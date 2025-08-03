@@ -87,7 +87,9 @@ const LandingPage = () => {
         <div className="nav-container">
           <div className="nav-logo" onClick={scrollToTop} style={{ cursor: 'pointer' }}>
             {/* Replace with your actual logo */}
-            <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel Logo" className="logo" />
+            <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel Logo" className="logo" onError={(e) => {
+              e.target.src = '/logo-simple.svg';
+            }} />
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
