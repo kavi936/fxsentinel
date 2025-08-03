@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fxsentinel"
+version = "1.0.0"
+description = "AI-Powered Forex Trading Dashboard"
+authors = [{name = "FXSentinel Team"}]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "Flask>=2.3.0",
+    "Flask-CORS>=4.0.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "gunicorn>=21.0.0",
+    "openai>=1.0.0",
+]
+
+[project.scripts]
+fxsentinel = "app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["tests*", "frontend*", "bot*", "data*", "stripe*"] 

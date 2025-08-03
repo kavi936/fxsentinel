@@ -2,12 +2,13 @@
 .git/
 .gitignore
 
-# Documentation files
+# Documentation files that might confuse Railway
 *.md
 DEPLOYMENT*.md
 DOMAIN_SETUP.md
 INVESTOR_DEMO.md
 project.md
+RAILWAY_DEPLOYMENT_FIX.md
 
 # Development files
 deploy.sh
@@ -34,4 +35,7 @@ venv/
 
 # OS files
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# Keep only essential files for deployment
+# This should help Railway focus on the Python app 
