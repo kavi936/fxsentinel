@@ -1074,7 +1074,6 @@ body {
   margin-bottom: 1rem;
   color: var(--text-white);
   font-family: 'Space Grotesk', 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-  text-transform: uppercase;
   letter-spacing: -0.01em;
 }
 

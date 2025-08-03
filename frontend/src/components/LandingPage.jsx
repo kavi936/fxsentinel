@@ -161,7 +161,7 @@ const LandingPage = () => {
             </div>
             
             <div className="hero-buttons">
-              <Link to="/dashboard" className="primary-button">
+              <Link to="/login" className="primary-button">
                 Explore FXSentinel
               </Link>
               <button className="secondary-button">
@@ -252,7 +252,7 @@ const LandingPage = () => {
                 <li>Email alerts</li>
                 <li>Basic dashboard</li>
               </ul>
-              <Link to="/dashboard" className="pricing-button">Start Free Trial</Link>
+              <Link to="/signup" className="pricing-button">Start Free Trial</Link>
             </div>
             <div className="pricing-card featured">
               <h3>Professional</h3>
@@ -264,7 +264,7 @@ const LandingPage = () => {
                 <li>Advanced dashboard</li>
                 <li>Trading recommendations</li>
               </ul>
-              <Link to="/dashboard" className="pricing-button">Start Free Trial</Link>
+              <Link to="/signup" className="pricing-button">Start Free Trial</Link>
             </div>
             <div className="pricing-card coming-soon">
               <h3>Enterprise</h3>

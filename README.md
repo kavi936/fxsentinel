@@ -1,125 +1,132 @@
-# 🌐 FXSentinel
+# 🌐 FXSentinel - AI-Powered Forex Trading Dashboard
 
-> AI-Powered Macro News Analysis for Forex Traders
+> An AI-powered web application providing macroeconomic news analysis, forecasts, and smart alerts for Forex and commodity traders.
 
-FXSentinel is a web application that provides AI-generated analysis of macroeconomic news events, helping retail traders make informed decisions for key instruments like EUR/USD, USD/JPY, and Gold.
+## 🚀 Features
 
-## 🚀 Current Status
+### 📊 News & Analysis Dashboard
+- **Real-time Economic Events**: Aggregates key events from ForexFactory
+- **AI-Powered Analysis**: GPT-generated explanations of market impact
+- **Currency Pair Insights**: Tailored analysis for EUR/USD, USD/JPY, and Gold
+- **Impact Assessment**: High/Medium/Low impact classification
 
-**MVP Phase 1 Complete** ✅
-- ✅ Beautiful news dashboard with mock data
-- ✅ AI analysis panel for each news event
-- ✅ Responsive design with dark theme
-- ✅ Flask backend with REST API
-- ✅ React frontend with modern UI
+### 🔔 Smart Alert System
+- **Telegram Bot Integration**: Instant notifications for important events
+- **Email Alerts**: Customizable email notifications
+- **Impact Level Filtering**: Choose which events to receive alerts for
+- **Alert Statistics**: Track delivery and engagement metrics
+
+### 📈 Trading Insights
+- **Market Sentiment Analysis**: Real-time sentiment indicators
+- **Currency Pair Tracking**: Live prices and percentage changes
+- **AI Trading Insights**: Machine learning-powered analysis
+- **Volatility Monitoring**: Market volatility index tracking
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React + Vite
-- **Backend**: Python + Flask
-- **Styling**: Modern CSS with dark theme
-- **API**: RESTful endpoints for news and analysis
+| Layer       | Technology                |
+|-------------|---------------------------|
+| Frontend    | React + Vite              |
+| Backend     | Python + Flask            |
+| AI          | OpenAI GPT-4-turbo        |
+| Styling     | CSS3 + Glassmorphism      |
+| APIs        | ForexFactory (scraped)    |
+| Alerts      | Telegram Bot API          |
 
-## 📦 Installation & Setup
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js (v16+)
-- Python 3.8+
-- pip
+- Python (v3.8+)
+- OpenAI API Key
 
-### Backend Setup
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install flask flask-cors
-python app.py
-```
+### Installation
 
-### Frontend Setup
-```bash
-cd frontend
-npm install
-npm run dev
-```
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd fxsentinel
+   ```
 
-### Access the Application
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:5000
+2. **Setup Backend**
+   ```bash
+   cd backend
+   pip install -r requirements.txt
+   
+   # Set your OpenAI API key
+   export OPENAI_API_KEY="your-api-key-here"
+   
+   # Run the Flask server
+   python app.py
+   ```
 
-## 🎯 Features
+3. **Setup Frontend**
+   ```bash
+   cd frontend
+   npm install
+   
+   # Create .env file
+   echo "VITE_API_URL=http://localhost:5000" > .env
+   
+   # Run the development server
+   npm run dev
+   ```
 
-### Current Features (MVP)
-1. **News Dashboard**: Displays upcoming macroeconomic events
-2. **Impact Levels**: Color-coded impact indicators (High/Medium/Low)
-3. **Trading Pairs**: Shows affected currency pairs for each event
-4. **AI Analysis**: Mock AI-generated insights for each news event
-5. **Responsive Design**: Works on desktop and mobile
+4. **Access the Application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:5000
 
-### Mock Data Includes
-- US CPI Data Release
-- ECB Interest Rate Decision
-- UK GDP Preliminary
-- BoJ Policy Rate Decision
+## 📱 Dashboard Features
 
-## 📊 API Endpoints
+### Tab Navigation
+- **📊 News & Analysis**: View upcoming economic events with AI analysis
+- **🔔 Smart Alerts**: Manage notification preferences and view alert history
+- **📈 Trading Insights**: Monitor market sentiment and trading opportunities
 
-- `GET /api/hello` - Health check
-- `GET /api/news` - Get all news events
-- `GET /api/analysis/<id>` - Get AI analysis for specific news event
+### Key Components
+- **Real-time Data**: Live updates from economic calendars
+- **Interactive UI**: Click events for detailed AI analysis
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Professional Styling**: Dark theme with glassmorphism effects
 
-## 🎨 UI/UX Features
+## 🔧 API Endpoints
 
-- **Dark Theme**: Professional dark interface
-- **Interactive Cards**: Click to view detailed analysis
-- **Impact Badges**: Visual impact indicators
-- **Responsive Layout**: Adapts to different screen sizes
-- **Loading States**: Smooth user experience
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/news` | GET | Fetch economic events |
+| `/api/analysis/<id>` | GET | Get AI analysis for event |
+| `/api/trading-data` | GET | Get market data and sentiment |
+| `/api/alerts` | GET | Get alert history and stats |
+| `/api/ai-insights` | GET | Get AI trading insights |
+| `/api/alert-settings` | GET/POST | Manage alert preferences |
 
-## 🔄 Next Steps
+## 🎯 Core Value Propositions
 
-### Phase 2 (Next Sprint)
-- [ ] Integrate real news APIs (TradingEconomics, ForexFactory)
-- [ ] Implement OpenAI GPT-4 for real AI analysis
-- [ ] Add user authentication
-- [ ] Create Telegram bot integration
+1. **Smart Alerts**: Never miss important market-moving events
+2. **AI Analysis**: Understand complex market dynamics instantly
+3. **Trading Insights**: Make informed decisions with confidence
+4. **Real-time Updates**: Stay ahead of market movements
 
-### Phase 3 (Future)
+## 🔮 Future Enhancements
+
 - [ ] Real-time price data integration
-- [ ] Advanced charting and technical analysis
+- [ ] Advanced charting capabilities
 - [ ] Mobile app development
-- [ ] Premium subscription features
+- [ ] Social trading features
+- [ ] Institutional partnerships
+- [ ] Machine learning models for prediction
 
-## 🏗️ Project Structure
+## 📄 License
 
-```
-fxsentinel/
-├── backend/          # Flask API server
-│   ├── app.py       # Main Flask application
-│   └── venv/        # Python virtual environment
-├── frontend/         # React application
-│   ├── src/
-│   │   ├── App.jsx  # Main React component
-│   │   └── App.css  # Styling
-│   └── package.json
-├── bot/             # Telegram bot (future)
-├── data/            # Data scrapers (future)
-├── stripe/          # Payment integration (future)
-└── README.md
-```
+This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## 🤝 Contributing
 
-This is an MVP build. The project is structured to easily add:
-- Real API integrations
-- Database models
-- Authentication
-- Payment processing
-- Real-time features
-
-## 📝 License
-
-This project is for educational and development purposes.
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
 ---
 
