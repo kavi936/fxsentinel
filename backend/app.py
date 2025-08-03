@@ -8,7 +8,7 @@ import os
 import json
 import time
 
-app = Flask(__name__, static_folder='../frontend/dist', static_url_path='')
+app = Flask(__name__)
 CORS(app)
 
 # Configure OpenAI (you'll need to set OPENAI_API_KEY environment variable)
@@ -414,13 +414,21 @@ def alert_settings():
             "settings": settings
         })
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-    """Serve React app for all non-API routes"""
-    if path.startswith('api/'):
-        return jsonify({"error": "API endpoint not found"}), 404
-    return app.send_static_file('index.html')
+@app.route('/')
+def home():
+    """API home endpoint"""
+    return jsonify({
+        "message": "FXSentinel API is running",
+        "status": "healthy",
+        "endpoints": {
+            "news": "/api/news",
+            "analysis": "/api/analysis/<id>",
+            "health": "/api/health",
+            "trading_data": "/api/trading-data",
+            "alerts": "/api/alerts",
+            "ai_insights": "/api/ai-insights"
+        }
+    })
 
 if __name__ == '__main__':
     app.run(debug=True) 
