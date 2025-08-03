@@ -86,10 +86,17 @@ const LandingPage = () => {
       <nav className={`navbar ${isScrolled ? 'navbar-scrolled' : ''}`}>
         <div className="nav-container">
           <div className="nav-logo" onClick={scrollToTop} style={{ cursor: 'pointer' }}>
-            {/* Replace with your actual logo */}
-            <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel Logo" className="logo" onError={(e) => {
-              e.target.src = '/logo-simple.svg';
-            }} />
+            <div style={{
+              fontSize: '28px',
+              fontWeight: 'bold',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ color: '#00ff88' }}>FX</span>
+              <span>Sentinel</span>
+            </div>
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>

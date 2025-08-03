@@ -260,9 +260,17 @@ function Dashboard() {
         <div className="navbar-container">
           <div className="navbar-left">
             <div className="navbar-logo">
-              <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel" onError={(e) => {
-                e.target.src = '/logo-simple.svg';
-              }} />
+              <div style={{
+                fontSize: '24px',
+                fontWeight: 'bold',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span style={{ color: '#00ff88' }}>FX</span>
+                <span>Sentinel</span>
+              </div>
             </div>
           </div>
           

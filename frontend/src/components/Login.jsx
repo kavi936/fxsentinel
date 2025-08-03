@@ -45,10 +45,17 @@ const Login = () => {
       <div className="auth-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo">
-            <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel Logo" onError={(e) => {
-              e.target.src = '/logo-simple.svg';
-            }} />
-            <span>FXSentinel</span>
+            <div style={{
+              fontSize: '24px',
+              fontWeight: 'bold',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <span style={{ color: '#00ff88' }}>FX</span>
+              <span>Sentinel</span>
+            </div>
           </Link>
           <h1>Welcome Back</h1>
           <p>Sign in to your FXSentinel account</p>
