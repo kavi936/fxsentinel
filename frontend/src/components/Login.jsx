@@ -46,7 +46,7 @@ const Login = () => {
         <div className="auth-header">
           <Link to="/" className="auth-logo">
             <img 
-              src="/fxsentinel_logo_nobg.png" 
+              src="/fxsentinel_logo_nobg.webp" 
               alt="FXSentinel Logo"
               style={{ height: '40px', width: 'auto' }}
               onError={(e) => {

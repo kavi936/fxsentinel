@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, timedelta
 import requests
@@ -8,7 +8,7 @@ import os
 import json
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='../frontend/dist', static_url_path='')
 CORS(app)
 
 # Configure OpenAI (you'll need to set OPENAI_API_KEY environment variable)
@@ -413,6 +413,14 @@ def alert_settings():
             "message": "Settings updated successfully",
             "settings": settings
         })
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve(path):
+    """Serve React app for all non-API routes"""
+    if path.startswith('api/'):
+        return jsonify({"error": "API endpoint not found"}), 404
+    return app.send_static_file('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True) 

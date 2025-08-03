@@ -261,7 +261,7 @@ function Dashboard() {
           <div className="navbar-left">
             <div className="navbar-logo">
               <img 
-                src="/fxsentinel_logo_nobg.png" 
+                src="/fxsentinel_logo_nobg.webp" 
                 alt="FXSentinel" 
                 style={{ height: '40px', width: 'auto' }}
                 onError={(e) => {
