@@ -1,0 +1,46 @@
+# Git files
+.git/
+.gitignore
+
+# Documentation files
+*.md
+DEPLOYMENT*.md
+DOMAIN_SETUP.md
+INVESTOR_DEMO.md
+project.md
+RAILWAY_DEPLOYMENT_FIX.md
+
+# Development files
+deploy.sh
+frontend/
+bot/
+data/
+stripe/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Railway files (not needed for Vercel)
+railway.json
+railway.toml
+.railway/
+nixpacks.toml
+Procfile
+Dockerfile 
