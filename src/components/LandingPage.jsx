@@ -1,36 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './LandingPage.css';
+import logoPng from '/fxsentinel_logo_nobg.png';
+import logoWebp from '/fxsentinel_logo_nobg.webp';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Test image accessibility on component mount
-  useEffect(() => {
-    const testImageAccess = async () => {
-      const imageUrls = [
-        '/fxsentinel_logo_nobg.webp',
-        '/fxsentinel_logo_nobg.png'
-      ];
-      
-      for (const url of imageUrls) {
-        try {
-          const response = await fetch(url, { method: 'HEAD' });
-          console.log(`Image ${url} status:`, response.status, response.ok ? 'OK' : 'FAILED');
-          
-          // Also try to load the image directly
-          const img = new Image();
-          img.onload = () => console.log(`Image ${url} loaded successfully`);
-          img.onerror = () => console.error(`Image ${url} failed to load`);
-          img.src = url;
-        } catch (error) {
-          console.error(`Failed to access ${url}:`, error);
-        }
-      }
-    };
-    
-    testImageAccess();
-  }, []);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,20 +91,13 @@ const LandingPage = () => {
         <div className="nav-container">
           <div className="nav-logo" onClick={scrollToTop} style={{ cursor: 'pointer' }}>
             <picture>
-              <source srcSet="/fxsentinel_logo_nobg.webp" type="image/webp" />
+              <source srcSet={logoWebp} type="image/webp" />
               <img 
-                src="/fxsentinel_logo_nobg.png" 
+                src={logoPng} 
                 alt="FXSentinel Logo" 
                 className="logo"
                 style={{ height: '50px', width: 'auto' }}
-                onError={(e) => {
-                  console.error('Logo failed to load:', e.target.src);
-                  console.error('Error details:', e);
-                  // Don't hide the image or show text fallback - let's see what happens
-                }}
-                onLoad={(e) => {
-                  console.log('Logo loaded successfully from:', e.target.src);
-                }}
+
               />
             </picture>
             <div style={{
@@ -341,15 +311,10 @@ const LandingPage = () => {
             <div className="footer-section">
               <div className="footer-logo">
                 <img 
-                  src="/fxsentinel_logo_nobg.png" 
+                  src={logoPng} 
                   alt="FXSentinel Logo" 
                   className="logo"
-                  onError={(e) => {
-                    console.error('Footer logo failed to load:', e.target.src);
-                  }}
-                  onLoad={(e) => {
-                    console.log('Footer logo loaded successfully from:', e.target.src);
-                  }}
+
                 />
                 <span>FXSentinel</span>
               </div>
