@@ -18,9 +18,6 @@ dependencies = [
     "openai>=1.0.0",
 ]
 
-[project.scripts]
-fxsentinel = "app:main"
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["*"]
