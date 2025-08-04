@@ -17,6 +17,12 @@ const LandingPage = () => {
         try {
           const response = await fetch(url, { method: 'HEAD' });
           console.log(`Image ${url} status:`, response.status, response.ok ? 'OK' : 'FAILED');
+          
+          // Also try to load the image directly
+          const img = new Image();
+          img.onload = () => console.log(`Image ${url} loaded successfully`);
+          img.onerror = () => console.error(`Image ${url} failed to load`);
+          img.src = url;
         } catch (error) {
           console.error(`Failed to access ${url}:`, error);
         }
@@ -117,7 +123,8 @@ const LandingPage = () => {
                 onError={(e) => {
                   console.error('Logo failed to load:', e.target.src);
                   console.error('Error details:', e);
-                  e.target.style.display = 'none';
+                  // Temporarily disable hiding the image to debug
+                  // e.target.style.display = 'none';
                   // Find the text fallback and show it
                   const textFallback = e.target.closest('.nav-logo').querySelector('div[style*="display: none"]');
                   if (textFallback) {

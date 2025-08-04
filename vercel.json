@@ -1,15 +1,30 @@
 {
   "version": 2,
-  "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
   "routes": [
     {
-      "src": "/fxsentinel_logo_nobg.(png|webp)",
-      "dest": "/fxsentinel_logo_nobg.$1"
+      "src": "/fxsentinel_logo_nobg.png",
+      "dest": "/fxsentinel_logo_nobg.png"
     },
     {
-      "src": "/fxsentinel_og.(png|webp)",
-      "dest": "/fxsentinel_og.$1"
+      "src": "/fxsentinel_logo_nobg.webp",
+      "dest": "/fxsentinel_logo_nobg.webp"
+    },
+    {
+      "src": "/fxsentinel_og.png",
+      "dest": "/fxsentinel_og.png"
+    },
+    {
+      "src": "/fxsentinel_og.webp",
+      "dest": "/fxsentinel_og.webp"
     },
     {
       "src": "/logo-simple.svg",
