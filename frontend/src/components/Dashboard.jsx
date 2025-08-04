@@ -260,16 +260,19 @@ function Dashboard() {
         <div className="navbar-container">
           <div className="navbar-left">
             <div className="navbar-logo">
-              <img 
-                src="/fxsentinel_logo_nobg.webp" 
-                alt="FXSentinel" 
-                style={{ height: '40px', width: 'auto' }}
-                onError={(e) => {
-                  console.log('Logo failed to load, using fallback');
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
+              <picture>
+                <source srcSet="/fxsentinel_logo_nobg.webp" type="image/webp" />
+                <img 
+                  src="/fxsentinel_logo_nobg.png" 
+                  alt="FXSentinel" 
+                  style={{ height: '40px', width: 'auto' }}
+                  onError={(e) => {
+                    console.log('Logo failed to load, using text fallback');
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              </picture>
               <div style={{
                 display: 'none',
                 fontSize: '24px',

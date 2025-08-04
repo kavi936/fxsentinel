@@ -76,16 +76,19 @@ const Signup = () => {
       <div className="auth-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo">
-            <img 
-              src="/fxsentinel_logo_nobg.webp" 
-              alt="FXSentinel Logo"
-              style={{ height: '40px', width: 'auto' }}
-              onError={(e) => {
-                console.log('Logo failed to load, using fallback');
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
+            <picture>
+              <source srcSet="/fxsentinel_logo_nobg.webp" type="image/webp" />
+              <img 
+                src="/fxsentinel_logo_nobg.png" 
+                alt="FXSentinel Logo"
+                style={{ height: '40px', width: 'auto' }}
+                onError={(e) => {
+                  console.log('Logo failed to load, using text fallback');
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            </picture>
             <div style={{
               display: 'none',
               fontSize: '24px',

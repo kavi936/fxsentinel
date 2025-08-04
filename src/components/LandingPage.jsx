@@ -337,6 +337,25 @@ const LandingPage = () => {
               <a href="#">API</a>
             </div>
           </div>
+          
+          {/* Disclaimer Section */}
+          <div className="disclaimer-section">
+            <div className="disclaimer-content">
+              <h4>Disclaimer</h4>
+              <p>
+                FXSentinel is a market intelligence and data analytics platform. We are not a brokerage, 
+                investment advisor, or financial institution. The platform provides AI-powered analysis 
+                of forex market events and economic data for informational purposes only. We do not 
+                provide financial advice, investment recommendations, or trading signals. The insights 
+                and analysis provided through our platform should not be considered as certified 
+                financial education or professional trading advice. Users should conduct their own 
+                research and consult with qualified financial professionals before making any investment 
+                decisions. All platform features and analysis are provided "as is" without any guarantees 
+                of accuracy or specific trading outcomes. All sales are final, and we do not offer refunds.
+              </p>
+            </div>
+          </div>
+          
           <div className="footer-bottom">
             <p>&copy; 2024 FXSentinel. All rights reserved.</p>
           </div>
