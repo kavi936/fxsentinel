@@ -123,13 +123,7 @@ const LandingPage = () => {
                 onError={(e) => {
                   console.error('Logo failed to load:', e.target.src);
                   console.error('Error details:', e);
-                  // Temporarily disable hiding the image to debug
-                  // e.target.style.display = 'none';
-                  // Find the text fallback and show it
-                  const textFallback = e.target.closest('.nav-logo').querySelector('div[style*="display: none"]');
-                  if (textFallback) {
-                    textFallback.style.display = 'flex';
-                  }
+                  // Don't hide the image or show text fallback - let's see what happens
                 }}
                 onLoad={(e) => {
                   console.log('Logo loaded successfully from:', e.target.src);
@@ -137,7 +131,7 @@ const LandingPage = () => {
               />
             </picture>
             <div style={{
-              display: 'none',
+              display: 'none', // Keep hidden for now
               fontSize: '28px',
               fontWeight: 'bold',
               color: '#ffffff',
@@ -346,7 +340,17 @@ const LandingPage = () => {
           <div className="footer-content">
             <div className="footer-section">
               <div className="footer-logo">
-                <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel Logo" className="logo" />
+                <img 
+                  src="/fxsentinel_logo_nobg.png" 
+                  alt="FXSentinel Logo" 
+                  className="logo"
+                  onError={(e) => {
+                    console.error('Footer logo failed to load:', e.target.src);
+                  }}
+                  onLoad={(e) => {
+                    console.log('Footer logo loaded successfully from:', e.target.src);
+                  }}
+                />
                 <span>FXSentinel</span>
               </div>
               <p>AI-powered forex news analysis for professional traders.</p>
