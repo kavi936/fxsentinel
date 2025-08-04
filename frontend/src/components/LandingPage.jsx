@@ -7,26 +7,7 @@ import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Test image accessibility on component mount
-  useEffect(() => {
-    const testImageAccess = async () => {
-      const imageUrls = [
-        '/fxsentinel_logo_nobg.webp',
-        '/fxsentinel_logo_nobg.png'
-      ];
-      
-      for (const url of imageUrls) {
-        try {
-          const response = await fetch(url, { method: 'HEAD' });
-          console.log(`Image ${url} status:`, response.status, response.ok ? 'OK' : 'FAILED');
-        } catch (error) {
-          console.error(`Failed to access ${url}:`, error);
-        }
-      }
-    };
-    
-    testImageAccess();
-  }, []);
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -118,17 +99,6 @@ const LandingPage = () => {
                 style={{ height: '50px', width: 'auto' }}
               />
             </picture>
-            <div style={{
-              display: 'none',
-              fontSize: '28px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{ color: '#00ff88' }}>FX</span>
-              <span>Sentinel</span>
-            </div>
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
@@ -328,7 +298,10 @@ const LandingPage = () => {
           <div className="footer-content">
             <div className="footer-section">
               <div className="footer-logo">
-                <img src="/fxsentinel_logo_nobg.png" alt="FXSentinel Logo" className="logo" />
+                <picture>
+                  <source srcSet={logoWebp} type="image/webp" />
+                  <img src={logoPng} alt="FXSentinel Logo" className="logo" />
+                </picture>
                 <span>FXSentinel</span>
               </div>
               <p>AI-powered forex news analysis for professional traders.</p>

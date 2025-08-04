@@ -55,17 +55,6 @@ const Login = () => {
                 style={{ height: '40px', width: 'auto' }}
               />
             </picture>
-            <div style={{
-              display: 'none',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{ color: '#00ff88' }}>FX</span>
-              <span>Sentinel</span>
-            </div>
           </Link>
           <h1>Welcome Back</h1>
           <p>Sign in to your FXSentinel account</p>

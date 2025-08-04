@@ -270,17 +270,6 @@ function Dashboard() {
                   style={{ height: '40px', width: 'auto' }}
                 />
               </picture>
-              <div style={{
-                display: 'none',
-                fontSize: '24px',
-                fontWeight: 'bold',
-                color: '#ffffff',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{ color: '#00ff88' }}>FX</span>
-                <span>Sentinel</span>
-              </div>
             </div>
           </div>
           
