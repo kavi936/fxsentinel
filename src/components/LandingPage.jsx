@@ -5,6 +5,27 @@ import './LandingPage.css';
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Test image accessibility on component mount
+  useEffect(() => {
+    const testImageAccess = async () => {
+      const imageUrls = [
+        '/fxsentinel_logo_nobg.webp',
+        '/fxsentinel_logo_nobg.png'
+      ];
+      
+      for (const url of imageUrls) {
+        try {
+          const response = await fetch(url, { method: 'HEAD' });
+          console.log(`Image ${url} status:`, response.status, response.ok ? 'OK' : 'FAILED');
+        } catch (error) {
+          console.error(`Failed to access ${url}:`, error);
+        }
+      }
+    };
+    
+    testImageAccess();
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
@@ -94,12 +115,17 @@ const LandingPage = () => {
                 className="logo"
                 style={{ height: '50px', width: 'auto' }}
                 onError={(e) => {
-                  console.log('Logo failed to load, using fallback');
+                  console.error('Logo failed to load:', e.target.src);
+                  console.error('Error details:', e);
                   e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
+                  // Find the text fallback and show it
+                  const textFallback = e.target.closest('.nav-logo').querySelector('div[style*="display: none"]');
+                  if (textFallback) {
+                    textFallback.style.display = 'flex';
+                  }
                 }}
-                onLoad={() => {
-                  console.log('Logo loaded successfully');
+                onLoad={(e) => {
+                  console.log('Logo loaded successfully from:', e.target.src);
                 }}
               />
             </picture>

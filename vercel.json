@@ -1,5 +1,39 @@
 {
   "version": 2,
   "buildCommand": "npm install && npm run build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "routes": [
+    {
+      "src": "/fxsentinel_logo_nobg.(png|webp)",
+      "dest": "/fxsentinel_logo_nobg.$1"
+    },
+    {
+      "src": "/fxsentinel_og.(png|webp)",
+      "dest": "/fxsentinel_og.$1"
+    },
+    {
+      "src": "/logo-simple.svg",
+      "dest": "/logo-simple.svg"
+    },
+    {
+      "src": "/dashboard-preview.svg",
+      "dest": "/dashboard-preview.svg"
+    },
+    {
+      "src": "/logo.svg",
+      "dest": "/logo.svg"
+    },
+    {
+      "src": "/vite.svg",
+      "dest": "/vite.svg"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
 } 
