@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './LandingPage.css';
+import logoPng from '../assets/fxsentinel_logo_nobg.png';
+import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -108,25 +110,12 @@ const LandingPage = () => {
         <div className="nav-container">
           <div className="nav-logo" onClick={scrollToTop} style={{ cursor: 'pointer' }}>
             <picture>
-              <source srcSet="/fxsentinel_logo_nobg.webp" type="image/webp" />
+              <source srcSet={logoWebp} type="image/webp" />
               <img 
-                src="/fxsentinel_logo_nobg.png" 
+                src={logoPng} 
                 alt="FXSentinel Logo" 
                 className="logo"
                 style={{ height: '50px', width: 'auto' }}
-                onError={(e) => {
-                  console.error('Logo failed to load:', e.target.src);
-                  console.error('Error details:', e);
-                  e.target.style.display = 'none';
-                  // Find the text fallback and show it
-                  const textFallback = e.target.closest('.nav-logo').querySelector('div[style*="display: none"]');
-                  if (textFallback) {
-                    textFallback.style.display = 'flex';
-                  }
-                }}
-                onLoad={() => {
-                  console.log('Logo loaded successfully from:', e.target.src);
-                }}
               />
             </picture>
             <div style={{

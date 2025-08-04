@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
+import logoPng from '../assets/fxsentinel_logo_nobg.png';
+import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -77,16 +79,11 @@ const Signup = () => {
         <div className="auth-header">
           <Link to="/" className="auth-logo">
             <picture>
-              <source srcSet="/fxsentinel_logo_nobg.webp" type="image/webp" />
+              <source srcSet={logoWebp} type="image/webp" />
               <img 
-                src="/fxsentinel_logo_nobg.png" 
+                src={logoPng} 
                 alt="FXSentinel Logo"
                 style={{ height: '40px', width: 'auto' }}
-                onError={(e) => {
-                  console.log('Logo failed to load, using text fallback');
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
               />
             </picture>
             <div style={{
