@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './LandingPage.css';
-import logoPng from '/fxsentinel_logo_nobg.png';
-import logoWebp from '/fxsentinel_logo_nobg.webp';
+import logoPng from '../assets/fxsentinel_logo_nobg.png';
+import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-
-
 
   useEffect(() => {
     const handleScroll = () => {
