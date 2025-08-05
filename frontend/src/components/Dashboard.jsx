@@ -32,6 +32,10 @@ function Dashboard() {
     mediumImpact: true,
     lowImpact: false
   });
+  
+  // Enhanced navbar state
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [marketStatus, setMarketStatus] = useState({ isOpen: true, lastUpdate: new Date() });
 
   // Fetch news data on mount
   useEffect(() => {
@@ -40,6 +44,25 @@ function Dashboard() {
     fetchAlerts();
     fetchAiInsights();
     fetchAlertSettings();
+    fetchMarketStatus();
+  }, []);
+
+  // Update time every second
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  // Update market status every 30 seconds
+  useEffect(() => {
+    const marketInterval = setInterval(() => {
+      fetchMarketStatus();
+    }, 30000);
+
+    return () => clearInterval(marketInterval);
   }, []);
 
   const fetchNews = async () => {
@@ -245,6 +268,75 @@ function Dashboard() {
     }
   };
 
+  const fetchMarketStatus = async () => {
+    try {
+      // Use Alpha Vantage API to check if markets are open
+      const response = await axios.get(`${config.endpoints.alphaVantage}/query?function=TIME_SERIES_INTRADAY&symbol=EURUSD&interval=1min&apikey=${config.alphaVantageKey}`);
+      
+      if (response.data && response.data['Time Series (1min)']) {
+        const latestTime = Object.keys(response.data['Time Series (1min)'])[0];
+        const latestData = response.data['Time Series (1min)'][latestTime];
+        
+        // Check if the data is recent (within last 5 minutes)
+        const dataTime = new Date(latestTime);
+        const now = new Date();
+        const timeDiff = now - dataTime;
+        const isRecent = timeDiff < 5 * 60 * 1000; // 5 minutes
+        
+        setMarketStatus({
+          isOpen: isRecent,
+          lastUpdate: dataTime
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching market status:', error);
+      // Fallback to checking if it's during market hours (simplified)
+      const now = new Date();
+      const hour = now.getHours();
+      const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+      const isMarketHours = !isWeekend && hour >= 8 && hour < 20; // Simplified market hours
+      
+      setMarketStatus({
+        isOpen: isMarketHours,
+        lastUpdate: now
+      });
+    }
+  };
+
+  const formatCurrentTime = () => {
+    const day = String(currentTime.getDate()).padStart(2, '0');
+    const month = String(currentTime.getMonth() + 1).padStart(2, '0');
+    const year = String(currentTime.getFullYear()).slice(-2);
+    const hours = String(currentTime.getHours()).padStart(2, '0');
+    const minutes = String(currentTime.getMinutes()).padStart(2, '0');
+    const seconds = String(currentTime.getSeconds()).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const getUserDisplayName = () => {
+    if (!currentUser) return 'Guest';
+    
+    // Check if user has a display name set
+    if (currentUser.displayName) {
+      return currentUser.displayName;
+    }
+    
+    // If no display name, try to extract a proper name from email
+    if (currentUser.email) {
+      const emailName = currentUser.email.split('@')[0];
+      // Convert email name to proper case (e.g., "kavi.cf412" -> "Kavi")
+      const nameParts = emailName.split('.');
+      if (nameParts.length > 0) {
+        // Capitalize the first part and use it as the name
+        return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+      }
+      return emailName;
+    }
+    
+    return 'User';
+  };
+
   if (loading) {
     return (
       <div className="dashboard-loading">
@@ -270,6 +362,13 @@ function Dashboard() {
                   style={{ height: '40px', width: 'auto' }}
                 />
               </picture>
+            </div>
+            <div className="welcome-message">
+              Welcome, <span className="username">{getUserDisplayName()}</span>
+            </div>
+            <div className="live-time">
+              <span className="date-section">{formatCurrentTime().split(' ')[0]}</span>
+              <span className="time-section">{formatCurrentTime().split(' ')[1]}</span>
             </div>
           </div>
           
@@ -298,8 +397,10 @@ function Dashboard() {
           
           <div className="navbar-right">
             <div className="market-status">
-              <span className="status-dot open"></span>
-              <span className="status-text">Markets Open</span>
+              <span className={`status-dot ${marketStatus.isOpen ? 'open' : 'closed'}`}></span>
+              <span className="status-text">
+                {marketStatus.isOpen ? 'Markets Open' : 'Markets Closed'}
+              </span>
             </div>
             <button onClick={refreshData} className="refresh-btn" title="Refresh Data">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -33,21 +33,63 @@
 .navbar-left {
   display: flex;
   align-items: center;
+  gap: 1.5rem;
+}
+
+.welcome-message {
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.username {
+  color: #ff0000;
+  font-weight: 600;
+}
+
+.live-time {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  padding: 0.4rem 0.8rem;
+  min-width: 120px;
+  max-width: 170px;
+  width: 170px;
+}
+
+.date-section {
+  font-size: 0.75rem;
+  color: #cccccc;
+  font-weight: 500;
+}
+
+.time-section {
+  font-size: 0.85rem;
+  color: #ffffff;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
 }
 
 .navbar-logo {
   display: flex;
   align-items: center;
-  height: 40px;
+  height: 45px;
   margin-right: 1rem;
   margin-left: -20px;
+  padding-top: 5px;
 }
 
 .navbar-logo img {
   height: 100%;
   width: auto;
   object-fit: contain;
-  max-height: 40px;
+  max-height: 45px;
 }
 
 .navbar-center {
@@ -64,7 +106,7 @@
 }
 
 .nav-tab {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(128, 128, 128, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #cccccc;
   padding: 0.6rem 1.2rem;
@@ -76,21 +118,51 @@
   backdrop-filter: blur(10px);
   text-transform: none;
   letter-spacing: 0.02em;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.nav-tab:hover::before {
+  left: 100%;
 }
 
 .nav-tab:hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 0, 0, 0.3);
   color: #ffffff;
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.nav-tab:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 0, 0, 0.3);
+  color: #ffffff;
+}
+
+.nav-tab:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .nav-tab.active {
   background: transparent !important;
-  border: 2px solid #ff0000 !important;
+  border: 1px solid #ff0000 !important;
   color: #ffffff !important;
   box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2) !important;
   font-weight: 600;
+  transform: translateY(-1px);
 }
 
 .navbar-right {
@@ -159,6 +231,15 @@
   box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
 }
 
+.notification-btn:focus {
+  outline: none;
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.notification-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .notification-badge {
   position: absolute;
   top: -2px;
@@ -199,6 +280,15 @@
   box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
 }
 
+.settings-btn:focus {
+  outline: none;
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.settings-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .settings-btn svg {
   transition: transform 0.3s ease;
 }
@@ -224,6 +314,15 @@
   background: rgba(255, 0, 0, 0.2);
   transform: rotate(180deg);
   box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+}
+
+.refresh-btn:focus {
+  outline: none;
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.refresh-btn:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .refresh-btn svg {
@@ -254,6 +353,15 @@
   box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
 }
 
+.profile-btn:focus {
+  outline: none;
+  background: rgba(255, 0, 0, 0.2);
+}
+
+.profile-btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .profile-btn svg {
   transition: transform 0.3s ease;
 }
@@ -282,6 +390,16 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
   color: #ffffff;
+}
+
+.home-btn:focus {
+  outline: none;
+  background: rgba(255, 0, 0, 0.2);
+  color: #ffffff;
+}
+
+.home-btn:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .home-btn svg {
@@ -1329,6 +1447,27 @@
     padding: 0 1rem;
   }
   
+  .navbar-left {
+    gap: 1rem;
+  }
+  
+  .welcome-message {
+    font-size: 0.8rem;
+  }
+  
+  .live-time {
+    min-width: 100px;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .date-section {
+    font-size: 0.7rem;
+  }
+  
+  .time-section {
+    font-size: 0.75rem;
+  }
+  
   .navbar-logo {
     height: 40px;
   }
@@ -1421,6 +1560,27 @@
 }
 
 @media (max-width: 480px) {
+  .navbar-left {
+    gap: 0.5rem;
+  }
+  
+  .welcome-message {
+    font-size: 0.7rem;
+  }
+  
+  .live-time {
+    min-width: 80px;
+    padding: 0.2rem 0.4rem;
+  }
+  
+  .date-section {
+    font-size: 0.65rem;
+  }
+  
+  .time-section {
+    font-size: 0.7rem;
+  }
+  
   .dashboard-title h1 {
     font-size: 1.8rem;
   }

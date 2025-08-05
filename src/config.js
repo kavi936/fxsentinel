@@ -4,7 +4,7 @@ const ALPHA_VANTAGE_API_KEY = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY || 'dem
 
 export const config = {
   API_BASE_URL,
-  ALPHA_VANTAGE_API_KEY,
+  alphaVantageKey: ALPHA_VANTAGE_API_KEY,
   endpoints: {
     news: `${API_BASE_URL}/api/news`,
     analysis: (id) => `${API_BASE_URL}/api/analysis/${id}`,
@@ -13,6 +13,8 @@ export const config = {
     aiInsights: `${API_BASE_URL}/api/ai-insights`,
     alertSettings: `${API_BASE_URL}/api/alert-settings`,
     hello: `${API_BASE_URL}/api/hello`,
+    // Alpha Vantage base URL
+    alphaVantage: 'https://www.alphavantage.co',
     // Forex price endpoints
     forexPrice: (fromCurrency, toCurrency) => 
       `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${ALPHA_VANTAGE_API_KEY}`
