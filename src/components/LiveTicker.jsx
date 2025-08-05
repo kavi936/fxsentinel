@@ -18,7 +18,9 @@ const LiveTicker = () => {
       loading,
       error,
       dataSource,
-      gbpPrice: prices.GBPUSD?.price
+      gbpPrice: prices.GBPUSD?.price,
+      eurPrice: prices.EURUSD?.price,
+      jpyPrice: prices.USDJPY?.price
     });
   }, [prices, loading, error, dataSource]);
 
