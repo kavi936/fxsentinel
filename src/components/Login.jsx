@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
+import logoPng from '../assets/fxsentinel_logo_nobg.png';
+import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -45,27 +47,14 @@ const Login = () => {
       <div className="auth-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo">
-            <img 
-              src="/fxsentinel_logo_nobg.webp" 
-              alt="FXSentinel Logo"
-              style={{ height: '40px', width: 'auto' }}
-              onError={(e) => {
-                console.log('Logo failed to load, using fallback');
-                e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'flex';
-              }}
-            />
-            <div style={{
-              display: 'none',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{ color: '#00ff88' }}>FX</span>
-              <span>Sentinel</span>
-            </div>
+            <picture>
+              <source srcSet={logoWebp} type="image/webp" />
+              <img 
+                src={logoPng} 
+                alt="FXSentinel Logo"
+                style={{ height: '40px', width: 'auto' }}
+              />
+            </picture>
           </Link>
           <h1>Welcome Back</h1>
           <p>Sign in to your FXSentinel account</p>

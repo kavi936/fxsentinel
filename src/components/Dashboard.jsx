@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import { config } from '../config';
 import './Dashboard.css';
+import logoPng from '../assets/fxsentinel_logo_nobg.png';
+import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -260,27 +262,14 @@ function Dashboard() {
         <div className="navbar-container">
           <div className="navbar-left">
             <div className="navbar-logo">
-              <img 
-                src="/fxsentinel_logo_nobg.webp" 
-                alt="FXSentinel" 
-                style={{ height: '40px', width: 'auto' }}
-                onError={(e) => {
-                  console.log('Logo failed to load, using fallback');
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-              <div style={{
-                display: 'none',
-                fontSize: '24px',
-                fontWeight: 'bold',
-                color: '#ffffff',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <span style={{ color: '#00ff88' }}>FX</span>
-                <span>Sentinel</span>
-              </div>
+              <picture>
+                <source srcSet={logoWebp} type="image/webp" />
+                <img 
+                  src={logoPng} 
+                  alt="FXSentinel" 
+                  style={{ height: '40px', width: 'auto' }}
+                />
+              </picture>
             </div>
           </div>
           

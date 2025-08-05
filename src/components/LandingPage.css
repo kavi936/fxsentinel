@@ -1447,42 +1447,10 @@ body {
   height: 32px;
 }
 
-/* Disclaimer Section */
-.disclaimer-section {
-  margin: 2rem 0 3rem 0;
-  padding: 1.5rem 0;
-  border-top: 1px solid rgba(51, 51, 51, 0.5);
-  border-bottom: 1px solid rgba(51, 51, 51, 0.5);
-  width: 100%;
-}
-
-.disclaimer-content {
-  width: 100%;
-  max-width: none;
-  margin: 0;
-  padding: 0 20px;
-}
-
-.disclaimer-content h4 {
-  color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 1rem;
-  font-weight: 500;
-  font-size: 1.1rem;
-  text-align: center;
-}
-
-.disclaimer-content p {
-  color: rgba(204, 204, 204, 0.5);
-  font-size: 0.9rem;
-  line-height: 1.6;
-  text-align: justify;
-  margin: 0;
-  opacity: 0.6;
-}
-
 .footer-bottom {
   text-align: center;
   padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
   color: var(--text-gray);
 }
 

@@ -3,9 +3,12 @@ import { Link } from 'react-router-dom';
 import './LandingPage.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import LiveTicker from './LiveTicker';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+
+
 
   useEffect(() => {
     const handleScroll = () => {
@@ -95,20 +98,8 @@ const LandingPage = () => {
                 alt="FXSentinel Logo" 
                 className="logo"
                 style={{ height: '50px', width: 'auto' }}
-
               />
             </picture>
-            <div style={{
-              display: 'none', // Keep hidden for now
-              fontSize: '28px',
-              fontWeight: 'bold',
-              color: '#ffffff',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <span style={{ color: '#00ff88' }}>FX</span>
-              <span>Sentinel</span>
-            </div>
           </div>
           <div className="nav-links">
             <a href="#features">Features</a>
@@ -170,16 +161,7 @@ const LandingPage = () => {
             </p>
             
             {/* Live Market Ticker */}
-            <div className="live-ticker-container">
-              <div className="live-ticker">
-                <span className="ticker-label">Live:</span>
-                <span className="ticker-item">EUR/USD 1.0854</span>
-                <span className="ticker-separator">•</span>
-                <span className="ticker-item">USD/JPY 148.23</span>
-                <span className="ticker-separator">•</span>
-                <span className="ticker-item">Gold $2,045.60</span>
-              </div>
-            </div>
+            <LiveTicker />
             
             <div className="hero-buttons">
               <Link to="/login" className="primary-button">
@@ -308,12 +290,10 @@ const LandingPage = () => {
           <div className="footer-content">
             <div className="footer-section">
               <div className="footer-logo">
-                <img 
-                  src={logoPng} 
-                  alt="FXSentinel Logo" 
-                  className="logo"
-
-                />
+                <picture>
+                  <source srcSet={logoWebp} type="image/webp" />
+                  <img src={logoPng} alt="FXSentinel Logo" className="logo" />
+                </picture>
                 <span>FXSentinel</span>
               </div>
               <p>AI-powered forex news analysis for professional traders.</p>

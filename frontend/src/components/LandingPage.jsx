@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './LandingPage.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import LiveTicker from './LiveTicker';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -160,16 +161,7 @@ const LandingPage = () => {
             </p>
             
             {/* Live Market Ticker */}
-            <div className="live-ticker-container">
-              <div className="live-ticker">
-                <span className="ticker-label">Live:</span>
-                <span className="ticker-item">EUR/USD 1.0854</span>
-                <span className="ticker-separator">•</span>
-                <span className="ticker-item">USD/JPY 148.23</span>
-                <span className="ticker-separator">•</span>
-                <span className="ticker-item">Gold $2,045.60</span>
-              </div>
-            </div>
+            <LiveTicker />
             
             <div className="hero-buttons">
               <Link to="/login" className="primary-button">
