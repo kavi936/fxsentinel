@@ -14,9 +14,9 @@ export const useForexPrices = () => {
   const [error, setError] = useState(null);
   const [dataSource, setDataSource] = useState('fallback'); // 'API' or 'fallback'
 
-  const fetchForexPrice = async (fromCurrency, toCurrency, pairName) => {
+  const fetchForexPrices = async () => {
     try {
-      const response = await fetch(config.endpoints.forexPrice(fromCurrency, toCurrency));
+      const response = await fetch(config.endpoints.forexPrices);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -24,66 +24,13 @@ export const useForexPrices = () => {
       
       const data = await response.json();
       
-      if (data['Error Message']) {
-        throw new Error(data['Error Message']);
+      if (data.error) {
+        throw new Error(data.error);
       }
       
-      if (data['Note']) {
-        throw new Error('API rate limit exceeded');
-      }
-      
-      const exchangeRate = data['Realtime Currency Exchange Rate'];
-      if (exchangeRate) {
-        const price = parseFloat(exchangeRate['5. Exchange Rate']);
-        const lastUpdate = new Date(exchangeRate['6. Last Refreshed']);
-        
-        return {
-          price: price,
-          change: 0, // Alpha Vantage doesn't provide change in this endpoint
-          lastUpdate: lastUpdate
-        };
-      }
-      
-      throw new Error('No exchange rate data found');
+      return data.prices;
     } catch (error) {
-      console.warn(`Failed to fetch ${pairName}:`, error.message);
-      return null;
-    }
-  };
-
-  const fetchGBPUSDPrice = async () => {
-    try {
-      const response = await fetch(config.endpoints.forexPrice('GBP', 'USD'));
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data['Error Message']) {
-        throw new Error(data['Error Message']);
-      }
-      
-      if (data['Note']) {
-        throw new Error('API rate limit exceeded');
-      }
-      
-      const exchangeRate = data['Realtime Currency Exchange Rate'];
-      if (exchangeRate) {
-        const price = parseFloat(exchangeRate['5. Exchange Rate']);
-        const lastUpdate = new Date(exchangeRate['6. Last Refreshed']);
-        
-        return {
-          price: price,
-          change: 0,
-          lastUpdate: lastUpdate
-        };
-      }
-      
-      throw new Error('No GBP/USD exchange rate data found');
-    } catch (error) {
-      console.warn('Failed to fetch GBP/USD price:', error.message);
+      console.warn('Failed to fetch forex prices:', error.message);
       return null;
     }
   };
@@ -107,41 +54,17 @@ export const useForexPrices = () => {
         }
       }
       
-      // Fetch all prices concurrently
-      const [eurUsdData, usdJpyData, gbpUsdData] = await Promise.allSettled([
-        fetchForexPrice('EUR', 'USD', 'EUR/USD'),
-        fetchForexPrice('USD', 'JPY', 'USD/JPY'),
-        fetchGBPUSDPrice()
-      ]);
+      // Fetch all prices from backend
+      const apiPrices = await fetchForexPrices();
       
-      const newPrices = { ...fallbackPrices };
-      let apiDataCount = 0;
-      
-      // Update with API data if available
-      if (eurUsdData.status === 'fulfilled' && eurUsdData.value) {
-        newPrices.EURUSD = eurUsdData.value;
-        apiDataCount++;
-      }
-      
-      if (usdJpyData.status === 'fulfilled' && usdJpyData.value) {
-        newPrices.USDJPY = usdJpyData.value;
-        apiDataCount++;
-      }
-      
-      if (gbpUsdData.status === 'fulfilled' && gbpUsdData.value) {
-        newPrices.GBPUSD = gbpUsdData.value;
-        apiDataCount++;
-      }
-      
-      setPrices(newPrices);
-      
-      // Determine data source
-      if (apiDataCount > 0) {
+      if (apiPrices) {
+        setPrices(apiPrices);
         setDataSource('API');
         // Cache the data
-        localStorage.setItem('forexPrices', JSON.stringify(newPrices));
+        localStorage.setItem('forexPrices', JSON.stringify(apiPrices));
         localStorage.setItem('lastForexFetch', Date.now().toString());
       } else {
+        setPrices(fallbackPrices);
         setDataSource('fallback');
         setError('Using fallback data - API unavailable');
       }
@@ -150,6 +73,7 @@ export const useForexPrices = () => {
       console.error('Error fetching forex prices:', error);
       setError('Failed to fetch live data');
       setDataSource('fallback');
+      setPrices(fallbackPrices);
     } finally {
       setLoading(false);
     }

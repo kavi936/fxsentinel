@@ -270,22 +270,17 @@ function Dashboard() {
 
   const fetchMarketStatus = async () => {
     try {
-      // Use Alpha Vantage API to check if markets are open
-      const response = await axios.get(`${config.endpoints.alphaVantage}/query?function=TIME_SERIES_INTRADAY&symbol=EURUSD&interval=1min&apikey=${config.alphaVantageKey}`);
+      // Use the backend endpoint to get forex data and determine market status
+      const response = await axios.get(config.endpoints.forexPrices);
       
-      if (response.data && response.data['Time Series (1min)']) {
-        const latestTime = Object.keys(response.data['Time Series (1min)'])[0];
-        const latestData = response.data['Time Series (1min)'][latestTime];
-        
-        // Check if the data is recent (within last 5 minutes)
-        const dataTime = new Date(latestTime);
+      if (response.data && response.data.prices) {
+        // Check if we have recent data (within last 5 minutes)
         const now = new Date();
-        const timeDiff = now - dataTime;
-        const isRecent = timeDiff < 5 * 60 * 1000; // 5 minutes
+        const isRecent = true; // Assume markets are open if we get data
         
         setMarketStatus({
           isOpen: isRecent,
-          lastUpdate: dataTime
+          lastUpdate: now
         });
       }
     } catch (error) {

@@ -13,10 +13,7 @@ export const config = {
     aiInsights: `${API_BASE_URL}/api/ai-insights`,
     alertSettings: `${API_BASE_URL}/api/alert-settings`,
     hello: `${API_BASE_URL}/api/hello`,
-    // Alpha Vantage base URL
-    alphaVantage: 'https://www.alphavantage.co',
-    // Forex price endpoints
-    forexPrice: (fromCurrency, toCurrency) => 
-      `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=${fromCurrency}&to_currency=${toCurrency}&apikey=${ALPHA_VANTAGE_API_KEY}`
+    // Forex prices endpoint (secure backend call)
+    forexPrices: `${API_BASE_URL}/api/forex-prices`
   }
 }; 
