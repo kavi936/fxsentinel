@@ -14,7 +14,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app, origins=['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'], supports_credentials=True)
+
+# Configure CORS to allow requests from Vercel
+CORS(app, origins=[
+    "http://localhost:5173",  # Local development
+    "http://localhost:3000",  # Alternative local port
+    "https://fxsentinel-mau27fc2t-kavis-projects-8cef0d67.vercel.app",  # Your Vercel domain
+    "https://fxsentinel.vercel.app",  # If you have a custom domain
+    "https://*.vercel.app",  # Any Vercel subdomain
+    "https://*.railway.app",  # Any Railway subdomain
+    "https://fxsentinel.com",  # If you have a custom domain
+    "https://www.fxsentinel.com"  # If you have a custom domain
+], methods=["GET", "POST", "OPTIONS"], supports_credentials=True)
 
 # Configure OpenAI (you'll need to set OPENAI_API_KEY environment variable)
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -522,9 +533,17 @@ def alert_settings():
             "settings": settings
         })
 
-@app.route('/api/forex-prices')
+@app.route('/api/forex-prices', methods=['GET', 'OPTIONS'])
 def get_forex_prices():
     """Get real-time forex prices from multiple sources for better accuracy"""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+    
     try:
         # Check rate limits before making API calls
         can_make_call, reason = check_unirate_rate_limits()
@@ -637,9 +656,17 @@ def get_forex_prices():
             'timestamp': datetime.now().isoformat()
         })
 
-@app.route('/api/forex-prices/refresh', methods=['POST'])
+@app.route('/api/forex-prices/refresh', methods=['POST', 'OPTIONS'])
 def refresh_forex_prices():
     """Force refresh forex prices from all available sources"""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+    
     try:
         print("🔄 Manual refresh requested...")
         
