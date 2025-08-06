@@ -7,8 +7,13 @@ const LiveTicker = () => {
 
   // Clear cache on component mount to ensure fresh data
   useEffect(() => {
+    console.log('LiveTicker: Clearing cache and forcing refresh...');
     localStorage.removeItem('forexPrices');
     localStorage.removeItem('lastForexFetch');
+    // Force immediate refresh
+    setTimeout(() => {
+      clearCache();
+    }, 100);
   }, []);
 
   // Debug logging
@@ -56,6 +61,13 @@ const LiveTicker = () => {
         {error && (
           <span className="ticker-error" title={error}>
             ⚠️
+          </span>
+        )}
+        
+        {/* Show data source indicator */}
+        {dataSource && dataSource.includes('fallback') && (
+          <span className="ticker-source" title="Using fallback data - API rate limit exceeded">
+            📊
           </span>
         )}
       </div>

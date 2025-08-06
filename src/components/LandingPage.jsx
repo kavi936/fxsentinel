@@ -338,6 +338,11 @@ const LandingPage = () => {
           
           <div className="footer-bottom">
             <p>&copy; 2024 FXSentinel. All rights reserved.</p>
+            <p className="attribution">
+              <a href="https://unirateapi.com" target="_blank" rel="noopener noreferrer">
+                Exchange Rates By UniRateAPI
+              </a>
+            </p>
           </div>
         </div>
       </footer>

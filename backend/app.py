@@ -8,15 +8,62 @@ import os
 import json
 import time
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, origins=['http://localhost:5173', 'http://localhost:3000', 'http://127.0.0.1:5173'], supports_credentials=True)
 
 # Configure OpenAI (you'll need to set OPENAI_API_KEY environment variable)
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Configure Alpha Vantage API
-ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY', '0J3YYQURDGPOG1WO')
+# Configure UniRateAPI
+UNIRATE_API_KEY = os.getenv('UNIRATE_API_KEY', 'demo')
+
+# UniRateAPI rate limits (30 calls per minute, unlimited daily)
+unirate_api_usage = {
+    'requests': 0,
+    'last_reset': datetime.now().date(),
+    'minute_requests': 0,
+    'last_minute_reset': datetime.now()
+}
+
+def check_unirate_rate_limits():
+    """Check if we can make a UniRateAPI call"""
+    now = datetime.now()
+    today = now.date()
+    
+    # Reset daily counter if it's a new day
+    if unirate_api_usage['last_reset'] != today:
+        unirate_api_usage['requests'] = 0
+        unirate_api_usage['last_reset'] = today
+    
+    # Reset minute counter if it's been more than a minute
+    if (now - unirate_api_usage['last_minute_reset']).seconds >= 60:
+        unirate_api_usage['minute_requests'] = 0
+        unirate_api_usage['last_minute_reset'] = now
+    
+    # Check minute limit (30 calls per minute for UniRateAPI)
+    if unirate_api_usage['minute_requests'] >= 30:
+        return False, "Minute limit exceeded"
+    
+    return True, "OK"
+
+def increment_unirate_usage():
+    """Increment the usage counter for UniRateAPI"""
+    unirate_api_usage['requests'] += 1
+    unirate_api_usage['minute_requests'] += 1
+
+def get_fallback_price(pair_name):
+    """Get fallback price data for a currency pair"""
+    fallback_prices = {
+        'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
+        'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
+        'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
+    }
+    return fallback_prices.get(pair_name, {'price': 1.0, 'change': 0, 'lastUpdate': datetime.now().isoformat()})
 
 def scrape_forexfactory_events():
     """Scrape upcoming economic events from ForexFactory"""
@@ -255,6 +302,37 @@ def health_check():
         "version": "1.0.0"
     })
 
+@app.route('/api/api-status')
+def api_status():
+    """Check UniRateAPI usage status"""
+    now = datetime.now()
+    today = now.date()
+    
+    # Reset counters for new day
+    if unirate_api_usage['last_reset'] != today:
+        unirate_api_usage['requests'] = 0
+        unirate_api_usage['last_reset'] = today
+    
+    # Reset minute counter if needed
+    if (now - unirate_api_usage['last_minute_reset']).seconds >= 60:
+        unirate_api_usage['minute_requests'] = 0
+        unirate_api_usage['last_minute_reset'] = now
+    
+    status = {
+        "provider": "UniRateAPI",
+        "plan": "Free Forever",
+        "daily_requests_used": unirate_api_usage['requests'],
+        "daily_requests_remaining": "unlimited",
+        "minute_requests_used": unirate_api_usage['minute_requests'],
+        "minute_requests_remaining": 30 - unirate_api_usage['minute_requests'],
+        "daily_limit": "unlimited",
+        "minute_limit": 30,
+        "status": "available" if unirate_api_usage['minute_requests'] < 30 else "exhausted",
+        "last_updated": datetime.now().isoformat()
+    }
+    
+    return jsonify(status)
+
 @app.route('/api/trading-data')
 def get_trading_data():
     """Get trading data and market sentiment"""
@@ -420,65 +498,91 @@ def alert_settings():
 
 @app.route('/api/forex-prices')
 def get_forex_prices():
-    """Get real-time forex prices from Alpha Vantage API"""
+    """Get real-time forex prices from UniRateAPI"""
     try:
-        # Define currency pairs to fetch
+        # Check rate limits before making API calls
+        can_make_call, reason = check_unirate_rate_limits()
+        if not can_make_call:
+            print(f"⚠️ Rate limit exceeded: {reason}")
+            # Return fallback data when rate limited
+            return jsonify({
+                'prices': {
+                    'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
+                    'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
+                    'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
+                },
+                'dataSource': 'fallback',
+                'reason': reason,
+                'timestamp': datetime.now().isoformat()
+            })
+        
+        # Define currency pairs to fetch (UniRateAPI format)
+        # Note: We need to get the inverse rates for proper forex pairs
         pairs = [
-            ('EUR', 'USD'),
-            ('USD', 'JPY'),
-            ('GBP', 'USD')
+            ('USD', 'EUR', 'EURUSD'),  # Get USD/EUR rate, then invert for EUR/USD
+            ('USD', 'JPY', 'USDJPY'),  # USD/JPY is correct
+            ('USD', 'GBP', 'GBPUSD')   # Get USD/GBP rate, then invert for GBP/USD
         ]
         
         prices = {}
         
-        for from_currency, to_currency in pairs:
+        for from_currency, to_currency, pair_name in pairs:
             try:
-                url = f"https://www.alphavantage.co/query"
+                # UniRateAPI Forex API endpoint
+                url = "https://api.unirateapi.com/api/convert"
                 params = {
-                    'function': 'CURRENCY_EXCHANGE_RATE',
-                    'from_currency': from_currency,
-                    'to_currency': to_currency,
-                    'apikey': ALPHA_VANTAGE_API_KEY
+                    'api_key': UNIRATE_API_KEY,
+                    'from': from_currency,
+                    'to': to_currency,
+                    'amount': 1  # Get rate for 1 unit
                 }
                 
+                print(f"Fetching {pair_name} from UniRateAPI...")
                 response = requests.get(url, params=params, timeout=10)
                 response.raise_for_status()
                 
                 data = response.json()
                 
-                if 'Realtime Currency Exchange Rate' in data:
-                    exchange_rate = data['Realtime Currency Exchange Rate']
-                    price = float(exchange_rate['5. Exchange Rate'])
-                    last_update = exchange_rate['6. Last Refreshed']
+                # Increment API usage
+                increment_unirate_usage()
+                
+                if 'result' in data and data['result']:
+                    rate = float(data['result'])
                     
-                    pair_name = f"{from_currency}{to_currency}"
+                    # Calculate the correct price based on the pair
+                    if pair_name == 'EURUSD':
+                        # USD/EUR rate is 0.865, so EUR/USD = 1/0.865 = 1.156
+                        price = 1 / rate
+                    elif pair_name == 'GBPUSD':
+                        # USD/GBP rate, so GBP/USD = 1/rate
+                        price = 1 / rate
+                    else:
+                        # USD/JPY is already correct
+                        price = rate
+                    
+                    # Calculate change (we'll use a simple approach for now)
+                    # In a production app, you might want to store previous prices
+                    change = 0  # UniRateAPI doesn't provide change in conversion endpoint
+                    
                     prices[pair_name] = {
                         'price': price,
-                        'change': 0,  # Alpha Vantage doesn't provide change in this endpoint
-                        'lastUpdate': last_update
-                    }
-                else:
-                    # Fallback data if API fails
-                    pair_name = f"{from_currency}{to_currency}"
-                    prices[pair_name] = {
-                        'price': 1.0854 if pair_name == 'EURUSD' else (148.23 if pair_name == 'USDJPY' else 1.2650),
-                        'change': 0,
+                        'change': change,
                         'lastUpdate': datetime.now().isoformat()
                     }
-                    
+                    print(f"✅ Successfully fetched {pair_name}: {price} (from rate: {rate})")
+                else:
+                    print(f"❌ No price data for {pair_name}")
+                    # Use fallback for this pair
+                    prices[pair_name] = get_fallback_price(pair_name)
+                        
             except Exception as e:
-                print(f"Error fetching {from_currency}/{to_currency}: {e}")
-                # Fallback data
-                pair_name = f"{from_currency}{to_currency}"
-                prices[pair_name] = {
-                    'price': 1.0854 if pair_name == 'EURUSD' else (148.23 if pair_name == 'USDJPY' else 1.2650),
-                    'change': 0,
-                    'lastUpdate': datetime.now().isoformat()
-                }
+                print(f"Error fetching {pair_name} from UniRateAPI: {e}")
+                # Use fallback for this pair
+                prices[pair_name] = get_fallback_price(pair_name)
         
         return jsonify({
             'prices': prices,
-            'dataSource': 'API',
+            'dataSource': 'UniRateAPI',
             'timestamp': datetime.now().isoformat()
         })
         
@@ -487,9 +591,9 @@ def get_forex_prices():
         # Return fallback data
         return jsonify({
             'prices': {
-                'EURUSD': {'price': 1.0854, 'change': 0, 'lastUpdate': datetime.now().isoformat()},
-                'USDJPY': {'price': 148.23, 'change': 0, 'lastUpdate': datetime.now().isoformat()},
-                'GBPUSD': {'price': 1.2650, 'change': 0, 'lastUpdate': datetime.now().isoformat()}
+                'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
+                'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
+                'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
             },
             'dataSource': 'fallback',
             'timestamp': datetime.now().isoformat()
@@ -512,4 +616,4 @@ def home():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(debug=True, port=8000) 

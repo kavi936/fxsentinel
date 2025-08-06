@@ -1,10 +1,8 @@
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const ALPHA_VANTAGE_API_KEY = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY || 'demo';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export const config = {
   API_BASE_URL,
-  alphaVantageKey: ALPHA_VANTAGE_API_KEY,
   endpoints: {
     news: `${API_BASE_URL}/api/news`,
     analysis: (id) => `${API_BASE_URL}/api/analysis/${id}`,
