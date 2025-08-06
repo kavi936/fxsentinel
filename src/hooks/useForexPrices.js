@@ -13,6 +13,7 @@ export const useForexPrices = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataSource, setDataSource] = useState('fallback'); // 'API' or 'fallback'
+  const [dataQuality, setDataQuality] = useState(null);
 
   const fetchForexPrices = async () => {
     try {
@@ -28,12 +29,17 @@ export const useForexPrices = () => {
       const data = await response.json();
       console.log('📊 API Response data:', data);
       console.log('💰 Prices received:', data.prices);
+      console.log('📈 Data quality:', data.dataQuality);
       
       if (data.error) {
         throw new Error(data.error);
       }
       
-      return data.prices;
+      return {
+        prices: data.prices,
+        dataSource: data.dataSource,
+        dataQuality: data.dataQuality
+      };
     } catch (error) {
       console.error('Failed to fetch forex prices:', error.message);
       return null;
@@ -58,8 +64,10 @@ export const useForexPrices = () => {
         const cachedData = localStorage.getItem('forexPrices');
         if (cachedData) {
           console.log('Using cached data');
-          setPrices(JSON.parse(cachedData));
-          setDataSource('API (cached)');
+          const parsedData = JSON.parse(cachedData);
+          setPrices(parsedData.prices || parsedData);
+          setDataSource(parsedData.dataSource || 'API (cached)');
+          setDataQuality(parsedData.dataQuality || null);
           setLoading(false);
           return;
         }
@@ -67,19 +75,21 @@ export const useForexPrices = () => {
       
       console.log('Fetching fresh data from API...');
       // Fetch all prices from backend
-      const apiPrices = await fetchForexPrices();
+      const apiData = await fetchForexPrices();
       
-      if (apiPrices) {
-        console.log('API prices received:', apiPrices);
-        setPrices(apiPrices);
-        setDataSource('API');
+      if (apiData) {
+        console.log('API data received:', apiData);
+        setPrices(apiData.prices);
+        setDataSource(apiData.dataSource);
+        setDataQuality(apiData.dataQuality);
         // Cache the data
-        localStorage.setItem('forexPrices', JSON.stringify(apiPrices));
+        localStorage.setItem('forexPrices', JSON.stringify(apiData));
         localStorage.setItem('lastForexFetch', Date.now().toString());
       } else {
         console.log('API failed, using fallback data');
         setPrices(fallbackPrices);
         setDataSource('fallback');
+        setDataQuality(null);
         setError('Using fallback data - API unavailable');
       }
       
@@ -87,6 +97,7 @@ export const useForexPrices = () => {
       console.error('Error fetching forex prices:', error);
       setError('Failed to fetch live data');
       setDataSource('fallback');
+      setDataQuality(null);
       setPrices(fallbackPrices);
     } finally {
       setLoading(false);
@@ -105,7 +116,7 @@ export const useForexPrices = () => {
   const clearCache = () => {
     localStorage.removeItem('forexPrices');
     localStorage.removeItem('lastForexFetch');
-    fetchAllPrices(); // Refresh immediately
+    fetchAllPrices();
   };
 
   return {
@@ -113,7 +124,7 @@ export const useForexPrices = () => {
     loading,
     error,
     dataSource,
-    refreshPrices: fetchAllPrices,
+    dataQuality,
     clearCache
   };
 }; 

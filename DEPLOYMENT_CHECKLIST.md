@@ -3,9 +3,9 @@
 ## ✅ **Pre-Deployment Checks**
 
 ### **1. Backend (Railway)**
-- [x] UniRateAPI integration working locally
-- [x] Currency pair mapping fixed (USD/EUR → EUR/USD)
-- [x] Rate inversion logic implemented
+- [x] TradingView API integration working locally
+- [x] Real-time forex market data implementation
+- [x] Multi-source fallback system in place
 - [x] Error handling and fallback mechanisms in place
 - [x] Environment variables properly configured
 
@@ -27,7 +27,6 @@
 ### **Step 1: Railway Backend**
 1. **Environment Variables to Set:**
    ```
-   UNIRATE_API_KEY=dsTglrlXhkV21st7nexUlLkSpi5RnpckNVmyescuv2FLP0r8cMEosNkdP1iuhKvl
    OPENAI_API_KEY=your_openai_api_key_here
    FLASK_ENV=production
    FLASK_DEBUG=False
@@ -45,7 +44,7 @@
 
 2. **Deploy and Test:**
    - Check live ticker displays real data
-   - Verify attribution link is present
+   - Verify data quality indicators working
    - Test error handling and fallback
 
 ## 🔍 **Post-Deployment Verification**
@@ -54,12 +53,12 @@
 - [ ] Frontend displays real forex prices (not fallback data)
 - [ ] Prices update every 5 minutes
 - [ ] Error states handled gracefully
-- [ ] Attribution link visible in footer
+- [ ] Data quality indicators working
 
 ### **2. API Endpoints Test**
-- [ ] `/api/forex-prices` returns real UniRateAPI data
+- [ ] `/api/forex-prices` returns real TradingView data
 - [ ] `/api/api-status` shows correct usage statistics
-- [ ] Rate limiting working properly
+- [ ] Multi-source fallback working properly
 
 ### **3. Security Verification**
 - [ ] No API keys visible in browser dev tools
@@ -72,8 +71,8 @@
 - **GBP/USD**: ~1.329 (real-time)
 
 ## 🚨 **Troubleshooting**
-- If fallback data shows: Check Railway environment variables
-- If API errors: Check UniRateAPI key validity
+- If fallback data shows: Check TradingView API connectivity
+- If API errors: Check multi-source fallback system
 - If frontend errors: Check Vercel environment variables
 - If CORS issues: Verify Railway CORS configuration
 

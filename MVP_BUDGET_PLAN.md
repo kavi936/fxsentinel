@@ -3,7 +3,7 @@
 ## Updated Monthly Recurring Costs (MRC) – Telegram News Harvesting
 
 ### **Core Monthly Costs**
-- **UniRateAPI Market Data**: $0 (Free forever, unlimited requests, 170+ currencies)
+- **TradingView Market Data**: $0 (Free forever, real-time forex data)
 - **Domain**: $2.92 ($35/year)
 - **Railway Hosting**: $5-10 (assume $8 for planning)
 - **OpenAI API (AI Analysis)**: $10-25 (assume $15 for planning)

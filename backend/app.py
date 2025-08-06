@@ -22,13 +22,39 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 # Configure UniRateAPI
 UNIRATE_API_KEY = os.getenv('UNIRATE_API_KEY', 'demo')
 
-# UniRateAPI rate limits (30 calls per minute, unlimited daily)
+# Global variables for API usage tracking
 unirate_api_usage = {
     'requests': 0,
     'last_reset': datetime.now().date(),
     'minute_requests': 0,
     'last_minute_reset': datetime.now()
 }
+
+# Alpha Vantage key rotation system
+alpha_vantage_keys = [
+    os.getenv('ALPHA_VANTAGE_API_KEY_1'),
+    os.getenv('ALPHA_VANTAGE_API_KEY_2'),
+    os.getenv('ALPHA_VANTAGE_API_KEY_3'),
+    os.getenv('ALPHA_VANTAGE_API_KEY_4')
+]
+
+# Filter out None values (keys not set)
+alpha_vantage_keys = [key for key in alpha_vantage_keys if key]
+
+# Track which key to use next
+current_alpha_vantage_key_index = 0
+
+def get_next_alpha_vantage_key():
+    """Get the next Alpha Vantage API key in rotation"""
+    global current_alpha_vantage_key_index
+    
+    if not alpha_vantage_keys:
+        return None
+    
+    key = alpha_vantage_keys[current_alpha_vantage_key_index]
+    current_alpha_vantage_key_index = (current_alpha_vantage_key_index + 1) % len(alpha_vantage_keys)
+    
+    return key
 
 def check_unirate_rate_limits():
     """Check if we can make a UniRateAPI call"""
@@ -498,7 +524,7 @@ def alert_settings():
 
 @app.route('/api/forex-prices')
 def get_forex_prices():
-    """Get real-time forex prices from UniRateAPI"""
+    """Get real-time forex prices from multiple sources for better accuracy"""
     try:
         # Check rate limits before making API calls
         can_make_call, reason = check_unirate_rate_limits()
@@ -516,74 +542,86 @@ def get_forex_prices():
                 'timestamp': datetime.now().isoformat()
             })
         
-        # Define currency pairs to fetch (UniRateAPI format)
-        # Note: We need to get the inverse rates for proper forex pairs
-        pairs = [
-            ('USD', 'EUR', 'EURUSD'),  # Get USD/EUR rate, then invert for EUR/USD
-            ('USD', 'JPY', 'USDJPY'),  # USD/JPY is correct
-            ('USD', 'GBP', 'GBPUSD')   # Get USD/GBP rate, then invert for GBP/USD
-        ]
-        
+        # Try to get data from multiple sources for better accuracy
         prices = {}
+        data_sources_used = []
         
-        for from_currency, to_currency, pair_name in pairs:
-            try:
-                # UniRateAPI Forex API endpoint
-                url = "https://api.unirateapi.com/api/convert"
-                params = {
-                    'api_key': UNIRATE_API_KEY,
-                    'from': from_currency,
-                    'to': to_currency,
-                    'amount': 1  # Get rate for 1 unit
-                }
-                
-                print(f"Fetching {pair_name} from UniRateAPI...")
-                response = requests.get(url, params=params, timeout=10)
-                response.raise_for_status()
-                
-                data = response.json()
-                
-                # Increment API usage
-                increment_unirate_usage()
-                
-                if 'result' in data and data['result']:
-                    rate = float(data['result'])
-                    
-                    # Calculate the correct price based on the pair
-                    if pair_name == 'EURUSD':
-                        # USD/EUR rate is 0.865, so EUR/USD = 1/0.865 = 1.156
-                        price = 1 / rate
-                    elif pair_name == 'GBPUSD':
-                        # USD/GBP rate, so GBP/USD = 1/rate
-                        price = 1 / rate
-                    else:
-                        # USD/JPY is already correct
-                        price = rate
-                    
-                    # Calculate change (we'll use a simple approach for now)
-                    # In a production app, you might want to store previous prices
-                    change = 0  # UniRateAPI doesn't provide change in conversion endpoint
-                    
-                    prices[pair_name] = {
-                        'price': price,
-                        'change': change,
-                        'lastUpdate': datetime.now().isoformat()
-                    }
-                    print(f"✅ Successfully fetched {pair_name}: {price} (from rate: {rate})")
-                else:
-                    print(f"❌ No price data for {pair_name}")
-                    # Use fallback for this pair
-                    prices[pair_name] = get_fallback_price(pair_name)
-                        
-            except Exception as e:
-                print(f"Error fetching {pair_name} from UniRateAPI: {e}")
-                # Use fallback for this pair
-                prices[pair_name] = get_fallback_price(pair_name)
+        # Source 1: TradingView API (real-time forex market data)
+        try:
+            tradingview_prices = get_tradingview_prices()
+            if tradingview_prices:
+                prices.update(tradingview_prices)
+                data_sources_used.append('TradingView')
+                print("✅ Successfully fetched data from TradingView")
+        except Exception as e:
+            print(f"❌ TradingView failed: {e}")
+        
+        # Source 2: Alpha Vantage (if keys are configured)
+        try:
+            alpha_prices = get_alpha_vantage_prices()
+            if alpha_prices:
+                # Use Alpha Vantage data for any missing pairs
+                for pair, data in alpha_prices.items():
+                    if pair not in prices:
+                        prices[pair] = data
+                data_sources_used.append('AlphaVantage')
+                print("✅ Successfully fetched data from Alpha Vantage")
+        except Exception as e:
+            print(f"❌ Alpha Vantage failed: {e}")
+        
+        # Source 3: UniRateAPI (exchange rates)
+        try:
+            unirate_prices = get_unirate_prices()
+            if unirate_prices:
+                # Use UniRateAPI data for any missing pairs
+                for pair, data in unirate_prices.items():
+                    if pair not in prices:
+                        prices[pair] = data
+                data_sources_used.append('UniRateAPI')
+                print("✅ Successfully fetched data from UniRateAPI")
+        except Exception as e:
+            print(f"❌ UniRateAPI failed: {e}")
+        
+        # Source 4: ExchangeRateAPI as fallback
+        try:
+            exchange_prices = get_exchange_rate_prices()
+            if exchange_prices:
+                # Use ExchangeRateAPI data for any missing pairs
+                for pair, data in exchange_prices.items():
+                    if pair not in prices:
+                        prices[pair] = data
+                data_sources_used.append('ExchangeRateAPI')
+                print("✅ Successfully fetched data from ExchangeRateAPI")
+        except Exception as e:
+            print(f"❌ ExchangeRateAPI failed: {e}")
+        
+        # If we still don't have all pairs, use fallback
+        required_pairs = ['EURUSD', 'USDJPY', 'GBPUSD']
+        for pair in required_pairs:
+            if pair not in prices:
+                prices[pair] = get_fallback_price(pair)
+                data_sources_used.append('fallback')
+        
+        # Add data freshness information
+        for pair in prices:
+            if 'lastUpdate' in prices[pair]:
+                try:
+                    last_update = datetime.fromisoformat(prices[pair]['lastUpdate'].replace('Z', '+00:00'))
+                    age_minutes = (datetime.now(last_update.tzinfo) - last_update).total_seconds() / 60
+                    prices[pair]['dataAgeMinutes'] = round(age_minutes, 1)
+                    prices[pair]['isStale'] = age_minutes > 5  # Consider data stale after 5 minutes
+                except:
+                    prices[pair]['dataAgeMinutes'] = None
+                    prices[pair]['isStale'] = True
         
         return jsonify({
             'prices': prices,
-            'dataSource': 'UniRateAPI',
-            'timestamp': datetime.now().isoformat()
+            'dataSource': ' + '.join(data_sources_used) if data_sources_used else 'fallback',
+            'timestamp': datetime.now().isoformat(),
+            'dataQuality': {
+                'hasStaleData': any(p.get('isStale', False) for p in prices.values()),
+                'averageAgeMinutes': sum(p.get('dataAgeMinutes', 0) for p in prices.values()) / len(prices) if prices else 0
+            }
         })
         
     except Exception as e:
@@ -598,6 +636,480 @@ def get_forex_prices():
             'dataSource': 'fallback',
             'timestamp': datetime.now().isoformat()
         })
+
+@app.route('/api/forex-prices/refresh', methods=['POST'])
+def refresh_forex_prices():
+    """Force refresh forex prices from all available sources"""
+    try:
+        print("🔄 Manual refresh requested...")
+        
+        # Clear any cached data
+        # Reset rate limit counters to allow fresh API calls
+        global unirate_api_usage
+        unirate_api_usage['minute_requests'] = 0
+        unirate_api_usage['last_minute_reset'] = datetime.now()
+        
+        # Get fresh data
+        prices = {}
+        data_sources_used = []
+        
+        # Try TradingView first (real-time forex market data)
+        try:
+            tradingview_prices = get_tradingview_prices()
+            if tradingview_prices:
+                prices.update(tradingview_prices)
+                data_sources_used.append('TradingView')
+                print("✅ Successfully fetched data from TradingView")
+        except Exception as e:
+            print(f"❌ TradingView failed: {e}")
+        
+        # Try Alpha Vantage second
+        try:
+            alpha_prices = get_alpha_vantage_prices()
+            if alpha_prices:
+                # Use Alpha Vantage data for any missing pairs
+                for pair, data in alpha_prices.items():
+                    if pair not in prices:
+                        prices[pair] = data
+                data_sources_used.append('AlphaVantage')
+                print("✅ Successfully fetched data from Alpha Vantage")
+        except Exception as e:
+            print(f"❌ Alpha Vantage failed: {e}")
+        
+        # Try UniRateAPI third
+        try:
+            unirate_prices = get_unirate_prices()
+            if unirate_prices:
+                # Use UniRateAPI data for any missing pairs
+                for pair, data in unirate_prices.items():
+                    if pair not in prices:
+                        prices[pair] = data
+                data_sources_used.append('UniRateAPI')
+                print("✅ Successfully fetched data from UniRateAPI")
+        except Exception as e:
+            print(f"❌ UniRateAPI failed: {e}")
+        
+        # Try ExchangeRateAPI as fallback
+        try:
+            exchange_prices = get_exchange_rate_prices()
+            if exchange_prices:
+                # Use ExchangeRateAPI data for any missing pairs
+                for pair, data in exchange_prices.items():
+                    if pair not in prices:
+                        prices[pair] = data
+                data_sources_used.append('ExchangeRateAPI')
+                print("✅ Successfully fetched data from ExchangeRateAPI")
+        except Exception as e:
+            print(f"❌ ExchangeRateAPI failed: {e}")
+        
+        # Fill any missing pairs with fallback data
+        required_pairs = ['EURUSD', 'USDJPY', 'GBPUSD']
+        for pair in required_pairs:
+            if pair not in prices:
+                prices[pair] = get_fallback_price(pair)
+                data_sources_used.append('fallback')
+        
+        # Add data freshness information
+        for pair in prices:
+            if 'lastUpdate' in prices[pair]:
+                try:
+                    last_update = datetime.fromisoformat(prices[pair]['lastUpdate'].replace('Z', '+00:00'))
+                    age_minutes = (datetime.now(last_update.tzinfo) - last_update).total_seconds() / 60
+                    prices[pair]['dataAgeMinutes'] = round(age_minutes, 1)
+                    prices[pair]['isStale'] = age_minutes > 5
+                except:
+                    prices[pair]['dataAgeMinutes'] = None
+                    prices[pair]['isStale'] = True
+        
+        return jsonify({
+            'prices': prices,
+            'dataSource': ' + '.join(data_sources_used) if data_sources_used else 'fallback',
+            'timestamp': datetime.now().isoformat(),
+            'dataQuality': {
+                'hasStaleData': any(p.get('isStale', False) for p in prices.values()),
+                'averageAgeMinutes': sum(p.get('dataAgeMinutes', 0) for p in prices.values()) / len(prices) if prices else 0
+            },
+            'message': 'Data refreshed successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error in manual refresh: {e}")
+        return jsonify({
+            'error': 'Failed to refresh data',
+            'message': str(e)
+        }), 500
+
+def get_unirate_prices():
+    """Get prices from UniRateAPI"""
+    pairs = [
+        ('USD', 'EUR', 'EURUSD'),
+        ('USD', 'JPY', 'USDJPY'),
+        ('USD', 'GBP', 'GBPUSD')
+    ]
+    
+    prices = {}
+    
+    for from_currency, to_currency, pair_name in pairs:
+        try:
+            url = "https://api.unirateapi.com/api/convert"
+            params = {
+                'api_key': UNIRATE_API_KEY,
+                'from': from_currency,
+                'to': to_currency,
+                'amount': 1
+            }
+            
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            increment_unirate_usage()
+            
+            if 'result' in data and data['result']:
+                rate = float(data['result'])
+                
+                # Calculate the correct price based on the pair
+                if pair_name == 'EURUSD':
+                    price = 1 / rate
+                elif pair_name == 'GBPUSD':
+                    price = 1 / rate
+                else:
+                    price = rate
+                
+                prices[pair_name] = {
+                    'price': price,
+                    'change': 0,  # UniRateAPI doesn't provide change
+                    'lastUpdate': datetime.now().isoformat(),
+                    'source': 'UniRateAPI'
+                }
+                
+        except Exception as e:
+            print(f"Error fetching {pair_name} from UniRateAPI: {e}")
+    
+    return prices
+
+def get_current_forex_prices():
+    """Get current forex prices from a free API source"""
+    try:
+        # Try using a free forex API that provides real-time data
+        # Using Alpha Vantage API (free tier) for more accurate forex data
+        alpha_vantage_key = get_next_alpha_vantage_key()
+        
+        if alpha_vantage_key:
+            prices = {}
+            
+            # Fetch EUR/USD
+            try:
+                url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey={alpha_vantage_key}"
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                
+                if 'Realtime Currency Exchange Rate' in data:
+                    rate_data = data['Realtime Currency Exchange Rate']
+                    if '5. Exchange Rate' in rate_data:
+                        eur_usd_rate = float(rate_data['5. Exchange Rate'])
+                        prices['EURUSD'] = {
+                            'price': eur_usd_rate,
+                            'change': 0,
+                            'lastUpdate': datetime.now().isoformat(),
+                            'source': 'AlphaVantage'
+                        }
+            except Exception as e:
+                print(f"Error fetching EUR/USD from Alpha Vantage: {e}")
+            
+            # Fetch USD/JPY
+            try:
+                url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=JPY&apikey={alpha_vantage_key}"
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                
+                if 'Realtime Currency Exchange Rate' in data:
+                    rate_data = data['Realtime Currency Exchange Rate']
+                    if '5. Exchange Rate' in rate_data:
+                        usd_jpy_rate = float(rate_data['5. Exchange Rate'])
+                        prices['USDJPY'] = {
+                            'price': usd_jpy_rate,
+                            'change': 0,
+                            'lastUpdate': datetime.now().isoformat(),
+                            'source': 'AlphaVantage'
+                        }
+            except Exception as e:
+                print(f"Error fetching USD/JPY from Alpha Vantage: {e}")
+            
+            # Fetch GBP/USD
+            try:
+                url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=GBP&to_currency=USD&apikey={alpha_vantage_key}"
+                response = requests.get(url, timeout=10)
+                response.raise_for_status()
+                data = response.json()
+                
+                if 'Realtime Currency Exchange Rate' in data:
+                    rate_data = data['Realtime Currency Exchange Rate']
+                    if '5. Exchange Rate' in rate_data:
+                        gbp_usd_rate = float(rate_data['5. Exchange Rate'])
+                        prices['GBPUSD'] = {
+                            'price': gbp_usd_rate,
+                            'change': 0,
+                            'lastUpdate': datetime.now().isoformat(),
+                            'source': 'AlphaVantage'
+                        }
+            except Exception as e:
+                print(f"Error fetching GBP/USD from Alpha Vantage: {e}")
+            
+            if prices:
+                return prices
+        
+        # Fallback to ExchangeRateAPI if Alpha Vantage is not available
+        url = "https://api.exchangerate-api.com/v4/latest/USD"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if 'rates' in data and 'time_last_updated' in data:
+            rates = data['rates']
+            last_update = datetime.fromtimestamp(data['time_last_updated'])
+            
+            prices = {}
+            
+            # EUR/USD
+            if 'EUR' in rates:
+                prices['EURUSD'] = {
+                    'price': rates['EUR'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI'
+                }
+            
+            # USD/JPY
+            if 'JPY' in rates:
+                prices['USDJPY'] = {
+                    'price': rates['JPY'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI'
+                }
+            
+            # GBP/USD
+            if 'GBP' in rates:
+                prices['GBPUSD'] = {
+                    'price': rates['GBP'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI'
+                }
+            
+            return prices
+            
+    except Exception as e:
+        print(f"Error fetching from forex APIs: {e}")
+    
+    return None
+
+def is_data_fresher(new_data, old_data):
+    """Check if new data is fresher than old data"""
+    try:
+        new_time = datetime.fromisoformat(new_data['lastUpdate'].replace('Z', '+00:00'))
+        old_time = datetime.fromisoformat(old_data['lastUpdate'].replace('Z', '+00:00'))
+        return new_time > old_time
+    except:
+        return False
+
+def get_alpha_vantage_prices():
+    """Get prices from Alpha Vantage API using key rotation"""
+    prices = {}
+    
+    # Get the next key in rotation
+    api_key = get_next_alpha_vantage_key()
+    
+    if not api_key:
+        print("No Alpha Vantage API keys configured")
+        return None
+    
+    print(f"Using Alpha Vantage key: {api_key[:8]}...")
+    
+    # Fetch EUR/USD
+    try:
+        url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=EUR&to_currency=USD&apikey={api_key}"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        if 'Realtime Currency Exchange Rate' in data:
+            rate_data = data['Realtime Currency Exchange Rate']
+            if '5. Exchange Rate' in rate_data:
+                eur_usd_rate = float(rate_data['5. Exchange Rate'])
+                prices['EURUSD'] = {
+                    'price': eur_usd_rate,
+                    'change': 0,
+                    'lastUpdate': datetime.now().isoformat(),
+                    'source': 'AlphaVantage'
+                }
+                print(f"✅ EUR/USD: {eur_usd_rate}")
+    except Exception as e:
+        print(f"Error fetching EUR/USD from Alpha Vantage: {e}")
+    
+    # Fetch USD/JPY
+    try:
+        url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=JPY&apikey={api_key}"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        if 'Realtime Currency Exchange Rate' in data:
+            rate_data = data['Realtime Currency Exchange Rate']
+            if '5. Exchange Rate' in rate_data:
+                usd_jpy_rate = float(rate_data['5. Exchange Rate'])
+                prices['USDJPY'] = {
+                    'price': usd_jpy_rate,
+                    'change': 0,
+                    'lastUpdate': datetime.now().isoformat(),
+                    'source': 'AlphaVantage'
+                }
+                print(f"✅ USD/JPY: {usd_jpy_rate}")
+    except Exception as e:
+        print(f"Error fetching USD/JPY from Alpha Vantage: {e}")
+    
+    # Fetch GBP/USD
+    try:
+        url = f"https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=GBP&to_currency=USD&apikey={api_key}"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        
+        if 'Realtime Currency Exchange Rate' in data:
+            rate_data = data['Realtime Currency Exchange Rate']
+            if '5. Exchange Rate' in rate_data:
+                gbp_usd_rate = float(rate_data['5. Exchange Rate'])
+                prices['GBPUSD'] = {
+                    'price': gbp_usd_rate,
+                    'change': 0,
+                    'lastUpdate': datetime.now().isoformat(),
+                    'source': 'AlphaVantage'
+                }
+                print(f"✅ GBP/USD: {gbp_usd_rate}")
+    except Exception as e:
+        print(f"Error fetching GBP/USD from Alpha Vantage: {e}")
+    
+    return prices
+
+def get_exchange_rate_prices():
+    """Get prices from ExchangeRateAPI"""
+    try:
+        url = "https://api.exchangerate-api.com/v4/latest/USD"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        
+        if 'rates' in data and 'time_last_updated' in data:
+            rates = data['rates']
+            last_update = datetime.fromtimestamp(data['time_last_updated'])
+            
+            prices = {}
+            
+            # EUR/USD
+            if 'EUR' in rates:
+                prices['EURUSD'] = {
+                    'price': rates['EUR'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI'
+                }
+            
+            # USD/JPY
+            if 'JPY' in rates:
+                prices['USDJPY'] = {
+                    'price': rates['JPY'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI'
+                }
+            
+            # GBP/USD
+            if 'GBP' in rates:
+                prices['GBPUSD'] = {
+                    'price': rates['GBP'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI'
+                }
+            
+            return prices
+            
+    except Exception as e:
+        print(f"Error fetching from ExchangeRateAPI: {e}")
+    
+    return None
+
+def get_tradingview_prices():
+    """Get real-time forex prices from TradingView API"""
+    try:
+        url = "https://scanner.tradingview.com/forex/scan"
+        headers = {
+            "Content-Type": "application/json"
+        }
+        data = {
+            "symbols": {
+                "tickers": ["FX:EURUSD", "FX:USDJPY", "FX:GBPUSD"]
+            },
+            "columns": ["close", "change", "change_abs"]
+        }
+        
+        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response.raise_for_status()
+        
+        result = response.json()
+        
+        if 'data' in result and result['data']:
+            prices = {}
+            
+            for item in result['data']:
+                symbol = item['s']
+                values = item['d']
+                
+                if len(values) >= 3:
+                    price = values[0]  # close price
+                    change_percent = values[1]  # change percentage
+                    change_abs = values[2]  # absolute change
+                    
+                    if symbol == "FX:EURUSD":
+                        prices['EURUSD'] = {
+                            'price': price,
+                            'change': change_abs,
+                            'changePercent': change_percent,
+                            'lastUpdate': datetime.now().isoformat(),
+                            'source': 'TradingView'
+                        }
+                    elif symbol == "FX:USDJPY":
+                        prices['USDJPY'] = {
+                            'price': price,
+                            'change': change_abs,
+                            'changePercent': change_percent,
+                            'lastUpdate': datetime.now().isoformat(),
+                            'source': 'TradingView'
+                        }
+                    elif symbol == "FX:GBPUSD":
+                        prices['GBPUSD'] = {
+                            'price': price,
+                            'change': change_abs,
+                            'changePercent': change_percent,
+                            'lastUpdate': datetime.now().isoformat(),
+                            'source': 'TradingView'
+                        }
+            
+            if prices:
+                print("✅ Successfully fetched data from TradingView")
+                for pair, data in prices.items():
+                    print(f"   {pair}: {data['price']} (change: {data['change']})")
+                return prices
+                
+    except Exception as e:
+        print(f"Error fetching from TradingView: {e}")
+    
+    return None
 
 @app.route('/')
 def home():
