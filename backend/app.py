@@ -19,13 +19,25 @@ app = Flask(__name__)
 CORS(app, origins=[
     "http://localhost:5173",  # Local development
     "http://localhost:3000",  # Alternative local port
-    "https://fxsentinel-mau27fc2t-kavis-projects-8cef0d67.vercel.app",  # Your Vercel domain
-    "https://fxsentinel.vercel.app",  # If you have a custom domain
-    "https://*.vercel.app",  # Any Vercel subdomain
-    "https://*.railway.app",  # Any Railway subdomain
-    "https://fxsentinel.com",  # If you have a custom domain
-    "https://www.fxsentinel.com"  # If you have a custom domain
+    "https://fxsentinel.io",  # Your custom domain
+    "https://www.fxsentinel.io",  # Your custom domain with www
+    "https://*.vercel.app",  # Any Vercel subdomain (for preview deployments)
+    "https://*.railway.app"  # Any Railway subdomain
 ], methods=["GET", "POST", "OPTIONS"], supports_credentials=True)
+
+# Add CORS headers to all responses
+@app.after_request
+def after_request(response):
+    origin = request.headers.get('Origin')
+    if origin and (origin.startswith('https://fxsentinel.io') or 
+                   origin.startswith('https://www.fxsentinel.io') or
+                   origin.endswith('.vercel.app') or
+                   origin.endswith('.railway.app') or
+                   origin.startswith('http://localhost')):
+        response.headers.add('Access-Control-Allow-Origin', origin)
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
 # Configure OpenAI (you'll need to set OPENAI_API_KEY environment variable)
 openai.api_key = os.getenv('OPENAI_API_KEY')
