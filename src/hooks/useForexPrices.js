@@ -4,8 +4,20 @@ import { config } from '../config';
 // Fallback data in case API fails
 const fallbackPrices = {
   EURUSD: { price: 1.0923, change: 0.0012, lastUpdate: new Date() },
+  GBPUSD: { price: 1.2712, change: -0.0020, lastUpdate: new Date() },
   USDJPY: { price: 147.85, change: -0.08, lastUpdate: new Date() },
-  GBPUSD: { price: 1.2712, change: -0.0020, lastUpdate: new Date() } // Replaced Gold with GBP/USD
+  USDCHF: { price: 0.8845, change: 0.0015, lastUpdate: new Date() },
+  AUDUSD: { price: 0.6623, change: -0.0018, lastUpdate: new Date() },
+  USDCAD: { price: 1.3542, change: 0.0021, lastUpdate: new Date() },
+  NZDUSD: { price: 0.6128, change: -0.0012, lastUpdate: new Date() },
+  EURGBP: { price: 0.8598, change: 0.0015, lastUpdate: new Date() },
+  EURJPY: { price: 161.45, change: -0.12, lastUpdate: new Date() },
+  GBPJPY: { price: 187.82, change: -0.25, lastUpdate: new Date() },
+  USDSEK: { price: 10.456, change: 0.023, lastUpdate: new Date() },
+  USDNOK: { price: 10.823, change: 0.031, lastUpdate: new Date() },
+  USDHKD: { price: 7.8234, change: 0.015, lastUpdate: new Date() },
+  EURCHF: { price: 0.9665, change: 0.0028, lastUpdate: new Date() },
+  GBPCHF: { price: 1.1234, change: 0.0019, lastUpdate: new Date() }
 };
 
 export const useForexPrices = () => {

@@ -6,21 +6,21 @@ import { config } from '../config';
 import './Dashboard.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import Overview from './Overview';
+import Markets from './Markets';
+import Alerts from './Alerts';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedNews, setSelectedNews] = useState(null);
-  const [analysis, setAnalysis] = useState(null);
-  const [analysisLoading, setAnalysisLoading] = useState(false);
   const [dataSource, setDataSource] = useState('');
   const [lastUpdated, setLastUpdated] = useState('');
   const [error, setError] = useState(null);
   
   // New state for enhanced features
-  const [activeTab, setActiveTab] = useState('news');
+  const [activeTab, setActiveTab] = useState('overview');
   const [alerts, setAlerts] = useState([]);
   const [alertStats, setAlertStats] = useState({});
   const [tradingData, setTradingData] = useState({});
@@ -35,7 +35,12 @@ function Dashboard() {
   
   // Enhanced navbar state
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [marketStatus, setMarketStatus] = useState({ isOpen: true, lastUpdate: new Date() });
+  const [marketStatus, setMarketStatus] = useState({ 
+    isOpen: false, 
+    lastUpdate: new Date(),
+    activeSessions: [],
+    nextSession: null
+  });
 
   // Fetch news data on mount
   useEffect(() => {
@@ -69,30 +74,93 @@ function Dashboard() {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get(config.endpoints.news);
+      
+      // Add timeout to API call
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const response = await axios.get(config.endpoints.news, {
+        signal: controller.signal,
+        timeout: 5000
+      });
+      
+      clearTimeout(timeoutId);
       setNews(response.data.news);
       setDataSource(response.data.source || 'API');
       setLastUpdated(response.data.last_updated);
       setLoading(false);
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('Error fetching news:', error);
-      setError('Failed to load news data. Please try again.');
+      
+      if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+        setError('Request timed out. Using fallback data.');
+        // Load fallback data immediately
+        setNews([
+          {
+            id: 1,
+            title: "US Non-Farm Payrolls",
+            description: "Employment data release expected to show strong job growth",
+            impact: "High",
+            date: "2024-01-15",
+            time: "08:30 EST",
+            currency: "USD",
+            pairs: ["EUR/USD", "USD/JPY"],
+            expected: "180K",
+            previous: "173K"
+          },
+          {
+            id: 2,
+            title: "ECB Interest Rate Decision",
+            description: "European Central Bank expected to maintain current rates",
+            impact: "Medium",
+            date: "2024-01-16",
+            time: "12:45 CET",
+            currency: "EUR",
+            pairs: ["EUR/USD", "EUR/GBP"],
+            expected: "4.50%",
+            previous: "4.50%"
+          }
+        ]);
+        setDataSource('Fallback Data');
+        setLastUpdated(new Date().toISOString());
+      } else {
+        setError('Failed to load news data. Using fallback data.');
+        // Same fallback data
+        setNews([
+          {
+            id: 1,
+            title: "US Non-Farm Payrolls",
+            description: "Employment data release expected to show strong job growth",
+            impact: "High",
+            date: "2024-01-15",
+            time: "08:30 EST",
+            currency: "USD",
+            pairs: ["EUR/USD", "USD/JPY"],
+            expected: "180K",
+            previous: "173K"
+          },
+          {
+            id: 2,
+            title: "ECB Interest Rate Decision",
+            description: "European Central Bank expected to maintain current rates",
+            impact: "Medium",
+            date: "2024-01-16",
+            time: "12:45 CET",
+            currency: "EUR",
+            pairs: ["EUR/USD", "EUR/GBP"],
+            expected: "4.50%",
+            previous: "4.50%"
+          }
+        ]);
+        setDataSource('Fallback Data');
+        setLastUpdated(new Date().toISOString());
+      }
       setLoading(false);
     }
   };
 
-  const fetchAnalysis = async (newsId) => {
-    try {
-      setAnalysisLoading(true);
-      const response = await axios.get(config.endpoints.analysis(newsId));
-      setAnalysis(response.data);
-      setAnalysisLoading(false);
-    } catch (error) {
-      console.error('Error fetching analysis:', error);
-      setAnalysisLoading(false);
-      setError('Failed to generate analysis. Please try again.');
-    }
-  };
+
 
   const fetchTradingData = async () => {
     try {
@@ -195,34 +263,7 @@ function Dashboard() {
     }
   };
 
-  const handleNewsClick = (newsItem) => {
-    setSelectedNews(newsItem);
-    setAnalysis(null); // Clear previous analysis
-    fetchAnalysis(newsItem.id);
-  };
 
-  const getImpactColor = (impact) => {
-    switch (impact) {
-      case 'High': return '#ff4444';
-      case 'Medium': return '#ffaa00';
-      case 'Low': return '#00cc44';
-      default: return '#666666';
-    }
-  };
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  const formatTime = (timeStr) => {
-    if (!timeStr) return 'TBD';
-    return timeStr;
-  };
 
   const refreshData = () => {
     fetchNews();
@@ -268,6 +309,142 @@ function Dashboard() {
     }
   };
 
+  const getTradingSessions = () => {
+    const now = new Date();
+    const utcHour = now.getUTCHours();
+    const utcDay = now.getUTCDay();
+    
+    // Check if it's weekend (Saturday = 6, Sunday = 0)
+    const isWeekend = utcDay === 0 || utcDay === 6;
+    
+    // Check for major holidays when forex markets are typically closed
+    const utcMonth = now.getUTCMonth();
+    const utcDate = now.getUTCDate();
+    
+    // Major holidays (simplified list - forex markets may have different schedules)
+    const isHoliday = (
+      // New Year's Day (January 1)
+      (utcMonth === 0 && utcDate === 1) ||
+      // Christmas Day (December 25)
+      (utcMonth === 11 && utcDate === 25) ||
+      // Boxing Day (December 26) - some markets
+      (utcMonth === 11 && utcDate === 26)
+    );
+    
+    // If it's weekend or holiday, no active sessions
+    if (isWeekend || isHoliday) {
+      // Find the next session for Monday (or next business day)
+      const nextBusinessDay = new Date(now);
+      let daysToAdd = 1;
+      
+      if (isWeekend) {
+        daysToAdd = utcDay === 0 ? 1 : 2; // Sunday = 0, Saturday = 6
+      }
+      
+      nextBusinessDay.setUTCDate(nextBusinessDay.getUTCDate() + daysToAdd);
+      nextBusinessDay.setUTCHours(22, 0, 0, 0); // Sydney opens at 22:00 UTC
+      
+      const reason = isWeekend ? 'weekend' : 'holiday';
+      
+      return { 
+        activeSessions: [], 
+        nextSession: { 
+          name: 'Sydney', 
+          start: 22, 
+          end: 7, 
+          timezone: 'AEST', 
+          color: '#4CAF50', 
+          localStart: 22, 
+          localEnd: 7,
+          nextOpen: nextBusinessDay,
+          reason: reason
+        } 
+      };
+    }
+    
+    // Trading session times (UTC) - only active on weekdays
+    const sessions = [
+      { name: 'Sydney', start: 22, end: 7, timezone: 'AEST', color: '#4CAF50', localStart: 22, localEnd: 7 },
+      { name: 'Tokyo', start: 0, end: 9, timezone: 'JST', color: '#2196F3', localStart: 0, localEnd: 9 },
+      { name: 'London', start: 8, end: 17, timezone: 'GMT', color: '#FF9800', localStart: 8, localEnd: 17 },
+      { name: 'New York', start: 13, end: 22, timezone: 'EST', color: '#9C27B0', localStart: 13, localEnd: 22 }
+    ];
+    
+    const activeSessions = [];
+    let nextSession = null;
+    
+    sessions.forEach(session => {
+      let isActive = false;
+      
+      if (session.start <= session.end) {
+        // Same day session (e.g., London 8-17)
+        isActive = utcHour >= session.start && utcHour < session.end;
+      } else {
+        // Overnight session (e.g., Sydney 22-7)
+        isActive = utcHour >= session.start || utcHour < session.end;
+      }
+      
+      if (isActive) {
+        activeSessions.push(session);
+      } else {
+        // Find next session
+        if (!nextSession) {
+          if (utcHour < session.start) {
+            nextSession = session;
+          } else if (session.start <= session.end && utcHour >= session.end) {
+            nextSession = session;
+          }
+        }
+      }
+    });
+    
+    // If no next session found, get the first one for tomorrow
+    if (!nextSession && activeSessions.length === 0) {
+      nextSession = sessions[0];
+    }
+    
+    return { activeSessions, nextSession };
+  };
+
+  const getTimeUntilNextSession = (nextSession) => {
+    if (!nextSession) return null;
+    
+    // If it's a weekend and we have nextOpen time
+    if (nextSession.nextOpen) {
+      const now = new Date();
+      const timeDiff = nextSession.nextOpen - now;
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      
+      if (days > 0) {
+        return `${days}d ${hours}h`;
+      } else {
+        return `${hours}h`;
+      }
+    }
+    
+    const now = new Date();
+    const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+    
+    let nextSessionTime = new Date(utcNow);
+    nextSessionTime.setUTCHours(nextSession.start, 0, 0, 0);
+    
+    // If the session time has passed today, get it for tomorrow
+    if (nextSessionTime <= utcNow) {
+      nextSessionTime.setUTCDate(nextSessionTime.getUTCDate() + 1);
+    }
+    
+    const timeDiff = nextSessionTime - utcNow;
+    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    } else {
+      return `${minutes}m`;
+    }
+  };
+
   const fetchMarketStatus = async () => {
     try {
       // Use the backend endpoint to get forex data and determine market status
@@ -278,22 +455,41 @@ function Dashboard() {
         const now = new Date();
         const isRecent = true; // Assume markets are open if we get data
         
+        const { activeSessions, nextSession } = getTradingSessions();
+        
         setMarketStatus({
-          isOpen: isRecent,
-          lastUpdate: now
+          isOpen: isRecent && activeSessions.length > 0,
+          lastUpdate: now,
+          activeSessions,
+          nextSession
         });
       }
     } catch (error) {
       console.error('Error fetching market status:', error);
-      // Fallback to checking if it's during market hours (simplified)
+      // Fallback to proper market hours checking
       const now = new Date();
-      const hour = now.getHours();
-      const isWeekend = now.getDay() === 0 || now.getDay() === 6;
-      const isMarketHours = !isWeekend && hour >= 8 && hour < 20; // Simplified market hours
+      const { activeSessions, nextSession } = getTradingSessions();
       
+      // Check if it's weekend (Saturday = 6, Sunday = 0)
+      const isWeekend = now.getUTCDay() === 0 || now.getUTCDay() === 6;
+      
+      // Markets are closed on weekends
+      if (isWeekend) {
+        setMarketStatus({
+          isOpen: false,
+          lastUpdate: now,
+          activeSessions: [],
+          nextSession: nextSession
+        });
+        return;
+      }
+      
+      // For weekdays, check if there are active sessions
       setMarketStatus({
-        isOpen: isMarketHours,
-        lastUpdate: now
+        isOpen: activeSessions.length > 0,
+        lastUpdate: now,
+        activeSessions,
+        nextSession
       });
     }
   };
@@ -306,7 +502,10 @@ function Dashboard() {
     const minutes = String(currentTime.getMinutes()).padStart(2, '0');
     const seconds = String(currentTime.getSeconds()).padStart(2, '0');
     
-    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+    return {
+      date: `${day}/${month}/${year}`,
+      time: `${hours}:${minutes}:${seconds}`
+    };
   };
 
   const getUserDisplayName = () => {
@@ -343,7 +542,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="dashboard">
+    <div className={`dashboard ${activeTab === 'overview' ? 'overview-active' : ''}`}>
       {/* Compact Static Navbar */}
       <nav className="dashboard-navbar">
         <div className="navbar-container">
@@ -361,31 +560,31 @@ function Dashboard() {
             <div className="welcome-message">
               Welcome, <span className="username">{getUserDisplayName()}</span>
             </div>
-            <div className="live-time">
-              <span className="date-section">{formatCurrentTime().split(' ')[0]}</span>
-              <span className="time-section">{formatCurrentTime().split(' ')[1]}</span>
-            </div>
+            <button className="datetime-btn">
+              <div className="date-section">{formatCurrentTime().date}</div>
+              <div className="time-section">{formatCurrentTime().time}</div>
+            </button>
           </div>
           
           <div className="navbar-center">
             <div className="navbar-tabs">
               <button 
-                className={`nav-tab ${activeTab === 'news' ? 'active' : ''}`}
-                onClick={() => setActiveTab('news')}
+                className={`nav-tab ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
               >
-                News & Analysis
+                Overview
+              </button>
+              <button 
+                className={`nav-tab ${activeTab === 'markets' ? 'active' : ''}`}
+                onClick={() => setActiveTab('markets')}
+              >
+                Markets
               </button>
               <button 
                 className={`nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
                 onClick={() => setActiveTab('alerts')}
               >
-                Alert Management
-              </button>
-              <button 
-                className={`nav-tab ${activeTab === 'trading' ? 'active' : ''}`}
-                onClick={() => setActiveTab('trading')}
-              >
-                Trading Insights
+                Alerts
               </button>
             </div>
           </div>
@@ -393,9 +592,26 @@ function Dashboard() {
           <div className="navbar-right">
             <div className="market-status">
               <span className={`status-dot ${marketStatus.isOpen ? 'open' : 'closed'}`}></span>
-              <span className="status-text">
-                {marketStatus.isOpen ? 'Markets Open' : 'Markets Closed'}
-              </span>
+              <div className="status-content">
+                <span className="status-text">
+                  {marketStatus.isOpen ? 'Markets Open' : 'Markets Closed'}
+                  {marketStatus.activeSessions && marketStatus.activeSessions.length > 0 && (
+                    <span className="session-brackets">
+                      ({marketStatus.activeSessions.map(session => session.name).join(', ')})
+                    </span>
+                  )}
+                  {!marketStatus.isOpen && marketStatus.nextSession && (
+                    <span className="session-brackets">
+                      {marketStatus.nextSession.reason === 'holiday' ? 
+                        `(Holiday)` : 
+                        marketStatus.nextSession.reason === 'weekend' ?
+                        `(${getTimeUntilNextSession(marketStatus.nextSession)})` :
+                        `(${getTimeUntilNextSession(marketStatus.nextSession)})`
+                      }
+                    </span>
+                  )}
+                </span>
+              </div>
             </div>
             <button onClick={refreshData} className="refresh-btn" title="Refresh Data">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -429,6 +645,7 @@ function Dashboard() {
             </Link>
           </div>
         </div>
+        <div className="navbar-divider"></div>
       </nav>
 
       {error && (
@@ -439,319 +656,28 @@ function Dashboard() {
       )}
 
       <main className="dashboard-main">
-        {activeTab === 'news' && (
-          <div className="news-grid">
-            <div className="news-list">
-              <h2>📊 Upcoming Events ({news.length})</h2>
-              {news.length === 0 ? (
-                <div className="no-events">
-                  <p>No upcoming events found.</p>
-                  <button onClick={refreshData}>Refresh Data</button>
-                </div>
-              ) : (
-                news.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className={`news-card ${selectedNews?.id === item.id ? 'selected' : ''}`}
-                    onClick={() => handleNewsClick(item)}
-                  >
-                    <div className="news-header">
-                      <h3>{item.title}</h3>
-                      <span 
-                        className="impact-badge"
-                        style={{ backgroundColor: getImpactColor(item.impact) }}
-                      >
-                        {item.impact}
-                      </span>
-                    </div>
-                    <p className="news-description">{item.description}</p>
-                    <div className="news-meta">
-                      <span className="date">{formatDate(item.date)}</span>
-                      <span className="time">{formatTime(item.time)}</span>
-                      <span className="currency">{item.currency}</span>
-                    </div>
-                    <div className="pairs">
-                      {item.pairs.map((pair, index) => (
-                        <span key={index} className="pair-tag">{pair}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="analysis-panel">
-              {selectedNews ? (
-                <div className="analysis-content">
-                  <h2>🤖 AI Analysis</h2>
-                  <div className="selected-news">
-                    <h3>{selectedNews.title}</h3>
-                    <p>{selectedNews.description}</p>
-                    <div className="news-details">
-                      <div className="detail">
-                        <strong>Expected:</strong> {selectedNews.expected}
-                      </div>
-                      <div className="detail">
-                        <strong>Previous:</strong> {selectedNews.previous}
-                      </div>
-                    </div>
-                  </div>
-
-                  {analysisLoading ? (
-                    <div className="analysis-loading">
-                      <div className="spinner"></div>
-                      <p>Generating AI analysis...</p>
-                    </div>
-                  ) : analysis ? (
-                    <div className="analysis-details">
-                      <div className="summary">
-                        <h4>📝 Summary</h4>
-                        <p>{analysis.summary}</p>
-                      </div>
-                      
-                      <div className="impacts">
-                        <h4>📈 Trading Impacts</h4>
-                        <div className="impact-item">
-                          <strong>EUR/USD:</strong> {analysis.eur_usd_impact}
-                        </div>
-                        <div className="impact-item">
-                          <strong>USD/JPY:</strong> {analysis.usd_jpy_impact}
-                        </div>
-                        <div className="impact-item">
-                          <strong>Gold:</strong> {analysis.gold_impact}
-                        </div>
-                      </div>
-
-                      <div className="confidence">
-                        <strong>Confidence Level:</strong> {analysis.confidence}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="no-analysis">
-                      <p>Click on a news event to generate AI analysis.</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="no-selection">
-                  <h2>🤖 AI Analysis</h2>
-                  <p>Select a news event to see AI-powered analysis and trading insights.</p>
-                  <div className="analysis-features">
-                    <div className="feature">
-                      <span>📊</span>
-                      <p>Market Impact Analysis</p>
-                    </div>
-                    <div className="feature">
-                      <span>🎯</span>
-                      <p>Currency Pair Insights</p>
-                    </div>
-                    <div className="feature">
-                      <span>⚡</span>
-                      <p>Real-time Updates</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        {activeTab === 'markets' && (
+          <Markets 
+            tradingData={tradingData}
+            aiInsights={aiInsights}
+            getSentimentColor={getSentimentColor}
+          />
         )}
 
         {activeTab === 'alerts' && (
-          <div className="alerts-section">
-            <div className="alerts-overview">
-              <h2>🔔 Smart Alert System</h2>
-              <p>Get instant notifications for important market events via Telegram and Email</p>
-              
-              <div className="alert-stats">
-                <div className="stat-card">
-                  <span className="stat-number">{alertStats.telegramSubscribers}</span>
-                  <span className="stat-label">Telegram Subscribers</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-number">{alertStats.emailSubscribers}</span>
-                  <span className="stat-label">Email Subscribers</span>
-                </div>
-                <div className="stat-card">
-                  <span className="stat-number">{alertStats.alertsThisWeek}</span>
-                  <span className="stat-label">Alerts This Week</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="alerts-content">
-              <div className="alert-settings">
-                <h3>⚙️ Alert Preferences</h3>
-                <div className="settings-grid">
-                  <div className="setting-group">
-                    <h4>Notification Channels</h4>
-                    <label className="setting-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertSettings.telegram}
-                        onChange={(e) => updateAlertSettings('telegram', e.target.checked)}
-                      />
-                      <span>📱 Telegram Bot</span>
-                    </label>
-                    <label className="setting-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertSettings.email}
-                        onChange={(e) => updateAlertSettings('email', e.target.checked)}
-                      />
-                      <span>📧 Email Alerts</span>
-                    </label>
-                  </div>
-                  
-                  <div className="setting-group">
-                    <h4>Impact Levels</h4>
-                    <label className="setting-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertSettings.highImpact}
-                        onChange={(e) => updateAlertSettings('highImpact', e.target.checked)}
-                      />
-                      <span>🔴 High Impact Events</span>
-                    </label>
-                    <label className="setting-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertSettings.mediumImpact}
-                        onChange={(e) => updateAlertSettings('mediumImpact', e.target.checked)}
-                      />
-                      <span>🟡 Medium Impact Events</span>
-                    </label>
-                    <label className="setting-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertSettings.lowImpact}
-                        onChange={(e) => updateAlertSettings('lowImpact', e.target.checked)}
-                      />
-                      <span>🟢 Low Impact Events</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="recent-alerts">
-                <h3>📋 Recent Alerts</h3>
-                <div className="alerts-list">
-                  {alerts.map(alert => (
-                    <div key={alert.id} className="alert-item">
-                      <div className="alert-icon">
-                        {alert.type === 'telegram' ? '📱' : '📧'}
-                      </div>
-                      <div className="alert-content">
-                        <h4>{alert.event}</h4>
-                        <p>{alert.status === 'sent' ? 'Delivered' : 'Scheduled'}</p>
-                        <small>{new Date(alert.timestamp).toLocaleString()}</small>
-                      </div>
-                      <div className="alert-recipients">
-                        {alert.recipients} recipients
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'trading' && (
-          <div className="trading-section">
-            <div className="trading-overview">
-              <h2>📈 Trading Insights & Market Analysis</h2>
-              <p>AI-powered analysis of market sentiment and trading opportunities</p>
-            </div>
-
-            <div className="trading-grid">
-              <div className="market-sentiment">
-                <h3>🎯 Market Sentiment</h3>
-                <div className="sentiment-indicator">
-                  <div className="sentiment-bar">
-                    <div 
-                      className="sentiment-fill"
-                      style={{ 
-                        width: '50%',
-                        backgroundColor: getSentimentColor(tradingData.marketSentiment)
-                      }}
-                    ></div>
-                  </div>
-                  <span className="sentiment-label">{tradingData.marketSentiment}</span>
-                </div>
-                <div className="volatility-info">
-                  <span>Volatility Index: {tradingData.volatilityIndex}</span>
-                </div>
-              </div>
-
-              <div className="currency-pairs">
-                <h3>💱 Key Currency Pairs</h3>
-                <div className="pairs-grid">
-                  <div className="pair-card">
-                    <div className="pair-header">
-                      <h4>EUR/USD</h4>
-                      <span className="pair-price">{tradingData.eurUsd?.price}</span>
-                    </div>
-                    <div className="pair-change">
-                      <span className={`change ${tradingData.eurUsd?.change > 0 ? 'positive' : 'negative'}`}>
-                        {tradingData.eurUsd?.change > 0 ? '+' : ''}{tradingData.eurUsd?.change}%
-                      </span>
-                      <span className="sentiment" style={{color: getSentimentColor(tradingData.eurUsd?.sentiment)}}>
-                        {tradingData.eurUsd?.sentiment}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pair-card">
-                    <div className="pair-header">
-                      <h4>USD/JPY</h4>
-                      <span className="pair-price">{tradingData.usdJpy?.price}</span>
-                    </div>
-                    <div className="pair-change">
-                      <span className={`change ${tradingData.usdJpy?.change > 0 ? 'positive' : 'negative'}`}>
-                        {tradingData.usdJpy?.change > 0 ? '+' : ''}{tradingData.usdJpy?.change}%
-                      </span>
-                      <span className="sentiment" style={{color: getSentimentColor(tradingData.usdJpy?.sentiment)}}>
-                        {tradingData.usdJpy?.sentiment}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="pair-card">
-                    <div className="pair-header">
-                      <h4>Gold</h4>
-                      <span className="pair-price">${tradingData.gold?.price}</span>
-                    </div>
-                    <div className="pair-change">
-                      <span className={`change ${tradingData.gold?.change > 0 ? 'positive' : 'negative'}`}>
-                        {tradingData.gold?.change > 0 ? '+' : ''}{tradingData.gold?.change}%
-                      </span>
-                      <span className="sentiment" style={{color: getSentimentColor(tradingData.gold?.sentiment)}}>
-                        {tradingData.gold?.sentiment}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="ai-insights">
-                <h3>🤖 AI Trading Insights</h3>
-                <div className="insights-content">
-                  {aiInsights.map((insight, index) => (
-                    <div key={index} className="insight-card">
-                      <h4>📊 {insight.pair} Analysis</h4>
-                      <p>{insight.analysis}</p>
-                      <div className="insight-meta">
-                        <span className="confidence">Confidence: {insight.confidence}%</span>
-                        <span className="timeframe">{insight.timeframe} Timeframe</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <Alerts 
+            alerts={alerts}
+            alertStats={alertStats}
+            alertSettings={alertSettings}
+            updateAlertSettings={updateAlertSettings}
+          />
         )}
       </main>
+
+      {/* Overview Tab - Rendered outside dashboard-main for full screen */}
+      {activeTab === 'overview' && (
+        <Overview />
+      )}
     </div>
   );
 }

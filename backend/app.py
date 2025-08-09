@@ -107,12 +107,37 @@ def increment_unirate_usage():
 
 def get_fallback_price(pair_name):
     """Get fallback price data for a currency pair"""
-    fallback_prices = {
-        'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
-        'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
-        'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
+    fallback_data = {
+        'EURUSD': {'price': 1.0923, 'change': 0.0012},
+        'GBPUSD': {'price': 1.2712, 'change': -0.0020},
+        'USDJPY': {'price': 147.85, 'change': -0.08},
+        'USDCHF': {'price': 0.8845, 'change': 0.0015},
+        'AUDUSD': {'price': 0.6623, 'change': -0.0018},
+        'USDCAD': {'price': 1.3542, 'change': 0.0021},
+        'NZDUSD': {'price': 0.6128, 'change': -0.0012},
+        'EURGBP': {'price': 0.8598, 'change': 0.0015},
+        'EURJPY': {'price': 161.45, 'change': -0.12},
+        'GBPJPY': {'price': 187.82, 'change': -0.25},
+        'USDSEK': {'price': 10.456, 'change': 0.023},
+        'USDNOK': {'price': 10.823, 'change': 0.031},
+        'USDHKD': {'price': 7.8234, 'change': 0.015},
+        'EURCHF': {'price': 0.9665, 'change': 0.0028},
+        'GBPCHF': {'price': 1.1234, 'change': 0.0019}
     }
-    return fallback_prices.get(pair_name, {'price': 1.0, 'change': 0, 'lastUpdate': datetime.now().isoformat()})
+    
+    if pair_name in fallback_data:
+        data = fallback_data[pair_name].copy()
+        data['lastUpdate'] = datetime.now().isoformat()
+        data['source'] = 'fallback'
+        return data
+    
+    # Generic fallback for unknown pairs
+    return {
+        'price': 1.0000,
+        'change': 0.0000,
+        'lastUpdate': datetime.now().isoformat(),
+        'source': 'fallback'
+    }
 
 def scrape_forexfactory_events():
     """Scrape upcoming economic events from ForexFactory"""
@@ -583,7 +608,8 @@ def get_forex_prices():
             if tradingview_prices:
                 prices.update(tradingview_prices)
                 data_sources_used.append('TradingView')
-                print("✅ Successfully fetched data from TradingView")
+                print(f"✅ Successfully fetched data from TradingView: {len(tradingview_prices)} pairs")
+                print(f"   TradingView pairs: {list(tradingview_prices.keys())}")
         except Exception as e:
             print(f"❌ TradingView failed: {e}")
         
@@ -627,11 +653,21 @@ def get_forex_prices():
             print(f"❌ ExchangeRateAPI failed: {e}")
         
         # If we still don't have all pairs, use fallback
-        required_pairs = ['EURUSD', 'USDJPY', 'GBPUSD']
+        required_pairs = [
+            'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD',
+            'USDCAD', 'NZDUSD', 'EURGBP', 'EURJPY', 'GBPJPY',
+            'USDSEK', 'USDNOK', 'USDHKD', 'EURCHF', 'GBPCHF'
+        ]
+        
+        # Ensure we have all required pairs by using fallback for missing ones
         for pair in required_pairs:
             if pair not in prices:
+                print(f"⚠️ Missing pair {pair}, using fallback data")
                 prices[pair] = get_fallback_price(pair)
-                data_sources_used.append('fallback')
+                if 'fallback' not in data_sources_used:
+                    data_sources_used.append('fallback')
+        
+        print(f"✅ Final result: {len(prices)} pairs available: {list(prices.keys())}")
         
         # Add data freshness information
         for pair in prices:
@@ -1049,31 +1085,78 @@ def get_exchange_rate_prices():
             
             prices = {}
             
-            # EUR/USD
-            if 'EUR' in rates:
-                prices['EURUSD'] = {
-                    'price': rates['EUR'],
+            # Map all available rates to our supported pairs
+            pair_mappings = {
+                'EUR': 'EURUSD',
+                'JPY': 'USDJPY', 
+                'GBP': 'GBPUSD',
+                'CHF': 'USDCHF',
+                'AUD': 'AUDUSD',
+                'CAD': 'USDCAD',
+                'NZD': 'NZDUSD',
+                'SEK': 'USDSEK',
+                'NOK': 'USDNOK',
+                'DKK': 'USDDKK'
+            }
+            
+            # Create prices for all available pairs
+            for rate_currency, pair_key in pair_mappings.items():
+                if rate_currency in rates:
+                    prices[pair_key] = {
+                        'price': rates[rate_currency],
+                        'change': 0,  # ExchangeRateAPI doesn't provide change data
+                        'lastUpdate': last_update.isoformat(),
+                        'source': 'ExchangeRateAPI'
+                    }
+            
+            # Handle cross-currency pairs (EUR/GBP, EUR/JPY, etc.)
+            if 'EUR' in rates and 'GBP' in rates:
+                prices['EURGBP'] = {
+                    'price': rates['EUR'] / rates['GBP'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI (calculated)'
+                }
+            
+            # Add HKD if available
+            if 'HKD' in rates:
+                prices['USDHKD'] = {
+                    'price': rates['HKD'],
                     'change': 0,
                     'lastUpdate': last_update.isoformat(),
                     'source': 'ExchangeRateAPI'
                 }
             
-            # USD/JPY
-            if 'JPY' in rates:
-                prices['USDJPY'] = {
-                    'price': rates['JPY'],
+            if 'EUR' in rates and 'JPY' in rates:
+                prices['EURJPY'] = {
+                    'price': rates['EUR'] * rates['JPY'],
                     'change': 0,
                     'lastUpdate': last_update.isoformat(),
-                    'source': 'ExchangeRateAPI'
+                    'source': 'ExchangeRateAPI (calculated)'
                 }
             
-            # GBP/USD
-            if 'GBP' in rates:
-                prices['GBPUSD'] = {
-                    'price': rates['GBP'],
+            if 'GBP' in rates and 'JPY' in rates:
+                prices['GBPJPY'] = {
+                    'price': rates['GBP'] * rates['JPY'],
                     'change': 0,
                     'lastUpdate': last_update.isoformat(),
-                    'source': 'ExchangeRateAPI'
+                    'source': 'ExchangeRateAPI (calculated)'
+                }
+            
+            if 'EUR' in rates and 'CHF' in rates:
+                prices['EURCHF'] = {
+                    'price': rates['EUR'] / rates['CHF'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI (calculated)'
+                }
+            
+            if 'GBP' in rates and 'CHF' in rates:
+                prices['GBPCHF'] = {
+                    'price': rates['GBP'] / rates['CHF'],
+                    'change': 0,
+                    'lastUpdate': last_update.isoformat(),
+                    'source': 'ExchangeRateAPI (calculated)'
                 }
             
             return prices
@@ -1084,15 +1167,23 @@ def get_exchange_rate_prices():
     return None
 
 def get_tradingview_prices():
-    """Get real-time forex prices from TradingView API"""
+    """Get real-time forex prices from TradingView API for all supported pairs"""
     try:
         url = "https://scanner.tradingview.com/forex/scan"
         headers = {
             "Content-Type": "application/json"
         }
+        
+        # All 15 forex pairs we support - using pairs that are actually available on TradingView
+        all_pairs = [
+            "FX:EURUSD", "FX:GBPUSD", "FX:USDJPY", "FX:USDCHF", "FX:AUDUSD",
+            "FX:USDCAD", "FX:NZDUSD", "FX:EURGBP", "FX:EURJPY", "FX:GBPJPY",
+            "FX:USDSEK", "FX:USDNOK", "FX:USDHKD", "FX:EURCHF", "FX:GBPCHF"
+        ]
+        
         data = {
             "symbols": {
-                "tickers": ["FX:EURUSD", "FX:USDJPY", "FX:GBPUSD"]
+                "tickers": all_pairs
             },
             "columns": ["close", "change", "change_abs"]
         }
@@ -1114,24 +1205,28 @@ def get_tradingview_prices():
                     change_percent = values[1]  # change percentage
                     change_abs = values[2]  # absolute change
                     
-                    if symbol == "FX:EURUSD":
-                        prices['EURUSD'] = {
-                            'price': price,
-                            'change': change_abs,
-                            'changePercent': change_percent,
-                            'lastUpdate': datetime.now().isoformat(),
-                            'source': 'TradingView'
-                        }
-                    elif symbol == "FX:USDJPY":
-                        prices['USDJPY'] = {
-                            'price': price,
-                            'change': change_abs,
-                            'changePercent': change_percent,
-                            'lastUpdate': datetime.now().isoformat(),
-                            'source': 'TradingView'
-                        }
-                    elif symbol == "FX:GBPUSD":
-                        prices['GBPUSD'] = {
+                    # Map TradingView symbols to our internal format
+                    pair_mapping = {
+                        "FX:EURUSD": "EURUSD",
+                        "FX:GBPUSD": "GBPUSD", 
+                        "FX:USDJPY": "USDJPY",
+                        "FX:USDCHF": "USDCHF",
+                        "FX:AUDUSD": "AUDUSD",
+                        "FX:USDCAD": "USDCAD",
+                        "FX:NZDUSD": "NZDUSD",
+                        "FX:EURGBP": "EURGBP",
+                        "FX:EURJPY": "EURJPY",
+                        "FX:GBPJPY": "GBPJPY",
+                        "FX:USDSEK": "USDSEK",
+                        "FX:USDNOK": "USDNOK",
+                        "FX:USDHKD": "USDHKD",  # Replaced USDDKK with USDHKD
+                        "FX:EURCHF": "EURCHF",
+                        "FX:GBPCHF": "GBPCHF"
+                    }
+                    
+                    if symbol in pair_mapping:
+                        pair_key = pair_mapping[symbol]
+                        prices[pair_key] = {
                             'price': price,
                             'change': change_abs,
                             'changePercent': change_percent,
@@ -1140,9 +1235,17 @@ def get_tradingview_prices():
                         }
             
             if prices:
-                print("✅ Successfully fetched data from TradingView")
-                for pair, data in prices.items():
-                    print(f"   {pair}: {data['price']} (change: {data['change']})")
+                print(f"✅ Successfully fetched data from TradingView")
+                print(f"   Fetched {len(prices)} pairs: {list(prices.keys())}")
+                
+                # Check if we got all expected pairs
+                expected_pairs = ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", 
+                                "USDCAD", "NZDUSD", "EURGBP", "EURJPY", "GBPJPY", 
+                                "USDSEK", "USDNOK", "USDHKD", "EURCHF", "GBPCHF"]
+                missing_pairs = [pair for pair in expected_pairs if pair not in prices]
+                if missing_pairs:
+                    print(f"⚠️ TradingView missing pairs: {missing_pairs}")
+                
                 return prices
                 
     except Exception as e:

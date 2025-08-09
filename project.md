@@ -1,3 +1,8 @@
+Fuckass notes:
+
+Restore everything to look like website 
+make sure users cant acess dashboard without logging in first
+
 
 # 🌐 FXSentinel – MVP Build
 
