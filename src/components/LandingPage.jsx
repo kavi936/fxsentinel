@@ -7,7 +7,7 @@ import LiveTicker from './LiveTicker';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
 
   useEffect(() => {
@@ -23,6 +23,45 @@ const LandingPage = () => {
     // Cleanup function to remove event listener
     return () => {
       window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isMobileMenuOpen && !event.target.closest('.mobile-menu') && !event.target.closest('.mobile-menu-button')) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('click', handleClickOutside);
+      // Add class to body when mobile menu is open
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      // Remove class and ensure scrolling is always enabled
+      document.body.classList.remove('mobile-menu-open');
+      document.body.style.overflow = '';
+    }
+
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      // Always restore scrolling on cleanup
+      document.body.classList.remove('mobile-menu-open');
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
+  // Additional cleanup effect to ensure scrolling is restored
+  useEffect(() => {
+    // Force enable scrolling when component mounts
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+    
+    return () => {
+      // Cleanup function to restore scrolling when component unmounts
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.classList.remove('mobile-menu-open');
     };
   }, []);
 
@@ -85,6 +124,49 @@ const LandingPage = () => {
     });
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    // Force restore scrolling and remove mobile menu class
+    document.body.style.overflow = '';
+    document.body.classList.remove('mobile-menu-open');
+  };
+
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    closeMobileMenu();
+  };
+
+
+
+  // Handle escape key to close mobile menu
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    if (isMobileMenuOpen) {
+      document.addEventListener('keydown', handleEscapeKey);
+      // Focus the first mobile menu link for better accessibility
+      const firstMobileLink = document.querySelector('.mobile-nav-link');
+      if (firstMobileLink) {
+        firstMobileLink.focus();
+      }
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isMobileMenuOpen]);
+
   return (
     <div className="landing-page">
       {/* Navigation */}
@@ -101,14 +183,44 @@ const LandingPage = () => {
               />
             </picture>
           </div>
-          <div className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#about">About</a>
-            <a href="#pricing">Pricing</a>
+          
+          {/* Desktop Navigation Links */}
+          <div className="nav-links desktop-only">
+            <button onClick={() => scrollToSection('features')} className="nav-link-button">Features</button>
+            <button onClick={() => scrollToSection('about')} className="nav-link-button">About</button>
+            <button onClick={() => scrollToSection('pricing')} className="nav-link-button">Pricing</button>
           </div>
-          <div className="nav-auth">
+          
+          {/* Desktop Auth Buttons */}
+          <div className="nav-auth desktop-only">
             <Link to="/login" className="login-button">Login</Link>
             <Link to="/signup" className="signup-button">Sign Up</Link>
+          </div>
+          
+          {/* Mobile Menu Button */}
+          <button 
+            className={`mobile-menu-button ${isMobileMenuOpen ? 'active' : ''}`}
+            onClick={toggleMobileMenu}
+            aria-label="Toggle mobile menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          
+
+        </div>
+        
+        {/* Mobile Navigation Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-menu-links">
+            <button onClick={() => scrollToSection('features')} className="mobile-nav-link">Features</button>
+            <button onClick={() => scrollToSection('about')} className="mobile-nav-link">About</button>
+            <button onClick={() => scrollToSection('pricing')} className="mobile-nav-link">Pricing</button>
+          </div>
+          <div className="mobile-menu-auth">
+            <Link to="/login" className="mobile-login-button" onClick={closeMobileMenu}>Login</Link>
+            <Link to="/signup" className="mobile-signup-button" onClick={closeMobileMenu}>Sign Up</Link>
           </div>
         </div>
       </nav>

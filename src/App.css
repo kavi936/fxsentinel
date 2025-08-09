@@ -31,11 +31,15 @@ body {
 
 html, body {
   overflow-x: hidden;
+  overflow-y: auto; /* Allow vertical scrolling */
+  height: auto;
+  min-height: 100vh;
 }
 
 .app {
   min-height: 100vh;
   background: var(--primary-black);
+  overflow: visible;
 }
 
 /* Smooth scrolling for anchor links */
