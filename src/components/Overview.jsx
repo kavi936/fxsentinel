@@ -12,6 +12,11 @@ const Overview = () => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   
+  // AI Analysis state
+  const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'loading', 'event-analysis', 'error'
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -410,6 +415,96 @@ const Overview = () => {
     // In a real implementation, this would open detailed charts for the event
   };
 
+  // AI Analysis handlers
+  const handleEventClick = (event) => {
+    console.log(`🎯 Event clicked: ${event.title}`);
+    setSelectedEvent(event);
+    setAiAnalysisState('loading');
+    
+    // Simulate AI analysis generation
+    setTimeout(() => {
+      const analysis = generateEventAnalysis(event);
+      setAiAnalysis(analysis);
+      setAiAnalysisState('event-analysis');
+    }, 2000);
+  };
+
+  const handleClearAnalysis = () => {
+    setSelectedEvent(null);
+    setAiAnalysis(null);
+    setAiAnalysisState('default');
+  };
+
+  const generateEventAnalysis = (event) => {
+    // Mock AI analysis based on event type and impact
+    const analysis = {
+      event: event,
+      marketConfidence: Math.random() > 0.5 ? 'High' : 'Low',
+      confidenceScore: Math.floor(Math.random() * 40) + 60, // 60-100
+      sentiment: Math.random() > 0.5 ? 'bullish' : 'bearish',
+      predictions: [],
+      insights: [],
+      tradingOpportunities: []
+    };
+
+    // Generate predictions based on event
+    if (event.impact === 'high') {
+      analysis.predictions.push({
+        type: 'positive',
+        icon: '🎯',
+        text: `${event.currency} likely to see significant movement`
+      });
+      analysis.predictions.push({
+        type: 'negative',
+        icon: '⚠️',
+        text: `High volatility expected in ${event.currencyPairs.join(', ')}`
+      });
+    } else {
+      analysis.predictions.push({
+        type: 'positive',
+        icon: '📈',
+        text: `Moderate impact expected on ${event.currency}`
+      });
+    }
+
+    // Generate insights
+    analysis.insights.push({
+      type: 'positive',
+      icon: '🤖',
+      text: `AI detected pattern in ${event.currency} price action`
+    });
+    analysis.insights.push({
+      type: 'negative',
+      icon: '📊',
+      text: `Volume analysis suggests cautious approach`
+    });
+
+    // Generate trading opportunities
+    event.currencyPairs.forEach(pair => {
+      analysis.tradingOpportunities.push({
+        pair: pair,
+        strategy: 'Breakout trade',
+        entry: '1.1650',
+        stopLoss: '1.1620',
+        takeProfit: '1.1700',
+        probability: Math.floor(Math.random() * 30) + 70 // 70-100%
+      });
+    });
+
+    return analysis;
+  };
+
+  const handleRefreshAI = () => {
+    if (selectedEvent) {
+      setAiAnalysisState('loading');
+      setTimeout(() => {
+        const analysis = generateEventAnalysis(selectedEvent);
+        setAiAnalysis(analysis);
+        setAiAnalysisState('event-analysis');
+      }, 1500);
+    }
+  };
+
   // Default pairs (only used if no saved preferences exist)
   const defaultPairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD'];
 
@@ -741,85 +836,299 @@ const Overview = () => {
           </div>
         </div>
 
-        {/* Economic Calendar - Based on recovered structure */}
-        <div className="news-calendar">
-          <div className="calendar-header">
-            <div className="header-main">
-              <h2 className="calendar-title">ECONOMIC CALENDAR</h2>
+        {/* Cards Grid Container */}
+        <div className="cards-grid-container">
+          {/* Economic Calendar - Based on recovered structure */}
+          <div className="news-calendar">
+            <div className="calendar-header">
+              <div className="header-main">
+                <h2 className="calendar-title">ECONOMIC CALENDAR</h2>
+              </div>
+              <div className="calendar-controls">
+                <button className="date-select-btn" onClick={handleDatePicker}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
+                  </svg>
+                </button>
+                <button className="filter-btn" onClick={handleFilter}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+                  </svg>
+                </button>
+                <button className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`} onClick={handleRefresh} disabled={isRefreshing}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="calendar-controls">
-              <button className="date-select-btn" onClick={handleDatePicker}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
-                </svg>
-              </button>
-              <button className="filter-btn" onClick={handleFilter}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
-                </svg>
-              </button>
-              <button className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`} onClick={handleRefresh} disabled={isRefreshing}>
+            <div className="calendar-content">
+              <div className="events-list">
+                {economicEvents.map((event) => (
+                  <div 
+                    key={event.id} 
+                    className={`event-card ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                    onClick={() => handleEventClick(event)}
+                  >
+                    <div className="event-main-row">
+                      <div className={`event-time impact-${event.impact}`}>
+                        <span className="time">{event.time}</span>
+                        <span className="date">{event.date}</span>
+                      </div>
+                      <div className="event-content">
+                        <div className="event-header-row">
+                          <h3 className="event-title">{event.title}</h3>
+                          <div className="status-box">
+                            <span className="currency">{event.currency}</span>
+                            <span className="status-indicator upcoming">{event.status}</span>
+                          </div>
+                        </div>
+                        <div className="event-meta-row">
+                          <span className="event-category">{event.type}</span>
+                          <div className="affected-pairs">
+                            {event.currencyPairs.map((pair, pairIndex) => (
+                              <span key={pairIndex} className="pair-badge">{pair}</span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="event-data">
+                      <div className="data-point">
+                        <span className="label">Previous:</span>
+                        <span className="value">{event.previous}</span>
+                      </div>
+                      <div className="data-point">
+                        <span className="label">Expected:</span>
+                        <span className="value">{event.expected}</span>
+                      </div>
+                      <div className="data-point">
+                        <span className="label">Actual:</span>
+                        <span className="value">{event.actual}</span>
+                      </div>
+                      <div className="graph-icon" onClick={(e) => {
+                        e.stopPropagation();
+                        handleChartView(event.title);
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 3v18h18"></path>
+                          <path d="M18 17V9"></path>
+                          <path d="M13 17V5"></path>
+                          <path d="M8 17v-3"></path>
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* AI Analysis Card */}
+          <div className="ai-analysis-card">
+            <div className="ai-header">
+              <div className="header-main">
+                <h2 className="ai-title">AI ANALYSIS</h2>
+                {selectedEvent && (
+                  <div className="selected-event-info">
+                    <span className="event-name">{selectedEvent.title}</span>
+                    <button className="clear-analysis-btn" onClick={handleClearAnalysis}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6L18 18"/>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <div className="ai-controls">
+                <button className="refresh-btn" onClick={handleRefreshAI}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="ai-content">
+              {aiAnalysisState === 'loading' && (
+                <div className="ai-loading-state">
+                  <div className="loading-spinner"></div>
+                  <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
+                  <div className="loading-subtext">AI is processing market data and generating insights</div>
+                </div>
+              )}
+
+              {aiAnalysisState === 'error' && (
+                <div className="ai-error-state">
+                  <div className="error-icon">⚠️</div>
+                  <div className="error-text">Analysis failed</div>
+                  <div className="error-subtext">Unable to generate AI analysis. Please try again.</div>
+                  <button className="retry-btn" onClick={handleRefreshAI}>Retry Analysis</button>
+                </div>
+              )}
+
+              {aiAnalysisState === 'event-analysis' && aiAnalysis && (
+                <>
+                  <div className="ai-overview">
+                    <div className="ai-indicator">
+                      <div className="ai-label">Market Confidence</div>
+                      <div className={`ai-value ${aiAnalysis.sentiment}`}>{aiAnalysis.marketConfidence}</div>
+                      <div className="ai-bar">
+                        <div className={`ai-fill ${aiAnalysis.sentiment}`} style={{width: `${aiAnalysis.confidenceScore}%`}}></div>
+                      </div>
+                    </div>
+                    
+                    <div className="ai-breakdown">
+                      <div className="ai-item">
+                        <span className="analysis-pair">{aiAnalysis.event.currency} Impact</span>
+                        <span className={`analysis-score ${aiAnalysis.sentiment}`}>
+                          {aiAnalysis.event.impact === 'high' ? 'Strong' : 'Moderate'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Volatility</span>
+                        <span className={`analysis-score ${aiAnalysis.event.impact === 'high' ? 'bearish' : 'neutral'}`}>
+                          {aiAnalysis.event.impact === 'high' ? 'High' : 'Low'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Risk Level</span>
+                        <span className={`analysis-score ${aiAnalysis.event.impact === 'high' ? 'bearish' : 'bullish'}`}>
+                          {aiAnalysis.event.impact === 'high' ? 'Elevated' : 'Normal'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Market Sentiment</span>
+                        <span className={`analysis-score ${aiAnalysis.sentiment}`}>
+                          {aiAnalysis.sentiment === 'bullish' ? 'Positive' : 'Negative'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="ai-factors">
+                    <h3>AI Predictions</h3>
+                    <div className="ai-prediction-list">
+                      {aiAnalysis.predictions.map((prediction, index) => (
+                        <div key={index} className={`ai-prediction-item ${prediction.type}`}>
+                          <span className="ai-prediction-icon">{prediction.icon}</span>
+                          <span className="ai-prediction-text">{prediction.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="ai-factors">
+                    <h3>Key Insights</h3>
+                    <div className="ai-insights-list">
+                      {aiAnalysis.insights.map((insight, index) => (
+                        <div key={index} className={`ai-insight-item ${insight.type}`}>
+                          <span className="ai-insight-icon">{insight.icon}</span>
+                          <span className="ai-insight-text">{insight.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {aiAnalysis.tradingOpportunities.length > 0 && (
+                    <div className="ai-factors">
+                      <h3>Trading Opportunities</h3>
+                      <div className="trading-opportunities-list">
+                        {aiAnalysis.tradingOpportunities.map((opportunity, index) => (
+                          <div key={index} className="trading-opportunity-item">
+                            <div className="opportunity-header">
+                              <span className="opportunity-pair">{opportunity.pair}</span>
+                              <span className="opportunity-probability">{opportunity.probability}%</span>
+                            </div>
+                            <div className="opportunity-details">
+                              <div className="opportunity-strategy">{opportunity.strategy}</div>
+                              <div className="opportunity-levels">
+                                <span>Entry: {opportunity.entry}</span>
+                                <span>SL: {opportunity.stopLoss}</span>
+                                <span>TP: {opportunity.takeProfit}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {aiAnalysisState === 'default' && (
+                <div className="ai-default-message">
+                  <div className="default-icon">🎯</div>
+                  <div className="default-text">Click on any economic event to get AI analysis</div>
+                  <div className="default-subtext">Get personalized insights and trading opportunities</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Market Sentiment Card - Duplicated below news calendar */}
+        <div className="market-sentiment-card-below">
+          <div className="sentiment-header">
+            <div className="header-main">
+              <h2 className="sentiment-title">MARKET SENTIMENT</h2>
+            </div>
+            <div className="sentiment-controls">
+              <button className="refresh-btn" onClick={() => console.log('Refresh sentiment')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                 </svg>
               </button>
             </div>
           </div>
-          <div className="calendar-content">
-            <div className="events-list">
-              {economicEvents.map((event) => (
-                <div key={event.id} className="event-card">
-                  <div className="event-main-row">
-                    <div className={`event-time impact-${event.impact}`}>
-                      <span className="time">{event.time}</span>
-                      <span className="date">{event.date}</span>
-                    </div>
-                    <div className="event-content">
-                      <div className="event-header-row">
-                        <h3 className="event-title">{event.title}</h3>
-                        <div className="status-box">
-                          <span className="currency">{event.currency}</span>
-                          <span className="status-indicator upcoming">{event.status}</span>
-                        </div>
-                      </div>
-                      <div className="event-meta-row">
-                        <span className="event-category">{event.type}</span>
-                        <div className="affected-pairs">
-                          {event.currencyPairs.map((pair, pairIndex) => (
-                            <span key={pairIndex} className="pair-badge">{pair}</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="event-data">
-                    <div className="data-point">
-                      <span className="label">Previous:</span>
-                      <span className="value">{event.previous}</span>
-                    </div>
-                    <div className="data-point">
-                      <span className="label">Expected:</span>
-                      <span className="value">{event.expected}</span>
-                    </div>
-                    <div className="data-point">
-                      <span className="label">Actual:</span>
-                      <span className="value">{event.actual}</span>
-                    </div>
-                    <div className="graph-icon" onClick={() => handleChartView(event.title)}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M3 3v18h18"></path>
-                        <path d="M18 17V9"></path>
-                        <path d="M13 17V5"></path>
-                        <path d="M8 17v-3"></path>
-                      </svg>
-                    </div>
-                  </div>
+          <div className="sentiment-content">
+            <div className="sentiment-overview">
+              <div className="sentiment-indicator">
+                <div className="sentiment-label">Overall Sentiment</div>
+                <div className="sentiment-value bullish">Bullish</div>
+                <div className="sentiment-bar">
+                  <div className="sentiment-fill bullish" style={{width: '65%'}}></div>
                 </div>
-              ))}
+              </div>
+              
+              <div className="sentiment-breakdown">
+                <div className="sentiment-item">
+                  <span className="currency-pair">EUR/USD</span>
+                  <span className="sentiment-score bullish">+0.65</span>
+                </div>
+                <div className="sentiment-item">
+                  <span className="currency-pair">GBP/USD</span>
+                  <span className="sentiment-score bearish">-0.32</span>
+                </div>
+                <div className="sentiment-item">
+                  <span className="currency-pair">USD/JPY</span>
+                  <span className="sentiment-score neutral">+0.08</span>
+                </div>
+                <div className="sentiment-item">
+                  <span className="currency-pair">USD/CHF</span>
+                  <span className="sentiment-score bullish">+0.42</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="sentiment-factors">
+              <h3>Key Factors</h3>
+              <div className="factor-list">
+                <div className="factor-item positive">
+                  <span className="factor-icon">📈</span>
+                  <span className="factor-text">Strong US economic data</span>
+                </div>
+                <div className="factor-item negative">
+                  <span className="factor-icon">📉</span>
+                  <span className="factor-text">ECB dovish signals</span>
+                </div>
+                <div className="factor-item positive">
+                  <span className="factor-icon">📈</span>
+                  <span className="factor-text">Risk appetite improving</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
       {/* Forex Pairs Selection Modal */}
       {isEditing && (
@@ -1189,6 +1498,7 @@ const Overview = () => {
         </div>
       )}
     </div>
+  </div>
   );
 };
 

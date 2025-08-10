@@ -331,34 +331,11 @@ function Dashboard() {
       (utcMonth === 11 && utcDate === 26)
     );
     
-    // If it's weekend or holiday, no active sessions
+    // If it's weekend or holiday, markets are closed
     if (isWeekend || isHoliday) {
-      // Find the next session for Monday (or next business day)
-      const nextBusinessDay = new Date(now);
-      let daysToAdd = 1;
-      
-      if (isWeekend) {
-        daysToAdd = utcDay === 0 ? 1 : 2; // Sunday = 0, Saturday = 6
-      }
-      
-      nextBusinessDay.setUTCDate(nextBusinessDay.getUTCDate() + daysToAdd);
-      nextBusinessDay.setUTCHours(22, 0, 0, 0); // Sydney opens at 22:00 UTC
-      
-      const reason = isWeekend ? 'weekend' : 'holiday';
-      
       return { 
         activeSessions: [], 
-        nextSession: { 
-          name: 'Sydney', 
-          start: 22, 
-          end: 7, 
-          timezone: 'AEST', 
-          color: '#4CAF50', 
-          localStart: 22, 
-          localEnd: 7,
-          nextOpen: nextBusinessDay,
-          reason: reason
-        } 
+        nextSession: null
       };
     }
     
@@ -371,7 +348,6 @@ function Dashboard() {
     ];
     
     const activeSessions = [];
-    let nextSession = null;
     
     sessions.forEach(session => {
       let isActive = false;
@@ -386,64 +362,13 @@ function Dashboard() {
       
       if (isActive) {
         activeSessions.push(session);
-      } else {
-        // Find next session
-        if (!nextSession) {
-          if (utcHour < session.start) {
-            nextSession = session;
-          } else if (session.start <= session.end && utcHour >= session.end) {
-            nextSession = session;
-          }
-        }
       }
     });
     
-    // If no next session found, get the first one for tomorrow
-    if (!nextSession && activeSessions.length === 0) {
-      nextSession = sessions[0];
-    }
-    
-    return { activeSessions, nextSession };
+    return { activeSessions, nextSession: null };
   };
 
-  const getTimeUntilNextSession = (nextSession) => {
-    if (!nextSession) return null;
-    
-    // If it's a weekend and we have nextOpen time
-    if (nextSession.nextOpen) {
-      const now = new Date();
-      const timeDiff = nextSession.nextOpen - now;
-      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      
-      if (days > 0) {
-        return `${days}d ${hours}h`;
-      } else {
-        return `${hours}h`;
-      }
-    }
-    
-    const now = new Date();
-    const utcNow = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
-    
-    let nextSessionTime = new Date(utcNow);
-    nextSessionTime.setUTCHours(nextSession.start, 0, 0, 0);
-    
-    // If the session time has passed today, get it for tomorrow
-    if (nextSessionTime <= utcNow) {
-      nextSessionTime.setUTCDate(nextSessionTime.getUTCDate() + 1);
-    }
-    
-    const timeDiff = nextSessionTime - utcNow;
-    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 0) {
-      return `${hours}h ${minutes}m`;
-    } else {
-      return `${minutes}m`;
-    }
-  };
+
 
   const fetchMarketStatus = async () => {
     try {
@@ -455,20 +380,19 @@ function Dashboard() {
         const now = new Date();
         const isRecent = true; // Assume markets are open if we get data
         
-        const { activeSessions, nextSession } = getTradingSessions();
+        const { activeSessions } = getTradingSessions();
         
         setMarketStatus({
           isOpen: isRecent && activeSessions.length > 0,
           lastUpdate: now,
-          activeSessions,
-          nextSession
+          activeSessions
         });
       }
     } catch (error) {
       console.error('Error fetching market status:', error);
       // Fallback to proper market hours checking
       const now = new Date();
-      const { activeSessions, nextSession } = getTradingSessions();
+      const { activeSessions } = getTradingSessions();
       
       // Check if it's weekend (Saturday = 6, Sunday = 0)
       const isWeekend = now.getUTCDay() === 0 || now.getUTCDay() === 6;
@@ -478,8 +402,7 @@ function Dashboard() {
         setMarketStatus({
           isOpen: false,
           lastUpdate: now,
-          activeSessions: [],
-          nextSession: nextSession
+          activeSessions: []
         });
         return;
       }
@@ -488,8 +411,7 @@ function Dashboard() {
       setMarketStatus({
         isOpen: activeSessions.length > 0,
         lastUpdate: now,
-        activeSessions,
-        nextSession
+        activeSessions
       });
     }
   };
@@ -602,16 +524,7 @@ function Dashboard() {
                       ({marketStatus.activeSessions.map(session => session.name).join(', ')})
                     </span>
                   )}
-                  {!marketStatus.isOpen && marketStatus.nextSession && (
-                    <span className="session-brackets">
-                      {marketStatus.nextSession.reason === 'holiday' ? 
-                        `(Holiday)` : 
-                        marketStatus.nextSession.reason === 'weekend' ?
-                        `(${getTimeUntilNextSession(marketStatus.nextSession)})` :
-                        `(${getTimeUntilNextSession(marketStatus.nextSession)})`
-                      }
-                    </span>
-                  )}
+
                 </span>
               </div>
             </div>

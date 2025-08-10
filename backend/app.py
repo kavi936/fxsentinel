@@ -582,21 +582,16 @@ def get_forex_prices():
         return response
     
     try:
-        # Check rate limits before making API calls
-        can_make_call, reason = check_unirate_rate_limits()
-        if not can_make_call:
-            print(f"⚠️ Rate limit exceeded: {reason}")
-            # Return fallback data when rate limited
-            return jsonify({
-                'prices': {
-                    'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
-                    'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
-                    'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
-                },
-                'dataSource': 'fallback',
-                'reason': reason,
-                'timestamp': datetime.now().isoformat()
-            })
+        # Try to get data from multiple sources for better accuracy
+        prices = {}
+        data_sources_used = []
+        unirate_rate_limited = False
+        
+        # Check UniRateAPI rate limits first
+        can_make_unirate_call, reason = check_unirate_rate_limits()
+        if not can_make_unirate_call:
+            print(f"⚠️ UniRateAPI rate limit exceeded: {reason}")
+            unirate_rate_limited = True
         
         # Try to get data from multiple sources for better accuracy
         prices = {}
@@ -626,18 +621,21 @@ def get_forex_prices():
         except Exception as e:
             print(f"❌ Alpha Vantage failed: {e}")
         
-        # Source 3: UniRateAPI (exchange rates)
-        try:
-            unirate_prices = get_unirate_prices()
-            if unirate_prices:
-                # Use UniRateAPI data for any missing pairs
-                for pair, data in unirate_prices.items():
-                    if pair not in prices:
-                        prices[pair] = data
-                data_sources_used.append('UniRateAPI')
-                print("✅ Successfully fetched data from UniRateAPI")
-        except Exception as e:
-            print(f"❌ UniRateAPI failed: {e}")
+        # Source 3: UniRateAPI (exchange rates) - only if not rate limited
+        if not unirate_rate_limited:
+            try:
+                unirate_prices = get_unirate_prices()
+                if unirate_prices:
+                    # Use UniRateAPI data for any missing pairs
+                    for pair, data in unirate_prices.items():
+                        if pair not in prices:
+                            prices[pair] = data
+                    data_sources_used.append('UniRateAPI')
+                    print("✅ Successfully fetched data from UniRateAPI")
+            except Exception as e:
+                print(f"❌ UniRateAPI failed: {e}")
+        else:
+            print("⏭️ Skipping UniRateAPI due to rate limits")
         
         # Source 4: ExchangeRateAPI as fallback
         try:
@@ -676,10 +674,25 @@ def get_forex_prices():
                     last_update = datetime.fromisoformat(prices[pair]['lastUpdate'].replace('Z', '+00:00'))
                     age_minutes = (datetime.now(last_update.tzinfo) - last_update).total_seconds() / 60
                     prices[pair]['dataAgeMinutes'] = round(age_minutes, 1)
-                    prices[pair]['isStale'] = age_minutes > 5  # Consider data stale after 5 minutes
+                    
+                    # Check if market is likely closed (weekend or outside trading hours)
+                    current_time = datetime.now(last_update.tzinfo)
+                    is_weekend = current_time.weekday() >= 5  # Saturday = 5, Sunday = 6
+                    is_market_hours = 0 <= current_time.hour <= 23  # Simplified market hours check
+                    
+                    # During market hours: data is stale after 15 minutes
+                    # During market closure: data is stale after 2 hours (more lenient)
+                    stale_threshold = 120 if (is_weekend or not is_market_hours) else 15
+                    moderate_threshold = 30 if (is_weekend or not is_market_hours) else 5
+                    
+                    prices[pair]['isStale'] = age_minutes > stale_threshold
+                    prices[pair]['isModeratelyOld'] = moderate_threshold < age_minutes <= stale_threshold
+                    prices[pair]['isMarketClosed'] = is_weekend or not is_market_hours
                 except:
                     prices[pair]['dataAgeMinutes'] = None
                     prices[pair]['isStale'] = True
+                    prices[pair]['isModeratelyOld'] = False
+                    prices[pair]['isMarketClosed'] = False
         
         return jsonify({
             'prices': prices,
@@ -687,6 +700,8 @@ def get_forex_prices():
             'timestamp': datetime.now().isoformat(),
             'dataQuality': {
                 'hasStaleData': any(p.get('isStale', False) for p in prices.values()),
+                'hasModeratelyOldData': any(p.get('isModeratelyOld', False) for p in prices.values()),
+                'isMarketClosed': any(p.get('isMarketClosed', False) for p in prices.values()),
                 'averageAgeMinutes': sum(p.get('dataAgeMinutes', 0) for p in prices.values()) / len(prices) if prices else 0
             }
         })
@@ -694,14 +709,33 @@ def get_forex_prices():
     except Exception as e:
         print(f"Error in forex prices endpoint: {e}")
         # Return fallback data
+        fallback_prices = {
+            'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
+            'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
+            'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
+        }
+        
+        # Add data quality info for fallback data
+        for pair in fallback_prices:
+            try:
+                last_update = datetime.fromisoformat(fallback_prices[pair]['lastUpdate'].replace('Z', '+00:00'))
+                current_time = datetime.now(last_update.tzinfo)
+                is_weekend = current_time.weekday() >= 5
+                is_market_hours = 0 <= current_time.hour <= 23
+                fallback_prices[pair]['isMarketClosed'] = is_weekend or not is_market_hours
+            except:
+                fallback_prices[pair]['isMarketClosed'] = False
+        
         return jsonify({
-            'prices': {
-                'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
-                'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
-                'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
-            },
+            'prices': fallback_prices,
             'dataSource': 'fallback',
-            'timestamp': datetime.now().isoformat()
+            'timestamp': datetime.now().isoformat(),
+            'dataQuality': {
+                'hasStaleData': False,
+                'hasModeratelyOldData': False,
+                'isMarketClosed': any(p.get('isMarketClosed', False) for p in fallback_prices.values()),
+                'averageAgeMinutes': 0
+            }
         })
 
 @app.route('/api/forex-prices/refresh', methods=['POST', 'OPTIONS'])

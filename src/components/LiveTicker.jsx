@@ -22,7 +22,10 @@ const LiveTicker = () => {
       dataQuality,
       gbpPrice: prices.GBPUSD?.price,
       eurPrice: prices.EURUSD?.price,
-      jpyPrice: prices.USDJPY?.price
+      jpyPrice: prices.USDJPY?.price,
+      isMarketClosed: dataQuality?.isMarketClosed,
+      hasStaleData: dataQuality?.hasStaleData,
+      hasModeratelyOldData: dataQuality?.hasModeratelyOldData
     });
   }, [prices, loading, error, dataSource, dataQuality]);
 
@@ -33,18 +36,25 @@ const LiveTicker = () => {
   const getDataQualityIndicator = () => {
     if (!dataQuality) return null;
     
+    // If market is closed, don't show any indicator
+    if (dataQuality.isMarketClosed) {
+      return null;
+    }
+    
+    // Show warning only for truly stale data (not just moderately old)
     if (dataQuality.hasStaleData) {
       return (
         <span className="ticker-warning" title={`Data may be stale (${dataQuality.averageAgeMinutes?.toFixed(1)} min old)`}>
-          ⚠️
+          [STALE]
         </span>
       );
     }
     
-    if (dataQuality.averageAgeMinutes > 2) {
+    // Show info for moderately old data during market hours
+    if (dataQuality.hasModeratelyOldData && !dataQuality.isMarketClosed) {
       return (
         <span className="ticker-info" title={`Data age: ${dataQuality.averageAgeMinutes?.toFixed(1)} minutes`}>
-          ℹ️
+          [OLD]
         </span>
       );
     }
@@ -58,7 +68,7 @@ const LiveTicker = () => {
     if (dataSource.includes('TradingView')) {
       return (
         <span className="ticker-source" title="Real-time forex market data from TradingView">
-          📈
+          [TV]
         </span>
       );
     }
@@ -66,7 +76,7 @@ const LiveTicker = () => {
     if (dataSource.includes('AlphaVantage')) {
       return (
         <span className="ticker-source" title="Data from Alpha Vantage (Professional forex data)">
-          📊
+          [AV]
         </span>
       );
     }
@@ -74,7 +84,7 @@ const LiveTicker = () => {
     if (dataSource.includes('UniRateAPI')) {
       return (
         <span className="ticker-source" title="Data from UniRateAPI">
-          🔄
+          [UR]
         </span>
       );
     }
@@ -82,7 +92,7 @@ const LiveTicker = () => {
     if (dataSource.includes('fallback')) {
       return (
         <span className="ticker-source" title="Using fallback data - API rate limit exceeded">
-          📊
+          [FB]
         </span>
       );
     }
@@ -117,7 +127,7 @@ const LiveTicker = () => {
         
         {error && (
           <span className="ticker-error" title={error}>
-            ⚠️
+            [ERROR]
           </span>
         )}
         

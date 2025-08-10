@@ -87,6 +87,14 @@
   cursor: help;
 }
 
+.ticker-market-closed {
+  color: #9c27b0;
+  font-size: 14px;
+  margin-left: 8px;
+  cursor: help;
+  opacity: 0.8;
+}
+
 @keyframes pulse {
   0% {
     opacity: 1;
