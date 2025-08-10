@@ -1,0 +1,53 @@
+{
+  "timestamp": "2025-08-10T09:14:30.045Z",
+  "url": "https://fxsentinel.io/dashboard",
+  "title": "FXSentinel - Trading News Analysis",
+  "reactTree": "<div class=\"app\"><div class=\"dashboard\"><nav class=\"dashboard-navbar\"><div class=\"navbar-container\"><div class=\"navbar-left\"><div class=\"navbar-logo\"><picture><source srcset=\"/assets/fxsentinel_logo_nobg-DP8AD05J.webp\" type=\"image/webp\"><img alt=\"FXSentinel\" src=\"/assets/fxsentinel_logo_nobg-nKd8-ja6.png\" style=\"height: 40px; width: auto;\"></picture></div><div class=\"welcome-message\">Welcome, <span class=\"username\">Kavi</span></div><div class=\"live-time\"><span class=\"date-section\">10/08/25</span><span class=\"time-section\">13:14:29</span></div></div><div class=\"navbar-center\"><div class=\"navbar-tabs\"><button class=\"nav-tab active\">Overview</button><button class=\"nav-tab \">Markets</button><button class=\"nav-tab \">Alerts</button></div></div><div class=\"navbar-right\"><div class=\"market-status\"><span class=\"status-dot closed\"></span><span class=\"status-text\">Markets Closed</span></div><div class=\"refresh-btn\" title=\"Refresh Data\" style=\"cursor: pointer;\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15\"></path></svg></div><div class=\"notification-btn\" title=\"Notifications\" style=\"cursor: pointer;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9\"></path><path d=\"M13.73 21a2 2 0 0 1-3.46 0\"></path></svg><span class=\"notification-badge\">3</span></div><div class=\"profile-btn\" title=\"User Profile\" style=\"cursor: pointer;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"></path><circle cx=\"12\" cy=\"7\" r=\"4\"></circle></svg></div><div class=\"settings-btn\" title=\"Settings\" style=\"cursor: pointer;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"3\"></circle><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z\"></path></svg></div><a class=\"home-btn\" title=\"Back to Home\" href=\"/\" data-discover=\"true\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z\"></path><polyline points=\"9,22 9,12 15,12 15,22\"></polyline></svg></a></div></div></nav><main class=\"dashboard-main\"><div class=\"overview-tab\"><div class=\"overview-content\"><div class=\"forex-pairs-card\"><div class=\"edit-button\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"></path><path d=\"M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z\"></path></svg></div><div class=\"forex-pairs-grid\"><div class=\"forex-pair\"><span class=\"pair-name\">EUR/USD</span><span class=\"pair-price down\">1.1640</span><span class=\"change-value down\">-0.0024</span><span class=\"change-percent down\">-0.21%</span></div><span class=\"separator\">|</span><div class=\"forex-pair\"><span class=\"pair-name\">GBP/USD</span><span class=\"pair-price up\">1.3448</span><span class=\"change-value up\">+0.0007</span><span class=\"change-percent up\">+0.05%</span></div><span class=\"separator\">|</span><div class=\"forex-pair\"><span class=\"pair-name\">USD/JPY</span><span class=\"pair-price up\">147.7030</span><span class=\"change-value up\">+0.5970</span><span class=\"change-percent up\">+0.40%</span></div><span class=\"separator\">|</span><div class=\"forex-pair\"><span class=\"pair-name\">USD/CHF</span><span class=\"pair-price up\">0.8076</span><span class=\"change-value up\">+0.0012</span><span class=\"change-percent up\">+0.15%</span></div><span class=\"separator\">|</span><div class=\"forex-pair\"><span class=\"pair-name\">AUD/USD</span><span class=\"pair-price down\">0.6518</span><span class=\"change-value down\">-0.0005</span><span class=\"change-percent down\">-0.07%</span></div></div></div><div class=\"news-calendar\"><div class=\"calendar-header\"><div class=\"header-main\"><h2>Economic Calendar</h2></div><div class=\"calendar-controls\"><button class=\"date-select-btn\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z\"></path></svg></button><button class=\"filter-btn\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M22 3H2l8 9.46V19l4 2v-8.54L22 3z\"></path></svg></button><button class=\"refresh-btn\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16\"></path></svg></button></div></div><div class=\"calendar-content\"><div class=\"events-list\"><div class=\"event-card \"><div class=\"event-main-row\"><div class=\"event-time impact-high\"><span class=\"time\">13:30 UTC</span><span class=\"date\">Sun, Aug 10</span></div><div class=\"event-content\"><div class=\"event-header-row\"><h3 class=\"event-title\">US CPI Data Release</h3><div class=\"status-box\"><span class=\"currency\">USD</span><span class=\"status-indicator upcoming\">Upcoming</span></div></div><div class=\"event-meta-row\"><span class=\"event-category\">Economic Release</span><div class=\"affected-pairs\"><span class=\"pair-badge\">EUR/USD</span><span class=\"pair-badge\">USD/JPY</span></div></div></div></div><div class=\"event-data\"><div class=\"data-point\"><span class=\"label\">Previous:</span><span class=\"value\">3.2%</span></div><div class=\"data-point\"><span class=\"label\">Expected:</span><span class=\"value\">3.1%</span></div><div class=\"data-point\"><span class=\"label\">Actual:</span><span class=\"value\">--</span></div><div class=\"graph-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 3v18h18\"></path><path d=\"M18 17V9\"></path><path d=\"M13 17V5\"></path><path d=\"M8 17v-3\"></path></svg></div></div></div><div class=\"event-card \"><div class=\"event-main-row\"><div class=\"event-time impact-high\"><span class=\"time\">12:45 UTC</span><span class=\"date\">Mon, Aug 11</span></div><div class=\"event-content\"><div class=\"event-header-row\"><h3 class=\"event-title\">ECB Interest Rate Decision</h3><div class=\"status-box\"><span class=\"currency\">EUR</span><span class=\"status-indicator upcoming\">Upcoming</span></div></div><div class=\"event-meta-row\"><span class=\"event-category\">Economic Release</span><div class=\"affected-pairs\"><span class=\"pair-badge\">EUR/USD</span><span class=\"pair-badge\">EUR/GBP</span></div></div></div></div><div class=\"event-data\"><div class=\"data-point\"><span class=\"label\">Previous:</span><span class=\"value\">4.50%</span></div><div class=\"data-point\"><span class=\"label\">Expected:</span><span class=\"value\">4.50%</span></div><div class=\"data-point\"><span class=\"label\">Actual:</span><span class=\"value\">--</span></div><div class=\"graph-icon\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 3v18h18\"></path><path d=\"M18 17V9\"></path><path d=\"M13 17V5\"></path><path d=\"M8 17v-3\"></path></svg></div></div></div></div></div></div></div></div></main></div></div>",
+  "externalResources": {
+    "scripts": [
+      "https://fxsentinel.io/assets/index-u2DxwkTq.js",
+      "https://www.googletagmanager.com/gtag/js?l=dataLayer&id=G-1QMRKVJD8C"
+    ],
+    "stylesheets": [
+      "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap",
+      "https://fxsentinel.io/assets/index-CmwgjxDC.css"
+    ],
+    "images": [
+      "https://fxsentinel.io/assets/fxsentinel_logo_nobg-nKd8-ja6.png"
+    ],
+    "fonts": [
+      "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    ]
+  },
+  "inlineStyles": {
+    "element_0": {
+      "tag": "IMG",
+      "className": "",
+      "styles": "height: 40px; width: auto;"
+    },
+    "element_1": {
+      "tag": "DIV",
+      "className": "refresh-btn",
+      "styles": "cursor: pointer;"
+    },
+    "element_2": {
+      "tag": "DIV",
+      "className": "notification-btn",
+      "styles": "cursor: pointer;"
+    },
+    "element_3": {
+      "tag": "DIV",
+      "className": "profile-btn",
+      "styles": "cursor: pointer;"
+    },
+    "element_4": {
+      "tag": "DIV",
+      "className": "settings-btn",
+      "styles": "cursor: pointer;"
+    }
+  },
+  "formData": {},
+  "meta": {
+    "viewport": "width=device-width, initial-scale=1.0"
+  }
+}

@@ -58,6 +58,57 @@
   font-weight: 600;
 }
 
+.datetime-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(255, 68, 68, 0.05) 100%);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-width: 160px;
+  max-width: 200px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.datetime-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 68, 68, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.datetime-container:hover {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.15) 0%, rgba(255, 68, 68, 0.08) 100%);
+  border-color: rgba(255, 68, 68, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.15);
+}
+
+.datetime-container:hover::before {
+  left: 100%;
+}
+
+.live-time {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .datetime-btn {
   display: flex;
   align-items: center;
@@ -84,9 +135,12 @@
 }
 
 .date-section {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #cccccc;
   font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .time-section {
@@ -94,7 +148,12 @@
   color: #ffffff;
   font-weight: 700;
   font-family: 'Courier New', monospace;
+  text-align: center;
+  white-space: nowrap;
+  display: inline-block;
 }
+
+
 
 .navbar-logo {
   display: flex;
@@ -604,7 +663,15 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  margin-top: 80px; /* Add top margin to account for fixed navbar */
+  margin-top: 10px; /* Add top margin to account for fixed navbar */
+  max-height: 48px; /* Make it as high as viewport minus navbar */
+}
+
+/* Override for overview tab to reduce spacing */
+.dashboard-main.overview-active {
+  margin-top: 0px;
+  padding-top: 0px;
+  max-height: 48px; /* Maintain full height minus navbar */
 }
 
 /* Enhanced News Grid */
@@ -1361,6 +1428,12 @@
     margin-right: 1rem;
   }
   
+  .datetime-container {
+    min-width: 140px;
+    max-width: 170px;
+    padding: 6px 10px;
+  }
+  
   .datetime-btn {
     min-width: 100px;
     padding: 0.3rem 0.6rem;
@@ -1426,6 +1499,13 @@
   .dashboard-main {
     padding: 1.5rem;
     margin-top: 70px;
+    max-height: 48px;
+  }
+  
+  .dashboard-main.overview-active {
+    margin-top: 0px;
+    padding-top: 0px;
+    max-height: 48px;
   }
 
   .news-details {
@@ -1549,6 +1629,13 @@
   .dashboard-main {
     padding: 1rem;
     margin-top: 70px;
+    max-height: 48px;
+  }
+  
+  .dashboard-main.overview-active {
+    margin-top: 0px;
+    padding-top: 0px;
+    max-height: 48px;
   }
   
   .dashboard-title h1 {

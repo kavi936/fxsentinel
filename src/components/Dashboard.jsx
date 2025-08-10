@@ -560,10 +560,12 @@ function Dashboard() {
             <div className="welcome-message">
               Welcome, <span className="username">{getUserDisplayName()}</span>
             </div>
-            <button className="datetime-btn">
-              <div className="date-section">{formatCurrentTime().date}</div>
-              <div className="time-section">{formatCurrentTime().time}</div>
-            </button>
+            <div className="datetime-container">
+              <div className="live-time">
+                <span className="date-section">{formatCurrentTime().date}</span>
+                <span className="time-section">{formatCurrentTime().time}</span>
+              </div>
+            </div>
           </div>
           
           <div className="navbar-center">
