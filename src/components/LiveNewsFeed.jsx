@@ -208,10 +208,10 @@ const LiveNewsFeed = () => {
                   <p className="news-summary">{newsItem.summary}</p>
                   
                   {newsItem.currency_pairs && newsItem.currency_pairs.length > 0 && (
-                    <div className="currency-pairs">
-                      <span className="pairs-label">Affected pairs:</span>
+                    <div className="news-currency-pairs">
+                      <span className="news-pairs-label">Affected pairs:</span>
                       {newsItem.currency_pairs.map((pair, index) => (
-                        <span key={index} className="currency-pair">{pair}</span>
+                        <span key={index} className="news-currency-pair">{pair}</span>
                       ))}
                     </div>
                   )}

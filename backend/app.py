@@ -328,51 +328,194 @@ def hello():
 # Import the news aggregator
 from services.news_aggregator import news_aggregator
 # Import the telegram monitor
-from services.telegram_monitor import telegram_monitor
+from services.telegram_monitor_user import telegram_user_monitor
 
 @app.route('/api/news')
 def get_news():
-    """Get aggregated news from multiple sources"""
+    """Get aggregated news from multiple sources with optimized performance"""
     try:
-        # Get RSS feed news
-        rss_news = news_aggregator.get_recent_news(hours=24)
+        # Import cache system
+        from services.news_cache import news_cache
         
-        # Get ForexFactory events (existing functionality)
-        try:
-            forex_factory_events = scrape_forexfactory_events()
-        except Exception as e:
-            print(f"Error fetching ForexFactory events: {e}")
-            forex_factory_events = []
+        # First, try to get cached data immediately
+        cached_news = news_cache.load_news()
+        if cached_news:
+            print(f"✅ Returning cached news ({len(cached_news)} articles)")
+            return jsonify({
+                "news": cached_news,
+                "last_updated": datetime.now().isoformat(),
+                "sources": ["cached_data"],
+                "total_articles": len(cached_news),
+                "cache_status": "cached"
+            })
         
-        # Get Telegram news (async operation)
+        # If no cache, fetch fresh data with optimized parallel processing
+        import concurrent.futures
+        import asyncio
+        
+        fresh_news = []
+        sources_used = []
+        
+        # Function to fetch RSS news with timeout
+        def fetch_rss_news():
+            try:
+                rss_news = news_aggregator.get_recent_news(hours=24)
+                print(f"✅ Fetched {len(rss_news)} RSS news articles")
+                return rss_news
+            except Exception as e:
+                print(f"❌ Error fetching RSS news: {e}")
+                return []
+        
+        # Function to fetch ForexFactory events with timeout
+        def fetch_forex_events():
+            try:
+                forex_events = scrape_forexfactory_events()
+                print(f"✅ Fetched {len(forex_events)} ForexFactory events")
+                return forex_events
+            except Exception as e:
+                print(f"❌ Error fetching ForexFactory events: {e}")
+                return []
+        
+        # Function to fetch alternative news with timeout
+        def fetch_alternative_news():
+            try:
+                from services.alternative_news_sources import alternative_news_sources
+                alt_news = alternative_news_sources.get_alternative_news(hours=24)
+                print(f"✅ Fetched {len(alt_news)} alternative news articles")
+                return alt_news
+            except Exception as e:
+                print(f"❌ Error fetching alternative news: {e}")
+                return []
+        
+        # Use ThreadPoolExecutor for parallel processing with shorter timeouts
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            # Submit all tasks with 10-second timeout each
+            rss_future = executor.submit(fetch_rss_news)
+            forex_future = executor.submit(fetch_forex_events)
+            alt_future = executor.submit(fetch_alternative_news)
+            
+            # Wait for all tasks with timeout
+            try:
+                rss_news = rss_future.result(timeout=10)
+                fresh_news.extend(rss_news)
+                sources_used.append("RSS Feeds")
+            except concurrent.futures.TimeoutError:
+                print("⚠️ RSS news fetch timed out")
+                rss_news = []
+            except Exception as e:
+                print(f"❌ RSS news fetch failed: {e}")
+                rss_news = []
+            
+            try:
+                forex_events = forex_future.result(timeout=10)
+                fresh_news.extend(forex_events)
+                sources_used.append("ForexFactory")
+            except concurrent.futures.TimeoutError:
+                print("⚠️ ForexFactory fetch timed out")
+                forex_events = []
+            except Exception as e:
+                print(f"❌ ForexFactory fetch failed: {e}")
+                forex_events = []
+            
+            try:
+                alt_news = alt_future.result(timeout=10)
+                fresh_news.extend(alt_news)
+                sources_used.append("Alternative Sources")
+            except concurrent.futures.TimeoutError:
+                print("⚠️ Alternative news fetch timed out")
+                alt_news = []
+            except Exception as e:
+                print(f"❌ Alternative news fetch failed: {e}")
+                alt_news = []
+        
+        # Try Telegram news separately with shorter timeout (non-blocking)
         telegram_news = []
         try:
             import asyncio
             # Create new event loop for async operation
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
-            telegram_news = loop.run_until_complete(telegram_monitor.get_recent_telegram_news(hours=24))
+            
+            # Reduced timeout for Telegram (15 seconds instead of 30)
+            telegram_news = loop.run_until_complete(
+                asyncio.wait_for(
+                    telegram_user_monitor.get_recent_telegram_news(hours=24),
+                    timeout=15.0  # Reduced from 30 to 15 seconds
+                )
+            )
             loop.close()
-        except Exception as e:
-            print(f"Error fetching Telegram news: {e}")
+            fresh_news.extend(telegram_news)
+            sources_used.append("Telegram")
+            print(f"✅ Fetched {len(telegram_news)} Telegram news articles")
+        except asyncio.TimeoutError:
+            print("⚠️ Telegram news fetch timed out, continuing with other sources...")
             telegram_news = []
+        except Exception as e:
+            print(f"❌ Error fetching Telegram news: {e}")
+            print("Continuing with other sources...")
+            telegram_news = []
+        finally:
+            # Ensure we clean up any remaining event loops
+            try:
+                if 'loop' in locals() and not loop.is_closed():
+                    loop.close()
+            except:
+                pass
         
-        # Combine and sort all news by publication date
-        all_news = rss_news + forex_factory_events + telegram_news
-        all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
-        
-        return jsonify({
-            "news": all_news,
-            "last_updated": datetime.now().isoformat(),
-            "sources": ["RSS Feeds", "ForexFactory", "Telegram"],
-            "total_articles": len(all_news)
-        })
+        # If we got fresh news, save it to cache and return it
+        if fresh_news:
+            # Combine and sort all news by publication date
+            all_news = fresh_news
+            all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
+            
+            # Save to cache for future use
+            news_cache.save_news(all_news)
+            
+            return jsonify({
+                "news": all_news,
+                "last_updated": datetime.now().isoformat(),
+                "sources": sources_used,
+                "total_articles": len(all_news),
+                "cache_status": "fresh"
+            })
+        else:
+            # No fresh news available, use mock data as fallback
+            print("⚠️ No fresh news available, using mock data")
+            mock_news = get_mock_news()
+            return jsonify({
+                "news": mock_news,
+                "last_updated": datetime.now().isoformat(),
+                "sources": ["fallback_data"],
+                "total_articles": len(mock_news),
+                "cache_status": "fallback"
+            })
+                
     except Exception as e:
-        print(f"Error fetching news: {e}")
+        print(f"❌ Error in news endpoint: {e}")
+        # Try to load from cache as fallback
+        try:
+            from services.news_cache import news_cache
+            cached_news = news_cache.load_news()
+            if cached_news:
+                print(f"✅ Error occurred, using cached news ({len(cached_news)} articles)")
+                return jsonify({
+                    "news": cached_news,
+                    "last_updated": datetime.now().isoformat(),
+                    "sources": ["cached_data"],
+                    "total_articles": len(cached_news),
+                    "cache_status": "cached_fallback"
+                })
+        except:
+            pass
+        
+        # Last resort: mock data
+        mock_news = get_mock_news()
         return jsonify({
-            "news": get_mock_news(),
+            "news": mock_news,
             "last_updated": datetime.now().isoformat(),
-            "sources": ["fallback_data"]
+            "sources": ["fallback_data"],
+            "total_articles": len(mock_news),
+            "cache_status": "fallback"
         })
 
 @app.route('/api/analysis/<int:news_id>')
@@ -407,6 +550,22 @@ def health_check():
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0"
     })
+
+@app.route('/api/cache-status')
+def cache_status():
+    """Get cache status information"""
+    try:
+        from services.news_cache import news_cache
+        status = news_cache.get_cache_status()
+        return jsonify({
+            "cache_status": status,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "timestamp": datetime.now().isoformat()
+        })
 
 @app.route('/api/api-status')
 def api_status():
@@ -1318,6 +1477,177 @@ def get_tradingview_prices():
         print(f"Error fetching from TradingView: {e}")
     
     return None
+
+@app.route('/api/dashboard-data')
+def get_dashboard_data():
+    """Get all dashboard data in a single request for better performance"""
+    try:
+        import concurrent.futures
+        from datetime import datetime
+        
+        # Function to get news data
+        def get_news_data():
+            try:
+                # Try cached news first for speed
+                from services.news_cache import news_cache
+                cached_news = news_cache.load_news()
+                if cached_news:
+                    return {
+                        "news": cached_news,
+                        "sources": ["cached_data"],
+                        "cache_status": "cached"
+                    }
+                
+                # If no cache, get fresh news (simplified version)
+                try:
+                    rss_news = news_aggregator.get_recent_news(hours=24)
+                    return {
+                        "news": rss_news[:10],  # Limit to 10 articles
+                        "sources": ["RSS Feeds"],
+                        "cache_status": "fresh"
+                    }
+                except:
+                    return {
+                        "news": get_mock_news(),
+                        "sources": ["fallback_data"],
+                        "cache_status": "fallback"
+                    }
+            except Exception as e:
+                print(f"Error getting news: {e}")
+                return {
+                    "news": get_mock_news(),
+                    "sources": ["fallback_data"],
+                    "cache_status": "fallback"
+                }
+        
+        # Function to get trading data
+        def get_trading_data():
+            try:
+                return {
+                    "eurUsd": {"price": 1.0856, "change": 0.12, "sentiment": "bullish"},
+                    "usdJpy": {"price": 148.23, "change": -0.08, "sentiment": "bearish"},
+                    "gold": {"price": 2034.50, "change": 0.45, "sentiment": "bullish"},
+                    "marketSentiment": "neutral",
+                    "volatilityIndex": 15.2
+                }
+            except Exception as e:
+                print(f"Error getting trading data: {e}")
+                return {}
+        
+        # Function to get alerts data
+        def get_alerts_data():
+            try:
+                return {
+                    "alerts": [
+                        {
+                            "id": 1,
+                            "type": "telegram",
+                            "event": "US CPI Data",
+                            "status": "sent",
+                            "timestamp": (datetime.now() - timedelta(hours=1)).isoformat(),
+                            "recipients": 1250,
+                            "impact": "High"
+                        }
+                    ],
+                    "stats": {
+                        "telegramSubscribers": 1250,
+                        "emailSubscribers": 890,
+                        "alertsThisWeek": 24,
+                        "totalAlerts": 156
+                    }
+                }
+            except Exception as e:
+                print(f"Error getting alerts: {e}")
+                return {"alerts": [], "stats": {}}
+        
+        # Function to get AI insights
+        def get_ai_insights():
+            try:
+                return [
+                    {
+                        "pair": "EUR/USD",
+                        "analysis": "Strong support at 1.0850 level. Break above 1.0870 could trigger bullish momentum.",
+                        "confidence": 85,
+                        "timeframe": "4H",
+                        "sentiment": "bullish"
+                    }
+                ]
+            except Exception as e:
+                print(f"Error getting AI insights: {e}")
+                return []
+        
+        # Function to get alert settings
+        def get_alert_settings():
+            try:
+                return {
+                    "telegram": True,
+                    "email": False,
+                    "highImpact": True,
+                    "mediumImpact": True,
+                    "lowImpact": False,
+                    "notificationTime": 15
+                }
+            except Exception as e:
+                print(f"Error getting alert settings: {e}")
+                return {}
+        
+        # Execute all functions in parallel
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {
+                executor.submit(get_news_data): "news",
+                executor.submit(get_trading_data): "tradingData",
+                executor.submit(get_alerts_data): "alerts",
+                executor.submit(get_ai_insights): "aiInsights",
+                executor.submit(get_alert_settings): "alertSettings"
+            }
+            
+            results = {}
+            for future in concurrent.futures.as_completed(futures, timeout=10):
+                data_type = futures[future]
+                try:
+                    results[data_type] = future.result()
+                except Exception as e:
+                    print(f"Error getting {data_type}: {e}")
+                    # Provide fallback data
+                    if data_type == "news":
+                        results[data_type] = {"news": get_mock_news(), "sources": ["fallback"], "cache_status": "fallback"}
+                    elif data_type == "tradingData":
+                        results[data_type] = {}
+                    elif data_type == "alerts":
+                        results[data_type] = {"alerts": [], "stats": {}}
+                    elif data_type == "aiInsights":
+                        results[data_type] = []
+                    elif data_type == "alertSettings":
+                        results[data_type] = {}
+        
+        return jsonify({
+            "news": results.get("news", {}).get("news", []),
+            "newsSources": results.get("news", {}).get("sources", []),
+            "newsCacheStatus": results.get("news", {}).get("cache_status", "unknown"),
+            "tradingData": results.get("tradingData", {}),
+            "alerts": results.get("alerts", {}).get("alerts", []),
+            "alertStats": results.get("alerts", {}).get("stats", {}),
+            "aiInsights": results.get("aiInsights", []),
+            "alertSettings": results.get("alertSettings", {}),
+            "lastUpdated": datetime.now().isoformat(),
+            "status": "success"
+        })
+        
+    except Exception as e:
+        print(f"Error in dashboard data endpoint: {e}")
+        return jsonify({
+            "news": get_mock_news(),
+            "newsSources": ["fallback"],
+            "newsCacheStatus": "fallback",
+            "tradingData": {},
+            "alerts": [],
+            "alertStats": {},
+            "aiInsights": [],
+            "alertSettings": {},
+            "lastUpdated": datetime.now().isoformat(),
+            "status": "error",
+            "error": str(e)
+        })
 
 @app.route('/')
 def home():

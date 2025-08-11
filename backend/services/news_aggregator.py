@@ -54,18 +54,21 @@ class NewsAggregator:
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
             }
             
-            response = requests.get(feed_url, headers=headers, timeout=10)
+            response = requests.get(feed_url, headers=headers, timeout=8)  # Reduced timeout from 10 to 8 seconds
             response.raise_for_status()
             
             feed = feedparser.parse(response.content)
             articles = []
             
-            for entry in feed.entries[:10]:  # Limit to 10 most recent articles
+            for entry in feed.entries[:5]:  # Reduced from 10 to 5 most recent articles
                 # Check if article is forex-related
                 if self.is_forex_related(entry.title, entry.summary):
                     article = self.parse_article(entry, source_name)
                     if article:
                         articles.append(article)
+                        # Stop after finding 3 forex-related articles per source for performance
+                        if len(articles) >= 3:
+                            break
             
             logger.info(f"Fetched {len(articles)} forex-related articles from {source_name}")
             return articles
@@ -75,45 +78,20 @@ class NewsAggregator:
             return []
     
     def is_forex_related(self, title: str, summary: str) -> bool:
-        """Check if article is forex-related based on keywords"""
-        text = f"{title} {summary}".lower()
-        
-        # Check for forex-specific keywords
-        for keyword in self.forex_keywords:
-            if keyword.lower() in text:
-                return True
-        
-        return False
+        """Check if article is forex-related using enhanced filtering"""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        return enhanced_forex_filter.is_forex_related(title, summary)
     
     def determine_impact_level(self, title: str, summary: str) -> str:
-        """Determine the impact level of the news"""
-        text = f"{title} {summary}".lower()
-        
-        # Check for high impact keywords
-        for keyword in self.high_impact_keywords:
-            if keyword.lower() in text:
-                return 'high'
-        
-        # Check for medium impact keywords
-        for keyword in self.medium_impact_keywords:
-            if keyword.lower() in text:
-                return 'medium'
-        
-        return 'low'
+        """Determine the impact level using enhanced filtering"""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        score = enhanced_forex_filter.get_forex_score(title, summary)
+        return score['impact_level']
     
     def extract_currency_pairs(self, title: str, summary: str) -> List[str]:
-        """Extract mentioned currency pairs from the article"""
-        text = f"{title} {summary}".lower()
-        currency_pairs = []
-        
-        # Common currency pair patterns
-        pairs = ['eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd', 'eur/gbp', 'eur/jpy', 'gbp/jpy']
-        
-        for pair in pairs:
-            if pair in text:
-                currency_pairs.append(pair.upper())
-        
-        return currency_pairs
+        """Extract currency pairs using enhanced filtering"""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        return enhanced_forex_filter.extract_currency_pairs(title, summary)
     
     def parse_article(self, entry, source_name: str) -> Dict[str, Any]:
         """Parse RSS entry into standardized format"""
@@ -208,11 +186,16 @@ class NewsAggregator:
                 pub_date = datetime.fromisoformat(article['published_at'].replace('Z', '+00:00'))
                 if pub_date >= cutoff_time:
                     recent_articles.append(article)
+                    # Limit total articles to 15 for performance
+                    if len(recent_articles) >= 15:
+                        break
             except:
                 # If date parsing fails, include the article
                 recent_articles.append(article)
+                if len(recent_articles) >= 15:
+                    break
         
-        return recent_articles[:20]  # Limit to 20 most recent articles
+        return recent_articles[:15]  # Ensure maximum of 15 articles
 
 # Global instance
 news_aggregator = NewsAggregator()

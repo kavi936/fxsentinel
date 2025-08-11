@@ -45,12 +45,67 @@ function Dashboard() {
 
   // Fetch news data on mount
   useEffect(() => {
-    fetchNews();
-    fetchTradingData();
-    fetchAlerts();
-    fetchAiInsights();
-    fetchAlertSettings();
-    fetchMarketStatus();
+    // Load all data in parallel for better performance
+    const loadAllData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Try the optimized single endpoint first
+        const optimizedResponse = await axios.get(config.endpoints.dashboardData, {
+          timeout: 8000
+        });
+        
+        if (optimizedResponse.data && optimizedResponse.data.status === 'success') {
+          // Set all data from single response
+          setNews(optimizedResponse.data.news || []);
+          setDataSource(optimizedResponse.data.newsSources?.join(', ') || 'API');
+          setLastUpdated(optimizedResponse.data.lastUpdated);
+          setTradingData(optimizedResponse.data.tradingData || {});
+          setAlerts(optimizedResponse.data.alerts || []);
+          setAlertStats(optimizedResponse.data.alertStats || {});
+          setAiInsights(optimizedResponse.data.aiInsights || []);
+          setAlertSettings(optimizedResponse.data.alertSettings || {});
+          
+          console.log('✅ Loaded all data from optimized endpoint');
+          setLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.warn('Optimized endpoint failed, falling back to individual calls:', error);
+      }
+      
+      // Fallback to individual API calls if optimized endpoint fails
+      try {
+        // Create all API calls in parallel
+        const promises = [
+          fetchNews(),
+          fetchTradingData(),
+          fetchAlerts(),
+          fetchAiInsights(),
+          fetchAlertSettings(),
+          fetchMarketStatus()
+        ];
+        
+        // Wait for all promises to resolve with a timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Request timeout')), 10000)
+        );
+        
+        await Promise.race([
+          Promise.all(promises),
+          timeoutPromise
+        ]);
+        
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+        setError('Some data failed to load. Using available data.');
+        setLoading(false);
+      }
+    };
+    
+    loadAllData();
   }, []);
 
   // Update time every second
@@ -100,29 +155,24 @@ function Dashboard() {
 
   const fetchNews = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
       // Add timeout to API call
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
       
       const response = await axios.get(config.endpoints.news, {
         signal: controller.signal,
-        timeout: 5000
+        timeout: 8000
       });
       
       clearTimeout(timeoutId);
       setNews(response.data.news);
       setDataSource(response.data.source || 'API');
       setLastUpdated(response.data.last_updated);
-      setLoading(false);
     } catch (error) {
-      clearTimeout(timeoutId);
       console.error('Error fetching news:', error);
       
       if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
-        setError('Request timed out. Using fallback data.');
+        console.warn('News request timed out. Using fallback data.');
         // Load fallback data immediately
         setNews([
           {
@@ -153,7 +203,7 @@ function Dashboard() {
         setDataSource('Fallback Data');
         setLastUpdated(new Date().toISOString());
       } else {
-        setError('Failed to load news data. Using fallback data.');
+        console.warn('Failed to load news data. Using fallback data.');
         // Same fallback data
         setNews([
           {
@@ -184,7 +234,6 @@ function Dashboard() {
         setDataSource('Fallback Data');
         setLastUpdated(new Date().toISOString());
       }
-      setLoading(false);
     }
   };
 
@@ -293,12 +342,42 @@ function Dashboard() {
 
 
 
-  const refreshData = () => {
+  const refreshData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // Try the optimized single endpoint first
+      const optimizedResponse = await axios.get(config.endpoints.dashboardData, {
+        timeout: 8000
+      });
+      
+      if (optimizedResponse.data && optimizedResponse.data.status === 'success') {
+        // Set all data from single response
+        setNews(optimizedResponse.data.news || []);
+        setDataSource(optimizedResponse.data.newsSources?.join(', ') || 'API');
+        setLastUpdated(optimizedResponse.data.lastUpdated);
+        setTradingData(optimizedResponse.data.tradingData || {});
+        setAlerts(optimizedResponse.data.alerts || []);
+        setAlertStats(optimizedResponse.data.alertStats || {});
+        setAiInsights(optimizedResponse.data.aiInsights || []);
+        setAlertSettings(optimizedResponse.data.alertSettings || {});
+        
+        console.log('✅ Refreshed all data from optimized endpoint');
+        setLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.warn('Optimized endpoint failed, falling back to individual calls:', error);
+    }
+    
+    // Fallback to individual API calls
     fetchNews();
     fetchTradingData();
     fetchAlerts();
     fetchAiInsights();
     fetchAlertSettings();
+    fetchMarketStatus();
   };
 
   const handleLogout = async () => {

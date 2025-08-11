@@ -13,6 +13,8 @@ export const config = {
     alertSettings: `${API_BASE_URL}/api/alert-settings`,
     hello: `${API_BASE_URL}/api/hello`,
     // Forex prices endpoint (secure backend call)
-    forexPrices: `${API_BASE_URL}/api/forex-prices`
+    forexPrices: `${API_BASE_URL}/api/forex-prices`,
+    // Optimized dashboard data endpoint (single request)
+    dashboardData: `${API_BASE_URL}/api/dashboard-data`
   }
 }; 
