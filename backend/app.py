@@ -680,10 +680,10 @@ def get_forex_prices():
                     is_weekend = current_time.weekday() >= 5  # Saturday = 5, Sunday = 6
                     is_market_hours = 0 <= current_time.hour <= 23  # Simplified market hours check
                     
-                    # During market hours: data is stale after 15 minutes
-                    # During market closure: data is stale after 2 hours (more lenient)
-                    stale_threshold = 120 if (is_weekend or not is_market_hours) else 15
-                    moderate_threshold = 30 if (is_weekend or not is_market_hours) else 5
+                    # During market hours: data is stale after 60 minutes (more lenient)
+                    # During market closure: data is stale after 4 hours (more lenient)
+                    stale_threshold = 240 if (is_weekend or not is_market_hours) else 60
+                    moderate_threshold = 60 if (is_weekend or not is_market_hours) else 15
                     
                     prices[pair]['isStale'] = age_minutes > stale_threshold
                     prices[pair]['isModeratelyOld'] = moderate_threshold < age_minutes <= stale_threshold
@@ -825,7 +825,7 @@ def refresh_forex_prices():
                     last_update = datetime.fromisoformat(prices[pair]['lastUpdate'].replace('Z', '+00:00'))
                     age_minutes = (datetime.now(last_update.tzinfo) - last_update).total_seconds() / 60
                     prices[pair]['dataAgeMinutes'] = round(age_minutes, 1)
-                    prices[pair]['isStale'] = age_minutes > 5
+                    prices[pair]['isStale'] = age_minutes > 60
                 except:
                     prices[pair]['dataAgeMinutes'] = None
                     prices[pair]['isStale'] = True
