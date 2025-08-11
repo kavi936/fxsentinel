@@ -325,22 +325,54 @@ def get_mock_analysis(event_title):
 def hello():
     return jsonify({'message': 'Hello from FXSentinel backend!'})
 
+# Import the news aggregator
+from services.news_aggregator import news_aggregator
+# Import the telegram monitor
+from services.telegram_monitor import telegram_monitor
+
 @app.route('/api/news')
 def get_news():
-    """Get real economic events data"""
+    """Get aggregated news from multiple sources"""
     try:
-        events = scrape_forexfactory_events()
+        # Get RSS feed news
+        rss_news = news_aggregator.get_recent_news(hours=24)
+        
+        # Get ForexFactory events (existing functionality)
+        try:
+            forex_factory_events = scrape_forexfactory_events()
+        except Exception as e:
+            print(f"Error fetching ForexFactory events: {e}")
+            forex_factory_events = []
+        
+        # Get Telegram news (async operation)
+        telegram_news = []
+        try:
+            import asyncio
+            # Create new event loop for async operation
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            telegram_news = loop.run_until_complete(telegram_monitor.get_recent_telegram_news(hours=24))
+            loop.close()
+        except Exception as e:
+            print(f"Error fetching Telegram news: {e}")
+            telegram_news = []
+        
+        # Combine and sort all news by publication date
+        all_news = rss_news + forex_factory_events + telegram_news
+        all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
+        
         return jsonify({
-            "news": events,
+            "news": all_news,
             "last_updated": datetime.now().isoformat(),
-            "source": "ForexFactory"
+            "sources": ["RSS Feeds", "ForexFactory", "Telegram"],
+            "total_articles": len(all_news)
         })
     except Exception as e:
         print(f"Error fetching news: {e}")
         return jsonify({
             "news": get_mock_news(),
             "last_updated": datetime.now().isoformat(),
-            "source": "mock_data"
+            "sources": ["fallback_data"]
         })
 
 @app.route('/api/analysis/<int:news_id>')

@@ -20,6 +20,32 @@ User selects the relevant Ai analysis he wants
 AI anlysis of live news is done, then sent to the user through alerts on telegram / email
 AI analysis of macro economic news is done after news release, then sent to the user through alerts.
 
+Live news feed:
+Telegram bot that harvests news data --> Format and present on overview file --> User selects to conduct AI analysis
+
+Telegram bot takes in data only from watcherguru free channel, for mvp. Then we can scale more proffesionaly to more forex live news etc.
+
+Create a news aggregator service that fetches from multiple RSS feeds
+Update your existing /api/news endpoint to include RSS data
+Enhance the frontend to display the aggregated news feed
+
+Test the live news feed - Visit your app and check the Overview page
+Add Telegram integration - We can implement WatcherGuru channel monitoring
+Add Twitter/X API - For real-time breaking news
+Enhance AI analysis - More detailed trading insights
+
+RSS Feeds (Reuters, Bloomberg, CNBC, MarketWatch)
+    ↓
+News Aggregator Service
+    ↓
+Filters for forex-related content
+    ↓
+Combines with ForexFactory events
+    ↓
+API Endpoint: /api/news
+    ↓
+Frontend LiveNewsFeed Component
+
 
 
 

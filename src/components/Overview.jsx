@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
+import LiveNewsFeed from './LiveNewsFeed';
 import './Overview.css';
 
 const Overview = () => {
@@ -1134,25 +1135,7 @@ const Overview = () => {
 
           {/* Live News + Analysis Card */}
           <div className="live-news-analysis-card">
-            <div className="news-header">
-              <div className="header-main">
-                <h2 className="news-title">LIVE NEWS + ANALYSIS</h2>
-              </div>
-              <div className="news-controls">
-                <button className="refresh-btn" onClick={() => console.log('Refresh news')}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className="news-content">
-              <div className="news-placeholder">
-                <div className="placeholder-icon">📰</div>
-                <div className="placeholder-text">Live News + Analysis</div>
-                <div className="placeholder-subtext">News feed and analysis will be implemented here</div>
-              </div>
-            </div>
+            <LiveNewsFeed />
           </div>
         </div>
 

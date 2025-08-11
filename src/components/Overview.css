@@ -2479,6 +2479,8 @@
   backdrop-filter: blur(10px);
 }
 
+
+
 .news-title {
   font-size: 8px;
   font-weight: 800;
@@ -2512,7 +2514,7 @@
 
 .news-content {
   flex: 1;
-  padding: 20px 24px;
+  padding: 10px 10px;
   overflow-y: auto;
   position: relative;
   z-index: 2;
