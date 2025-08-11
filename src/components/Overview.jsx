@@ -1066,65 +1066,91 @@ const Overview = () => {
           </div>
         </div>
 
-        {/* Market Sentiment Card - Duplicated below news calendar */}
-        <div className="market-sentiment-card-below">
-          <div className="sentiment-header">
-            <div className="header-main">
-              <h2 className="sentiment-title">MARKET SENTIMENT</h2>
+        {/* Second Cards Grid Container */}
+        <div className="cards-grid-container-second">
+          {/* Market Sentiment Card */}
+          <div className="market-sentiment-card">
+            <div className="sentiment-header">
+              <div className="header-main">
+                <h2 className="sentiment-title">MARKET SENTIMENT</h2>
+              </div>
+              <div className="sentiment-controls">
+                <button className="refresh-btn" onClick={() => console.log('Refresh sentiment')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div className="sentiment-controls">
-              <button className="refresh-btn" onClick={() => console.log('Refresh sentiment')}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div className="sentiment-content">
-            <div className="sentiment-overview">
-              <div className="sentiment-indicator">
-                <div className="sentiment-label">Overall Sentiment</div>
-                <div className="sentiment-value bullish">Bullish</div>
-                <div className="sentiment-bar">
-                  <div className="sentiment-fill bullish" style={{width: '65%'}}></div>
+            <div className="sentiment-content">
+              <div className="sentiment-overview">
+                <div className="sentiment-indicator">
+                  <div className="sentiment-label">Overall Sentiment</div>
+                  <div className="sentiment-value bullish">Bullish</div>
+                  <div className="sentiment-bar">
+                    <div className="sentiment-fill bullish" style={{width: '65%'}}></div>
+                  </div>
+                </div>
+                
+                <div className="sentiment-breakdown">
+                  <div className="sentiment-item">
+                    <span className="currency-pair">EUR/USD</span>
+                    <span className="sentiment-score bullish">+0.65</span>
+                  </div>
+                  <div className="sentiment-item">
+                    <span className="currency-pair">GBP/USD</span>
+                    <span className="sentiment-score bearish">-0.32</span>
+                  </div>
+                  <div className="sentiment-item">
+                    <span className="currency-pair">USD/JPY</span>
+                    <span className="sentiment-score neutral">+0.08</span>
+                  </div>
+                  <div className="sentiment-item">
+                    <span className="currency-pair">USD/CHF</span>
+                    <span className="sentiment-score bullish">+0.42</span>
+                  </div>
                 </div>
               </div>
               
-              <div className="sentiment-breakdown">
-                <div className="sentiment-item">
-                  <span className="currency-pair">EUR/USD</span>
-                  <span className="sentiment-score bullish">+0.65</span>
-                </div>
-                <div className="sentiment-item">
-                  <span className="currency-pair">GBP/USD</span>
-                  <span className="sentiment-score bearish">-0.32</span>
-                </div>
-                <div className="sentiment-item">
-                  <span className="currency-pair">USD/JPY</span>
-                  <span className="sentiment-score neutral">+0.08</span>
-                </div>
-                <div className="sentiment-item">
-                  <span className="currency-pair">USD/CHF</span>
-                  <span className="sentiment-score bullish">+0.42</span>
+              <div className="sentiment-factors">
+                <h3>Key Factors</h3>
+                <div className="factor-list">
+                  <div className="factor-item positive">
+                    <span className="factor-icon">📈</span>
+                    <span className="factor-text">Strong US economic data</span>
+                  </div>
+                  <div className="factor-item negative">
+                    <span className="factor-icon">📉</span>
+                    <span className="factor-text">ECB dovish signals</span>
+                  </div>
+                  <div className="factor-item positive">
+                    <span className="factor-icon">📈</span>
+                    <span className="factor-text">Risk appetite improving</span>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <div className="sentiment-factors">
-              <h3>Key Factors</h3>
-              <div className="factor-list">
-                <div className="factor-item positive">
-                  <span className="factor-icon">📈</span>
-                  <span className="factor-text">Strong US economic data</span>
-                </div>
-                <div className="factor-item negative">
-                  <span className="factor-icon">📉</span>
-                  <span className="factor-text">ECB dovish signals</span>
-                </div>
-                <div className="factor-item positive">
-                  <span className="factor-icon">📈</span>
-                  <span className="factor-text">Risk appetite improving</span>
-                </div>
+          </div>
+
+          {/* Live News + Analysis Card */}
+          <div className="live-news-analysis-card">
+            <div className="news-header">
+              <div className="header-main">
+                <h2 className="news-title">LIVE NEWS + ANALYSIS</h2>
+              </div>
+              <div className="news-controls">
+                <button className="refresh-btn" onClick={() => console.log('Refresh news')}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="news-content">
+              <div className="news-placeholder">
+                <div className="placeholder-icon">📰</div>
+                <div className="placeholder-text">Live News + Analysis</div>
+                <div className="placeholder-subtext">News feed and analysis will be implemented here</div>
               </div>
             </div>
           </div>

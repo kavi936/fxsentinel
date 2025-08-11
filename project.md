@@ -1,7 +1,33 @@
 Fuckass notes:
 
-Restore everything to look like website 
-make sure users cant acess dashboard without logging in first
+Overview (MVP):
+
+[                                     Navbar                                   ]
+[                                Market ticker                                 ]
+[                                                                              ]
+[          Economic Calendar                            Ai Analysis            ]
+[                                                                              ]
+[                                                                              ]
+[                                                                              ]
+[     Market Sentiment + Market summary          Live news feed + AI Analysis  ]
+[                                                                              ]
+[                                                                              ]
+[                                                                              ]
+
+
+Alerts (MVP):
+User selects the relevant Ai analysis he wants
+AI anlysis of live news is done, then sent to the user through alerts on telegram / email
+AI analysis of macro economic news is done after news release, then sent to the user through alerts.
+
+
+
+
+
+
+
+
+
 
 
 # 🌐 FXSentinel – MVP Build

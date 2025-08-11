@@ -41,6 +41,7 @@ function Dashboard() {
     activeSessions: [],
     nextSession: null
   });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Fetch news data on mount
   useEffect(() => {
@@ -69,6 +70,33 @@ function Dashboard() {
 
     return () => clearInterval(marketInterval);
   }, []);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuOpen && !event.target.closest('.mobile-menu-overlay') && !event.target.closest('.mobile-menu-toggle')) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [mobileMenuOpen]);
+
+  // Manage body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.classList.add('mobile-menu-open');
+    } else {
+      document.body.classList.remove('mobile-menu-open');
+    }
+
+    return () => {
+      document.body.classList.remove('mobile-menu-open');
+    };
+  }, [mobileMenuOpen]);
 
   const fetchNews = async () => {
     try {
@@ -280,6 +308,15 @@ function Dashboard() {
     } catch (error) {
       console.error('Failed to log out:', error);
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const handleMobileTabChange = (tab) => {
+    setActiveTab(tab);
+    setMobileMenuOpen(false);
   };
 
   const updateAlertSettings = (setting, value) => {
@@ -559,9 +596,116 @@ function Dashboard() {
               </svg>
             </Link>
           </div>
+          
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="mobile-menu-toggle" 
+            onClick={toggleMobileMenu}
+            title="Menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
         </div>
         <div className="navbar-divider"></div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`mobile-menu-overlay ${mobileMenuOpen ? 'active' : ''}`}>
+        <div className="mobile-menu-content">
+          <div className="mobile-menu-section">
+            <h3>Navigation</h3>
+            <div className="mobile-nav-tabs">
+              <button 
+                className={`mobile-nav-tab ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => handleMobileTabChange('overview')}
+              >
+                Overview
+              </button>
+              <button 
+                className={`mobile-nav-tab ${activeTab === 'markets' ? 'active' : ''}`}
+                onClick={() => handleMobileTabChange('markets')}
+              >
+                Markets
+              </button>
+              <button 
+                className={`mobile-nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
+                onClick={() => handleMobileTabChange('alerts')}
+              >
+                Alerts
+              </button>
+            </div>
+          </div>
+          
+          <div className="mobile-menu-section">
+            <h3>Market Status</h3>
+            <div className="mobile-actions">
+              <div className="mobile-action-btn">
+                <span className={`status-dot ${marketStatus.isOpen ? 'open' : 'closed'}`}></span>
+                <span>
+                  {marketStatus.isOpen ? 'Markets Open' : 'Markets Closed'}
+                  {marketStatus.activeSessions && marketStatus.activeSessions.length > 0 && (
+                    <span className="session-brackets">
+                      {' '}({marketStatus.activeSessions.map(session => session.name).join(', ')})
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mobile-menu-section">
+            <h3>Actions</h3>
+            <div className="mobile-actions">
+              <button onClick={() => { refreshData(); setMobileMenuOpen(false); }} className="mobile-action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                </svg>
+                Refresh Data
+              </button>
+              <button className="mobile-action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+                Notifications (3)
+              </button>
+              <button className="mobile-action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Profile
+              </button>
+              <button className="mobile-action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+                Settings
+              </button>
+              <Link to="/" className="mobile-action-btn" onClick={() => setMobileMenuOpen(false)}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+                Back to Home
+              </Link>
+              <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="mobile-action-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                  <polyline points="16,17 21,12 16,7"/>
+                  <line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {error && (
         <div className="error-message">
