@@ -325,10 +325,164 @@ def get_mock_analysis(event_title):
 def hello():
     return jsonify({'message': 'Hello from FXSentinel backend!'})
 
+@app.route('/api/finnhub-test')
+def test_finnhub():
+    """Test Finnhub API connection"""
+    try:
+        result = finnhub_calendar.test_connection()
+        return jsonify({
+            "finnhub_status": result,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            "finnhub_status": {
+                "status": "error",
+                "message": f"Test failed: {str(e)}",
+                "api_key_valid": False
+            },
+            "timestamp": datetime.now().isoformat()
+        })
+
 # Import the news aggregator
 from services.news_aggregator import news_aggregator
 # Import the telegram monitor
 from services.telegram_monitor_user import telegram_user_monitor
+# Import the Finnhub calendar service
+from services.finnhub_calendar import finnhub_calendar
+# Import the Finnhub historical service
+from services.finnhub_historical import finnhub_historical
+
+@app.route('/api/economic-calendar')
+def get_economic_calendar():
+    """Get economic calendar events from Finnhub API"""
+    try:
+        # Get query parameters for date range
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        # Fetch events from Finnhub
+        events = finnhub_calendar.get_economic_calendar(start_date, end_date)
+        
+        if events:
+            return jsonify({
+                "events": events,
+                "source": "Finnhub",
+                "last_updated": datetime.now().isoformat(),
+                "total_events": len(events),
+                "status": "success"
+            })
+        else:
+            # Fallback to mock data if Finnhub fails
+            print("⚠️ No events from Finnhub, using fallback data")
+            fallback_events = get_mock_economic_events()
+            return jsonify({
+                "events": fallback_events,
+                "source": "fallback_data",
+                "last_updated": datetime.now().isoformat(),
+                "total_events": len(fallback_events),
+                "status": "fallback"
+            })
+            
+    except Exception as e:
+        print(f"❌ Error in economic calendar endpoint: {e}")
+        # Return fallback data on error
+        fallback_events = get_mock_economic_events()
+        return jsonify({
+            "events": fallback_events,
+            "source": "fallback_data",
+            "last_updated": datetime.now().isoformat(),
+            "total_events": len(fallback_events),
+            "status": "error"
+        })
+
+def get_mock_economic_events():
+    """Fallback mock economic calendar data"""
+    today = datetime.now()
+    
+    return [
+        {
+            "id": 1,
+            "time": "13:30 UTC",
+            "date": (today + timedelta(days=1)).strftime('%a, %b %d'),
+            "title": "US CPI Data Release",
+            "type": "ECONOMIC RELEASE",
+            "currency": "USD",
+            "status": "UPCOMING",
+            "impact": "high",
+            "currencyPairs": ["EUR/USD", "USD/JPY"],
+            "previous": "3.2%",
+            "expected": "3.1%",
+            "actual": "--",
+            "source": "fallback_data"
+        },
+        {
+            "id": 2,
+            "time": "12:45 UTC",
+            "date": (today + timedelta(days=2)).strftime('%a, %b %d'),
+            "title": "ECB Interest Rate Decision",
+            "type": "CENTRAL BANK",
+            "currency": "EUR",
+            "status": "UPCOMING",
+            "impact": "high",
+            "currencyPairs": ["EUR/USD", "EUR/GBP"],
+            "previous": "4.50%",
+            "expected": "4.50%",
+            "actual": "--",
+            "source": "fallback_data"
+        },
+        {
+            "id": 3,
+            "time": "14:00 UTC",
+            "date": (today + timedelta(days=2)).strftime('%a, %b %d'),
+            "title": "US Retail Sales",
+            "type": "ECONOMIC RELEASE",
+            "currency": "USD",
+            "status": "UPCOMING",
+            "impact": "medium",
+            "currencyPairs": ["GBP/USD", "USD/CHF"],
+            "previous": "0.2%",
+            "expected": "0.1%",
+            "actual": "--",
+            "source": "fallback_data"
+        }
+    ]
+
+@app.route('/api/economic-chart/<event_name>')
+def get_economic_chart_data(event_name):
+    """Get historical chart data for a specific economic event"""
+    try:
+        # Get query parameters
+        months = request.args.get('months', 12, type=int)
+        
+        # Decode the event name from URL
+        import urllib.parse
+        decoded_event_name = urllib.parse.unquote(event_name)
+        
+        print(f"📊 Fetching chart data for: {decoded_event_name} ({months} months)")
+        
+        # Get chart data from historical service
+        chart_data = finnhub_historical.get_chart_data_for_event(decoded_event_name, months)
+        
+        if chart_data and chart_data.get('historical_data'):
+            return jsonify({
+                "chart_data": chart_data,
+                "status": "success",
+                "message": f"Found {len(chart_data['historical_data'])} data points"
+            })
+        else:
+            return jsonify({
+                "chart_data": chart_data,
+                "status": "no_data",
+                "message": "No historical data available for this event"
+            }), 404
+            
+    except Exception as e:
+        print(f"❌ Error in economic chart endpoint: {e}")
+        return jsonify({
+            "status": "error",
+            "message": f"Error fetching chart data: {str(e)}"
+        }), 500
 
 @app.route('/api/news')
 def get_news():
@@ -1666,4 +1820,4 @@ def home():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=8000) 
+    app.run(debug=True, host='0.0.0.0', port=5001) 

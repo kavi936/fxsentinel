@@ -1,9 +1,105 @@
 {
-  "timestamp": "2025-08-12T11:01:52.172672",
-  "news_count": 34,
+  "timestamp": "2025-08-12T13:04:13.557941",
+  "news_count": 27,
   "news": [
     {
-      "id": 5988999683785540562,
+      "id": 4030701968698953552,
+      "title": "Nasdaq Analysis & Price Prediction",
+      "summary": "Nasdaq Analysis and Price Prediction with orderFlow IntelinvestingLive.com (formerly ForexLive) delivers a merged Nasdaq analysis that combines the past five trading days of market structure with toda...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/technical-analysis/nasdaq-analysis-price-prediction-20250812/",
+      "published_at": "2025-08-12T08:55:55",
+      "impact": "low",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 2500676110813763584,
+      "title": "What is the distribution of forecasts for the US CPI?",
+      "summary": "The ranges of estimates are \nimportant in terms of market reaction because when the actual data deviates from the \nexpectations, it creates a surprise effect. Another\n important input in market's reac...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/what-is-the-distribution-of-forecasts-for-the-us-cpi-20250812/",
+      "published_at": "2025-08-12T08:53:52",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 5152773648535052765,
+      "title": "Sidelined from Trump-Putin talks, Ukraine warns the world not to trust Russia",
+      "summary": "Ukraine has been left out in the cold ahead of high-profile talks between U.S. President Donald Trump and President Vladimir Putin on Friday.",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/08/12/ukraine-warns-the-world-not-to-trust-russia-says-new-offensives-ahead.html",
+      "published_at": "2025-08-12T08:36:35",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 3951576523932707050,
+      "title": "EURUSD Technical Analysis – Traders await the US CPI release",
+      "summary": "Fundamental\nOverviewThe USD has been weak\nalmost across the board since the NFP report as the softer than expected data\ntriggered a quick dovish repricing and a change in stance for many Fed members.\n...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/forex/eurusd-technical-analysis-traders-await-the-us-cpi-release-20250812/",
+      "published_at": "2025-08-12T08:18:13",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 5893019952985166597,
+      "title": "Is there a downside risk to the US CPI report later?",
+      "summary": "On core inflation, a majority of analysts and estimate have it pinned in and around +0.3% m/m for July. As such, this makes Jefferies' +0.246% reading a bit of an outlier in that sense. The firm says ...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/is-there-a-downside-risk-to-the-us-cpi-report-later-20250812/",
+      "published_at": "2025-08-12T08:14:04",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 6644239399984227156,
+      "title": "China Escalates Canada Trade Spat With More Canola Levies",
+      "summary": "China will implement more levies on Canadian rapeseed after an anti-dumping probe, escalating a trade spat that’s disrupted crop flows.",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-08-12/china-imposes-temporary-duties-on-canadian-rapeseed-after-probe",
+      "published_at": "2025-08-12T07:35:42",
+      "impact": "medium",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 2531103426408147905,
+      "title": "Gold Technical Analysis – All eyes on the US CPI",
+      "summary": "Fundamental\nOverviewGold pulled back yesterday\nwhich is something we also saw in other markets with the US dollar strengthening.\nThis could be hedging activity into CPI as there was no fundamental dri...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/technical-analysis/gold-technical-analysis-all-eyes-on-the-us-cpi-20250812/",
+      "published_at": "2025-08-12T07:25:02",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 2668417487217348575,
+      "title": "European equities hold a little higher to kick start the day",
+      "summary": "Eurostoxx +0.3%Germany DAX +0.1%France CAC 40 +0.5%UK FTSE +0.2%Spain IBEX +0.5%Italy FTSE MIB +0.5%It's a decent start but still very early in the day. US futures are also keeping steadier after yest...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/stocks/european-equities-hold-a-little-higher-to-kick-start-the-day-20250812/",
+      "published_at": "2025-08-12T07:18:51",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7086027510918400686,
       "title": "US inflation seen picking up in July with bigger accelerations in the months ahead - UBS",
       "summary": "The firm is forecasting that core CPI is seen at +0.35% m/m (vs +0.32% m/m estimate) and +3.11% y/y (vs +3.00% y/y estimate) in July. Among all the analysts, UBS has the highest estimates as they see ...",
       "source": "ForexLive",
@@ -15,7 +111,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 6162608826528564987,
+      "id": 6651713862894725643,
       "title": "Musk threatens 'immediate' legal action against Apple over alleged antitrust violations",
       "summary": "ChatGPT was ranked No. 1 in the top free apps section of the American iOS store. Apple has tied up with OpenAI to integrate ChatGPT into its products.",
       "source": "CNBC",
@@ -27,7 +123,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 1230265357937946144,
+      "id": 382235168758162940,
       "title": "RBA governor Bullock: The board is always data dependent",
       "summary": "Being pre-emptive suggests that we will take action based on something that we expect might happenAnd we are already doing that to some extent by reacting to our forecastsWe are looking for confirmati...",
       "source": "ForexLive",
@@ -39,7 +135,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 1457435874709395444,
+      "id": 6756448886261405071,
       "title": "Eurostoxx futures +0.3% in early European trading",
       "summary": "German DAX futures +0.3%UK FTSE futures +0.2%This comes even after Wall Street was more sluggish as well, with investors all waiting on the US CPI report later today before committing to any moves thi...",
       "source": "ForexLive",
@@ -51,7 +147,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 115001835937239781,
+      "id": 5218527494754294125,
       "title": "UK June ILO unemployment rate 4.7% vs 4.7% expected",
       "summary": "Prior 4.7%Employment change 239k vs 185k expectedPrior 134kAverage weekly earnings +4.6% vs +4.7% 3m/y expectedPrior +5.0%Average weekly earnings (ex bonus) +5.0% vs +5.0% 3m/y expectedPrior +5.0%July...",
       "source": "ForexLive",
@@ -63,19 +159,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 2102001312104136057,
-      "title": "Europe’s Ariane 6 Rocket Slated to Launch in SpaceX Challenge",
-      "summary": "A troubled European rocket critical to the continent’s goal of reducing its reliance on Elon Musk’s SpaceX is set to thunder off a launchpad for only its third-ever mission.",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/articles/2025-08-12/europe-s-ariane-6-rocket-slated-to-launch-in-spacex-challenge",
-      "published_at": "2025-08-12T06:00:00",
-      "impact": "low",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 3335236020370305922,
+      "id": 6460680782011881226,
       "title": "RBA governor Bullock: We are focused on inflation and employment",
       "summary": "We do not target asset pricesNo promises on what the RBA will deliver on rates if financial markets face volatility boutThere are risks to volatility in markets if things go pear shaped in the USPeopl...",
       "source": "ForexLive",
@@ -87,7 +171,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 3101942799216039835,
+      "id": 1434570015669889414,
       "title": "China has reportedly urged local firms to avoid using Nvidia's H20 chips in new guidance",
       "summary": "It is reported that Chinese authorities have sent notices over the past few weeks, calling on local companies to avoid using Nvidia's H20 processors. That especially if they are to be used for governm...",
       "source": "ForexLive",
@@ -99,19 +183,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 2963482249892047676,
-      "title": "Spain treads a risky path by standing up to Trump on defense and China",
-      "summary": "Tensions over defense and foreign policy issues are growing between Madrid and Washington.",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/08/12/sanchez-how-spain-is-standing-up-to-trump-on-defense-and-china.html",
-      "published_at": "2025-08-12T05:05:48",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 1543067278525892004,
+      "id": 966831535194292283,
       "title": "RBA cuts cash rate by 25 bps to 3.60% in August monetary policy decision",
       "summary": "Prior 3.85%Inflation has continued to moderateUncertainty in the world economy remains elevatedThere is a little more clarity on the scope and scale of US tariffsIt suggests that more extreme outcomes...",
       "source": "ForexLive",
@@ -125,70 +197,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 251583381605220678,
-      "title": "FX option expiries for 12 August 10am New York cut",
-      "summary": "There are a couple to take note of on the board for today, as highlighted in bold below.The first one is for EUR/USD at the 1.1650 level. It's not one that ties to any technical significance so the im...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/Orders/fx-option-expiries-for-12-august-10am-new-york-cut-20250812/",
-      "published_at": "2025-08-12T04:07:07",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/USD",
-        "USD/CAD"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 7107869624622836457,
-      "title": "China president Xi reportedly held phone talks with Brazil president Lula",
-      "summary": "As Trump calls for China to quadruple its soybean purchases from the US, Brazil is one to be concerned as they have been China's top soybeans supplier for a while now. For some context, China is the w...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/news/china-president-xi-reportedly-held-phone-talks-with-brazil-president-lula-20250812/",
-      "published_at": "2025-08-12T03:25:46",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 3190320952362242037,
-      "title": "investingLive Asia-pacific FX news wrap: Awaiting the US inflation data",
-      "summary": "US and China extended their tariff truce for 90 days, lifting Asian stocks and sending Japan’s Nikkei to a record high. Australia’s business confidence hit a three-year peak ahead of an expected RBA r...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/news/investinglive-asia-pacific-fx-news-wrap-awaiting-the-us-inflation-data-20250812/",
-      "published_at": "2025-08-12T02:42:19",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 6751944454310617123,
-      "title": "JPMorgan sees stagflation signs as tariffs lift prices and US growth, jobs slow",
-      "summary": "JPMorgan is warning that the US could face a “somewhat stagflationary” environment in the second half of the year, as early signs of tariff-driven price pressures combine with softer demand and a weak...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/news/jpmorgan-sees-stagflation-signs-as-tariffs-lift-prices-and-us-growth-jobs-slow-20250812/",
-      "published_at": "2025-08-12T02:29:52",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 7908425708874851352,
-      "title": "Trump, South Korea’s Lee to meet in Washington on Aug 25 - security and economic issues",
-      "summary": "South Korean President Lee Jae-myung will visit the US from August 24–26 for his first summit with President Donald Trump, his office said. The leaders will meet on August 25 in Washington to discuss ...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/news/trump-south-koreas-lee-to-meet-in-washington-on-aug-25-security-and-economic-issues-20250812/",
-      "published_at": "2025-08-12T01:52:26",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 8912498066385277146,
+      "id": 8392364693186565445,
       "title": "**JUST IN:** Elon Musk says xAI will take \"immediate legal action\" against Apple for alleged antitru",
       "summary": "**JUST IN:** Elon Musk says xAI will take \"immediate legal action\" against Apple for alleged antitrust violations.",
       "source": "Telegram - WatcherGuru",
@@ -202,7 +211,7 @@
       "channel": "WatcherGuru"
     },
     {
-      "id": 7571021387298211322,
+      "id": 3858342885035338803,
       "title": "**JUST IN:** Elon Musk says xAI will take \"immediate legal action\" against Apple for alleged antitru",
       "summary": "**JUST IN:** Elon Musk says xAI will take \"immediate legal action\" against Apple for alleged antitrust violations.",
       "source": "Telegram - @WatcherGuru",
@@ -216,7 +225,7 @@
       "channel": "@WatcherGuru"
     },
     {
-      "id": 36304973006831793,
+      "id": 7153262909763611755,
       "title": "Trump says he's nominating E.J. Antoni as Bureau of Labor Statistics commissioner",
       "summary": "President Trump, who claimed former BLS Commissioner Erika McEntarfer manipulated jobs data, said Antoni would release \"honest and accurate\" numbers.",
       "source": "CNBC",
@@ -228,7 +237,7 @@
       "status": "PUBLISHED"
     },
     {
-      "id": 4726488158682964067,
+      "id": 2581754152039776489,
       "title": "**JUST IN:** Grok has been suspended.",
       "summary": "**JUST IN:** Grok has been suspended.",
       "source": "Telegram - WatcherGuru",
@@ -242,7 +251,7 @@
       "channel": "WatcherGuru"
     },
     {
-      "id": 8163043965917994420,
+      "id": 3001631931448656444,
       "title": "**JUST IN:** Grok has been suspended.",
       "summary": "**JUST IN:** Grok has been suspended.",
       "source": "Telegram - @WatcherGuru",
@@ -256,7 +265,7 @@
       "channel": "@WatcherGuru"
     },
     {
-      "id": 3408629819325686686,
+      "id": 484266231617711896,
       "title": "**JUST IN:** 🇺🇸🇨🇳 President Trump officially extends China tariff deadline by 90 days.",
       "summary": "**JUST IN:** 🇺🇸🇨🇳 President Trump officially extends China tariff deadline by 90 days.",
       "source": "Telegram - WatcherGuru",
@@ -270,7 +279,7 @@
       "channel": "WatcherGuru"
     },
     {
-      "id": 2718545737663489200,
+      "id": 7289948498391686176,
       "title": "**JUST IN:** 🇺🇸🇨🇳 President Trump officially extends China tariff deadline by 90 days.",
       "summary": "**JUST IN:** 🇺🇸🇨🇳 President Trump officially extends China tariff deadline by 90 days.",
       "source": "Telegram - @WatcherGuru",
@@ -284,7 +293,7 @@
       "channel": "@WatcherGuru"
     },
     {
-      "id": 4905518665913978970,
+      "id": 600549781427795441,
       "title": "**JUST IN:** 🇺🇸 President Trump says tariffs are making the US \"strong and rich.\"",
       "summary": "**JUST IN:** 🇺🇸 President Trump says tariffs are making the US \"strong and rich.\"",
       "source": "Telegram - WatcherGuru",
@@ -298,7 +307,7 @@
       "channel": "WatcherGuru"
     },
     {
-      "id": 8558954926732251798,
+      "id": 6763518150450277961,
       "title": "**JUST IN:** 🇺🇸 President Trump says tariffs are making the US \"strong and rich.\"",
       "summary": "**JUST IN:** 🇺🇸 President Trump says tariffs are making the US \"strong and rich.\"",
       "source": "Telegram - @WatcherGuru",
@@ -310,108 +319,6 @@
       "status": "PUBLISHED",
       "message_id": 10116,
       "channel": "@WatcherGuru"
-    },
-    {
-      "id": 6769875964398253537,
-      "title": "JPY steady in quiet trade – Scotiabank",
-      "summary": "The Japanese Yen (JPY) is entering Monday’s NA session flat against the US Dollar (USD) as it consolidates just above the lower end of its recent narrow range, Scotiabank's Chief FX Strategists Shaun ...",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/jpy-steady-in-quiet-trade-scotiabank-202508111143",
-      "published_at": "2025-08-11T11:43:47",
-      "impact": "low",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 4467860541217796834,
-      "title": "USD/CHF rallies beyond 0.8100 with all eyes on trade talks and US CP",
-      "summary": "The Swiss Franc is struggling on Monday amid a moderate risk appetite, while the US Dollar appreciates across the board amid hopes of a US-China trade deal and investors’ reluctance of l¡placing large...",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/usd-chf-rallies-beyond-08100-with-all-eyes-on-trade-talks-and-us-cp-202508111142",
-      "published_at": "2025-08-11T11:42:03",
-      "impact": "high",
-      "currency_pairs": [
-        "USD/CHF"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 7486940300300453802,
-      "title": "GBP consolidating recent gains – Scotiabank",
-      "summary": "The Pound Sterling (GBP) is steady, entering Monday’s NA session flat vs. the USD as it consolidates last week’s gains, Scotiabank's Chief FX Strategists Shaun Osborne and Eric Theoret report.",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/gbp-consolidating-recent-gains-scotiabank-202508111141",
-      "published_at": "2025-08-11T11:41:32",
-      "impact": "low",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 6487467444002864720,
-      "title": "Pound Sterling Price News and Forecast: GBP/USD could extend uptrend once it clears 1.3490-1.3500",
-      "summary": "GBP/USD moves sideways above 1.3450 after gaining more than 1% in the previous week. The pair's technical outlook points to overbought conditions in the near term.",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/gbp-usd-weekly-outlook-pound-sterling-buyers-return-in-tandem-with-boes-hawkishness-202508111141",
-      "published_at": "2025-08-11T11:41:16",
-      "impact": "low",
-      "currency_pairs": [
-        "GBP/USD"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 4076013825670229424,
-      "title": "Pound Sterling gains as traders trim BoE's interest rate cut bets",
-      "summary": "The Pound Sterling (GBP) trades higher against its peers at the start of the week as traders have trimmed expectations supporting further interest rate cuts by the Bank of England (BoE) in the remaind...",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/pound-sterling-extends-winning-streak-against-us-dollar-ahead-of-key-uk-us-data-202508110757",
-      "published_at": "2025-08-11T11:40:25",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 1827438283596003247,
-      "title": "USD/CNH is still trading in a range – UOB Group",
-      "summary": "US Dollar (USD) is likely to consolidate; firmer underlying tone suggests a higher range of 7.1820/7.1980.",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/usd-cnh-is-still-trading-in-a-range-uob-group-202508111138",
-      "published_at": "2025-08-11T11:38:43",
-      "impact": "low",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 7621462901096286408,
-      "title": "EUR quiet ahead of Tuesday’s ZEW – Scotiabank",
-      "summary": "The Euro (EUR) is entering Monday’s NA session flat against the US Dollar (USD) as it extends its consolidation of last week’s gains, Scotiabank's Chief FX Strategists Shaun Osborne and Eric Theoret r...",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/eur-quiet-ahead-of-tuesdays-zew-scotiabank-202508111132",
-      "published_at": "2025-08-11T11:32:46",
-      "impact": "low",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 889197461250048600,
-      "title": "USD/JPY: Any advance is likely to be part of a higher range of 147.20/148.25 – UOB Group",
-      "summary": "US Dollar (USD) could rebound further, but any advance is likely to be part of a higher range of 147.20/148.25. In the longer run, downward momentum is slowing; the likelihood of USD dropping further ...",
-      "source": "FXStreet",
-      "url": "https://www.fxstreet.com/news/usd-jpy-any-advance-is-likely-to-be-part-of-a-higher-range-of-14720-14825-uob-group-202508111129",
-      "published_at": "2025-08-11T11:29:24",
-      "impact": "low",
-      "currency_pairs": [
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
     },
     {
       "id": 1,
