@@ -46,6 +46,9 @@ API Endpoint: /api/news
     ↓
 Frontend LiveNewsFeed Component
 
+Market Sentiment:
+
+
 
 
 

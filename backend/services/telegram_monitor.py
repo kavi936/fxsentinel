@@ -19,13 +19,16 @@ class TelegramMonitor:
         self.bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
         self.session_name = 'fxsentinel_session'
         
-        # Channel to monitor
+        # Channel to monitor (Note: Bot API cannot read public channel messages)
+        # These channels require user account access, not bot token
         self.target_channels = [
+            # Public channels (require user account, not bot)
             'WatcherGuru',  # Main channel - https://t.me/WatcherGuru
             '@WatcherGuru',  # With @ symbol
             'WatcherGuruChat',  # Chat channel mentioned in description
-            'forex_signals',  # Test public forex channel
-            'forex_news',  # Test public forex channel
+            
+            # Alternative: Private channels where bot is admin
+            # Add these if you have access to private forex channels
         ]
         
         # Forex keywords for filtering

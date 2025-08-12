@@ -793,7 +793,7 @@ function Dashboard() {
         </div>
       )}
 
-      <main className="dashboard-main">
+            <main className="dashboard-main">
         {activeTab === 'markets' && (
           <Markets 
             tradingData={tradingData}
@@ -816,7 +816,7 @@ function Dashboard() {
       {activeTab === 'overview' && (
         <Overview />
       )}
-    </div>
+  </div>
   );
 }
 

@@ -1086,48 +1086,147 @@ const Overview = () => {
             <div className="sentiment-content">
               <div className="sentiment-overview">
                 <div className="sentiment-indicator">
-                  <div className="sentiment-label">Overall Sentiment</div>
+                  <div className="sentiment-label">Overall Market Sentiment</div>
                   <div className="sentiment-value bullish">Bullish</div>
                   <div className="sentiment-bar">
-                    <div className="sentiment-fill bullish" style={{width: '65%'}}></div>
+                    <div className="sentiment-fill bullish" style={{width: '68%'}}></div>
                   </div>
+                  <div className="sentiment-score">68/100</div>
                 </div>
                 
-                <div className="sentiment-breakdown">
-                  <div className="sentiment-item">
-                    <span className="currency-pair">EUR/USD</span>
-                    <span className="sentiment-score bullish">+0.65</span>
+                <div className="sentiment-metrics">
+                  <div className="metric-item">
+                    <span className="metric-label">Risk Appetite</span>
+                    <span className="metric-value high">High</span>
                   </div>
-                  <div className="sentiment-item">
-                    <span className="currency-pair">GBP/USD</span>
-                    <span className="sentiment-score bearish">-0.32</span>
+                  <div className="metric-item">
+                    <span className="metric-label">Volatility Index</span>
+                    <span className="metric-value medium">Medium</span>
                   </div>
-                  <div className="sentiment-item">
-                    <span className="currency-pair">USD/JPY</span>
-                    <span className="sentiment-score neutral">+0.08</span>
+                  <div className="metric-item">
+                    <span className="metric-label">Market Stress</span>
+                    <span className="metric-value low">Low</span>
                   </div>
-                  <div className="sentiment-item">
-                    <span className="currency-pair">USD/CHF</span>
-                    <span className="sentiment-score bullish">+0.42</span>
+                  <div className="metric-item">
+                    <span className="metric-label">Liquidity</span>
+                    <span className="metric-value high">High</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="sentiment-breakdown">
+                <h3>Major Pairs Sentiment</h3>
+                <div className="pairs-sentiment-grid">
+                  <div className="pair-sentiment-item">
+                    <div className="pair-header">
+                      <span className="pair-name">EUR/USD</span>
+                      <span className="pair-change positive">+0.12%</span>
+                    </div>
+                    <div className="sentiment-gauge">
+                      <div className="gauge-fill bullish" style={{width: '72%'}}></div>
+                    </div>
+                    <div className="pair-metrics">
+                      <span className="metric">RSI: 58</span>
+                      <span className="metric">Vol: 12.5%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pair-sentiment-item">
+                    <div className="pair-header">
+                      <span className="pair-name">GBP/USD</span>
+                      <span className="pair-change negative">-0.08%</span>
+                    </div>
+                    <div className="sentiment-gauge">
+                      <div className="gauge-fill bearish" style={{width: '35%'}}></div>
+                    </div>
+                    <div className="pair-metrics">
+                      <span className="metric">RSI: 42</span>
+                      <span className="metric">Vol: 15.2%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pair-sentiment-item">
+                    <div className="pair-header">
+                      <span className="pair-name">USD/JPY</span>
+                      <span className="pair-change positive">+0.25%</span>
+                    </div>
+                    <div className="sentiment-gauge">
+                      <div className="gauge-fill bullish" style={{width: '85%'}}></div>
+                    </div>
+                    <div className="pair-metrics">
+                      <span className="metric">RSI: 65</span>
+                      <span className="metric">Vol: 18.7%</span>
+                    </div>
+                  </div>
+                  
+                  <div className="pair-sentiment-item">
+                    <div className="pair-header">
+                      <span className="pair-name">USD/CHF</span>
+                      <span className="pair-change positive">+0.05%</span>
+                    </div>
+                    <div className="sentiment-gauge">
+                      <div className="gauge-fill neutral" style={{width: '52%'}}></div>
+                    </div>
+                    <div className="pair-metrics">
+                      <span className="metric">RSI: 51</span>
+                      <span className="metric">Vol: 8.9%</span>
+                    </div>
                   </div>
                 </div>
               </div>
               
               <div className="sentiment-factors">
-                <h3>Key Factors</h3>
-                <div className="factor-list">
-                  <div className="factor-item positive">
-                    <span className="factor-icon">📈</span>
-                    <span className="factor-text">Strong US economic data</span>
+                <h3>Market Drivers</h3>
+                <div className="drivers-list">
+                  <div className="driver-item positive">
+                    <div className="driver-icon">📈</div>
+                    <div className="driver-content">
+                      <div className="driver-title">Strong US Economic Data</div>
+                      <div className="driver-description">Recent CPI and employment figures support USD strength</div>
+                    </div>
+                    <div className="driver-impact">High Impact</div>
                   </div>
-                  <div className="factor-item negative">
-                    <span className="factor-icon">📉</span>
-                    <span className="factor-text">ECB dovish signals</span>
+                  
+                  <div className="driver-item negative">
+                    <div className="driver-icon">📉</div>
+                    <div className="driver-content">
+                      <div className="driver-title">ECB Policy Uncertainty</div>
+                      <div className="driver-description">Mixed signals on future rate decisions</div>
+                    </div>
+                    <div className="driver-impact">Medium Impact</div>
                   </div>
-                  <div className="factor-item positive">
-                    <span className="factor-icon">📈</span>
-                    <span className="factor-text">Risk appetite improving</span>
+                  
+                  <div className="driver-item positive">
+                    <div className="driver-icon">📊</div>
+                    <div className="driver-content">
+                      <div className="driver-title">Risk Sentiment Improving</div>
+                      <div className="driver-description">Global markets showing increased risk appetite</div>
+                    </div>
+                    <div className="driver-impact">Medium Impact</div>
                   </div>
+                  
+                  <div className="driver-item neutral">
+                    <div className="driver-icon">⚖️</div>
+                    <div className="driver-content">
+                      <div className="driver-title">Central Bank Divergence</div>
+                      <div className="driver-description">Mixed policy outlooks creating balanced flows</div>
+                    </div>
+                    <div className="driver-impact">Low Impact</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="sentiment-summary">
+                <div className="summary-header">
+                  <h3>Market Outlook</h3>
+                  <span className="outlook-time">Next 24h</span>
+                </div>
+                <div className="summary-content">
+                  <p>Overall market sentiment remains bullish with strong USD fundamentals and improving risk appetite. Key focus on upcoming Fed minutes and ECB commentary. Expect continued USD strength against EUR and GBP, while JPY weakness persists.</p>
+                </div>
+                <div className="summary-actions">
+                  <button className="action-btn primary">View Detailed Analysis</button>
+                  <button className="action-btn secondary">Set Alerts</button>
                 </div>
               </div>
             </div>
@@ -1506,6 +1605,28 @@ const Overview = () => {
           </div>
         </div>
       )}
+
+      {/* Footer Disclaimer */}
+      <div className="overview-footer">
+        <div className="footer-disclaimer">
+          <div className="disclaimer-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+              <line x1="12" y1="9" x2="12" y2="13"></line>
+              <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+          </div>
+          <div className="disclaimer-content">
+            <h4>Financial Disclaimer</h4>
+            <p>
+              We are not financial advisors. The information provided on this platform is for educational and informational purposes only. 
+              All trading involves risk, and past performance does not guarantee future results. 
+              Always conduct your own research and consider consulting with a qualified financial advisor before making any investment decisions. 
+              FXSentinel does not provide investment advice or recommendations.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
   );
