@@ -9,6 +9,10 @@ import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import Overview from './Overview';
 import Markets from './Markets';
 import Alerts from './Alerts';
+import TimezoneSettings from './TimezoneSettings';
+import NotificationsPopup from './NotificationsPopup';
+import ProfilePopup from './ProfilePopup';
+import MarketStatusPopup from './MarketStatusPopup';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -42,6 +46,10 @@ function Dashboard() {
     nextSession: null
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [timezoneSettingsOpen, setTimezoneSettingsOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [marketStatusOpen, setMarketStatusOpen] = useState(false);
 
   // Fetch news data on mount
   useEffect(() => {
@@ -408,6 +416,16 @@ function Dashboard() {
     saveAlertSettings({ ...alertSettings, [setting]: value });
   };
 
+  const handleTimezoneChange = (newTimezone) => {
+    // Force re-render of components that display time
+    setCurrentTime(new Date());
+    
+    // Trigger a custom event to notify other components
+    window.dispatchEvent(new CustomEvent('timezoneChanged', { 
+      detail: { timezone: newTimezone } 
+    }));
+  };
+
   const saveAlertSettings = async (settings) => {
     try {
       await axios.post(config.endpoints.alertSettings, settings);
@@ -630,7 +648,12 @@ function Dashboard() {
           </div>
           
           <div className="navbar-right">
-            <div className="market-status">
+            <div 
+              className="market-status"
+              onClick={() => setMarketStatusOpen(true)}
+              style={{ cursor: 'pointer' }}
+              title="Click for detailed market status"
+            >
               <span className={`status-dot ${marketStatus.isOpen ? 'open' : 'closed'}`}></span>
               <div className="status-content">
                 <span className="status-text">
@@ -649,23 +672,35 @@ function Dashboard() {
                 <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
               </svg>
             </button>
-            <button className="notification-btn" title="Notifications">
+            <button 
+              className="notification-btn" 
+              title="Notifications"
+              onClick={() => setNotificationsOpen(true)}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
               <span className="notification-badge">3</span>
             </button>
-            <button className="profile-btn" title="User Profile">
+            <button 
+              className="profile-btn" 
+              title="User Profile"
+              onClick={() => setProfileOpen(true)}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
               </svg>
             </button>
-            <button className="settings-btn" title="Settings">
+            <button 
+              className="settings-btn" 
+              title="Settings"
+              onClick={() => setTimezoneSettingsOpen(true)}
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
               </svg>
             </button>
             <Link to="/" className="home-btn" title="Back to Home">
@@ -745,21 +780,30 @@ function Dashboard() {
                 </svg>
                 Refresh Data
               </button>
-              <button className="mobile-action-btn">
+              <button 
+                className="mobile-action-btn"
+                onClick={() => { setNotificationsOpen(true); setMobileMenuOpen(false); }}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
                 Notifications (3)
               </button>
-              <button className="mobile-action-btn">
+              <button 
+                className="mobile-action-btn"
+                onClick={() => { setProfileOpen(true); setMobileMenuOpen(false); }}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
                 Profile
               </button>
-              <button className="mobile-action-btn">
+              <button 
+                className="mobile-action-btn"
+                onClick={() => { setTimezoneSettingsOpen(true); setMobileMenuOpen(false); }}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="3"/>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
@@ -816,6 +860,34 @@ function Dashboard() {
       {activeTab === 'overview' && (
         <Overview />
       )}
+
+      {/* Timezone Settings Modal */}
+      <TimezoneSettings
+        isOpen={timezoneSettingsOpen}
+        onClose={() => setTimezoneSettingsOpen(false)}
+        onTimezoneChange={handleTimezoneChange}
+      />
+
+      {/* Notifications Popup */}
+      <NotificationsPopup
+        isOpen={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
+      />
+
+      {/* Profile Popup */}
+      <ProfilePopup
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+      />
+
+      {/* Market Status Popup */}
+      <MarketStatusPopup
+        isOpen={marketStatusOpen}
+        onClose={() => setMarketStatusOpen(false)}
+        marketStatus={marketStatus}
+      />
+
+
   </div>
   );
 }

@@ -3,30 +3,71 @@ import os
 from datetime import datetime, timedelta
 import json
 from typing import List, Dict, Optional
+import re
 
 class FinnhubHistoricalService:
     """Service for fetching historical economic data from Finnhub"""
     
     def __init__(self):
-        self.api_key = os.getenv('FINNHUB_API_KEY', 'd2d51d1r01qjem5j4g9gd2d51d1r01qjem5j4ga0')
+        self.api_key = os.getenv('FINNHUB_API_KEY')
         self.base_url = 'https://finnhub.io/api/v1'
         self.session = requests.Session()
-        self.session.headers.update({
-            'X-Finnhub-Token': self.api_key,
-            'User-Agent': 'FXSentinel/1.0'
-        })
+        self.session.headers.update({'X-Finnhub-Token': self.api_key})
     
+    def _parse_economic_value(self, value) -> Optional[float]:
+        """
+        Parse economic data value from various formats
+        
+        Args:
+            value: Raw value from API (could be string, number, or None)
+            
+        Returns:
+            Parsed float value or None if invalid
+        """
+        if value is None:
+            return None
+            
+        # If it's already a number, return it
+        if isinstance(value, (int, float)):
+            return float(value)
+            
+        # If it's a string, try to parse it
+        if isinstance(value, str):
+            # Remove any whitespace
+            value = value.strip()
+            
+            # Handle percentage values (e.g., "2.3 %", "2.3%")
+            if '%' in value:
+                # Extract the numeric part
+                numeric_part = re.sub(r'[^\d.-]', '', value)
+                try:
+                    return float(numeric_part)
+                except ValueError:
+                    return None
+            
+            # Handle plain numeric strings
+            try:
+                return float(value)
+            except ValueError:
+                return None
+                
+        return None
+
     def get_historical_data_for_indicator(self, indicator_name: str, months: int = 24) -> List[Dict]:
         """
         Get historical data for a specific economic indicator
         
         Args:
-            indicator_name: Name of the indicator (e.g., 'CPI', 'GDP', 'Unemployment')
-            months: Number of months of historical data to fetch
+            indicator_name: Name of the economic indicator
+            months: Number of months of historical data
             
         Returns:
             List of historical data points
         """
+        if not self.api_key:
+            print("❌ Finnhub API key not configured")
+            return []
+
         try:
             # Calculate date range
             end_date = datetime.now()
@@ -47,18 +88,49 @@ class FinnhubHistoricalService:
             data = response.json()
             events = data.get('economicCalendar', [])
             
-            # Filter events for the specific indicator
+            print(f"📊 Total events from Finnhub: {len(events)}")
+            
+            # Filter events for the specific indicator with more flexible matching
             indicator_events = []
             indicator_lower = indicator_name.lower()
             
+            # Create a list of possible matches for different indicators
+            indicator_matches = {
+                'cpi': ['cpi', 'inflation', 'consumer price index'],
+                'gdp': ['gdp', 'gross domestic product'],
+                'unemployment': ['unemployment', 'jobless', 'employment'],
+                'employment': ['employment', 'non farm payrolls', 'payrolls'],
+                'retail sales': ['retail sales', 'retail'],
+                'inflation': ['inflation', 'cpi', 'consumer price'],
+                'interest rate': ['interest rate', 'rate decision'],
+                'manufacturing': ['manufacturing', 'pmi', 'industrial production']
+            }
+            
+            # Get the list of keywords to match for this indicator
+            keywords = indicator_matches.get(indicator_lower, [indicator_lower])
+            
             for event in events:
                 event_name = event.get('event', '').lower()
+                country = event.get('country', '').lower()
                 
-                # Check if this event matches our indicator
-                if indicator_lower in event_name:
+                # Check if this event matches our indicator keywords
+                matches = False
+                for keyword in keywords:
+                    if keyword in event_name:
+                        matches = True
+                        break
+                
+                # Also check if the indicator name is in the event name (backward compatibility)
+                if not matches and indicator_lower in event_name:
+                    matches = True
+                
+                if matches:
                     # Only include events with actual data
                     if event.get('actual') is not None:
                         indicator_events.append(event)
+                        print(f"✅ Matched event: {event.get('event')} ({event.get('country')}) - {event.get('actual')}")
+            
+            print(f"📊 Found {len(indicator_events)} matching events for {indicator_name}")
             
             # Sort by date (most recent first)
             indicator_events.sort(key=lambda x: x.get('time', ''), reverse=True)
@@ -73,20 +145,27 @@ class FinnhubHistoricalService:
                         date_str = time_str.split(' ')[0]
                         event_date = datetime.strptime(date_str, '%Y-%m-%d')
                         
-                        historical_data.append({
-                            'date': event_date.strftime('%Y-%m-%d'),
-                            'value': event.get('actual'),
-                            'previous': event.get('prev'),
-                            'expected': event.get('estimate'),
-                            'unit': event.get('unit', ''),
-                            'event_name': event.get('event'),
-                            'country': event.get('country', '')
-                        })
+                        # Parse and normalize the actual value
+                        raw_actual = event.get('actual')
+                        parsed_actual = self._parse_economic_value(raw_actual)
+                        
+                        # Only include data points with valid numeric values
+                        if parsed_actual is not None:
+                            historical_data.append({
+                                'date': event_date.strftime('%Y-%m-%d'),
+                                'value': parsed_actual,
+                                'previous': self._parse_economic_value(event.get('prev')),
+                                'expected': self._parse_economic_value(event.get('estimate')),
+                                'unit': event.get('unit', ''),
+                                'event_name': event.get('event'),
+                                'country': event.get('country', ''),
+                                'raw_value': raw_actual  # Keep original for debugging
+                            })
                 except Exception as e:
                     print(f"⚠️ Error parsing event date: {e}")
                     continue
             
-            print(f"✅ Found {len(historical_data)} historical data points for {indicator_name}")
+            print(f"✅ Found {len(historical_data)} valid historical data points for {indicator_name}")
             return historical_data
             
         except Exception as e:

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
 import LiveNewsFeed from './LiveNewsFeed';
 import { config } from '../config';
+import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
 import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 
@@ -47,6 +48,93 @@ const Overview = () => {
   });
   
   const { prices, loading, error } = useForexPrices();
+
+  // Timezone state
+  const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
+
+  // Format economic calendar time
+  const formatCalendarTime = (timeStr, dateStr) => {
+    try {
+      // Parse the time and date from the backend format
+      // Backend sends: time="14:30 UTC", date="Tue, Aug 12"
+      const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})\s*UTC/);
+      const dateMatch = dateStr.match(/(\w{3}),\s*(\w{3})\s*(\d{1,2})/);
+      
+      if (timeMatch && dateMatch) {
+        const hour = parseInt(timeMatch[1]);
+        const minute = timeMatch[2];
+        const dayName = dateMatch[1];
+        const month = dateMatch[2];
+        const day = dateMatch[3];
+        
+        // Create a date string that we can parse
+        const currentYear = new Date().getFullYear();
+        const monthMap = {
+          'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
+          'Jul': 6, 'Aug': 7, 'Sep': 8, 'Oct': 9, 'Nov': 10, 'Dec': 11
+        };
+        
+        const monthIndex = monthMap[month];
+        if (monthIndex !== undefined) {
+          // Create UTC date string and parse it properly as UTC
+          const utcDateString = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(parseInt(day)).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${minute}:00.000Z`;
+          const utcDate = new Date(utcDateString);
+          
+          // Convert to user's timezone
+          if (currentTimezone !== 'UTC') {
+            const convertedTime = utcDate.toLocaleTimeString('en-US', {
+              timeZone: currentTimezone,
+              hour12: false,
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+            
+            const convertedDate = utcDate.toLocaleDateString('en-US', {
+              timeZone: currentTimezone,
+              weekday: 'short',
+              month: 'short',
+              day: 'numeric'
+            });
+            
+            const tzAbbr = getTimezoneAbbreviation(currentTimezone);
+            return {
+              time: `${convertedTime} ${tzAbbr}`,
+              date: convertedDate
+            };
+          }
+        }
+      }
+      
+      // Fallback to original format
+      return { time: timeStr, date: dateStr };
+    } catch (error) {
+      console.error('Error formatting calendar time:', error);
+      return { time: timeStr, date: dateStr };
+    }
+  };
+
+  // Listen for timezone changes
+  useEffect(() => {
+    const checkTimezone = () => {
+      const newTimezone = getUserTimezone();
+      if (newTimezone !== currentTimezone) {
+        setCurrentTimezone(newTimezone);
+      }
+    };
+
+    const timezoneInterval = setInterval(checkTimezone, 1000);
+    
+    const handleTimezoneChange = (e) => {
+      setCurrentTimezone(e.detail.timezone);
+    };
+
+    window.addEventListener('timezoneChanged', handleTimezoneChange);
+    
+    return () => {
+      clearInterval(timezoneInterval);
+      window.removeEventListener('timezoneChanged', handleTimezoneChange);
+    };
+  }, [currentTimezone]);
 
   // Economic calendar state
   const [economicEvents, setEconomicEvents] = useState([]);
@@ -857,15 +945,22 @@ const Overview = () => {
                     >
                     <div className="event-main-row">
                       <div className={`event-time impact-${event.impact}`}>
-                        <span className="time">{event.time}</span>
-                        <span className="date">{event.date}</span>
+                        {(() => {
+                          const formatted = formatCalendarTime(event.time, event.date);
+                          return (
+                            <>
+                              <span className="time">{formatted.time}</span>
+                              <span className="date">{formatted.date}</span>
+                            </>
+                          );
+                        })()}
                       </div>
                       <div className="event-content">
                         <div className="event-header-row">
                           <h3 className="event-title">{event.title}</h3>
                           <div className="status-box">
                             <span className="currency">{event.currency}</span>
-                            <span className="status-indicator upcoming">{event.status}</span>
+                            <span className={`status-indicator ${event.status.toLowerCase()}`}>{event.status}</span>
                           </div>
                         </div>
                         <div className="event-meta-row">
