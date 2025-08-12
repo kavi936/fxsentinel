@@ -1,6 +1,6 @@
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (window.location.hostname === 'localhost' ? 'http://localhost:8000' : 'https://fxsentinel-production.up.railway.app');
+  (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://fxsentinel-production.up.railway.app');
 
 export const config = {
   API_BASE_URL,
@@ -15,6 +15,12 @@ export const config = {
     // Forex prices endpoint (secure backend call)
     forexPrices: `${API_BASE_URL}/api/forex-prices`,
     // Optimized dashboard data endpoint (single request)
-    dashboardData: `${API_BASE_URL}/api/dashboard-data`
+    dashboardData: `${API_BASE_URL}/api/dashboard-data`,
+    // Economic calendar endpoint (Finnhub integration)
+    economicCalendar: `${API_BASE_URL}/api/economic-calendar`,
+    // Finnhub test endpoint
+    finnhubTest: `${API_BASE_URL}/api/finnhub-test`,
+    // Economic chart endpoint
+    economicChart: `${API_BASE_URL}/api/economic-chart`
   }
 }; 

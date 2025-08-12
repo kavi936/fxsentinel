@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
 import LiveNewsFeed from './LiveNewsFeed';
+import { config } from '../config';
 import './Overview.css';
+import EconomicChartPopup from './EconomicChartPopup.jsx';
 
 const Overview = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -46,107 +48,15 @@ const Overview = () => {
   
   const { prices, loading, error } = useForexPrices();
 
-  // Mock economic calendar data
-  const [economicEvents] = useState([
-    {
-      id: 1,
-      time: '13:30 UTC',
-      date: 'Sun, Aug 10',
-      title: 'US CPI Data Release',
-      type: 'ECONOMIC RELEASE',
-      currency: 'USD',
-      status: 'UPCOMING',
-      impact: 'high',
-      currencyPairs: ['EUR/USD', 'USD/JPY'],
-      previous: '3.2%',
-      expected: '3.1%',
-      actual: '--'
-    },
-    {
-      id: 2,
-      time: '12:45 UTC',
-      date: 'Mon, Aug 11',
-      title: 'ECB Interest Rate Decision',
-      type: 'ECONOMIC RELEASE',
-      currency: 'EUR',
-      status: 'UPCOMING',
-      impact: 'high',
-      currencyPairs: ['EUR/USD', 'EUR/GBP'],
-      previous: '4.50%',
-      expected: '4.50%',
-      actual: '--'
-    },
-    {
-      id: 3,
-      time: '14:00 UTC',
-      date: 'Mon, Aug 11',
-      title: 'US Retail Sales',
-      type: 'ECONOMIC RELEASE',
-      currency: 'USD',
-      status: 'UPCOMING',
-      impact: 'medium',
-      currencyPairs: ['GBP/USD', 'USD/CHF'],
-      previous: '0.2%',
-      expected: '0.1%',
-      actual: '--'
-    },
-    {
-      id: 4,
-      time: '09:30 UTC',
-      date: 'Tue, Aug 12',
-      title: 'UK Employment Data',
-      type: 'ECONOMIC RELEASE',
-      currency: 'GBP',
-      status: 'UPCOMING',
-      impact: 'medium',
-      currencyPairs: ['GBP/USD', 'EUR/GBP'],
-      previous: '4.2%',
-      expected: '4.1%',
-      actual: '--'
-    },
-    {
-      id: 5,
-      time: '15:00 UTC',
-      date: 'Tue, Aug 12',
-      title: 'Fed Chair Powell Speech',
-      type: 'CENTRAL BANK',
-      currency: 'USD',
-      status: 'UPCOMING',
-      impact: 'high',
-      currencyPairs: ['EUR/USD', 'USD/JPY'],
-      previous: '--',
-      expected: '--',
-      actual: '--'
-    },
-    {
-      id: 6,
-      time: '08:00 UTC',
-      date: 'Wed, Aug 13',
-      title: 'Australian Employment Change',
-      type: 'ECONOMIC RELEASE',
-      currency: 'AUD',
-      status: 'UPCOMING',
-      impact: 'low',
-      currencyPairs: ['AUD/USD', 'EUR/AUD'],
-      previous: '32.6K',
-      expected: '25.0K',
-      actual: '--'
-    },
-    {
-      id: 7,
-      time: '13:15 UTC',
-      date: 'Wed, Aug 13',
-      title: 'Canadian CPI Data',
-      type: 'ECONOMIC RELEASE',
-      currency: 'CAD',
-      status: 'UPCOMING',
-      impact: 'medium',
-      currencyPairs: ['USD/CAD', 'EUR/CAD'],
-      previous: '2.9%',
-      expected: '2.8%',
-      actual: '--'
-    }
-  ]);
+  // Economic calendar state
+  const [economicEvents, setEconomicEvents] = useState([]);
+  const [calendarLoading, setCalendarLoading] = useState(true);
+  const [calendarError, setCalendarError] = useState(null);
+  const [calendarSource, setCalendarSource] = useState('loading');
+
+  // Chart popup state
+  const [chartPopupOpen, setChartPopupOpen] = useState(false);
+  const [selectedChartEvent, setSelectedChartEvent] = useState(null);
 
   // Economic Calendar Button Handlers
   const handleDatePicker = () => {
@@ -157,11 +67,73 @@ const Overview = () => {
     setIsFilterModalOpen(true);
   };
 
+  // Chart popup handlers
+  const handleChartClick = (event) => {
+    setSelectedChartEvent(event);
+    setChartPopupOpen(true);
+  };
+
+  const handleCloseChart = () => {
+    setChartPopupOpen(false);
+    setSelectedChartEvent(null);
+  };
+
+  // Fetch economic calendar data
+  useEffect(() => {
+    fetchEconomicCalendar();
+  }, [selectedDateRange]);
+
+  const fetchEconomicCalendar = async () => {
+    try {
+      setCalendarLoading(true);
+      setCalendarError(null);
+      
+      // Format dates for API request
+      const startDate = selectedDateRange.start.toISOString().split('T')[0];
+      const endDate = selectedDateRange.end.toISOString().split('T')[0];
+      
+      const url = `${config.endpoints.economicCalendar}?start_date=${startDate}&end_date=${endDate}`;
+      console.log(`📅 Fetching calendar data for ${startDate} to ${endDate}`);
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (response.ok && data.events) {
+        setEconomicEvents(data.events);
+        setCalendarSource(data.source || 'API');
+        console.log(`✅ Fetched ${data.events.length} economic events from ${data.source} for ${startDate} to ${endDate}`);
+      } else {
+        throw new Error(data.message || 'Failed to fetch economic calendar');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching economic calendar:', error);
+      setCalendarError(error.message);
+      setCalendarSource('error');
+    } finally {
+      setCalendarLoading(false);
+    }
+  };
+
+  // Filter economic events based on current filter settings
+  const getFilteredEvents = () => {
+    if (!economicEvents.length) return [];
+    
+    return economicEvents.filter(event => {
+      // Filter by impact level
+      const impactMatch = filterImpactLevels[event.impact] || false;
+      
+      // Filter by currency
+      const currencyMatch = filterCurrencies[event.currency] || false;
+      
+      // Event passes if both impact and currency filters match
+      return impactMatch && currencyMatch;
+    });
+  };
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Simulate API refresh - in real implementation, this would fetch fresh data
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await fetchEconomicCalendar();
       console.log('🔄 Calendar data refreshed');
     } catch (error) {
       console.error('❌ Error refreshing calendar data:', error);
@@ -331,6 +303,9 @@ const Overview = () => {
     
     // Close modal
     setIsCalendarModalOpen(false);
+    
+    // Refresh calendar data with new date range
+    fetchEconomicCalendar();
   };
 
   // Filter handlers
@@ -864,13 +839,22 @@ const Overview = () => {
               </div>
             </div>
             <div className="calendar-content">
+              {/* Filter status indicator */}
+              <div className="filter-status">
+                <span className="filter-info">
+                  Showing {getFilteredEvents().length} of {economicEvents.length} events
+                  {calendarSource && <span className="data-source"> • Source: {calendarSource}</span>}
+                </span>
+                {calendarLoading && <span className="loading-indicator">Loading...</span>}
+              </div>
               <div className="events-list">
-                {economicEvents.map((event) => (
-                  <div 
-                    key={event.id} 
-                    className={`event-card ${selectedEvent?.id === event.id ? 'selected' : ''}`}
-                    onClick={() => handleEventClick(event)}
-                  >
+                {getFilteredEvents().length > 0 ? (
+                  getFilteredEvents().map((event) => (
+                    <div 
+                      key={event.id} 
+                      className={`event-card ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      onClick={() => handleEventClick(event)}
+                    >
                     <div className="event-main-row">
                       <div className={`event-time impact-${event.impact}`}>
                         <span className="time">{event.time}</span>
@@ -887,9 +871,13 @@ const Overview = () => {
                         <div className="event-meta-row">
                           <span className="event-category">{event.type}</span>
                           <div className="affected-pairs">
-                            {event.currencyPairs.map((pair, pairIndex) => (
-                              <span key={pairIndex} className="pair-badge">{pair}</span>
-                            ))}
+                            {event.currencyPairs && event.currencyPairs.length > 0 ? (
+                              event.currencyPairs.map((pair, pairIndex) => (
+                                <span key={pairIndex} className="pair-badge">{pair}</span>
+                              ))
+                            ) : (
+                              <span className="pair-badge no-pairs">No specific pairs</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -909,7 +897,7 @@ const Overview = () => {
                       </div>
                       <div className="graph-icon" onClick={(e) => {
                         e.stopPropagation();
-                        handleChartView(event.title);
+                        handleChartClick(event);
                       }}>
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M3 3v18h18"></path>
@@ -920,7 +908,14 @@ const Overview = () => {
                       </div>
                     </div>
                   </div>
-                ))}
+                ))
+                ) : (
+                  <div className="no-events-state">
+                    <div className="no-events-icon">📅</div>
+                    <div className="no-events-text">No events match your current filters</div>
+                    <div className="no-events-subtext">Try adjusting your filter settings to see more events</div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -1605,6 +1600,13 @@ const Overview = () => {
           </div>
         </div>
       )}
+
+      {/* Chart Popup */}
+      <EconomicChartPopup
+        event={selectedChartEvent}
+        isOpen={chartPopupOpen}
+        onClose={handleCloseChart}
+      />
 
       {/* Footer Disclaimer */}
       <div className="overview-footer">
