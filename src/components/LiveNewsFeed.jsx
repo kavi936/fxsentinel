@@ -104,10 +104,17 @@ const LiveNewsFeed = () => {
     }
   };
 
-  const filteredNews = news.filter(item => {
-    if (filter === 'all') return true;
-    return item.impact?.toLowerCase() === filter;
-  });
+  const filteredNews = news
+    .filter(item => {
+      if (filter === 'all') return true;
+      return item.impact?.toLowerCase() === filter;
+    })
+    .sort((a, b) => {
+      // Sort by published_at timestamp in descending order (newest first)
+      const dateA = new Date(a.published_at);
+      const dateB = new Date(b.published_at);
+      return dateB - dateA;
+    });
 
   const clearSelection = () => {
     setSelectedNews(null);
