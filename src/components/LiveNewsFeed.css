@@ -77,6 +77,12 @@
   font-weight: 500;
 }
 
+.timezone-indicator {
+  color: #22c55e;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
 .news-controls {
   display: flex;
   gap: 12px;

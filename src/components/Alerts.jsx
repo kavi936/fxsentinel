@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatTimeForTimezone } from '../utils/timezoneUtils';
 import './Alerts.css';
 
 function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
@@ -89,7 +90,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                 <div className="alert-content">
                   <h4>{alert.event}</h4>
                   <p>{alert.status === 'sent' ? 'Delivered' : 'Scheduled'}</p>
-                  <small>{new Date(alert.timestamp).toLocaleString()}</small>
+                  <small>{formatTimeForTimezone(alert.timestamp, null, 'datetime')}</small>
                 </div>
                 <div className="alert-recipients">
                   {alert.recipients} recipients

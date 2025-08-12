@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { config } from '../config';
+import { formatNewsTime, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
 import './LiveNewsFeed.css';
 
 const LiveNewsFeed = () => {
@@ -11,6 +12,7 @@ const LiveNewsFeed = () => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [filter, setFilter] = useState('all'); // all, high, medium, low
+  const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
 
   useEffect(() => {
     fetchNews();
@@ -18,6 +20,40 @@ const LiveNewsFeed = () => {
     const interval = setInterval(fetchNews, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Listen for timezone changes
+  useEffect(() => {
+    const checkTimezone = () => {
+      const newTimezone = getUserTimezone();
+      if (newTimezone !== currentTimezone) {
+        setCurrentTimezone(newTimezone);
+      }
+    };
+
+    // Check timezone every second
+    const timezoneInterval = setInterval(checkTimezone, 1000);
+    
+    // Also listen for storage events (when timezone is changed in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key === 'fxSentinel_userTimezone') {
+        setCurrentTimezone(e.newValue || 'UTC');
+      }
+    };
+
+    // Listen for custom timezone change events
+    const handleTimezoneChange = (e) => {
+      setCurrentTimezone(e.detail.timezone);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('timezoneChanged', handleTimezoneChange);
+    
+    return () => {
+      clearInterval(timezoneInterval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('timezoneChanged', handleTimezoneChange);
+    };
+  }, [currentTimezone]);
 
   const fetchNews = async () => {
     try {
@@ -29,7 +65,10 @@ const LiveNewsFeed = () => {
       
       if (response.ok) {
         setNews(data.news || []);
-        setLastUpdated(data.last_updated);
+        console.log('API response last_updated:', data.last_updated, typeof data.last_updated);
+        // Use current time as fallback if last_updated is not provided or invalid
+        const lastUpdatedValue = data.last_updated || new Date().toISOString();
+        setLastUpdated(lastUpdatedValue);
       } else {
         throw new Error('Failed to fetch news');
       }
@@ -87,21 +126,48 @@ const LiveNewsFeed = () => {
   };
 
   const formatTime = (timestamp) => {
-    try {
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diffMs = now - date;
-      const diffMins = Math.floor(diffMs / 60000);
-      const diffHours = Math.floor(diffMs / 3600000);
-      
-      if (diffMins < 1) return 'Just now';
-      if (diffMins < 60) return `${diffMins}m ago`;
-      if (diffHours < 24) return `${diffHours}h ago`;
-      
-      return date.toLocaleDateString();
-    } catch {
-      return 'Unknown';
+    return formatNewsTime(timestamp, currentTimezone);
+  };
+
+  const formatTimeAgo = (timestamp) => {
+    console.log('formatTimeAgo input:', timestamp, typeof timestamp);
+    
+    // Handle null/undefined
+    if (!timestamp) {
+      console.error('Timestamp is null or undefined');
+      return 'Recently';
     }
+    
+    // Ensure timestamp is a valid Date object
+    let date;
+    if (timestamp instanceof Date) {
+      date = timestamp;
+    } else if (typeof timestamp === 'string') {
+      // Handle ISO string format
+      date = new Date(timestamp);
+    } else {
+      // Try to create Date from any other format
+      date = new Date(timestamp);
+    }
+    
+    // Check if the date is valid
+    if (isNaN(date.getTime())) {
+      console.error('Invalid timestamp after conversion:', timestamp, 'converted to:', date);
+      return 'Recently';
+    }
+    
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    console.log('Time calculation:', { now, date, diff, minutes, hours, days });
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
   };
 
   const filteredNews = news
@@ -129,7 +195,7 @@ const LiveNewsFeed = () => {
           <div className="news-stats">
             {lastUpdated && (
               <span className="last-updated">
-                Updated {formatTime(lastUpdated)}
+                Updated {formatTimeAgo(lastUpdated)}
               </span>
             )}
           </div>

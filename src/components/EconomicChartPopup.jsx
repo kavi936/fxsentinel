@@ -65,9 +65,40 @@ const EconomicChartPopup = ({ event, isOpen, onClose }) => {
     }
 
     const data = chartData.historical_data;
-    const maxValue = Math.max(...data.map(d => d.value || 0));
-    const minValue = Math.min(...data.map(d => d.value || 0));
+    
+    // Filter out any invalid data points and ensure all values are numbers
+    const validData = data.filter(point => 
+      point.value !== null && 
+      point.value !== undefined && 
+      typeof point.value === 'number' && 
+      !isNaN(point.value)
+    );
+
+    if (validData.length === 0) {
+      return (
+        <div className="no-chart-data">
+          <div className="no-data-icon">⚠️</div>
+          <p>No valid numeric data available</p>
+          <p className="no-data-subtext">All data points contain invalid values</p>
+        </div>
+      );
+    }
+
+    // Calculate statistics on valid data only
+    const values = validData.map(d => d.value);
+    const maxValue = Math.max(...values);
+    const minValue = Math.min(...values);
     const range = maxValue - minValue;
+
+    // Add debugging information
+    console.log('Chart Data Debug:', {
+      totalPoints: data.length,
+      validPoints: validData.length,
+      minValue,
+      maxValue,
+      range,
+      sampleValues: values.slice(0, 5)
+    });
 
     return (
       <div className="chart-container">
@@ -75,10 +106,13 @@ const EconomicChartPopup = ({ event, isOpen, onClose }) => {
           <h3>{chartData.indicator} Historical Data</h3>
           <div className="chart-stats">
             <span className="stat">
-              <strong>Latest:</strong> {formatValue(data[0]?.value, data[0]?.unit)}
+              <strong>Latest:</strong> {formatValue(validData[0]?.value, validData[0]?.unit)}
             </span>
             <span className="stat">
-              <strong>Average:</strong> {formatValue(chartData.statistics?.average, data[0]?.unit)}
+              <strong>Average:</strong> {formatValue(chartData.statistics?.average, validData[0]?.unit)}
+            </span>
+            <span className="stat">
+              <strong>Range:</strong> {formatValue(minValue, validData[0]?.unit)} - {formatValue(maxValue, validData[0]?.unit)}
             </span>
             <span className="stat">
               <strong>Trend:</strong> 
@@ -90,8 +124,17 @@ const EconomicChartPopup = ({ event, isOpen, onClose }) => {
         </div>
 
         <div className="chart-bars">
-          {data.slice(0, 20).map((point, index) => {
-            const height = range > 0 ? ((point.value - minValue) / range) * 100 : 50;
+          {validData.slice(0, 20).map((point, index) => {
+            // Calculate height percentage with better handling of edge cases
+            let height;
+            if (range === 0) {
+              height = 50; // Default height for flat data
+            } else {
+              height = ((point.value - minValue) / range) * 100;
+              // Ensure height is within reasonable bounds
+              height = Math.max(5, Math.min(95, height));
+            }
+            
             const isLatest = index === 0;
             
             return (
@@ -110,8 +153,13 @@ const EconomicChartPopup = ({ event, isOpen, onClose }) => {
         </div>
 
         <div className="chart-footer">
-          <p>Showing {data.length} data points over {chartData.timeframe}</p>
+          <p>Showing {validData.length} valid data points over {chartData.timeframe}</p>
           <p>Data source: Finnhub Economic Calendar</p>
+          {data.length !== validData.length && (
+            <p style={{color: '#ffa500', fontSize: '12px'}}>
+              ⚠️ Filtered out {data.length - validData.length} invalid data points
+            </p>
+          )}
         </div>
       </div>
     );
