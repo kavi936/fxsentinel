@@ -21,5 +21,5 @@ COPY . .
 # Expose port (Railway will set the PORT environment variable)
 EXPOSE $PORT
 
-# Start the application
-CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 
+# Start the application with proper configuration for Railway
+CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --keep-alive 2 
