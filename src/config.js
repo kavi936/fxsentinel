@@ -21,6 +21,11 @@ export const config = {
     // Finnhub test endpoint
     finnhubTest: `${API_BASE_URL}/api/finnhub-test`,
     // Economic chart endpoint
-    economicChart: `${API_BASE_URL}/api/economic-chart`
+    economicChart: `${API_BASE_URL}/api/economic-chart`,
+    // AI Analysis endpoints
+    backend: API_BASE_URL,
+    enhancedAnalysis: (id) => `${API_BASE_URL}/api/enhanced-analysis/${id}`,
+    newsSentiment: `${API_BASE_URL}/api/news-sentiment`,
+    technicalAnalysis: (pair) => `${API_BASE_URL}/api/technical-analysis/${pair}`
   }
 }; 

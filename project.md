@@ -49,9 +49,61 @@ Frontend LiveNewsFeed Component
 Market Sentiment:
 
 
+AI Analysis of Macro News:
 
+General:
 
+There are 2 scenarios. When a trader wants analysis before news, or after news has taken place. Based on this we can give them sufficient analysis.
 
+What is the news, what it means. If it comes in higher or lower than expected is it good for the currency or not ? How is it measured. Why does it impact the markets ?
+
+1. Immediate Market Impact
+
+Direction: Will this news likely push the market up, down, or sideways in the short term?
+
+Magnitude: Is the expected move small and choppy or big and volatile?
+
+Affected assets: Which currency pairs, stocks, commodities, or indices are most sensitive to this news?
+
+2. Long-term Market Impact
+
+It depends on...
+
+2. Context vs. Expectations
+
+Was it priced in? Did the market already anticipate this outcome?
+
+Deviation from forecast: How far is the actual data from analyst expectations or consensus forecasts?
+
+Historical reaction: How has the market reacted to similar news in the past?
+
+3. Sentiment Analysis
+
+Tone: Is the news generally bullish, bearish, or neutral for risk assets?
+
+Forward guidance: Does it change investor sentiment for the coming weeks/months?
+
+4. Macro & Cross-Market Links
+
+Correlated markets: How might this news spill over into related markets (e.g., oil news impacting CAD, geopolitical news impacting safe havens like USD/JPY or gold)?
+
+Intermarket signals: Are bonds, equities, or commodities confirming or contradicting the FX move?
+
+5. Trading Opportunities
+
+Scenarios: Key if/then setups (“If price breaks X after news, look for Y target”).
+
+Timeframe relevance: Is this a scalp opportunity, a swing trade, or a longer-term position setup?
+
+Risk factors: What could invalidate the trade idea? Are there upcoming events that could reverse the move?
+
+6. Big Picture Implications
+
+Policy outlook: Does it make central bank rate hikes/cuts more or less likely?
+
+Economic health signal: What does this mean for growth, inflation, or risk appetite?
+
+Narrative shift: Does it change the main story the market’s been trading on recently?
 
 
 
