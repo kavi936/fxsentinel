@@ -2017,4 +2017,8 @@ def home():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001) 
+    # Use Railway's PORT environment variable or default to 5001 for local development
+    port = int(os.environ.get('PORT', 5001))
+    # Only use debug mode in development
+    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    app.run(debug=debug_mode, host='0.0.0.0', port=port) 
