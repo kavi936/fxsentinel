@@ -480,17 +480,20 @@ const Overview = () => {
   };
 
   // AI Analysis handlers
-  const handleEventClick = (event) => {
+  const handleEventClick = async (event) => {
     console.log(`🎯 Event clicked: ${event.title}`);
     setSelectedEvent(event);
     setAiAnalysisState('loading');
     
-    // Simulate AI analysis generation
-    setTimeout(() => {
-      const analysis = generateEventAnalysis(event);
+    try {
+      // Generate real AI analysis
+      const analysis = await generateEventAnalysis(event);
       setAiAnalysis(analysis);
       setAiAnalysisState('event-analysis');
-    }, 2000);
+    } catch (error) {
+      console.error('❌ Error generating AI analysis:', error);
+      setAiAnalysisState('error');
+    }
   };
 
   const handleClearAnalysis = () => {
@@ -499,73 +502,122 @@ const Overview = () => {
     setAiAnalysisState('default');
   };
 
-  const generateEventAnalysis = (event) => {
-    // Mock AI analysis based on event type and impact
-    const analysis = {
-      event: event,
-      marketConfidence: Math.random() > 0.5 ? 'High' : 'Low',
-      confidenceScore: Math.floor(Math.random() * 40) + 60, // 60-100
-      sentiment: Math.random() > 0.5 ? 'bullish' : 'bearish',
-      predictions: [],
-      insights: [],
-      tradingOpportunities: []
-    };
-
-    // Generate predictions based on event
-    if (event.impact === 'high') {
-      analysis.predictions.push({
-        type: 'positive',
-        icon: '🎯',
-        text: `${event.currency} likely to see significant movement`
-      });
-      analysis.predictions.push({
-        type: 'negative',
-        icon: '⚠️',
-        text: `High volatility expected in ${event.currencyPairs.join(', ')}`
-      });
-    } else {
-      analysis.predictions.push({
-        type: 'positive',
-        icon: '📈',
-        text: `Moderate impact expected on ${event.currency}`
-      });
+  const generateEventAnalysis = async (event) => {
+    try {
+      console.log('🤖 Generating AI analysis for event:', event);
+      
+      // Call our enhanced AI analysis endpoint
+      const response = await fetch(`${config.endpoints.backend}/api/enhanced-analysis/${event.id}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const analysis = await response.json();
+      console.log('✅ AI analysis received:', analysis);
+      
+      // Transform the backend response to match frontend expectations
+      return {
+        event: event,
+        marketConfidence: analysis.basic_analysis?.confidence_score > 80 ? 'High' : 'Medium',
+        confidenceScore: parseInt(analysis.basic_analysis?.confidence?.replace('%', '') || '75'),
+        sentiment: analysis.sentiment_analysis?.sentiment || 'neutral',
+        predictions: [
+          {
+            type: 'positive',
+            icon: '🎯',
+            text: analysis.basic_analysis?.summary || 'AI analysis available'
+          }
+        ],
+        insights: analysis.sentiment_analysis?.trading_implications?.map(implication => ({
+          type: 'positive',
+          icon: '🤖',
+          text: implication
+        })) || [],
+        tradingOpportunities: analysis.basic_analysis?.trading_opportunities?.map(opp => ({
+          pair: opp.pair,
+          strategy: opp.strategy,
+          entry: opp.entry_zone?.min || 'N/A',
+          stopLoss: opp.stop_loss,
+          takeProfit: opp.take_profit,
+          probability: opp.probability
+        })) || [],
+        // Add new fields from enhanced analysis
+        sentimentAnalysis: analysis.sentiment_analysis,
+        technicalAnalyses: analysis.technical_analyses,
+        riskAssessment: analysis.basic_analysis?.risk_assessment
+      };
+      
+    } catch (error) {
+      console.error('❌ Error generating AI analysis:', error);
+      
+      // Fallback to basic analysis if enhanced fails
+      try {
+        const basicResponse = await fetch(`${config.endpoints.backend}/api/analysis/${event.id}`);
+        if (basicResponse.ok) {
+          const basicAnalysis = await basicResponse.json();
+          return {
+            event: event,
+            marketConfidence: 'Medium',
+            confidenceScore: parseInt(basicAnalysis.confidence?.replace('%', '') || '70'),
+            sentiment: 'neutral',
+            predictions: [
+              {
+                type: 'positive',
+                icon: '🎯',
+                text: basicAnalysis.summary || 'Analysis available'
+              }
+            ],
+            insights: [
+              {
+                type: 'positive',
+                icon: '🤖',
+                text: 'Basic AI analysis completed'
+              }
+            ],
+            tradingOpportunities: []
+          };
+        }
+      } catch (basicError) {
+        console.error('❌ Basic analysis also failed:', basicError);
+      }
+      
+      // Final fallback - return basic structure
+      return {
+        event: event,
+        marketConfidence: 'Low',
+        confidenceScore: 60,
+        sentiment: 'neutral',
+        predictions: [
+          {
+            type: 'negative',
+            icon: '⚠️',
+            text: 'Analysis temporarily unavailable'
+          }
+        ],
+        insights: [
+          {
+            type: 'negative',
+            icon: '📊',
+            text: 'Please try again later'
+          }
+        ],
+        tradingOpportunities: []
+      };
     }
-
-    // Generate insights
-    analysis.insights.push({
-      type: 'positive',
-      icon: '🤖',
-      text: `AI detected pattern in ${event.currency} price action`
-    });
-    analysis.insights.push({
-      type: 'negative',
-      icon: '📊',
-      text: `Volume analysis suggests cautious approach`
-    });
-
-    // Generate trading opportunities
-    event.currencyPairs.forEach(pair => {
-      analysis.tradingOpportunities.push({
-        pair: pair,
-        strategy: 'Breakout trade',
-        entry: '1.1650',
-        stopLoss: '1.1620',
-        takeProfit: '1.1700',
-        probability: Math.floor(Math.random() * 30) + 70 // 70-100%
-      });
-    });
-
-    return analysis;
   };
 
-  const handleRefreshAI = () => {
+  const handleRefreshAI = async () => {
     if (selectedEvent) {
       setAiAnalysisState('loading');
-      setTimeout(() => {
-        const analysis = generateEventAnalysis(selectedEvent);
+      try {
+        const analysis = await generateEventAnalysis(selectedEvent);
         setAiAnalysis(analysis);
         setAiAnalysisState('event-analysis');
-      }, 1500);
+      } catch (error) {
+        console.error('❌ Error refreshing AI analysis:', error);
+        setAiAnalysisState('error');
+      }
     }
   };
 
