@@ -230,7 +230,13 @@ from services.local_ai_analysis import local_ai_analyzer, MarketContext
 from services.news_sentiment_analyzer import news_sentiment_analyzer
 from services.technical_analysis_service import technical_analyzer
 from services.enhanced_ai_analysis import enhanced_ai_analyzer, MarketContext as EnhancedMarketContext
-from services.gpt_ai_analysis import gpt_ai_analyzer, MarketContext as GPTMarketContext
+try:
+    from services.gpt_ai_analysis import gpt_ai_analyzer, MarketContext as GPTMarketContext
+    GPT_AVAILABLE = True
+except Exception as e:
+    print(f"🔍 GPT Analyzer import failed: {e}")
+    gpt_ai_analyzer = None
+    GPT_AVAILABLE = False
 import pandas as pd
 import numpy as np
 
@@ -791,11 +797,80 @@ def get_enhanced_analysis(news_id):
         print(f"📊 Analysis type: {analysis_type.upper()} (Actual data: {event.get('actual', 'Not available')})")
         
         # Get GPT-powered comprehensive analysis
-        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(
-            event, 
-            gpt_market_context, 
-            analysis_type
-        )
+        if not GPT_AVAILABLE or not gpt_ai_analyzer:
+            print(f"🚨🚨🚨 GPT NOT AVAILABLE - USING FALLBACK 🚨🚨🚨")
+            # Create a fallback analysis result
+            from services.gpt_ai_analysis import GPTAnalysisResult
+            gpt_analysis = GPTAnalysisResult(
+                general_overview={
+                    "event_explanation": f"Analysis for {event.get('title', 'Unknown Event')} - GPT service unavailable",
+                    "market_logic": "Market impact assessment - using fallback analysis",
+                    "impact_level": event.get('impact', 'Medium'),
+                    "measurement_method": "Standard economic measurement"
+                },
+                immediate_impact={
+                    "direction": "Sideways",
+                    "magnitude": "Medium",
+                    "affected_pairs": ["EUR/USD", "USD/JPY"],
+                    "confidence": 60,
+                    "duration": "1-2 hours"
+                },
+                long_term_impact={
+                    "trend_implications": "Monitor for trend continuation or reversal",
+                    "structural_changes": "Watch for policy implications",
+                    "time_horizon": "1-2 weeks"
+                },
+                context_expectations={
+                    "priced_in_percentage": 50,
+                    "surprise_potential": "Medium",
+                    "historical_context": "Similar events have shown mixed results",
+                    "market_positioning": "Neutral positioning"
+                },
+                sentiment_analysis={
+                    "overall_tone": "Neutral",
+                    "risk_appetite": "No significant change expected",
+                    "forward_guidance": "Monitor for guidance changes"
+                },
+                cross_market_links={
+                    "bond_markets": "Monitor bond yield reactions",
+                    "equity_markets": "Watch for equity market correlation",
+                    "commodities": "Monitor commodity market impact",
+                    "safe_haven_flows": "Watch safe haven currency flows"
+                },
+                trading_framework={
+                    "key_levels": {
+                        "support": ["Key support levels"],
+                        "resistance": ["Key resistance levels"]
+                    },
+                    "timing": {
+                        "avoid_trading": "30 minutes around release",
+                        "best_setup": "1-2 hours after release",
+                        "monitoring_start": "1 hour before release"
+                    },
+                    "risk_management": {
+                        "position_sizing": "Normal",
+                        "correlation_risk": "Medium"
+                    }
+                },
+                big_picture={
+                    "policy_implications": "Monitor for policy implications",
+                    "economic_health": "Assess economic health impact",
+                    "narrative_shift": "Watch for narrative changes",
+                    "risk_level": "Medium"
+                },
+                confidence_score=60.0,
+                analysis_timestamp=datetime.now().isoformat(),
+                event_id=str(event.get('id', 'unknown')),
+                analysis_type=analysis_type,
+                model_used="fallback",
+                cost_estimate=0.0
+            )
+        else:
+            gpt_analysis = gpt_ai_analyzer.analyze_macro_event(
+                event, 
+                gpt_market_context, 
+                analysis_type
+            )
         
         # Debug: Log what we're getting from GPT
         print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
