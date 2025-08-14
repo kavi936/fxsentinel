@@ -73,16 +73,21 @@ class GPTAnalysisResult:
 
 class GPTAIAnalyzer:
     def __init__(self):
-        # Configure OpenAI
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
+        # Configure OpenAI - initialize client lazily to avoid startup errors
+        self.api_key = os.getenv('OPENAI_API_KEY')
+        self.client = None
+        
+        if not self.api_key:
             print("🔍 WARNING: OPENAI_API_KEY not found in environment variables!")
             print("🔍 This will cause GPT analysis to fail and use fallback content.")
         else:
-            print(f"🔍 OpenAI API Key found: {api_key[:10]}...{api_key[-4:]}")
-        
-        self.client = openai.OpenAI(api_key=api_key)
-        print(f"🔍 GPT Analyzer initialized with API key: {'VALID' if api_key else 'MISSING'}")
+            print(f"🔍 OpenAI API Key found: {self.api_key[:10]}...{self.api_key[-4:]}")
+            try:
+                self.client = openai.OpenAI(api_key=self.api_key)
+                print(f"🔍 GPT Analyzer initialized with API key: VALID")
+            except Exception as e:
+                print(f"🔍 Error initializing OpenAI client: {e}")
+                self.client = None
         
         # Initialize Redis for caching (optional - falls back to in-memory)
         self.redis_client = None
@@ -201,6 +206,14 @@ class GPTAIAnalyzer:
         prompt = self._build_analysis_prompt(event, market_context, analysis_type)
         
         try:
+            # Check if OpenAI client is available
+            if not self.client:
+                print(f"🚨🚨🚨 GPT CLIENT NOT AVAILABLE - EASY TO FIND 🚨🚨🚨")
+                print(f"🚨 API Key available: {'YES' if self.api_key else 'NO'}")
+                print(f"🚨 Client initialized: {'NO'}")
+                print(f"🚨🚨🚨 END CLIENT CHECK 🚨🚨🚨")
+                raise Exception("OpenAI client not initialized - API key may be missing")
+            
             # Make GPT API call
             response = self.client.chat.completions.create(
                 model=model,
@@ -586,5 +599,10 @@ Provide analysis that is educational and helps traders understand the market dyn
         # This is a simplified calculation
         return 0.0  # Would need to track actual hits/misses
 
-# Global instance
-gpt_ai_analyzer = GPTAIAnalyzer()
+# Global instance - create safely
+try:
+    gpt_ai_analyzer = GPTAIAnalyzer()
+except Exception as e:
+    print(f"🔍 Error creating GPT analyzer instance: {e}")
+    # Create a minimal instance that will use fallback
+    gpt_ai_analyzer = None
