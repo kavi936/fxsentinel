@@ -29,6 +29,8 @@ const Overview = () => {
     end: new Date()
   });
   const [quickSelectOption, setQuickSelectOption] = useState('this-month');
+  const [isSelectingRange, setIsSelectingRange] = useState(false);
+  const [rangeStartDate, setRangeStartDate] = useState(null);
   
   // Filter state
   const [filterImpactLevels, setFilterImpactLevels] = useState({
@@ -152,11 +154,14 @@ const Overview = () => {
   };
 
   const handleFilter = () => {
+    console.log('🔄 Opening filter modal');
     setIsFilterModalOpen(true);
   };
 
   // Chart popup handlers
   const handleChartClick = (event) => {
+    console.log('🔍 Chart clicked for event:', event);
+    console.log('🔍 Event title:', event.title);
     setSelectedChartEvent(event);
     setChartPopupOpen(true);
   };
@@ -206,16 +211,45 @@ const Overview = () => {
   const getFilteredEvents = () => {
     if (!economicEvents.length) return [];
     
-    return economicEvents.filter(event => {
-      // Filter by impact level
-      const impactMatch = filterImpactLevels[event.impact] || false;
+    console.log('🔍 Filtering events:', {
+      totalEvents: economicEvents.length,
+      filterImpactLevels,
+      filterCurrencies,
+      dateRange: `${selectedDateRange.start.toISOString().split('T')[0]} to ${selectedDateRange.end.toISOString().split('T')[0]}`
+    });
+    
+    // Debug: Log all unique impact levels and currencies in the data
+    const uniqueImpacts = [...new Set(economicEvents.map(event => event.impact))];
+    const uniqueCurrencies = [...new Set(economicEvents.map(event => event.currency))];
+    console.log('🔍 Unique impacts in data:', uniqueImpacts);
+    console.log('🔍 Unique currencies in data:', uniqueCurrencies);
+    
+    const filtered = economicEvents.filter(event => {
+      // Filter by impact level - handle case sensitivity
+      const eventImpact = event.impact?.toLowerCase();
+      const impactMatch = filterImpactLevels[eventImpact] || false;
       
       // Filter by currency
       const currencyMatch = filterCurrencies[event.currency] || false;
       
+      // Debug logging for first few events
+      if (economicEvents.indexOf(event) < 3) {
+        console.log(`🔍 Event "${event.title}":`, {
+          impact: event.impact,
+          eventImpact,
+          currency: event.currency,
+          impactMatch,
+          currencyMatch,
+          passes: impactMatch && currencyMatch
+        });
+      }
+      
       // Event passes if both impact and currency filters match
       return impactMatch && currencyMatch;
     });
+    
+    console.log(`✅ Filtered ${filtered.length} events from ${economicEvents.length} total for date range ${selectedDateRange.start.toISOString().split('T')[0]} to ${selectedDateRange.end.toISOString().split('T')[0]}`);
+    return filtered;
   };
 
   const handleRefresh = async () => {
@@ -235,6 +269,7 @@ const Overview = () => {
   };
 
   const handleCloseFilterModal = () => {
+    console.log('🔄 Closing filter modal');
     setIsFilterModalOpen(false);
   };
 
@@ -257,6 +292,22 @@ const Overview = () => {
     return `${months[date.getMonth()]} ${date.getFullYear()}`;
   };
 
+  const formatDateRange = (startDate, endDate) => {
+    if (!startDate || !endDate) return 'No date selected';
+    
+    const formatSingleDate = (date) => {
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    };
+    
+    if (startDate.toDateString() === endDate.toDateString()) {
+      return formatSingleDate(startDate);
+    } else {
+      return `${formatSingleDate(startDate)} - ${formatSingleDate(endDate)}`;
+    }
+  };
+
   const isSameDay = (date1, date2) => {
     return date1.getDate() === date2.getDate() && 
            date1.getMonth() === date2.getMonth() && 
@@ -265,6 +316,11 @@ const Overview = () => {
 
   const isToday = (date) => {
     return isSameDay(date, new Date());
+  };
+
+  const isInDateRange = (date, startDate, endDate) => {
+    if (!startDate || !endDate) return false;
+    return date >= startDate && date <= endDate;
   };
 
   const generateCalendarDays = (date) => {
@@ -288,8 +344,10 @@ const Overview = () => {
       days.push({ date: day, type: 'current-month' });
     }
     
-    // Next month days
-    for (let i = 1; i <= 6 - lastDay; i++) {
+    // Next month days - ensure we have exactly 42 days total (6 rows x 7 days)
+    const totalDays = days.length;
+    const nextMonthDaysNeeded = 42 - totalDays;
+    for (let i = 1; i <= nextMonthDaysNeeded; i++) {
       const day = new Date(date.getFullYear(), date.getMonth() + 1, i);
       days.push({ date: day, type: 'next-month' });
     }
@@ -316,11 +374,59 @@ const Overview = () => {
 
   // Date selection handlers
   const handleDateClick = (day) => {
-    setSelectedDate(day.date);
+    console.log('📅 Date clicked:', day.date.toDateString(), 'Type:', day.type);
+    
+    if (isSelectingRange) {
+      // Range selection mode
+      if (!rangeStartDate) {
+        // First click - set start date
+        setRangeStartDate(day.date);
+        setSelectedDate(day.date);
+        console.log('📅 Range start date set:', day.date.toDateString());
+      } else {
+        // Second click - set end date and complete range
+        const start = rangeStartDate < day.date ? rangeStartDate : day.date;
+        const end = rangeStartDate < day.date ? day.date : rangeStartDate;
+        
+        setSelectedDateRange({ start, end });
+        setSelectedDate(start);
+        setRangeStartDate(null);
+        setIsSelectingRange(false);
+        console.log('📅 Range selection completed:', start.toDateString(), 'to', end.toDateString());
+      }
+    } else {
+      // Single date selection mode
+      setSelectedDate(day.date);
+      const newDateRange = {
+        start: day.date,
+        end: day.date
+      };
+      setSelectedDateRange(newDateRange);
+      console.log('📅 Updated date range:', newDateRange.start.toDateString(), 'to', newDateRange.end.toDateString());
+    }
+  };
+
+  const toggleRangeSelection = () => {
+    setIsSelectingRange(!isSelectingRange);
+    if (isSelectingRange) {
+      // Cancel range selection
+      setRangeStartDate(null);
+    }
+  };
+
+  const resetCalendarSelection = () => {
+    const today = new Date();
+    setSelectedDate(today);
+    setSelectedDateRange({ start: today, end: today });
+    setQuickSelectOption('today');
+    setRangeStartDate(null);
+    setIsSelectingRange(false);
+    console.log('🔄 Calendar selection reset to today');
   };
 
   // Quick select handlers
   const handleQuickSelect = (option) => {
+    console.log('📅 Quick select option:', option);
     setQuickSelectOption(option);
     const today = new Date();
     let startDate, endDate;
@@ -371,16 +477,34 @@ const Overview = () => {
     }
 
     setSelectedDateRange({ start: startDate, end: endDate });
+    console.log('📅 Quick select date range:', startDate.toDateString(), 'to', endDate.toDateString());
+    // Also update the selected date to the start date for single-day selections
+    if (['today', 'yesterday', 'tomorrow'].includes(option)) {
+      setSelectedDate(startDate);
+      console.log('📅 Updated selected date:', startDate.toDateString());
+    }
   };
 
   // Save preferences and close modal
   const handleSaveDateSelection = () => {
+    // Ensure we have a valid date range
+    const finalDateRange = {
+      start: selectedDateRange.start,
+      end: selectedDateRange.end
+    };
+    
+    // If no date range is set, use the selected date
+    if (!finalDateRange.start || !finalDateRange.end) {
+      finalDateRange.start = selectedDate;
+      finalDateRange.end = selectedDate;
+    }
+    
     // Save to localStorage
     const preferences = {
       selectedDate: selectedDate.toISOString(),
       selectedDateRange: {
-        start: selectedDateRange.start.toISOString(),
-        end: selectedDateRange.end.toISOString()
+        start: finalDateRange.start.toISOString(),
+        end: finalDateRange.end.toISOString()
       },
       quickSelectOption: quickSelectOption,
       lastUpdated: new Date().toISOString()
@@ -388,6 +512,9 @@ const Overview = () => {
     
     localStorage.setItem('fxSentinel_calendarPreferences', JSON.stringify(preferences));
     console.log('💾 Calendar preferences saved:', preferences);
+    
+    // Update the state with the final date range
+    setSelectedDateRange(finalDateRange);
     
     // Close modal
     setIsCalendarModalOpen(false);
@@ -398,20 +525,31 @@ const Overview = () => {
 
   // Filter handlers
   const handleImpactLevelToggle = (level) => {
-    setFilterImpactLevels(prev => ({
-      ...prev,
-      [level]: !prev[level]
-    }));
+    console.log(`🔄 Toggling impact level: ${level}`);
+    setFilterImpactLevels(prev => {
+      const newState = {
+        ...prev,
+        [level.toLowerCase()]: !prev[level.toLowerCase()]
+      };
+      console.log(`✅ Updated impact levels:`, newState);
+      return newState;
+    });
   };
 
   const handleCurrencyToggle = (currency) => {
-    setFilterCurrencies(prev => ({
-      ...prev,
-      [currency]: !prev[currency]
-    }));
+    console.log(`🔄 Toggling currency: ${currency}`);
+    setFilterCurrencies(prev => {
+      const newState = {
+        ...prev,
+        [currency]: !prev[currency]
+      };
+      console.log(`✅ Updated currencies:`, newState);
+      return newState;
+    });
   };
 
   const handleSelectAllImpact = () => {
+    console.log('🔄 Selecting all impact levels');
     setFilterImpactLevels({
       high: true,
       medium: true,
@@ -420,6 +558,7 @@ const Overview = () => {
   };
 
   const handleSelectAllCurrencies = () => {
+    console.log('🔄 Selecting all currencies');
     setFilterCurrencies({
       USD: true,
       EUR: true,
@@ -433,6 +572,7 @@ const Overview = () => {
   };
 
   const handleClearAllImpact = () => {
+    console.log('🔄 Clearing all impact levels');
     setFilterImpactLevels({
       high: false,
       medium: false,
@@ -441,6 +581,7 @@ const Overview = () => {
   };
 
   const handleClearAllCurrencies = () => {
+    console.log('🔄 Clearing all currencies');
     setFilterCurrencies({
       USD: false,
       EUR: false,
@@ -455,6 +596,11 @@ const Overview = () => {
 
   // Save filter preferences and close modal
   const handleSaveFilterPreferences = () => {
+    console.log('💾 Saving filter preferences:', {
+      impactLevels: filterImpactLevels,
+      currencies: filterCurrencies
+    });
+    
     // Save to localStorage
     const filterPreferences = {
       impactLevels: filterImpactLevels,
@@ -463,10 +609,28 @@ const Overview = () => {
     };
     
     localStorage.setItem('fxSentinel_filterPreferences', JSON.stringify(filterPreferences));
-    console.log('💾 Filter preferences saved:', filterPreferences);
+    console.log('💾 Filter preferences saved to localStorage');
     
     // Close modal
     setIsFilterModalOpen(false);
+  };
+
+  // Helper function to check if filters are at default state
+  const areFiltersAtDefault = () => {
+    const defaultImpactLevels = { high: true, medium: true, low: true };
+    const defaultCurrencies = { USD: true, EUR: true, GBP: true, JPY: true, AUD: true, CAD: true, CHF: true, NZD: true };
+    
+    const impactMatch = JSON.stringify(filterImpactLevels) === JSON.stringify(defaultImpactLevels);
+    const currencyMatch = JSON.stringify(filterCurrencies) === JSON.stringify(defaultCurrencies);
+    
+    return impactMatch && currencyMatch;
+  };
+
+  // Reset filters to default state
+  const handleResetFilters = () => {
+    console.log('🔄 Resetting filters to defaults');
+    handleSelectAllImpact();
+    handleSelectAllCurrencies();
   };
 
   const handleCurrencyPair = (pair) => {
@@ -504,52 +668,166 @@ const Overview = () => {
 
   const generateEventAnalysis = async (event) => {
     try {
-      console.log('🤖 Generating AI analysis for event:', event);
+      console.log('🤖 Generating comprehensive AI analysis for event:', event);
       
-      // Call our enhanced AI analysis endpoint
-      const response = await fetch(`${config.endpoints.backend}/api/enhanced-analysis/${event.id}`);
+      // Determine if this is pre-event or post-event analysis based on actual data availability
+      const hasActualData = event.actual && event.actual !== 'N/A' && event.actual !== '' && event.actual !== null;
+      const isPostEvent = hasActualData;
+      
+      console.log(`📊 Analysis type: ${isPostEvent ? 'POST-EVENT' : 'PRE-EVENT'} (Actual data: ${event.actual || 'Not available'})`);
+      
+      // Call our enhanced AI analysis endpoint with proper structure
+      console.log('🚨🚨🚨 FRONTEND: About to call enhanced-analysis endpoint 🚨🚨🚨');
+      console.log('🚨 Config endpoints backend:', config.endpoints.backend);
+      console.log('🚨 Event object:', event);
+      console.log('🚨 Event ID:', event.id);
+      console.log('🚨 Event Title:', event.title);
+      console.log('🚨 URL:', `${config.endpoints.backend}/api/enhanced-analysis/${event.id}`);
+      
+      const response = await fetch(`${config.endpoints.backend}/api/enhanced-analysis/${event.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event: event,
+          analysisType: isPostEvent ? 'post-event' : 'pre-event',
+          marketContext: {
+            currentTime: new Date().toISOString(),
+            eventTime: new Date().toISOString(),
+            isPostEvent: isPostEvent
+          }
+        })
+      });
+      
+      console.log('🚨🚨🚨 FRONTEND: Fetch response received 🚨🚨🚨');
+      console.log('🚨 Response status:', response.status);
+      console.log('🚨 Response ok:', response.ok);
       
       if (!response.ok) {
+        console.log('🚨🚨🚨 FRONTEND: HTTP error occurred 🚨🚨🚨');
+        console.log('🚨 Error status:', response.status);
+        const errorText = await response.text();
+        console.log('🚨 Error text:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const analysis = await response.json();
-      console.log('✅ AI analysis received:', analysis);
+      console.log('🚨🚨🚨 FRONTEND: Analysis JSON parsed successfully 🚨🚨🚨');
+      console.log('✅ Comprehensive AI analysis received:', analysis);
       
-      // Transform the backend response to match frontend expectations
+      // Debug: Log the actual content lengths
+      console.log('🔍 Frontend Debug - Content Lengths:');
+      console.log('   Event Explanation:', analysis.general_overview?.event_explanation?.length || 0);
+      console.log('   Market Logic:', analysis.general_overview?.market_logic?.length || 0);
+      console.log('   Detailed Analysis:', analysis.immediate_impact?.detailed_analysis?.length || 0);
+      console.log('   Historical Context:', analysis.context_expectations?.historical_context?.length || 0);
+      console.log('   Sample Event Explanation:', analysis.general_overview?.event_explanation?.substring(0, 100) || 'No content');
+      
+      // Transform the backend response to preserve detailed GPT content
       return {
         event: event,
-        marketConfidence: analysis.basic_analysis?.confidence_score > 80 ? 'High' : 'Medium',
-        confidenceScore: parseInt(analysis.basic_analysis?.confidence?.replace('%', '') || '75'),
-        sentiment: analysis.sentiment_analysis?.sentiment || 'neutral',
+        analysisType: isPostEvent ? 'post-event' : 'pre-event',
+        
+        // General Overview - Preserve full GPT content
+        generalOverview: {
+          eventExplanation: analysis.general_overview?.event_explanation || 'Economic indicator analysis',
+          marketLogic: analysis.general_overview?.market_logic || 'Market impact assessment',
+          impactLevel: analysis.general_overview?.impact_level || event.impact || 'Medium'
+        },
+        
+        // Immediate Market Impact - Preserve full GPT content
+        immediateImpact: {
+          direction: analysis.immediate_impact?.direction || 'Sideways',
+          magnitude: analysis.immediate_impact?.magnitude || 'Medium',
+          affectedPairs: analysis.immediate_impact?.affected_pairs || [event.currency + 'USD'],
+          confidence: analysis.immediate_impact?.confidence || 75,
+          detailedAnalysis: analysis.immediate_impact?.detailed_analysis || null
+        },
+        
+        // Context vs Expectations - Preserve full GPT content
+        expectationsAnalysis: {
+          pricedInPercentage: analysis.context_expectations?.priced_in_percentage || 60,
+          surprisePotential: analysis.context_expectations?.surprise_potential || 'Medium',
+          historicalContext: analysis.context_expectations?.historical_context || 'Historical performance context',
+          marketPositioning: analysis.context_expectations?.market_positioning || 'Market positioning analysis'
+        },
+        
+        // Trading Framework - Preserve full GPT content
+        tradingFramework: {
+          keyLevels: {
+            support: analysis.trading_framework?.key_levels?.support || ['Level 1', 'Level 2'],
+            resistance: analysis.trading_framework?.key_levels?.resistance || ['Level 1', 'Level 2']
+          },
+          timing: {
+            avoidTrading: analysis.trading_framework?.timing?.avoid_trading || '30 min before to 30 min after',
+            bestSetup: analysis.trading_framework?.timing?.best_setup || '1-2 hours after release',
+            monitoringStart: analysis.trading_framework?.timing?.monitoring_start || '1 hour before'
+          },
+          riskManagement: {
+            positionSizing: analysis.trading_framework?.risk_management?.position_sizing || 'Conservative',
+            correlationRisk: analysis.trading_framework?.risk_management?.correlation_risk || 'Medium'
+          }
+        },
+        
+        // Big Picture Implications - Preserve full GPT content
+        bigPicture: {
+          policyImplications: analysis.big_picture?.policy_implications || 'Central bank policy impact',
+          economicHealth: analysis.big_picture?.economic_health || 'Economic health assessment',
+          narrativeShift: analysis.big_picture?.narrative_shift || 'Market story changes',
+          riskLevel: analysis.big_picture?.risk_level || 'Medium'
+        },
+        
+        // Sentiment Analysis - Preserve full GPT content
+        sentiment: analysis.sentiment_analysis?.overall_tone || 'neutral',
+        marketConfidence: analysis.immediate_impact?.confidence > 80 ? 'High' : analysis.immediate_impact?.confidence > 60 ? 'Medium' : 'Low',
+        confidenceScore: analysis.immediate_impact?.confidence || 75,
+        
+        // Long-term Impact - Preserve full GPT content
+        longTermImpact: {
+          trendImplications: analysis.long_term_impact?.trend_implications || 'Long-term trend analysis',
+          structuralChanges: analysis.long_term_impact?.structural_changes || 'Policy and structural impact',
+          timeHorizon: analysis.long_term_impact?.time_horizon || '6 months to 1 year'
+        },
+        
+        // Sentiment Analysis (detailed) - Preserve full GPT content
+        sentimentAnalysis: {
+          overallTone: analysis.sentiment_analysis?.overall_tone || 'Neutral',
+          riskAppetite: analysis.sentiment_analysis?.risk_appetite || 'Risk appetite assessment',
+          forwardGuidance: analysis.sentiment_analysis?.forward_guidance || 'Future expectations analysis'
+        },
+        
+        // Cross-Market Links - Preserve full GPT content
+        crossMarketLinks: {
+          bondMarkets: analysis.cross_market_links?.bond_markets || 'Bond market implications',
+          equityMarkets: analysis.cross_market_links?.equity_markets || 'Equity market impact',
+          commodities: analysis.cross_market_links?.commodities || 'Commodity market effects',
+          safeHavenFlows: analysis.cross_market_links?.safe_haven_flows || 'Safe haven asset implications'
+        },
+        
+        // Legacy fields for backward compatibility
         predictions: [
           {
             type: 'positive',
             icon: '🎯',
-            text: analysis.basic_analysis?.summary || 'AI analysis available'
+            text: analysis.general_overview?.event_explanation || 'AI analysis available'
           }
         ],
-        insights: analysis.sentiment_analysis?.trading_implications?.map(implication => ({
-          type: 'positive',
-          icon: '🤖',
-          text: implication
-        })) || [],
-        tradingOpportunities: analysis.basic_analysis?.trading_opportunities?.map(opp => ({
-          pair: opp.pair,
-          strategy: opp.strategy,
-          entry: opp.entry_zone?.min || 'N/A',
-          stopLoss: opp.stop_loss,
-          takeProfit: opp.take_profit,
-          probability: opp.probability
-        })) || [],
-        // Add new fields from enhanced analysis
-        sentimentAnalysis: analysis.sentiment_analysis,
-        technicalAnalyses: analysis.technical_analyses,
-        riskAssessment: analysis.basic_analysis?.risk_assessment
+        insights: [
+          {
+            type: 'positive',
+            icon: '🤖',
+            text: analysis.big_picture?.policy_implications || 'Policy implications analysis'
+          }
+        ],
+        tradingOpportunities: []
       };
       
     } catch (error) {
-      console.error('❌ Error generating AI analysis:', error);
+      console.log('🚨🚨🚨 FRONTEND: Error in generateEventAnalysis 🚨🚨🚨');
+      console.log('🚨 Error message:', error.message);
+      console.log('🚨 Error stack:', error.stack);
+      console.error('❌ Error generating comprehensive AI analysis:', error);
       
       // Fallback to basic analysis if enhanced fails
       try {
@@ -558,14 +836,47 @@ const Overview = () => {
           const basicAnalysis = await basicResponse.json();
           return {
             event: event,
+            analysisType: 'pre-event',
+            generalOverview: {
+              eventExplanation: basicAnalysis.summary || 'Basic economic analysis',
+              marketLogic: 'Market impact assessment',
+              impactLevel: event.impact || 'Medium'
+            },
+            immediateImpact: {
+              direction: 'Sideways',
+              magnitude: 'Medium',
+              affectedPairs: [event.currency + 'USD'],
+              confidence: parseInt(basicAnalysis.confidence?.replace('%', '') || '70')
+            },
+            expectationsAnalysis: {
+              pricedInPercentage: 60,
+              surprisePotential: 'Medium',
+              historicalContext: 'Historical context available'
+            },
+            tradingFramework: {
+              keyLevels: {
+                support: ['Support 1', 'Support 2'],
+                resistance: ['Resistance 1', 'Resistance 2']
+              },
+              timing: {
+                avoidTrading: '30 min before to 30 min after',
+                bestSetup: '1-2 hours after release',
+                monitoringStart: '1 hour before'
+              }
+            },
+            bigPicture: {
+              policyImplications: 'Central bank policy impact',
+              narrativeShift: 'Market story changes',
+              riskLevel: 'Medium'
+            },
+            sentiment: 'neutral',
             marketConfidence: 'Medium',
             confidenceScore: parseInt(basicAnalysis.confidence?.replace('%', '') || '70'),
-            sentiment: 'neutral',
             predictions: [
               {
                 type: 'positive',
                 icon: '🎯',
-                text: basicAnalysis.summary || 'Analysis available'
+                text: basicAnalysis.summary || 'Basic analysis available'
               }
             ],
             insights: [
@@ -582,12 +893,45 @@ const Overview = () => {
         console.error('❌ Basic analysis also failed:', basicError);
       }
       
-      // Final fallback - return basic structure
+      // Final fallback - return comprehensive structure
       return {
         event: event,
+        analysisType: 'pre-event',
+        generalOverview: {
+          eventExplanation: 'Analysis temporarily unavailable',
+          marketLogic: 'Market impact assessment',
+          impactLevel: event.impact || 'Medium'
+        },
+        immediateImpact: {
+          direction: 'Sideways',
+          magnitude: 'Medium',
+          affectedPairs: [event.currency + 'USD'],
+          confidence: 60
+        },
+        expectationsAnalysis: {
+          pricedInPercentage: 60,
+          surprisePotential: 'Medium',
+          historicalContext: 'Historical context unavailable'
+        },
+        tradingFramework: {
+          keyLevels: {
+            support: ['Support 1', 'Support 2'],
+            resistance: ['Resistance 1', 'Resistance 2']
+          },
+          timing: {
+            avoidTrading: '30 min before to 30 min after',
+            bestSetup: '1-2 hours after release',
+            monitoringStart: '1 hour before'
+          }
+        },
+        bigPicture: {
+          policyImplications: 'Policy implications analysis',
+          narrativeShift: 'Market story analysis',
+          riskLevel: 'Medium'
+        },
+        sentiment: 'neutral',
         marketConfidence: 'Low',
         confidenceScore: 60,
-        sentiment: 'neutral',
         predictions: [
           {
             type: 'negative',
@@ -717,6 +1061,14 @@ const Overview = () => {
       console.log('🔄 Falling back to default filter preferences');
     }
   }, []);
+
+  // Debug: Log filter state changes
+  useEffect(() => {
+    console.log('🔄 Filter state changed:', {
+      impactLevels: filterImpactLevels,
+      currencies: filterCurrencies
+    });
+  }, [filterImpactLevels, filterCurrencies]);
 
   // Save user preferences to localStorage whenever selectedPairs changes
   useEffect(() => {
@@ -966,7 +1318,11 @@ const Overview = () => {
                     <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
                   </svg>
                 </button>
-                <button className="filter-btn" onClick={handleFilter}>
+                <button className={`filter-btn ${(() => {
+                  const activeImpactLevels = Object.values(filterImpactLevels).filter(Boolean).length;
+                  const activeCurrencies = Object.values(filterCurrencies).filter(Boolean).length;
+                  return (activeImpactLevels < 3 || activeCurrencies < 8) ? 'active' : '';
+                })()}`} onClick={handleFilter}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
                   </svg>
@@ -984,7 +1340,14 @@ const Overview = () => {
                 <span className="filter-info">
                   Showing {getFilteredEvents().length} of {economicEvents.length} events
                   {calendarSource && <span className="data-source"> • Source: {calendarSource}</span>}
+                  <span className="date-range-info"> • Date: {formatDateRange(selectedDateRange.start, selectedDateRange.end)}</span>
                 </span>
+                {/* Active filters indicator */}
+                <div className="active-filters">
+                  {(() => {
+                    return null;
+                  })()}
+                </div>
                 {calendarLoading && <span className="loading-indicator">Loading...</span>}
               </div>
               <div className="events-list">
@@ -992,7 +1355,7 @@ const Overview = () => {
                   getFilteredEvents().map((event) => (
                     <div 
                       key={event.id} 
-                      className={`event-card ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
                       onClick={() => handleEventClick(event)}
                     >
                     <div className="event-main-row">
@@ -1060,7 +1423,28 @@ const Overview = () => {
                   <div className="no-events-state">
                     <div className="no-events-icon">📅</div>
                     <div className="no-events-text">No events match your current filters</div>
-                    <div className="no-events-subtext">Try adjusting your filter settings to see more events</div>
+                    <div className="no-events-subtext">
+                      {(() => {
+                        const activeImpactLevels = Object.entries(filterImpactLevels)
+                          .filter(([level, active]) => active)
+                          .map(([level]) => level);
+                        
+                        const activeCurrencies = Object.entries(filterCurrencies)
+                          .filter(([currency, active]) => active)
+                          .map(([currency]) => currency);
+                        
+                        if (activeImpactLevels.length === 0) {
+                          return "No impact levels selected. Try selecting at least one impact level.";
+                        } else if (activeCurrencies.length === 0) {
+                          return "No currencies selected. Try selecting at least one currency.";
+                        } else {
+                          return "Try adjusting your filter settings to see more events";
+                        }
+                      })()}
+                    </div>
+                    <button className="reset-filters-btn" onClick={handleResetFilters}>
+                      Reset Filters
+                    </button>
                   </div>
                 )}
               </div>
@@ -1110,7 +1494,21 @@ const Overview = () => {
               )}
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
+                (() => {
+                  console.log('🔍 Rendering Analysis - State:', aiAnalysisState);
+                  console.log('🔍 Rendering Analysis - aiAnalysis object:', aiAnalysis);
+                  console.log('🔍 Rendering Analysis - aiAnalysis.generalOverview:', aiAnalysis.generalOverview);
+                  return true;
+                })() &&
                 <>
+                  {/* Analysis Type Badge */}
+                  <div className="analysis-type-badge">
+                    <span className={`type-indicator ${aiAnalysis.analysisType}`}>
+                      {aiAnalysis.analysisType === 'post-event' ? '📊 Post-Event Analysis' : '🔮 Pre-Event Analysis'}
+                    </span>
+                  </div>
+
+                  {/* Market Confidence Overview */}
                   <div className="ai-overview">
                     <div className="ai-indicator">
                       <div className="ai-label">Market Confidence</div>
@@ -1124,77 +1522,182 @@ const Overview = () => {
                       <div className="ai-item">
                         <span className="analysis-pair">{aiAnalysis.event.currency} Impact</span>
                         <span className={`analysis-score ${aiAnalysis.sentiment}`}>
-                          {aiAnalysis.event.impact === 'high' ? 'Strong' : 'Moderate'}
+                          {aiAnalysis.generalOverview.impactLevel === 'high' ? 'Strong' : 'Moderate'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Market Direction</span>
+                        <span className={`analysis-score ${aiAnalysis.immediateImpact.direction === 'Up' ? 'bullish' : aiAnalysis.immediateImpact.direction === 'Down' ? 'bearish' : 'neutral'}`}>
+                          {aiAnalysis.immediateImpact.direction}
                         </span>
                       </div>
                       <div className="ai-item">
                         <span className="analysis-pair">Volatility</span>
-                        <span className={`analysis-score ${aiAnalysis.event.impact === 'high' ? 'bearish' : 'neutral'}`}>
-                          {aiAnalysis.event.impact === 'high' ? 'High' : 'Low'}
+                        <span className={`analysis-score ${aiAnalysis.immediateImpact.magnitude === 'High' ? 'bearish' : 'neutral'}`}>
+                          {aiAnalysis.immediateImpact.magnitude}
                         </span>
                       </div>
                       <div className="ai-item">
                         <span className="analysis-pair">Risk Level</span>
-                        <span className={`analysis-score ${aiAnalysis.event.impact === 'high' ? 'bearish' : 'bullish'}`}>
-                          {aiAnalysis.event.impact === 'high' ? 'Elevated' : 'Normal'}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Market Sentiment</span>
-                        <span className={`analysis-score ${aiAnalysis.sentiment}`}>
-                          {aiAnalysis.sentiment === 'bullish' ? 'Positive' : 'Negative'}
+                        <span className={`analysis-score ${aiAnalysis.bigPicture.riskLevel === 'High' ? 'bearish' : 'bullish'}`}>
+                          {aiAnalysis.bigPicture.riskLevel}
                         </span>
                       </div>
                     </div>
                   </div>
-                  
-                  <div className="ai-factors">
-                    <h3>AI Predictions</h3>
-                    <div className="ai-prediction-list">
-                      {aiAnalysis.predictions.map((prediction, index) => (
-                        <div key={index} className={`ai-prediction-item ${prediction.type}`}>
-                          <span className="ai-prediction-icon">{prediction.icon}</span>
-                          <span className="ai-prediction-text">{prediction.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className="ai-factors">
-                    <h3>Key Insights</h3>
-                    <div className="ai-insights-list">
-                      {aiAnalysis.insights.map((insight, index) => (
-                        <div key={index} className={`ai-insight-item ${insight.type}`}>
-                          <span className="ai-insight-icon">{insight.icon}</span>
-                          <span className="ai-insight-text">{insight.text}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {aiAnalysis.tradingOpportunities.length > 0 && (
-                    <div className="ai-factors">
-                      <h3>Trading Opportunities</h3>
-                      <div className="trading-opportunities-list">
-                        {aiAnalysis.tradingOpportunities.map((opportunity, index) => (
-                          <div key={index} className="trading-opportunity-item">
-                            <div className="opportunity-header">
-                              <span className="opportunity-pair">{opportunity.pair}</span>
-                              <span className="opportunity-probability">{opportunity.probability}%</span>
-                            </div>
-                            <div className="opportunity-details">
-                              <div className="opportunity-strategy">{opportunity.strategy}</div>
-                              <div className="opportunity-levels">
-                                <span>Entry: {opportunity.entry}</span>
-                                <span>SL: {opportunity.stopLoss}</span>
-                                <span>TP: {opportunity.takeProfit}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                  {/* AI Analysis - Flowing Paragraphs */}
+                  <div className="ai-analysis-flowing">
+                    {/* General Overview */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">📋 General Overview</h3>
+                      <div className="flowing-paragraph">
+                        {(() => {
+                          console.log('🔍 Rendering Event Explanation:', aiAnalysis.generalOverview.eventExplanation);
+                          return aiAnalysis.generalOverview.eventExplanation;
+                        })()}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Market Logic:</strong> {(() => {
+                          console.log('🔍 Rendering Market Logic:', aiAnalysis.generalOverview.marketLogic);
+                          return aiAnalysis.generalOverview.marketLogic;
+                        })()}
                       </div>
                     </div>
-                  )}
+
+                    {/* Immediate Market Impact */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">⚡ Immediate Market Impact</h3>
+                      <div className="flowing-paragraph">
+                        {(() => {
+                          const content = aiAnalysis.immediateImpact.detailedAnalysis || `The immediate reaction to this event is expected to be ${aiAnalysis.immediateImpact.direction.toLowerCase()} with ${aiAnalysis.immediateImpact.magnitude.toLowerCase()} volatility. Primary impact will be seen in ${aiAnalysis.immediateImpact.affectedPairs.join(', ')}.`;
+                          console.log('🔍 Rendering Immediate Impact:', content);
+                          return content;
+                        })()}
+                      </div>
+                      <div className="key-metrics">
+                        <span className="metric-item">
+                          <strong>Confidence:</strong> {aiAnalysis.immediateImpact.confidence}%
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Context vs Expectations */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">📊 Context vs Expectations</h3>
+                      <div className="key-metrics">
+                        <span className="metric-item">
+                          <strong>Priced In:</strong> {aiAnalysis.expectationsAnalysis.pricedInPercentage}%
+                        </span>
+                        <span className="metric-item">
+                          <strong>Surprise Potential:</strong> {aiAnalysis.expectationsAnalysis.surprisePotential}
+                        </span>
+                      </div>
+                      <div className="flowing-paragraph">
+                        {aiAnalysis.expectationsAnalysis.historicalContext}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Market Positioning:</strong> {aiAnalysis.expectationsAnalysis.marketPositioning}
+                      </div>
+                    </div>
+
+                    {/* Long-term Market Impact */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">📈 Long-term Market Impact</h3>
+                      <div className="flowing-paragraph">
+                        {aiAnalysis.longTermImpact?.trendImplications || 'Long-term trend analysis available'}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Structural Changes:</strong> {aiAnalysis.longTermImpact?.structuralChanges || 'Policy and structural impact analysis'}
+                      </div>
+                    </div>
+
+                    {/* Sentiment Analysis */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">🎭 Sentiment Analysis</h3>
+                      <div className="key-metrics">
+                        <span className={`metric-item sentiment-${aiAnalysis.sentimentAnalysis?.overallTone || 'neutral'}`}>
+                          <strong>Overall Tone:</strong> {aiAnalysis.sentimentAnalysis?.overallTone || 'Neutral'}
+                        </span>
+                      </div>
+                      <div className="flowing-paragraph">
+                        {aiAnalysis.sentimentAnalysis?.riskAppetite || 'Risk appetite assessment'}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Forward Guidance:</strong> {aiAnalysis.sentimentAnalysis?.forwardGuidance || 'Future expectations analysis'}
+                      </div>
+                    </div>
+
+                    {/* Cross-Market Links */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">🔗 Cross-Market Links</h3>
+                      <div className="flowing-paragraph">
+                        <strong>Bond Markets:</strong> {aiAnalysis.crossMarketLinks?.bondMarkets || 'Bond market implications'}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Equity Markets:</strong> {aiAnalysis.crossMarketLinks?.equityMarkets || 'Equity market impact'}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Commodities:</strong> {aiAnalysis.crossMarketLinks?.commodities || 'Commodity market effects'}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Safe Haven Flows:</strong> {aiAnalysis.crossMarketLinks?.safeHavenFlows || 'Safe haven asset implications'}
+                      </div>
+                    </div>
+
+                    {/* Trading Framework */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">🎯 Trading Framework</h3>
+                      <div className="key-metrics">
+                        <span className="metric-item">
+                          <strong>Key Support:</strong> {aiAnalysis.tradingFramework.keyLevels.support.join(', ')}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Key Resistance:</strong> {aiAnalysis.tradingFramework.keyLevels.resistance.join(', ')}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Avoid Trading:</strong> {aiAnalysis.tradingFramework.timing.avoidTrading}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Best Setup:</strong> {aiAnalysis.tradingFramework.timing.bestSetup}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Start Monitoring:</strong> {aiAnalysis.tradingFramework.timing.monitoringStart}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Position Sizing:</strong> {aiAnalysis.tradingFramework.riskManagement?.positionSizing || 'Conservative'}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Correlation Risk:</strong> {aiAnalysis.tradingFramework.riskManagement?.correlationRisk || 'Medium'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Big Picture Implications */}
+                    <div className="analysis-section-flowing">
+                      <h3 className="section-header">🌍 Big Picture Implications</h3>
+                      <div className="flowing-paragraph">
+                        <strong>Policy Impact:</strong> {aiAnalysis.bigPicture.policyImplications}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Economic Health:</strong> {aiAnalysis.bigPicture.economicHealth}
+                      </div>
+                      <div className="flowing-paragraph">
+                        <strong>Narrative Shift:</strong> {aiAnalysis.bigPicture.narrativeShift}
+                      </div>
+                      <div className="key-metrics">
+                        <span className="metric-item">
+                          <strong>Risk Assessment:</strong> {aiAnalysis.bigPicture.riskLevel}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Disclaimer */}
+                  <div className="analysis-disclaimer">
+                    <span className="disclaimer-icon">⚠️</span>
+                    <span className="disclaimer-text">This analysis provides market insights and levels, not specific trade recommendations. Always use proper risk management.</span>
+                  </div>
                 </>
               )}
 
@@ -1320,7 +1823,7 @@ const Overview = () => {
               <div className="sentiment-factors">
                 <h3>Market Drivers</h3>
                 <div className="drivers-list">
-                  <div className="driver-item positive">
+                  <div className="driver-item positive impact-high">
                     <div className="driver-icon">📈</div>
                     <div className="driver-content">
                       <div className="driver-title">Strong US Economic Data</div>
@@ -1329,7 +1832,7 @@ const Overview = () => {
                     <div className="driver-impact">High Impact</div>
                   </div>
                   
-                  <div className="driver-item negative">
+                  <div className="driver-item negative impact-medium">
                     <div className="driver-icon">📉</div>
                     <div className="driver-content">
                       <div className="driver-title">ECB Policy Uncertainty</div>
@@ -1338,7 +1841,7 @@ const Overview = () => {
                     <div className="driver-impact">Medium Impact</div>
                   </div>
                   
-                  <div className="driver-item positive">
+                  <div className="driver-item positive impact-medium">
                     <div className="driver-icon">📊</div>
                     <div className="driver-content">
                       <div className="driver-title">Risk Sentiment Improving</div>
@@ -1347,7 +1850,7 @@ const Overview = () => {
                     <div className="driver-impact">Medium Impact</div>
                   </div>
                   
-                  <div className="driver-item neutral">
+                  <div className="driver-item neutral impact-low">
                     <div className="driver-icon">⚖️</div>
                     <div className="driver-content">
                       <div className="driver-title">Central Bank Divergence</div>
@@ -1525,6 +2028,42 @@ const Overview = () => {
               </button>
             </div>
             
+            {/* Current Selection Indicator */}
+            <div className="current-selection-indicator">
+              <div className="selection-info">
+                <span className="selection-label">Current Selection:</span>
+                <span className="selection-dates">
+                  {formatDateRange(selectedDateRange.start, selectedDateRange.end)}
+                </span>
+                {economicEvents.length > 0 && (
+                  <span className="events-count">
+                    ({getFilteredEvents().length} of {economicEvents.length} events)
+                  </span>
+                )}
+              </div>
+              <div className="selection-controls">
+                <button 
+                  className={`range-toggle-btn ${isSelectingRange ? 'active' : ''}`}
+                  onClick={toggleRangeSelection}
+                  title={isSelectingRange ? 'Cancel range selection' : 'Enable range selection'}
+                >
+                  {isSelectingRange ? 'Cancel Range' : 'Select Range'}
+                </button>
+                <button 
+                  className="reset-btn"
+                  onClick={resetCalendarSelection}
+                  title="Reset to today"
+                >
+                  Reset
+                </button>
+                {isSelectingRange && rangeStartDate && (
+                  <span className="range-instruction">
+                    Click another date to complete range
+                  </span>
+                )}
+              </div>
+            </div>
+            
             {/* Calendar Section */}
             <div className="calendar-section">
               <div className="calendar-header-nav">
@@ -1546,19 +2085,31 @@ const Overview = () => {
                   <span>S</span>
                 </div>
                 <div className="calendar-days">
-                  {generateCalendarDays(currentDate).map((day, index) => (
-                    <span
-                      key={index}
-                      className={`day ${day.type} ${
-                        isToday(day.date) ? 'current' : ''
-                      } ${
-                        isSameDay(day.date, selectedDate) ? 'selected' : ''
-                      }`}
-                      onClick={() => handleDateClick(day)}
-                    >
-                      {day.date.getDate()}
-                    </span>
-                  ))}
+                  {generateCalendarDays(currentDate).map((day, index) => {
+                    const isInRange = isInDateRange(day.date, selectedDateRange.start, selectedDateRange.end);
+                    const isRangeStart = rangeStartDate && isSameDay(day.date, rangeStartDate);
+                    const isRangeEnd = selectedDateRange.end && isSameDay(day.date, selectedDateRange.end);
+                    
+                    return (
+                      <span
+                        key={index}
+                        className={`day ${day.type} ${
+                          isToday(day.date) ? 'current' : ''
+                        } ${
+                          isSameDay(day.date, selectedDate) ? 'selected' : ''
+                        } ${
+                          isInRange ? 'in-range' : ''
+                        } ${
+                          isRangeStart ? 'range-start' : ''
+                        } ${
+                          isRangeEnd ? 'range-end' : ''
+                        }`}
+                        onClick={() => handleDateClick(day)}
+                      >
+                        {day.date.getDate()}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1655,6 +2206,14 @@ const Overview = () => {
               </button>
             </div>
 
+            {/* Filter Info Message */}
+            <div className="filter-info-message">
+              <div className="info-icon">ℹ️</div>
+              <div className="info-text">
+                <strong>How filtering works:</strong> Date range filters fetch data from the server, while impact/currency filters are applied to the displayed events. Both work together to show you the most relevant events.
+              </div>
+            </div>
+
             {/* Impact Level Section */}
             <div className="filter-section">
               <div className="filter-section-header">
@@ -1737,12 +2296,17 @@ const Overview = () => {
 
             {/* Action Buttons */}
             <div className="filter-modal-actions">
-              <button className="btn-cancel" onClick={handleCloseFilterModal}>
-                Cancel
+              <button className="btn-reset" onClick={handleResetFilters}>
+                Reset to Defaults
               </button>
-              <button className="btn-save" onClick={handleSaveFilterPreferences}>
-                Save Changes
-              </button>
+              <div className="modal-actions-right">
+                <button className="btn-cancel" onClick={handleCloseFilterModal}>
+                  Cancel
+                </button>
+                <button className="btn-save" onClick={handleSaveFilterPreferences}>
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>

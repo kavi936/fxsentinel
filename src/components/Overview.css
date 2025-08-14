@@ -367,6 +367,126 @@
   width: 90%;
 }
 
+/* Current Selection Indicator Styles */
+.current-selection-indicator {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.selection-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #AAAAAA;
+  white-space: nowrap;
+}
+
+.selection-dates {
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 68, 68, 0.2);
+}
+
+.events-count {
+  font-size: 13px;
+  color: #888888;
+  font-weight: 500;
+}
+
+.selection-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.range-toggle-btn {
+  background: linear-gradient(135deg, #2A2A2A 0%, #3A3A3A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.range-toggle-btn:hover {
+  background: linear-gradient(135deg, #3A3A3A 0%, #4A4A4A 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.range-toggle-btn.active {
+  background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
+  border-color: rgba(255, 68, 68, 0.3);
+  color: white;
+}
+
+.reset-btn {
+  background: linear-gradient(135deg, #666666 0%, #777777 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.reset-btn:hover {
+  background: linear-gradient(135deg, #777777 0%, #888888 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.range-instruction {
+  font-size: 12px;
+  color: #888888;
+  font-style: italic;
+  margin-left: auto;
+}
+
+/* Responsive adjustments for selection controls */
+@media (max-width: 480px) {
+  .selection-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .selection-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  
+  .range-toggle-btn,
+  .reset-btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .range-instruction {
+    margin-left: 0;
+    text-align: center;
+  }
+}
+
 .calendar-section {
   padding: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -782,8 +902,11 @@
 
 /* New Event Card Structure - Updated to match image */
 .events-list {
-  padding: 0;
+  padding: 8px 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .event-card {
@@ -791,11 +914,12 @@
   border-bottom: 1px solid rgba(255, 68, 68, 0.08);
   position: relative;
   z-index: 2;
-  background: rgba(255, 255, 255, 0.01);
-  margin: 8px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  margin: 0 16px;
   border-radius: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .event-card:hover {
@@ -803,6 +927,43 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   border-color: rgba(255, 68, 68, 0.15);
+}
+
+/* Event card impact-based background colors */
+.event-card.impact-high {
+  background: rgba(255, 68, 68, 0.08);
+  border: 2px solid rgba(255, 68, 68, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.15);
+}
+
+.event-card.impact-high:hover {
+  background: rgba(255, 68, 68, 0.12);
+  border-color: rgba(255, 68, 68, 0.35);
+  box-shadow: 0 6px 20px rgba(255, 68, 68, 0.2);
+}
+
+.event-card.impact-medium {
+  background: rgba(255, 165, 0, 0.08);
+  border: 2px solid rgba(255, 165, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(255, 165, 0, 0.15);
+}
+
+.event-card.impact-medium:hover {
+  background: rgba(255, 165, 0, 0.12);
+  border-color: rgba(255, 165, 0, 0.35);
+  box-shadow: 0 6px 20px rgba(255, 165, 0, 0.2);
+}
+
+.event-card.impact-low {
+  background: rgba(50, 205, 50, 0.08);
+  border: 2px solid rgba(50, 205, 50, 0.25);
+  box-shadow: 0 4px 12px rgba(50, 205, 50, 0.15);
+}
+
+.event-card.impact-low:hover {
+  background: rgba(50, 205, 50, 0.12);
+  border-color: rgba(50, 205, 50, 0.35);
+  box-shadow: 0 6px 20px rgba(50, 205, 50, 0.2);
 }
 
 .event-card:last-child {
@@ -831,22 +992,24 @@
 
 /* Impact level styling */
 .event-time.impact-high {
-  border: 1px solid #FF4444;
-  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.2);
+  border: 2px solid #FF4444;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.25) 0%, rgba(255, 68, 68, 0.15) 100%);
+  color: #ffffff;
 }
 
 .event-time.impact-medium {
-  border: 1px solid #FFA500;
-  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.15);
+  border: 2px solid #FFA500;
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.25);
+  background: linear-gradient(135deg, rgba(255, 165, 0, 0.25) 0%, rgba(255, 165, 0, 0.15) 100%);
+  color: #ffffff;
 }
 
 .event-time.impact-low {
-  border: 1px solid #32CD32;
-  box-shadow: 0 2px 8px rgba(50, 205, 50, 0.1);
-}
-
-.event-time.impact-high {
-  color: #ff4444;
+  border: 2px solid #32CD32;
+  box-shadow: 0 2px 8px rgba(50, 205, 50, 0.2);
+  background: linear-gradient(135deg, rgba(50, 205, 50, 0.25) 0%, rgba(50, 205, 50, 0.15) 100%);
+  color: #ffffff;
 }
 
 .event-time .time {
@@ -854,14 +1017,15 @@
   font-weight: 700;
   color: #ffffff;
   line-height: 1.2;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 .event-time .date {
   font-size: 11px;
-  color: #AAAAAA;
+  color: rgba(255, 255, 255, 0.9);
   margin-top: 6px;
   font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .event-content {
@@ -1089,6 +1253,173 @@
 .data-source {
   color: rgba(255, 255, 255, 0.5);
   font-style: italic;
+}
+
+.date-range-info {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.filter-summary {
+  margin-top: 4px;
+}
+
+.filter-summary-text {
+  font-size: 11px;
+  color: #FF4444;
+  background: rgba(255, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 68, 68, 0.2);
+}
+
+.filter-info-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0;
+}
+
+.info-icon {
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.info-text {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.4;
+}
+
+.info-text strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Comprehensive AI Analysis Styles */
+.analysis-type-badge {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.type-indicator {
+  background: linear-gradient(135deg, #8B0000 0%, #A52A2A 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+}
+
+.type-indicator.post-event {
+  background: linear-gradient(135deg, #006400 0%, #228B22 100%);
+  border-color: rgba(0, 255, 0, 0.3);
+}
+
+.analysis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.analysis-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.item-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.item-value {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1.4;
+}
+
+.item-value.direction-up {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.item-value.direction-down {
+  color: #ff4757;
+  font-weight: 600;
+}
+
+.item-value.direction-sideways {
+  color: #ffa500;
+  font-weight: 600;
+}
+
+.analysis-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.item-value.detailed-text {
+  line-height: 1.6;
+  font-size: 14px;
+  color: #e0e0e0;
+  text-align: left;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border-left: 3px solid #ff4444;
+  margin-top: 4px;
+}
+
+.item-value.sentiment-bullish {
+  color: #00ff88;
+  font-weight: 600;
+}
+
+.item-value.sentiment-bearish {
+  color: #ff4757;
+  font-weight: 600;
+}
+
+.item-value.sentiment-neutral {
+  color: #ffa500;
+  font-weight: 600;
+}
+
+.analysis-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.disclaimer-icon {
+  font-size: 14px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.disclaimer-text {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
 }
 
 .loading-indicator {
@@ -3193,6 +3524,93 @@
   padding-bottom: 8px;
 }
 
+/* AI Analysis Flowing Paragraphs - New Layout */
+.ai-analysis-flowing {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.analysis-section-flowing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.section-header {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+  text-transform: none;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(255, 68, 68, 0.3);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.flowing-paragraph {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #e0e0e0;
+  text-align: left;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border-left: 3px solid rgba(255, 68, 68, 0.4);
+  margin-bottom: 8px;
+}
+
+.flowing-paragraph strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.key-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.metric-item {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+.metric-item strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.metric-item.sentiment-bullish {
+  background: rgba(0, 255, 136, 0.1);
+  border-color: rgba(0, 255, 136, 0.3);
+  color: #00ff88;
+}
+
+.metric-item.sentiment-bearish {
+  background: rgba(255, 71, 87, 0.1);
+  border-color: rgba(255, 71, 87, 0.3);
+  color: #ff4757;
+}
+
+.metric-item.sentiment-neutral {
+  background: rgba(255, 165, 2, 0.1);
+  border-color: rgba(255, 165, 2, 0.3);
+  color: #ffa502;
+}
+
 /* AI Prediction List Styles */
 .ai-prediction-list,
 .ai-insights-list {
@@ -3729,6 +4147,37 @@
 
 .driver-item.neutral {
   border-left: 4px solid #ffa500;
+}
+
+/* Driver item impact-based background colors */
+.driver-item.impact-high {
+  background: rgba(255, 68, 68, 0.05);
+  border: 1px solid rgba(255, 68, 68, 0.15);
+}
+
+.driver-item.impact-high:hover {
+  background: rgba(255, 68, 68, 0.08);
+  border-color: rgba(255, 68, 68, 0.25);
+}
+
+.driver-item.impact-medium {
+  background: rgba(255, 165, 0, 0.05);
+  border: 1px solid rgba(255, 165, 0, 0.15);
+}
+
+.driver-item.impact-medium:hover {
+  background: rgba(255, 165, 0, 0.08);
+  border-color: rgba(255, 165, 0, 0.25);
+}
+
+.driver-item.impact-low {
+  background: rgba(50, 205, 50, 0.05);
+  border: 1px solid rgba(50, 205, 50, 0.15);
+}
+
+.driver-item.impact-low:hover {
+  background: rgba(50, 205, 50, 0.08);
+  border-color: rgba(50, 205, 50, 0.25);
 }
 
 .driver-icon {

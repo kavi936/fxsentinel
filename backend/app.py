@@ -13,6 +13,13 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Debug: Check if environment variables are loaded
+print(f"🔍 Environment Debug:")
+print(f"   OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
+if os.getenv('OPENAI_API_KEY'):
+    api_key = os.getenv('OPENAI_API_KEY')
+    print(f"   API Key Preview: {api_key[:10]}...{api_key[-4:]}")
+
 app = Flask(__name__)
 
 # Configure CORS to allow requests from Vercel
@@ -139,79 +146,39 @@ def get_fallback_price(pair_name):
         'source': 'fallback'
     }
 
-def scrape_forexfactory_events():
-    """Scrape upcoming economic events from ForexFactory"""
+def get_economic_event_by_id(event_id):
+    """Get economic event by ID from Finnhub calendar data"""
     try:
-        # ForexFactory economic calendar URL
-        url = "https://www.forexfactory.com/calendar"
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
+        # Get events from Finnhub calendar
+        events = finnhub_calendar.get_economic_calendar()
         
-        response = requests.get(url, headers=headers, timeout=10)
-        response.raise_for_status()
+        # Find the event with matching ID
+        event = next((e for e in events if e.get('id') == event_id), None)
         
-        soup = BeautifulSoup(response.content, 'html.parser')
-        events = []
-        
-        # Find economic calendar events
-        calendar_rows = soup.find_all('tr', class_='calendar__row')
-        
-        for row in calendar_rows[:10]:  # Limit to 10 events for MVP
-            try:
-                # Extract event details
-                event_cell = row.find('td', class_='calendar__event')
-                if not event_cell:
-                    continue
-                    
-                event_name = event_cell.get_text(strip=True)
-                
-                # Extract currency
-                currency_cell = row.find('td', class_='calendar__currency')
-                currency = currency_cell.get_text(strip=True) if currency_cell else "USD"
-                
-                # Extract impact
-                impact_cell = row.find('td', class_='calendar__impact')
-                impact = "Medium"
-                if impact_cell:
-                    impact_icons = impact_cell.find_all('span', class_='icon--ff-impact-red')
-                    if len(impact_icons) >= 3:
-                        impact = "High"
-                    elif len(impact_icons) >= 1:
-                        impact = "Medium"
-                    else:
-                        impact = "Low"
-                
-                # Extract time
-                time_cell = row.find('td', class_='calendar__time')
-                event_time = time_cell.get_text(strip=True) if time_cell else "00:00"
-                
-                # Generate event ID
-                event_id = len(events) + 1
-                
-                events.append({
-                    "id": event_id,
-                    "title": event_name,
-                    "description": f"{event_name} - {currency} Economic Event",
-                    "date": datetime.now().strftime("%Y-%m-%d"),
-                    "time": event_time,
-                    "impact": impact,
-                    "currency": currency,
-                    "pairs": get_currency_pairs(currency),
-                    "expected": "TBD",
-                    "previous": "TBD"
-                })
-                
-            except Exception as e:
-                print(f"Error parsing event: {e}")
-                continue
-                
-        return events
-        
+        if event:
+            return event
+        else:
+            # If not found, create a mock event with the provided ID
+            return {
+                'id': event_id,
+                'title': 'Economic Event Analysis',
+                'currency': 'USD',
+                'impact': 'medium',
+                'description': 'Analysis of economic event impact on forex markets',
+                'timestamp': datetime.now().isoformat()
+            }
+            
     except Exception as e:
-        print(f"Error scraping ForexFactory: {e}")
-        # Fallback to mock data if scraping fails
-        return get_mock_news()
+        print(f"Error getting economic event by ID: {e}")
+        # Return mock event as fallback
+        return {
+            'id': event_id,
+            'title': 'Economic Event Analysis',
+            'currency': 'USD',
+            'impact': 'medium',
+            'description': 'Analysis of economic event impact on forex markets',
+            'timestamp': datetime.now().isoformat()
+        }
 
 def get_currency_pairs(currency):
     """Get relevant currency pairs for a given currency"""
@@ -258,10 +225,12 @@ def get_mock_news():
         }
     ]
 
-# Import our free AI analysis services
+# Import our AI analysis services
 from services.local_ai_analysis import local_ai_analyzer, MarketContext
 from services.news_sentiment_analyzer import news_sentiment_analyzer
 from services.technical_analysis_service import technical_analyzer
+from services.enhanced_ai_analysis import enhanced_ai_analyzer, MarketContext as EnhancedMarketContext
+from services.gpt_ai_analysis import gpt_ai_analyzer, MarketContext as GPTMarketContext
 import pandas as pd
 import numpy as np
 
@@ -520,16 +489,32 @@ def get_news():
         # First, try to get cached data immediately
         cached_news = news_cache.load_news()
         if cached_news:
-            print(f"✅ Returning cached news ({len(cached_news)} articles)")
-            return jsonify({
-                "news": cached_news,
-                "last_updated": datetime.now().isoformat(),
-                "sources": ["cached_data"],
-                "total_articles": len(cached_news),
-                "cache_status": "cached"
-            })
+            # Check if cached news contains economic calendar events (Finnhub data)
+            # If it does, clear the cache to force fresh news fetch
+            has_economic_events = any(
+                news_item.get('source', '').lower() == 'finnhub' or 
+                news_item.get('type', '').lower() == 'economic' or
+                'economic calendar' in str(news_item.get('source', '')).lower()
+                for news_item in cached_news
+            )
+            
+            if has_economic_events:
+                print("🔄 Clearing cache due to economic calendar events found")
+                news_cache.clear_cache()
+                cached_news = None
+            else:
+                print(f"✅ Returning cached news ({len(cached_news)} articles)")
+                return jsonify({
+                    "news": cached_news,
+                    "last_updated": datetime.now().isoformat(),
+                    "sources": ["cached_data"],
+                    "total_articles": len(cached_news),
+                    "cache_status": "cached"
+                })
         
         # If no cache, fetch fresh data with optimized parallel processing
+        # Note: Economic calendar events are excluded from live news feed
+        # as they are handled separately in the economic calendar component
         import concurrent.futures
         import asyncio
         
@@ -546,16 +531,6 @@ def get_news():
                 print(f"❌ Error fetching RSS news: {e}")
                 return []
         
-        # Function to fetch ForexFactory events with timeout
-        def fetch_forex_events():
-            try:
-                forex_events = scrape_forexfactory_events()
-                print(f"✅ Fetched {len(forex_events)} ForexFactory events")
-                return forex_events
-            except Exception as e:
-                print(f"❌ Error fetching ForexFactory events: {e}")
-                return []
-        
         # Function to fetch alternative news with timeout
         def fetch_alternative_news():
             try:
@@ -568,10 +543,9 @@ def get_news():
                 return []
         
         # Use ThreadPoolExecutor for parallel processing with shorter timeouts
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-            # Submit all tasks with 10-second timeout each
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            # Submit tasks with 10-second timeout each (removed economic calendar)
             rss_future = executor.submit(fetch_rss_news)
-            forex_future = executor.submit(fetch_forex_events)
             alt_future = executor.submit(fetch_alternative_news)
             
             # Wait for all tasks with timeout
@@ -585,17 +559,6 @@ def get_news():
             except Exception as e:
                 print(f"❌ RSS news fetch failed: {e}")
                 rss_news = []
-            
-            try:
-                forex_events = forex_future.result(timeout=10)
-                fresh_news.extend(forex_events)
-                sources_used.append("ForexFactory")
-            except concurrent.futures.TimeoutError:
-                print("⚠️ ForexFactory fetch timed out")
-                forex_events = []
-            except Exception as e:
-                print(f"❌ ForexFactory fetch failed: {e}")
-                forex_events = []
             
             try:
                 alt_news = alt_future.result(timeout=10)
@@ -702,30 +665,8 @@ def get_news():
 def get_analysis(news_id):
     """Generate AI analysis for specific news event"""
     try:
-        # Try to get the news event from ForexFactory
-        try:
-            events = scrape_forexfactory_events()
-            event = next((e for e in events if e['id'] == news_id), None)
-        except Exception as e:
-            print(f"Error scraping ForexFactory: {e}")
-            # Create a mock event if ForexFactory fails
-            event = {
-                'id': news_id,
-                'title': 'US CPI Data Release',
-                'currency': 'USD',
-                'impact': 'high',
-                'description': 'Consumer Price Index data release that could impact USD pairs'
-            }
-        
-        if not event:
-            # Create a default event if none found
-            event = {
-                'id': news_id,
-                'title': 'Economic Event Analysis',
-                'currency': 'USD',
-                'impact': 'medium',
-                'description': 'Analysis of economic event impact on forex markets'
-            }
+        # Get the economic event by ID from Finnhub calendar data
+        event = get_economic_event_by_id(news_id)
         
         # Generate AI analysis
         analysis = generate_ai_analysis(
@@ -795,103 +736,101 @@ def get_technical_analysis(pair):
         print(f"Error in technical analysis: {e}")
         return jsonify({"error": "Failed to perform technical analysis"}), 500
 
-@app.route('/api/enhanced-analysis/<int:news_id>')
+@app.route('/api/enhanced-analysis/<news_id>', methods=['GET', 'POST'])
 def get_enhanced_analysis(news_id):
-    """Get comprehensive analysis including sentiment and technical analysis"""
+    """Get comprehensive GPT-powered analysis for economic events"""
+    print(f"🚨🚨🚨 ENHANCED ANALYSIS ENDPOINT CALLED - ID: {news_id} 🚨🚨🚨")
     try:
-        # Try to get the news event from ForexFactory
-        try:
-            events = scrape_forexfactory_events()
-            event = next((e for e in events if e['id'] == news_id), None)
-        except Exception as e:
-            print(f"Error scraping ForexFactory: {e}")
-            # Create a mock event if ForexFactory fails
-            event = {
-                'id': news_id,
-                'title': 'US CPI Data Release',
-                'currency': 'USD',
-                'impact': 'high',
-                'description': 'Consumer Price Index data release that could impact USD pairs',
-                'timestamp': datetime.now().isoformat()
-            }
+        # Get the economic event by ID from Finnhub calendar data
+        event = get_economic_event_by_id(news_id)
         
         if not event:
-            # Create a default event if none found
-            event = {
-                'id': news_id,
-                'title': 'Economic Event Analysis',
-                'currency': 'USD',
-                'impact': 'medium',
-                'description': 'Analysis of economic event impact on forex markets',
-                'timestamp': datetime.now().isoformat()
-            }
+            return jsonify({"error": "Event not found"}), 404
         
-        # Get basic AI analysis
-        basic_analysis = generate_ai_analysis(
-            event['title'], 
-            event['currency'], 
-            event['impact']
+        # Create GPT market context with real market data
+        gpt_market_context = GPTMarketContext(
+            current_prices={
+                'EUR/USD': 1.0850,
+                'USD/JPY': 148.50,
+                'GBP/USD': 1.2650,
+                'USD/CHF': 0.8650,
+                'AUD/USD': 0.6650,
+                'USD/CAD': 1.3550
+            },
+            recent_volatility={
+                'EUR/USD': 0.008,
+                'USD/JPY': 0.012,
+                'GBP/USD': 0.010,
+                'USD/CHF': 0.007,
+                'AUD/USD': 0.009,
+                'USD/CAD': 0.006
+            },
+            market_sentiment={
+                'EUR/USD': 'neutral',
+                'USD/JPY': 'bullish',
+                'GBP/USD': 'bearish',
+                'USD/CHF': 'neutral',
+                'AUD/USD': 'neutral',
+                'USD/CAD': 'neutral'
+            },
+            key_levels={
+                'EUR/USD': {'support': 1.0800, 'resistance': 1.0900},
+                'USD/JPY': {'support': 148.00, 'resistance': 149.00},
+                'GBP/USD': {'support': 1.2600, 'resistance': 1.2700}
+            },
+            economic_calendar=[],
+            bond_yields={'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8},
+            equity_indices={'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000},
+            commodity_prices={'GOLD': 2000, 'OIL': 75, 'SILVER': 25}
         )
         
-        # Get sentiment analysis
-        sentiment_result = news_sentiment_analyzer.analyze_news_sentiment(
-            event.get('description', ''), 
-            event['title']
+        # Determine analysis type based on actual data availability
+        has_actual_data = event.get('actual') and event.get('actual') not in ['N/A', '', None]
+        analysis_type = "post_event" if has_actual_data else "pre_event"
+        
+        print(f"📊 Analysis type: {analysis_type.upper()} (Actual data: {event.get('actual', 'Not available')})")
+        
+        # Get GPT-powered comprehensive analysis
+        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(
+            event, 
+            gpt_market_context, 
+            analysis_type
         )
         
-        # Get technical analysis for affected pairs
-        technical_analyses = {}
-        affected_pairs = sentiment_result.affected_pairs[:3]  # Limit to 3 pairs
+        # Debug: Log what we're getting from GPT
+        print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
+        print(f"🚨 Model Used: {gpt_analysis.model_used}")
+        print(f"🚨 Cache Hit: {gpt_analysis.cache_hit}")
+        print(f"🚨 Event Explanation Length: {len(gpt_analysis.general_overview.get('event_explanation', ''))}")
+        print(f"🚨 Market Logic Length: {len(gpt_analysis.general_overview.get('market_logic', ''))}")
+        print(f"🚨 Detailed Analysis Length: {len(gpt_analysis.immediate_impact.get('detailed_analysis', ''))}")
+        print(f"🚨 Sample Event Explanation: {gpt_analysis.general_overview.get('event_explanation', '')[:100]}...")
+        print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
         
-        for pair in affected_pairs:
-            try:
-                # Create mock price data for technical analysis
-                dates = pd.date_range(start='2024-01-01', end=datetime.now(), freq='D')
-                np.random.seed(hash(pair) % 1000)  # Different seed for each pair
-                
-                base_price = 1.0850 if 'EUR' in pair else 148.50 if 'JPY' in pair else 1.2650
-                price_changes = np.random.normal(0, 0.005, len(dates))
-                prices = [base_price]
-                
-                for change in price_changes[1:]:
-                    new_price = prices[-1] * (1 + change)
-                    prices.append(new_price)
-                
-                price_data = pd.DataFrame({
-                    'date': dates,
-                    'close': prices,
-                    'high': [p * (1 + abs(np.random.normal(0, 0.002))) for p in prices],
-                    'low': [p * (1 - abs(np.random.normal(0, 0.002))) for p in prices],
-                    'volume': np.random.randint(1000, 10000, len(dates))
-                })
-                
-                technical_analyses[pair] = technical_analyzer.analyze_pair(pair, price_data)
-            except Exception as e:
-                print(f"Error analyzing {pair}: {e}")
-                technical_analyses[pair] = {"error": "Analysis failed"}
-        
-        # Combine all analyses
+        # Transform to frontend-compatible format
         enhanced_analysis = {
             'event': event,
-            'basic_analysis': basic_analysis,
-            'sentiment_analysis': {
-                'sentiment': sentiment_result.sentiment,
-                'confidence': sentiment_result.confidence,
-                'keywords': sentiment_result.keywords,
-                'impact_score': sentiment_result.impact_score,
-                'affected_pairs': sentiment_result.affected_pairs,
-                'trading_implications': sentiment_result.trading_implications
-            },
-            'technical_analyses': technical_analyses,
-            'timestamp': datetime.now().isoformat(),
-            'analysis_type': 'enhanced_free_ai'
+            'general_overview': gpt_analysis.general_overview,
+            'immediate_impact': gpt_analysis.immediate_impact,
+            'long_term_impact': gpt_analysis.long_term_impact,
+            'context_expectations': gpt_analysis.context_expectations,
+            'sentiment_analysis': gpt_analysis.sentiment_analysis,
+            'cross_market_links': gpt_analysis.cross_market_links,
+            'trading_framework': gpt_analysis.trading_framework,
+            'big_picture': gpt_analysis.big_picture,
+            'confidence_score': gpt_analysis.confidence_score,
+            'analysis_timestamp': gpt_analysis.analysis_timestamp,
+            'analysis_type': gpt_analysis.analysis_type,
+            'model_used': gpt_analysis.model_used,
+            'cost_estimate': gpt_analysis.cost_estimate,
+            'cache_hit': gpt_analysis.cache_hit
         }
         
         return jsonify(enhanced_analysis)
         
     except Exception as e:
-        print(f"Error generating enhanced analysis: {e}")
-        return jsonify({"error": "Failed to generate enhanced analysis"}), 500
+        print(f"Error generating GPT analysis: {e}")
+        return jsonify({"error": "Failed to generate GPT analysis"}), 500
 
 @app.route('/api/health')
 def health_check():
@@ -901,6 +840,21 @@ def health_check():
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0"
     })
+
+@app.route('/api/gpt-stats')
+def get_gpt_stats():
+    """Get GPT AI analysis usage statistics"""
+    try:
+        stats = gpt_ai_analyzer.get_usage_stats()
+        return jsonify({
+            "gpt_usage": stats,
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            "error": "Failed to get GPT stats",
+            "message": str(e)
+        }), 500
 
 @app.route('/api/cache-status')
 def cache_status():
@@ -2015,6 +1969,154 @@ def home():
             "ai_insights": "/api/ai-insights"
         }
     })
+
+@app.route('/api/pre-event-analysis/<int:news_id>')
+def get_pre_event_analysis(news_id):
+    """Get pre-event analysis for upcoming news events"""
+    try:
+        # Get the economic event by ID from Finnhub calendar data
+        event = get_economic_event_by_id(news_id)
+        
+        # Create enhanced market context
+        enhanced_market_context = EnhancedMarketContext(
+            current_prices={
+                'EUR/USD': 1.0850,
+                'USD/JPY': 148.50,
+                'GBP/USD': 1.2650,
+                'USD/CHF': 0.8650,
+                'AUD/USD': 0.6650,
+                'USD/CAD': 1.3550
+            },
+            recent_volatility={
+                'EUR/USD': 0.008,
+                'USD/JPY': 0.012,
+                'GBP/USD': 0.010,
+                'USD/CHF': 0.007,
+                'AUD/USD': 0.009,
+                'USD/CAD': 0.006
+            },
+            market_sentiment={
+                'EUR/USD': 'neutral',
+                'USD/JPY': 'bullish',
+                'GBP/USD': 'bearish',
+                'USD/CHF': 'neutral',
+                'AUD/USD': 'neutral',
+                'USD/CAD': 'neutral'
+            },
+            key_levels={
+                'EUR/USD': {'support': 1.0800, 'resistance': 1.0900},
+                'USD/JPY': {'support': 148.00, 'resistance': 149.00},
+                'GBP/USD': {'support': 1.2600, 'resistance': 1.2700}
+            },
+            economic_calendar=[],
+            bond_yields={'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8},
+            equity_indices={'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000},
+            commodity_prices={'GOLD': 2000, 'OIL': 75, 'SILVER': 25},
+            central_bank_expectations={},
+            historical_reactions={}
+        )
+        
+        # Get pre-event analysis
+        pre_event_analysis = enhanced_ai_analyzer.analyze_macro_event(
+            event, 
+            enhanced_market_context, 
+            "pre_event"
+        )
+        
+        # Transform to frontend-compatible format
+        analysis_result = {
+            'event': event,
+            'event_context': pre_event_analysis.immediate_impact,  # Contains event explanation
+            'historical_context': pre_event_analysis.long_term_impact,  # Contains historical analysis
+            'market_expectations': pre_event_analysis.context_expectations,  # Contains expectations
+            'pre_event_sentiment': pre_event_analysis.sentiment_analysis,  # Contains sentiment
+            'cross_market_context': pre_event_analysis.cross_market_links,  # Contains cross-market
+            'preparation_strategy': pre_event_analysis.market_shifts,  # Contains preparation strategy
+            'risk_assessment': pre_event_analysis.big_picture,  # Contains risks
+            'confidence_score': pre_event_analysis.confidence_score,
+            'timestamp': pre_event_analysis.analysis_timestamp,
+            'analysis_type': 'pre_event_preparation'
+        }
+        
+        return jsonify(analysis_result)
+        
+    except Exception as e:
+        print(f"Error generating pre-event analysis: {e}")
+        return jsonify({"error": "Failed to generate pre-event analysis"}), 500
+
+@app.route('/api/post-event-analysis/<int:news_id>')
+def get_post_event_analysis(news_id):
+    """Get post-event analysis for completed news events"""
+    try:
+        # Get the economic event by ID from Finnhub calendar data
+        event = get_economic_event_by_id(news_id)
+        
+        # Create enhanced market context
+        enhanced_market_context = EnhancedMarketContext(
+            current_prices={
+                'EUR/USD': 1.0850,
+                'USD/JPY': 148.50,
+                'GBP/USD': 1.2650,
+                'USD/CHF': 0.8650,
+                'AUD/USD': 0.6650,
+                'USD/CAD': 1.3550
+            },
+            recent_volatility={
+                'EUR/USD': 0.008,
+                'USD/JPY': 0.012,
+                'GBP/USD': 0.010,
+                'USD/CHF': 0.007,
+                'AUD/USD': 0.009,
+                'USD/CAD': 0.006
+            },
+            market_sentiment={
+                'EUR/USD': 'neutral',
+                'USD/JPY': 'bullish',
+                'GBP/USD': 'bearish',
+                'USD/CHF': 'neutral',
+                'AUD/USD': 'neutral',
+                'USD/CAD': 'neutral'
+            },
+            key_levels={
+                'EUR/USD': {'support': 1.0800, 'resistance': 1.0900},
+                'USD/JPY': {'support': 148.00, 'resistance': 149.00},
+                'GBP/USD': {'support': 1.2600, 'resistance': 1.2700}
+            },
+            economic_calendar=[],
+            bond_yields={'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8},
+            equity_indices={'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000},
+            commodity_prices={'GOLD': 2000, 'OIL': 75, 'SILVER': 25},
+            central_bank_expectations={},
+            historical_reactions={}
+        )
+        
+        # Get post-event analysis
+        post_event_analysis = enhanced_ai_analyzer.analyze_macro_event(
+            event, 
+            enhanced_market_context, 
+            "post_event"
+        )
+        
+        # Transform to frontend-compatible format
+        analysis_result = {
+            'event': event,
+            'immediate_impact': post_event_analysis.immediate_impact,
+            'long_term_impact': post_event_analysis.long_term_impact,
+            'context_expectations': post_event_analysis.context_expectations,
+            'sentiment_analysis': post_event_analysis.sentiment_analysis,
+            'cross_market_links': post_event_analysis.cross_market_links,
+            'market_shifts': post_event_analysis.market_shifts,
+            'big_picture': post_event_analysis.big_picture,
+            'confidence_score': post_event_analysis.confidence_score,
+            'timestamp': post_event_analysis.analysis_timestamp,
+            'analysis_type': 'post_event_analysis'
+        }
+        
+        return jsonify(analysis_result)
+        
+    except Exception as e:
+        print(f"Error generating post-event analysis: {e}")
+        return jsonify({"error": "Failed to generate post-event analysis"}), 500
 
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development

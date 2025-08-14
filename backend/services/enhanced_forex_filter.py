@@ -155,21 +155,151 @@ class EnhancedForexFilter:
     
     def extract_currency_pairs(self, title: str, summary: str = "") -> List[str]:
         """
-        Extract currency pairs from text
+        Extract currency pairs from text with enhanced detection
         """
         text = f"{title} {summary}".lower()
         currency_pairs = []
         
-        # Common currency pair patterns
-        pairs = [
+        # Common currency pair patterns (exact matches)
+        exact_pairs = [
             'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd',
             'eur/gbp', 'eur/jpy', 'gbp/jpy', 'eur/chf', 'gbp/chf', 'aud/jpy', 'cad/jpy',
             'eur/aud', 'gbp/aud', 'eur/cad', 'gbp/cad', 'aud/cad', 'nzd/jpy', 'aud/nzd'
         ]
         
-        for pair in pairs:
+        # Check for exact currency pair matches
+        for pair in exact_pairs:
             if pair in text:
                 currency_pairs.append(pair.upper())
+        
+        # Enhanced currency detection - look for individual currencies and suggest pairs
+        currencies_found = []
+        
+        # Currency keywords and their codes
+        currency_keywords = {
+            'dollar': 'USD', 'us dollar': 'USD', 'greenback': 'USD', 'buck': 'USD',
+            'euro': 'EUR', 'european': 'EUR',
+            'pound': 'GBP', 'sterling': 'GBP', 'british pound': 'GBP',
+            'yen': 'JPY', 'japanese yen': 'JPY',
+            'franc': 'CHF', 'swiss franc': 'CHF',
+            'australian dollar': 'AUD', 'aussie': 'AUD',
+            'canadian dollar': 'CAD', 'loonie': 'CAD',
+            'new zealand dollar': 'NZD', 'kiwi': 'NZD',
+            'yuan': 'CNY', 'chinese yuan': 'CNY', 'renminbi': 'CNY',
+            'rupee': 'INR', 'indian rupee': 'INR',
+            'real': 'BRL', 'brazilian real': 'BRL',
+            'peso': 'MXN', 'mexican peso': 'MXN',
+            'won': 'KRW', 'south korean won': 'KRW',
+            'krona': 'SEK', 'swedish krona': 'SEK',
+            'krone': 'NOK', 'norwegian krone': 'NOK',
+            'danish krone': 'DKK',
+            'zloty': 'PLN', 'polish zloty': 'PLN',
+            'koruna': 'CZK', 'czech koruna': 'CZK',
+            'forint': 'HUF', 'hungarian forint': 'HUF',
+            'leu': 'RON', 'romanian leu': 'RON',
+            'lev': 'BGN', 'bulgarian lev': 'BGN',
+            'kuna': 'HRK', 'croatian kuna': 'HRK',
+            'dinar': 'RSD', 'serbian dinar': 'RSD',
+            'lira': 'TRY', 'turkish lira': 'TRY',
+            'rand': 'ZAR', 'south african rand': 'ZAR',
+            'ruble': 'RUB', 'russian ruble': 'RUB',
+            'singapore dollar': 'SGD', 'sgd': 'SGD'
+        }
+        
+        # Country to currency mapping for better detection
+        country_currency_map = {
+            # Major countries
+            'united states': 'USD', 'us ': 'USD', 'usa': 'USD', 'america': 'USD', 'american': 'USD',
+            'european union': 'EUR', 'eu ': 'EUR', 'eurozone': 'EUR', 'europe': 'EUR', 'european': 'EUR',
+            'united kingdom': 'GBP', 'uk ': 'GBP', 'britain': 'GBP', 'british': 'GBP', 'england': 'GBP',
+            'japan': 'JPY', 'japanese': 'JPY',
+            'australia': 'AUD', 'australian': 'AUD',
+            'canada': 'CAD', 'canadian': 'CAD',
+            'switzerland': 'CHF', 'swiss': 'CHF',
+            'new zealand': 'NZD', 'nz ': 'NZD',
+            'china': 'CNY', 'chinese': 'CNY',
+            'india': 'INR', 'indian': 'INR',
+            'brazil': 'BRL', 'brazilian': 'BRL',
+            'mexico': 'MXN', 'mexican': 'MXN',
+            'south korea': 'KRW', 'korean': 'KRW',
+            'sweden': 'SEK', 'swedish': 'SEK',
+            'norway': 'NOK', 'norwegian': 'NOK',
+            'denmark': 'DKK', 'danish': 'DKK',
+            'poland': 'PLN', 'polish': 'PLN',
+            'czech republic': 'CZK', 'czech': 'CZK',
+            'hungary': 'HUF', 'hungarian': 'HUF',
+            'romania': 'RON', 'romanian': 'RON',
+            'bulgaria': 'BGN', 'bulgarian': 'BGN',
+            'croatia': 'HRK', 'croatian': 'HRK',
+            'serbia': 'RSD', 'serbian': 'RSD',
+            'turkey': 'TRY', 'turkish': 'TRY',
+            'south africa': 'ZAR', 'african': 'ZAR',
+            'russia': 'RUB', 'russian': 'RUB',
+            'singapore': 'SGD',
+            
+            # Individual Eurozone countries (map to EUR)
+            'germany': 'EUR', 'german': 'EUR', 'deutschland': 'EUR',
+            'france': 'EUR', 'french': 'EUR',
+            'italy': 'EUR', 'italian': 'EUR',
+            'spain': 'EUR', 'spanish': 'EUR',
+            'netherlands': 'EUR', 'dutch': 'EUR',
+            'belgium': 'EUR', 'belgian': 'EUR',
+            'austria': 'EUR', 'austrian': 'EUR',
+            'finland': 'EUR', 'finnish': 'EUR',
+            'ireland': 'EUR', 'irish': 'EUR',
+            'portugal': 'EUR', 'portuguese': 'EUR',
+            'greece': 'EUR', 'greek': 'EUR',
+            'slovenia': 'EUR', 'slovenian': 'EUR',
+            'slovakia': 'EUR', 'slovak': 'EUR',
+            'estonia': 'EUR', 'estonian': 'EUR',
+            'latvia': 'EUR', 'latvian': 'EUR',
+            'lithuania': 'EUR', 'lithuanian': 'EUR',
+            'luxembourg': 'EUR', 'luxembourgish': 'EUR',
+            'malta': 'EUR', 'maltese': 'EUR',
+            'cyprus': 'EUR', 'cypriot': 'EUR'
+        }
+        
+        # Find currencies mentioned in the text
+        for keyword, currency_code in currency_keywords.items():
+            if keyword in text:
+                currencies_found.append(currency_code)
+        
+        # Find currencies based on country names
+        for country, currency_code in country_currency_map.items():
+            if country in text:
+                currencies_found.append(currency_code)
+        
+        # Also check for currency codes directly
+        currency_codes = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY', 'INR', 'BRL', 'MXN', 'KRW', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'HRK', 'RSD', 'TRY', 'ZAR', 'RUB', 'SGD']
+        for code in currency_codes:
+            if code.lower() in text:
+                currencies_found.append(code)
+        
+        # Remove duplicates
+        currencies_found = list(set(currencies_found))
+        
+        # If we found currencies but no exact pairs, suggest relevant pairs
+        if currencies_found and not currency_pairs:
+            # Major currency pairs to suggest based on found currencies
+            major_pairs = {
+                'USD': ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD'],
+                'EUR': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF', 'EUR/CAD', 'EUR/AUD'],
+                'GBP': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF', 'GBP/CAD', 'GBP/AUD'],
+                'JPY': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY', 'CAD/JPY', 'CHF/JPY'],
+                'AUD': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY', 'AUD/CAD', 'AUD/CHF'],
+                'CAD': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'CAD/JPY', 'AUD/CAD', 'CAD/CHF'],
+                'CHF': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'CHF/JPY', 'AUD/CHF', 'CAD/CHF'],
+                'NZD': ['NZD/USD', 'EUR/NZD', 'GBP/NZD', 'NZD/JPY', 'AUD/NZD', 'NZD/CAD']
+            }
+            
+            # Add relevant pairs for each currency found
+            for currency in currencies_found:
+                if currency in major_pairs:
+                    # Add top 3 most liquid pairs for each currency
+                    currency_pairs.extend(major_pairs[currency][:3])
+            
+            # Remove duplicates and limit to reasonable number
+            currency_pairs = list(set(currency_pairs))[:6]
         
         return currency_pairs
     
