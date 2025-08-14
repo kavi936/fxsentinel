@@ -55,21 +55,23 @@ General:
 
 There are 2 scenarios. When a trader wants analysis before news, or after news has taken place. Based on this we can give them sufficient analysis.
 
-What is the news, what it means. If it comes in higher or lower than expected is it good for the currency or not ? How is it measured. Why does it impact the markets ?
+// So essentially pre-news and post-news analysis //
 
-1. Immediate Market Impact
+// General Overview (we can add to this):
+What is the news, what does it mean ?. If it comes in higher or lower than expected is it good for the currency or not ? How is it measured. Why does it impact the markets ?
 
+// Immediate Market Impact:
 Direction: Will this news likely push the market up, down, or sideways in the short term?
 
 Magnitude: Is the expected move small and choppy or big and volatile?
 
 Affected assets: Which currency pairs, stocks, commodities, or indices are most sensitive to this news?
 
-2. Long-term Market Impact
+// Long-term Market Impact
 
-It depends on...
+This news may have short term impact, but in the long term can we see a change in direction, what can this depend on.
 
-2. Context vs. Expectations
+// Context vs. Expectations
 
 Was it priced in? Did the market already anticipate this outcome?
 
@@ -77,27 +79,33 @@ Deviation from forecast: How far is the actual data from analyst expectations or
 
 Historical reaction: How has the market reacted to similar news in the past?
 
-3. Sentiment Analysis
+// Sentiment Analysis
 
 Tone: Is the news generally bullish, bearish, or neutral for risk assets?
+How would the deviation affect markets.
 
 Forward guidance: Does it change investor sentiment for the coming weeks/months?
 
-4. Macro & Cross-Market Links
+// Macro & Cross-Market Links
 
 Correlated markets: How might this news spill over into related markets (e.g., oil news impacting CAD, geopolitical news impacting safe havens like USD/JPY or gold)?
 
 Intermarket signals: Are bonds, equities, or commodities confirming or contradicting the FX move?
 
-5. Trading Opportunities
+Look at yield curves such as US10Y for USD, and other stuff that could be impacted.
 
-Scenarios: Key if/then setups (“If price breaks X after news, look for Y target”).
+// Trading Opportunities
+
+Scenarios: Only mark certain price levels
 
 Timeframe relevance: Is this a scalp opportunity, a swing trade, or a longer-term position setup?
 
 Risk factors: What could invalidate the trade idea? Are there upcoming events that could reverse the move?
 
-6. Big Picture Implications
+Never tell the trader where to position trade his trades, we only counsel.
+
+
+// Big Picture Implications
 
 Policy outlook: Does it make central bank rate hikes/cuts more or less likely?
 
@@ -107,7 +115,34 @@ Narrative shift: Does it change the main story the market’s been trading on re
 
 
 
++++++++++++++ To Do 
 
+AI Analysis Card // Make it amazing and propoer analysis of macro news
+AI Analysis Card // Allow users to do analysis of Forex Pairs rather then only macronews.
+Economic calendar // chart popoup not working
+Live news card // Remove finnhub mentions in the live news 
+Live news card // Integrate AI analysis for live news 
+Market sentiment // Create LLM powered Market sentiment card using all available data
+
+Alert Management tab // alerts how it will work configure telegram and email bots
+Markets Tab // Remove - Not needed as of now
+
+Fix Notifications pop-up
+Change Icon for settings to time icon // Modify timezone pop up for red theme
+
+Integrate stripe payments before dashbaord acess, after sign up. // 3 day free trial //
+Modify Profile section to fit rules of closing subscriptions for stripe payers.
+
+Modify Landing page to look amazing
+
+Product Should be done by now
+
++++++++++++++ Marketing 
+
+Goal: 15 paying users 
+Use twitter and Instagram and Tiktok to promote product
+Proper branding // Product people want but cant get
+Start affiliates, not normal ones like infuencer shit, but big value ones that want to actually work toegether to make the best porduct. They can if they want to promote it. 
 
 
 

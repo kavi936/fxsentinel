@@ -9,7 +9,7 @@ class FinnhubHistoricalService:
     """Service for fetching historical economic data from Finnhub"""
     
     def __init__(self):
-        self.api_key = os.getenv('FINNHUB_API_KEY')
+        self.api_key = os.getenv('FINNHUB_API_KEY', 'd2d51d1r01qjem5j4g9gd2d51d1r01qjem5j4ga0')
         self.base_url = 'https://finnhub.io/api/v1'
         self.session = requests.Session()
         self.session.headers.update({'X-Finnhub-Token': self.api_key})

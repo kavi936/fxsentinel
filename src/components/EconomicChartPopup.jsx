@@ -9,7 +9,9 @@ const EconomicChartPopup = ({ event, isOpen, onClose }) => {
   const [selectedTimeframe, setSelectedTimeframe] = useState(12);
 
   useEffect(() => {
+    console.log('🔍 Chart popup useEffect triggered:', { isOpen, event: event?.title });
     if (isOpen && event) {
+      console.log('🔍 Starting to fetch chart data for:', event.title);
       fetchChartData();
     }
   }, [isOpen, event, selectedTimeframe]);
@@ -24,17 +26,25 @@ const EconomicChartPopup = ({ event, isOpen, onClose }) => {
       // Encode the event title for URL
       const encodedEventName = encodeURIComponent(event.title);
       const url = `${config.endpoints.economicChart}/${encodedEventName}?months=${selectedTimeframe}`;
+      
+      console.log('🔍 Fetching chart data for event:', event.title);
+      console.log('🔍 URL:', url);
 
       const response = await fetch(url);
+      console.log('🔍 Response status:', response.status);
+      
       const data = await response.json();
+      console.log('🔍 Response data:', data);
 
       if (data.status === 'success' && data.chart_data) {
+        console.log('✅ Chart data received:', data.chart_data);
         setChartData(data.chart_data);
       } else {
+        console.log('❌ No chart data:', data.message);
         setError(data.message || 'No historical data available');
       }
     } catch (err) {
-      console.error('Error fetching chart data:', err);
+      console.error('❌ Error fetching chart data:', err);
       setError('Failed to load historical data');
     } finally {
       setLoading(false);
