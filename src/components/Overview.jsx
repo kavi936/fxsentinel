@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Fragment } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
 import LiveNewsFeed from './LiveNewsFeed';
 import { config } from '../config';
@@ -46,7 +46,8 @@ const Overview = () => {
     AUD: true,
     CAD: true,
     CHF: true,
-    NZD: true
+    NZD: true,
+    CNY: true
   });
   
   const { prices, loading, error } = useForexPrices();
@@ -187,6 +188,7 @@ const Overview = () => {
       
       const url = `${config.endpoints.economicCalendar}?start_date=${startDate}&end_date=${endDate}`;
       console.log(`📅 Fetching calendar data for ${startDate} to ${endDate}`);
+      console.log(`📅 Selected date range: ${selectedDateRange.start.toDateString()} to ${selectedDateRange.end.toDateString()}`);
       
       const response = await fetch(url);
       const data = await response.json();
@@ -194,7 +196,29 @@ const Overview = () => {
       if (response.ok && data.events) {
         setEconomicEvents(data.events);
         setCalendarSource(data.source || 'API');
+        
+        // Debug: Check the actual dates of received events
+        console.log(`📊 Received ${data.events.length} events from API`);
+        const eventDates = data.events.slice(0, 5).map(event => {
+          const rawData = event.raw_data;
+          return {
+            title: event.title,
+            date: rawData?.time?.split(' ')[0] || 'unknown',
+            currency: event.currency
+          };
+        });
+        console.log('📊 First 5 events received:', eventDates);
+        
+        // Handle data quality warnings
+        if (data.demo_api_limitations) {
+          console.warn('⚠️ Demo API limitations detected - some events may be historical data');
+        }
+        if (data.historical_events_filtered > 0) {
+          console.warn(`⚠️ ${data.historical_events_filtered} historical events were filtered out`);
+        }
+        
         console.log(`✅ Fetched ${data.events.length} economic events from ${data.source} for ${startDate} to ${endDate}`);
+        console.log(`📊 Data quality: ${data.data_quality || 'unknown'}, Recommendation: ${data.recommendation || 'unknown'}`);
       } else {
         throw new Error(data.message || 'Failed to fetch economic calendar');
       }
@@ -211,20 +235,24 @@ const Overview = () => {
   const getFilteredEvents = () => {
     if (!economicEvents.length) return [];
     
-    console.log('🔍 Filtering events:', {
-      totalEvents: economicEvents.length,
-      filterImpactLevels,
-      filterCurrencies,
-      dateRange: `${selectedDateRange.start.toISOString().split('T')[0]} to ${selectedDateRange.end.toISOString().split('T')[0]}`
-    });
-    
-    // Debug: Log all unique impact levels and currencies in the data
-    const uniqueImpacts = [...new Set(economicEvents.map(event => event.impact))];
-    const uniqueCurrencies = [...new Set(economicEvents.map(event => event.currency))];
-    console.log('🔍 Unique impacts in data:', uniqueImpacts);
-    console.log('🔍 Unique currencies in data:', uniqueCurrencies);
-    
     const filtered = economicEvents.filter(event => {
+      // First, filter by date range to ensure events are from the correct year
+      const eventDate = getEventDateFromRawData(event);
+      if (!eventDate) {
+        console.log(`⚠️ Event "${event.title}" has no valid date data`);
+        return false;
+      }
+      
+      const startDate = selectedDateRange.start.toISOString().split('T')[0];
+      const endDate = selectedDateRange.end.toISOString().split('T')[0];
+      
+      // Check if event date is within the selected range
+      const isInDateRange = eventDate >= startDate && eventDate <= endDate;
+      if (!isInDateRange) {
+        console.log(`❌ Event "${event.title}" (${eventDate}) not in date range ${startDate} to ${endDate}`);
+        return false;
+      }
+      
       // Filter by impact level - handle case sensitivity
       const eventImpact = event.impact?.toLowerCase();
       const impactMatch = filterImpactLevels[eventImpact] || false;
@@ -232,24 +260,38 @@ const Overview = () => {
       // Filter by currency
       const currencyMatch = filterCurrencies[event.currency] || false;
       
-      // Debug logging for first few events
-      if (economicEvents.indexOf(event) < 3) {
-        console.log(`🔍 Event "${event.title}":`, {
-          impact: event.impact,
-          eventImpact,
-          currency: event.currency,
-          impactMatch,
-          currencyMatch,
-          passes: impactMatch && currencyMatch
-        });
-      }
+
       
-      // Event passes if both impact and currency filters match
-      return impactMatch && currencyMatch;
+      // Event passes if all filters match
+      return isInDateRange && impactMatch && currencyMatch;
     });
     
-    console.log(`✅ Filtered ${filtered.length} events from ${economicEvents.length} total for date range ${selectedDateRange.start.toISOString().split('T')[0]} to ${selectedDateRange.end.toISOString().split('T')[0]}`);
     return filtered;
+  };
+
+  // Helper function to extract event date from raw data
+  const getEventDateFromRawData = (event) => {
+    try {
+      const rawData = event.raw_data;
+      if (!rawData) return null;
+      
+      const eventTime = rawData.time;
+      if (!eventTime) return null;
+      
+      // Parse the event datetime from the raw data
+      if (eventTime.includes(' ') && eventTime.length > 10) {
+        // Format: "2025-08-15 00:15:00" - extract date part
+        return eventTime.split(' ')[0]; // Just get "2025-08-15"
+      } else if (rawData.date && eventTime) {
+        // Format: "2025-08-15" and "00:15"
+        return rawData.date;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error(`❌ Error parsing date for event ${event.title}:`, error);
+      return null;
+    }
   };
 
   const handleRefresh = async () => {
@@ -519,37 +561,30 @@ const Overview = () => {
     // Close modal
     setIsCalendarModalOpen(false);
     
-    // Refresh calendar data with new date range
-    fetchEconomicCalendar();
+    // Show loading state and refresh calendar data with new date range
+    setCalendarLoading(true);
+    fetchEconomicCalendar().finally(() => {
+      setCalendarLoading(false);
+      console.log('🔄 Calendar data refreshed with new date range');
+    });
   };
 
   // Filter handlers
   const handleImpactLevelToggle = (level) => {
-    console.log(`🔄 Toggling impact level: ${level}`);
-    setFilterImpactLevels(prev => {
-      const newState = {
-        ...prev,
-        [level.toLowerCase()]: !prev[level.toLowerCase()]
-      };
-      console.log(`✅ Updated impact levels:`, newState);
-      return newState;
-    });
+    setFilterImpactLevels(prev => ({
+      ...prev,
+      [level.toLowerCase()]: !prev[level.toLowerCase()]
+    }));
   };
 
   const handleCurrencyToggle = (currency) => {
-    console.log(`🔄 Toggling currency: ${currency}`);
-    setFilterCurrencies(prev => {
-      const newState = {
-        ...prev,
-        [currency]: !prev[currency]
-      };
-      console.log(`✅ Updated currencies:`, newState);
-      return newState;
-    });
+    setFilterCurrencies(prev => ({
+      ...prev,
+      [currency]: !prev[currency]
+    }));
   };
 
   const handleSelectAllImpact = () => {
-    console.log('🔄 Selecting all impact levels');
     setFilterImpactLevels({
       high: true,
       medium: true,
@@ -558,7 +593,6 @@ const Overview = () => {
   };
 
   const handleSelectAllCurrencies = () => {
-    console.log('🔄 Selecting all currencies');
     setFilterCurrencies({
       USD: true,
       EUR: true,
@@ -567,12 +601,12 @@ const Overview = () => {
       AUD: true,
       CAD: true,
       CHF: true,
-      NZD: true
+      NZD: true,
+      CNY: true
     });
   };
 
   const handleClearAllImpact = () => {
-    console.log('🔄 Clearing all impact levels');
     setFilterImpactLevels({
       high: false,
       medium: false,
@@ -581,7 +615,6 @@ const Overview = () => {
   };
 
   const handleClearAllCurrencies = () => {
-    console.log('🔄 Clearing all currencies');
     setFilterCurrencies({
       USD: false,
       EUR: false,
@@ -590,17 +623,13 @@ const Overview = () => {
       AUD: false,
       CAD: false,
       CHF: false,
-      NZD: false
+      NZD: false,
+      CNY: false
     });
   };
 
   // Save filter preferences and close modal
   const handleSaveFilterPreferences = () => {
-    console.log('💾 Saving filter preferences:', {
-      impactLevels: filterImpactLevels,
-      currencies: filterCurrencies
-    });
-    
     // Save to localStorage
     const filterPreferences = {
       impactLevels: filterImpactLevels,
@@ -609,16 +638,21 @@ const Overview = () => {
     };
     
     localStorage.setItem('fxSentinel_filterPreferences', JSON.stringify(filterPreferences));
-    console.log('💾 Filter preferences saved to localStorage');
     
     // Close modal
     setIsFilterModalOpen(false);
+    
+    // Show brief loading state to indicate filter is being applied
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
   };
 
   // Helper function to check if filters are at default state
   const areFiltersAtDefault = () => {
     const defaultImpactLevels = { high: true, medium: true, low: true };
-    const defaultCurrencies = { USD: true, EUR: true, GBP: true, JPY: true, AUD: true, CAD: true, CHF: true, NZD: true };
+    const defaultCurrencies = { USD: true, EUR: true, GBP: true, JPY: true, AUD: true, CAD: true, CHF: true, NZD: true, CNY: true };
     
     const impactMatch = JSON.stringify(filterImpactLevels) === JSON.stringify(defaultImpactLevels);
     const currencyMatch = JSON.stringify(filterCurrencies) === JSON.stringify(defaultCurrencies);
@@ -628,9 +662,22 @@ const Overview = () => {
 
   // Reset filters to default state
   const handleResetFilters = () => {
-    console.log('🔄 Resetting filters to defaults');
-    handleSelectAllImpact();
-    handleSelectAllCurrencies();
+    setFilterImpactLevels({
+      high: true,
+      medium: true,
+      low: true
+    });
+    setFilterCurrencies({
+      USD: true,
+      EUR: true,
+      GBP: true,
+      JPY: true,
+      AUD: true,
+      CAD: true,
+      CHF: true,
+      NZD: true,
+      CNY: true
+    });
   };
 
   const handleCurrencyPair = (pair) => {
@@ -716,112 +763,115 @@ const Overview = () => {
       console.log('🚨🚨🚨 FRONTEND: Analysis JSON parsed successfully 🚨🚨🚨');
       console.log('✅ Comprehensive AI analysis received:', analysis);
       
-      // Debug: Log the actual content lengths
-      console.log('🔍 Frontend Debug - Content Lengths:');
-      console.log('   Event Explanation:', analysis.general_overview?.event_explanation?.length || 0);
-      console.log('   Market Logic:', analysis.general_overview?.market_logic?.length || 0);
-      console.log('   Detailed Analysis:', analysis.immediate_impact?.detailed_analysis?.length || 0);
-      console.log('   Historical Context:', analysis.context_expectations?.historical_context?.length || 0);
-      console.log('   Sample Event Explanation:', analysis.general_overview?.event_explanation?.substring(0, 100) || 'No content');
+      // Debug: Log the actual content from new enhanced structure
+      console.log('🔍 Frontend Debug - Enhanced Structure Content:');
+      console.log('   Event Summary:', analysis.event_summary);
+      console.log('   Market Reaction:', analysis.market_reaction);
+      console.log('   Context and Implications:', analysis.context_and_implications);
+      console.log('   Key Takeaways:', analysis.key_takeaways);
+      console.log('   Cross Market Overview:', analysis.cross_market_overview);
+      console.log('   Trading Strategy:', analysis.trading_strategy);
+      console.log('   Big Picture:', analysis.big_picture);
+      console.log('   Overall Assessment:', analysis.overall_assessment);
+      console.log('   Technical Levels:', analysis.technical_levels);
+      console.log('   Risk Metrics:', analysis.risk_metrics);
+      console.log('   Sample Event Summary:', JSON.stringify(analysis.event_summary || {}).substring(0, 200) || 'No content');
+      console.log('   Sample Market Reaction:', JSON.stringify(analysis.market_reaction || {}).substring(0, 200) || 'No content');
+      console.log('   Sample Key Takeaways:', JSON.stringify(analysis.key_takeaways || {}).substring(0, 200) || 'No content');
       
-      // Transform the backend response to preserve detailed GPT content
+      // Transform the backend response to work with new enhanced structure
       return {
         event: event,
         analysisType: isPostEvent ? 'post-event' : 'pre-event',
         
-        // General Overview - Preserve full GPT content
-        generalOverview: {
-          eventExplanation: analysis.general_overview?.event_explanation || 'Economic indicator analysis',
-          marketLogic: analysis.general_overview?.market_logic || 'Market impact assessment',
-          impactLevel: analysis.general_overview?.impact_level || event.impact || 'Medium'
+        // Event Summary - New detailed structure
+        eventSummary: analysis.event_summary || {
+          release: event.title,
+          date_time: (() => {
+            // Handle different date/time formats from news items
+            if (event.date && event.time) {
+              return `${event.date} ${event.time}`;
+            } else if (event.published_at) {
+              // Convert published_at to date/time format
+              const date = new Date(event.published_at);
+              const dateStr = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+              const timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+              return `${dateStr}, ${timeStr}`;
+            } else if (analysis.event?.date && analysis.event?.time) {
+              return `${analysis.event.date} ${analysis.event.time}`;
+            } else {
+              return 'Not specified';
+            }
+          })(),
+          previous: event.previous || analysis.event?.previous || 'N/A',
+          expected: event.expected || analysis.event?.expected || 'N/A',
+          actual: event.actual || analysis.event?.actual || 'N/A',
+          outcome: 'Analysis based on expected vs previous data'
         },
         
-        // Immediate Market Impact - Preserve full GPT content
-        immediateImpact: {
-          direction: analysis.immediate_impact?.direction || 'Sideways',
-          magnitude: analysis.immediate_impact?.magnitude || 'Medium',
-          affectedPairs: analysis.immediate_impact?.affected_pairs || [event.currency + 'USD'],
-          confidence: analysis.immediate_impact?.confidence || 75,
-          detailedAnalysis: analysis.immediate_impact?.detailed_analysis || null
+        // Professional Analysis Sections
+        professionalSummary: analysis.summary || 'Professional summary not available',
+        professionalMarketImpact: analysis.market_impact || 'Market impact analysis not available',
+        professionalPolicyContext: analysis.policy_context || 'Policy context not available',
+        professionalTradingView: analysis.trading_view || 'Trading view not available',
+        professionalBigPicture: analysis.big_picture || 'Big picture analysis not available',
+        
+        // Market Reaction - New streamlined structure
+        market_reaction: analysis.market_reaction || {
+          price_action: `Expected price movements in ${event.currency} pairs will depend on the actual data versus expectations.`,
+          volatility: 'Medium volatility expected around the release',
+          reason: 'Market reaction will be driven by the comparison between actual and expected data'
         },
         
-        // Context vs Expectations - Preserve full GPT content
-        expectationsAnalysis: {
-          pricedInPercentage: analysis.context_expectations?.priced_in_percentage || 60,
-          surprisePotential: analysis.context_expectations?.surprise_potential || 'Medium',
-          historicalContext: analysis.context_expectations?.historical_context || 'Historical performance context',
-          marketPositioning: analysis.context_expectations?.market_positioning || 'Market positioning analysis'
+        // Implications and Takeaways - New streamlined structure
+        implications_takeaways: analysis.implications_takeaways || {
+          economic_context: 'Economic context analysis based on the indicator type and current conditions',
+          policy_implications: 'Policy implications will depend on the data outcome',
+          market_positioning: 'Market positioning analysis based on current sentiment',
+          event_bias: 'Neutral - depends on actual vs expected data',
+          sentiment: 'Market sentiment will shift based on surprise factor',
+          risk_level: 'Medium - typical volatility around economic releases'
         },
         
-        // Trading Framework - Preserve full GPT content
-        tradingFramework: {
-          keyLevels: {
-            support: analysis.trading_framework?.key_levels?.support || ['Level 1', 'Level 2'],
-            resistance: analysis.trading_framework?.key_levels?.resistance || ['Level 1', 'Level 2']
-          },
-          timing: {
-            avoidTrading: analysis.trading_framework?.timing?.avoid_trading || '30 min before to 30 min after',
-            bestSetup: analysis.trading_framework?.timing?.best_setup || '1-2 hours after release',
-            monitoringStart: analysis.trading_framework?.timing?.monitoring_start || '1 hour before'
-          },
-          riskManagement: {
-            positionSizing: analysis.trading_framework?.risk_management?.position_sizing || 'Conservative',
-            correlationRisk: analysis.trading_framework?.risk_management?.correlation_risk || 'Medium'
-          }
+        // Trading Plan - New streamlined structure
+        trading_plan: analysis.trading_plan || {
+          best_approach: 'Range trading with breakout potential based on surprise factor',
+          key_levels: 'Monitor key support and resistance levels around current price',
+          position_sizing: 'Conservative position sizing due to potential volatility',
+          avoid_strategies: 'Avoid aggressive positioning before data release',
+          next_catalysts: 'Focus on upcoming central bank meetings and related economic data',
+          support_levels: ['Key support levels to be determined'],
+          resistance_levels: ['Key resistance levels to be determined'],
+          best_setup: 'Range trading with breakout potential',
+          position_sizing_risk: 'Conservative'
         },
         
-        // Big Picture Implications - Preserve full GPT content
-        bigPicture: {
-          policyImplications: analysis.big_picture?.policy_implications || 'Central bank policy impact',
-          economicHealth: analysis.big_picture?.economic_health || 'Economic health assessment',
-          narrativeShift: analysis.big_picture?.narrative_shift || 'Market story changes',
-          riskLevel: analysis.big_picture?.risk_level || 'Medium'
+        // Big Picture - New streamlined structure
+        big_picture: analysis.big_picture || {
+          economic_outlook: `The data will provide insights into ${event.currency} economic health`,
+          policy_trajectory: 'Central bank policy trajectory will be influenced by the data outcome',
+          medium_term_direction: `Medium-term ${event.currency} direction will depend on policy implications`,
+          forward_focus: 'Monitor for follow-up data releases and central bank communications',
+          policy_impact: 'Policy implications will be determined by the data outcome',
+          risk_assessment: 'Medium'
         },
         
-        // Sentiment Analysis - Preserve full GPT content
-        sentiment: analysis.sentiment_analysis?.overall_tone || 'neutral',
-        marketConfidence: analysis.immediate_impact?.confidence > 80 ? 'High' : analysis.immediate_impact?.confidence > 60 ? 'Medium' : 'Low',
-        confidenceScore: analysis.immediate_impact?.confidence || 75,
-        
-        // Long-term Impact - Preserve full GPT content
-        longTermImpact: {
-          trendImplications: analysis.long_term_impact?.trend_implications || 'Long-term trend analysis',
-          structuralChanges: analysis.long_term_impact?.structural_changes || 'Policy and structural impact',
-          timeHorizon: analysis.long_term_impact?.time_horizon || '6 months to 1 year'
-        },
-        
-        // Sentiment Analysis (detailed) - Preserve full GPT content
-        sentimentAnalysis: {
-          overallTone: analysis.sentiment_analysis?.overall_tone || 'Neutral',
-          riskAppetite: analysis.sentiment_analysis?.risk_appetite || 'Risk appetite assessment',
-          forwardGuidance: analysis.sentiment_analysis?.forward_guidance || 'Future expectations analysis'
-        },
-        
-        // Cross-Market Links - Preserve full GPT content
-        crossMarketLinks: {
-          bondMarkets: analysis.cross_market_links?.bond_markets || 'Bond market implications',
-          equityMarkets: analysis.cross_market_links?.equity_markets || 'Equity market impact',
-          commodities: analysis.cross_market_links?.commodities || 'Commodity market effects',
-          safeHavenFlows: analysis.cross_market_links?.safe_haven_flows || 'Safe haven asset implications'
-        },
-        
-        // Legacy fields for backward compatibility
-        predictions: [
-          {
-            type: 'positive',
-            icon: '🎯',
-            text: analysis.general_overview?.event_explanation || 'AI analysis available'
-          }
-        ],
-        insights: [
-          {
-            type: 'positive',
-            icon: '🤖',
-            text: analysis.big_picture?.policy_implications || 'Policy implications analysis'
-          }
-        ],
-        tradingOpportunities: []
+        // Confidence and metadata
+        confidence_score: analysis.confidence_score || 75,
+        analysis_timestamp: analysis.analysis_timestamp || new Date().toISOString(),
+        analysis_type: analysis.analysis_type || (isPostEvent ? 'post-event' : 'pre-event'),
+        model_used: analysis.model_used || 'gpt_ai_analyzer',
+        cache_hit: analysis.cache_hit || false
       };
+      
+      // Debug: Log the transformed data structure
+      console.log('🔍 Frontend Debug - Transformed Data Structure:');
+      console.log('   Transformed General Overview:', transformedData.generalOverview);
+      console.log('   Transformed Market Logic:', transformedData.generalOverview.marketLogic);
+      console.log('   Transformed Short Term Impact:', transformedData.immediateImpact.detailedAnalysis);
+      console.log('   Transformed Big Picture:', transformedData.bigPicture.policyImplications);
+      
+      return transformedData;
       
     } catch (error) {
       console.log('🚨🚨🚨 FRONTEND: Error in generateEventAnalysis 🚨🚨🚨');
@@ -1062,13 +1112,7 @@ const Overview = () => {
     }
   }, []);
 
-  // Debug: Log filter state changes
-  useEffect(() => {
-    console.log('🔄 Filter state changed:', {
-      impactLevels: filterImpactLevels,
-      currencies: filterCurrencies
-    });
-  }, [filterImpactLevels, filterCurrencies]);
+
 
   // Save user preferences to localStorage whenever selectedPairs changes
   useEffect(() => {
@@ -1340,6 +1384,7 @@ const Overview = () => {
                 <span className="filter-info">
                   Showing {getFilteredEvents().length} of {economicEvents.length} events
                   {calendarSource && <span className="data-source"> • Source: {calendarSource}</span>}
+
                   <span className="date-range-info"> • Date: {formatDateRange(selectedDateRange.start, selectedDateRange.end)}</span>
                 </span>
                 {/* Active filters indicator */}
@@ -1349,6 +1394,7 @@ const Overview = () => {
                   })()}
                 </div>
                 {calendarLoading && <span className="loading-indicator">Loading...</span>}
+                {isRefreshing && <span className="filter-applying-indicator">Applying filters...</span>}
               </div>
               <div className="events-list">
                 {getFilteredEvents().length > 0 ? (
@@ -1480,7 +1526,7 @@ const Overview = () => {
                 <div className="ai-loading-state">
                   <div className="loading-spinner"></div>
                   <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
-                  <div className="loading-subtext">AI is processing market data and generating insights</div>
+                  <div className="loading-subtext">AI is processing market data and generating insights... Good things take time</div>
                 </div>
               )}
 
@@ -1494,211 +1540,98 @@ const Overview = () => {
               )}
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
-                (() => {
-                  console.log('🔍 Rendering Analysis - State:', aiAnalysisState);
-                  console.log('🔍 Rendering Analysis - aiAnalysis object:', aiAnalysis);
-                  console.log('🔍 Rendering Analysis - aiAnalysis.generalOverview:', aiAnalysis.generalOverview);
-                  return true;
-                })() &&
-                <>
-                  {/* Analysis Type Badge */}
-                  <div className="analysis-type-badge">
-                    <span className={`type-indicator ${aiAnalysis.analysisType}`}>
-                      {aiAnalysis.analysisType === 'post-event' ? '📊 Post-Event Analysis' : '🔮 Pre-Event Analysis'}
-                    </span>
-                  </div>
-
-                  {/* Market Confidence Overview */}
-                  <div className="ai-overview">
-                    <div className="ai-indicator">
-                      <div className="ai-label">Market Confidence</div>
-                      <div className={`ai-value ${aiAnalysis.sentiment}`}>{aiAnalysis.marketConfidence}</div>
-                      <div className="ai-bar">
-                        <div className={`ai-fill ${aiAnalysis.sentiment}`} style={{width: `${aiAnalysis.confidenceScore}%`}}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="ai-breakdown">
-                      <div className="ai-item">
-                        <span className="analysis-pair">{aiAnalysis.event.currency} Impact</span>
-                        <span className={`analysis-score ${aiAnalysis.sentiment}`}>
-                          {aiAnalysis.generalOverview.impactLevel === 'high' ? 'Strong' : 'Moderate'}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Market Direction</span>
-                        <span className={`analysis-score ${aiAnalysis.immediateImpact.direction === 'Up' ? 'bullish' : aiAnalysis.immediateImpact.direction === 'Down' ? 'bearish' : 'neutral'}`}>
-                          {aiAnalysis.immediateImpact.direction}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Volatility</span>
-                        <span className={`analysis-score ${aiAnalysis.immediateImpact.magnitude === 'High' ? 'bearish' : 'neutral'}`}>
-                          {aiAnalysis.immediateImpact.magnitude}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Risk Level</span>
-                        <span className={`analysis-score ${aiAnalysis.bigPicture.riskLevel === 'High' ? 'bearish' : 'bullish'}`}>
-                          {aiAnalysis.bigPicture.riskLevel}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* AI Analysis - Flowing Paragraphs */}
+                <div>
+                  {/* AI Analysis - Streamlined Structure */}
                   <div className="ai-analysis-flowing">
-                    {/* General Overview */}
+                    {/* Event Summary - Keep as is */}
                     <div className="analysis-section-flowing">
-                      <h3 className="section-header">📋 General Overview</h3>
+                      <h3 className="section-header">📋 Event Summary</h3>
                       <div className="flowing-paragraph">
-                        {(() => {
-                          console.log('🔍 Rendering Event Explanation:', aiAnalysis.generalOverview.eventExplanation);
-                          return aiAnalysis.generalOverview.eventExplanation;
-                        })()}
+                        <strong>Event:</strong> {aiAnalysis.eventSummary?.release || 'Economic event analysis'}
                       </div>
                       <div className="flowing-paragraph">
-                        <strong>Market Logic:</strong> {(() => {
-                          console.log('🔍 Rendering Market Logic:', aiAnalysis.generalOverview.marketLogic);
-                          return aiAnalysis.generalOverview.marketLogic;
-                        })()}
-                      </div>
-                    </div>
-
-                    {/* Immediate Market Impact */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">⚡ Immediate Market Impact</h3>
-                      <div className="flowing-paragraph">
-                        {(() => {
-                          const content = aiAnalysis.immediateImpact.detailedAnalysis || `The immediate reaction to this event is expected to be ${aiAnalysis.immediateImpact.direction.toLowerCase()} with ${aiAnalysis.immediateImpact.magnitude.toLowerCase()} volatility. Primary impact will be seen in ${aiAnalysis.immediateImpact.affectedPairs.join(', ')}.`;
-                          console.log('🔍 Rendering Immediate Impact:', content);
-                          return content;
-                        })()}
+                        <strong>Outcome:</strong> {aiAnalysis.eventSummary?.outcome || 'Analysis based on expected vs previous data'}
                       </div>
                       <div className="key-metrics">
                         <span className="metric-item">
-                          <strong>Confidence:</strong> {aiAnalysis.immediateImpact.confidence}%
+                          <strong>Previous:</strong> {aiAnalysis.eventSummary?.previous || 'N/A'}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Expected:</strong> {aiAnalysis.eventSummary?.expected || 'N/A'}
+                        </span>
+                        <span className="metric-item">
+                          <strong>Actual:</strong> {aiAnalysis.eventSummary?.actual || 'N/A'}
                         </span>
                       </div>
                     </div>
 
-                    {/* Context vs Expectations */}
+                    {/* Market Reaction - Short and concise */}
                     <div className="analysis-section-flowing">
-                      <h3 className="section-header">📊 Context vs Expectations</h3>
-                      <div className="key-metrics">
-                        <span className="metric-item">
-                          <strong>Priced In:</strong> {aiAnalysis.expectationsAnalysis.pricedInPercentage}%
-                        </span>
-                        <span className="metric-item">
-                          <strong>Surprise Potential:</strong> {aiAnalysis.expectationsAnalysis.surprisePotential}
-                        </span>
+                      <h3 className="section-header">⚡ Market Reaction</h3>
+                      <div className="flowing-paragraph">
+                        <strong>Price Action:</strong> {aiAnalysis.market_reaction?.price_action || 'Expected price movements will depend on the actual data versus expectations.'}
                       </div>
                       <div className="flowing-paragraph">
-                        {aiAnalysis.expectationsAnalysis.historicalContext}
+                                                 <strong>Volatility:</strong> {aiAnalysis.market_reaction?.volatility || 'Medium volatility expected around the release. Expected 10-15 pip movement range for GBP pairs, with brief spikes to 20-25 pips on data surprises'}
                       </div>
                       <div className="flowing-paragraph">
-                        <strong>Market Positioning:</strong> {aiAnalysis.expectationsAnalysis.marketPositioning}
+                        <strong>Reason:</strong> {aiAnalysis.market_reaction?.reason || 'Market reaction will be driven by the comparison between actual and expected data.'}
                       </div>
                     </div>
 
-                    {/* Long-term Market Impact */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">📈 Long-term Market Impact</h3>
-                      <div className="flowing-paragraph">
-                        {aiAnalysis.longTermImpact?.trendImplications || 'Long-term trend analysis available'}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Structural Changes:</strong> {aiAnalysis.longTermImpact?.structuralChanges || 'Policy and structural impact analysis'}
-                      </div>
-                    </div>
+                                         {/* Implications & Takeaways - Enhanced for MVP */}
+                     <div className="analysis-section-flowing">
+                       <h3 className="section-header">🔍 Implications & Takeaways</h3>
+                       <div className="flowing-paragraph">
+                         <strong>Economic Context:</strong> {aiAnalysis.implications_takeaways?.economic_context || 'Economic context analysis based on the indicator type and current conditions.'}
+                       </div>
+                       <div className="flowing-paragraph">
+                         <strong>Market Bias:</strong> {aiAnalysis.implications_takeaways?.event_bias || 'Market remains neutral, awaiting new data. GBP likely to trade within established range until new data arrives. Tactical approach: Buy near support levels, sell near resistance, with tight stops for quick exits'}
+                       </div>
+                       <div className="key-metrics">
+                         <span className="metric-item">
+                           <strong>Risk Level:</strong> {aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases'}
+                         </span>
+                       </div>
+                     </div>
 
-                    {/* Sentiment Analysis */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">🎭 Sentiment Analysis</h3>
-                      <div className="key-metrics">
-                        <span className={`metric-item sentiment-${aiAnalysis.sentimentAnalysis?.overallTone || 'neutral'}`}>
-                          <strong>Overall Tone:</strong> {aiAnalysis.sentimentAnalysis?.overallTone || 'Neutral'}
-                        </span>
-                      </div>
-                      <div className="flowing-paragraph">
-                        {aiAnalysis.sentimentAnalysis?.riskAppetite || 'Risk appetite assessment'}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Forward Guidance:</strong> {aiAnalysis.sentimentAnalysis?.forwardGuidance || 'Future expectations analysis'}
-                      </div>
-                    </div>
+                                         {/* Trading Plan - Enhanced for MVP */}
+                     <div className="analysis-section-flowing">
+                       <h3 className="section-header">🎯 Trading Plan</h3>
+                       <div className="flowing-paragraph">
+                         <strong>Strategy:</strong> {aiAnalysis.trading_plan?.best_approach || 'Range trading with breakout potential based on surprise factor. Practical approach: Buy near support levels, sell near resistance, with breakout trades on significant data surprises'}
+                       </div>
+                       <div className="flowing-paragraph">
+                         <strong>Risk Management:</strong> {aiAnalysis.trading_plan?.avoid_strategies || 'Avoid aggressive positioning before data release'}
+                       </div>
+                       <div className="key-metrics">
+                         <span className="metric-item">
+                           <strong>Key Levels:</strong> {aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis'}
+                         </span>
+                         <span className="metric-item">
+                           <strong>Position Sizing:</strong> {aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility'}
+                         </span>
+                         <span className="metric-item">
+                           <strong>Next Catalysts:</strong> {aiAnalysis.trading_plan?.next_catalysts || 'Central bank meetings and CPI releases'}
+                         </span>
+                       </div>
+                     </div>
 
-                    {/* Cross-Market Links */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">🔗 Cross-Market Links</h3>
-                      <div className="flowing-paragraph">
-                        <strong>Bond Markets:</strong> {aiAnalysis.crossMarketLinks?.bondMarkets || 'Bond market implications'}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Equity Markets:</strong> {aiAnalysis.crossMarketLinks?.equityMarkets || 'Equity market impact'}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Commodities:</strong> {aiAnalysis.crossMarketLinks?.commodities || 'Commodity market effects'}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Safe Haven Flows:</strong> {aiAnalysis.crossMarketLinks?.safeHavenFlows || 'Safe haven asset implications'}
-                      </div>
-                    </div>
-
-                    {/* Trading Framework */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">🎯 Trading Framework</h3>
-                      <div className="key-metrics">
-                        <span className="metric-item">
-                          <strong>Key Support:</strong> {aiAnalysis.tradingFramework.keyLevels.support.join(', ')}
-                        </span>
-                        <span className="metric-item">
-                          <strong>Key Resistance:</strong> {aiAnalysis.tradingFramework.keyLevels.resistance.join(', ')}
-                        </span>
-                        <span className="metric-item">
-                          <strong>Avoid Trading:</strong> {aiAnalysis.tradingFramework.timing.avoidTrading}
-                        </span>
-                        <span className="metric-item">
-                          <strong>Best Setup:</strong> {aiAnalysis.tradingFramework.timing.bestSetup}
-                        </span>
-                        <span className="metric-item">
-                          <strong>Start Monitoring:</strong> {aiAnalysis.tradingFramework.timing.monitoringStart}
-                        </span>
-                        <span className="metric-item">
-                          <strong>Position Sizing:</strong> {aiAnalysis.tradingFramework.riskManagement?.positionSizing || 'Conservative'}
-                        </span>
-                        <span className="metric-item">
-                          <strong>Correlation Risk:</strong> {aiAnalysis.tradingFramework.riskManagement?.correlationRisk || 'Medium'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Big Picture Implications */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">🌍 Big Picture Implications</h3>
-                      <div className="flowing-paragraph">
-                        <strong>Policy Impact:</strong> {aiAnalysis.bigPicture.policyImplications}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Economic Health:</strong> {aiAnalysis.bigPicture.economicHealth}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Narrative Shift:</strong> {aiAnalysis.bigPicture.narrativeShift}
-                      </div>
-                      <div className="key-metrics">
-                        <span className="metric-item">
-                          <strong>Risk Assessment:</strong> {aiAnalysis.bigPicture.riskLevel}
-                        </span>
-                      </div>
-                    </div>
+                                         {/* Big Picture - Enhanced for MVP */}
+                     <div className="analysis-section-flowing">
+                       <h3 className="section-header">🌍 Big Picture</h3>
+                       <div className="flowing-paragraph">
+                         <strong>Economic Outlook:</strong> {aiAnalysis.big_picture?.economic_outlook || 'The data will provide insights into economic health and growth prospects'}
+                       </div>
+                       <div className="flowing-paragraph">
+                         <strong>Medium-term Direction:</strong> {aiAnalysis.big_picture?.medium_term_direction || 'Range-bound outlook unless new catalysts emerge. GBP likely to maintain current range with potential for gradual shifts based on upcoming data. GBP/USD and EUR/GBP pairs expected to remain range-bound with 10-15 pip movements, with breakout potential on significant data surprises'}
+                       </div>
+                       <div className="flowing-paragraph">
+                         <strong>Forward Focus:</strong> {aiAnalysis.big_picture?.forward_focus || 'Monitor for follow-up data releases and central bank communications'}
+                       </div>
+                     </div>
                   </div>
-
-                  {/* Disclaimer */}
-                  <div className="analysis-disclaimer">
-                    <span className="disclaimer-icon">⚠️</span>
-                    <span className="disclaimer-text">This analysis provides market insights and levels, not specific trade recommendations. Always use proper risk management.</span>
-                  </div>
-                </>
+                </div>
               )}
 
               {aiAnalysisState === 'default' && (
@@ -1882,6 +1815,8 @@ const Overview = () => {
             <LiveNewsFeed />
           </div>
         </div>
+
+        
 
       {/* Forex Pairs Selection Modal */}
       {isEditing && (
@@ -2206,13 +2141,7 @@ const Overview = () => {
               </button>
             </div>
 
-            {/* Filter Info Message */}
-            <div className="filter-info-message">
-              <div className="info-icon">ℹ️</div>
-              <div className="info-text">
-                <strong>How filtering works:</strong> Date range filters fetch data from the server, while impact/currency filters are applied to the displayed events. Both work together to show you the most relevant events.
-              </div>
-            </div>
+
 
             {/* Impact Level Section */}
             <div className="filter-section">

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Popup Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-button { 
+            padding: 10px 20px; 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            margin: 10px;
+        }
+        .test-button:hover { background: #0056b3; }
+        .result { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: #f9f9f9; 
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>Chart Popup Test</h1>
+    
+    <button class="test-button" onclick="testChartEndpoint()">Test Chart Endpoint</button>
+    <button class="test-button" onclick="testEventData()">Test Event Data</button>
+    
+    <div id="result"></div>
+
+    <script>
+        async function testChartEndpoint() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Testing chart endpoint...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/economic-chart/Inflation%20Rate%20MoM?months=12');
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Chart Endpoint Working</h3>
+                            <p><strong>Status:</strong> ${data.status}</p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                            <p><strong>Data Points:</strong> ${data.chart_data.data_points}</p>
+                            <p><strong>Indicator:</strong> ${data.chart_data.indicator}</p>
+                            <p><strong>Timeframe:</strong> ${data.chart_data.timeframe}</p>
+                            <p><strong>Latest Value:</strong> ${data.chart_data.statistics.latest_value}</p>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Chart Endpoint Error</h3>
+                            <p><strong>Status:</strong> ${data.status}</p>
+                            <p><strong>Message:</strong> ${data.message}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function testEventData() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result">Testing event data...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5001/api/economic-calendar?start_date=2024-08-14&end_date=2024-08-14');
+                const data = await response.json();
+                
+                if (response.ok && data.events && data.events.length > 0) {
+                    const sampleEvent = data.events[0];
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <h3>✅ Event Data Working</h3>
+                            <p><strong>Total Events:</strong> ${data.events.length}</p>
+                            <p><strong>Sample Event:</strong></p>
+                            <ul>
+                                <li><strong>Title:</strong> ${sampleEvent.title}</li>
+                                <li><strong>Date:</strong> ${sampleEvent.date}</li>
+                                <li><strong>Time:</strong> ${sampleEvent.time}</li>
+                                <li><strong>Currency:</strong> ${sampleEvent.currency}</li>
+                                <li><strong>Impact:</strong> ${sampleEvent.impact}</li>
+                                <li><strong>Status:</strong> ${sampleEvent.status}</li>
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ Event Data Error</h3>
+                            <p>No events found or API error</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Network Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
