@@ -64,12 +64,42 @@ class FinnhubCalendarService:
                     if self._is_event_in_date_range(transformed_event, start_date, end_date):
                         # Filter for major currency events only
                         if self._is_major_currency_event(transformed_event):
-                            transformed_events.append(transformed_event)
+                            # For current/future dates, exclude events that have already completed
+                            # This prevents showing historical data from previous years
+                            if self._should_include_event_for_date_range(transformed_event, start_date, end_date):
+                                # Additional legitimacy validation for single day views
+                                if start_date == end_date:  # Single day view
+                                    if self._is_legitimate_economic_event(transformed_event, start_date):
+                                        transformed_events.append(transformed_event)
+                                else:  # Multi-day view
+                                    transformed_events.append(transformed_event)
             
             # Sort events by date and time (earliest first)
             transformed_events.sort(key=lambda x: x.get('raw_data', {}).get('time', ''))
             
+            # Note: No artificial limit on events - Finnhub may have more events than other sources
+            # The filtering focuses on major currencies and significant economic events
+            
             print(f"✅ Filtered to {len(transformed_events)} major currency events within date range {start_date} to {end_date}")
+            
+            # Check for demo API limitations and data quality issues
+            requested_year = datetime.strptime(start_date, '%Y-%m-%d').year
+            current_year = datetime.now().year
+            wrong_year_events_count = 0
+            correct_year_events_count = 0
+            
+            for event in transformed_events:
+                raw_data = event.get('raw_data', {})
+                event_time_str = raw_data.get('time', '')
+                if event_time_str and ' ' in event_time_str:
+                    try:
+                        event_datetime = datetime.strptime(event_time_str, '%Y-%m-%d %H:%M:%S')
+                        if event_datetime.year == requested_year:
+                            correct_year_events_count += 1
+                        else:
+                            wrong_year_events_count += 1
+                    except:
+                        pass
             
             # Add warning if we have very few events
             if len(transformed_events) < 5:
@@ -79,13 +109,30 @@ class FinnhubCalendarService:
                 print("   - Consider alternative data sources")
                 print("   - Recommended: Get a paid Finnhub API key or integrate with Forex Factory")
             
+            # Add warning if we have events from wrong years (indicating demo API issues)
+            if wrong_year_events_count > 0:
+                print(f"⚠️ WARNING: Demo API returning events from wrong years ({wrong_year_events_count} wrong year vs {correct_year_events_count} correct year)")
+                print("   - Consider upgrading to a paid Finnhub subscription for accurate data")
+                print("   - Events from wrong years have been filtered out")
+            
+            # Add warning if requesting future dates but getting no events
+            if requested_year > current_year and len(transformed_events) == 0:
+                print("⚠️ WARNING: No events found for future dates")
+                print("   - Demo API may not provide future economic calendar data")
+                print("   - Consider upgrading to a paid Finnhub subscription")
+            
             # Add data quality metadata
             if transformed_events:
                 transformed_events[0]['_metadata'] = {
                     'data_quality': 'limited' if len(transformed_events) < 10 else 'moderate',
                     'source': 'finnhub_demo',
                     'recommendation': 'upgrade_to_paid_api' if len(transformed_events) < 10 else 'data_acceptable',
-                    'major_currencies_found': list(set([e.get('currency', '') for e in transformed_events if e.get('currency')]))
+                    'major_currencies_found': list(set([e.get('currency', '') for e in transformed_events if e.get('currency')])),
+                    'demo_api_limitations': wrong_year_events_count > 0,
+                    'wrong_year_events_filtered': wrong_year_events_count,
+                    'correct_year_events_found': correct_year_events_count,
+                    'requested_year': requested_year,
+                    'current_year': current_year
                 }
             
             return transformed_events
@@ -118,6 +165,7 @@ class FinnhubCalendarService:
                 return False
             
             # Parse the event datetime
+            event_datetime = None
             if ' ' in event_time_str and len(event_time_str) > 10:
                 # Format: "2025-08-13 00:00:00"
                 event_datetime = datetime.strptime(event_time_str, '%Y-%m-%d %H:%M:%S')
@@ -135,7 +183,34 @@ class FinnhubCalendarService:
             end_dt = datetime.strptime(end_date, '%Y-%m-%d')
             
             # Check if event date is within the range (inclusive)
-            return start_dt.date() <= event_datetime.date() <= end_dt.date()
+            event_date_only = event_datetime.date()
+            start_date_only = start_dt.date()
+            end_date_only = end_dt.date()
+            
+            is_in_range = start_date_only <= event_date_only <= end_date_only
+            
+            # Additional validation: Check if the event year matches the requested year
+            # This helps filter out historical data from demo API
+            requested_year = start_dt.year
+            event_year = event_datetime.year
+            
+            if event_year != requested_year:
+                print(f"⚠️ Filtering out historical event: {event.get('title', 'Unknown')} from {event_year} (requested {requested_year})")
+                return False
+            
+            # For current date requests, exclude events that have already completed
+            # This prevents showing events that happened earlier in the day
+            current_date = datetime.now().date()
+            if start_date_only == current_date and event_date_only == current_date:
+                current_time = datetime.now()
+                if event_datetime < current_time:
+                    # Check if this event has actual data (indicating it's already happened)
+                    actual_value = event.get('actual', '--')
+                    if actual_value != '--' and actual_value != '':
+                        print(f"⚠️ Filtering out completed event from earlier today: {event.get('title', 'Unknown')} at {event_datetime.strftime('%H:%M')}")
+                        return False
+            
+            return is_in_range
             
         except Exception as e:
             print(f"❌ Error checking date range for event {event.get('title', 'Unknown')}: {e}")
@@ -584,43 +659,206 @@ class FinnhubCalendarService:
             True if event is for a major currency, False otherwise
         """
         try:
-            # Major currency countries/codes
+            # Major currencies only (the 9 major forex currencies including CNY)
             major_currencies = {
-                'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'CNY', 'HKD', 'SGD', 'SEK', 'NOK', 'DKK'
+                'USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'CNY'
             }
             
+            # Major forex-relevant countries only (for the 9 major currencies)
             major_countries = {
-                'US', 'EU', 'GB', 'JP', 'AU', 'CA', 'CH', 'NZ', 'CN', 'HK', 'SG', 'SE', 'NO', 'DK',
+                'US', 'EU', 'GB', 'JP', 'AU', 'CA', 'CH', 'NZ', 'CN',
                 'USA', 'EUROZONE', 'UK', 'JAPAN', 'AUSTRALIA', 'CANADA', 'SWITZERLAND', 'NEW ZEALAND', 'CHINA'
             }
             
-            # Check currency
+            # Check currency - must be a major currency
             currency = event.get('currency', '').upper()
-            if currency in major_currencies:
-                return True
+            if currency not in major_currencies:
+                return False
             
-            # Check country
+            # Check country - must be a major country
             raw_data = event.get('raw_data', {})
             country = raw_data.get('country', '').upper()
-            if country in major_countries:
-                return True
             
-            # Check if it's a major economic event by title
-            title = event.get('title', '').upper()
-            major_events = {
-                'GDP', 'CPI', 'INFLATION', 'UNEMPLOYMENT', 'INTEREST RATE', 'FOMC', 'ECB', 'BOJ', 'BOE', 'RBA', 'BOC',
-                'NON-FARM PAYROLLS', 'ADP', 'ISM', 'PMI', 'RETAIL SALES', 'TRADE BALANCE', 'CURRENT ACCOUNT'
-            }
+            if country not in major_countries:
+                return False
             
-            for major_event in major_events:
-                if major_event in title:
-                    return True
-            
-            return False
+            # If we get here, both currency and country are major
+            return True
             
         except Exception as e:
             print(f"❌ Error checking major currency event {event.get('title', 'Unknown')}: {e}")
             return False
+
+    def _should_include_event_for_date_range(self, event: Dict, start_date: str, end_date: str) -> bool:
+        """
+        Determine if an event should be included based on the requested date range
+        
+        Args:
+            event: Transformed event data
+            start_date: Start date in YYYY-MM-DD format
+            end_date: End date in YYYY-MM-DD format
+            
+        Returns:
+            True if event should be included, False otherwise
+        """
+        try:
+            # Parse the requested date range
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            current_date = datetime.now().date()
+            
+            # For current date requests, we need to be more careful about completed events
+            # We want to include legitimate completed events from today, but exclude historical fake events
+            if start_dt.date() == current_date:
+                event_status = event.get('status', '').upper()
+                if event_status == 'COMPLETED':
+                    # Check if this event has actual data
+                    actual_value = event.get('actual', '--')
+                    if actual_value != '--' and actual_value != '':
+                        # Check if this is a legitimate economic event (not fake/placeholder)
+                        title = event.get('title', '').upper()
+                        
+                        # Include legitimate major economic events even if completed
+                        legitimate_events = [
+                            'NON-FARM PAYROLLS', 'UNEMPLOYMENT RATE', 'AVERAGE HOURLY EARNINGS',
+                            'CPI', 'CORE CPI', 'PCE', 'CORE PCE', 'RETAIL SALES', 'GDP',
+                            'ISM MANUFACTURING PMI', 'ISM NON-MANUFACTURING PMI', 'JOLTS JOB OPENINGS',
+                            'ADP EMPLOYMENT CHANGE', 'FEDERAL FUNDS RATE', 'ECB INTEREST RATE DECISION',
+                            'BOE INTEREST RATE DECISION', 'BOJ INTEREST RATE DECISION',
+                            'RBA INTEREST RATE DECISION', 'BOC INTEREST RATE DECISION',
+                            'SNB INTEREST RATE DECISION', 'RBNZ INTEREST RATE DECISION',
+                            'SPEECH', 'TESTIMONY', 'COMMENTS', 'INTERVIEW', 'PRESENTATION',
+                            'CONFERENCE', 'SYMPOSIUM', 'FORUM', 'SEMINAR'
+                        ]
+                        
+                        is_legitimate = False
+                        for legitimate in legitimate_events:
+                            if legitimate in title:
+                                is_legitimate = True
+                                break
+                        
+                        if is_legitimate:
+                            print(f"✅ Including legitimate completed event: {event.get('title', 'Unknown')} - {actual_value}")
+                            return True
+                        else:
+                            print(f"⚠️ Excluding fake completed event: {event.get('title', 'Unknown')} - {actual_value}")
+                            return False
+            
+            return True
+            
+        except Exception as e:
+            print(f"❌ Error checking if event should be included {event.get('title', 'Unknown')}: {e}")
+            return True  # Default to including the event if there's an error
+
+    def _is_legitimate_economic_event(self, event: Dict, requested_date: str) -> bool:
+        """
+        Check if an event is a legitimate economic event for the requested date
+        
+        Args:
+            event: Transformed event data
+            requested_date: Requested date in YYYY-MM-DD format
+            
+        Returns:
+            True if event is legitimate, False otherwise
+        """
+        try:
+            title = event.get('title', '').upper()
+            currency = event.get('currency', '').upper()
+            
+            # Check for known legitimate major economic events and important speeches
+            # Since Finnhub demo API is unreliable, we'll be strict but include important events
+            legitimate_major_events = [
+                'NON-FARM PAYROLLS',
+                'UNEMPLOYMENT RATE',
+                'AVERAGE HOURLY EARNINGS',
+                'PARTICIPATION RATE',
+                'FEDERAL FUNDS RATE',
+                'FOMC STATEMENT',
+                'FOMC PRESS CONFERENCE',
+                'ECB INTEREST RATE DECISION',
+                'ECB PRESS CONFERENCE',
+                'BOE INTEREST RATE DECISION',
+                'BOE MINUTES',
+                'BOJ INTEREST RATE DECISION',
+                'RBA INTEREST RATE DECISION',
+                'BOC INTEREST RATE DECISION',
+                'SNB INTEREST RATE DECISION',
+                'RBNZ INTEREST RATE DECISION',
+                'JACKSON HOLE SYMPOSIUM',
+                'FOMC MINUTES',
+                'ECB MINUTES',
+                'BOE MINUTES',
+                'BOJ MINUTES',
+                'RBA MINUTES',
+                'BOC MINUTES',
+                'SNB MINUTES',
+                'RBNZ MINUTES',
+            ]
+            
+            # Check for important central bank speeches and events
+            important_speeches = [
+                'SPEECH',  # Any central bank speech
+                'TESTIMONY',  # Congressional testimony
+                'COMMENTS',  # Central bank comments
+                'INTERVIEW',  # Central bank interviews
+                'PRESENTATION',  # Economic presentations
+                'CONFERENCE',  # Economic conferences
+                'SYMPOSIUM',  # Economic symposiums
+                'FORUM',  # Economic forums
+                'SEMINAR',  # Economic seminars
+            ]
+            
+            # Include known major events
+            for major_event in legitimate_major_events:
+                if major_event in title:
+                    print(f"✅ Including legitimate major event: {event.get('title', 'Unknown')}")
+                    return True
+            
+            # Include important central bank speeches and events (regardless of time)
+            for speech_type in important_speeches:
+                if speech_type in title:
+                    print(f"✅ Including important speech/event: {event.get('title', 'Unknown')}")
+                    return True
+            
+            # For all other events, check if they're UPCOMING, IMMINENT, or COMPLETED
+            # But only include COMPLETED events if they're legitimate (handled by _should_include_event_for_date_range)
+            status = event.get('status', '').upper()
+            if status in ['UPCOMING', 'IMMINENT', 'COMPLETED']:
+                # Additional check: only include events with reasonable timing
+                raw_data = event.get('raw_data', {})
+                event_time_str = raw_data.get('time', '')
+                
+                if event_time_str and ' ' in event_time_str:
+                    try:
+                        event_datetime = datetime.strptime(event_time_str, '%Y-%m-%d %H:%M:%S')
+                        
+                        # Check if the event time is reasonable (not at midnight or unusual hours)
+                        # But allow late evening events (up to 23:59) for important speeches
+                        hour = event_datetime.hour
+                        if hour == 0:  # Only filter out midnight events
+                            print(f"⚠️ Filtering out event with suspicious time: {event.get('title', 'Unknown')} at {event_time_str}")
+                            return False
+                        
+                        # Check if the event is on a weekend (most economic events are on weekdays)
+                        weekday = event_datetime.weekday()
+                        if weekday >= 5:  # Saturday (5) or Sunday (6)
+                            print(f"⚠️ Filtering out weekend event: {event.get('title', 'Unknown')} on {event_datetime.strftime('%A')}")
+                            return False
+                            
+                        # If it passes all checks, include it
+                        print(f"✅ Including event: {event.get('title', 'Unknown')} (status: {status})")
+                        return True
+                        
+                    except:
+                        pass
+            
+            # Filter out all other events (mostly fake/placeholder data)
+            print(f"⚠️ Filtering out likely placeholder event: {event.get('title', 'Unknown')} (status: {status})")
+            return False
+            
+        except Exception as e:
+            print(f"❌ Error checking event legitimacy {event.get('title', 'Unknown')}: {e}")
+            return False  # Default to excluding the event if there's an error
 
 # Create global instance
 finnhub_calendar = FinnhubCalendarService()

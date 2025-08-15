@@ -1,0 +1,679 @@
+/* Latest News Calendar CSS from Git Commit 3127bee */
+/* Update FXSentinel with enhanced telegram monitoring, news filtering, and UI improvements */
+
+/* Economic Calendar - Main Container */
+.economic-calendar {
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a0a0a 25%, #1e0505 50%, #1a0a0a 75%, #0f0f0f 100%);
+  border: 1px solid rgba(255, 68, 68, .15);
+  border-radius: 20px;
+  margin-top: 20px;
+  margin-left: 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 700px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px #0006, 0 0 0 1px #ff44441a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.economic-calendar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, rgba(218, 0, 18, 0.08) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(218, 0, 18, 0.03) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Compatibility class for news-calendar */
+.news-calendar {
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a0a0a 25%, #1e0505 50%, #1a0a0a 75%, #0f0f0f 100%);
+  border: 1px solid rgba(255, 68, 68, .15);
+  border-radius: 20px;
+  margin-top: 20px;
+  margin-left: 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 650px;
+  min-height: 650px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px #0006, 0 0 0 1px #ff44441a;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.news-calendar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, rgba(218, 0, 18, 0.08) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(218, 0, 18, 0.03) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Calendar Header */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #8B0000;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 8px;
+}
+
+.header-main h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.calendar-title {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+  position: relative;
+  letter-spacing: 1.5px;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.calendar-controls {
+  display: flex;
+  gap: 12px;
+}
+
+.date-select-btn,
+.filter-btn,
+.refresh-btn {
+  background: linear-gradient(135deg, rgba(51, 51, 51, 0.8) 0%, rgba(80, 20, 20, 0.6) 50%, rgba(51, 51, 51, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.date-select-btn:hover,
+.filter-btn:hover,
+.refresh-btn:hover {
+  background: linear-gradient(135deg, rgba(68, 68, 68, 0.9) 0%, rgba(100, 30, 30, 0.7) 50%, rgba(68, 68, 68, 0.9) 100%);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.date-select-btn svg,
+.filter-btn svg,
+.refresh-btn svg {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Calendar Button Styles */
+.calendar-btn {
+  background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 50%, #0f0f0f 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+}
+
+.calendar-btn:hover {
+  background: linear-gradient(145deg, #3a3a3a 0%, #2a2a2a 50%, #1a1a1a 100%);
+  transform: scale(1.08) translateY(-2px);
+  border-color: rgba(218, 0, 18, 0.4);
+  box-shadow: 
+    0 8px 24px rgba(218, 0, 18, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.calendar-btn:hover::before {
+  left: 100%;
+}
+
+.calendar-btn:active {
+  transform: scale(1.02) translateY(0px);
+  transition: all 0.1s ease;
+}
+
+.calendar-btn svg {
+  width: 18px;
+  height: 18px;
+  color: inherit;
+  transition: all 0.3s ease;
+}
+
+.calendar-btn:hover svg {
+  color: #fff;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+}
+
+/* Calendar Content Section */
+.calendar-content {
+  flex: 1;
+  overflow-y: auto;
+  height: calc(100% - 80px); /* Subtract header height */
+  max-height: calc(650px - 80px); /* Match container max-height minus header */
+  color: white;
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(180deg, #0f0f0f 0%, #1a0a0a 50%, #1e0505 100%);
+}
+
+/* Custom scrollbar for calendar content */
+.calendar-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.calendar-content::-webkit-scrollbar-thumb {
+  background: #fff3;
+  border-radius: 3px;
+}
+
+.calendar-content::-webkit-scrollbar-track {
+  background: #ffffff0d;
+}
+
+/* Custom scrollbar for sentiment content */
+.sentiment-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sentiment-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 68, 68, 0.3);
+  border-radius: 3px;
+}
+
+.sentiment-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 68, 68, 0.5);
+}
+
+.sentiment-content::-webkit-scrollbar-track {
+  background: rgba(255, 68, 68, 0.1);
+  border-radius: 3px;
+}
+
+/* Move scrollbar to the left */
+.calendar-content {
+  direction: rtl;
+}
+
+.calendar-content > * {
+  direction: ltr;
+}
+
+/* Events list container */
+.events-list {
+  padding: 0;
+  padding-bottom: 20px; /* Add bottom padding for better scroll experience */
+}
+
+/* Direction handling for calendar content children */
+.calendar-content > * {
+  direction: ltr;
+}
+
+/* Individual event cards */
+.event-card {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .05);
+  cursor: pointer;
+  transition: all .2s ease;
+  background: transparent;
+  position: relative;
+}
+
+.calendar-event {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 20px;
+  align-items: center;
+  padding: 0;
+  position: relative;
+}
+
+.event-separator::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Event Time */
+.event-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.time-box {
+  background: linear-gradient(145deg, #8b4513 0%, #a0522d 50%, #cd853f 100%);
+  border-radius: 12px;
+  padding: 14px 18px;
+  text-align: center;
+  min-width: 90px;
+  box-shadow: 
+    0 4px 12px rgba(139, 69, 19, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.time {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.date {
+  display: block;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 4px;
+}
+
+/* Event Details */
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.event-type {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Event Currency */
+.event-currency {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  min-width: 120px;
+}
+
+.currency-code {
+  font-size: 16px;
+  font-weight: 700;
+  color: white;
+}
+
+.status-badge {
+  background: linear-gradient(145deg, #ff8c00 0%, #ffa500 50%, #ffb84d 100%);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(255, 140, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Enhanced Event Cards */
+.event-card {
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 68, 68, 0.08);
+  position: relative;
+  z-index: 2;
+  background: rgba(255, 255, 255, 0.01);
+  margin: 8px 12px;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.event-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 68, 68, 0.15);
+}
+
+.event-card:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.event-main-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 0;
+}
+
+.event-time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 60px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%);
+  border: 1px solid #8B0000;
+  border-radius: 8px;
+  padding: 8px 10px;
+  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.1);
+  margin-top: -4px;
+}
+
+/* Impact level styling */
+.event-time.impact-high {
+  border: 1px solid #FF4444;
+  box-shadow: 0 2px 8px rgba(255, 68, 68, 0.2);
+}
+
+.event-time.impact-medium {
+  border: 1px solid #FFA500;
+  box-shadow: 0 2px 8px rgba(255, 165, 0, 0.15);
+}
+
+.event-time.impact-low {
+  border: 1px solid #32CD32;
+  box-shadow: 0 2px 8px rgba(50, 205, 50, 0.1);
+}
+
+.event-time.impact-high {
+  color: #ff4444;
+}
+
+.event-time .time {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.event-time .date {
+  font-size: 11px;
+  color: #AAAAAA;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+.event-content {
+  flex: 1;
+}
+
+.event-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.event-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  flex: 1;
+  line-height: 1.3;
+  letter-spacing: 0.2px;
+}
+
+.status-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.currency {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FF6B6B;
+  background: rgba(255, 107, 107, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .cards-grid-container,
+  .cards-grid-container-second {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .news-calendar,
+  .ai-analysis-card,
+  .market-sentiment-card,
+  .live-news-analysis-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .cards-grid-container,
+  .cards-grid-container-second {
+    margin: 10px;
+    gap: 10px;
+  }
+  
+  .sentiment-content,
+  .ai-content,
+  .news-content {
+    padding: 15px;
+  }
+  
+  .sentiment-indicator,
+  .ai-indicator {
+    padding: 15px;
+  }
+  
+  .sentiment-value,
+  .ai-value {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cards-grid-container,
+  .cards-grid-container-second {
+    margin: 5px;
+    gap: 10px;
+  }
+  
+  .sentiment-content,
+  .ai-content,
+  .news-content {
+    padding: 10px;
+  }
+  
+  .sentiment-indicator,
+  .ai-indicator {
+    padding: 12px;
+  }
+  
+  .sentiment-value,
+  .ai-value {
+    font-size: 18px;
+  }
+  
+  .sentiment-item,
+  .ai-item,
+  .factor-item,
+  .ai-prediction-item,
+  .ai-insight-item {
+    padding: 10px 12px;
+  }
+}
+
+/* Small Mobile Responsive */
+@media (max-width: 360px) {
+  .economic-calendar-container {
+    padding-left: 0;
+    padding-right: 0;
+    margin-top: -15px;
+    width: calc(100% - 30px);
+  }
+  
+  .economic-calendar {
+    padding: 0;
+    border-radius: 10px;
+  }
+  
+  .calendar-title {
+    font-size: 8px;
+  }
+  
+  .calendar-controls {
+    gap: 4px;
+  }
+  
+  .calendar-btn {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .calendar-btn svg {
+    width: 13px;
+    height: 13px;
+    color: #888;
+  }
+  
+  .calendar-event {
+    gap: 10px;
+    padding: 0;
+  }
+  
+  .time-box {
+    min-width: 55px;
+    padding: 5px 8px;
+  }
+  
+  .time {
+    font-size: 10px;
+  }
+  
+  .date {
+    font-size: 7px;
+  }
+  
+  .event-title {
+    font-size: 12px;
+  }
+  
+  .event-type {
+    font-size: 8px;
+  }
+  
+  .currency-code {
+    font-size: 12px;
+  }
+  
+  .status-badge {
+    padding: 2px 5px;
+    font-size: 7px;
+  }
+  
+  .pair-btn {
+    padding: 2px 4px;
+    font-size: 7px;
+  }
+  
+  .event-data {
+    gap: 6px;
+  }
+  
+  .data-label {
+    font-size: 6px;
+  }
+  
+  .data-value {
+    font-size: 8px;
+  }
+  
+  .chart-btn {
+    width: 26px;
+    height: 26px;
+  }
+  
+  .chart-btn svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
+/* Grid Layout for Cards */
+.cards-grid-container {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 30px;
+  margin: 10px;
+  max-width: 100%;
+}
+
+.cards-grid-container-second {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin: 10px;
+  margin-top: 30px;
+  max-width: 100%;
+}
