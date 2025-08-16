@@ -1541,6 +1541,47 @@ const Overview = () => {
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
                 <div>
+                  {/* AI Overview - News Summary and Confidence */}
+                  <div className="ai-overview">
+                    <div className="ai-indicator">
+                      <div className="ai-label">Market Confidence</div>
+                      <div className={`ai-value ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
+                        {aiAnalysis.confidence_score ? `${aiAnalysis.confidence_score}%` : '85%'}
+                      </div>
+                      <div className="ai-bar">
+                        <div className={`ai-fill ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`} 
+                             style={{width: `${aiAnalysis.confidence_score || 85}%`}}></div>
+                      </div>
+                    </div>
+                    
+                    <div className="ai-breakdown">
+                      <div className="ai-item">
+                        <span className="analysis-pair">{aiAnalysis.eventSummary?.release?.split(' ')[0] || 'Event'} Impact</span>
+                        <span className={`analysis-score ${aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'bearish' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'bullish' : 'neutral'}`}>
+                          {aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'Strong' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'Weak' : 'Moderate'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Volatility</span>
+                        <span className={`analysis-score ${aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('high') ? 'bearish' : aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('low') ? 'bullish' : 'neutral'}`}>
+                          {aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('high') ? 'High' : aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('low') ? 'Low' : 'Medium'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Risk Level</span>
+                        <span className={`analysis-score ${aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'bearish' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'bullish' : 'neutral'}`}>
+                          {aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'Elevated' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'Low' : 'Normal'}
+                        </span>
+                      </div>
+                      <div className="ai-item">
+                        <span className="analysis-pair">Market Sentiment</span>
+                        <span className={`analysis-score ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
+                          {aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'Positive' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'Negative' : 'Neutral'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* AI Analysis - Streamlined Structure */}
                   <div className="ai-analysis-flowing">
                     {/* Event Summary - Keep as is */}
@@ -1553,13 +1594,13 @@ const Overview = () => {
                         <strong>Outcome:</strong> {aiAnalysis.eventSummary?.outcome || 'Analysis based on expected vs previous data'}
                       </div>
                       <div className="key-metrics">
-                        <span className="metric-item">
+                        <span className={`metric-item ${(aiAnalysis.eventSummary?.previous || 'N/A').length > 100 ? 'long-content' : ''}`}>
                           <strong>Previous:</strong> {aiAnalysis.eventSummary?.previous || 'N/A'}
                         </span>
-                        <span className="metric-item">
+                        <span className={`metric-item ${(aiAnalysis.eventSummary?.expected || 'N/A').length > 100 ? 'long-content' : ''}`}>
                           <strong>Expected:</strong> {aiAnalysis.eventSummary?.expected || 'N/A'}
                         </span>
-                        <span className="metric-item">
+                        <span className={`metric-item ${(aiAnalysis.eventSummary?.actual || 'N/A').length > 100 ? 'long-content' : ''}`}>
                           <strong>Actual:</strong> {aiAnalysis.eventSummary?.actual || 'N/A'}
                         </span>
                       </div>
@@ -1589,7 +1630,7 @@ const Overview = () => {
                          <strong>Market Bias:</strong> {aiAnalysis.implications_takeaways?.event_bias || 'Market remains neutral, awaiting new data. GBP likely to trade within established range until new data arrives. Tactical approach: Buy near support levels, sell near resistance, with tight stops for quick exits'}
                        </div>
                        <div className="key-metrics">
-                         <span className="metric-item">
+                         <span className={`metric-item ${(aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases').length > 100 ? 'long-content' : ''}`}>
                            <strong>Risk Level:</strong> {aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases'}
                          </span>
                        </div>
@@ -1605,13 +1646,13 @@ const Overview = () => {
                          <strong>Risk Management:</strong> {aiAnalysis.trading_plan?.avoid_strategies || 'Avoid aggressive positioning before data release'}
                        </div>
                        <div className="key-metrics">
-                         <span className="metric-item">
+                         <span className={`metric-item ${(aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis').length > 100 ? 'long-content' : ''}`}>
                            <strong>Key Levels:</strong> {aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis'}
                          </span>
-                         <span className="metric-item">
+                         <span className={`metric-item ${(aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility').length > 100 ? 'long-content' : ''}`}>
                            <strong>Position Sizing:</strong> {aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility'}
                          </span>
-                         <span className="metric-item">
+                         <span className={`metric-item ${(aiAnalysis.trading_plan?.next_catalysts || 'Central bank meetings and CPI releases').length > 100 ? 'long-content' : ''}`}>
                            <strong>Next Catalysts:</strong> {aiAnalysis.trading_plan?.next_catalysts || 'Central bank meetings and CPI releases'}
                          </span>
                        </div>
