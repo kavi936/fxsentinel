@@ -894,8 +894,37 @@ def get_enhanced_analysis(news_id):
         print(f"🚨 Sample Analysis: {str(gpt_analysis)[:200]}...")
         print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
         
-        # Transform to frontend-compatible format
-        if isinstance(gpt_analysis, dict):
+        # Transform to frontend-compatible format with new structure
+        if hasattr(gpt_analysis, 'headline'):  # New enhanced structure
+            # Enhanced GPT analyzer returns object with quick-scan elements
+            enhanced_analysis = {
+                # Quick-scan elements (NEW)
+                'headline': gpt_analysis.headline,
+                'key_takeaway': gpt_analysis.key_takeaway,
+                'forward_scenarios': gpt_analysis.forward_scenarios,
+                
+                # Comprehensive analysis (EXISTING)
+                'eventSummary': gpt_analysis.event_summary,
+                'market_reaction': gpt_analysis.market_reaction,
+                'implications_takeaways': gpt_analysis.implications_takeaways,
+                'trading_plan': gpt_analysis.trading_plan,
+                'big_picture': gpt_analysis.big_picture,
+                
+                # Enhanced positioning context (NEW)
+                'positioning_context': gpt_analysis.positioning_context,
+                'next_catalysts': gpt_analysis.next_catalysts,
+                
+                # Meta data
+                'confidence_score': gpt_analysis.confidence_score,
+                'analysis_timestamp': gpt_analysis.analysis_timestamp,
+                'event_id': gpt_analysis.event_id,
+                'analysis_type': gpt_analysis.analysis_type,
+                'model_used': gpt_analysis.model_used,
+                'cost_estimate': gpt_analysis.cost_estimate,
+                'cache_hit': gpt_analysis.cache_hit,
+                'definition_source': gpt_analysis.definition_source
+            }
+        elif isinstance(gpt_analysis, dict):
             # Optimized ChatGPT analyzer returns dict (includes professional sections)
             enhanced_analysis = {
                 'event': event,

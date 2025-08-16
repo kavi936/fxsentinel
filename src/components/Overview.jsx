@@ -714,6 +714,8 @@ const Overview = () => {
   };
 
   const generateEventAnalysis = async (event) => {
+    console.log('🦒🦒🦒 FRONTEND: generateEventAnalysis function called 🦒🦒🦒');
+    console.log('🦒 Event received:', event);
     try {
       console.log('🤖 Generating comprehensive AI analysis for event:', event);
       
@@ -724,12 +726,12 @@ const Overview = () => {
       console.log(`📊 Analysis type: ${isPostEvent ? 'POST-EVENT' : 'PRE-EVENT'} (Actual data: ${event.actual || 'Not available'})`);
       
       // Call our enhanced AI analysis endpoint with proper structure
-      console.log('🚨🚨🚨 FRONTEND: About to call enhanced-analysis endpoint 🚨🚨🚨');
-      console.log('🚨 Config endpoints backend:', config.endpoints.backend);
-      console.log('🚨 Event object:', event);
-      console.log('🚨 Event ID:', event.id);
-      console.log('🚨 Event Title:', event.title);
-      console.log('🚨 URL:', `${config.endpoints.backend}/api/enhanced-analysis/${event.id}`);
+      console.log('🦄🦄🦄 FRONTEND: About to call enhanced-analysis endpoint 🦄🦄🦄');
+      console.log('🦄 Config endpoints backend:', config.endpoints.backend);
+      console.log('🦄 Event object:', event);
+      console.log('🦄 Event ID:', event.id);
+      console.log('🦄 Event Title:', event.title);
+      console.log('🦄 URL:', `${config.endpoints.backend}/api/enhanced-analysis/${event.id}`);
       
       const response = await fetch(`${config.endpoints.backend}/api/enhanced-analysis/${event.id}`, {
         method: 'POST',
@@ -747,37 +749,39 @@ const Overview = () => {
         })
       });
       
-      console.log('🚨🚨🚨 FRONTEND: Fetch response received 🚨🚨🚨');
-      console.log('🚨 Response status:', response.status);
-      console.log('🚨 Response ok:', response.ok);
+      console.log('🐸🐸🐸 FRONTEND: Fetch response received 🐸🐸🐸');
+      console.log('🐸 Response status:', response.status);
+      console.log('🐸 Response ok:', response.ok);
       
       if (!response.ok) {
-        console.log('🚨🚨🚨 FRONTEND: HTTP error occurred 🚨🚨🚨');
-        console.log('🚨 Error status:', response.status);
+        console.log('🦒🦒🦒 FRONTEND: HTTP error occurred 🦒🦒🦒');
+        console.log('🦒 Error status:', response.status);
         const errorText = await response.text();
-        console.log('🚨 Error text:', errorText);
+        console.log('🦒 Error text:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const analysis = await response.json();
-      console.log('🚨🚨🚨 FRONTEND: Analysis JSON parsed successfully 🚨🚨🚨');
-      console.log('✅ Comprehensive AI analysis received:', analysis);
+      console.log('🦊🦊🦊 FRONTEND: Analysis JSON parsed successfully 🦊🦊🦊');
+      console.log('🦊 Comprehensive AI analysis received:', analysis);
+      console.log('🦊 Headline from backend:', analysis.headline);
+      console.log('🦊 Key Takeaway from backend:', analysis.key_takeaway);
+      console.log('🦊 Forward Scenarios from backend:', analysis.forward_scenarios);
       
       // Debug: Log the actual content from new enhanced structure
-      console.log('🔍 Frontend Debug - Enhanced Structure Content:');
-      console.log('   Event Summary:', analysis.event_summary);
-      console.log('   Market Reaction:', analysis.market_reaction);
-      console.log('   Context and Implications:', analysis.context_and_implications);
-      console.log('   Key Takeaways:', analysis.key_takeaways);
-      console.log('   Cross Market Overview:', analysis.cross_market_overview);
-      console.log('   Trading Strategy:', analysis.trading_strategy);
-      console.log('   Big Picture:', analysis.big_picture);
-      console.log('   Overall Assessment:', analysis.overall_assessment);
-      console.log('   Technical Levels:', analysis.technical_levels);
-      console.log('   Risk Metrics:', analysis.risk_metrics);
-      console.log('   Sample Event Summary:', JSON.stringify(analysis.event_summary || {}).substring(0, 200) || 'No content');
-      console.log('   Sample Market Reaction:', JSON.stringify(analysis.market_reaction || {}).substring(0, 200) || 'No content');
-      console.log('   Sample Key Takeaways:', JSON.stringify(analysis.key_takeaways || {}).substring(0, 200) || 'No content');
+      console.log('🐨🐨🐨 Frontend Debug - Enhanced Structure Content 🐨🐨🐨');
+      console.log('🐨 Event Summary:', analysis.eventSummary);
+      console.log('🐨 Market Reaction:', analysis.market_reaction);
+      console.log('🐨 Implications Takeaways:', analysis.implications_takeaways);
+      console.log('🐨 Key Takeaway:', analysis.key_takeaway);
+      console.log('🐨 Forward Scenarios:', analysis.forward_scenarios);
+      console.log('🐨 Trading Plan:', analysis.trading_plan);
+      console.log('🐨 Big Picture:', analysis.big_picture);
+      console.log('🐨 Positioning Context:', analysis.positioning_context);
+      console.log('🐨 Next Catalysts:', analysis.next_catalysts);
+      console.log('🐨 Sample Event Summary:', JSON.stringify(analysis.eventSummary || {}).substring(0, 200) || 'No content');
+      console.log('🐨 Sample Market Reaction:', JSON.stringify(analysis.market_reaction || {}).substring(0, 200) || 'No content');
+      console.log('🐨 Sample Key Takeaway:', analysis.key_takeaway || 'No content');
       
       // Transform the backend response to work with new enhanced structure
       return {
@@ -785,7 +789,7 @@ const Overview = () => {
         analysisType: isPostEvent ? 'post-event' : 'pre-event',
         
         // Event Summary - New detailed structure
-        eventSummary: analysis.event_summary || {
+        eventSummary: analysis.eventSummary || {
           release: event.title,
           date_time: (() => {
             // Handle different date/time formats from news items
@@ -856,6 +860,28 @@ const Overview = () => {
           risk_assessment: 'Medium'
         },
         
+        // Quick-scan elements (NEW)
+        headline: analysis.headline || `📊 ${event.title} Analysis`,
+        key_takeaway: analysis.key_takeaway || 'Analysis based on current market conditions',
+        forward_scenarios: analysis.forward_scenarios || {
+          bullish: '✅ Above key resistance: potential move higher on positive data surprise',
+          bearish: '❌ Below key support: potential move lower on negative data surprise',
+          neutral: 'Range likely between key support and resistance if no breakout.'
+        },
+        
+        // Enhanced positioning context (NEW)
+        positioning_context: analysis.positioning_context || {
+          retail_sentiment: 'Retail positioning analysis based on current market conditions',
+          institutional_flow: 'Institutional money flow analysis',
+          futures_positioning: 'Futures market positioning',
+          market_bias: 'Overall market bias based on positioning'
+        },
+        next_catalysts: analysis.next_catalysts || [
+          'Central bank meetings and CPI releases',
+          'Economic data releases',
+          'Policy announcements'
+        ],
+        
         // Confidence and metadata
         confidence_score: analysis.confidence_score || 75,
         analysis_timestamp: analysis.analysis_timestamp || new Date().toISOString(),
@@ -866,18 +892,18 @@ const Overview = () => {
       
       // Debug: Log the transformed data structure
       console.log('🔍 Frontend Debug - Transformed Data Structure:');
-      console.log('   Transformed General Overview:', transformedData.generalOverview);
-      console.log('   Transformed Market Logic:', transformedData.generalOverview.marketLogic);
-      console.log('   Transformed Short Term Impact:', transformedData.immediateImpact.detailedAnalysis);
-      console.log('   Transformed Big Picture:', transformedData.bigPicture.policyImplications);
+      console.log('   Transformed Data:', returnObject);
+      console.log('🔍 Headline in return object:', returnObject.headline);
+      console.log('🔍 Key Takeaway in return object:', returnObject.key_takeaway);
+      console.log('🔍 Forward Scenarios in return object:', returnObject.forward_scenarios);
       
-      return transformedData;
+      return returnObject;
       
     } catch (error) {
-      console.log('🚨🚨🚨 FRONTEND: Error in generateEventAnalysis 🚨🚨🚨');
-      console.log('🚨 Error message:', error.message);
-      console.log('🚨 Error stack:', error.stack);
-      console.error('❌ Error generating comprehensive AI analysis:', error);
+      console.log('🦁🦁🦁 FRONTEND: Error in generateEventAnalysis 🦁🦁🦁');
+      console.log('🦁 Error message:', error.message);
+      console.log('🦁 Error stack:', error.stack);
+      console.error('🦁 Error generating comprehensive AI analysis:', error);
       
       // Fallback to basic analysis if enhanced fails
       try {
@@ -940,10 +966,11 @@ const Overview = () => {
           };
         }
       } catch (basicError) {
-        console.error('❌ Basic analysis also failed:', basicError);
+        console.error('🐯🐯🐯 Basic analysis also failed:', basicError);
       }
       
       // Final fallback - return comprehensive structure
+      console.log('🦘🦘🦘 FRONTEND: Using final fallback data 🦘🦘🦘');
       return {
         event: event,
         analysisType: 'pre-event',
@@ -1526,7 +1553,7 @@ const Overview = () => {
                 <div className="ai-loading-state">
                   <div className="loading-spinner"></div>
                   <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
-                  <div className="loading-subtext">AI is processing market data and generating insights... Good things take time</div>
+                  <div className="loading-subtext">AI is processing market data and generating insights... Good things take time.</div>
                 </div>
               )}
 
@@ -1541,7 +1568,18 @@ const Overview = () => {
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
                 <div>
-                  {/* AI Overview - News Summary and Confidence */}
+                  {/* NEW: Quick-Scan Headline */}
+                  <div className="quick-scan-headline">
+                    <div className="headline-main">
+                      <span className="headline-emoji">{aiAnalysis.headline?.split(' ')[0] || '📊'}</span>
+                      <span className="headline-text">{aiAnalysis.headline?.substring(aiAnalysis.headline.indexOf(' ') + 1) || 'Economic Event Analysis'}</span>
+                    </div>
+                    <div className="key-takeaway">
+                      {aiAnalysis.key_takeaway || 'Analysis based on current market conditions and positioning data.'}
+                    </div>
+                  </div>
+
+                  {/* AI Overview - Enhanced with positioning data */}
                   <div className="ai-overview">
                     <div className="ai-indicator">
                       <div className="ai-label">Market Confidence</div>
@@ -1582,95 +1620,198 @@ const Overview = () => {
                     </div>
                   </div>
 
-                  {/* AI Analysis - Streamlined Structure */}
-                  <div className="ai-analysis-flowing">
-                    {/* Event Summary - Keep as is */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">📋 Event Summary</h3>
-                      <div className="flowing-paragraph">
-                        <strong>Event:</strong> {aiAnalysis.eventSummary?.release || 'Economic event analysis'}
+                  {/* NEW: Forward Scenarios */}
+                  <div className="forward-scenarios-section">
+                    <h3 className="section-header">🎯 Forward Scenarios</h3>
+                    {/* DEBUG: Log the actual aiAnalysis state */}
+                    {console.log('🦘🦘🦘 FRONTEND DISPLAY DEBUG - aiAnalysis state 🦘🦘🦘', aiAnalysis)}
+                    {console.log('🦘 Forward Scenarios:', aiAnalysis?.forward_scenarios)}
+                    {console.log('🦘 Positioning Context:', aiAnalysis?.positioning_context)}
+                    <div className="scenarios-grid">
+                      <div className="scenario bullish">
+                        <div className="scenario-content">
+                          <h4>Bullish</h4>
+                          <p>{aiAnalysis.forward_scenarios?.bullish || 'Above key resistance: potential move higher on positive data surprise'}</p>
+                        </div>
                       </div>
-                      <div className="flowing-paragraph">
-                        <strong>Outcome:</strong> {aiAnalysis.eventSummary?.outcome || 'Analysis based on expected vs previous data'}
+                      <div className="scenario bearish">
+                        <div className="scenario-content">
+                          <h4>Bearish</h4>
+                          <p>{aiAnalysis.forward_scenarios?.bearish || 'Below key support: potential move lower on negative data surprise'}</p>
+                        </div>
                       </div>
-                      <div className="key-metrics">
-                        <span className={`metric-item ${(aiAnalysis.eventSummary?.previous || 'N/A').length > 100 ? 'long-content' : ''}`}>
-                          <strong>Previous:</strong> {aiAnalysis.eventSummary?.previous || 'N/A'}
-                        </span>
-                        <span className={`metric-item ${(aiAnalysis.eventSummary?.expected || 'N/A').length > 100 ? 'long-content' : ''}`}>
-                          <strong>Expected:</strong> {aiAnalysis.eventSummary?.expected || 'N/A'}
-                        </span>
-                        <span className={`metric-item ${(aiAnalysis.eventSummary?.actual || 'N/A').length > 100 ? 'long-content' : ''}`}>
-                          <strong>Actual:</strong> {aiAnalysis.eventSummary?.actual || 'N/A'}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Market Reaction - Short and concise */}
-                    <div className="analysis-section-flowing">
-                      <h3 className="section-header">⚡ Market Reaction</h3>
-                      <div className="flowing-paragraph">
-                        <strong>Price Action:</strong> {aiAnalysis.market_reaction?.price_action || 'Expected price movements will depend on the actual data versus expectations.'}
-                      </div>
-                      <div className="flowing-paragraph">
-                                                 <strong>Volatility:</strong> {aiAnalysis.market_reaction?.volatility || 'Medium volatility expected around the release. Expected 10-15 pip movement range for GBP pairs, with brief spikes to 20-25 pips on data surprises'}
-                      </div>
-                      <div className="flowing-paragraph">
-                        <strong>Reason:</strong> {aiAnalysis.market_reaction?.reason || 'Market reaction will be driven by the comparison between actual and expected data.'}
+                      <div className="scenario neutral">
+                        <div className="scenario-content">
+                          <h4>Neutral</h4>
+                          <p>{aiAnalysis.forward_scenarios?.neutral || 'Range likely between key support and resistance if no breakout'}</p>
+                        </div>
                       </div>
                     </div>
+                  </div>
 
-                                         {/* Implications & Takeaways - Enhanced for MVP */}
-                     <div className="analysis-section-flowing">
-                       <h3 className="section-header">🔍 Implications & Takeaways</h3>
-                       <div className="flowing-paragraph">
-                         <strong>Economic Context:</strong> {aiAnalysis.implications_takeaways?.economic_context || 'Economic context analysis based on the indicator type and current conditions.'}
-                       </div>
-                       <div className="flowing-paragraph">
-                         <strong>Market Bias:</strong> {aiAnalysis.implications_takeaways?.event_bias || 'Market remains neutral, awaiting new data. GBP likely to trade within established range until new data arrives. Tactical approach: Buy near support levels, sell near resistance, with tight stops for quick exits'}
-                       </div>
-                       <div className="key-metrics">
-                         <span className={`metric-item ${(aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases').length > 100 ? 'long-content' : ''}`}>
-                           <strong>Risk Level:</strong> {aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases'}
-                         </span>
-                       </div>
-                     </div>
+                  {/* NEW: Positioning Context */}
+                  <div className="positioning-context-section">
+                    <h3 className="section-header">📊 Market Positioning</h3>
+                    <div className="positioning-grid">
+                      <div className="positioning-item">
+                        <h4>Retail Sentiment</h4>
+                        <p>{aiAnalysis.positioning_context?.retail_sentiment || 'Retail positioning analysis based on current market conditions'}</p>
+                      </div>
+                      <div className="positioning-item">
+                        <h4>Institutional Flow</h4>
+                        <p>{aiAnalysis.positioning_context?.institutional_flow || 'Institutional money flow analysis'}</p>
+                      </div>
+                      <div className="positioning-item">
+                        <h4>Futures Positioning</h4>
+                        <p>{aiAnalysis.positioning_context?.futures_positioning || 'Futures market positioning'}</p>
+                      </div>
+                      <div className="positioning-item">
+                        <h4>Market Bias</h4>
+                        <p>{aiAnalysis.positioning_context?.market_bias || 'Overall market bias based on positioning'}</p>
+                      </div>
+                    </div>
+                  </div>
 
-                                         {/* Trading Plan - Enhanced for MVP */}
-                     <div className="analysis-section-flowing">
-                       <h3 className="section-header">🎯 Trading Plan</h3>
-                       <div className="flowing-paragraph">
-                         <strong>Strategy:</strong> {aiAnalysis.trading_plan?.best_approach || 'Range trading with breakout potential based on surprise factor. Practical approach: Buy near support levels, sell near resistance, with breakout trades on significant data surprises'}
-                       </div>
-                       <div className="flowing-paragraph">
-                         <strong>Risk Management:</strong> {aiAnalysis.trading_plan?.avoid_strategies || 'Avoid aggressive positioning before data release'}
-                       </div>
-                       <div className="key-metrics">
-                         <span className={`metric-item ${(aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis').length > 100 ? 'long-content' : ''}`}>
-                           <strong>Key Levels:</strong> {aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis'}
-                         </span>
-                         <span className={`metric-item ${(aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility').length > 100 ? 'long-content' : ''}`}>
-                           <strong>Position Sizing:</strong> {aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility'}
-                         </span>
-                         <span className={`metric-item ${(aiAnalysis.trading_plan?.next_catalysts || 'Central bank meetings and CPI releases').length > 100 ? 'long-content' : ''}`}>
-                           <strong>Next Catalysts:</strong> {aiAnalysis.trading_plan?.next_catalysts || 'Central bank meetings and CPI releases'}
-                         </span>
-                       </div>
-                     </div>
+                  {/* AI Analysis - Expandable Detailed Sections */}
+                  <div className="ai-analysis-expandable">
+                    {/* Event Summary - Expandable */}
+                    <details className="analysis-details">
+                      <summary className="details-summary">
+                        <span className="summary-icon">📋</span>
+                        <span className="summary-title">Event Summary</span>
+                        <span className="summary-arrow">▼</span>
+                      </summary>
+                      <div className="details-content">
+                        <div className="flowing-paragraph">
+                          <strong>Event:</strong> {aiAnalysis.eventSummary?.release || 'Economic event analysis'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Outcome:</strong> {aiAnalysis.eventSummary?.outcome || 'Analysis based on expected vs previous data'}
+                        </div>
+                        <div className="key-metrics">
+                          <span className={`metric-item ${(aiAnalysis.eventSummary?.previous || 'N/A').length > 100 ? 'long-content' : ''}`}>
+                            <strong>Previous:</strong> {aiAnalysis.eventSummary?.previous || 'N/A'}
+                          </span>
+                          <span className={`metric-item ${(aiAnalysis.eventSummary?.expected || 'N/A').length > 100 ? 'long-content' : ''}`}>
+                            <strong>Expected:</strong> {aiAnalysis.eventSummary?.expected || 'N/A'}
+                          </span>
+                          <span className={`metric-item ${(aiAnalysis.eventSummary?.actual || 'N/A').length > 100 ? 'long-content' : ''}`}>
+                            <strong>Actual:</strong> {aiAnalysis.eventSummary?.actual || 'N/A'}
+                          </span>
+                        </div>
+                      </div>
+                    </details>
 
-                                         {/* Big Picture - Enhanced for MVP */}
-                     <div className="analysis-section-flowing">
-                       <h3 className="section-header">🌍 Big Picture</h3>
-                       <div className="flowing-paragraph">
-                         <strong>Economic Outlook:</strong> {aiAnalysis.big_picture?.economic_outlook || 'The data will provide insights into economic health and growth prospects'}
-                       </div>
-                       <div className="flowing-paragraph">
-                         <strong>Medium-term Direction:</strong> {aiAnalysis.big_picture?.medium_term_direction || 'Range-bound outlook unless new catalysts emerge. GBP likely to maintain current range with potential for gradual shifts based on upcoming data. GBP/USD and EUR/GBP pairs expected to remain range-bound with 10-15 pip movements, with breakout potential on significant data surprises'}
-                       </div>
-                       <div className="flowing-paragraph">
-                         <strong>Forward Focus:</strong> {aiAnalysis.big_picture?.forward_focus || 'Monitor for follow-up data releases and central bank communications'}
-                       </div>
-                     </div>
+                    {/* Market Reaction - Expandable */}
+                    <details className="analysis-details">
+                      <summary className="details-summary">
+                        <span className="summary-icon">⚡</span>
+                        <span className="summary-title">Market Reaction</span>
+                        <span className="summary-arrow">▼</span>
+                      </summary>
+                      <div className="details-content">
+                        <div className="flowing-paragraph">
+                          <strong>Price Action:</strong> {aiAnalysis.market_reaction?.price_action || 'Expected price movements will depend on the actual data versus expectations.'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Volatility:</strong> {aiAnalysis.market_reaction?.volatility || 'Medium volatility expected around the release. Expected 10-15 pip movement range for GBP pairs, with brief spikes to 20-25 pips on data surprises'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Reason:</strong> {aiAnalysis.market_reaction?.reason || 'Market reaction will be driven by the comparison between actual and expected data.'}
+                        </div>
+                      </div>
+                    </details>
+
+                    {/* Implications & Takeaways - Expandable */}
+                    <details className="analysis-details">
+                      <summary className="details-summary">
+                        <span className="summary-icon">🔍</span>
+                        <span className="summary-title">Implications & Takeaways</span>
+                        <span className="summary-arrow">▼</span>
+                      </summary>
+                      <div className="details-content">
+                        <div className="flowing-paragraph">
+                          <strong>Economic Context:</strong> {aiAnalysis.implications_takeaways?.economic_context || 'Economic context analysis based on the indicator type and current conditions.'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Market Bias:</strong> {aiAnalysis.implications_takeaways?.event_bias || 'Market remains neutral, awaiting new data. GBP likely to trade within established range until new data arrives. Tactical approach: Buy near support levels, sell near resistance, with tight stops for quick exits'}
+                        </div>
+                        <div className="key-metrics">
+                          <span className={`metric-item ${(aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases').length > 100 ? 'long-content' : ''}`}>
+                            <strong>Risk Level:</strong> {aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases'}
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+
+                    {/* Trading Plan - Expandable */}
+                    <details className="analysis-details">
+                      <summary className="details-summary">
+                        <span className="summary-icon">🎯</span>
+                        <span className="summary-title">Trading Plan</span>
+                        <span className="summary-arrow">▼</span>
+                      </summary>
+                      <div className="details-content">
+                        <div className="flowing-paragraph">
+                          <strong>Strategy:</strong> {aiAnalysis.trading_plan?.best_approach || 'Range trading with breakout potential based on surprise factor. Practical approach: Buy near support levels, sell near resistance, with breakout trades on significant data surprises'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Risk Management:</strong> {aiAnalysis.trading_plan?.avoid_strategies || 'Avoid aggressive positioning before data release'}
+                        </div>
+                        <div className="key-metrics">
+                          <span className={`metric-item ${(aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis').length > 100 ? 'long-content' : ''}`}>
+                            <strong>Key Levels:</strong> {aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis'}
+                          </span>
+                          <span className={`metric-item ${(aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility').length > 100 ? 'long-content' : ''}`}>
+                            <strong>Position Sizing:</strong> {aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility'}
+                          </span>
+                        </div>
+                      </div>
+                    </details>
+
+                    {/* Big Picture - Expandable */}
+                    <details className="analysis-details">
+                      <summary className="details-summary">
+                        <span className="summary-icon">🌍</span>
+                        <span className="summary-title">Big Picture</span>
+                        <span className="summary-arrow">▼</span>
+                      </summary>
+                      <div className="details-content">
+                        <div className="flowing-paragraph">
+                          <strong>Economic Outlook:</strong> {aiAnalysis.big_picture?.economic_outlook || 'The data will provide insights into economic health and growth prospects'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Medium-term Direction:</strong> {aiAnalysis.big_picture?.medium_term_direction || 'Range-bound outlook unless new catalysts emerge. GBP likely to maintain current range with potential for gradual shifts based on upcoming data. GBP/USD and EUR/GBP pairs expected to remain range-bound with 10-15 pip movements, with breakout potential on significant data surprises'}
+                        </div>
+                        <div className="flowing-paragraph">
+                          <strong>Forward Focus:</strong> {aiAnalysis.big_picture?.forward_focus || 'Monitor for follow-up data releases and central bank communications'}
+                        </div>
+                      </div>
+                    </details>
+
+                    {/* Next Catalysts - Expandable */}
+                    <details className="analysis-details">
+                      <summary className="details-summary">
+                        <span className="summary-icon">📅</span>
+                        <span className="summary-title">Next Catalysts</span>
+                        <span className="summary-arrow">▼</span>
+                      </summary>
+                      <div className="details-content">
+                        <div className="catalysts-list">
+                          {aiAnalysis.next_catalysts?.map((catalyst, index) => (
+                            <div key={index} className="catalyst-item">
+                              <span className="catalyst-icon">📅</span>
+                              <span className="catalyst-text">{catalyst}</span>
+                            </div>
+                          )) || (
+                            <div className="catalyst-item">
+                              <span className="catalyst-icon">📅</span>
+                              <span className="catalyst-text">Central bank meetings and CPI releases</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </details>
                   </div>
                 </div>
               )}

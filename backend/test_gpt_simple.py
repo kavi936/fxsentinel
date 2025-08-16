@@ -86,14 +86,16 @@ def test_gpt_analysis():
         
         # Display analysis structure
         print(f"\n📋 Analysis Structure:")
-        print(f"   General Overview: {len(pre_event_analysis.general_overview)} fields")
-        print(f"   Immediate Impact: {len(pre_event_analysis.immediate_impact)} fields")
-        print(f"   Long-term Impact: {len(pre_event_analysis.long_term_impact)} fields")
-        print(f"   Context Expectations: {len(pre_event_analysis.context_expectations)} fields")
-        print(f"   Sentiment Analysis: {len(pre_event_analysis.sentiment_analysis)} fields")
-        print(f"   Cross-market Links: {len(pre_event_analysis.cross_market_links)} fields")
-        print(f"   Trading Framework: {len(pre_event_analysis.trading_framework)} fields")
+        print(f"   Headline: {pre_event_analysis.headline}")
+        print(f"   Key Takeaway: {pre_event_analysis.key_takeaway}")
+        print(f"   Forward Scenarios: {len(pre_event_analysis.forward_scenarios)} scenarios")
+        print(f"   Event Summary: {len(pre_event_analysis.event_summary)} fields")
+        print(f"   Market Reaction: {len(pre_event_analysis.market_reaction)} fields")
+        print(f"   Implications & Takeaways: {len(pre_event_analysis.implications_takeaways)} fields")
+        print(f"   Trading Plan: {len(pre_event_analysis.trading_plan)} fields")
         print(f"   Big Picture: {len(pre_event_analysis.big_picture)} fields")
+        print(f"   Positioning Context: {len(pre_event_analysis.positioning_context)} fields")
+        print(f"   Next Catalysts: {len(pre_event_analysis.next_catalysts)} items")
         
         # Test usage stats
         print("\n📊 Testing Usage Statistics...")
@@ -118,14 +120,16 @@ def test_gpt_analysis():
         # Save sample analysis to file for inspection
         sample_analysis = {
             "pre_event": {
-                "general_overview": pre_event_analysis.general_overview,
-                "immediate_impact": pre_event_analysis.immediate_impact,
-                "long_term_impact": pre_event_analysis.long_term_impact,
-                "context_expectations": pre_event_analysis.context_expectations,
-                "sentiment_analysis": pre_event_analysis.sentiment_analysis,
-                "cross_market_links": pre_event_analysis.cross_market_links,
-                "trading_framework": pre_event_analysis.trading_framework,
+                "headline": pre_event_analysis.headline,
+                "key_takeaway": pre_event_analysis.key_takeaway,
+                "forward_scenarios": pre_event_analysis.forward_scenarios,
+                "event_summary": pre_event_analysis.event_summary,
+                "market_reaction": pre_event_analysis.market_reaction,
+                "implications_takeaways": pre_event_analysis.implications_takeaways,
+                "trading_plan": pre_event_analysis.trading_plan,
                 "big_picture": pre_event_analysis.big_picture,
+                "positioning_context": pre_event_analysis.positioning_context,
+                "next_catalysts": pre_event_analysis.next_catalysts,
                 "confidence_score": pre_event_analysis.confidence_score,
                 "model_used": pre_event_analysis.model_used,
                 "cost_estimate": pre_event_analysis.cost_estimate
@@ -140,10 +144,10 @@ def test_gpt_analysis():
         # Show a preview of the analysis
         print(f"\n📖 Analysis Preview:")
         print(f"   Event: {test_event['title']}")
-        print(f"   Explanation: {pre_event_analysis.general_overview.get('event_explanation', 'N/A')[:100]}...")
-        print(f"   Market Logic: {pre_event_analysis.general_overview.get('market_logic', 'N/A')[:100]}...")
-        print(f"   Direction: {pre_event_analysis.immediate_impact.get('direction', 'N/A')}")
-        print(f"   Magnitude: {pre_event_analysis.immediate_impact.get('magnitude', 'N/A')}")
+        print(f"   Headline: {pre_event_analysis.headline}")
+        print(f"   Key Takeaway: {pre_event_analysis.key_takeaway[:100]}...")
+        print(f"   Forward Scenarios: {len(pre_event_analysis.forward_scenarios)} scenarios")
+        print(f"   Market Reaction: {pre_event_analysis.market_reaction.get('price_action', 'N/A')[:100]}...")
         
     except Exception as e:
         print(f"❌ Test failed: {e}")
