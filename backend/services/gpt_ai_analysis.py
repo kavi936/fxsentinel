@@ -42,30 +42,54 @@ class MarketContext:
     equity_indices: Dict[str, float]
     commodity_prices: Dict[str, float]
     # New positioning data
-    retail_sentiment: Dict[str, float]  # 0.0 to 1.0 (0% to 100% long)
-    futures_positioning: Dict[str, int]  # Net long/short contracts
-    institutional_flow: Dict[str, float]  # Net buying/selling in millions
-    time_to_event: int  # seconds until event
-    liquidity_level: int  # 1=High, 2=Medium, 3=Low
-    scenario_probabilities: Dict[str, float]  # Higher, Lower, In-line probabilities
+    retail_sentiment: Dict[str, float] = None  # 0.0 to 1.0 (0% to 100% long)
+    futures_positioning: Dict[str, int] = None  # Net long/short contracts
+    institutional_flow: Dict[str, float] = None  # Net buying/selling in millions
+    time_to_event: int = 3600  # seconds until event
+    liquidity_level: int = 2  # 1=High, 2=Medium, 3=Low
+    scenario_probabilities: Dict[str, float] = None  # Higher, Lower, In-line probabilities
+    
+    def __post_init__(self):
+        # Set default values if None
+        if self.retail_sentiment is None:
+            self.retail_sentiment = {
+                'EUR/USD': 0.65, 'USD/JPY': 0.35, 'GBP/USD': 0.50,
+                'USD/CHF': 0.70, 'AUD/USD': 0.40, 'USD/CAD': 0.55
+            }
+        if self.futures_positioning is None:
+            self.futures_positioning = {
+                'EUR/USD': 15000, 'USD/JPY': -8000, 'GBP/USD': 5000,
+                'USD/CHF': 12000, 'AUD/USD': -3000, 'USD/CAD': 2000
+            }
+        if self.institutional_flow is None:
+            self.institutional_flow = {
+                'EUR/USD': 25.5, 'USD/JPY': -15.2, 'GBP/USD': 8.7,
+                'USD/CHF': 18.3, 'AUD/USD': -12.1, 'USD/CAD': 5.4
+            }
+        if self.scenario_probabilities is None:
+            self.scenario_probabilities = {
+                'higher': 0.30, 'lower': 0.50, 'inline': 0.20
+            }
 
 @dataclass
 class GPTAnalysisResult:
-    """Streamlined GPT analysis result with optimized structure"""
-    # Event summary
+    """Enhanced GPT analysis result with quick-scan elements and comprehensive analysis"""
+    
+    # Quick-scan elements (NEW)
+    headline: str
+    key_takeaway: str
+    forward_scenarios: Dict[str, Any]
+    
+    # Comprehensive analysis (EXISTING)
     event_summary: Dict[str, Any]
-    
-    # Market reaction
     market_reaction: Dict[str, Any]
-    
-    # Implications and takeaways (merged from context_and_implications and key_takeaways)
     implications_takeaways: Dict[str, Any]
-    
-    # Trading plan (merged from trading_strategy and trading_framework)
     trading_plan: Dict[str, Any]
-    
-    # Big picture (merged from big_picture and big_picture_implications)
     big_picture: Dict[str, Any]
+    
+    # Enhanced positioning context (NEW)
+    positioning_context: Dict[str, Any]
+    next_catalysts: List[str]
     
     # Meta data
     confidence_score: float
@@ -89,8 +113,11 @@ class GPTAIAnalyzer:
         else:
             print(f"🔍 OpenAI API Key found: {self.api_key[:10]}...{self.api_key[-4:]}")
             try:
-                self.client = openai.OpenAI(api_key=self.api_key)
-                print(f"🔍 GPT Analyzer initialized with API key: VALID")
+                self.client = openai.OpenAI(
+                    api_key=self.api_key,
+                    timeout=30.0  # 30 second timeout for API calls
+                )
+                print(f"🔍 GPT Analyzer initialized with API key: VALID (30s timeout)")
             except Exception as e:
                 print(f"🔍 Error initializing OpenAI client: {e}")
                 self.client = None
@@ -288,8 +315,99 @@ class GPTAIAnalyzer:
             cost_estimate = (tokens_used / 1000) * self.cost_estimates.get(model, 0.01)
             self.total_cost += cost_estimate
             
-            # Create streamlined analysis result
+            # Debug: Log what fields are actually in the GPT response
+            print(f"🚨🚨🚨 GPT RESPONSE FIELD DEBUG 🚨🚨🚨")
+            print(f"🚨 Available fields in analysis_data: {list(analysis_data.keys())}")
+            print(f"🚨 Headline field: {analysis_data.get('headline', 'NOT FOUND')}")
+            print(f"🚨 Key Takeaway field: {analysis_data.get('key_takeaway', 'NOT FOUND')}")
+            print(f"🚨 Forward Scenarios field: {analysis_data.get('forward_scenarios', 'NOT FOUND')}")
+            print(f"🚨🚨🚨 END GPT RESPONSE FIELD DEBUG 🚨🚨🚨")
+            
+            # Validate that required fields are present, if not, regenerate
+            required_fields = ['headline', 'key_takeaway', 'forward_scenarios', 'positioning_context', 'next_catalysts']
+            missing_fields = [field for field in required_fields if field not in analysis_data]
+            
+            if missing_fields:
+                print(f"🚨🚨🚨 MISSING REQUIRED FIELDS - REGENERATING 🚨🚨🚨")
+                print(f"🚨 Missing fields: {missing_fields}")
+                print(f"🚨 Regenerating with more explicit prompt...")
+                
+                # Create a more explicit prompt for missing fields
+                explicit_prompt = f"""
+You MUST include these specific fields in your JSON response:
+
+{{
+  "headline": "📊 [Event Name] Analysis - [Brief Impact Summary]",
+  "key_takeaway": "[One sentence capturing the main market implication]",
+  "forward_scenarios": {{
+    "bullish": "✅ [Bullish scenario with specific levels]",
+    "bearish": "❌ [Bearish scenario with specific levels]", 
+    "neutral": "➡️ [Neutral scenario with range]"
+  }},
+  "positioning_context": {{
+    "retail_sentiment": "[Retail positioning analysis]",
+    "institutional_flow": "[Institutional money flow analysis]",
+    "futures_positioning": "[Futures market positioning]",
+    "market_bias": "[Overall market bias]"
+  }},
+  "next_catalysts": [
+    "[Next key event 1]",
+    "[Next key event 2]", 
+    "[Next key event 3]"
+  ],
+  "event_summary": {analysis_data.get('event_summary', {})},
+  "market_reaction": {analysis_data.get('market_reaction', {})},
+  "implications_takeaways": {analysis_data.get('implications_takeaways', {})},
+  "trading_plan": {analysis_data.get('trading_plan', {})},
+  "big_picture": {analysis_data.get('big_picture', {})},
+  "confidence_score": {analysis_data.get('confidence_score', 75)}
+}}
+
+Event: {event.get('title', 'Unknown')}
+Currency: {event.get('currency', 'Unknown')}
+"""
+                
+                # Make a second API call with the explicit prompt
+                response2 = self.client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are a JSON generator. You MUST return ONLY valid JSON with ALL required fields."
+                        },
+                        {
+                            "role": "user", 
+                            "content": explicit_prompt
+                        }
+                    ],
+                    temperature=0.1,
+                    max_tokens=2000,
+                    response_format={"type": "json_object"}
+                )
+                
+                response_content2 = response2.choices[0].message.content
+                try:
+                    analysis_data = json.loads(response_content2)
+                    print(f"🚨🚨🚨 REGENERATED RESPONSE SUCCESS 🚨🚨🚨")
+                    print(f"🚨 New fields: {list(analysis_data.keys())}")
+                except json.JSONDecodeError as e:
+                    print(f"🚨🚨🚨 REGENERATION FAILED - USING ORIGINAL 🚨🚨🚨")
+                    print(f"🚨 Error: {e}")
+            else:
+                print(f"🚨🚨🚨 ALL REQUIRED FIELDS PRESENT 🚨🚨🚨")
+            
+            # Create enhanced analysis result with quick-scan elements
             result = GPTAnalysisResult(
+                # Quick-scan elements (NEW)
+                headline=analysis_data.get('headline', f"📊 {event.get('title', 'Unknown Event')} Analysis"),
+                key_takeaway=analysis_data.get('key_takeaway', 'Analysis based on current market conditions'),
+                forward_scenarios=analysis_data.get('forward_scenarios', {
+                    "bullish": "✅ Above key resistance: potential move higher on positive data surprise",
+                    "bearish": "❌ Below key support: potential move lower on negative data surprise",
+                    "neutral": "Range likely between key support and resistance if no breakout."
+                }),
+                
+                # Comprehensive analysis (EXISTING)
                 event_summary=analysis_data.get('event_summary', {
                     "release": event.get('title', 'Unknown Event'),
                     "outcome": "Analysis based on expected vs previous data",
@@ -329,6 +447,21 @@ class GPTAIAnalyzer:
                     "policy_impact": "Policy implications will be determined by the data outcome",
                     "risk_assessment": "Medium"
                 }),
+                
+                # Enhanced positioning context (NEW)
+                positioning_context=analysis_data.get('positioning_context', {
+                    "retail_sentiment": "Retail positioning analysis based on current market conditions",
+                    "institutional_flow": "Institutional money flow analysis",
+                    "futures_positioning": "Futures market positioning",
+                    "market_bias": "Overall market bias based on positioning"
+                }),
+                next_catalysts=analysis_data.get('next_catalysts', [
+                    "Central bank meetings and CPI releases",
+                    "Economic data releases",
+                    "Policy announcements"
+                ]),
+                
+                # Meta data
                 confidence_score=analysis_data.get('confidence_score', 75.0),
                 analysis_timestamp=datetime.now().isoformat(),
                 event_id=str(event.get('id', 'unknown')),
@@ -365,21 +498,93 @@ class GPTAIAnalyzer:
             return self._build_enhanced_post_event_prompt(event, market_context)
     
     def _build_enhanced_pre_event_prompt(self, event: Dict, market_context: MarketContext) -> str:
-        """Build the ultimate enhanced pre-event analysis prompt combining best practices"""
+        """Build enhanced pre-event analysis prompt with quick-scan elements and comprehensive analysis"""
         
         # Get economic context using hybrid approach
         economic_context = self.get_economic_indicator_context(event.get('title', 'Unknown Event'))
         
         prompt = f"""
-You are an experienced Forex strategist providing professional, data-driven market analysis for retail traders. 
-Your goal: Deliver clear, insightful analysis that explains cause-and-effect logic, market expectations, and risk scenarios in a structured format. 
-Do NOT give explicit trade signals or recommendations. Instead, provide educational insights, scenario-based reasoning, and actionable frameworks for understanding market dynamics.
+You are a senior Forex market strategist creating comprehensive, actionable pre-event analysis for professional traders.
 
-**CRITICAL: Focus your analysis specifically on {event.get('currency', 'Unknown')} currency pairs and the relevant central bank (e.g., Fed for USD, BoE for GBP, ECB for EUR, BoJ for JPY).**
+### CRITICAL REQUIREMENTS - YOU MUST INCLUDE ALL THESE FIELDS:
+1. **headline** - A quick headline with emojis (REQUIRED)
+2. **key_takeaway** - One sentence that captures the main implication (REQUIRED)  
+3. **forward_scenarios** - Bullish, bearish, neutral scenarios with ✅ and ❌ icons (REQUIRED)
+4. **positioning_context** - Market positioning analysis (REQUIRED)
+5. **next_catalysts** - List of upcoming catalysts (REQUIRED)
+
+### OBJECTIVES:
+- Provide a quick headline with emojis and one-sentence key takeaway first
+- Generate forward-looking scenarios (bullish, bearish, neutral) with ✅ and ❌ icons
+- Include comprehensive market analysis with positioning context
+- Focus on actionable frameworks rather than academic analysis
+- Identify next catalysts and forward planning opportunities
+- Use positioning data to explain market bias and institutional flows
+
+**CRITICAL: Focus your analysis specifically on {event.get('currency', 'Unknown')} currency pairs and the relevant central bank.**
+**MANDATORY: You MUST include ALL fields in the JSON response, especially headline, key_takeaway, and forward_scenarios.**
 
 ---
 
-### 📌 Event Details:
+### OUTPUT FORMAT:
+
+{{
+  "headline": "📢 [Short Impact Summary in one line with emoji]",
+  "key_takeaway": "[One sentence that captures the main implication]",
+  "forward_scenarios": {{
+    "bullish": "✅ Above [key level]: target [next level]. Reason: [driver]",
+    "bearish": "❌ Below [key level]: target [next level]. Reason: [driver]",
+    "neutral": "Range likely between [level] and [level] if no breakout."
+  }},
+  "event_summary": {{
+    "release": "{event.get('title', 'Unknown Event')}",
+    "date_time": "{event.get('date', 'Not specified')} {event.get('time', 'Not specified')}",
+    "previous": "{event.get('previous', 'N/A')}",
+    "expected": "{event.get('expected', 'N/A')}",
+    "actual": "N/A (Pre-Event Analysis)",
+    "outcome": "Analysis based on expected vs previous data and market positioning"
+  }},
+  "market_reaction": {{
+    "price_action": "Expected price action description for {event.get('currency', 'Unknown')} with quantified ranges (pips for FX).",
+    "volatility": "Volatility assessment (Low/Medium/High) with specific reasoning based on expectations and market conditions.",
+    "reason": "Explanation of expected market reaction based on deviation from expectations, market bias, and sentiment."
+  }},
+  "implications_takeaways": {{
+    "economic_context": "Why this data matters for the economy, growth, inflation, and employment.",
+    "policy_implications": "How this affects central bank decisions, rate expectations, and monetary policy trajectory.",
+    "market_bias": "Bullish/Bearish/Neutral with clear reasoning based on expectations.",
+    "risk_level": "Risk assessment (Low/Medium/High) with trader-appropriate guidance."
+  }},
+  "trading_plan": {{
+    "best_approach": "Trading strategy based on expectations: range trading for neutral, breakout for strong deviations.",
+    "avoid_strategies": "Risk management: what strategies to avoid under current market conditions.",
+    "key_levels": "Support/resistance levels and key zones to watch.",
+    "position_sizing": "Position sizing recommendations based on volatility and risk level.",
+    "next_catalysts": "Upcoming events and catalysts that could shift direction."
+  }},
+  "big_picture": {{
+    "economic_outlook": "Economic outlook based on expectations and broader economic context.",
+    "medium_term_direction": "Medium-term direction: range-bound for minor deviations, directional for strong deviations.",
+    "policy_trajectory": "Policy trajectory and central bank implications.",
+    "forward_focus": "Macro risks, upcoming catalysts, and events to monitor."
+  }},
+  "positioning_context": {{
+    "retail_sentiment": "Retail positioning analysis for {event.get('currency', 'Unknown')} pairs",
+    "institutional_flow": "Institutional money flow analysis",
+    "futures_positioning": "Futures market positioning",
+    "market_bias": "Overall market bias based on positioning"
+  }},
+  "next_catalysts": [
+    "[Name + date of next key event 1]",
+    "[Name + date of next key event 2]",
+    "[Name + date of next key event 3]"
+  ],
+  "confidence_score": "[0-100 based on data clarity and market conditions]"
+}}
+
+---
+
+### EVENT DETAILS:
 Title: {event.get('title', 'Unknown Event')}
 Currency: {event.get('currency', 'Unknown')}
 Impact Level: {event.get('impact', 'Medium')}
@@ -388,140 +593,43 @@ Previous: {event.get('previous', 'Not specified')}
 Actual: N/A (Pre-Event Analysis)
 Date & Time: {event.get('date', 'Not specified')} {event.get('time', 'Not specified')}
 
-### 📌 Market Context:
+### MARKET CONTEXT:
 Current Prices: {json.dumps(market_context.current_prices, indent=2)}
 Recent Volatility: {json.dumps(market_context.recent_volatility, indent=2)}
 Market Sentiment: {json.dumps(market_context.market_sentiment, indent=2)}
 Key Technical Levels: {json.dumps(market_context.key_levels, indent=2)}
 
-### 📌 Enhanced Market Positioning:
+### ENHANCED POSITIONING DATA:
 Retail Sentiment: {json.dumps(market_context.retail_sentiment, indent=2)}
 Futures Positioning: {json.dumps(market_context.futures_positioning, indent=2)}
 Institutional Flow: {json.dumps(market_context.institutional_flow, indent=2)}
 Time to Event: {market_context.time_to_event} seconds
 Liquidity Level: {market_context.liquidity_level} (1=High, 2=Medium, 3=Low)
 
-### 📌 Cross-Market Context:
+### CROSS-MARKET CONTEXT:
 Bond Yields: {json.dumps(market_context.bond_yields, indent=2)}
 Equity Indices: {json.dumps(market_context.equity_indices, indent=2)}
 Commodities: {json.dumps(market_context.commodity_prices, indent=2)}
 
-### 📌 Scenario Probabilities:
+### SCENARIO PROBABILITIES:
 Higher than Expected: {market_context.scenario_probabilities.get('higher', 0.30):.1%}
 Lower than Expected: {market_context.scenario_probabilities.get('lower', 0.50):.1%}
 In Line with Expectations: {market_context.scenario_probabilities.get('inline', 0.20):.1%}
 
-### 📌 Economic Knowledge:
+### ECONOMIC KNOWLEDGE:
 {economic_context}
 
-### 📌 Universal Event Analysis Framework:
-The system provides comprehensive analysis for ANY economic event, currency, or asset:
-
-**Universal Event Summary:**
-- Event name, currency/asset, release date/time, previous/expected/actual values
-- Deviation assessment: above, below, or in line with expectations
-- Economic significance and market implications
-
-**Universal Market Reaction:**
-- Price action with quantified ranges (pips for FX, points for indices)
-- Volatility assessment (low/medium/high) with specific reasoning
-- Movement explanation based on deviation, market bias, and sentiment
-
-**Universal Implications & Takeaways:**
-- Economic context: why the number matters for the economy
-- Policy implications: central bank impact and rate expectations
-- Market bias: bullish, bearish, or neutral with clear reasoning
-- Risk level: trader-appropriate risk assessment (low/medium/high)
-
-**Universal Trading Plan:**
-- Actionable strategies based on deviation type
-- Key support/resistance levels and position sizing
-- Risk management guidelines and strategies to avoid
-- Market condition-appropriate recommendations
-
-**Universal Medium-Term Outlook:**
-- Trend assessment based on deviation strength
-- Policy trajectory and macroeconomic risks
-- Forward focus: upcoming catalysts and events to watch
-- Range-bound vs directional guidance
-
-**Universal Deviation Handling:**
-- Above expectations: bullish potential with overshooting risks
-- Below expectations: bearish potential with accelerated sell-off risks
-- In line with expectations: stability focus with range-bound trading
-
-### 📌 Currency-Specific Analysis Requirements:
-- **Currency Focus**: Analyze specifically for {event.get('currency', 'Unknown')} currency pairs
-- **Central Bank**: Consider the relevant central bank's policy stance and reaction function
-- **Currency Pairs**: Focus on {event.get('currency', 'Unknown')}/USD, EUR/{event.get('currency', 'Unknown')}, {event.get('currency', 'Unknown')}/JPY, etc.
-- **Country Context**: Consider the specific economic conditions and policy environment for the {event.get('currency', 'Unknown')} country
-
-### 📌 Historical Context:
-Compare to last 3 similar releases and typical market reactions for this type of economic indicator.
-
-### 📌 Analysis Type:
-Pre-Event Analysis
-
----
-
-## ✅ UNIVERSAL OUTPUT REQUIREMENTS:
-Provide analysis in **JSON** with the following universal structure for ANY economic event, currency, or asset:
-
-{{
-  "event_summary": {{
-    "release": "{event.get('title', 'Unknown Event')}",
-    "date_time": "{event.get('date', 'Not specified')} {event.get('time', 'Not specified')}",
-    "previous": "{event.get('previous', 'N/A')}",
-    "expected": "{event.get('expected', 'N/A')}",
-    "actual": "{event.get('actual', 'N/A')}",
-    "outcome": "Universal assessment: 'Above expectations → Bullish', 'Below expectations → Bearish', 'In line with expectations → Neutral'. Include economic significance."
-  }},
-  
-  "market_reaction": {{
-    "price_action": "Universal price action description for {event.get('currency', 'Unknown')} with quantified ranges (pips for FX, points for indices). Include movement patterns and key levels.",
-    "volatility": "Universal volatility assessment (Low/Medium/High) with specific reasoning based on deviation magnitude and market conditions.",
-    "reason": "Universal explanation of market reaction based on deviation from expectations, market bias, and sentiment."
-  }},
-  
-  "implications_takeaways": {{
-    "economic_context": "Universal economic context: why this data matters for the economy, growth, inflation, and employment.",
-    "policy_implications": "Universal policy impact: how this affects central bank decisions, rate expectations, and monetary policy trajectory.",
-    "market_bias": "Universal market bias: Bullish/Bearish/Neutral with clear reasoning based on deviation.",
-    "risk_level": "Universal risk assessment (Low/Medium/High) with trader-appropriate guidance."
-  }},
-  
-  "trading_plan": {{
-    "best_approach": "Universal trading strategy based on deviation: range trading for neutral, breakout for strong deviations, fade for extreme moves.",
-    "avoid_strategies": "Universal risk management: what strategies to avoid under current market conditions.",
-    "key_levels": "Universal support/resistance levels and key zones to watch.",
-    "position_sizing": "Universal position sizing recommendations based on volatility and risk level.",
-    "next_catalysts": "Universal forward focus: upcoming events and catalysts that could shift direction."
-  }},
-  
-  "big_picture": {{
-    "economic_outlook": "Universal economic outlook based on data deviation and broader economic context.",
-    "medium_term_direction": "Universal medium-term direction: range-bound for minor deviations, directional for strong deviations.",
-    "policy_trajectory": "Universal policy trajectory and central bank implications.",
-    "forward_focus": "Universal forward focus: macro risks, upcoming catalysts, and events to monitor."
-  }},
-  
-  "confidence_score": 85
-}}
-
----
-
-### ✅ Additional Rules:
-- Keep each section **under 150 words**, concise but data-driven.
-- Always use **actual figures from input** (expected vs previous).
-- Mention **surprise potential** and if the market has priced in expectations.
-- Provide historical comparison where relevant (e.g., last release impact).
-- Tone: **Professional, analytical, educational**.
-- Use **specific numbers and data points** from the market context provided.
-- Consider **market positioning data** (retail sentiment, futures positioning, institutional flow).
-- Factor in **time to event** and **liquidity conditions**.
-- **CRITICAL**: Focus analysis specifically on {event.get('currency', 'Unknown')} currency pairs and the relevant central bank.
-- **CRITICAL**: Mention specific {event.get('currency', 'Unknown')} currency pairs (e.g., {event.get('currency', 'Unknown')}/USD, EUR/{event.get('currency', 'Unknown')}, {event.get('currency', 'Unknown')}/JPY).
-- **CRITICAL**: Consider the specific central bank's policy stance and reaction function.
+### ANALYSIS REQUIREMENTS:
+1. Start with a catchy headline using emojis
+2. Provide one-line key takeaway that captures the essence
+3. Generate three forward scenarios with clear ✅/❌ icons
+4. Use positioning data to explain market bias and institutional flows
+5. Include comprehensive analysis with actionable frameworks
+6. Identify the next key catalysts for forward planning
+7. Keep tone professional but trader-friendly
+8. Focus on actionable insights, not academic analysis
+9. Use specific price levels and technical guidance
+10. Include risk management and position sizing advice
 """
         return prompt
     
