@@ -8,8 +8,11 @@ class FinnhubCalendarService:
     """Service for fetching economic calendar data from Finnhub API"""
     
     def __init__(self):
-        self.api_key = os.getenv('FINNHUB_API_KEY', 'd2d51d1r01qjem5j4g9gd2d51d1r01qjem5j4ga0')  # Demo key from email
-        self.base_url = 'https://finnhub.io/api/v1'
+        # Use environment variable only, no hardcoded keys
+        self.api_key = os.getenv('FINNHUB_API_KEY')
+        if not self.api_key:
+            raise ValueError("FINNHUB_API_KEY environment variable not set")
+        self.base_url = "https://finnhub.io/api/v1"
         self.session = requests.Session()
         self.session.headers.update({
             'X-Finnhub-Token': self.api_key,

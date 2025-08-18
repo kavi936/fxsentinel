@@ -72,19 +72,15 @@ class EnhancedForexFilter:
             'cryptocurrency', 'bitcoin', 'ethereum', 'crypto', 'blockchain', 'defi', 'nft',
             'altcoin', 'stablecoin', 'token', 'ico', 'airdrop', 'mining', 'wallet',
             
-            # Stocks and equities
+            # Stocks and equities (but keep if they mention forex/currency impact)
             'stock', 'equity', 'shares', 'dividend', 'earnings', 'revenue', 'profit', 'loss',
             'market cap', 'pe ratio', 'ipo', 'secondary offering', 'buyback', 'split',
             
-            # Commodities
-            'commodity', 'oil', 'crude', 'gold', 'silver', 'copper', 'natural gas', 'corn',
-            'wheat', 'soybeans', 'cotton', 'sugar', 'coffee', 'cocoa', 'lumber',
-            
-            # Real estate
+            # Real estate (but keep if they mention forex/currency impact)
             'real estate', 'property', 'mortgage', 'housing', 'home', 'apartment', 'rental',
             'commercial property', 'reit', 'construction', 'builder',
             
-            # Other non-forex
+            # Other non-forex (but keep if they mention forex/currency impact)
             'bonds', 'treasury', 'corporate bond', 'municipal bond', 'yield curve',
             'options', 'futures', 'derivatives', 'hedge fund', 'mutual fund', 'etf'
         ]
@@ -107,6 +103,7 @@ class EnhancedForexFilter:
     def is_forex_related(self, title: str, summary: str = "") -> bool:
         """
         Enhanced forex filtering using positive and negative keywords
+        More intelligent filtering to include economic and commodity news that impacts forex
         """
         text = f"{title} {summary}".lower()
         
@@ -114,8 +111,39 @@ class EnhancedForexFilter:
         positive_matches = self._count_keyword_matches(text, self.positive_keywords)
         negative_matches = self._count_keyword_matches(text, self.negative_keywords)
         
-        # Decision logic: must have positive keywords AND no negative keywords
-        return positive_matches > 0 and negative_matches == 0
+        # Core forex terms that indicate strong forex relevance
+        core_forex_terms = [
+            'forex', 'currency', 'fx', 'foreign exchange',
+            'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd',
+            'fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz',
+            'cpi', 'inflation', 'interest rate', 'non-farm payrolls', 'gdp'
+        ]
+        
+        # Economic and commodity terms that are forex-relevant
+        forex_relevant_terms = [
+            'commodity', 'oil', 'crude', 'gold', 'silver', 'copper', 'natural gas',
+            'economic', 'economy', 'economic data', 'economic indicator',
+            'trade', 'tariff', 'trade war', 'trade deal', 'trade agreement',
+            'geopolitical', 'geopolitics', 'diplomatic', 'sanctions',
+            'market sentiment', 'risk-off', 'risk-on', 'safe haven'
+        ]
+        
+        has_core_forex = any(term in text for term in core_forex_terms)
+        has_forex_relevant = any(term in text for term in forex_relevant_terms)
+        
+        # Decision logic:
+        # 1. If it has core forex terms, include it (regardless of negative keywords)
+        # 2. If it has forex-relevant terms AND positive keywords, include it
+        # 3. If it has only negative keywords without forex relevance, exclude it
+        
+        if has_core_forex:
+            return True  # Always include if it has core forex terms
+        
+        if has_forex_relevant and positive_matches > 0:
+            return True  # Include economic/commodity news that's forex-relevant
+        
+        # Exclude if it has negative keywords without forex relevance
+        return negative_matches == 0 and positive_matches > 0
     
     def get_forex_score(self, title: str, summary: str = "") -> Dict[str, Any]:
         """

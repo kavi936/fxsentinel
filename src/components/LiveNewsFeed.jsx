@@ -152,6 +152,56 @@ const LiveNewsFeed = () => {
     setError(null);
   };
 
+  const getCachedAnalysis = async (newsItem) => {
+    try {
+      setAnalyzing(true);
+      setError(null);
+      
+      console.log('🦊 React app - Getting cached analysis for news item:', {
+        id: newsItem.id,
+        title: newsItem.title,
+        source: newsItem.source
+      });
+      
+      // Ensure news ID is treated as string to preserve precision
+      const newsId = String(newsItem.id);
+      const requestUrl = `${config.API_BASE_URL}/api/get-cached-analysis/${newsId}`;
+      console.log('🦊 React app - Making cached analysis request to:', requestUrl);
+      
+      // Make API call to get cached analysis
+      const response = await fetch(requestUrl);
+      console.log('🦊 React app - Cached analysis response status:', response.status);
+      
+      if (response.ok) {
+        const analysis = await response.json();
+        console.log('🦊 React app - Cached analysis received:', analysis);
+        
+        setAiAnalysis(analysis);
+        setSelectedNews(newsItem);
+        console.log('🦊 React app - Cached analysis displayed successfully');
+      } else {
+        const errorData = await response.json();
+        console.error('🦊 React app - Cached analysis request failed:', response.status, errorData);
+        throw new Error(errorData.error || `Failed to get cached analysis: ${response.status}`);
+      }
+      
+    } catch (err) {
+      console.error('🦊 React app - Error getting cached analysis:', err);
+      
+      let errorMessage = 'Failed to load cached analysis';
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        errorMessage = 'Network error - check your connection';
+      } else if (err.message.includes('Failed to get cached analysis:')) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      setAiAnalysis(null);
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
   const analyzeNews = async (newsItem) => {
     try {
       setAnalyzing(true);
@@ -328,7 +378,8 @@ const LiveNewsFeed = () => {
     console.log('🦊 React app - getCurrentNewsList - Original news items:', currentList.slice(0, 3).map(item => ({
       id: item.id,
       title: item.title,
-      idType: typeof item.id
+      idType: typeof item.id,
+      is_analyzed: item.is_analyzed
     })));
     
     // Remove duplicates based on title similarity
@@ -337,11 +388,18 @@ const LiveNewsFeed = () => {
     console.log('🦊 React app - getCurrentNewsList - After removeDuplicateNews:', uniqueNews.slice(0, 3).map(item => ({
       id: item.id,
       title: item.title,
-      idType: typeof item.id
+      idType: typeof item.id,
+      is_analyzed: item.is_analyzed
     })));
     
     const filteredAndSorted = uniqueNews
       .filter(item => {
+        // For history tab, only show analyzed news items
+        if (activeTab === 'history' && !item.is_analyzed) {
+          return false;
+        }
+        
+        // Apply impact filter
         if (filter === 'all') return true;
         return item.impact?.toLowerCase() === filter;
       })
@@ -355,7 +413,8 @@ const LiveNewsFeed = () => {
     console.log('🦊 React app - getCurrentNewsList - Final result:', filteredAndSorted.slice(0, 3).map(item => ({
       id: item.id,
       title: item.title,
-      idType: typeof item.id
+      idType: typeof item.id,
+      is_analyzed: item.is_analyzed
     })));
     
     return filteredAndSorted;
@@ -512,7 +571,7 @@ const LiveNewsFeed = () => {
               L
             </button>
           </div>
-          <button className="refresh-btn" onClick={activeTab === 'live' ? fetchNews : () => fetchNewsHistory()} disabled={loading || historyLoading}>
+          <button className="news-refresh-btn" onClick={activeTab === 'live' ? fetchNews : () => fetchNewsHistory()} disabled={loading || historyLoading}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
             </svg>
@@ -543,7 +602,7 @@ const LiveNewsFeed = () => {
                 <button onClick={() => handleTabChange('live')} className="switch-tab-btn">
                   Switch to Live News
                 </button>
-                <button onClick={() => fetchNewsHistory()} className="refresh-btn">
+                <button onClick={() => fetchNewsHistory()} className="news-refresh-btn">
                   Refresh History
                 </button>
               </div>
@@ -600,8 +659,8 @@ const LiveNewsFeed = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               handleNewsClick(newsItem);
-                              // Fetch the analysis for this news item
-                              analyzeNews(newsItem);
+                              // Get the cached analysis for this news item
+                              getCachedAnalysis(newsItem);
                             }}
                             title="View Analysis"
                           >

@@ -306,7 +306,7 @@ class TelegramUserMonitor:
             recent_messages.sort(key=lambda x: x['published_at'], reverse=True)
             
             logger.info(f"Retrieved {len(recent_messages)} recent Telegram news items")
-            return recent_messages[:20]  # Limit to 20 most recent
+            return recent_messages[:30]  # Increased from 20 to 30 most recent
             
         except Exception as e:
             logger.error(f"Error getting recent Telegram news: {e}")

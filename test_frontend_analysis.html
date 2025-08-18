@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Analysis Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ff4757; }
+        .info { color: #ffa502; }
+        button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        .news-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .analysis-section {
+            background: rgba(0, 255, 0, 0.1);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .analysis-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        .debug-info {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Frontend Analysis Display Test</h1>
+        <p>Testing the exact same logic as the React component</p>
+        
+        <div class="test-section">
+            <h3>Step 1: Get News Items</h3>
+            <button onclick="getNewsItems()">Get News Items</button>
+            <div id="news-items"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Step 2: Test Analysis Display Logic</h3>
+            <button onclick="testAnalysisDisplay()">Test Analysis Display</button>
+            <div id="analysis-display"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate React state variables
+        let selectedNews = null;
+        let aiAnalysis = null;
+        let analyzing = false;
+        let error = null;
+        
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://fxsentinel-production.up.railway.app';
+        const endpoints = {
+            news: `${API_BASE_URL}/api/news`,
+            analysis: (id) => `${API_BASE_URL}/api/analysis/${id}`
+        };
+        
+        async function getNewsItems() {
+            const resultDiv = document.getElementById('news-items');
+            resultDiv.innerHTML = '<p class="info">Fetching news items...</p>';
+            
+            try {
+                const response = await fetch(endpoints.news);
+                const data = await response.json();
+                
+                if (response.ok && data.news && data.news.length > 0) {
+                    const newsItems = data.news.slice(0, 3); // Show first 3 items
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Found ${data.news.length} news items</p>
+                        <div id="news-list">
+                            ${newsItems.map((item, index) => `
+                                <div class="news-item">
+                                    <h4>${item.title}</h4>
+                                    <p><strong>ID:</strong> ${item.id}</p>
+                                    <p><strong>Source:</strong> ${item.source}</p>
+                                    <button onclick="analyzeNewsItem(${item.id}, '${item.title.replace(/'/g, "\\'")}')">
+                                        Analyze This News
+                                    </button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p class="error">❌ No news items found</p>';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function analyzeNewsItem(newsId, title) {
+            console.log('🔍 Analyzing news item:', newsId, title);
+            
+            // Simulate React state changes
+            selectedNews = { id: newsId, title: title };
+            aiAnalysis = null;
+            analyzing = true;
+            error = null;
+            
+            // Update display
+            updateAnalysisDisplay();
+            
+            try {
+                const requestUrl = endpoints.analysis(newsId) + '?t=' + Date.now();
+                console.log('🔍 Making analysis request to:', requestUrl);
+                
+                const response = await fetch(requestUrl);
+                console.log('🔍 Response status:', response.status);
+                
+                const analysis = await response.json();
+                console.log('🔍 Analysis received:', analysis);
+                
+                if (response.ok) {
+                    // Simulate React setState
+                    aiAnalysis = analysis;
+                    analyzing = false;
+                    error = null;
+                    
+                    console.log('🔍 Setting AI analysis:', aiAnalysis);
+                    console.log('🔍 Analysis type:', aiAnalysis.analysis_type);
+                    console.log('🔍 News impact:', aiAnalysis.news_impact);
+                    console.log('🔍 Trading implications:', aiAnalysis.trading_implications);
+                    
+                    updateAnalysisDisplay();
+                } else {
+                    throw new Error(`Analysis failed: ${response.status} ${response.statusText}`);
+                }
+            } catch (err) {
+                console.error('🔍 Error analyzing news:', err);
+                error = err.message;
+                analyzing = false;
+                aiAnalysis = null;
+                updateAnalysisDisplay();
+            }
+        }
+        
+        function updateAnalysisDisplay() {
+            const resultDiv = document.getElementById('analysis-display');
+            
+            // Simulate the exact same conditional logic as React component
+            const shouldShow = selectedNews && (aiAnalysis || analyzing || error);
+            
+            console.log('🔍 Analysis display condition:', {
+                selectedNews: !!selectedNews,
+                hasAiAnalysis: !!aiAnalysis,
+                isAnalyzing: analyzing,
+                hasError: !!error,
+                shouldShow: shouldShow
+            });
+            
+            if (!shouldShow) {
+                resultDiv.innerHTML = '<p class="info">No analysis to display</p>';
+                return;
+            }
+            
+            let content = `
+                <div class="analysis-section">
+                    <h4>AI Analysis for: ${selectedNews.title}</h4>
+                    <div class="debug-info">
+                        <p><strong>Debug Info:</strong></p>
+                        <p>Selected News ID: ${selectedNews.id}</p>
+                        <p>Has AI Analysis: ${!!aiAnalysis}</p>
+                        <p>Is Analyzing: ${analyzing}</p>
+                        <p>Has Error: ${!!error}</p>
+                    </div>
+            `;
+            
+            if (analyzing && !aiAnalysis) {
+                content += `
+                    <div class="analysis-content">
+                        <p>🔄 Analyzing news sentiment and market implications...</p>
+                    </div>
+                `;
+            } else if (error) {
+                content += `
+                    <div class="analysis-content">
+                        <p class="error">❌ Error: ${error}</p>
+                        <button onclick="analyzeNewsItem(${selectedNews.id}, '${selectedNews.title.replace(/'/g, "\\'")}')">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            } else if (aiAnalysis) {
+                content += `
+                    <div class="analysis-content">
+                        <p class="success">✅ Analysis Complete!</p>
+                        <p><strong>Analysis Type:</strong> ${aiAnalysis.analysis_type}</p>
+                        <p><strong>Confidence:</strong> ${aiAnalysis.confidence}%</p>
+                        <p><strong>Immediate Reaction:</strong> ${aiAnalysis.immediate_reaction}</p>
+                        <p><strong>News Impact:</strong> ${aiAnalysis.news_impact || 'NO DATA'}</p>
+                        <p><strong>Trading Implications:</strong> ${aiAnalysis.trading_implications || 'NO DATA'}</p>
+                        <p><strong>Key Pairs:</strong> ${aiAnalysis.key_pairs?.join(', ') || 'NO DATA'}</p>
+                        <p><strong>Volatility:</strong> ${aiAnalysis.volatility || 'NO DATA'}</p>
+                        <p><strong>Timeframe:</strong> ${aiAnalysis.timeframe || 'NO DATA'}</p>
+                    </div>
+                `;
+            }
+            
+            content += '</div>';
+            resultDiv.innerHTML = content;
+        }
+        
+        function testAnalysisDisplay() {
+            const resultDiv = document.getElementById('analysis-display');
+            resultDiv.innerHTML = '<p class="info">Testing analysis display logic...</p>';
+            
+            // Test with mock data
+            selectedNews = { id: 123, title: 'Test News Item' };
+            aiAnalysis = {
+                analysis_type: 'gpt_enhanced',
+                confidence: 85,
+                immediate_reaction: 'neutral',
+                news_impact: 'This is a test news impact paragraph.',
+                trading_implications: 'This is a test trading implications paragraph.',
+                key_pairs: ['EUR/USD', 'USD/JPY'],
+                volatility: 'medium',
+                timeframe: '1-24 hours'
+            };
+            analyzing = false;
+            error = null;
+            
+            updateAnalysisDisplay();
+        }
+    </script>
+</body>
+</html>

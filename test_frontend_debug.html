@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ff4757; }
+        .info { color: #ffa502; }
+        button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Frontend Debug Test</h1>
+        <p>Testing what the frontend is actually calling and receiving</p>
+        
+        <div class="test-section">
+            <h3>Step 1: Get News Items (Like React App)</h3>
+            <button onclick="getNewsItems()">Get News Items</button>
+            <div id="news-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Step 2: Test Analysis (Like React App)</h3>
+            <button onclick="testAnalysis()">Test Analysis</button>
+            <div id="analysis-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate React app's config exactly
+        // For testing, always use localhost since we're opening the file directly
+        const API_BASE_URL = 'http://localhost:5001';
+        const endpoints = {
+            news: `${API_BASE_URL}/api/news`,
+            analysis: (id) => `${API_BASE_URL}/api/analysis/${id}`
+        };
+        
+        let currentNewsItems = [];
+        
+        async function getNewsItems() {
+            const resultDiv = document.getElementById('news-result');
+            resultDiv.innerHTML = '<p class="info">Fetching news items...</p>';
+            
+            try {
+                console.log('🔍 Making news request to:', endpoints.news);
+                const response = await fetch(endpoints.news);
+                console.log('🔍 News response status:', response.status);
+                
+                const data = await response.json();
+                console.log('🔍 News data received:', data);
+                
+                if (response.ok && data.news && data.news.length > 0) {
+                    currentNewsItems = data.news;
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Found ${data.news.length} news items</p>
+                        <p class="info">First 3 news items:</p>
+                        <pre>${JSON.stringify(data.news.slice(0, 3), null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p class="error">❌ No news items found</p>';
+                }
+            } catch (error) {
+                console.error('🔍 News API Error:', error);
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+        
+        async function testAnalysis() {
+            const resultDiv = document.getElementById('analysis-result');
+            
+            if (currentNewsItems.length === 0) {
+                resultDiv.innerHTML = '<p class="error">❌ Please get news items first</p>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '<p class="info">Testing analysis...</p>';
+            
+            // Test with the first news item
+            const testNews = currentNewsItems[0];
+            const newsId = testNews.id;
+            
+            console.log('🔍 Testing analysis for news:', testNews.title);
+            console.log('🔍 News ID:', newsId);
+            
+            try {
+                const requestUrl = endpoints.analysis(newsId) + '?t=' + Date.now();
+                console.log('🔍 Making analysis request to:', requestUrl);
+                
+                const response = await fetch(requestUrl);
+                console.log('🔍 Analysis response status:', response.status);
+                
+                const analysis = await response.json();
+                console.log('🔍 Analysis received:', analysis);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Analysis successful!</p>
+                        <p class="info">News Title: ${testNews.title}</p>
+                        <p class="info">News ID: ${newsId}</p>
+                        <p class="info">Analysis Type: ${analysis.analysis_type}</p>
+                        <p class="info">Confidence: ${analysis.confidence}%</p>
+                        <p class="info">News Impact Length: ${analysis.news_impact?.length || 0}</p>
+                        <p class="info">Trading Implications Length: ${analysis.trading_implications?.length || 0}</p>
+                        <p class="info">Full Analysis:</p>
+                        <pre>${JSON.stringify(analysis, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Analysis failed: ${response.status} ${response.statusText}</p>
+                        <pre>${JSON.stringify(analysis, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                console.error('🔍 Analysis Error:', error);
+                resultDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

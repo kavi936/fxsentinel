@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ff4757; }
+        .info { color: #ffa502; }
+        button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>React Connection Test</h1>
+        <p>Testing the exact same fetch request your React app makes</p>
+        
+        <div class="test-section">
+            <h3>Test 1: Direct API Call (Like React App)</h3>
+            <button onclick="testDirectAPI()">Test Direct API</button>
+            <div id="direct-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 2: With Origin Header (Like Browser)</h3>
+            <button onclick="testWithOrigin()">Test With Origin</button>
+            <div id="origin-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 3: Current News Items</h3>
+            <button onclick="testNewsAPI()">Get Current News</button>
+            <div id="news-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate React app's config
+        const API_BASE_URL = 'http://localhost:5001';
+        const analysisEndpoint = (id) => `${API_BASE_URL}/api/analysis/${id}`;
+        
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.innerHTML = '<p class="info">Testing...</p>';
+            
+            try {
+                const response = await fetch(analysisEndpoint('2301960550843964484'));
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ Success! Status: ${response.status}</p>
+                    <p class="success">Analysis Type: ${data.analysis_type}</p>
+                    <p class="success">Confidence: ${data.confidence}%</p>
+                    <p class="success">News Impact Length: ${data.news_impact?.length || 0}</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Error: ${error.message}</p>
+                    <p class="error">Type: ${error.name}</p>
+                `;
+            }
+        }
+        
+        async function testWithOrigin() {
+            const resultDiv = document.getElementById('origin-result');
+            resultDiv.innerHTML = '<p class="info">Testing with origin header...</p>';
+            
+            try {
+                const response = await fetch(analysisEndpoint('2301960550843964484'), {
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ Success with Origin! Status: ${response.status}</p>
+                    <p class="success">Origin: ${window.location.origin}</p>
+                    <p class="success">Analysis Type: ${data.analysis_type}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Error with Origin: ${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testNewsAPI() {
+            const resultDiv = document.getElementById('news-result');
+            resultDiv.innerHTML = '<p class="info">Getting current news...</p>';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/news`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ News API Success! Found ${data.news?.length || 0} items</p>
+                    <p class="info">First news item ID: ${data.news?.[0]?.id || 'None'}</p>
+                    <p class="info">First news title: ${data.news?.[0]?.title?.substring(0, 50) || 'None'}...</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ News API Error: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

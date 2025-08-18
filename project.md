@@ -117,12 +117,15 @@ Narrative shift: Does it change the main story the market’s been trading on re
 
 +++++++++++++ To Do 
 
-AI Analysis Card // Make it amazing and propoer analysis of macro news
-AI Analysis Card // Allow users to do analysis of Forex Pairs rather then only macronews.
-Economic calendar // chart popoup not working
-Live news card // Remove finnhub mentions in the live news 
+zz AI Analysis Card // Make it amazing and propoer analysis of macro news
+Market Sentiment Card // Allow users to do analysis of Forex Pairs.
+zzEconomic calendar // chart popoup not working
+
+zz Live news card // Remove finnhub mentions in the live news 
 Live news card // Integrate AI analysis for live news 
+
 Market sentiment // Create LLM powered Market sentiment card using all available data
+Market Sentiment Card // Allow users to do analysis of Forex Pairs.
 
 Alert Management tab // alerts how it will work configure telegram and email bots
 Markets Tab // Remove - Not needed as of now

@@ -63,23 +63,31 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     }
   };
 
-  const getUserDisplayName = () => {
+  const getUserDisplayName = (truncate = false) => {
     if (!currentUser) return 'Guest';
     
-    if (currentUser.displayName) {
-      return currentUser.displayName;
-    }
+    let displayName = '';
     
-    if (currentUser.email) {
+    if (currentUser.displayName) {
+      displayName = currentUser.displayName;
+    } else if (currentUser.email) {
       const emailName = currentUser.email.split('@')[0];
       const nameParts = emailName.split('.');
       if (nameParts.length > 0) {
-        return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+        displayName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+      } else {
+        displayName = emailName;
       }
-      return emailName;
+    } else {
+      displayName = 'User';
     }
     
-    return 'User';
+    // Only truncate if requested (for navbar use)
+    if (truncate && displayName.length > 8) {
+      return displayName.substring(0, 8);
+    }
+    
+    return displayName;
   };
 
   const getUserInitials = () => {

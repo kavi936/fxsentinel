@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Display Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .debug-section {
+            border: 1px solid #333;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .raw-data {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .display-test {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .news-impact {
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        }
+        .news-impact h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #22c55e;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .news-impact p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-weight: 400;
+        }
+        .trading-implications {
+            padding: 20px;
+            border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        }
+        .trading-implications h5 {
+            font-size: 14px;
+            font-weight: 700;
+            color: #22c55e;
+            margin: 0 0 12px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .trading-implications p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-weight: 400;
+        }
+        button {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analysis Display Debug</h1>
+    
+    <div class="debug-section">
+        <h3>Get Analysis Data</h3>
+        <button onclick="getAnalysisData()">Fetch Analysis</button>
+        <div id="rawData" class="raw-data" style="display: none;"></div>
+    </div>
+    
+    <div class="debug-section">
+        <h3>Display Test</h3>
+        <div id="displayTest" class="display-test" style="display: none;">
+            <div class="news-impact">
+                <h5>Market Impact</h5>
+                <p id="newsImpactText"></p>
+            </div>
+            
+            <div class="trading-implications">
+                <h5>Trading Implications</h5>
+                <p id="tradingImplicationsText"></p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function getAnalysisData() {
+            try {
+                // First get a news item
+                const newsResponse = await fetch('http://localhost:5001/api/news');
+                const newsData = await newsResponse.json();
+                
+                if (!newsData.news || newsData.news.length === 0) {
+                    throw new Error('No news items available');
+                }
+                
+                const newsId = newsData.news[0].id;
+                console.log('Using news ID:', newsId);
+                
+                // Get analysis
+                const analysisResponse = await fetch(`http://localhost:5001/api/analysis/${newsId}`);
+                const analysisData = await analysisResponse.json();
+                
+                // Show raw data
+                const rawDataDiv = document.getElementById('rawData');
+                rawDataDiv.textContent = JSON.stringify(analysisData, null, 2);
+                rawDataDiv.style.display = 'block';
+                
+                // Test display
+                const displayTestDiv = document.getElementById('displayTest');
+                const newsImpactText = document.getElementById('newsImpactText');
+                const tradingImplicationsText = document.getElementById('tradingImplicationsText');
+                
+                newsImpactText.textContent = analysisData.news_impact || 'MISSING NEWS IMPACT';
+                tradingImplicationsText.textContent = analysisData.trading_implications || 'MISSING TRADING IMPLICATIONS';
+                
+                displayTestDiv.style.display = 'block';
+                
+                console.log('Analysis data:', analysisData);
+                console.log('News impact length:', analysisData.news_impact?.length);
+                console.log('Trading implications length:', analysisData.trading_implications?.length);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('rawData').textContent = 'Error: ' + error.message;
+                document.getElementById('rawData').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
