@@ -2,6 +2,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
   (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://fxsentinel-production.up.railway.app');
 
+// Debug logging (only in development)
+if (window.location.hostname === 'localhost') {
+  console.log('🦊 Config - API_BASE_URL:', API_BASE_URL);
+  console.log('🦊 Config - VITE_API_URL:', import.meta.env.VITE_API_URL);
+  console.log('🦊 Config - window.location.hostname:', window.location.hostname);
+}
+
 export const config = {
   API_BASE_URL,
   endpoints: {

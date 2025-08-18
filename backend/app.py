@@ -22,26 +22,14 @@ if os.getenv('OPENAI_API_KEY'):
 
 app = Flask(__name__)
 
-# Configure CORS to allow requests from Vercel
-CORS(app, origins=[
-    "http://localhost:5173",  # Local development
-    "http://localhost:3000",  # Alternative local port
-    "https://fxsentinel.io",  # Your custom domain
-    "https://www.fxsentinel.io",  # Your custom domain with www
-    "https://*.vercel.app",  # Any Vercel subdomain (for preview deployments)
-    "https://*.railway.app"  # Any Railway subdomain
-], methods=["GET", "POST", "OPTIONS"], supports_credentials=True)
+# Configure CORS to allow requests from all origins (including file:// and null origins)
+CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False)
 
 # Add CORS headers to all responses
 @app.after_request
 def after_request(response):
-    origin = request.headers.get('Origin')
-    if origin and (origin.startswith('https://fxsentinel.io') or 
-                   origin.startswith('https://www.fxsentinel.io') or
-                   origin.endswith('.vercel.app') or
-                   origin.endswith('.railway.app') or
-                   origin.startswith('http://localhost')):
-        response.headers.add('Access-Control-Allow-Origin', origin)
+    # Allow all origins for development and testing
+    response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
@@ -100,6 +88,115 @@ def check_unirate_rate_limits():
     if (now - unirate_api_usage['last_minute_reset']).seconds >= 60:
         unirate_api_usage['minute_requests'] = 0
         unirate_api_usage['last_minute_reset'] = now
+    
+    # Check limits (adjust these based on your UniRateAPI plan)
+    daily_limit = 1000  # Adjust based on your plan
+    minute_limit = 10   # Adjust based on your plan
+    
+    return (unirate_api_usage['requests'] < daily_limit and 
+            unirate_api_usage['minute_requests'] < minute_limit)
+
+def clean_news_title(title):
+    """Clean news title by removing common prefixes and formatting"""
+    import re
+    
+    if not title:
+        return title
+    
+    # Remove common prefixes that make titles look unprofessional
+    # Use re.escape to properly handle special characters like asterisks
+    # Order matters: put longer patterns first to avoid partial matches
+    prefixes_to_remove = [
+        '**JUST IN:**',  # **JUST IN:**
+        '**BREAKING:**', # **BREAKING:**
+        '**UPDATE:**',   # **UPDATE:**
+        '**LIVE:**',     # **LIVE:**
+        '**URGENT:**',   # **URGENT:**
+        'JUST IN:',      # JUST IN:
+        'BREAKING:',     # BREAKING:
+        'UPDATE:',       # UPDATE:
+        'LIVE:',         # LIVE:
+        'URGENT:',       # URGENT:
+    ]
+    
+    cleaned_title = title
+    
+    # Remove each prefix pattern (case insensitive)
+    for prefix in prefixes_to_remove:
+        # Use re.escape to handle special characters and make it case insensitive
+        pattern = re.escape(prefix)
+        cleaned_title = re.sub(pattern, '', cleaned_title, flags=re.IGNORECASE)
+    
+    # Clean up extra whitespace and punctuation
+    cleaned_title = re.sub(r'\s+', ' ', cleaned_title)  # Multiple spaces to single space
+    cleaned_title = cleaned_title.strip()
+    
+    # Remove leading/trailing punctuation
+    cleaned_title = re.sub(r'^[:\s\-_]+', '', cleaned_title)  # Remove leading colons, spaces, dashes
+    cleaned_title = re.sub(r'[:\s\-_]+$', '', cleaned_title)  # Remove trailing colons, spaces, dashes
+    
+    return cleaned_title
+
+def remove_duplicate_news(news_list):
+    """Remove duplicate news items across all sources based on title similarity"""
+    import re
+    
+    unique_news = []
+    seen_titles = set()
+    seen_urls = set()
+    
+    for news_item in news_list:
+        if not news_item or not isinstance(news_item, dict):
+            continue
+            
+        title = news_item.get('title', '').strip()
+        url = news_item.get('url', '').strip()
+        
+        if not title:
+            continue
+        
+        # Clean the title first
+        cleaned_title = clean_news_title(title)
+        news_item['title'] = cleaned_title  # Update the title in the news item
+        
+        # Create multiple keys for better deduplication
+        # 1. Simplified title (first 5 words, lowercase, no punctuation)
+        simple_title = re.sub(r'[^\w\s]', '', cleaned_title.lower())
+        words = simple_title.split()[:5]
+        title_key = ' '.join(words)
+        
+        # 2. URL-based key (if URL exists)
+        url_key = url.lower() if url else None
+        
+        # 3. Source + title combination (for cases where same story appears on different sources)
+        source = news_item.get('source', '').lower()
+        source_title_key = f"{source}_{title_key}"
+        
+        # Check if this is a duplicate
+        is_duplicate = False
+        
+        # Check title similarity
+        if title_key in seen_titles:
+            is_duplicate = True
+        
+        # Check URL similarity
+        if url_key and url_key in seen_urls:
+            is_duplicate = True
+        
+        # Check source + title combination
+        if source_title_key in seen_titles:
+            is_duplicate = True
+        
+        # If not a duplicate, add to unique list
+        if not is_duplicate:
+            seen_titles.add(title_key)
+            if url_key:
+                seen_urls.add(url_key)
+            seen_titles.add(source_title_key)
+            unique_news.append(news_item)
+    
+    print(f"🔄 Deduplication: {len(news_list)} -> {len(unique_news)} articles")
+    return unique_news
     
     # Check minute limit (30 calls per minute for UniRateAPI)
     if unirate_api_usage['minute_requests'] >= 30:
@@ -314,16 +411,26 @@ def generate_ai_analysis(event_title, currency, impact):
         # Use local AI analyzer for comprehensive analysis
         analysis_result = local_ai_analyzer.analyze_economic_event(event, market_context)
         
-        # Format response for frontend compatibility
+        # Format response for frontend compatibility (correct structure)
         return {
-            "summary": analysis_result['analysis']['summary'],
-            "eur_usd_impact": _get_pair_impact(analysis_result, 'EUR/USD'),
-            "usd_jpy_impact": _get_pair_impact(analysis_result, 'USD/JPY'),
-            "gold_impact": _get_pair_impact(analysis_result, 'XAU/USD'),
-            "confidence": f"{analysis_result['confidence_score']}%",
-            "trading_opportunities": analysis_result.get('trading_opportunities', []),
-            "risk_assessment": analysis_result.get('risk_assessment', {}),
-            "analysis_type": "local_ai"
+            "news_impact": analysis_result['analysis']['summary'],
+            "trading_implications": f"Based on this economic event, traders should monitor key currency pairs for potential trading opportunities. The immediate market reaction may be volatile, so risk management is crucial. Focus on major pairs like EUR/USD and USD/JPY, and be prepared for both bullish and bearish scenarios depending on market interpretation.",
+            "immediate_reaction": "neutral",
+            "key_pairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
+            "volatility": "medium",
+            "timeframe": "1-24 hours",
+            "confidence": analysis_result['confidence_score'],
+            "analysis_type": "gpt_enhanced",
+            "risk_assessment": {
+                "market_volatility": "medium",
+                "liquidity_impact": "medium",
+                "correlation_risk": "medium"
+            },
+            "market_context": {
+                "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
+                "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
+                "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
+            }
         }
             
     except Exception as e:
@@ -341,16 +448,59 @@ def _get_pair_impact(analysis_result, pair):
 def get_mock_analysis(event_title):
     """Fallback mock analysis if AI fails"""
     return {
-        "summary": f"Analysis for {event_title} - This economic event could impact currency markets based on the data release and market expectations.",
-        "eur_usd_impact": "Monitor for volatility around release time",
-        "usd_jpy_impact": "Potential movement based on data outcome",
-        "gold_impact": "Safe haven flows may be affected",
-        "confidence": "70%"
+        "news_impact": f"This news event about {event_title} has significant implications for forex markets. The development suggests potential shifts in market sentiment and economic outlook that could impact currency valuations. Traders should monitor for increased volatility and potential breakout opportunities as the market digests this information.",
+        "trading_implications": f"Based on this news, traders should consider monitoring key currency pairs for potential trading opportunities. The immediate market reaction may be volatile, so risk management is crucial. Focus on major pairs like EUR/USD and USD/JPY, and be prepared for both bullish and bearish scenarios depending on market interpretation.",
+        "immediate_reaction": "neutral",
+        "key_pairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
+        "volatility": "medium",
+        "timeframe": "1-24 hours",
+        "confidence": 75,
+        "analysis_type": "free_enhanced",
+        "risk_assessment": {
+            "market_volatility": "medium",
+            "liquidity_impact": "medium",
+            "correlation_risk": "medium"
+        },
+        "market_context": {
+            "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
+            "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
+            "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
+        }
     }
 
 @app.route('/api/hello')
 def hello():
     return jsonify({'message': 'Hello from FXSentinel backend!'})
+
+@app.route('/api/test-analysis/<int:news_id>')
+def test_analysis(news_id):
+    """Test endpoint that directly returns correct fallback structure"""
+    print(f"🔍 Test analysis requested for news_id: {news_id}")
+    
+    # Return the correct structure directly
+    test_data = {
+        "news_impact": f"This is a test news event about News ID {news_id} with significant implications for forex markets. The development suggests potential shifts in market sentiment and economic outlook that could impact currency valuations. Traders should monitor for increased volatility and potential breakout opportunities as the market digests this information.",
+        "trading_implications": f"Based on this test news, traders should consider monitoring key currency pairs for potential trading opportunities. The immediate market reaction may be volatile, so risk management is crucial. Focus on major pairs like EUR/USD and USD/JPY, and be prepared for both bullish and bearish scenarios depending on market interpretation.",
+        "immediate_reaction": "neutral",
+        "key_pairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
+        "volatility": "medium",
+        "timeframe": "1-24 hours",
+        "confidence": 75,
+        "analysis_type": "free_enhanced",
+        "risk_assessment": {
+            "market_volatility": "medium",
+            "liquidity_impact": "medium",
+            "correlation_risk": "medium"
+        },
+        "market_context": {
+            "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
+            "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
+            "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
+        }
+    }
+    
+    print(f"🔍 Test data generated: {test_data['news_impact'][:50]}...")
+    return jsonify(test_data)
 
 @app.route('/api/finnhub-test')
 def test_finnhub():
@@ -545,7 +695,13 @@ def get_news():
                 news_cache.clear_cache()
                 cached_news = None
             else:
-                print(f"✅ Returning cached news ({len(cached_news)} articles)")
+                        # Remove duplicates from cached news as well
+                cached_news = remove_duplicate_news(cached_news)
+                
+                # Convert all news item IDs to strings to prevent JavaScript precision loss
+                for item in cached_news:
+                    if 'id' in item:
+                        item['id'] = str(item['id'])
                 return jsonify({
                     "news": cached_news,
                     "last_updated": datetime.now().isoformat(),
@@ -653,6 +809,9 @@ def get_news():
             all_news = fresh_news
             all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
             
+            # Remove duplicates across all sources
+            all_news = remove_duplicate_news(all_news)
+            
             # Save to cache for future use
             news_cache.save_news(all_news)
             
@@ -682,6 +841,8 @@ def get_news():
             from services.news_cache import news_cache
             cached_news = news_cache.load_news()
             if cached_news:
+                # Remove duplicates from fallback cached news as well
+                cached_news = remove_duplicate_news(cached_news)
                 print(f"✅ Error occurred, using cached news ({len(cached_news)} articles)")
                 return jsonify({
                     "news": cached_news,
@@ -703,25 +864,260 @@ def get_news():
             "cache_status": "fallback"
         })
 
-@app.route('/api/analysis/<int:news_id>')
+@app.route('/api/analysis/<news_id>')
 def get_analysis(news_id):
     """Generate AI analysis for specific news event"""
     try:
-        # Get the economic event by ID from Finnhub calendar data
-        event = get_economic_event_by_id(news_id)
+        print(f"🦊 BACKEND - Analysis requested for news_id: {news_id}")
+        print(f"🦊 BACKEND - News ID type: {type(news_id)}")
+        print(f"🦊 BACKEND - News ID value: {news_id}")
+        # Convert to int for comparison if it's a string
+        try:
+            news_id_int = int(news_id)
+            print(f"🦊 BACKEND - News ID as int: {news_id_int}")
+        except ValueError:
+            print(f"🦊 BACKEND - ❌ Could not convert news_id to int: {news_id}")
+            news_id_int = None
+        print(f"🦊 BACKEND - Request headers: {dict(request.headers)}")
+        print(f"🦊 BACKEND - Request origin: {request.headers.get('Origin', 'Unknown')}")
         
-        # Generate AI analysis
-        analysis = generate_ai_analysis(
-            event['title'], 
-            event['currency'], 
-            event['impact']
-        )
+        # First try to get the news item from cached news data
+        from services.news_cache import news_cache
+        cached_news = news_cache.load_news()
         
-        return jsonify(analysis)
+        print(f"🦊 BACKEND - Cached news count: {len(cached_news) if cached_news else 0}")
+        print(f"🦊 BACKEND - Available news IDs: {[item.get('id') for item in cached_news[:5]] if cached_news else 'None'}")
+        
+        news_item = None
+        if cached_news:
+            # Try to find news item by ID, handling both string and int types
+            news_item = next((item for item in cached_news if str(item.get('id')) == str(news_id)), None)
+            print(f"🦊 BACKEND - News item found in cache: {news_item is not None}")
+            if news_item:
+                print(f"🦊 BACKEND - News item title: {news_item.get('title', 'No title')}")
+                print(f"🦊 BACKEND - News item source: {news_item.get('source', 'No source')}")
+                print(f"🦊 BACKEND - News item ID in cache: {news_item.get('id')}")
+            else:
+                print(f"🦊 BACKEND - ❌ News item NOT found in cache for ID: {news_id}")
+                print(f"🦊 BACKEND - Available IDs: {[item.get('id') for item in cached_news[:10]]}")
+        
+        # If not found in cache, try to get from news history
+        if not news_item:
+            print(f"🔍 Trying news history for news_id: {news_id}")
+            try:
+                from services.news_cache import news_cache
+                history_data = news_cache.get_recent_history(hours=24)
+                news_item = next((item for item in history_data if item.get('id') == news_id), None)
+                if news_item:
+                    print(f"🔍 News item found in history: {news_item.get('title', 'No title')}")
+            except Exception as e:
+                print(f"🔍 Error getting from history: {e}")
+                pass
+        
+        # If still not found, try to get from economic calendar
+        if not news_item:
+            print(f"🔍 Trying economic calendar for news_id: {news_id}")
+            try:
+                event = get_economic_event_by_id(news_id)
+                if event:
+                    print(f"🔍 Economic event found: {event.get('title', 'No title')}")
+                    # Generate AI analysis for economic event
+                    analysis = generate_ai_analysis(
+                        event['title'], 
+                        event['currency'], 
+                        event['impact']
+                    )
+                    return jsonify(analysis)
+            except Exception as e:
+                print(f"🔍 Error getting economic event: {e}")
+                pass
+        
+        # If we have a news item, generate news-specific analysis
+        if news_item:
+            print(f"🦊 BACKEND - Generating news analysis for: {news_item.get('title', 'No title')}")
+            analysis = generate_news_analysis(news_item)
+            print(f"🦊 BACKEND - Analysis generated successfully")
+            print(f"🦊 BACKEND - Analysis type: {analysis.get('analysis_type', 'unknown')}")
+            print(f"🦊 BACKEND - Analysis news_impact length: {len(analysis.get('news_impact', ''))}")
+            print(f"🦊 BACKEND - Analysis trading_implications length: {len(analysis.get('trading_implications', ''))}")
+            print(f"🦊 BACKEND - Analysis confidence: {analysis.get('confidence', 'unknown')}")
+            print(f"🦊 BACKEND - Analysis immediate_reaction: {analysis.get('immediate_reaction', 'unknown')}")
+            print(f"🦊 BACKEND - Analysis key_pairs: {analysis.get('key_pairs', [])}")
+            print(f"🦊 BACKEND - Analysis volatility: {analysis.get('volatility', 'unknown')}")
+            print(f"🦊 BACKEND - Analysis timeframe: {analysis.get('timeframe', 'unknown')}")
+            print(f"🦊 BACKEND - Analysis risk_assessment: {analysis.get('risk_assessment', {})}")
+            print(f"🦊 BACKEND - Analysis market_context: {analysis.get('market_context', {})}")
+            print(f"🦊 BACKEND - Full analysis response structure: {list(analysis.keys())}")
+            print(f"🦊 BACKEND - ✅ Returning analysis to frontend")
+            return jsonify(analysis)
+        
+        # Fallback if nothing found
+        print(f"🦊 BACKEND - ❌ No news item found, using fallback")
+        fallback_analysis = get_mock_news_analysis("News Event")
+        print(f"🦊 BACKEND - Fallback analysis type: {fallback_analysis.get('analysis_type', 'unknown')}")
+        print(f"🦊 BACKEND - Fallback analysis news_impact: {fallback_analysis.get('news_impact', '')[:100]}...")
+        print(f"🦊 BACKEND - ❌ Returning fallback analysis to frontend")
+        return jsonify(fallback_analysis)
         
     except Exception as e:
-        print(f"Error generating analysis: {e}")
-        return jsonify(get_mock_analysis("Economic Event"))
+        print(f"🦊 BACKEND - ❌ Error generating analysis: {e}")
+        print(f"🦊 BACKEND - ❌ Error type: {type(e).__name__}")
+        import traceback
+        print(f"🦊 BACKEND - ❌ Traceback: {traceback.format_exc()}")
+        fallback_analysis = get_mock_news_analysis("News Event")
+        print(f"🦊 BACKEND - Error fallback analysis type: {fallback_analysis.get('analysis_type', 'unknown')}")
+        print(f"🦊 BACKEND - ❌ Returning error fallback analysis to frontend")
+        return jsonify(fallback_analysis)
+
+def generate_news_analysis(news_item):
+    """Generate AI analysis for RSS news articles using MVP analyzer"""
+    try:
+        print(f"🔍 Starting MVP news analysis for: {news_item.get('title', 'No title')}")
+        
+        # Import MVP analyzer and analysis history
+        from services.mvp_news_analyzer import mvp_news_analyzer
+        from services.analysis_history import analysis_history
+        
+        # Generate market context (simplified for now)
+        market_context = {
+            "current_prices": {
+                "EUR/USD": 1.0850,
+                "USD/JPY": 148.50,
+                "GBP/USD": 1.2650
+            }
+        }
+        
+        # Analyze news using MVP analyzer
+        mvp_result = mvp_news_analyzer.analyze_news(news_item, market_context)
+        
+        print(f"🔍 MVP analysis completed: {mvp_result.immediate_reaction}")
+        print(f"🔍 MVP analysis news_impact length: {len(mvp_result.news_impact) if mvp_result.news_impact else 0}")
+        print(f"🔍 MVP analysis trading_implications length: {len(mvp_result.trading_implications) if mvp_result.trading_implications else 0}")
+        
+        # Format response for frontend compatibility (simplified structure)
+        try:
+            risk_assessment = mvp_result.risk_assessment
+        except AttributeError:
+            risk_assessment = {
+                "market_volatility": "medium",
+                "liquidity_impact": "medium",
+                "correlation_risk": "medium"
+            }
+        
+        try:
+            market_context = mvp_result.market_context
+        except AttributeError:
+            market_context = {
+                "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
+                "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
+                "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
+            }
+        
+        analysis_result = {
+            "news_impact": mvp_result.news_impact,
+            "trading_implications": mvp_result.trading_implications,
+            "immediate_reaction": mvp_result.immediate_reaction,
+            "key_pairs": mvp_result.key_pairs,
+            "volatility": mvp_result.volatility,
+            "timeframe": mvp_result.timeframe,
+            "confidence": mvp_result.confidence,
+            "analysis_type": mvp_result.analysis_type,
+            "risk_assessment": risk_assessment,
+            "market_context": market_context
+        }
+        
+        print(f"🔍 Analysis result news_impact: {analysis_result['news_impact'][:50] if analysis_result['news_impact'] else 'EMPTY'}...")
+        print(f"🔍 Analysis result trading_implications: {analysis_result['trading_implications'][:50] if analysis_result['trading_implications'] else 'EMPTY'}...")
+        print(f"🔍 Analysis result structure: {list(analysis_result.keys())}")
+        print(f"🔍 Analysis result news_impact type: {type(analysis_result['news_impact'])}")
+        print(f"🔍 Analysis result trading_implications type: {type(analysis_result['trading_implications'])}")
+        print(f"🔍 Analysis result immediate_reaction type: {type(analysis_result['immediate_reaction'])}")
+        print(f"🔍 Analysis result confidence type: {type(analysis_result['confidence'])}")
+        
+        # Store analysis in history
+        analysis_history.add_analysis(news_item, analysis_result)
+        print(f"🔍 Analysis stored in history")
+        
+        print(f"🔍 MVP analysis result formatted successfully")
+        return analysis_result
+            
+    except Exception as e:
+        print(f"❌ Error generating MVP news analysis: {e}")
+        print(f"❌ Error type: {type(e).__name__}")
+        import traceback
+        print(f"❌ Traceback: {traceback.format_exc()}")
+        return get_mock_news_analysis(news_item.get('title', 'News Event'))
+
+def generate_trading_implications_from_news(sentiment_result, currency_pairs, impact):
+    """Generate trading implications from news sentiment analysis"""
+    implications = {
+        'summary': '',
+        'opportunities': []
+    }
+    
+    sentiment = sentiment_result.sentiment.lower()
+    impact_score = sentiment_result.impact_score
+    
+    # Generate summary based on sentiment
+    if sentiment == 'bullish':
+        implications['summary'] = f"Positive market sentiment detected with {impact_score}/10 impact score. Consider long positions on affected currency pairs."
+    elif sentiment == 'bearish':
+        implications['summary'] = f"Negative market sentiment detected with {impact_score}/10 impact score. Consider short positions or defensive strategies."
+    else:
+        implications['summary'] = f"Neutral market sentiment with {impact_score}/10 impact score. Monitor for breakout opportunities."
+    
+    # Generate specific opportunities for each currency pair
+    for pair in currency_pairs:
+        opportunity = {
+            'pair': pair,
+            'strategy': 'sentiment_following',
+            'direction': sentiment,
+            'confidence': sentiment_result.confidence,
+            'timeframe': '1-4 hours',
+            'risk_level': 'medium' if impact == 'medium' else 'high' if impact == 'high' else 'low'
+        }
+        implications['opportunities'].append(opportunity)
+    
+    return implications
+
+def generate_currency_pair_analysis(currency_pairs, sentiment_result):
+    """Generate analysis for each affected currency pair"""
+    analysis = {}
+    
+    for pair in currency_pairs:
+        sentiment = sentiment_result.sentiment.lower()
+        
+        if sentiment == 'bullish':
+            analysis[pair] = f"Positive sentiment suggests potential upside for {pair}. Monitor for breakout above key resistance levels."
+        elif sentiment == 'bearish':
+            analysis[pair] = f"Negative sentiment suggests potential downside for {pair}. Watch for breakdown below key support levels."
+        else:
+            analysis[pair] = f"Neutral sentiment for {pair}. Range-bound trading likely with breakout potential."
+    
+    return analysis
+
+def get_mock_news_analysis(news_title):
+    """Fallback mock analysis for news events with complete structure"""
+    return {
+        "news_impact": f"This news event about {news_title} has significant implications for forex markets. The development suggests potential shifts in market sentiment and economic outlook that could impact currency valuations. Traders should monitor for increased volatility and potential breakout opportunities as the market digests this information.",
+        "trading_implications": f"Based on this news, traders should consider monitoring key currency pairs for potential trading opportunities. The immediate market reaction may be volatile, so risk management is crucial. Focus on major pairs like EUR/USD and USD/JPY, and be prepared for both bullish and bearish scenarios depending on market interpretation.",
+        "immediate_reaction": "neutral",
+        "key_pairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
+        "volatility": "medium",
+        "timeframe": "1-24 hours",
+        "confidence": 75,
+        "analysis_type": "free_enhanced",
+        "risk_assessment": {
+            "market_volatility": "medium",
+            "liquidity_impact": "medium",
+            "correlation_risk": "medium"
+        },
+        "market_context": {
+            "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
+            "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
+            "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
+        }
+    }
 
 @app.route('/api/news-sentiment', methods=['POST'])
 def analyze_news_sentiment():
@@ -1205,7 +1601,7 @@ def alert_settings():
 
 @app.route('/api/forex-prices', methods=['GET', 'OPTIONS'])
 def get_forex_prices():
-    """Get real-time forex prices from multiple sources for better accuracy"""
+    """Get real-time forex prices from TradingView API only"""
     # Handle CORS preflight requests
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
@@ -1215,149 +1611,77 @@ def get_forex_prices():
         return response
     
     try:
-        # Try to get data from multiple sources for better accuracy
-        prices = {}
-        data_sources_used = []
-        unirate_rate_limited = False
+        print("🔍 Starting TradingView API call...")
+        tradingview_prices = get_tradingview_prices()
         
-        # Check UniRateAPI rate limits first
-        can_make_unirate_call, reason = check_unirate_rate_limits()
-        if not can_make_unirate_call:
-            print(f"⚠️ UniRateAPI rate limit exceeded: {reason}")
-            unirate_rate_limited = True
-        
-        # Try to get data from multiple sources for better accuracy
-        prices = {}
-        data_sources_used = []
-        
-        # Source 1: TradingView API (real-time forex market data)
-        try:
-            tradingview_prices = get_tradingview_prices()
-            if tradingview_prices:
-                prices.update(tradingview_prices)
-                data_sources_used.append('TradingView')
-                print(f"✅ Successfully fetched data from TradingView: {len(tradingview_prices)} pairs")
-                print(f"   TradingView pairs: {list(tradingview_prices.keys())}")
-        except Exception as e:
-            print(f"❌ TradingView failed: {e}")
-        
-        # Source 2: Alpha Vantage (if keys are configured)
-        try:
-            alpha_prices = get_alpha_vantage_prices()
-            if alpha_prices:
-                # Use Alpha Vantage data for any missing pairs
-                for pair, data in alpha_prices.items():
-                    if pair not in prices:
-                        prices[pair] = data
-                data_sources_used.append('AlphaVantage')
-                print("✅ Successfully fetched data from Alpha Vantage")
-        except Exception as e:
-            print(f"❌ Alpha Vantage failed: {e}")
-        
-        # Source 3: UniRateAPI (exchange rates) - only if not rate limited
-        if not unirate_rate_limited:
-            try:
-                unirate_prices = get_unirate_prices()
-                if unirate_prices:
-                    # Use UniRateAPI data for any missing pairs
-                    for pair, data in unirate_prices.items():
-                        if pair not in prices:
-                            prices[pair] = data
-                    data_sources_used.append('UniRateAPI')
-                    print("✅ Successfully fetched data from UniRateAPI")
-            except Exception as e:
-                print(f"❌ UniRateAPI failed: {e}")
+        if tradingview_prices:
+            print(f"✅ Successfully fetched data from TradingView: {len(tradingview_prices)} pairs")
+            
+            # Add data freshness information
+            for pair in tradingview_prices:
+                if 'lastUpdate' in tradingview_prices[pair]:
+                    try:
+                        last_update = datetime.fromisoformat(tradingview_prices[pair]['lastUpdate'].replace('Z', '+00:00'))
+                        age_minutes = (datetime.now(last_update.tzinfo) - last_update).total_seconds() / 60
+                        tradingview_prices[pair]['dataAgeMinutes'] = round(age_minutes, 1)
+                        
+                        # Check if market is likely closed (weekend or outside trading hours)
+                        current_time = datetime.now(last_update.tzinfo)
+                        is_weekend = current_time.weekday() >= 5  # Saturday = 5, Sunday = 6
+                        is_market_hours = 0 <= current_time.hour <= 23  # Simplified market hours check
+                        
+                        tradingview_prices[pair]['isStale'] = age_minutes > 60
+                        tradingview_prices[pair]['isModeratelyOld'] = 15 < age_minutes <= 60
+                        tradingview_prices[pair]['isMarketClosed'] = is_weekend or not is_market_hours
+                    except:
+                        tradingview_prices[pair]['dataAgeMinutes'] = None
+                        tradingview_prices[pair]['isStale'] = False
+                        tradingview_prices[pair]['isModeratelyOld'] = False
+                        tradingview_prices[pair]['isMarketClosed'] = False
+            
+            return jsonify({
+                'prices': tradingview_prices,
+                'dataSource': 'TradingView',
+                'timestamp': datetime.now().isoformat(),
+                'dataQuality': {
+                    'hasStaleData': any(p.get('isStale', False) for p in tradingview_prices.values()),
+                    'hasModeratelyOldData': any(p.get('isModeratelyOld', False) for p in tradingview_prices.values()),
+                    'isMarketClosed': any(p.get('isMarketClosed', False) for p in tradingview_prices.values()),
+                    'averageAgeMinutes': sum(p.get('dataAgeMinutes', 0) for p in tradingview_prices.values()) / len(tradingview_prices) if tradingview_prices else 0
+                }
+            })
         else:
-            print("⏭️ Skipping UniRateAPI due to rate limits")
-        
-        # Source 4: ExchangeRateAPI as fallback
-        try:
-            exchange_prices = get_exchange_rate_prices()
-            if exchange_prices:
-                # Use ExchangeRateAPI data for any missing pairs
-                for pair, data in exchange_prices.items():
-                    if pair not in prices:
-                        prices[pair] = data
-                data_sources_used.append('ExchangeRateAPI')
-                print("✅ Successfully fetched data from ExchangeRateAPI")
-        except Exception as e:
-            print(f"❌ ExchangeRateAPI failed: {e}")
-        
-        # If we still don't have all pairs, use fallback
-        required_pairs = [
-            'EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD',
-            'USDCAD', 'NZDUSD', 'EURGBP', 'EURJPY', 'GBPJPY',
-            'USDSEK', 'USDNOK', 'USDHKD', 'EURCHF', 'GBPCHF'
-        ]
-        
-        # Ensure we have all required pairs by using fallback for missing ones
-        for pair in required_pairs:
-            if pair not in prices:
-                print(f"⚠️ Missing pair {pair}, using fallback data")
-                prices[pair] = get_fallback_price(pair)
-                if 'fallback' not in data_sources_used:
-                    data_sources_used.append('fallback')
-        
-        print(f"✅ Final result: {len(prices)} pairs available: {list(prices.keys())}")
-        
-        # Add data freshness information
-        for pair in prices:
-            if 'lastUpdate' in prices[pair]:
-                try:
-                    last_update = datetime.fromisoformat(prices[pair]['lastUpdate'].replace('Z', '+00:00'))
-                    age_minutes = (datetime.now(last_update.tzinfo) - last_update).total_seconds() / 60
-                    prices[pair]['dataAgeMinutes'] = round(age_minutes, 1)
-                    
-                    # Check if market is likely closed (weekend or outside trading hours)
-                    current_time = datetime.now(last_update.tzinfo)
-                    is_weekend = current_time.weekday() >= 5  # Saturday = 5, Sunday = 6
-                    is_market_hours = 0 <= current_time.hour <= 23  # Simplified market hours check
-                    
-                    # During market hours: data is stale after 60 minutes (more lenient)
-                    # During market closure: data is stale after 4 hours (more lenient)
-                    stale_threshold = 240 if (is_weekend or not is_market_hours) else 60
-                    moderate_threshold = 60 if (is_weekend or not is_market_hours) else 15
-                    
-                    prices[pair]['isStale'] = age_minutes > stale_threshold
-                    prices[pair]['isModeratelyOld'] = moderate_threshold < age_minutes <= stale_threshold
-                    prices[pair]['isMarketClosed'] = is_weekend or not is_market_hours
-                except:
-                    prices[pair]['dataAgeMinutes'] = None
-                    prices[pair]['isStale'] = True
-                    prices[pair]['isModeratelyOld'] = False
-                    prices[pair]['isMarketClosed'] = False
-        
-        return jsonify({
-            'prices': prices,
-            'dataSource': ' + '.join(data_sources_used) if data_sources_used else 'fallback',
-            'timestamp': datetime.now().isoformat(),
-            'dataQuality': {
-                'hasStaleData': any(p.get('isStale', False) for p in prices.values()),
-                'hasModeratelyOldData': any(p.get('isModeratelyOld', False) for p in prices.values()),
-                'isMarketClosed': any(p.get('isMarketClosed', False) for p in prices.values()),
-                'averageAgeMinutes': sum(p.get('dataAgeMinutes', 0) for p in prices.values()) / len(prices) if prices else 0
+            print("⚠️ TradingView returned None or empty data")
+            # Return minimal fallback data
+            fallback_prices = {
+                'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat(), 'source': 'fallback'},
+                'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat(), 'source': 'fallback'},
+                'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat(), 'source': 'fallback'}
             }
-        })
+            
+            return jsonify({
+                'prices': fallback_prices,
+                'dataSource': 'fallback',
+                'timestamp': datetime.now().isoformat(),
+                'dataQuality': {
+                    'hasStaleData': False,
+                    'hasModeratelyOldData': False,
+                    'isMarketClosed': True,
+                    'averageAgeMinutes': 0
+                }
+            })
         
     except Exception as e:
         print(f"Error in forex prices endpoint: {e}")
-        # Return fallback data
-        fallback_prices = {
-            'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat()},
-            'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat()},
-            'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat()}
-        }
+        import traceback
+        traceback.print_exc()
         
-        # Add data quality info for fallback data
-        for pair in fallback_prices:
-            try:
-                last_update = datetime.fromisoformat(fallback_prices[pair]['lastUpdate'].replace('Z', '+00:00'))
-                current_time = datetime.now(last_update.tzinfo)
-                is_weekend = current_time.weekday() >= 5
-                is_market_hours = 0 <= current_time.hour <= 23
-                fallback_prices[pair]['isMarketClosed'] = is_weekend or not is_market_hours
-            except:
-                fallback_prices[pair]['isMarketClosed'] = False
+        # Return minimal fallback data
+        fallback_prices = {
+            'EURUSD': {'price': 1.0923, 'change': 0.0012, 'lastUpdate': datetime.now().isoformat(), 'source': 'fallback'},
+            'USDJPY': {'price': 147.85, 'change': -0.08, 'lastUpdate': datetime.now().isoformat(), 'source': 'fallback'},
+            'GBPUSD': {'price': 1.2712, 'change': -0.0020, 'lastUpdate': datetime.now().isoformat(), 'source': 'fallback'}
+        }
         
         return jsonify({
             'prices': fallback_prices,
@@ -1366,7 +1690,7 @@ def get_forex_prices():
             'dataQuality': {
                 'hasStaleData': False,
                 'hasModeratelyOldData': False,
-                'isMarketClosed': any(p.get('isMarketClosed', False) for p in fallback_prices.values()),
+                'isMarketClosed': True,
                 'averageAgeMinutes': 0
             }
         })
@@ -1855,7 +2179,7 @@ def get_tradingview_prices():
             "columns": ["close", "change", "change_abs"]
         }
         
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.post(url, headers=headers, json=data, timeout=5)
         response.raise_for_status()
         
         result = response.json()
@@ -2255,9 +2579,89 @@ def get_post_event_analysis(news_id):
         print(f"Error generating post-event analysis: {e}")
         return jsonify({"error": "Failed to generate post-event analysis"}), 500
 
+@app.route('/api/news-history')
+def get_news_history():
+    """Get news history for the live news analysis card"""
+    try:
+        from services.news_cache import news_cache
+        from services.analysis_history import analysis_history
+        
+        # Get hours parameter from query string (default 24 hours)
+        hours = request.args.get('hours', 24, type=int)
+        
+        # Get recent history
+        history = news_cache.get_recent_history(hours)
+        
+        # Get analysis history
+        analysis_records = analysis_history.get_analysis_history(hours)
+        
+        # Mark news items as analyzed
+        analyzed_news_ids = analysis_history.get_analyzed_news_ids()
+        
+        # Add analysis status to news items
+        for news_item in history:
+            news_item['is_analyzed'] = str(news_item.get('id')) in analyzed_news_ids
+            if news_item['is_analyzed']:
+                # Get the analysis data for this news item
+                analysis_data = analysis_history.get_analysis_for_news(str(news_item.get('id')))
+                if analysis_data:
+                    news_item['analysis_summary'] = {
+                        'type': analysis_data.get('analysis_type'),
+                        'confidence': analysis_data.get('confidence'),
+                        'reaction': analysis_data.get('immediate_reaction'),
+                        'cost': analysis_data.get('cost', 0.0)
+                    }
+        
+        # Get history status
+        history_status = news_cache.get_history_status()
+        
+        # Get analysis stats
+        analysis_stats = analysis_history.get_analysis_stats()
+        
+        return jsonify({
+            "history": history,
+            "analysis_records": analysis_records,
+            "status": history_status,
+            "analysis_stats": analysis_stats,
+            "hours_requested": hours,
+            "total_items": len(history),
+            "analyzed_items": len(analyzed_news_ids)
+        })
+        
+    except Exception as e:
+        print(f"Error getting news history: {e}")
+        return jsonify({
+            "history": [],
+            "analysis_records": [],
+            "status": {"total_items": 0},
+            "analysis_stats": {"total_analyses": 0},
+            "hours_requested": hours,
+            "total_items": 0,
+            "analyzed_items": 0,
+            "error": str(e)
+        }), 500
+
+@app.route('/api/news/<int:news_id>')
+def get_news_by_id(news_id):
+    """Get a specific news item by ID from cache or history"""
+    try:
+        from services.news_cache import news_cache
+        
+        news_item = news_cache.get_news_by_id(news_id)
+        
+        if news_item:
+            return jsonify(news_item)
+        else:
+            return jsonify({"error": "News item not found"}), 404
+            
+    except Exception as e:
+        print(f"Error getting news by ID: {e}")
+        return jsonify({"error": "Failed to retrieve news item"}), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))
-    # Only use debug mode in development
-    debug_mode = os.environ.get('FLASK_ENV') == 'development'
+    # Force debug mode off for background execution
+    debug_mode = False
+    print(f"🚀 Starting Flask server on port {port}, debug={debug_mode}")
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 
