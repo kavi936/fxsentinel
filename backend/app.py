@@ -2658,6 +2658,96 @@ def get_news_by_id(news_id):
         print(f"Error getting news by ID: {e}")
         return jsonify({"error": "Failed to retrieve news item"}), 500
 
+@app.route('/api/get-cached-analysis/<news_id>')
+def get_cached_analysis(news_id):
+    """Get cached analysis for a specific news item"""
+    try:
+        from services.analysis_history import analysis_history
+        
+        # Get the cached analysis
+        analysis_data = analysis_history.get_analysis_for_news(str(news_id))
+        
+        if analysis_data:
+            print(f"✅ Retrieved cached analysis for news ID: {news_id}")
+            return jsonify(analysis_data)
+        else:
+            print(f"❌ No cached analysis found for news ID: {news_id}")
+            return jsonify({"error": "No cached analysis found for this news item"}), 404
+            
+    except Exception as e:
+        print(f"Error getting cached analysis: {e}")
+        return jsonify({"error": "Failed to retrieve cached analysis"}), 500
+
+@app.route('/api/clear-analysis-history', methods=['POST'])
+def clear_analysis_history():
+    """Clear analysis history and related data"""
+    try:
+        from services.analysis_history import analysis_history
+        from services.news_cache import news_cache
+        
+        # Get parameters from request
+        data = request.get_json() or {}
+        clear_type = data.get('type', 'all')  # analysis, news_cache, news_history, all
+        confirm = data.get('confirm', False)
+        
+        # Validate clear_type
+        valid_types = ['analysis', 'news_cache', 'news_history', 'all']
+        if clear_type not in valid_types:
+            return jsonify({"error": f"Invalid clear_type. Must be one of: {valid_types}"}), 400
+        
+        results = {
+            "success": True,
+            "cleared_items": [],
+            "errors": [],
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Clear analysis history
+        if clear_type in ["analysis", "all"]:
+            try:
+                if analysis_history.clear_history():
+                    results["cleared_items"].append("analysis_history")
+                else:
+                    results["errors"].append("Failed to clear analysis history")
+            except Exception as e:
+                results["errors"].append(f"Error clearing analysis history: {e}")
+        
+        # Clear news cache
+        if clear_type in ["news_cache", "all"]:
+            try:
+                if news_cache.clear_cache():
+                    results["cleared_items"].append("news_cache")
+                else:
+                    results["errors"].append("Failed to clear news cache")
+            except Exception as e:
+                results["errors"].append(f"Error clearing news cache: {e}")
+        
+        # Clear news history
+        if clear_type in ["news_history", "all"]:
+            try:
+                if news_cache.clear_history():
+                    results["cleared_items"].append("news_history")
+                else:
+                    results["errors"].append("Failed to clear news history")
+            except Exception as e:
+                results["errors"].append(f"Error clearing news history: {e}")
+        
+        # Check if operation was successful
+        if results["errors"]:
+            results["success"] = False
+            return jsonify(results), 500
+        
+        print(f"✅ Analysis history cleared successfully: {results['cleared_items']}")
+        return jsonify(results)
+        
+    except Exception as e:
+        print(f"Error clearing analysis history: {e}")
+        return jsonify({
+            "success": False,
+            "errors": [f"Unexpected error: {e}"],
+            "timestamp": datetime.now().isoformat()
+        }), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))

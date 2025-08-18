@@ -3,6 +3,7 @@
 Test Finnhub API directly to see if we can get better expected values
 """
 
+import os
 import requests
 import json
 from datetime import datetime, timedelta
@@ -11,7 +12,10 @@ def test_finnhub_direct():
     """Test Finnhub API directly"""
     print("🔍 Testing Finnhub API Directly...")
     
-    api_key = 'd2d51d1r01qjem5j4g9gd2d51d1r01qjem5j4ga0'
+    api_key = os.getenv('FINNHUB_API_KEY')
+    if not api_key:
+        print("❌ FINNHUB_API_KEY environment variable not set!")
+        return
     base_url = 'https://finnhub.io/api/v1'
     
     # Test different date ranges and parameters

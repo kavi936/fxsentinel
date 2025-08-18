@@ -1398,7 +1398,7 @@ const Overview = () => {
                     <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
                   </svg>
                 </button>
-                <button className={`refresh-btn ${isRefreshing ? 'refreshing' : ''}`} onClick={handleRefresh} disabled={isRefreshing}>
+                <button className={`calendar-refresh-btn ${isRefreshing ? 'refreshing' : ''}`} onClick={handleRefresh} disabled={isRefreshing}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>
@@ -1541,7 +1541,7 @@ const Overview = () => {
                 )}
               </div>
               <div className="ai-controls">
-                <button className="refresh-btn" onClick={handleRefreshAI}>
+                <button className="ai-refresh-btn" onClick={handleRefreshAI}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>
@@ -1836,7 +1836,7 @@ const Overview = () => {
                 <h2 className="sentiment-title">MARKET SENTIMENT</h2>
               </div>
               <div className="sentiment-controls">
-                <button className="refresh-btn" onClick={() => console.log('Refresh sentiment')}>
+                <button className="sentiment-refresh-btn" onClick={() => console.log('Refresh sentiment')}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>

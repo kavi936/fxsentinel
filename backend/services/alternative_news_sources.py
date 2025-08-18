@@ -55,41 +55,20 @@ class AlternativeNewsSources:
         self.medium_impact_keywords = ['retail sales', 'manufacturing', 'unemployment', 'employment', 'trade balance']
         
     def is_forex_related(self, title: str, summary: str) -> bool:
-        """Check if article is forex-related"""
-        text = f"{title} {summary}".lower()
-        
-        for keyword in self.forex_keywords:
-            if keyword.lower() in text:
-                return True
-        return False
+        """Check if article is forex-related using enhanced filtering"""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        return enhanced_forex_filter.is_forex_related(title, summary)
     
     def determine_impact_level(self, title: str, summary: str) -> str:
-        """Determine impact level of the article"""
-        text = f"{title} {summary}".lower()
-        
-        for keyword in self.high_impact_keywords:
-            if keyword.lower() in text:
-                return 'high'
-        
-        for keyword in self.medium_impact_keywords:
-            if keyword.lower() in text:
-                return 'medium'
-        
-        return 'low'
+        """Determine impact level using enhanced filtering"""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        score = enhanced_forex_filter.get_forex_score(title, summary)
+        return score['impact_level']
     
     def extract_currency_pairs(self, title: str, summary: str) -> List[str]:
-        """Extract currency pairs from text"""
-        text = f"{title} {summary}".lower()
-        currency_pairs = []
-        
-        # Common currency pair patterns
-        pairs = ['eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd', 'eur/gbp', 'eur/jpy', 'gbp/jpy']
-        
-        for pair in pairs:
-            if pair in text:
-                currency_pairs.append(pair.upper())
-        
-        return currency_pairs
+        """Extract currency pairs using enhanced filtering"""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        return enhanced_forex_filter.extract_currency_pairs(title, summary)
     
     def fetch_rss_feed(self, feed_url: str, source_name: str) -> List[Dict[str, Any]]:
         """Fetch and parse RSS feed"""
@@ -147,7 +126,7 @@ class AlternativeNewsSources:
             return {
                 'id': abs(article_id),
                 'title': title,
-                'summary': summary[:200] + '...' if len(summary) > 200 else summary,
+                'summary': summary[:800] + '...' if len(summary) > 800 else summary,  # Increased from 200 to 800 characters for more detailed descriptions
                 'source': source_name,
                 'url': entry.link if hasattr(entry, 'link') else '',
                 'published_at': pub_date.isoformat(),
@@ -196,7 +175,7 @@ class AlternativeNewsSources:
         recent_articles.sort(key=lambda x: x['published_at'], reverse=True)
         
         logger.info(f"Retrieved {len(recent_articles)} alternative news articles")
-        return recent_articles[:20]  # Limit to 20 most recent
+        return recent_articles[:30]  # Increased from 20 to 30 most recent
 
 # Global instance
 alternative_news_sources = AlternativeNewsSources()

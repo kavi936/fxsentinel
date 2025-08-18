@@ -314,7 +314,9 @@
 
 .date-select-btn,
 .filter-btn,
-.refresh-btn {
+.calendar-refresh-btn,
+.ai-refresh-btn,
+.sentiment-refresh-btn {
   background: linear-gradient(135deg, rgba(51, 51, 51, 0.8) 0%, rgba(80, 20, 20, 0.6) 50%, rgba(51, 51, 51, 0.8) 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 6px;
@@ -330,20 +332,26 @@
 
 .date-select-btn:hover,
 .filter-btn:hover,
-.refresh-btn:hover {
+.calendar-refresh-btn:hover,
+.ai-refresh-btn:hover,
+.sentiment-refresh-btn:hover {
   background: linear-gradient(135deg, rgba(68, 68, 68, 0.9) 0%, rgba(100, 30, 30, 0.7) 50%, rgba(68, 68, 68, 0.9) 100%);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
 .date-select-btn svg,
 .filter-btn svg,
-.refresh-btn svg {
+.calendar-refresh-btn svg,
+.ai-refresh-btn svg,
+.sentiment-refresh-btn svg {
   width: 16px;
   height: 16px;
   color: #ffffff;
 }
 
-.refresh-btn.refreshing svg {
+.calendar-refresh-btn.refreshing svg,
+.ai-refresh-btn.refreshing svg,
+.sentiment-refresh-btn.refreshing svg {
   animation: spin 1s linear infinite;
 }
 
@@ -356,7 +364,9 @@
   }
 }
 
-.refresh-btn:disabled {
+.calendar-refresh-btn:disabled,
+.ai-refresh-btn:disabled,
+.sentiment-refresh-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -3426,6 +3436,8 @@
   background: linear-gradient(180deg, #ff4444 0%, #ff6b6b 100%);
   border-radius: 3px 0 0 3px;
 }
+
+.ai-title {
   text-shadow: 
     0 2px 4px rgba(0, 0, 0, 0.7),
     0 0 20px rgba(99, 102, 241, 0.4);

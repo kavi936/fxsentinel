@@ -1,119 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frontend-Backend Connection Test</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
-        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .loading { background-color: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
-    </style>
 </head>
 <body>
-    <h1>🧪 Frontend-Backend AI Analysis Connection Test</h1>
-    
-    <button onclick="testBasicAnalysis()">Test Basic Analysis</button>
-    <button onclick="testEnhancedAnalysis()">Test Enhanced Analysis</button>
-    <button onclick="testNewsSentiment()">Test News Sentiment</button>
-    <button onclick="testTechnicalAnalysis()">Test Technical Analysis</button>
-    <button onclick="testAll()">Test All Endpoints</button>
-    
-    <div id="results"></div>
+    <h1>Frontend-Backend Connection Test</h1>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testAnalysis()">Test Analysis</button>
+    <div id="result"></div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:5001';
-        
-        function addResult(message, type = 'success') {
-            const resultsDiv = document.getElementById('results');
-            const resultDiv = document.createElement('div');
-            resultDiv.className = `test-result ${type}`;
-            resultDiv.innerHTML = message;
-            resultsDiv.appendChild(resultDiv);
-        }
-        
-        async function testBasicAnalysis() {
-            addResult('🔄 Testing Basic Analysis...', 'loading');
+        async function testConnection() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/analysis/1`);
-                if (response.ok) {
-                    const data = await response.json();
-                    addResult(`✅ Basic Analysis Working!<br>Summary: ${data.summary?.substring(0, 100)}...<br>Confidence: ${data.confidence}`);
-                } else {
-                    addResult(`❌ Basic Analysis Failed: ${response.status}`, 'error');
-                }
+                const response = await fetch('http://localhost:5001/api/hello');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = `
+                    <h2>Connection Test:</h2>
+                    <p>Status: ${response.status}</p>
+                    <p>Message: ${data.message}</p>
+                `;
             } catch (error) {
-                addResult(`❌ Basic Analysis Error: ${error.message}`, 'error');
+                document.getElementById('result').innerHTML = `
+                    <h2>Connection Error:</h2>
+                    <p>${error.message}</p>
+                `;
             }
         }
-        
-        async function testEnhancedAnalysis() {
-            addResult('🔄 Testing Enhanced Analysis...', 'loading');
+
+        async function testAnalysis() {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/enhanced-analysis/1`);
-                if (response.ok) {
-                    const data = await response.json();
-                    addResult(`✅ Enhanced Analysis Working!<br>Type: ${data.analysis_type}<br>Sentiment: ${data.sentiment_analysis?.sentiment}`);
-                } else {
-                    addResult(`❌ Enhanced Analysis Failed: ${response.status}`, 'error');
-                }
-            } catch (error) {
-                addResult(`❌ Enhanced Analysis Error: ${error.message}`, 'error');
-            }
-        }
-        
-        async function testNewsSentiment() {
-            addResult('🔄 Testing News Sentiment...', 'loading');
-            try {
-                const testData = {
-                    news_items: [{
-                        title: "US CPI Data Better Than Expected",
-                        content: "Consumer Price Index rose 0.3% in December, beating expectations."
-                    }]
-                };
+                const newsId = '4844333674929140008';
+                const response = await fetch(`http://localhost:5001/api/analysis/${newsId}?t=${Date.now()}`);
+                const analysis = await response.json();
                 
-                const response = await fetch(`${API_BASE_URL}/api/news-sentiment`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(testData)
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    addResult(`✅ News Sentiment Working!<br>Sentiment: ${data.overall_sentiment}<br>Keywords: ${data.top_keywords?.slice(0, 3).join(', ')}`);
-                } else {
-                    addResult(`❌ News Sentiment Failed: ${response.status}`, 'error');
-                }
+                document.getElementById('result').innerHTML = `
+                    <h2>Analysis Test:</h2>
+                    <p>Status: ${response.status}</p>
+                    <p>Analysis Type: ${analysis.analysis_type}</p>
+                    <p>News Impact: ${analysis.news_impact ? 'Present' : 'Missing'}</p>
+                    <p>Trading Implications: ${analysis.trading_implications ? 'Present' : 'Missing'}</p>
+                    <h3>Full Response:</h3>
+                    <pre>${JSON.stringify(analysis, null, 2)}</pre>
+                `;
             } catch (error) {
-                addResult(`❌ News Sentiment Error: ${error.message}`, 'error');
+                document.getElementById('result').innerHTML = `
+                    <h2>Analysis Error:</h2>
+                    <p>${error.message}</p>
+                `;
             }
-        }
-        
-        async function testTechnicalAnalysis() {
-            addResult('🔄 Testing Technical Analysis...', 'loading');
-            try {
-                const response = await fetch(`${API_BASE_URL}/api/technical-analysis/EUR_USD`);
-                if (response.ok) {
-                    const data = await response.json();
-                    addResult(`✅ Technical Analysis Working!<br>Pair: ${data.pair}<br>Sentiment: ${data.sentiment?.sentiment}<br>Signals: ${data.signals?.length || 0}`);
-                } else {
-                    addResult(`❌ Technical Analysis Failed: ${response.status}`, 'error');
-                }
-            } catch (error) {
-                addResult(`❌ Technical Analysis Error: ${error.message}`, 'error');
-            }
-        }
-        
-        async function testAll() {
-            addResult('🔄 Testing All Endpoints...', 'loading');
-            await testBasicAnalysis();
-            await testEnhancedAnalysis();
-            await testNewsSentiment();
-            await testTechnicalAnalysis();
-            addResult('🎯 All tests completed!');
         }
     </script>
 </body>

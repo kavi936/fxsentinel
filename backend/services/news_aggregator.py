@@ -31,6 +31,26 @@ class NewsAggregator:
                 'url': 'https://feeds.marketwatch.com/marketwatch/marketpulse/',
                 'name': 'MarketWatch',
                 'forex_keywords': ['forex', 'currency', 'dollar', 'euro', 'yen', 'pound', 'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe']
+            },
+            'fxstreet': {
+                'url': 'https://www.fxstreet.com/rss',
+                'name': 'FXStreet',
+                'forex_keywords': ['forex', 'currency', 'dollar', 'euro', 'yen', 'pound', 'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'eur/usd', 'usd/jpy', 'gbp/usd']
+            },
+            'investing_forex': {
+                'url': 'https://www.investing.com/rss/news_forex.rss',
+                'name': 'Investing.com Forex',
+                'forex_keywords': ['forex', 'currency', 'dollar', 'euro', 'yen', 'pound', 'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'eur/usd', 'usd/jpy', 'gbp/usd']
+            },
+            'forexlive': {
+                'url': 'https://www.forexlive.com/feed/',
+                'name': 'ForexLive',
+                'forex_keywords': ['forex', 'currency', 'dollar', 'euro', 'yen', 'pound', 'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'eur/usd', 'usd/jpy', 'gbp/usd']
+            },
+            'dailyfx': {
+                'url': 'https://www.dailyfx.com/feeds/forex_news.xml',
+                'name': 'DailyFX',
+                'forex_keywords': ['forex', 'currency', 'dollar', 'euro', 'yen', 'pound', 'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'eur/usd', 'usd/jpy', 'gbp/usd']
             }
         }
         
@@ -60,14 +80,14 @@ class NewsAggregator:
             feed = feedparser.parse(response.content)
             articles = []
             
-            for entry in feed.entries[:5]:  # Reduced from 10 to 5 most recent articles
+            for entry in feed.entries[:10]:  # Increased from 5 to 10 most recent articles
                 # Check if article is forex-related
                 if self.is_forex_related(entry.title, entry.summary):
                     article = self.parse_article(entry, source_name)
                     if article:
                         articles.append(article)
-                        # Stop after finding 3 forex-related articles per source for performance
-                        if len(articles) >= 3:
+                        # Stop after finding 5 forex-related articles per source for better coverage
+                        if len(articles) >= 5:
                             break
             
             logger.info(f"Fetched {len(articles)} forex-related articles from {source_name}")
@@ -122,7 +142,7 @@ class NewsAggregator:
             return {
                 'id': abs(article_id),  # Ensure positive ID
                 'title': title,
-                'summary': summary[:200] + '...' if len(summary) > 200 else summary,
+                'summary': summary[:800] + '...' if len(summary) > 800 else summary,  # Increased from 500 to 800 characters for more detailed descriptions
                 'source': source_name,
                 'url': entry.link if hasattr(entry, 'link') else '',
                 'published_at': pub_date.isoformat(),
@@ -186,16 +206,16 @@ class NewsAggregator:
                 pub_date = datetime.fromisoformat(article['published_at'].replace('Z', '+00:00'))
                 if pub_date >= cutoff_time:
                     recent_articles.append(article)
-                    # Limit total articles to 15 for performance
-                    if len(recent_articles) >= 15:
+                    # Limit total articles to 30 for better coverage
+                    if len(recent_articles) >= 30:
                         break
             except:
                 # If date parsing fails, include the article
                 recent_articles.append(article)
-                if len(recent_articles) >= 15:
+                if len(recent_articles) >= 30:
                     break
         
-        return recent_articles[:15]  # Ensure maximum of 15 articles
+        return recent_articles[:30]  # Ensure maximum of 30 articles
 
 # Global instance
 news_aggregator = NewsAggregator()

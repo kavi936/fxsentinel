@@ -564,27 +564,36 @@ function Dashboard() {
     };
   };
 
-  const getUserDisplayName = () => {
+  const getUserDisplayName = (truncate = false) => {
     if (!currentUser) return 'Guest';
+    
+    let displayName = '';
     
     // Check if user has a display name set
     if (currentUser.displayName) {
-      return currentUser.displayName;
+      displayName = currentUser.displayName;
     }
-    
     // If no display name, try to extract a proper name from email
-    if (currentUser.email) {
+    else if (currentUser.email) {
       const emailName = currentUser.email.split('@')[0];
       // Convert email name to proper case (e.g., "kavi.cf412" -> "Kavi")
       const nameParts = emailName.split('.');
       if (nameParts.length > 0) {
         // Capitalize the first part and use it as the name
-        return nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+        displayName = nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1);
+      } else {
+        displayName = emailName;
       }
-      return emailName;
+    } else {
+      displayName = 'User';
     }
     
-    return 'User';
+    // Truncate to maximum 8 characters to prevent navbar overflow
+    if (truncate && displayName.length > 8) {
+      return displayName.substring(0, 8);
+    }
+    
+    return displayName;
   };
 
   if (loading) {
@@ -614,7 +623,7 @@ function Dashboard() {
               </picture>
             </div>
             <div className="welcome-message">
-              Welcome, <span className="username">{getUserDisplayName()}</span>
+              Welcome, <span className="username">{getUserDisplayName(true)}</span>
             </div>
             <div className="datetime-container">
               <div className="live-time">
@@ -667,7 +676,7 @@ function Dashboard() {
                 </span>
               </div>
             </div>
-            <button onClick={refreshData} className="refresh-btn" title="Refresh Data">
+            <button onClick={refreshData} className="navbar-refresh-btn" title="Refresh Data">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
               </svg>

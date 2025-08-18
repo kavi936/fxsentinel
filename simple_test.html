@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Analysis Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .news-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .news-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 12px 0;
+            line-height: 1.4;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            hyphens: auto;
+            max-width: 100%;
+            display: block;
+        }
+        .analyze-btn {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .analysis-content {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 12px;
+        }
+        .sentiment-badge {
+            background: #ffa502;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .confidence-score {
+            color: #22c55e;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .news-impact h5, .trading-implications h5 {
+            color: #22c55e;
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .news-impact p, .trading-implications p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            margin: 0 0 15px 0;
+        }
+        .debug-info {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #22c55e;
+        }
+        .error {
+            color: #ff4757;
+            padding: 10px;
+            background: rgba(255, 71, 87, 0.1);
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Analysis Test</h1>
+        <p>Testing with a different approach to avoid CORS issues</p>
+        
+        <div class="news-item">
+            <h3 class="news-title">🇺🇸 Federal Reserve Chair Jerome Powell to give speech next week on the Fed's policy framework</h3>
+            
+            <button class="analyze-btn" onclick="testAnalysis()">Test Analysis</button>
+            
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testAnalysis() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="loading">Testing analysis...</div>';
+            
+            try {
+                // Test with a simple fetch request
+                const response = await fetch('http://localhost:5001/api/analysis/2301960550843964484', {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                
+                if (response.ok) {
+                    const analysis = await response.json();
+                    console.log('Analysis received:', analysis);
+                    displayAnalysis(analysis);
+                } else {
+                    console.error('Response not ok:', response.status, response.statusText);
+                    resultDiv.innerHTML = `<div class="error">Error: ${response.status} ${response.statusText}</div>`;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                resultDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+        
+        function displayAnalysis(analysis) {
+            const resultDiv = document.getElementById('result');
+            
+            const html = `
+                <div class="analysis-content">
+                    <div class="sentiment-badge">
+                        ${getSentimentIcon(analysis.immediate_reaction)} ${analysis.immediate_reaction?.replace('_', ' ').toUpperCase() || 'NEUTRAL'}
+                    </div>
+                    <div class="confidence-score">
+                        Confidence: ${typeof analysis.confidence === 'string' ? analysis.confidence : `${analysis.confidence}%`}
+                    </div>
+                    
+                    <div class="news-impact">
+                        <h5>Market Impact</h5>
+                        <p>${analysis.news_impact || 'NO NEWS IMPACT DATA'}</p>
+                    </div>
+                    
+                    <div class="trading-implications">
+                        <h5>Trading Implications</h5>
+                        <p>${analysis.trading_implications || 'NO TRADING IMPLICATIONS DATA'}</p>
+                    </div>
+                    
+                    <div class="debug-info">
+                        <strong>Debug Info:</strong><br>
+                        Analysis Type: ${analysis.analysis_type}<br>
+                        News Impact Length: ${analysis.news_impact?.length || 0}<br>
+                        Trading Implications Length: ${analysis.trading_implications?.length || 0}<br>
+                        Immediate Reaction: ${analysis.immediate_reaction}<br>
+                        Confidence: ${analysis.confidence}<br>
+                        Key Pairs: ${analysis.key_pairs?.join(', ')}<br>
+                        Volatility: ${analysis.volatility}<br>
+                        Timeframe: ${analysis.timeframe}<br>
+                        Full Response: ${JSON.stringify(analysis, null, 2)}
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = html;
+        }
+        
+        function getSentimentIcon(sentiment) {
+            switch (sentiment?.toLowerCase()) {
+                case 'bullish': return '📈';
+                case 'bearish': return '📉';
+                case 'neutral': return '➡️';
+                default: return '📊';
+            }
+        }
+    </script>
+</body>
+</html>

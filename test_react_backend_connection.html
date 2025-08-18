@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .success { color: #22c55e; }
+        .error { color: #ff4757; }
+        .info { color: #ffa502; }
+        button {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 10px 5px;
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 11px;
+        }
+        .news-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>React Backend Connection Test</h1>
+        <p>Testing the exact same configuration as your React app</p>
+        
+        <div class="test-section">
+            <h3>Test 1: React App Configuration</h3>
+            <button onclick="testReactConfig()">Test React Config</button>
+            <div id="config-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 2: News API (Like React App)</h3>
+            <button onclick="testNewsAPI()">Test News API</button>
+            <div id="news-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 3: Analysis API (Like React App)</h3>
+            <button onclick="testAnalysisAPI()">Test Analysis API</button>
+            <div id="analysis-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h3>Test 4: CORS Test (From React Origin)</h3>
+            <button onclick="testCORS()">Test CORS</button>
+            <div id="cors-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate React app's config exactly
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://fxsentinel-production.up.railway.app';
+        const endpoints = {
+            news: `${API_BASE_URL}/api/news`,
+            analysis: (id) => `${API_BASE_URL}/api/analysis/${id}`,
+            newsHistory: `${API_BASE_URL}/api/news-history`
+        };
+        
+        function testReactConfig() {
+            const resultDiv = document.getElementById('config-result');
+            resultDiv.innerHTML = `
+                <p class="info">React App Configuration:</p>
+                <p class="info">Hostname: ${window.location.hostname}</p>
+                <p class="info">Origin: ${window.location.origin}</p>
+                <p class="info">API_BASE_URL: ${API_BASE_URL}</p>
+                <p class="info">News Endpoint: ${endpoints.news}</p>
+                <p class="info">Analysis Endpoint: ${endpoints.analysis('test')}</p>
+                <p class="success">✅ Configuration loaded successfully</p>
+            `;
+        }
+        
+        async function testNewsAPI() {
+            const resultDiv = document.getElementById('news-result');
+            resultDiv.innerHTML = '<p class="info">Testing News API...</p>';
+            
+            try {
+                console.log('🔍 Making news request to:', endpoints.news);
+                const response = await fetch(endpoints.news);
+                console.log('🔍 News response status:', response.status);
+                console.log('🔍 News response headers:', Object.fromEntries(response.headers.entries()));
+                
+                const data = await response.json();
+                console.log('🔍 News data received:', data);
+                
+                if (response.ok) {
+                    const newsItems = data.news || [];
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ News API Success!</p>
+                        <p class="info">Found ${newsItems.length} news items</p>
+                        <p class="info">Response Status: ${response.status}</p>
+                        <p class="info">CORS Headers: ${response.headers.get('Access-Control-Allow-Origin') || 'None'}</p>
+                        ${newsItems.length > 0 ? `
+                            <div class="news-item">
+                                <h4>First News Item:</h4>
+                                <p><strong>Title:</strong> ${newsItems[0].title}</p>
+                                <p><strong>ID:</strong> ${newsItems[0].id}</p>
+                                <p><strong>Source:</strong> ${newsItems[0].source}</p>
+                            </div>
+                        ` : ''}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ News API Error: ${response.status} ${response.statusText}</p>
+                        <p class="error">Response: ${JSON.stringify(data)}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('🔍 News API Error:', error);
+                resultDiv.innerHTML = `
+                    <p class="error">❌ News API Exception: ${error.message}</p>
+                    <p class="error">Type: ${error.name}</p>
+                `;
+            }
+        }
+        
+        async function testAnalysisAPI() {
+            const resultDiv = document.getElementById('analysis-result');
+            resultDiv.innerHTML = '<p class="info">Testing Analysis API...</p>';
+            
+            try {
+                // First get a news item to analyze
+                const newsResponse = await fetch(endpoints.news);
+                const newsData = await newsResponse.json();
+                
+                if (!newsResponse.ok || !newsData.news || newsData.news.length === 0) {
+                    resultDiv.innerHTML = '<p class="error">❌ No news items available for analysis test</p>';
+                    return;
+                }
+                
+                const testNewsId = newsData.news[0].id;
+                const analysisUrl = endpoints.analysis(testNewsId);
+                
+                console.log('🔍 Making analysis request to:', analysisUrl);
+                const response = await fetch(analysisUrl);
+                console.log('🔍 Analysis response status:', response.status);
+                console.log('🔍 Analysis response headers:', Object.fromEntries(response.headers.entries()));
+                
+                const data = await response.json();
+                console.log('🔍 Analysis data received:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <p class="success">✅ Analysis API Success!</p>
+                        <p class="info">News ID: ${testNewsId}</p>
+                        <p class="info">Analysis Type: ${data.analysis_type}</p>
+                        <p class="info">Confidence: ${data.confidence}%</p>
+                        <p class="info">Response Status: ${response.status}</p>
+                        <p class="info">CORS Headers: ${response.headers.get('Access-Control-Allow-Origin') || 'None'}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p class="error">❌ Analysis API Error: ${response.status} ${response.statusText}</p>
+                        <p class="error">Response: ${JSON.stringify(data)}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('🔍 Analysis API Error:', error);
+                resultDiv.innerHTML = `
+                    <p class="error">❌ Analysis API Exception: ${error.message}</p>
+                    <p class="error">Type: ${error.name}</p>
+                `;
+            }
+        }
+        
+        async function testCORS() {
+            const resultDiv = document.getElementById('cors-result');
+            resultDiv.innerHTML = '<p class="info">Testing CORS...</p>';
+            
+            try {
+                // Test with explicit origin header (like browser would send)
+                const response = await fetch(endpoints.news, {
+                    method: 'GET',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const corsHeader = response.headers.get('Access-Control-Allow-Origin');
+                const corsMethods = response.headers.get('Access-Control-Allow-Methods');
+                const corsHeaders = response.headers.get('Access-Control-Allow-Headers');
+                
+                resultDiv.innerHTML = `
+                    <p class="success">✅ CORS Test Complete</p>
+                    <p class="info">Request Origin: ${window.location.origin}</p>
+                    <p class="info">Access-Control-Allow-Origin: ${corsHeader || 'None'}</p>
+                    <p class="info">Access-Control-Allow-Methods: ${corsMethods || 'None'}</p>
+                    <p class="info">Access-Control-Allow-Headers: ${corsHeaders || 'None'}</p>
+                    <p class="info">Response Status: ${response.status}</p>
+                    ${corsHeader === '*' || corsHeader === window.location.origin ? 
+                        '<p class="success">✅ CORS is properly configured</p>' : 
+                        '<p class="error">❌ CORS may be blocking requests</p>'
+                    }
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p class="error">❌ CORS Test Failed: ${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

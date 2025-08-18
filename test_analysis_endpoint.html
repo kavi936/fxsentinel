@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis Endpoint Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success { border-color: #22c55e; background: #f0fdf4; }
+        .error { border-color: #ef4444; background: #fef2f2; }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            border-radius: 4px;
+        }
+        button {
+            background: #22c55e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #16a34a;
+        }
+        .result {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Analysis Endpoint Test</h1>
+    
+    <div class="test-section">
+        <h3>Backend Connection Test</h3>
+        <button onclick="testBackendConnection()">Test Backend Connection</button>
+        <div id="backendResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>News Data Test</h3>
+        <button onclick="testNewsData()">Get News Data</button>
+        <div id="newsResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>Analysis Endpoint Test</h3>
+        <button onclick="testAnalysisEndpoint()">Test Analysis Endpoint</button>
+        <div id="analysisResult" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="log" id="log"></div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:5001';
+        
+        function log(message) {
+            const logElement = document.getElementById('log');
+            logElement.innerHTML += new Date().toLocaleTimeString() + ': ' + message + '<br>';
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        async function testBackendConnection() {
+            log('Testing backend connection...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/hello`);
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('backendResult');
+                resultDiv.textContent = JSON.stringify(data, null, 2);
+                resultDiv.style.display = 'block';
+                resultDiv.parentElement.className = 'test-section success';
+                
+                log('✅ Backend connection successful');
+            } catch (error) {
+                log('❌ Backend connection failed: ' + error.message);
+                const resultDiv = document.getElementById('backendResult');
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.style.display = 'block';
+                resultDiv.parentElement.className = 'test-section error';
+            }
+        }
+        
+        async function testNewsData() {
+            log('Testing news data endpoint...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/news`);
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('newsResult');
+                resultDiv.textContent = `Found ${data.news?.length || 0} news items\n\nFirst news item:\n${JSON.stringify(data.news?.[0], null, 2)}`;
+                resultDiv.style.display = 'block';
+                resultDiv.parentElement.className = 'test-section success';
+                
+                log(`✅ News data successful - found ${data.news?.length || 0} items`);
+            } catch (error) {
+                log('❌ News data failed: ' + error.message);
+                const resultDiv = document.getElementById('newsResult');
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.style.display = 'block';
+                resultDiv.parentElement.className = 'test-section error';
+            }
+        }
+        
+        async function testAnalysisEndpoint() {
+            log('Testing analysis endpoint...');
+            try {
+                // First get a news item
+                const newsResponse = await fetch(`${API_BASE_URL}/api/news`);
+                const newsData = await newsResponse.json();
+                
+                if (!newsData.news || newsData.news.length === 0) {
+                    throw new Error('No news items available');
+                }
+                
+                const newsId = newsData.news[0].id;
+                log(`Using news ID: ${newsId}`);
+                
+                // Test analysis endpoint
+                const analysisResponse = await fetch(`${API_BASE_URL}/api/analysis/${newsId}`);
+                const analysisData = await analysisResponse.json();
+                
+                const resultDiv = document.getElementById('analysisResult');
+                resultDiv.textContent = `Analysis successful for news ID: ${newsId}\n\nAnalysis data:\n${JSON.stringify(analysisData, null, 2)}`;
+                resultDiv.style.display = 'block';
+                resultDiv.parentElement.className = 'test-section success';
+                
+                log('✅ Analysis endpoint successful');
+            } catch (error) {
+                log('❌ Analysis endpoint failed: ' + error.message);
+                const resultDiv = document.getElementById('analysisResult');
+                resultDiv.textContent = 'Error: ' + error.message;
+                resultDiv.style.display = 'block';
+                resultDiv.parentElement.className = 'test-section error';
+            }
+        }
+        
+        log('Test page loaded. Click buttons to test endpoints.');
+    </script>
+</body>
+</html>

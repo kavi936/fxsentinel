@@ -43,6 +43,27 @@ yarn-error.log*
 .env.production.local
 backend/.env
 
+# Session files and sensitive data
+*.session
+*.session-journal
+fxsentinel_session.session*
+fxsentinel_user_session.session*
+test_session.session*
+
+# Cache and data files
+*.json
+!package.json
+!package-lock.json
+!pyproject.toml
+!vite.config.js
+!vercel.json
+!eslint.config.js
+analysis_history.json
+news_cache.json
+news_history.json
+economic_indicators_cache.json
+gpt_analysis_sample.json
+
 # IDE
 .vscode/
 .idea/
@@ -120,4 +141,4 @@ public
 
 # Temporary folders
 tmp/
-temp/ .env
+temp/
