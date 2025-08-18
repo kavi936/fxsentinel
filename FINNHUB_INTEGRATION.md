@@ -25,8 +25,8 @@ FXSentinel now integrates with Finnhub's economic calendar API to provide real-t
 ## API Credentials
 
 ### Demo Account (Current)
-- **Email**: fxsentinelapp@gmail.com
-- **Password**: Kavi4321
+- **Email**: [Your Finnhub email]
+- **Password**: [Your Finnhub password]
 - **API Key**: [Get your API key from Finnhub.io](https://finnhub.io/register)
 - **Expiry**: 1 month from setup
 - **Access**: All endpoints for testing

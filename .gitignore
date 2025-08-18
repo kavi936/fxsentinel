@@ -142,3 +142,6 @@ public
 # Temporary folders
 tmp/
 temp/
+
+# Built/compiled files
+working-dashboard.js
