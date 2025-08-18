@@ -1516,42 +1516,98 @@ body.mobile-menu-open {
   font-size: 1.1rem;
 }
 
-/* Enhanced Responsive Design - Optimized for all screen sizes */
-@media (max-width: 1400px) {
-  .navbar-container {
-    padding: 0 1.75rem;
-    gap: 1.75rem;
-  }
-  
-  .navbar-center {
-    margin: 0 2.5rem;
-  }
-  
-  .navbar-tabs {
-    min-width: 310px;
-    max-width: 400px;
-  }
-}
-
+/* Responsive Design - Intelligent Scaling Approach */
 @media (max-width: 1200px) {
   .navbar-container {
-    padding: 0 1.5rem;
-    gap: 1.5rem;
+    padding: 0 1.25rem;
+    gap: 1.25rem;
+  }
+  
+  .navbar-left {
+    gap: 1.25rem;
   }
   
   .navbar-center {
-    margin: 0 1.5rem;
+    margin: 0 1.25rem;
   }
   
   .navbar-tabs {
-    min-width: 300px;
-    max-width: 380px;
+    min-width: 260px;
+    max-width: 320px;
+    padding: 4px 6px;
+  }
+  
+  .nav-tab {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
+  
+  .navbar-right {
+    gap: 0.8rem;
+  }
+  
+  .welcome-message {
+    font-size: 0.8rem;
+    margin-right: 1.25rem;
+  }
+  
+  .datetime-container {
+    min-width: 140px;
+    max-width: 170px;
+    padding: 6px 10px;
+  }
+  
+  .date-section {
+    font-size: 0.7rem;
+  }
+  
+  .time-section {
+    font-size: 0.75rem;
+  }
+  
+  .navbar-logo {
+    height: 36px;
+    margin-right: 1.25rem;
+  }
+  
+  .market-status {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.7rem;
+    min-width: 130px;
+  }
+  
+  .status-text {
+    font-size: 0.65rem;
+  }
+  
+  .session-brackets {
+    font-size: 0.6rem;
+  }
+  
+  .refresh-btn,
+  .profile-btn,
+  .home-btn,
+  .notification-btn,
+  .settings-btn {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .notification-badge {
+    width: 17px;
+    height: 17px;
+    font-size: 0.6rem;
   }
 }
 
 @media (max-width: 1024px) {
   .navbar-container {
-    padding: 0 1.25rem;
+    padding: 0 1rem;
+    gap: 1rem;
+  }
+  
+  .navbar-left {
     gap: 1rem;
   }
   
@@ -1560,15 +1616,75 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs {
-    min-width: 280px;
-    max-width: 340px;
+    min-width: 240px;
+    max-width: 300px;
+    padding: 3px 5px;
   }
   
   .nav-tab {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.75rem;
+    min-width: 75px;
   }
   
+  .navbar-right {
+    gap: 0.7rem;
+  }
+  
+  .welcome-message {
+    font-size: 0.75rem;
+    margin-right: 1rem;
+  }
+  
+  .datetime-container {
+    min-width: 130px;
+    max-width: 160px;
+    padding: 5px 9px;
+  }
+  
+  .date-section {
+    font-size: 0.65rem;
+  }
+  
+  .time-section {
+    font-size: 0.7rem;
+  }
+  
+  .navbar-logo {
+    height: 34px;
+    margin-right: 1rem;
+  }
+  
+  .market-status {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.65rem;
+    min-width: 120px;
+  }
+  
+  .status-text {
+    font-size: 0.6rem;
+  }
+  
+  .session-brackets {
+    font-size: 0.55rem;
+  }
+  
+  .refresh-btn,
+  .profile-btn,
+  .home-btn,
+  .notification-btn,
+  .settings-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .notification-badge {
+    width: 16px;
+    height: 16px;
+    font-size: 0.55rem;
+  }
+  
+  /* Dashboard content responsive styles */
   .news-grid {
     grid-template-columns: 1fr;
     gap: 2rem;
@@ -1584,119 +1700,182 @@ body.mobile-menu-open {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .navbar-container {
-    padding: 0 1rem;
-    gap: 0.75rem;
+    padding: 0 0.8rem;
+    gap: 0.8rem;
   }
   
   .navbar-left {
-    gap: 1rem;
+    gap: 0.8rem;
   }
   
   .navbar-center {
-    margin: 0 0.75rem;
+    margin: 0 0.8rem;
   }
   
   .navbar-tabs {
-    min-width: 260px;
-    max-width: 300px;
-    padding: 4px;
+    min-width: 220px;
+    max-width: 280px;
+    padding: 2px 4px;
   }
   
   .nav-tab {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.8rem;
-    min-width: 80px;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.7rem;
+    min-width: 70px;
   }
   
   .navbar-right {
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
   
   .welcome-message {
-    font-size: 0.8rem;
-    margin-right: 1rem;
+    font-size: 0.7rem;
+    margin-right: 0.8rem;
   }
   
   .datetime-container {
-    min-width: 140px;
-    max-width: 170px;
-    padding: 6px 10px;
-  }
-  
-  .datetime-btn {
-    min-width: 100px;
-    padding: 0.3rem 0.6rem;
+    min-width: 120px;
+    max-width: 150px;
+    padding: 4px 8px;
   }
   
   .date-section {
-    font-size: 0.8rem;
+    font-size: 0.6rem;
   }
   
   .time-section {
-    font-size: 0.75rem;
-  }
-  
-  .navbar-logo {
-    height: 35px;
-    margin-right: 1rem;
-  }
-  
-  .refresh-btn {
-    width: 34px;
-    height: 34px;
-    font-size: 0.9rem;
-  }
-  
-  .profile-btn {
-    width: 34px;
-    height: 34px;
-  }
-  
-  .home-btn {
-    width: 34px;
-    height: 34px;
-  }
-  
-  .market-status {
-    padding: 0.5rem 0.8rem;
-    font-size: 0.7rem;
-    margin-right: 0.25rem;
-    min-width: 130px;
-    gap: 0.5rem;
-  }
-  
-  .status-text {
     font-size: 0.65rem;
   }
   
-  .session-brackets {
-    font-size: 0.6rem;
+  .navbar-logo {
+    height: 32px;
+    margin-right: 0.8rem;
   }
   
+  .market-status {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.6rem;
+    min-width: 110px;
+  }
+  
+  .status-text {
+    font-size: 0.55rem;
+  }
+  
+  .session-brackets {
+    font-size: 0.5rem;
+  }
+  
+  .refresh-btn,
+  .profile-btn,
+  .home-btn,
   .notification-btn,
   .settings-btn {
-    width: 34px;
-    height: 34px;
+    width: 30px;
+    height: 30px;
   }
   
   .notification-badge {
-    width: 16px;
-    height: 16px;
+    width: 15px;
+    height: 15px;
+    font-size: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-container {
+    padding: 0 0.7rem;
+    gap: 0.7rem;
+  }
+  
+  .navbar-left {
+    gap: 0.7rem;
+  }
+  
+  .navbar-center {
+    margin: 0 0.7rem;
+  }
+  
+  .navbar-tabs {
+    min-width: 200px;
+    max-width: 260px;
+    padding: 2px 3px;
+  }
+  
+  .nav-tab {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.65rem;
+    min-width: 65px;
+  }
+  
+  .navbar-right {
+    gap: 0.5rem;
+  }
+  
+  .welcome-message {
+    font-size: 0.65rem;
+    margin-right: 0.7rem;
+  }
+  
+  .datetime-container {
+    min-width: 110px;
+    max-width: 140px;
+    padding: 3px 7px;
+  }
+  
+  .date-section {
+    font-size: 0.55rem;
+  }
+  
+  .time-section {
     font-size: 0.6rem;
   }
   
+  .navbar-logo {
+    height: 30px;
+    margin-right: 0.7rem;
+  }
+  
+  .market-status {
+    padding: 0.35rem 0.5rem;
+    font-size: 0.55rem;
+    min-width: 100px;
+  }
+  
+  .status-text {
+    font-size: 0.5rem;
+  }
+  
+  .session-brackets {
+    font-size: 0.45rem;
+  }
+  
+  .refresh-btn,
+  .profile-btn,
+  .home-btn,
+  .notification-btn,
+  .settings-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .notification-badge {
+    width: 14px;
+    height: 14px;
+    font-size: 0.45rem;
+  }
+  
+  /* Dashboard content responsive styles */
   .dashboard-main {
     padding: 1.5rem;
     margin-top: 70px;
-    max-height: 48px;
   }
   
   .dashboard-main.overview-active {
     margin-top: 0px;
     padding-top: 0px;
-    max-height: 48px;
   }
 
   .news-details {
@@ -1731,112 +1910,24 @@ body.mobile-menu-open {
   }
 }
 
-/* Optimized breakpoint for screens between 640px and 768px - scaled approach */
-@media (max-width: 700px) and (min-width: 641px) {
+@media (max-width: 640px) {
   .navbar-container {
-    padding: 0 0.5rem;
-    gap: 0.25rem;
+    padding: 0 0.6rem;
+    gap: 0.6rem;
   }
   
   .navbar-left {
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
   
   .navbar-center {
-    margin: 0 0.25rem;
-  }
-  
-  .navbar-tabs {
-    min-width: 200px;
-    max-width: 240px;
-    padding: 2px;
-  }
-  
-  .nav-tab {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.65rem;
-    min-width: 65px;
-  }
-  
-  .navbar-right {
-    gap: 0.25rem;
-  }
-  
-  .welcome-message {
-    font-size: 0.65rem;
-    margin-right: 0.5rem;
-  }
-  
-  .datetime-container {
-    min-width: 90px;
-    max-width: 120px;
-    padding: 3px 6px;
-  }
-  
-  .date-section {
-    font-size: 0.65rem;
-  }
-  
-  .time-section {
-    font-size: 0.6rem;
-  }
-  
-  .navbar-logo {
-    height: 28px;
-    margin-right: 0.5rem;
-  }
-  
-  .market-status {
-    padding: 0.25rem 0.4rem;
-    font-size: 0.55rem;
-    margin-right: 0.25rem;
-    min-width: 80px;
-    gap: 0.25rem;
-  }
-  
-  .status-text {
-    font-size: 0.5rem;
-  }
-  
-  .session-brackets {
-    font-size: 0.45rem;
-  }
-  
-  .refresh-btn,
-  .profile-btn,
-  .home-btn,
-  .notification-btn,
-  .settings-btn {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .notification-badge {
-    width: 12px;
-    height: 12px;
-    font-size: 0.45rem;
-  }
-}
-
-/* Ultra-compact breakpoint for very tight spaces - everything scaled down */
-@media (max-width: 680px) and (min-width: 641px) {
-  .navbar-container {
-    padding: 0 0.25rem;
-    gap: 0.15rem;
-  }
-  
-  .navbar-left {
-    gap: 0.25rem;
-  }
-  
-  .navbar-center {
-    margin: 0 0.15rem;
+    margin: 0 0.6rem;
   }
   
   .navbar-tabs {
     min-width: 180px;
-    max-width: 220px;
-    padding: 1px;
+    max-width: 240px;
+    padding: 1px 2px;
   }
   
   .nav-tab {
@@ -1846,22 +1937,22 @@ body.mobile-menu-open {
   }
   
   .navbar-right {
-    gap: 0.15rem;
+    gap: 0.4rem;
   }
   
   .welcome-message {
     font-size: 0.6rem;
-    margin-right: 0.25rem;
+    margin-right: 0.6rem;
   }
   
   .datetime-container {
-    min-width: 80px;
-    max-width: 100px;
-    padding: 2px 4px;
+    min-width: 100px;
+    max-width: 130px;
+    padding: 2px 6px;
   }
   
   .date-section {
-    font-size: 0.6rem;
+    font-size: 0.5rem;
   }
   
   .time-section {
@@ -1869,16 +1960,14 @@ body.mobile-menu-open {
   }
   
   .navbar-logo {
-    height: 26px;
-    margin-right: 0.25rem;
+    height: 28px;
+    margin-right: 0.6rem;
   }
   
   .market-status {
-    padding: 0.2rem 0.3rem;
+    padding: 0.3rem 0.4rem;
     font-size: 0.5rem;
-    margin-right: 0.15rem;
-    min-width: 70px;
-    gap: 0.2rem;
+    min-width: 90px;
   }
   
   .status-text {
@@ -1899,100 +1988,13 @@ body.mobile-menu-open {
   }
   
   .notification-badge {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     font-size: 0.4rem;
   }
 }
 
-/* Micro-compact breakpoint for extremely tight spaces - minimal scaling */
-@media (max-width: 660px) and (min-width: 641px) {
-  .navbar-container {
-    padding: 0 0.15rem;
-    gap: 0.1rem;
-  }
-  
-  .navbar-left {
-    gap: 0.15rem;
-  }
-  
-  .navbar-center {
-    margin: 0 0.1rem;
-  }
-  
-  .navbar-tabs {
-    min-width: 160px;
-    max-width: 200px;
-    padding: 1px;
-  }
-  
-  .nav-tab {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.55rem;
-    min-width: 55px;
-  }
-  
-  .navbar-right {
-    gap: 0.1rem;
-  }
-  
-  .welcome-message {
-    font-size: 0.55rem;
-    margin-right: 0.15rem;
-  }
-  
-  .datetime-container {
-    min-width: 70px;
-    max-width: 90px;
-    padding: 1px 3px;
-  }
-  
-  .date-section {
-    font-size: 0.55rem;
-  }
-  
-  .time-section {
-    font-size: 0.5rem;
-  }
-  
-  .navbar-logo {
-    height: 24px;
-    margin-right: 0.15rem;
-  }
-  
-  .market-status {
-    padding: 0.15rem 0.25rem;
-    font-size: 0.45rem;
-    margin-right: 0.1rem;
-    min-width: 60px;
-    gap: 0.15rem;
-  }
-  
-  .status-text {
-    font-size: 0.4rem;
-  }
-  
-  .session-brackets {
-    font-size: 0.35rem;
-  }
-  
-  .refresh-btn,
-  .profile-btn,
-  .home-btn,
-  .notification-btn,
-  .settings-btn {
-    width: 24px;
-    height: 24px;
-  }
-  
-  .notification-badge {
-    width: 8px;
-    height: 8px;
-    font-size: 0.35rem;
-  }
-}
-
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   /* Show mobile menu toggle and hide regular navbar elements */
   .mobile-menu-toggle {
     display: flex;
@@ -2016,8 +2018,8 @@ body.mobile-menu-open {
   }
   
   .datetime-container {
-    min-width: 120px;
-    max-width: 150px;
+    min-width: 100px;
+    max-width: 130px;
     padding: 4px 8px;
   }
   
@@ -2043,52 +2045,8 @@ body.mobile-menu-open {
     margin-top: 0px;
     padding-top: 0px;
   }
-}
-
-@media (max-width: 480px) {
-  .navbar-container {
-    padding: 0 0.75rem;
-    gap: 0.25rem;
-  }
   
-  .navbar-left {
-    gap: 0.5rem;
-  }
-  
-  .datetime-container {
-    min-width: 100px;
-    max-width: 130px;
-    padding: 3px 6px;
-  }
-  
-  .date-section {
-    font-size: 0.65rem;
-  }
-  
-  .time-section {
-    font-size: 0.65rem;
-  }
-  
-  .navbar-logo {
-    height: 28px;
-    margin-right: 0.5rem;
-  }
-  
-  .mobile-menu-toggle {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .dashboard-main {
-    padding: 0.75rem;
-    margin-top: 70px;
-  }
-  
-  .dashboard-main.overview-active {
-    margin-top: 0px;
-    padding-top: 0px;
-  }
-  
+  /* Dashboard content responsive styles */
   .dashboard-title h1 {
     font-size: 1.8rem;
   }
@@ -2121,33 +2079,33 @@ body.mobile-menu-open {
 @media (max-width: 360px) {
   .navbar-container {
     padding: 0 0.5rem;
-    gap: 0.25rem;
   }
   
   .datetime-container {
     min-width: 90px;
-    max-width: 110px;
-    padding: 2px 4px;
+    max-width: 120px;
+    padding: 3px 6px;
   }
   
   .date-section {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
   
   .time-section {
-    font-size: 0.6rem;
+    font-size: 0.65rem;
   }
   
   .navbar-logo {
-    height: 26px;
-    margin-right: 0.25rem;
+    height: 28px;
+    margin-right: 0.5rem;
   }
   
   .mobile-menu-toggle {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
   
+  /* Dashboard content responsive styles */
   .dashboard-main {
     padding: 0.5rem;
     margin-top: 70px;
