@@ -10,14 +10,18 @@ class FinnhubCalendarService:
     def __init__(self):
         # Use environment variable only, no hardcoded keys
         self.api_key = os.getenv('FINNHUB_API_KEY')
-        if not self.api_key:
-            raise ValueError("FINNHUB_API_KEY environment variable not set")
         self.base_url = "https://finnhub.io/api/v1"
         self.session = requests.Session()
-        self.session.headers.update({
-            'X-Finnhub-Token': self.api_key,
-            'User-Agent': 'FXSentinel/1.0'
-        })
+        
+        if self.api_key:
+            self.session.headers.update({
+                'X-Finnhub-Token': self.api_key,
+                'User-Agent': 'FXSentinel/1.0'
+            })
+            print("✅ Finnhub API key configured")
+        else:
+            print("⚠️ FINNHUB_API_KEY not set - Finnhub features will be disabled")
+            self.api_key = None
     
     def get_economic_calendar(self, start_date: str = None, end_date: str = None) -> List[Dict]:
         """
@@ -30,6 +34,11 @@ class FinnhubCalendarService:
         Returns:
             List of economic calendar events
         """
+        # Check if API key is available
+        if not self.api_key:
+            print("⚠️ Finnhub API key not configured - returning empty calendar")
+            return []
+            
         try:
             # Set default dates if not provided
             if not start_date:
