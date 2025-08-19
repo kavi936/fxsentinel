@@ -1,418 +1,589 @@
 {
-  "timestamp": "2025-08-18T13:00:44.414702",
-  "news_count": 27,
+  "timestamp": "2025-08-19T10:35:32.138503",
+  "news_count": 37,
   "news": [
     {
-      "id": 3638326248664112342,
-      "title": "OpenAI's Sam Altman sees AI bubble forming as industry spending surges",
-      "summary": "OpenAI CEO Sam Altman thinks the artificial intelligence market is in a bubble, similar to the dotcom bubble, he recently told reporters.",
+      "id": 8435285881354894969,
+      "title": "OpenAI launches cheapest ChatGPT plan at $4.6, starting in India",
+      "summary": "OpenAI has launched a subscription plan for users in India, priced at just 399 rupees ($4.57) per month, its most affordable offering yet.",
       "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/08/18/openai-sam-altman-warns-ai-market-is-in-a-bubble.html",
-      "published_at": "2025-08-18T08:12:29",
+      "url": "https://www.cnbc.com/2025/08/19/openai-chases-growth-india-with-cheapest-plan-at-chatgpt-plan-at-399-rupees-global-rollout.html",
+      "published_at": "2025-08-19T06:31:36",
       "impact": "low",
       "currency_pairs": [],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 5250550152927587669,
-      "title": "Horizons Middle East & Africa 8/18/2025",
-      "summary": "Horizons Middle East & Africa is your daily spotlight on one of the world's fastest-growing regions. Live from Dubai, we bring you the latest global markets and analysis, plus news-making interviews, with a special focus on MEA. All that and more, as you head to the office in the Gulf, pause for lunch in Hong Kong, or start your day in London or Johannesburg.  (Source: Bloomberg)",
+      "id": 2630579569347531742,
+      "title": "US-India Ties Under Strain During Trump's Second Term",
+      "summary": "Rockefeller International Chairman Ruchir Sharma says the relationship between President Trump and Indian Prime Minister Narendra Modi was off to a bad start during Trump's second term due to a series of \"personal\" misunderstandings.\nHe appeared on Bloomberg's Insight with Haslinda Amin. (Source: Bloomberg)",
       "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/videos/2025-08-18/horizons-middle-east-africa-8-18-2025-video",
-      "published_at": "2025-08-18T08:05:28",
-      "impact": "low",
-      "currency_pairs": [
-        "GBP/USD",
-        "EUR/USD",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 2429285567412264249,
-      "title": "Lessons From the One Sovereign Wealth Fund in the United States",
-      "summary": "A talk with the CEO and CIO of the Alaska Permanent Fund.",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/articles/2025-08-18/lessons-from-the-one-sovereign-wealth-fund-in-the-united-states",
-      "published_at": "2025-08-18T08:00:30",
-      "impact": "low",
-      "currency_pairs": [
-        "GBP/USD",
-        "EUR/USD",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 5385909820077594778,
-      "title": "South African Bonds Lure Foreign Investors With Top EM Returns",
-      "summary": "Foreign investors are flooding into South Africa’s government bond market to take advantage of one of the best emerging-market trades of recent years.",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/articles/2025-08-18/south-african-bonds-lure-foreign-investors-with-top-em-returns",
-      "published_at": "2025-08-18T08:00:00",
-      "impact": "medium",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 1336783646752357234,
-      "title": "Cryptocurrencies lose altitude to start the new week",
-      "summary": "Cryptos are facing a pullback to start the new week, with both Bitcoin and Ethereum notably dropping. The former is down close to 2%, adjusting lower after failing to get above $124,000 last week. The latter is seeing a similar rejection of the $4,800 mark. The Friday decline already saw Bitcoin lose near-term momentum and with the latest drop today, Ethereum is suffering a similar fate.The near 5% fall today takes out the 200-hour moving average (blue line), after buyers had tried to defend the level over the weekend. The break there now sees the near-term momentum switch to being more bearish again. That is allowing for a test of the 38.2 Fib retracement level of the swing higher since the start of August, seen around $4,242.In short, buyers are now feeling exhausted as the upside leg re...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/Cryptocurrency/cryptocurrencies-lose-altitude-to-start-the-new-week-20250818/",
-      "published_at": "2025-08-18T07:56:00",
+      "url": "https://www.bloomberg.com/news/videos/2025-08-19/us-india-ties-under-strain-during-trump-s-second-term-video",
+      "published_at": "2025-08-19T06:12:16",
       "impact": "high",
       "currency_pairs": [],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 4040700053748286876,
-      "title": "Trump advisor Peter Navarro slams India’s ‘opportunistic’ purchases of Russian crude",
-      "summary": "His comments come shortly after trade negotiations between the U.S. and India were reportedly called off.",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/08/18/trump-advisor-peter-navarro-says-india-must-stop-buying-russian-oil.html",
-      "published_at": "2025-08-18T07:53:59",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 5624376895630457411,
-      "title": "EURUSD Technical Analysis – Will Fed Chair Powell signal a September cut?",
-      "summary": "Fundamental\nOverviewThe USD came under some\npressure at the start of last week following the US CPI report as the data came\nmostly in line with expectations. In the following days though, we got some hottish\ndata with the US PPI beating expectations by a big margin, the US Jobless\nClaims improving further and the inflation expectations in the UMich survey\nsurprising to the upside. Overall, we ended the week\nbasically flat on the US dollar as the aggressive dovish expectations on the\nFed got trimmed a bit. Nevertheless, given the overreaction from the Fed\nmembers to the last soft NFP, a September cut looks unavoidable now and only a\nhot NFP report in September might get us to a 50% probability (although it\nwould certainly diminish expectations for rate cuts after the September one). The foc...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/forex/eurusd-technical-analysis-will-fed-chair-powell-signal-a-september-cut-20250818/",
-      "published_at": "2025-08-18T07:51:48",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "EUR/USD",
-        "EUR/GBP",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 5381683196402335489,
-      "title": "Market Outlook for the week of 18th-22nd August",
-      "summary": "The week will begin quietly, with no significant data releases scheduled for Monday that are likely to impact the FX market.  On Tuesday, attention will turn to Canada with the release of inflation data, while in the U.S. the focus will be on building permits and housing starts.  Wednesday brings several key events, including the RBNZ monetary policy announcement in New Zealand, inflation data from the U.K., and later in the day, the release of the FOMC meeting minutes.  On Thursday, the spotlight shifts to the flash manufacturing and services PMIs for Australia, the eurozone, the U.K., and the U.S. In addition, the U.S. will publish existing home sales data.  Thursday also marks the opening of the Jackson Hole Symposium, though Fed Chair Powell is scheduled to deliver his remarks on Frida...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/forex/market-outlook-for-the-week-of-18th-22nd-august-20250818/",
-      "published_at": "2025-08-18T07:39:03",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "EUR/NZD",
-        "GBP/NZD",
-        "AUD/USD",
-        "GBP/CAD"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 1433945839498121495,
-      "title": "European stocks trade mixed ahead of Trump-Ukraine crunch talks",
-      "summary": "European stocks opened in mixed territory on Monday as traders focus on a meeting between regional leaders and President Trump to discuss Ukraine.",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/08/18/european-markets-on-mon-aug-18-stoxx-600-dax-cac-ftse-stocks.html",
-      "published_at": "2025-08-18T07:25:01",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "EUR/USD",
-        "EUR/GBP",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 225572232440452611,
-      "title": "China Ramps Up Rare Earth Exports After Fright For Global Buyers",
-      "summary": "China’s exports of rare earth products &mdash; including magnets &mdash; extended their recovery in July, months after Beijing threatened a disruptive global shortage by crimping supplies to fight a trade clash with US President Donald Trump.",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/articles/2025-08-18/china-s-rare-earth-product-exports-jump-to-highest-since-january",
-      "published_at": "2025-08-18T07:20:38",
-      "impact": "high",
-      "currency_pairs": [
-        "GBP/USD",
-        "EUR/USD",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 1682628110229126859,
-      "title": "European indices keep more tentative now to kick start the session",
-      "summary": "Eurostoxx -0.3%Germany DAX -0.3%France CAC 40 -0.2%UK FTSE flatSpain IBEX -0.3%Italy FTSE MIB -0.1%It's a bit of a check back with US futures also dropping just a little to start the day. S&amp;P 500 futures are now down 0.1% after tech shares saw a more sluggish showing at the end of last week. It's all about reassessing Fed odds in the week ahead, with markets now pricing in a ~84% probability of a rate cut. That is down from after having fully priced in such a move after the US CPI report last week.\n                            This article was written by Justin Low at investinglive.com.",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/stocks/european-indices-keep-more-tentative-now-to-kick-start-the-session-20250818/",
-      "published_at": "2025-08-18T07:14:30",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "USD/CHF",
-        "GBP/JPY",
-        "EUR/CHF",
-        "EUR/USD"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 2340531581742830203,
-      "title": "USDJPY Technical Analysis – The focus turns to Fed Chair Powell",
-      "summary": "Fundamental\nOverviewThe USD came under some pressure\nat the start of last week following the US CPI report as the data came mostly\nin line with expectations. In the following days though, we got some hottish\ndata with the US PPI beating expectations by a big margin, the US Jobless\nClaims improving further and the inflation expectations in the UMich survey surprising\nto the upside. Overall, we ended the week\nbasically flat on the US dollar as the aggressive dovish expectations on the\nFed got trimmed a bit. Nevertheless, given the overreaction from the Fed members\nto the last soft NFP, a September cut looks unavoidable now and only a hot NFP\nreport in September might get us to a 50% probability (although it would\ncertainly diminish expectations for rate cuts after the September one). The foc...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/forex/usdjpy-technical-analysis-the-focus-turns-to-fed-chair-powell-20250818/",
-      "published_at": "2025-08-18T06:58:05",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "GBP/JPY",
-        "EUR/USD",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 1322336838460133685,
+      "id": 2890533659809873003,
       "title": "What are the main events for today?",
-      "summary": "Today it's going to be kind of a synthetic Sunday as we don't have anything on the agenda. The only notable event is the Trump-Zelensky meeting in Washington where there will also be a few European leaders participating. Not sure if markets care about the Russia-Ukraine war though. The biggest moves have been seen just in specific markets like the Russian stock market, the ruble and maybe crude oil. The focus this week is going to be on the Jackson Hole Symposium where Fed Chair Powell is going to deliver his speech on Friday. Traders will be attentive to any tiny signal on what's next for monetary policy and whether Powell opens up for a rate cut in September. Most likely though, he won't pre-commit to anything and will just reiterate that they will decide on the totality of the data.\n   ...",
+      "summary": "In the European session, we don't have anything on the agenda, so we can expect the usual choppy price action although some US dollar strength into Powell's speech looks likely.In the American session, we get the Canadian CPI. The most important measure, the Trimmed-Mean CPI YoY is expected at 3.1% vs 3.0% prior. That would be above the Bank of Canada's 1-3% target band and certainly much higher than the 2% mid-point. The market is pricing a 31% chance of a rate cut at the upcoming meeting, which looks totally misplaced based on the economic data. Overall, the market sees at least one last 25 bps rate cut by October 2026.We have also Fed's Bowman speaking today but given that she's a known dove and that the topic of the discussion is about \"fostering new technology in the banking system\", ...",
       "source": "ForexLive",
-      "url": "https://investinglive.com/news/what-are-the-main-events-for-today-20250818/",
-      "published_at": "2025-08-18T06:09:16",
+      "url": "https://investinglive.com/news/what-are-the-main-events-for-today-20250819/",
+      "published_at": "2025-08-19T06:09:57",
       "impact": "high",
       "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
+        "USD/JPY",
         "EUR/USD",
         "EUR/GBP",
-        "USD/JPY"
+        "GBP/USD",
+        "GBP/CAD",
+        "USD/CAD"
       ],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 136905096188256297,
-      "title": "FX option expiries for 18 August 10am New York cut",
-      "summary": "There is arguably just one to take note of on the day, as highlighted in bold below.That being for EUR/USD at the 1.1675 level. The pair is keeping in a narrow range so far today amid the lack of catalysts to whet trading appetite to start the new week. And that is likely to continue into European trading as well with bigger things only coming later this week. But alongside the 100-hour moving average at 1.1679, the expiries could keep a floor on price action if there is any extension of the current price range in European trading.For more information on how to use this data, you may refer to this post here.Head on over to investingLive (formerly ForexLive) to get in on the know!\n                            This article was written by Justin Low at investinglive.com.",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/Orders/fx-option-expiries-for-18-august-10am-new-york-cut-20250818/",
-      "published_at": "2025-08-18T06:06:30",
+      "id": 8557747628602331601,
+      "title": "O’Neill: Expect 30-40% LNG Demand Growth in next decade",
+      "summary": "First-half profit for Australia’s largest oil and gas producer Woodside Energy fell 24% to $US1.25 billion in the six months ending June 30, from $US1.63 billion in the same period last year. A dip in commodity prices and higher depreciation and restoration expenses offset higher production revenues. Meg O’Neill CEO of Woodside Energy, spoke to Bloomberg’s Chief Africa Correspondent Jennifer Zabasajja on Horizons Middle East and Africa on the factors affecting oil & gas prices. (Source: Bloomberg)",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/videos/2025-08-19/o-neill-expect-30-40-lng-demand-growth-in-next-decade-video",
+      "published_at": "2025-08-19T06:05:06",
       "impact": "low",
       "currency_pairs": [
-        "EUR/USD"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 4331707257540394288,
-      "title": "Eurostoxx futures +0.2% in early European trading",
-      "summary": "German DAX futures +0.3%UK FTSE futures +0.2%European equities are looking to continue the positive run from last week but will face a couple of different challenges this week. The Russia-Ukraine situation is one to watch in the early stages before sentiment on Wall Street will factor in with the Fed minutes and Target/Walmart earnings in focus. Later in the week though, we'll have PMI data to dictate the pace of things before we get to Fed chair Powell's appearance in Jackson Hole.\n                            This article was written by Justin Low at investinglive.com.",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/stocks/eurostoxx-futures-02-in-early-european-trading-20250818/",
-      "published_at": "2025-08-18T06:03:53",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "GBP/JPY",
-        "EUR/USD",
-        "EUR/GBP"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 7445509355341584059,
-      "title": "Jackson Hole on the horizon for markets this week",
-      "summary": "I reckon the narrative going into Jackson Hole this year is rather clear. If you're expecting Powell to reaffirm rate cut expectations, you'd be sorely disappointed. But in that sense, can we argue that market players are quite evidently favouring Powell to adopt a more hawkish tone? Or at least to not conform to the more dovish bias heading into September?As such, it might seem that the propensity to surprise is actually on the other side of the equation now. But if anything, that argues to how high of a threshold the situation is for Powell to have to surprise markets in this manner.In short, don't expect Powell to be explicit or pre-commit to anything in September. However, that won't stop markets from designing their own ideas in their heads. Fed funds futures are still showing ~84% od...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/centralbank/jackson-hole-on-the-horizon-for-markets-this-week-20250818/",
-      "published_at": "2025-08-18T05:03:44",
-      "impact": "high",
-      "currency_pairs": [
-        "GBP/USD",
-        "EUR/USD",
-        "USD/JPY"
-      ],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 6574751925995323578,
-      "title": "investingLive Asia-pacific FX news wrap 18 Aug: BTC back below 116K",
-      "summary": "It was a mostly quiet start to the news week as there were no major surprises in store for markets with the Trump/Putin meeting. It will also be a relatively quiet week on the data side, with Jackson Hole the main event of the week (but that's only Friday).Navarro criticizes India’s oil trade with Russia, questions strategic alignmentCrypto continuing to give back some of its recent gainsImplied volatility levels for US500, NAS100 and GER40Qantas accepts A$90m court penalty, adds A$120m compensation fundIndia proposes GST cuts on small cars and insurance premiumsUS earnings in focus for the week aheadSouth Korea plans partial implementation of inter-Korean agreementsTrump says Zelensky could end war immediatelyPBOC sets USD/ CNY reference rate for today at 7.1322 (vs. estimate at 7.1793)Hu...",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/news/investinglive-asia-pacific-fx-news-wrap-18-aug-btc-back-below-116k-20250818/",
-      "published_at": "2025-08-18T04:35:14",
-      "impact": "high",
-      "currency_pairs": [
-        "EUR/JPY",
-        "GBP/USD",
-        "EUR/NZD",
-        "GBP/NZD",
-        "GBP/JPY",
+        "GBP/AUD",
+        "GBP/CAD",
+        "USD/CAD",
+        "EUR/AUD",
+        "EUR/CAD",
         "AUD/USD"
       ],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 2242125163247100406,
-      "title": "Trump puts onus on Zelenskyy to end conflict with Russia ahead of meeting",
-      "summary": "In a post on Truth Social, Trump said that Zelenskyy could \"end the war with Russia almost immediately, if he wants to, or he can continue to fight.\"",
+      "id": 4760639125567247285,
+      "title": "SoftBank shares fall over 5% after it announces $2 billion investment in Intel",
+      "summary": "Investors are also looking ahead to the U.S. Federal Reserve Chair Jerome Powell's annual speech at the central bank's summit in Jackson Hole, Wyoming.",
       "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/08/18/trump-putin-zelenskyy-russia-ukraine-war-moscow-kyiv-nato-crimea-europe-us-alaska-washington-meeting.html",
-      "published_at": "2025-08-18T04:27:54",
+      "url": "https://www.cnbc.com/2025/08/19/asia-stock-markets-today-live-updates-nikkei-225-asx-200-kospi-hang-seng-csi-300-sensex-nifty-50html.html",
+      "published_at": "2025-08-19T05:59:32",
+      "impact": "high",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 6170156255186605760,
+      "title": "Fed chair Powell to adopt a more cautious approach at Jackson Hole - MUFG",
+      "summary": "MUFG notes that the Jackson Hole Symposium will be the next high-stakes event for the Fed in terms of offering up any policy communication. And given the circumstances, a repeat of last year - where a dovish guidance was explicit - is rather unlikely. The firm notes that Fed chair Powell is expected to lean on the cautious side and that will temper downside pressures on the US dollar in the near-term.They also note that markets are pricing in the resumption of policy easing by the Fed and will look to Powell to validate those expectations. However, Powell may not choose to confirm the timing and buy more time to assess incoming data. If so, that could dampen downside pressures against the dollar with markets having to reassess their pricing on rate cuts.The narrative here fits with the com...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/centralbank/fed-chair-powell-to-adopt-a-more-cautious-approach-at-jackson-hole-mufg-20250819/",
+      "published_at": "2025-08-19T05:25:58",
       "impact": "high",
       "currency_pairs": [
-        "GBP/USD",
         "EUR/USD",
-        "USD/JPY"
+        "USD/JPY",
+        "GBP/USD"
       ],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 4770766376010180156,
-      "title": "A slower Monday set to greet European traders to start the week",
-      "summary": "The meeting in Alaska was a bit of a dud to say the least as it didn't achieve much. Now, we'll see Ukraine president Zelensky head to Washington again to meet with US president Trump. This time around though, he will be accompanied by European leaders so as to not get ambushed as he did back in February.There's hopeful optimism but given how talks are being done separately in this manner, you wouldn't blame me for being skeptical that some deal can be done without Ukraine being involved. All eyes will be on what Trump will sell with regards to the security guarantees. So, we'll see.As markets return from the weekend, the mood music is more sanguine to start the new week. Major currencies aren't up to much with the dollar keeping steadier. That comes after some slight declines on Friday wi...",
+      "id": 8041902268341134687,
+      "title": "‘Coolcations’ are booming again as tourists prioritize quieter, off-peak trips",
+      "summary": "Tourists are pivoting away from Europe's traditional summer hotspots amid concerns over blistering heat and raging wildfires.",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/08/19/coolcations-are-booming-as-tourists-prioritize-quieter-off-peak-trips.html",
+      "published_at": "2025-08-19T05:07:44",
+      "impact": "low",
+      "currency_pairs": [
+        "EUR/USD",
+        "EUR/JPY",
+        "EUR/GBP"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 5992903327749603697,
+      "title": "Another quiet session beckons for European traders",
+      "summary": "There will be bigger fish to fry later in the week. But for now, European traders and investor will have to fend for themselves in working through this more tentative and tepid market mood. Traders are settling down after Fed rate cuts bets have cooled since last week, though Fed funds futures still point to ~84% odds of a 25 bps move.All eyes will be on Fed chair Powell's speech in Jackson Hole on Friday. But before we get to that, there will be some interest on the Fed minutes as well as earnings by big retailers - namely Target and Walmart. And that is not forgetting the PMI data on Thursday as well.In the meantime though, we're in for yet another slower session to start the week. Major currencies are little changed after the dollar posted slight gains overnight. The changes are leaving...",
       "source": "ForexLive",
-      "url": "https://investinglive.com/news/a-slower-monday-set-to-greet-european-traders-to-start-the-week-20250818/",
-      "published_at": "2025-08-18T04:22:13",
+      "url": "https://investinglive.com/news/another-quiet-session-beckons-for-european-traders-20250819/",
+      "published_at": "2025-08-19T05:02:45",
       "impact": "high",
       "currency_pairs": [
-        "EUR/JPY",
+        "USD/JPY",
+        "EUR/USD",
+        "EUR/GBP",
         "GBP/USD",
-        "EUR/NZD",
-        "GBP/NZD",
-        "GBP/JPY",
-        "EUR/USD"
+        "EUR/JPY"
       ],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 1125138705020220332,
-      "title": "Navarro criticizes India’s oil trade with Russia, questions strategic alignment",
-      "summary": "White House trade adviser Navarro said India’s oil lobby funding Russia has to stop, according to an FT opinion piece.Navarro stated that if India wants to be treated as a strategic partner of the US, it needs to start acting like one.\n                            This article was written by Arno V Venter at investinglive.com.",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/news/navarro-criticizes-indias-oil-trade-with-russia-questions-strategic-alignment-20250818/",
-      "published_at": "2025-08-18T04:15:47",
-      "impact": "medium",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 69810433051340640,
-      "title": "Qantas accepts A$90m court penalty, adds A$120m compensation fund",
-      "summary": "Qantas issued a statement on the ground handling penalty judgment.The airline accepted the Federal Court's decision on the penalty for unlawfully outsourcing its ground handling function in 2020.Qantas will pay a A$90 million penalty in accordance with the court’s orders.Qantas has also paid A$120 million into a compensation fund for all affected former employees.While the penalty and compensation are sizable, Qantas had been under pressure to resolve the matter, so markets may view this as removing an overhang.\n                            This article was written by Arno V Venter at investinglive.com.",
-      "source": "ForexLive",
-      "url": "https://investinglive.com/stocks/qantas-accepts-a90m-court-penalty-adds-a120m-compensation-fund-20250818/",
-      "published_at": "2025-08-18T02:26:51",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "RSS_FEED",
-      "status": "PUBLISHED"
-    },
-    {
-      "id": 7077723363747734627,
-      "title": "Soho House Members’ Club Nears Deal to Go Private, WSJ Says",
-      "summary": "A group of investors that includes billionaire Ron Burkle is close to a deal to take members’ club Soho House &amp; Co. private, according to the Wall Street Journal.",
-      "source": "Bloomberg",
-      "url": "https://www.bloomberg.com/news/articles/2025-08-17/soho-house-member-s-club-nears-deal-to-go-private-wsj-says",
-      "published_at": "2025-08-17T23:45:16",
+      "id": 6965422555959525682,
+      "title": "From dumpling-making to pub quizzes: Gen Z's recipe to making friends in real life",
+      "summary": "Gen Z are \"resisting this digital age because it has become very cluttered and unreliable...they're yearning to connect in person,\" one workplace expert said.",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/08/19/gen-z-workers-are-going-to-irl-networking-events-to-find-friendships.html",
+      "published_at": "2025-08-19T05:00:01",
       "impact": "low",
       "currency_pairs": [],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 2645383108825068382,
-      "title": "White House envoy claims Russia agreed to 'Article 5-like' security guarantees for Ukraine",
-      "summary": "Special Envoy Steve Witkoff's remarks come just days after President Donald Trump met in Alaska with the Russian president to discuss ending the war in Ukraine.",
-      "source": "CNBC",
-      "url": "https://www.cnbc.com/2025/08/17/trump-putin-steve-witkoff-ukraine-security-guarantees.html",
-      "published_at": "2025-08-17T18:31:36",
+      "id": 4601460476782316904,
+      "title": "Japan veteran lawmaker calls on BOJ to \"start early\" on interest rate hikes",
+      "summary": "Japan needs new economic framework in which BOJ raises rates, government restores fiscal healthBetter to start early for BOJ when it comes to rate hikesJapan must reverse weak yen, seek a somewhat stronger currencyBOJ must gradually raise rates as it is undesirable to keep real borrowing costs negative for a prolonged periodThe pressure is certainly starting to grow for the BOJ to take action. But as has been the case since Ueda took charge, they've been more than willing enough to bide their time. The central bank could've took their first step in late 2023 but waited on the spring wage negotiations before moving in March 2024. That underscores the mentality as we look towards the next rate hike as well it would seem.\n                            This article was written by Justin Low at i...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/japan-veteran-lawmaker-calls-on-boj-to-start-early-on-interest-rate-hikes-20250819/",
+      "published_at": "2025-08-19T04:18:56",
       "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/JPY",
+        "GBP/JPY"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7388269258605352704,
+      "title": "Vietnam Touts $48 Billion in Project Investments to Spur Growth",
+      "summary": "Vietnam on Tuesday said around 250 projects, with investments totaling about $48 billion, are being pursued in the country as the government seeks to show it’s boosting economic growth.",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-08-19/vietnam-kicks-off-ambitious-new-projects-to-spur-economic-growth",
+      "published_at": "2025-08-19T03:58:46",
+      "impact": "low",
       "currency_pairs": [],
       "type": "RSS_FEED",
       "status": "PUBLISHED"
     },
     {
-      "id": 3518393836433490366,
-      "title": "Eric Trump says \"buy the dips.\"",
-      "summary": "**JUST IN:** Eric Trump says \"buy the dips.\"",
-      "source": "Telegram - WatcherGuru",
-      "url": "",
-      "published_at": "2025-08-17T02:11:50+00:00",
+      "id": 4294856161708439634,
+      "title": "investingLive Asia-pacific FX news wrap 19 Aug: Like watching paint dry",
+      "summary": "If you just got to your desk for the day, don't worry, you didn't miss much. It was an exceptionally quiet session with very little to get excited about in terms of price action.Japan PM calls for ceasefire and fair peace, weighs role in Ukraine securityFX option expiries for 19 August 10am New York cutS&amp;P affirms US AA+ rating with stable outlook despite high deficitsImportant implied volatility levels for USDCAD, EURCAD, GBPCAD and CADJPYHurricane Erin nears Bahamas, heads toward US Atlantic coastRBC 1-3 month outlook for major currenciesOpenAI launches ChatGPT Go in India for 399 rupeesPBOC sets USD/ CNY reference rate for today at 7.1359 (vs. estimate at 7.1846)Preview for the Canadian CPI data later todayAustralia Consumer Sentiment 5.7% vs 0.6% priorRubio backs Ukraine security g...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/investinglive-asia-pacific-fx-news-wrap-19-aug-like-watching-paint-dry-20250819/",
+      "published_at": "2025-08-19T03:44:06",
       "impact": "high",
-      "currency_pairs": [],
-      "type": "TELEGRAM_USER",
-      "status": "PUBLISHED",
-      "message_id": 10184,
-      "channel": "WatcherGuru"
+      "currency_pairs": [
+        "EUR/NZD",
+        "USD/JPY",
+        "GBP/NZD",
+        "EUR/USD",
+        "GBP/AUD",
+        "EUR/GBP"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
     },
     {
-      "id": 9018322939087731164,
-      "title": "🇺🇸 Federal Reserve ends program that increased bank scrutiny of crypto.",
-      "summary": "**JUST IN:** 🇺🇸 Federal Reserve ends program that increased bank scrutiny of crypto.",
-      "source": "Telegram - WatcherGuru",
-      "url": "",
-      "published_at": "2025-08-15T16:07:28+00:00",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "TELEGRAM_USER",
-      "status": "PUBLISHED",
-      "message_id": 10179,
-      "channel": "WatcherGuru"
+      "id": 2360290751841188485,
+      "title": "Japan 20-Year Bond Auction Highlights Lingering Fiscal Concerns",
+      "summary": "Japan’s 20-year government bond auction drew demand that was weaker than its 12-month average, reflecting investor caution about longer dated debt facing fiscal risks like higher government spending and tax cuts.",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-08-19/japan-20-year-bond-sale-sees-weaker-demand-than-12-month-average",
+      "published_at": "2025-08-19T03:38:42",
+      "impact": "low",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/JPY",
+        "GBP/JPY"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
     },
     {
-      "id": 1467256451274714803,
-      "title": "🇺🇸🇨🇳 President Trump says China is not doing well economically.",
-      "summary": "**JUST IN:** 🇺🇸🇨🇳 President Trump says China is not doing well economically.",
-      "source": "Telegram - WatcherGuru",
-      "url": "",
-      "published_at": "2025-08-15T12:40:42+00:00",
-      "impact": "high",
-      "currency_pairs": [],
-      "type": "TELEGRAM_USER",
-      "status": "PUBLISHED",
-      "message_id": 10177,
-      "channel": "WatcherGuru"
+      "id": 7977651754536292343,
+      "title": "Japan PM calls for ceasefire and fair peace, weighs role in Ukraine security",
+      "summary": "Japan’s Prime Minister Ishiba said the important priority is an immediate ceasefire and the achievement of a 'fair peace' when asked about the US-Ukraine meeting.He added that Japan will consider what it can do in terms of security for Ukraine from the standpoint of its legal framework and capabilities. 'from a standpoint of its legal framework and capabilities'...that's a really nice way of saying we probably won't be able to do anything.Will have to remember this line the next time the kids ask me for more screen time.\n                            This article was written by Arno V Venter at investinglive.com.",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/japan-pm-calls-for-ceasefire-and-fair-peace-weighs-role-in-ukraine-security-20250819/",
+      "published_at": "2025-08-19T03:32:49",
+      "impact": "low",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/JPY",
+        "GBP/JPY"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
     },
     {
-      "id": 1913095048031377294,
-      "title": "🇺🇸 Federal Reserve Chair Jerome Powell to give speech next week on the Fed's policy fra",
-      "summary": "**JUST IN:** 🇺🇸 Federal Reserve Chair Jerome Powell to give speech next week on the Fed's policy framework.",
-      "source": "Telegram - WatcherGuru",
-      "url": "",
-      "published_at": "2025-08-14T21:03:36+00:00",
+      "id": 6595076593978600955,
+      "title": "FX option expiries for 19 August 10am New York cut",
+      "summary": "There are a couple to take note of on the board for the day, as highlighted in bold below.The first ones are for EUR/USD at the 1.1625 and 1.1700 levels. The expiries should act as bookends for price action in the session ahead, though we might not see too much attraction given the lack of trading appetite. The dollar is steadier overall but not really finding much conviction to go running to start the week.Then, there is one for AUD/USD at the 0.6515 level. The expiries here might not factor too much into play given the more lackadaisical market mood. However, they do sit near the key hourly moving averages around 0.6517-18 currently and together could limit any upside extension of the price range in the session ahead.For more information on how to use this data, you may refer to this pos...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/Orders/fx-option-expiries-for-19-august-10am-new-york-cut-20250819/",
+      "published_at": "2025-08-19T03:29:03",
+      "impact": "low",
+      "currency_pairs": [
+        "EUR/USD",
+        "AUD/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 1577634638180192222,
+      "title": "S&P affirms US AA+ rating with stable outlook despite high deficits",
+      "summary": "S&amp;P affirmed the US sovereign rating at AA+/A-1+ with a stable outlook, noting steady but high deficits.It expects US net general government debt to approach 100% of GDP due to rising nondiscretionary interest and aging-related spending.S&amp;P projects US economic growth around 2% following a slowdown in 2025 and 2026.It said fiscal deficit outcomes won’t meaningfully improve, but no persistent deterioration is projected over the next several years.Average annual real GDP growth is expected to decelerate to 1.7% in 2025 and 1.6% in 2026.\n                            This article was written by Arno V Venter at investinglive.com.",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/sp-affirms-us-aa-rating-with-stable-outlook-despite-high-deficits-20250819/",
+      "published_at": "2025-08-19T03:24:56",
       "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 1513373643093104217,
+      "title": "Important implied volatility levels for USDCAD, EURCAD, GBPCAD and CADJPY",
+      "summary": "Here is a quick snapshot of today's implied volatility support and resistance levels for USDCAD, EURCAD, GBPCAD and CADJPY ahead of today's CA CPI data.USDCAD: 1.3837 (resistance) - 1.3760(support)EURCAD: 1.6150(resistance) - 1.6030 (support)GBPCAD: 1.8700(resistance) - 1.8570 (support)CADJPY: 107.60 (resistance) - 106.50 (support)Looking at the EURCAD specifically, the pair is currently rejecting from a huge multi-year level of resistance around the 1.6150, with decent confluence with the implied volatility level as well. Big level to watch for those trading the EURCAD.These levels are based on 1-month implied volatility and can be used as dynamic and market-based levels of support and resistance.These levels on their own are quite handy, but when we combine them with technical analysis t...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/forex/important-implied-volatility-levels-for-usdcad-eurcad-gbpcad-and-cadjpy-20250819/",
+      "published_at": "2025-08-19T03:23:04",
+      "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/USD",
+        "EUR/GBP",
+        "GBP/USD",
+        "GBP/JPY",
+        "GBP/CAD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7602463337642989695,
+      "title": "Hurricane Erin nears Bahamas, heads toward US Atlantic coast",
+      "summary": "The National Hurricane Center said Erin is moving northwestward to the east of the Bahamas.The storm is expected to bring high surf and possible tropical storm conditions to parts of the Bahamas and the US Atlantic coast.Hurricane Erin is about 780 miles (1,255 km) south-southeast of Cape Hatteras, North Carolina, with maximum sustained winds of 125 mph (205 km/h).\n                            This article was written by Arno V Venter at investinglive.com.",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/hurricane-erin-nears-bahamas-heads-toward-us-atlantic-coast-20250819/",
+      "published_at": "2025-08-19T02:50:57",
+      "impact": "low",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 8763394540850100649,
+      "title": "RBC 1-3 month outlook for major currencies",
+      "summary": "US Dollar (USD)Rangebound with opposing drivers: Fed cuts argue for weakness, strong US equities attract inflows.Likely stays contained in near term, with weakness emerging later in Q4.Euro (EUR)Lack of investment appeal so far; equities and rates underperformed US.German stimulus and Fed cuts vs ECB pause could support EUR/USD.Risks both ways, but skew is mildly positive.Japanese Yen (JPY)RBC maintains bullish call; USD/JPY expected below 140 by year-end.Recent weakness blamed on July-specific factors (elections, tariffs, carry).Rate differentials moving in JPY’s favor, BOJ steady, Fed easing.Sterling (GBP)Undervalued vs EUR, SEK, CHF; GBP/CHF has strongest short-term upside.BoE cautious on cuts; one more cut expected this year.Attractive for carry, especially vs CHF; limited US tariff ex...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/forex/rbc-1-3-month-outlook-for-major-currencies-20250819/",
+      "published_at": "2025-08-19T02:13:34",
+      "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "AUD/USD",
+        "USD/CAD",
+        "GBP/CHF"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 3093011311350922952,
+      "title": "PBOC sets USD/ CNY reference rate for today at 7.1359 (vs. estimate at 7.1846)",
+      "summary": "The People's Bank of China (PBOC), China's central bank, is responsible for setting the daily midpoint of the yuan (also known as renminbi or RMB). The PBOC follows a managed floating exchange rate system that allows the value of the yuan to fluctuate within a certain range, called a \"band,\" around a central reference rate, or \"midpoint.\" It's currently at +/- 2%.Previous close was 7.1854\n                            This article was written by Arno V Venter at investinglive.com.",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/news/pboc-sets-usd-cny-reference-rate-for-today-at-71359-vs-estimate-at-71846-20250819/",
+      "published_at": "2025-08-19T01:15:51",
+      "impact": "low",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 3424939841449234244,
+      "title": "Preview for the Canadian CPI data later today",
+      "summary": "Traders\nand analysts are looking for a slight drop in headline inflation for July, with YY CPI expected to land at 1.8%, down from 1.9% in June. But the more\nimportant core measure (Trim and Median) is expected to stay elevated around 3.1%.This is important, because even though headline is seen drifting lower, the bank's preferred measure of Core inflation is remaining sticky above their target band.Right now, markets are pricing in around a 30% chance of a cut in September, and a 90% chance of a cut before year-end.The BoC has already signalled it's in wait-and-see mode, with several things working together to keep inflation expectations relatively anchored:Wage growth and unit labour costs have cooled off a bit.The Canadian dollar’s recent strength has helped make imported goods a little...",
+      "source": "ForexLive",
+      "url": "https://investinglive.com/forex/preview-for-the-canadian-cpi-data-later-today-20250819/",
+      "published_at": "2025-08-19T01:15:21",
+      "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/USD",
+        "GBP/USD",
+        "GBP/CAD",
+        "USD/CAD",
+        "EUR/CAD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 8645334258588936900,
+      "title": "European Futures Rise, Oil Dips After Ukraine Meet: Markets Wrap",
+      "summary": "Financial markets traded in a narrow range, with global equities holding near record highs, after Donald Trump’s meeting with Ukraine’s president and European leaders ended with a call for a summit with Russia.",
+      "source": "Bloomberg",
+      "url": "https://www.bloomberg.com/news/articles/2025-08-18/stock-market-today-dow-s-p-live-updates",
+      "published_at": "2025-08-18T22:36:18",
+      "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "EUR/JPY",
+        "EUR/GBP"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 3693800331444744783,
+      "title": "Dow Jones Industrial Average inches lower to start a fresh week",
+      "summary": "The Dow Jones Industrial Average (DJIA) eased slightly on Monday, paring last week’s gains. A quiet start to the week is giving investors some room to breathe before the next round of key economic data, as well as the start of this year’s economic symposium at Jackson Hole.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/dow-jones-industrial-average-cools-on-a-quiet-monday-202508181908",
+      "published_at": "2025-08-18T20:46:51",
+      "impact": "low",
       "currency_pairs": [],
-      "type": "TELEGRAM_USER",
-      "status": "PUBLISHED",
-      "message_id": 10174,
-      "channel": "WatcherGuru"
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 26110629412497336,
+      "title": "Canadian Dollar spins in circles in quiet start to week",
+      "summary": "The Canadian Dollar (CAD) treaded water on Monday, kicking off the new trading week with a notable lack of momentum as investors take a breather from last week’s inflation-fueled excitement.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/canadian-dollar-spins-in-circles-in-quiet-start-to-week-202508181935",
+      "published_at": "2025-08-18T19:35:55",
+      "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/USD",
+        "GBP/USD",
+        "GBP/CAD",
+        "USD/CAD",
+        "EUR/CAD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7469911904924674920,
+      "title": "Retail earnings set to steer S&P 500: WMT, HD, LOW and TGT",
+      "summary": "Retail earnings are the main focus of the US stock market this week as some investors have taken precautions ahead of a significant interest rate event on Friday.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/retail-earnings-set-to-steer-sp-500-wmt-hd-low-and-tgt-202508181920",
+      "published_at": "2025-08-18T19:20:59",
+      "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 5978132920694958067,
+      "title": "Forex Today: Canadian inflation figures take centre stage",
+      "summary": "The US Dollar (USD) managed to leave behind part of Friday’s retracement, regaining upside impulse in a context of heightened caution ahead of the Trump-Zelenskiy gathering and the upcoming Jackson Hole Symposium.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/forex-today-canadian-inflation-figures-take-centre-stage-202508181842",
+      "published_at": "2025-08-18T18:42:34",
+      "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/USD",
+        "GBP/USD",
+        "GBP/CAD",
+        "USD/CAD",
+        "EUR/CAD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 2949829302027337092,
+      "title": "Gold consolidates as Fed Minutes and ceasefire speculation cap gains",
+      "summary": "Gold price traded sideways on Monday as traders await the meeting between Trump, Zelenskiy, and European leaders in Washington following last week's summit between US President Donald Trump and Russian President Vladimir Putin.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/gold-consolidates-as-fed-minutes-and-ceasefire-speculation-cap-gains-202508181820",
+      "published_at": "2025-08-18T18:20:37",
+      "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/USD",
+        "EUR/GBP",
+        "GBP/USD",
+        "EUR/JPY"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 1796352499478782724,
+      "title": "AUD/USD pressured by stronger US Dollar, focus turns to Trump-Zelenskyy talks",
+      "summary": "The Australian Dollar (AUD) is losing ground against its US counterpart to kick off the week, with the AUD/USD pair slipping below the 0.6500 mark during the New York session on Monday.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/aud-usd-pressured-by-stronger-us-dollar-focus-turns-to-trump-zelenskyy-talks-202508181806",
+      "published_at": "2025-08-18T18:06:03",
+      "impact": "high",
+      "currency_pairs": [
+        "AUD/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7284054340417192087,
+      "title": "Trump states need for peace in second Russia-Ukraine summit in a week",
+      "summary": "United States (US) President Donald Trump announced an ongoing desire to resolve the ongoing Russia-Ukraine war during a joint press conference with Ukrainian President Volodymyr Zelenskyy on Monday.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/trump-states-need-for-peace-in-second-russia-ukraine-summit-in-a-week-202508181742",
+      "published_at": "2025-08-18T17:42:35",
+      "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 454815360381601863,
+      "title": "Gold retreats as rising yields and firm USD weigh ahead of Trump-Zelenskyy talks",
+      "summary": "Gold (XAU/USD) kicks off the week on a volatile note, staging a sharp intraday recovery after briefly dipping to an 11-day low near $3,323 during early Monday trade.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/gold-rebounds-as-safe-haven-demand-rises-ahead-of-trump-zelenskyy-meeting-202508181205",
+      "published_at": "2025-08-18T15:52:46",
+      "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 5509122504056989746,
+      "title": "Silver stalls near $38.00 as traders await Trump-Zelenskyy talks",
+      "summary": "Silver (XAG/USD) is treading water around $38.00 on Monday, as traders stay on the sidelines ahead of a key meeting between US President Donald Trump and Ukrainian President Volodymyr Zelenskyy.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/silver-stalls-near-3800-as-traders-await-trump-zelenskyy-talks-202508181541",
+      "published_at": "2025-08-18T15:41:23",
+      "impact": "high",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 4805215798664699127,
+      "title": "Pound Sterling Price News and Forecast: GBP/USD holds near 1.3540 as traders await Ukraine-Russia outcome",
+      "summary": "GBP/USD steadies during the North American session, down a minimal 0.08% amid a scarce economic docket on both sides of the Atlantic.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/pound-sterling-price-news-and-forecast-gbp-usd-holds-near-13540-as-traders-await-ukraine-russia-outcome-202508181531",
+      "published_at": "2025-08-18T15:31:36",
+      "impact": "medium",
+      "currency_pairs": [
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7685033361692077102,
+      "title": "GBP/USD holds near 1.3540 as traders await Ukraine-Russia outcome, Powell speech",
+      "summary": "GBP/USD steadies during the North American session, down a minimal 0.08% amid a scarce economic docket on both sides of the Atlantic.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/gbp-usd-holds-near-13540-as-traders-await-ukraine-russia-outcome-powell-speech-202508181452",
+      "published_at": "2025-08-18T14:52:58",
+      "impact": "high",
+      "currency_pairs": [
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 2445603438487795125,
+      "title": "Versant to rename MSNBC, drop famed peacock logos in Comcast separation",
+      "summary": "They're the first real public-facing changes in Versant's upcoming separation from Comcast's NBCUniversal.",
+      "source": "CNBC",
+      "url": "https://www.cnbc.com/2025/08/18/comcast-versant-rename-msnbc-peacock-logos.html",
+      "published_at": "2025-08-18T14:28:42",
+      "impact": "low",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 749116044761817997,
+      "title": "Canadian Dollar retreats as US Dollar firms ahead of Trump-Zelenskyy talks",
+      "summary": "The Canadian Dollar (CAD) surrenders all of its intraday gains against the US Dollar (USD) on Monday, as the Greenback stages a modest recovery ahead of high-profile Trump–Zelenskyy talks later in the day.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/canadian-dollar-retreats-as-us-dollar-firms-ahead-of-trump-zelenskyy-talks-202508181425",
+      "published_at": "2025-08-18T14:25:14",
+      "impact": "high",
+      "currency_pairs": [
+        "USD/JPY",
+        "EUR/USD",
+        "GBP/USD",
+        "GBP/CAD",
+        "USD/CAD",
+        "EUR/CAD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 7764652240468284512,
+      "title": "TMUS gains 35% off the bluebox, Buyers regain control",
+      "summary": "TMUS resumes the long term bullish sequence after finding the low for the March 2025 pullback in the blue box on 17th June 2025.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/news/tmus-gains-35-off-the-bluebox-buyers-regain-control-202508181353",
+      "published_at": "2025-08-18T13:53:56",
+      "impact": "low",
+      "currency_pairs": [
+        "EUR/USD",
+        "USD/JPY",
+        "GBP/USD"
+      ],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
+    },
+    {
+      "id": 8313851490165807985,
+      "title": "Diversifying your retirement with IRAs: A resource against market hazards",
+      "summary": "Preparing for retirement is not just a matter of accumulating savings, but also of organizing them in a way that reduces risk and increases the prospects of return.",
+      "source": "FXStreet",
+      "url": "https://www.fxstreet.com/finance/diversifying-your-retirement-with-iras-a-resource-against-market-hazards-202508181349",
+      "published_at": "2025-08-18T13:49:46",
+      "impact": "low",
+      "currency_pairs": [],
+      "type": "RSS_FEED",
+      "status": "PUBLISHED"
     }
   ]
 }

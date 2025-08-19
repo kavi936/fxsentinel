@@ -11,6 +11,11 @@
   background: transparent;
 }
 
+/* When Alerts tab is active, make dashboard background transparent */
+.dashboard.alerts-active {
+  background: transparent;
+}
+
 /* Compact Static Navbar */
 .dashboard-navbar {
   background: #000000;

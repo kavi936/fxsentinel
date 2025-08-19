@@ -1805,6 +1805,77 @@ def refresh_forex_prices():
             'message': str(e)
         }), 500
 
+@app.route('/api/market-sentiment', methods=['GET', 'OPTIONS'])
+def get_market_sentiment():
+    """Get comprehensive market sentiment analysis"""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+    
+    try:
+        print("🔍 Fetching market sentiment data...")
+        
+        # Import the sentiment service
+        from services.market_sentiment_service import market_sentiment_service
+        
+        # Get sentiment data
+        sentiment_data = market_sentiment_service.get_market_sentiment()
+        
+        print(f"✅ Successfully fetched sentiment data for trading day: {sentiment_data.get('trading_day')}")
+        
+        return jsonify(sentiment_data)
+        
+    except Exception as e:
+        print(f"❌ Error fetching market sentiment: {e}")
+        return jsonify({
+            'error': 'Failed to fetch market sentiment',
+            'message': str(e),
+            'timestamp': datetime.now().isoformat(),
+            'trading_day': datetime.now().strftime('%Y-%m-%d')
+        }), 500
+
+@app.route('/api/sentiment/refresh', methods=['POST', 'OPTIONS'])
+def refresh_sentiment():
+    """Force refresh sentiment calculations"""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+    
+    try:
+        print("🔄 Manual sentiment refresh requested...")
+        
+        # Import the sentiment service
+        from services.market_sentiment_service import market_sentiment_service
+        
+        # Force fresh calculation by clearing cache
+        market_sentiment_service.current_sentiment = None
+        
+        # Get fresh sentiment data
+        sentiment_data = market_sentiment_service.get_market_sentiment()
+        
+        print(f"✅ Successfully refreshed sentiment data")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Sentiment data refreshed successfully',
+            'data': sentiment_data
+        })
+        
+    except Exception as e:
+        print(f"❌ Error refreshing sentiment: {e}")
+        return jsonify({
+            'error': 'Failed to refresh sentiment',
+            'message': str(e)
+        }), 500
+
 def get_unirate_prices():
     """Get prices from UniRateAPI"""
     pairs = [

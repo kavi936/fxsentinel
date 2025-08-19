@@ -864,8 +864,8 @@ const Overview = () => {
                         <div className="event-header-row">
                           <h3 className="event-title">{event.title}</h3>
                           <div className="status-box">
-                            <span className="currency">{event.currency}</span>
-                            <span className="status-indicator upcoming">{event.status}</span>
+                            <span className="currency-badge">{event.currency}</span>
+                            <span className="event-status-indicator upcoming">{event.status}</span>
                           </div>
                         </div>
                         <div className="event-meta-row">

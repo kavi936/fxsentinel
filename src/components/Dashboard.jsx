@@ -7,7 +7,6 @@ import './Dashboard.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import Overview from './Overview';
-import Markets from './Markets';
 import Alerts from './Alerts';
 import TimezoneSettings from './TimezoneSettings';
 import NotificationsPopup from './NotificationsPopup';
@@ -607,7 +606,7 @@ function Dashboard() {
   }
 
   return (
-    <div className={`dashboard ${activeTab === 'overview' ? 'overview-active' : ''}`}>
+    <div className={`dashboard ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''}`}>
       {/* Compact Static Navbar */}
       <nav className="dashboard-navbar">
         <div className="navbar-container">
@@ -640,12 +639,6 @@ function Dashboard() {
                 onClick={() => setActiveTab('overview')}
               >
                 Overview
-              </button>
-              <button 
-                className={`nav-tab ${activeTab === 'markets' ? 'active' : ''}`}
-                onClick={() => setActiveTab('markets')}
-              >
-                Markets
               </button>
               <button 
                 className={`nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
@@ -749,12 +742,6 @@ function Dashboard() {
                 Overview
               </button>
               <button 
-                className={`mobile-nav-tab ${activeTab === 'markets' ? 'active' : ''}`}
-                onClick={() => handleMobileTabChange('markets')}
-              >
-                Markets
-              </button>
-              <button 
                 className={`mobile-nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
                 onClick={() => handleMobileTabChange('alerts')}
               >
@@ -846,24 +833,15 @@ function Dashboard() {
         </div>
       )}
 
-            <main className="dashboard-main">
-        {activeTab === 'markets' && (
-          <Markets 
-            tradingData={tradingData}
-            aiInsights={aiInsights}
-            getSentimentColor={getSentimentColor}
-          />
-        )}
-
-        {activeTab === 'alerts' && (
-          <Alerts 
-            alerts={alerts}
-            alertStats={alertStats}
-            alertSettings={alertSettings}
-            updateAlertSettings={updateAlertSettings}
-          />
-        )}
-      </main>
+      {/* Alerts Tab - Rendered outside dashboard-main for full screen */}
+      {activeTab === 'alerts' && (
+        <Alerts 
+          alerts={alerts}
+          alertStats={alertStats}
+          alertSettings={alertSettings}
+          updateAlertSettings={updateAlertSettings}
+        />
+      )}
 
       {/* Overview Tab - Rendered outside dashboard-main for full screen */}
       {activeTab === 'overview' && (
