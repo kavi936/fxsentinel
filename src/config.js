@@ -33,6 +33,9 @@ export const config = {
     backend: API_BASE_URL,
     enhancedAnalysis: (id) => `${API_BASE_URL}/api/enhanced-analysis/${id}`,
     newsSentiment: `${API_BASE_URL}/api/news-sentiment`,
-    technicalAnalysis: (pair) => `${API_BASE_URL}/api/technical-analysis/${pair}`
+    technicalAnalysis: (pair) => `${API_BASE_URL}/api/technical-analysis/${pair}`,
+    // Market sentiment endpoints
+    marketSentiment: `${API_BASE_URL}/api/market-sentiment`,
+    sentimentRefresh: `${API_BASE_URL}/api/sentiment/refresh`
   }
 }; 

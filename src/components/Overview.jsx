@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
+import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
 import LiveNewsFeed from './LiveNewsFeed';
 import { config } from '../config';
 import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
@@ -7,6 +8,11 @@ import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 
 const Overview = () => {
+  // Helper function to capitalize sentiment values
+  const capitalizeSentiment = (value) => {
+    return value.charAt(0).toUpperCase() + value.slice(1);
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPairs, setSelectedPairs] = useState([]);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
@@ -51,6 +57,18 @@ const Overview = () => {
   });
   
   const { prices, loading, error } = useForexPrices();
+  const { 
+    sentiment, 
+    loading: sentimentLoading, 
+    error: sentimentError, 
+    lastUpdate,
+    refreshSentiment, 
+    getConditionValue, 
+    getConditionPercentage, 
+    getPairSentiment, 
+    getSentimentColor, 
+    formatTimeAgo 
+  } = useMarketSentiment();
 
   // Timezone state
   const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
@@ -1447,8 +1465,8 @@ const Overview = () => {
                         <div className="event-header-row">
                           <h3 className="event-title">{event.title}</h3>
                           <div className="status-box">
-                            <span className="currency">{event.currency}</span>
-                            <span className={`status-indicator ${event.status.toLowerCase()}`}>{event.status}</span>
+                            <span className="currency-badge">{event.currency}</span>
+                            <span className={`event-status-indicator ${event.status.toLowerCase()}`}>{event.status}</span>
                           </div>
                         </div>
                         <div className="event-meta-row">
@@ -1836,7 +1854,12 @@ const Overview = () => {
                 <h2 className="sentiment-title">MARKET SENTIMENT</h2>
               </div>
               <div className="sentiment-controls">
-                <button className="sentiment-refresh-btn" onClick={() => console.log('Refresh sentiment')}>
+                <button 
+                  className={`sentiment-refresh-btn ${sentimentLoading ? 'spinning' : ''}`}
+                  onClick={refreshSentiment}
+                  disabled={sentimentLoading}
+                  title="Refresh Market Sentiment"
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>
@@ -1844,25 +1867,38 @@ const Overview = () => {
               </div>
             </div>
             <div className="sentiment-content">
-              <div className="sentiment-overview">
-                <div className="sentiment-indicator">
-                  <div className="sentiment-label">Overall Market Sentiment</div>
-                  <div className="sentiment-value bullish">Bullish</div>
-                  <div className="sentiment-bar">
-                    <div className="sentiment-fill bullish" style={{width: '68%'}}></div>
-                  </div>
-                  <div className="sentiment-score">68/100</div>
+              <div className="market-conditions-overview">
+                <div className="conditions-header">
+                  <h3>Market Conditions</h3>
+                  <span className="update-time">
+                    {sentimentLoading ? 'Updating...' : `Updated ${formatTimeAgo(lastUpdate || sentiment.timestamp)}`}
+                  </span>
+                </div>
+                
+                <div className="conditions-grid">
+                  {sentiment.market_conditions.map((condition, index) => (
+                    <div key={index} className="condition-item">
+                      <div className="condition-label">{condition.name}</div>
+                      <div className={`condition-value ${condition.value}`}>
+                        {condition.name === 'Volatility Environment' ? `${capitalizeSentiment(condition.value)} Volatility` : 
+                         condition.name === 'Risk Appetite' ? capitalizeSentiment(condition.value) : 
+                         condition.name === 'Market Correlation' ? capitalizeSentiment(condition.value) : capitalizeSentiment(condition.value)}
+                      </div>
+                      <div className="condition-bar">
+                        <div 
+                          className="bar-fill" 
+                          style={{
+                            width: `${condition.percentage}%`,
+                            background: `linear-gradient(90deg, ${getSentimentColor(condition.value)} 0%, ${getSentimentColor(condition.value)}80 100%)`
+                          }}
+                        ></div>
+                      </div>
+                      <div className="condition-detail">{condition.detail}</div>
+                    </div>
+                  ))}
                 </div>
                 
                 <div className="sentiment-metrics">
-                  <div className="metric-item">
-                    <span className="metric-label">Risk Appetite</span>
-                    <span className="metric-value high">High</span>
-                  </div>
-                  <div className="metric-item">
-                    <span className="metric-label">Volatility Index</span>
-                    <span className="metric-value medium">Medium</span>
-                  </div>
                   <div className="metric-item">
                     <span className="metric-label">Market Stress</span>
                     <span className="metric-value low">Low</span>
@@ -1871,108 +1907,62 @@ const Overview = () => {
                     <span className="metric-label">Liquidity</span>
                     <span className="metric-value high">High</span>
                   </div>
+                  <div className="metric-item">
+                    <span className="metric-label">Momentum</span>
+                    <span className="metric-value medium">Mixed</span>
+                  </div>
+                  <div className="metric-item">
+                    <span className="metric-label">Volume</span>
+                    <span className="metric-value high">Above Avg</span>
+                  </div>
                 </div>
               </div>
               
               <div className="sentiment-breakdown">
                 <h3>Major Pairs Sentiment</h3>
                 <div className="pairs-sentiment-grid">
-                  <div className="pair-sentiment-item">
-                    <div className="pair-header">
-                      <span className="pair-name">EUR/USD</span>
-                      <span className="pair-change positive">+0.12%</span>
+                  {sentiment.pairs_sentiment.map((pair, index) => (
+                    <div key={index} className="pair-sentiment-item">
+                      <div className="pair-header">
+                        <span className="pair-name">{pair.pair}</span>
+                        <span className={`pair-change ${pair.price_change >= 0 ? 'positive' : 'negative'}`}>
+                          {pair.price_change >= 0 ? '+' : ''}{pair.price_change.toFixed(2)}%
+                        </span>
+                      </div>
+                      <div className="sentiment-gauge">
+                        <div 
+                          className={`gauge-fill ${pair.sentiment}`} 
+                          style={{
+                            width: `${pair.percentage}%`,
+                            background: `linear-gradient(90deg, ${getSentimentColor(pair.sentiment)} 0%, ${getSentimentColor(pair.sentiment)}80 100%)`
+                          }}
+                        ></div>
+                      </div>
+                      <div className="pair-metrics">
+                        <span className="metric">RSI: {pair.rsi.toFixed(0)}</span>
+                        <span className="metric">Vol: {pair.volatility.toFixed(1)}%</span>
+                      </div>
                     </div>
-                    <div className="sentiment-gauge">
-                      <div className="gauge-fill bullish" style={{width: '72%'}}></div>
-                    </div>
-                    <div className="pair-metrics">
-                      <span className="metric">RSI: 58</span>
-                      <span className="metric">Vol: 12.5%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="pair-sentiment-item">
-                    <div className="pair-header">
-                      <span className="pair-name">GBP/USD</span>
-                      <span className="pair-change negative">-0.08%</span>
-                    </div>
-                    <div className="sentiment-gauge">
-                      <div className="gauge-fill bearish" style={{width: '35%'}}></div>
-                    </div>
-                    <div className="pair-metrics">
-                      <span className="metric">RSI: 42</span>
-                      <span className="metric">Vol: 15.2%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="pair-sentiment-item">
-                    <div className="pair-header">
-                      <span className="pair-name">USD/JPY</span>
-                      <span className="pair-change positive">+0.25%</span>
-                    </div>
-                    <div className="sentiment-gauge">
-                      <div className="gauge-fill bullish" style={{width: '85%'}}></div>
-                    </div>
-                    <div className="pair-metrics">
-                      <span className="metric">RSI: 65</span>
-                      <span className="metric">Vol: 18.7%</span>
-                    </div>
-                  </div>
-                  
-                  <div className="pair-sentiment-item">
-                    <div className="pair-header">
-                      <span className="pair-name">USD/CHF</span>
-                      <span className="pair-change positive">+0.05%</span>
-                    </div>
-                    <div className="sentiment-gauge">
-                      <div className="gauge-fill neutral" style={{width: '52%'}}></div>
-                    </div>
-                    <div className="pair-metrics">
-                      <span className="metric">RSI: 51</span>
-                      <span className="metric">Vol: 8.9%</span>
-                    </div>
-                  </div>
+                  ))}
                 </div>
               </div>
               
               <div className="sentiment-factors">
                 <h3>Market Drivers</h3>
                 <div className="drivers-list">
-                  <div className="driver-item positive impact-high">
-                    <div className="driver-icon">📈</div>
-                    <div className="driver-content">
-                      <div className="driver-title">Strong US Economic Data</div>
-                      <div className="driver-description">Recent CPI and employment figures support USD strength</div>
+                  {sentiment.market_drivers.map((driver, index) => (
+                    <div key={index} className={`driver-item ${driver.sentiment} impact-${driver.impact}`}>
+                      <div className="driver-icon">
+                        {driver.sentiment === 'positive' ? '📈' : 
+                         driver.sentiment === 'negative' ? '📉' : '📊'}
+                      </div>
+                      <div className="driver-content">
+                        <div className="driver-title">{driver.title}</div>
+                        <div className="driver-description">{driver.description}</div>
+                      </div>
+                      <div className="driver-impact">{driver.impact.charAt(0).toUpperCase() + driver.impact.slice(1)} Impact</div>
                     </div>
-                    <div className="driver-impact">High Impact</div>
-                  </div>
-                  
-                  <div className="driver-item negative impact-medium">
-                    <div className="driver-icon">📉</div>
-                    <div className="driver-content">
-                      <div className="driver-title">ECB Policy Uncertainty</div>
-                      <div className="driver-description">Mixed signals on future rate decisions</div>
-                    </div>
-                    <div className="driver-impact">Medium Impact</div>
-                  </div>
-                  
-                  <div className="driver-item positive impact-medium">
-                    <div className="driver-icon">📊</div>
-                    <div className="driver-content">
-                      <div className="driver-title">Risk Sentiment Improving</div>
-                      <div className="driver-description">Global markets showing increased risk appetite</div>
-                    </div>
-                    <div className="driver-impact">Medium Impact</div>
-                  </div>
-                  
-                  <div className="driver-item neutral impact-low">
-                    <div className="driver-icon">⚖️</div>
-                    <div className="driver-content">
-                      <div className="driver-title">Central Bank Divergence</div>
-                      <div className="driver-description">Mixed policy outlooks creating balanced flows</div>
-                    </div>
-                    <div className="driver-impact">Low Impact</div>
-                  </div>
+                  ))}
                 </div>
               </div>
               
@@ -1982,10 +1972,10 @@ const Overview = () => {
                   <span className="outlook-time">Next 24h</span>
                 </div>
                 <div className="summary-content">
-                  <p>Overall market sentiment remains bullish with strong USD fundamentals and improving risk appetite. Key focus on upcoming Fed minutes and ECB commentary. Expect continued USD strength against EUR and GBP, while JPY weakness persists.</p>
+                  <p>{sentiment.market_outlook}</p>
                 </div>
                 <div className="summary-actions">
-                  <button className="action-btn primary">View Detailed Analysis</button>
+                  <button className="action-btn primary">View Detailed Analysis - Coming Soon</button>
                   <button className="action-btn secondary">Set Alerts</button>
                 </div>
               </div>

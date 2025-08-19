@@ -733,12 +733,14 @@
 .currency-badge {
   background: linear-gradient(135deg, #333333 0%, #444444 100%);
   color: white;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
   font-weight: 600;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  display: inline-block;
+  line-height: 1.2;
 }
 
 /* Filter Modal Actions */
@@ -891,7 +893,7 @@
   gap: 8px;
 }
 
-.currency {
+.currency-badge {
   font-size: 13px;
   font-weight: 700;
   color: #FF6B6B;
@@ -899,7 +901,7 @@
   letter-spacing: 0.5px;
 }
 
-.status-indicator {
+.event-status-indicator {
   font-size: 10px;
   font-weight: 700;
   padding: 5px 10px;
@@ -908,7 +910,7 @@
   letter-spacing: 0.8px;
 }
 
-.status-indicator.upcoming {
+.event-status-indicator.upcoming {
   color: #ffffff;
   background: linear-gradient(135deg, #FFA500 0%, #FFB84D 100%);
   border: none;

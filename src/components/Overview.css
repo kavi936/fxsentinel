@@ -11,7 +11,7 @@
   max-width: 100%;
   margin: 0 auto;
   padding: 20px;
-  padding-top: 0px; /* Reduced padding to bring ticker closer to navbar */
+  padding-top: 80px; /* Added top padding to account for fixed navbar (60px) + some spacing */
   line-height: 1;
 }
 
@@ -349,9 +349,9 @@
   color: #ffffff;
 }
 
-.calendar-refresh-btn.refreshing svg,
-.ai-refresh-btn.refreshing svg,
-.sentiment-refresh-btn.refreshing svg {
+.calendar-refresh-btn.spinning svg,
+.ai-refresh-btn.spinning svg,
+.sentiment-refresh-btn.spinning svg {
   animation: spin 1s linear infinite;
 }
 
@@ -914,15 +914,17 @@
 .currency-badge {
   background: linear-gradient(135deg, #ff4444 0%, #cc3333 100%);
   color: white;
-  padding: 6px 10px;
-  border-radius: 8px;
-  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 10px;
   font-weight: 700;
   border: 1px solid rgba(255, 68, 68, 0.5);
   box-shadow: 0 2px 8px rgba(255, 68, 68, 0.3);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
+  display: inline-block;
+  line-height: 1.2;
 }
 
 .currency-badge::before {
@@ -1145,7 +1147,7 @@
   letter-spacing: 0.5px;
 }
 
-.status-indicator {
+.event-status-indicator {
   font-size: 10px;
   font-weight: 700;
   padding: 5px 10px;
@@ -1154,7 +1156,7 @@
   letter-spacing: 0.8px;
 }
 
-.status-indicator.upcoming {
+.event-status-indicator.upcoming {
   color: #ffffff;
   background: linear-gradient(135deg, #FFA500 0%, #FFB84D 100%);
   border: none;
@@ -1164,7 +1166,7 @@
   box-shadow: 0 2px 6px rgba(255, 165, 0, 0.3);
 }
 
-.status-indicator.imminent {
+.event-status-indicator.imminent {
   color: #ffffff;
   background: linear-gradient(135deg, #FF4444 0%, #FF6B6B 100%);
   border: none;
@@ -1175,7 +1177,7 @@
   animation: pulse-imminent 2s ease-in-out infinite;
 }
 
-.status-indicator.completed {
+.event-status-indicator.completed {
   color: #ffffff;
   background: linear-gradient(135deg, #32CD32 0%, #50C878 100%);
   border: none;
@@ -4286,6 +4288,122 @@
 .sentiment-score {
   font-size: 14px;
   font-weight: 600;
+}
+
+/* Market Conditions Overview Styles */
+.market-conditions-overview {
+  margin-bottom: 25px;
+}
+
+.conditions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.conditions-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.update-time {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.conditions-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.condition-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.condition-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, transparent 50%, rgba(220, 53, 69, 0.05) 100%);
+  pointer-events: none;
+}
+
+.condition-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.condition-value {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  font-family: 'Space Grotesk', monospace;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.condition-value.high {
+  color: #00ff88;
+  text-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
+}
+
+.condition-value.medium {
+  color: #ffa500;
+  text-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
+}
+
+.condition-value.low {
+  color: #ff4757;
+  text-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+}
+
+.condition-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 8px;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: linear-gradient(90deg, #ff4444 0%, #ff6b6b 50%, #ff8a8a 100%);
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+.condition-detail {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+.condition-detail-center {
   color: rgba(255, 255, 255, 0.8);
   text-align: center;
   font-family: 'Space Grotesk', monospace;
