@@ -284,7 +284,14 @@ const Overview = () => {
       return isInDateRange && impactMatch && currencyMatch;
     });
     
-    return filtered;
+    // Sort events by date and time (earliest first)
+    const sortedEvents = filtered.sort((a, b) => {
+      const dateA = getEventDateTime(a);
+      const dateB = getEventDateTime(b);
+      return dateA - dateB;
+    });
+    
+    return sortedEvents;
   };
 
   // Helper function to extract event date from raw data
@@ -309,6 +316,35 @@ const Overview = () => {
     } catch (error) {
       console.error(`❌ Error parsing date for event ${event.title}:`, error);
       return null;
+    }
+  };
+
+  // Helper function to extract event date and time for sorting
+  const getEventDateTime = (event) => {
+    try {
+      const rawData = event.raw_data;
+      if (!rawData || !rawData.time) {
+        return new Date(0); // Return epoch date for invalid events
+      }
+      
+      if (rawData.time.includes(' ') && rawData.time.length > 10) {
+        // Format: "2025-08-13 00:00:00" - parse as UTC to avoid timezone issues
+        const [datePart, timePart] = rawData.time.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hour, minute, second] = timePart.split(':').map(Number);
+        
+        // Create date in UTC to avoid timezone conversion issues
+        return new Date(Date.UTC(year, month - 1, day, hour, minute, second || 0));
+      } else if (rawData.date && rawData.time) {
+        // Format: "2025-08-13" and "13:30"
+        const dateTimeStr = `${rawData.date} ${rawData.time}`;
+        return new Date(dateTimeStr);
+      }
+      
+      return new Date(0); // Return epoch date for invalid events
+    } catch (error) {
+      console.error(`❌ Error parsing event datetime for ${event.title}:`, error);
+      return new Date(0);
     }
   };
 
