@@ -427,9 +427,21 @@ function Dashboard() {
 
   const saveAlertSettings = async (settings) => {
     try {
-      await axios.post(config.endpoints.alertSettings, settings);
+      // Get current user ID (you'll need to implement this based on your auth system)
+      const userId = "0E0xJnQpYzZb8YkfQfSiwKYc8Fz2"; // For now, hardcoded
+      
+      const response = await axios.put(config.endpoints.alertSettings, {
+        userId: userId,
+        settings: settings
+      });
+      
+      if (response.data.success) {
+        console.log('✅ Alert settings saved successfully');
+      } else {
+        console.error('❌ Failed to save alert settings:', response.data.error);
+      }
     } catch (error) {
-      console.error('Error saving alert settings:', error);
+      console.error('❌ Error saving alert settings:', error);
     }
   };
 

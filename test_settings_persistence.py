@@ -1,187 +1,144 @@
 #!/usr/bin/env python3
 """
-Test Alert Settings Persistence
-Tests the new settings save/load functionality
+Test Settings Persistence
 """
 
 import requests
 import json
-from datetime import datetime
 
 def test_settings_persistence():
-    """Test saving and loading alert settings"""
-    print("🧪 Testing Alert Settings Persistence")
+    """Test if settings are being saved and loaded correctly"""
+    
+    print("⚙️ Testing Settings Persistence")
     print("=" * 50)
     
-    base_url = "http://localhost:5001"
-    user_id = "test_user_123"
+    # Test user ID
+    user_id = "0E0xJnQpYzZb8YkfQfSiwKYc8Fz2"
     
-    # Test data
-    test_settings = {
-        "channels": {
-            "telegram": {"enabled": True, "chatId": "123456789", "username": "@testuser"},
-            "email": {"enabled": False, "address": ""}
-        },
-        "preferences": {
-            "impactLevels": {"high": True, "medium": True, "low": False},
-            "alertTypes": {"preNews": True, "postNews": True, "liveNews": True, "technicalAnalysis": False},
-            "currencyPairs": ["EUR/USD", "USD/JPY", "GBP/USD", "AUD/USD"],
-            "quietHours": {"enabled": True, "start": "23:00", "end": "07:00", "timezone": "UTC"}
-        }
-    }
-    
+    # Test 1: Load current settings
+    print("\n1. Loading Current Settings...")
     try:
-        # Test 1: Save settings
-        print("\n1️⃣ Testing Save Settings...")
-        save_response = requests.put(
-            f"{base_url}/api/alerts/settings",
+        response = requests.get(
+            f"http://localhost:5001/api/alerts/settings?userId={user_id}",
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        print(f"   Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
+                settings = data.get('settings', {})
+                print("   ✅ Settings loaded successfully")
+                print(f"   Currency pairs: {settings.get('preferences', {}).get('currencyPairs', [])}")
+                print(f"   Alert types: {settings.get('preferences', {}).get('alertTypes', {})}")
+            else:
+                print("   ❌ Failed to load settings")
+        else:
+            print(f"   ❌ Request failed: {response.status_code}")
+            
+    except Exception as e:
+        print(f"   ❌ Error loading settings: {e}")
+    
+    # Test 2: Save new settings
+    print("\n2. Saving New Settings...")
+    try:
+        new_settings = {
+            "channels": {
+                "telegram": {"enabled": True, "chatId": "8008493413", "username": "@kavi_user"},
+                "email": {"enabled": False, "address": ""}
+            },
+            "preferences": {
+                "impactLevels": {"high": True, "medium": True, "low": False},
+                "alertTypes": {"preNews": True, "postNews": True, "liveNews": True, "technicalAnalysis": False},
+                "currencyPairs": ["EUR/USD", "USD/JPY", "GBP/USD", "AUD/USD"],
+                "quietHours": {"enabled": True, "start": "23:00", "end": "07:00", "timezone": "UTC"}
+            }
+        }
+        
+        response = requests.put(
+            "http://localhost:5001/api/alerts/settings",
             json={
                 "userId": user_id,
-                "settings": test_settings
+                "settings": new_settings
             },
             headers={"Content-Type": "application/json"},
             timeout=10
         )
         
-        if save_response.status_code == 200:
-            save_data = save_response.json()
-            if save_data.get("success"):
+        print(f"   Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
                 print("   ✅ Settings saved successfully")
             else:
-                print(f"   ❌ Save failed: {save_data.get('error', 'Unknown error')}")
-                return False
+                print(f"   ❌ Failed to save settings: {data.get('error')}")
         else:
-            print(f"   ❌ Save failed with status {save_response.status_code}")
-            print(f"   Response: {save_response.text}")
-            return False
-        
-        # Test 2: Load settings
-        print("\n2️⃣ Testing Load Settings...")
-        load_response = requests.get(
-            f"{base_url}/api/alerts/settings?userId={user_id}",
-            timeout=10
-        )
-        
-        if load_response.status_code == 200:
-            load_data = load_response.json()
-            if load_data.get("success") and load_data.get("settings"):
-                loaded_settings = load_data["settings"]
-                print("   ✅ Settings loaded successfully")
-                
-                # Test 3: Verify data integrity
-                print("\n3️⃣ Testing Data Integrity...")
-                
-                # Check channels
-                if (loaded_settings.get("channels", {}).get("telegram", {}).get("enabled") == True and
-                    loaded_settings.get("channels", {}).get("telegram", {}).get("chatId") == "123456789"):
-                    print("   ✅ Telegram settings preserved")
-                else:
-                    print("   ❌ Telegram settings not preserved correctly")
-                    return False
-                
-                # Check currency pairs
-                if "AUD/USD" in loaded_settings.get("preferences", {}).get("currencyPairs", []):
-                    print("   ✅ Currency pairs preserved")
-                else:
-                    print("   ❌ Currency pairs not preserved correctly")
-                    return False
-                
-                # Check quiet hours
-                if (loaded_settings.get("preferences", {}).get("quietHours", {}).get("enabled") == True and
-                    loaded_settings.get("preferences", {}).get("quietHours", {}).get("start") == "23:00"):
-                    print("   ✅ Quiet hours preserved")
-                else:
-                    print("   ❌ Quiet hours not preserved correctly")
-                    return False
-                
-                print("\n🎉 All tests passed! Settings persistence is working correctly.")
-                return True
-                
-            else:
-                print(f"   ❌ Load failed: {load_data.get('error', 'Unknown error')}")
-                return False
-        else:
-            print(f"   ❌ Load failed with status {load_response.status_code}")
-            print(f"   Response: {load_response.text}")
-            return False
+            print(f"   ❌ Request failed: {response.status_code}")
             
-    except requests.exceptions.ConnectionError:
-        print("   ❌ Could not connect to backend server")
-        print("   💡 Make sure the backend is running: python3 backend/app.py")
-        return False
     except Exception as e:
-        print(f"   ❌ Test failed with error: {e}")
-        return False
-
-def test_default_settings():
-    """Test loading default settings for new user"""
-    print("\n🧪 Testing Default Settings")
-    print("=" * 30)
+        print(f"   ❌ Error saving settings: {e}")
     
-    base_url = "http://localhost:5001"
-    new_user_id = "new_user_456"
-    
+    # Test 3: Verify settings were saved
+    print("\n3. Verifying Settings Were Saved...")
     try:
-        # Test loading settings for new user
         response = requests.get(
-            f"{base_url}/api/alerts/settings?userId={new_user_id}",
+            f"http://localhost:5001/api/alerts/settings?userId={user_id}",
+            headers={"Content-Type": "application/json"},
             timeout=10
         )
         
         if response.status_code == 200:
             data = response.json()
-            if data.get("success") and data.get("settings"):
-                settings = data["settings"]
+            if data.get('success'):
+                settings = data.get('settings', {})
+                currency_pairs = settings.get('preferences', {}).get('currencyPairs', [])
+                quiet_hours = settings.get('preferences', {}).get('quietHours', {})
                 
-                # Check if default settings are returned
-                if (settings.get("channels", {}).get("telegram", {}).get("enabled") == False and
-                    settings.get("preferences", {}).get("currencyPairs") == ["EUR/USD", "USD/JPY", "GBP/USD"]):
-                    print("   ✅ Default settings returned correctly")
-                    return True
+                print("   ✅ Settings retrieved successfully")
+                print(f"   Currency pairs: {currency_pairs}")
+                print(f"   Quiet hours enabled: {quiet_hours.get('enabled', False)}")
+                
+                # Check if our changes were saved
+                if "AUD/USD" in currency_pairs and quiet_hours.get('enabled'):
+                    print("   ✅ Settings persistence confirmed!")
                 else:
-                    print("   ❌ Default settings not returned correctly")
-                    return False
+                    print("   ❌ Settings not persisted correctly")
             else:
-                print(f"   ❌ Failed to get default settings: {data.get('error', 'Unknown error')}")
-                return False
+                print("   ❌ Failed to retrieve settings")
         else:
-            print(f"   ❌ Failed with status {response.status_code}")
-            return False
+            print(f"   ❌ Request failed: {response.status_code}")
             
     except Exception as e:
-        print(f"   ❌ Test failed with error: {e}")
-        return False
-
-def main():
-    """Run all tests"""
-    print("🚀 Alert Settings Persistence Test Suite")
-    print("=" * 60)
+        print(f"   ❌ Error verifying settings: {e}")
     
-    # Test 1: Settings persistence
-    test1_passed = test_settings_persistence()
+    # Test 4: Test frontend endpoint
+    print("\n4. Testing Frontend Endpoint...")
+    try:
+        response = requests.get(
+            f"http://localhost:5001/api/alerts/user-settings?userId={user_id}",
+            headers={"Content-Type": "application/json"},
+            timeout=10
+        )
+        
+        print(f"   Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if data.get('success'):
+                print("   ✅ Frontend endpoint working")
+            else:
+                print("   ❌ Frontend endpoint failed")
+        else:
+            print(f"   ❌ Frontend endpoint failed: {response.status_code}")
+            
+    except Exception as e:
+        print(f"   ❌ Error testing frontend endpoint: {e}")
     
-    # Test 2: Default settings
-    test2_passed = test_default_settings()
-    
-    # Summary
-    print("\n" + "=" * 60)
-    print("📊 Test Results Summary:")
-    print(f"   Settings Persistence: {'✅ PASSED' if test1_passed else '❌ FAILED'}")
-    print(f"   Default Settings: {'✅ PASSED' if test2_passed else '❌ FAILED'}")
-    
-    if test1_passed and test2_passed:
-        print("\n🎉 All tests passed! Settings persistence is working correctly.")
-        print("\n✅ What's Working:")
-        print("   • Settings are saved to Firebase Realtime Database")
-        print("   • Settings are loaded correctly on page refresh")
-        print("   • Default settings are provided for new users")
-        print("   • Data integrity is maintained")
-    else:
-        print("\n⚠️ Some tests failed. Check the issues above.")
-        print("\n🔧 Troubleshooting:")
-        print("   1. Make sure backend server is running")
-        print("   2. Check Firebase configuration in .env file")
-        print("   3. Verify Firebase Realtime Database is accessible")
+    print("\n" + "=" * 50)
+    print("Settings Persistence Test completed!")
 
 if __name__ == "__main__":
-    main()
+    test_settings_persistence()

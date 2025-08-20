@@ -533,7 +533,7 @@ from services.finnhub_historical import finnhub_historical
 
 @app.route('/api/economic-calendar')
 def get_economic_calendar():
-    """Get economic calendar events from Finnhub API"""
+    """Get economic calendar events from Finnhub API with alert triggering"""
     try:
         # Get query parameters for date range
         start_date = request.args.get('start_date')
@@ -545,6 +545,26 @@ def get_economic_calendar():
         if events:
             # Extract metadata from first event if available
             metadata = events[0].get('_metadata', {}) if events else {}
+            
+            # Trigger economic calendar alerts (non-blocking)
+            try:
+                from services.economic_calendar_alerts import economic_calendar_alerts
+                # Process events for alerts in background
+                import threading
+                def trigger_economic_alerts():
+                    try:
+                        results = economic_calendar_alerts.process_economic_calendar_for_alerts()
+                        print(f"📅 Economic calendar alert processing results: {results}")
+                    except Exception as e:
+                        print(f"❌ Error in economic calendar alert processing: {e}")
+                
+                # Start alert processing in background thread
+                alert_thread = threading.Thread(target=trigger_economic_alerts)
+                alert_thread.daemon = True
+                alert_thread.start()
+                
+            except Exception as e:
+                print(f"⚠️ Economic calendar alert triggering failed: {e}")
             
             return jsonify({
                 "events": events,
@@ -675,13 +695,18 @@ def get_economic_chart_data(event_name):
 @app.route('/api/news')
 def get_news():
     """Get aggregated news from multiple sources with optimized performance and alert triggering"""
-    """Get aggregated news from multiple sources with optimized performance"""
     try:
         # Import cache system
         from services.news_cache import news_cache
         
-        # First, try to get cached data immediately
-        cached_news = news_cache.load_news()
+        # Check if force refresh is requested
+        force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
+        
+        # First, try to get cached data immediately (unless force refresh)
+        cached_news = None
+        if not force_refresh:
+            cached_news = news_cache.load_news()
+        
         if cached_news:
             # Check if cached news contains economic calendar events (Finnhub data)
             # If it does, clear the cache to force fresh news fetch
@@ -885,6 +910,86 @@ def get_news():
             "total_articles": len(mock_news),
             "cache_status": "fallback"
         })
+
+@app.route('/api/force-refresh-news', methods=['POST'])
+def force_refresh_news():
+    """Force refresh news and trigger alerts immediately"""
+    try:
+        print("🔄 Force refreshing news...")
+        
+        # Clear cache to force fresh fetch
+        from services.news_cache import news_cache
+        news_cache.clear_cache()
+        
+        # Fetch fresh news
+        from services.news_aggregator import news_aggregator
+        from services.alternative_news_sources import alternative_news_sources
+        
+        fresh_news = []
+        
+        # Fetch RSS news
+        try:
+            rss_news = news_aggregator.get_recent_news(hours=24)
+            fresh_news.extend(rss_news)
+            print(f"✅ Fetched {len(rss_news)} RSS news articles")
+        except Exception as e:
+            print(f"❌ Error fetching RSS news: {e}")
+        
+        # Fetch alternative news
+        try:
+            alt_news = alternative_news_sources.get_alternative_news(hours=24)
+            fresh_news.extend(alt_news)
+            print(f"✅ Fetched {len(alt_news)} alternative news articles")
+        except Exception as e:
+            print(f"❌ Error fetching alternative news: {e}")
+        
+        if fresh_news:
+            # Remove duplicates and sort
+            # Import the function from the correct location
+            def remove_duplicate_news(news_list):
+                """Remove duplicate news items based on title and source"""
+                seen = set()
+                unique_news = []
+                for item in news_list:
+                    # Create a unique key based on title and source
+                    key = f"{item.get('title', '')}_{item.get('source', '')}"
+                    if key not in seen:
+                        seen.add(key)
+                        unique_news.append(item)
+                return unique_news
+            
+            fresh_news = remove_duplicate_news(fresh_news)
+            fresh_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
+            
+            # Save to cache
+            news_cache.save_news(fresh_news)
+            
+            # Trigger alerts immediately
+            try:
+                from services.news_alert_trigger import news_alert_trigger
+                results = news_alert_trigger.process_news_for_alerts(fresh_news)
+                print(f"🎯 Force refresh alert results: {results}")
+            except Exception as e:
+                print(f"❌ Error triggering alerts: {e}")
+            
+            return jsonify({
+                "success": True,
+                "message": f"Force refreshed {len(fresh_news)} news articles",
+                "articles_count": len(fresh_news),
+                "alert_results": results if 'results' in locals() else None
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "message": "No fresh news available"
+            }), 404
+            
+    except Exception as e:
+        print(f"❌ Error in force refresh: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/api/analysis/<news_id>')
 def get_analysis(news_id):
@@ -1609,21 +1714,37 @@ def get_alert_settings():
             if not user_id:
                 return jsonify({"success": False, "error": "userId is required"}), 400
             
-            # Mock alert settings
-            settings = {
-                "channels": {
-                    "telegram": {"enabled": True, "chatId": "mock_chat_id", "username": "@kavi_user"},
-                    "email": {"enabled": False, "address": ""}
-                },
-                "preferences": {
-                    "impactLevels": {"high": True, "medium": True, "low": False},
-                    "alertTypes": {"preNews": True, "postNews": True, "liveNews": True, "technicalAnalysis": False},
-                    "currencyPairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
-                    "quietHours": {"enabled": False, "start": "22:00", "end": "06:00", "timezone": "UTC"}
-                }
-            }
+            # Verify user has access (security check)
+            if not _verify_user_access(user_id):
+                return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
             
-            return jsonify({"success": True, "settings": settings})
+            # Get real settings from Firebase
+            try:
+                from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                firebase_storage = FirebaseRealtimeStorage()
+                settings = firebase_storage.get_user_alert_settings(user_id)
+                
+                if settings:
+                    return jsonify({"success": True, "settings": settings})
+                else:
+                    # Return default settings for new users
+                    default_settings = {
+                        "channels": {
+                            "telegram": {"enabled": False, "chatId": "", "username": ""},
+                            "email": {"enabled": False, "address": ""}
+                        },
+                        "preferences": {
+                            "impactLevels": {"high": True, "medium": True, "low": False},
+                            "alertTypes": {"preNews": True, "postNews": True, "liveNews": True, "technicalAnalysis": False},
+                            "currencyPairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
+                            "quietHours": {"enabled": False, "start": "22:00", "end": "06:00", "timezone": "UTC"}
+                        }
+                    }
+                    return jsonify({"success": True, "settings": default_settings})
+                    
+            except Exception as e:
+                print(f"Error getting user settings from Firebase: {e}")
+                return jsonify({"success": False, "error": "Failed to load settings"}), 500
             
         elif request.method == 'PUT':
             # For PUT requests, get userId from JSON body
@@ -1881,8 +2002,13 @@ def _verify_user_access(user_id):
     try:
         print(f"🔒 SECURITY CHECK: Verifying access for user: {user_id}")
         
-        # Block obvious invalid user IDs
-        invalid_ids = ['current_user_id', 'authenticated_user', 'test_user', 'mock_user', '']
+        # Block obvious invalid user IDs and test users
+        invalid_ids = [
+            'current_user_id', 'authenticated_user', 'test_user', 'mock_user', 
+            'new_user_test_001', 'invalid_user', 'test_authorized_user_123',
+            'test_user_123', '93dc7ac8fca1b72c6ec800f35c7ac1d7', 
+            'b58996c504c5638798eb6b511e6f49af'
+        ]
         if not user_id or user_id in invalid_ids:
             print(f"❌ BLOCKED: Invalid user_id: {user_id}")
             return False
@@ -1890,6 +2016,11 @@ def _verify_user_access(user_id):
         # Block short user IDs (should be email or Firebase UID)
         if len(user_id) < 5:
             print(f"❌ BLOCKED: User_id too short: {user_id}")
+            return False
+        
+        # Block test users that start with 'test_' or 'new_user_'
+        if user_id.startswith('test_') or user_id.startswith('new_user_'):
+            print(f"❌ BLOCKED: Test user_id: {user_id}")
             return False
         
         # For now, allow valid-looking user IDs (email format or long UID)
@@ -3345,6 +3476,79 @@ def update_alert_settings():
         
     except Exception as e:
         print(f"Error managing alert settings: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    """Get all users with alert configurations (for testing)"""
+    try:
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        firebase_storage = FirebaseRealtimeStorage()
+        
+        # Get all users from Firebase (this would need to be implemented in FirebaseRealtimeStorage)
+        # For now, return empty list as this is just for testing
+        users = []
+        
+        return jsonify(users)
+        
+    except Exception as e:
+        print(f"Error getting users: {e}")
+        return jsonify([])
+
+@app.route('/api/test-alert', methods=['POST'])
+def test_alert_with_data():
+    """Test alert with custom data (for testing)"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+        
+        user_id = data.get('user_id', 'test_user')
+        news_item = data.get('news_item', {})
+        ai_analysis = data.get('ai_analysis', {})
+        
+        # Create alert message using the news alert trigger service
+        from services.news_alert_trigger import news_alert_trigger
+        
+        message = news_alert_trigger._create_alert_message(news_item, ai_analysis)
+        
+        return jsonify({
+            "success": True,
+            "message": "Test alert message created successfully",
+            "alert_message": message
+        })
+        
+    except Exception as e:
+        print(f"Error creating test alert: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/test-alert-template', methods=['POST'])
+def test_alert_template():
+    """Test alert template creation (for testing)"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+        
+        news_item = data.get('news_item', {})
+        ai_analysis = data.get('ai_analysis', {})
+        
+        # Create alert message using the news alert trigger service
+        from services.news_alert_trigger import news_alert_trigger
+        
+        message = news_alert_trigger._create_alert_message(news_item, ai_analysis)
+        
+        return jsonify({
+            "success": True,
+            "message": "Alert template created successfully",
+            "message": message,
+            "length": len(message),
+            "has_ai_analysis": "🤖" in message,
+            "has_emojis": "🚨" in message
+        })
+        
+    except Exception as e:
+        print(f"Error testing alert template: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == '__main__':

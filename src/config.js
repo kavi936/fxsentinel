@@ -17,7 +17,7 @@ export const config = {
     tradingData: `${API_BASE_URL}/api/trading-data`,
     alerts: `${API_BASE_URL}/api/alerts`,
     aiInsights: `${API_BASE_URL}/api/ai-insights`,
-    alertSettings: `${API_BASE_URL}/api/alert-settings`,
+    alertSettings: `${API_BASE_URL}/api/alerts/settings`,
     hello: `${API_BASE_URL}/api/hello`,
     // Forex prices endpoint (secure backend call)
     forexPrices: `${API_BASE_URL}/api/forex-prices`,

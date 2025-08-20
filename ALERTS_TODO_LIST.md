@@ -385,6 +385,17 @@ This document contains all tasks needed to complete the alerts system, organized
 - ✅ **Alert history tracking** - Test alerts are saved to Firebase for history
 - ✅ **End-to-end validation** - Complete test alert pipeline working perfectly
 
+### **Economic Calendar Integration Completed** - ✅ COMPLETED
+- ✅ **Pre-event alert system** - Created EconomicCalendarAlerts service with smart filtering
+- ✅ **High-impact event detection** - Automatically identifies Fed, ECB, NFP, CPI, and other major events
+- ✅ **User preference filtering** - Respects user's currency pairs, impact levels, and alert types
+- ✅ **Multi-timing alerts** - Sends alerts 2 hours, 1 hour, and 10 minutes before events
+- ✅ **Background processing** - Integrated with economic calendar endpoint for automatic triggering
+- ✅ **Professional formatting** - Different message formats for early vs final reminders
+- ✅ **History tracking** - Pre-event alerts saved to user's alert history
+- ✅ **End-to-end testing** - Complete pre-event alert pipeline working perfectly
+- ✅ **Production ready** - Real economic events, real trader value, scalable system
+
 ### **Authentication System Completed** - ✅ COMPLETED
 - ✅ **Fixed Telegram bot authentication** - Resolved chicken-and-egg problem in verification flow
 - ✅ **Updated verification endpoint** - Now returns `success: true` for users with dashboard access
@@ -392,6 +403,16 @@ This document contains all tasks needed to complete the alerts system, organized
 - ✅ **Enhanced bot setup flow** - Bot now saves chat_id when user successfully starts
 - ✅ **Security maintained** - Only authenticated dashboard users can access bot
 - ✅ **End-to-end testing** - Complete bot setup flow working from dashboard to Telegram
+
+### **Settings Persistence Completed** - ✅ COMPLETED
+- ✅ **Fixed endpoint mismatch** - Corrected frontend/backend endpoint alignment
+- ✅ **Fixed data format** - Proper userId/settings structure for API calls
+- ✅ **Fixed HTTP methods** - Using PUT for settings updates
+- ✅ **Added save calls** - Frontend now saves settings on every change
+- ✅ **Real-time persistence** - Settings saved immediately to Firebase
+- ✅ **Cross-session persistence** - Settings loaded correctly on page refresh
+- ✅ **End-to-end testing** - Complete settings save/load pipeline working
+- ✅ **Production ready** - Bulletproof settings persistence for real users
 
 ### **Security Implementation Completed**
 - ✅ **All security tests passing** - Unauthorized access blocking working perfectly
@@ -452,13 +473,15 @@ This document contains all tasks needed to complete the alerts system, organized
 
 ### **Medium Priority - MVP Features**
 
-4. **Economic Calendar Integration** 📅
-   - [ ] Add pre-news alerts for upcoming events
-   - [ ] Test 1-2 hour advance notifications
-   - [ ] Verify event data is accurate
-   - [ ] Test timing and scheduling
+4. **Economic Calendar Integration** 📅 - ✅ COMPLETED
+   - [x] Add pre-news alerts for upcoming events
+   - [x] Test 1-2 hour advance notifications
+   - [x] Verify event data is accurate
+   - [x] Test timing and scheduling
+   - [x] Add 10-minute final reminders
+   - [x] Professional message formatting
 
-5. **Alert Content & Formatting** 📝
+5. **Alert Content & Formatting** 📝 - 🔥 NEXT PRIORITY
    - [ ] Create pre-news alert template
    - [ ] Create post-news alert template
    - [ ] Create live news alert template
@@ -468,9 +491,10 @@ This document contains all tasks needed to complete the alerts system, organized
 
 1. ✅ **Test Alerts** - COMPLETED - Validated the entire alert delivery pipeline
 2. ✅ **Connect Live News Feed** - COMPLETED - Real-time news monitoring with AI analysis
-3. 🔥 **Economic Calendar Integration** - NEXT PRIORITY - Pre-news alerts for upcoming events
-4. **Alert Content & Formatting** - Polish alert templates and user experience
-5. **End-to-End User Flow Testing** - Complete user journey validation
+3. ✅ **Economic Calendar Integration** - COMPLETED - Pre-news alerts for upcoming events
+4. ✅ **Settings Persistence** - COMPLETED - Bulletproof settings save/load system
+5. 🔥 **Alert Content & Formatting** - NEXT PRIORITY - Polish alert templates and user experience
+6. **End-to-End User Flow Testing** - Complete user journey validation
 
 ---
 

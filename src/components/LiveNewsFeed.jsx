@@ -17,6 +17,7 @@ const LiveNewsFeed = () => {
   const [selectedNews, setSelectedNews] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [forceRefreshing, setForceRefreshing] = useState(false);
 
   // Debug useEffect to monitor state changes
   useEffect(() => {
@@ -28,8 +29,8 @@ const LiveNewsFeed = () => {
 
   useEffect(() => {
     fetchNews();
-    // Set up auto-refresh every 5 minutes
-    const interval = setInterval(fetchNews, 5 * 60 * 1000);
+    // Set up auto-refresh every 2 minutes for more frequent updates
+    const interval = setInterval(fetchNews, 2 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -67,7 +68,7 @@ const LiveNewsFeed = () => {
     };
   }, [currentTimezone]);
 
-  const fetchNews = async () => {
+  const fetchNews = async (forceRefresh = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -79,7 +80,26 @@ const LiveNewsFeed = () => {
         console.log('🦊 React app - Analysis endpoint:', config.endpoints.analysis('test'));
       }
       
-      const response = await fetch(config.endpoints.news);
+      let response;
+      if (forceRefresh) {
+        // Force refresh endpoint
+        response = await fetch(`${config.API_BASE_URL}/api/force-refresh-news`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const forceData = await response.json();
+        
+        if (forceData.success) {
+          console.log('🔄 Force refresh successful:', forceData.message);
+          // Now fetch the updated news
+          response = await fetch(config.endpoints.news);
+        } else {
+          throw new Error('Force refresh failed');
+        }
+      } else {
+        response = await fetch(config.endpoints.news);
+      }
+      
       const data = await response.json();
       
       if (response.ok) {
@@ -608,7 +628,22 @@ const LiveNewsFeed = () => {
               </div>
             )}
             {activeTab === 'live' && (
-              <button onClick={fetchNews}>Refresh</button>
+              <div className="refresh-buttons">
+                <button 
+                  onClick={() => fetchNews(false)} 
+                  className="refresh-btn"
+                  disabled={loading}
+                >
+                  {loading ? 'Refreshing...' : 'Refresh'}
+                </button>
+                <button 
+                  onClick={() => fetchNews(true)} 
+                  className="force-refresh-btn"
+                  disabled={forceRefreshing}
+                >
+                  {forceRefreshing ? 'Force Refreshing...' : '🔄 Force Refresh'}
+                </button>
+              </div>
             )}
           </div>
         ) : (

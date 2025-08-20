@@ -156,28 +156,28 @@ async def start_command(update, context):
                     "4. Click 'Connect Telegram Bot'\n\n"
                     "Only authenticated dashboard users can use this bot."
                 )
+        else:
+            # Regular start command - check if user is authenticated
+            if chat_id in authenticated_users:
+                await update.message.reply_text(
+                    "Welcome back to FXSentinel Alerts\n"
+                    "**You're already authenticated and set up to receive alerts**\n\n"
+                    "**Commands:**\n"
+                    "/status - Check your alert settings\n"
+                    "/test - Send a test alert\n"
+                    "/help - Show all commands"
+                )
             else:
-                # Regular start command - check if user is authenticated
-                if chat_id in authenticated_users:
-                        await update.message.reply_text(
-                            "Welcome back to FXSentinel Alerts\n"
-                            "**You're already authenticated and set up to receive alerts**\n\n"
-                            "**Commands:**\n"
-                            "/status - Check your alert settings\n"
-                            "/test - Send a test alert\n"
-                            "/help - Show all commands"
-                        )
-                    else:
-                        await update.message.reply_text(
-                            "Access Restricted\n"
-                            "**This bot is only available to FXSentinel dashboard users**\n\n"
-                            "**To get access:**\n"
-                            "1. Visit the FXSentinel dashboard\n"
-                            "2. Log in to your account\n"
-                            "3. Go to the Alerts section\n"
-                            "4. Click 'Connect Telegram Bot'\n\n"
-                            "You'll receive a unique link to activate your bot access."
-                        )
+                await update.message.reply_text(
+                    "Access Restricted\n"
+                    "**This bot is only available to FXSentinel dashboard users**\n\n"
+                    "**To get access:**\n"
+                    "1. Visit the FXSentinel dashboard\n"
+                    "2. Log in to your account\n"
+                    "3. Go to the Alerts section\n"
+                    "4. Click 'Connect Telegram Bot'\n\n"
+                    "You'll receive a unique link to activate your bot access."
+                )
             
     except Exception as e:
         logger.error(f"Error in start command: {e}")
