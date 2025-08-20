@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class NewsCache:
-    def __init__(self, cache_file: str = 'news_cache.json', max_age_hours: int = 2, history_file: str = 'news_history.json'):
+    def __init__(self, cache_file: str = 'news_cache.json', max_age_hours: int = 0.25, history_file: str = 'news_history.json'):  # 15 minutes cache
         self.cache_file = cache_file
         self.history_file = history_file
         self.max_age_hours = max_age_hours

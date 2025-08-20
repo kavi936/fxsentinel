@@ -300,6 +300,11 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       }
     };
     setAlertPreferences(updatedPreferences);
+    
+    // Save to backend using the function passed from Dashboard
+    if (updateAlertSettings) {
+      updateAlertSettings('preferences', updatedPreferences.preferences);
+    }
   };
 
   const addCurrencyPair = (pair) => {
@@ -312,6 +317,11 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
         }
       };
       setAlertPreferences(updatedPreferences);
+      
+      // Save to backend
+      if (updateAlertSettings) {
+        updateAlertSettings('preferences', updatedPreferences.preferences);
+      }
     }
   };
 
@@ -324,6 +334,11 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       }
     };
     setAlertPreferences(updatedPreferences);
+    
+    // Save to backend
+    if (updateAlertSettings) {
+      updateAlertSettings('preferences', updatedPreferences.preferences);
+    }
   };
 
   // Disconnect Telegram
