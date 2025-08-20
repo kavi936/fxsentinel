@@ -16,7 +16,8 @@ class TelegramMonitor:
         # Telegram API credentials (will be set via environment variables)
         self.api_id = os.getenv('TELEGRAM_API_ID')
         self.api_hash = os.getenv('TELEGRAM_API_HASH')
-        self.bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        # Use news bot token for monitoring channels
+        self.bot_token = os.getenv('TELEGRAM_NEWS_BOT_TOKEN')
         self.session_name = 'fxsentinel_session'
         
         # Channel to monitor (Note: Bot API cannot read public channel messages)

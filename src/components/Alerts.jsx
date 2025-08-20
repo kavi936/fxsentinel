@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { formatTimeForTimezone } from '../utils/timezoneUtils';
 import { config } from '../config';
+import { useAuth } from '../contexts/AuthContext';
 import './Alerts.css';
 
 function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
+  const { currentUser } = useAuth();
+  
   // State for different sections and functionality
-  const [activeTab, setActiveTab] = useState('overview'); // overview, setup, preferences, history
+  const [activeTab, setActiveTab] = useState('setup'); // setup, preferences, history
   const [telegramSetup, setTelegramSetup] = useState({
     step: 'connect', // connect, verify, complete
     botUsername: '@FXSentinelBot',
@@ -31,15 +34,173 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
   const [loading, setLoading] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [showEmailSetup, setShowEmailSetup] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  
+  // Test alert functionality
+  const [testAlertLoading, setTestAlertLoading] = useState(false);
+  const [testAlertStatus, setTestAlertStatus] = useState(null);
+
+  // Get authenticated user ID
+  const getUserId = () => {
+    if (!currentUser) {
+      throw new Error('User not authenticated');
+    }
+    return currentUser.uid || currentUser.email || 'authenticated_user';
+  };
+
+  // Load saved preferences on component mount
+  useEffect(() => {
+    if (currentUser) {
+      loadAlertPreferences();
+      checkTelegramConnection();
+    }
+  }, [currentUser]);
+
+  // Check current Telegram connection status
+  const checkTelegramConnection = async () => {
+    try {
+      const userId = getUserId();
+      const response = await fetch(`${config.API_BASE_URL}/api/telegram/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.connected) {
+          // User has Telegram connected, update both states
+          setTelegramSetup(prev => ({
+            ...prev,
+            step: 'complete'
+          }));
+          
+          // Update alert preferences if not already set
+          setAlertPreferences(prev => ({
+            ...prev,
+            channels: {
+              ...prev.channels,
+              telegram: { 
+                enabled: true, 
+                chatId: data.chatId || '', 
+                username: data.username || '' 
+              }
+            }
+          }));
+          
+          console.log('✅ Telegram connection verified and updated');
+        }
+      }
+    } catch (error) {
+      console.error('Error checking Telegram connection:', error);
+    }
+  };
+
+  // Load alert preferences from backend
+  const loadAlertPreferences = async () => {
+    try {
+      setLoading(true);
+      const userId = getUserId();
+      const response = await fetch(`${config.API_BASE_URL}/api/alerts/user-settings?userId=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.settings) {
+          setAlertPreferences(prev => ({
+            ...prev,
+            ...data.settings
+          }));
+          console.log('✅ Loaded saved alert preferences');
+          
+          // Check if Telegram is already connected and update telegramSetup state
+          const telegramSettings = data.settings.channels?.telegram;
+          if (telegramSettings?.enabled && telegramSettings?.chatId) {
+            setTelegramSetup(prev => ({
+              ...prev,
+              step: 'complete'
+            }));
+            console.log('✅ Telegram already connected, setting step to complete');
+          }
+        }
+      } else {
+        console.log('No saved preferences found, using defaults');
+      }
+    } catch (error) {
+      console.error('Error loading alert preferences:', error);
+      // Continue with default preferences
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save alert preferences to backend
+  const saveAlertPreferences = async (newPreferences) => {
+    try {
+      setSavingSettings(true);
+      const userId = getUserId();
+      const response = await fetch(`${config.API_BASE_URL}/api/alerts/user-settings`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          settings: newPreferences
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          console.log('✅ Alert preferences saved successfully');
+        } else {
+          console.error('Failed to save preferences:', data.error);
+        }
+      } else {
+        console.error('Failed to save preferences:', response.status);
+      }
+    } catch (error) {
+      console.error('Error saving alert preferences:', error);
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  // Save preferences whenever they change (with debouncing)
+  useEffect(() => {
+    if (currentUser) {
+      const timeoutId = setTimeout(() => {
+        saveAlertPreferences(alertPreferences);
+      }, 1000); // Save after 1 second of no changes
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [alertPreferences, currentUser]);
+
+  // Clear test alert status when user changes
+  useEffect(() => {
+    setTestAlertStatus(null);
+  }, [currentUser]);
 
   // Telegram Bot Setup Flow
   const setupTelegramBot = async () => {
+    if (!currentUser) {
+      alert('Please log in to set up Telegram alerts');
+      return;
+    }
+    
     setTelegramSetup(prev => ({ ...prev, loading: true }));
     try {
+      const userId = getUserId();
       const response = await fetch(`${config.API_BASE_URL}/api/telegram/setup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: 'current_user_id' })
+        body: JSON.stringify({ userId: userId })
       });
       
       const data = await response.json();
@@ -57,82 +218,186 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           botLink: data.botLink,
           loading: false
         });
+      } else {
+        throw new Error(data.error || 'Failed to setup Telegram bot');
       }
     } catch (error) {
       console.error('Error setting up Telegram bot:', error);
+      alert('Failed to setup Telegram bot. Please try again.');
       setTelegramSetup(prev => ({ ...prev, loading: false }));
     }
   };
 
   const verifyTelegramConnection = async () => {
+    if (!currentUser) {
+      alert('Please log in to verify Telegram connection');
+      return;
+    }
+    
     setTelegramSetup(prev => ({ ...prev, loading: true }));
     try {
-      const response = await fetch(`${config.API_BASE_URL}/api/telegram/verify`);
+      const userId = getUserId();
+      const response = await fetch(`${config.API_BASE_URL}/api/telegram/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: userId })
+      });
+      
       const data = await response.json();
       
-      if (data.connected) {
+      if (data.success && data.connected) {
         setTelegramSetup({ step: 'complete', loading: false });
-        setAlertPreferences(prev => ({
-          ...prev,
+        const updatedPreferences = {
+          ...alertPreferences,
           channels: {
-            ...prev.channels,
+            ...alertPreferences.channels,
             telegram: { enabled: true, chatId: data.chatId, username: data.username }
           }
-        }));
+        };
+        setAlertPreferences(updatedPreferences);
+        // Save immediately when Telegram is connected
+        await saveAlertPreferences(updatedPreferences);
+      } else if (data.success && !data.connected) {
+        // User has access but bot not connected yet
+        alert('Bot setup not completed. Please complete the bot setup first.');
+        setTelegramSetup(prev => ({ ...prev, loading: false }));
+      } else {
+        throw new Error(data.error || 'Failed to verify connection');
       }
     } catch (error) {
       console.error('Error verifying Telegram connection:', error);
+      alert('Failed to verify Telegram connection. Please try again.');
       setTelegramSetup(prev => ({ ...prev, loading: false }));
     }
   };
 
   const setupEmailAlerts = () => {
     if (emailInput && emailInput.includes('@')) {
-      setAlertPreferences(prev => ({
-        ...prev,
+      const updatedPreferences = {
+        ...alertPreferences,
         channels: {
-          ...prev.channels,
+          ...alertPreferences.channels,
           email: { enabled: true, address: emailInput }
         }
-      }));
+      };
+      setAlertPreferences(updatedPreferences);
       setShowEmailSetup(false);
       setEmailInput('');
+      // Save immediately when email is connected
+      saveAlertPreferences(updatedPreferences);
     }
   };
 
   const updatePreference = (category, setting, value) => {
-    setAlertPreferences(prev => ({
-      ...prev,
+    const updatedPreferences = {
+      ...alertPreferences,
       preferences: {
-        ...prev.preferences,
+        ...alertPreferences.preferences,
         [category]: {
-          ...prev.preferences[category],
+          ...alertPreferences.preferences[category],
           [setting]: value
         }
       }
-    }));
+    };
+    setAlertPreferences(updatedPreferences);
   };
 
   const addCurrencyPair = (pair) => {
     if (pair && !alertPreferences.preferences.currencyPairs.includes(pair)) {
-      setAlertPreferences(prev => ({
-        ...prev,
+      const updatedPreferences = {
+        ...alertPreferences,
         preferences: {
-          ...prev.preferences,
-          currencyPairs: [...prev.preferences.currencyPairs, pair]
+          ...alertPreferences.preferences,
+          currencyPairs: [...alertPreferences.preferences.currencyPairs, pair]
         }
-      }));
+      };
+      setAlertPreferences(updatedPreferences);
     }
   };
 
   const removeCurrencyPair = (pair) => {
-    setAlertPreferences(prev => ({
-      ...prev,
+    const updatedPreferences = {
+      ...alertPreferences,
       preferences: {
-        ...prev.preferences,
-        currencyPairs: prev.preferences.currencyPairs.filter(p => p !== pair)
+        ...alertPreferences.preferences,
+        currencyPairs: alertPreferences.preferences.currencyPairs.filter(p => p !== pair)
       }
-    }));
+    };
+    setAlertPreferences(updatedPreferences);
+  };
+
+  // Disconnect Telegram
+  const disconnectTelegram = () => {
+    const updatedPreferences = {
+      ...alertPreferences,
+      channels: {
+        ...alertPreferences.channels,
+        telegram: { enabled: false, chatId: '', username: '' }
+      }
+    };
+    setAlertPreferences(updatedPreferences);
+    setTelegramSetup({ step: 'connect', loading: false });
+    // Clear test alert status when disconnecting
+    setTestAlertStatus(null);
+    // Save immediately when Telegram is disconnected
+    saveAlertPreferences(updatedPreferences);
+  };
+
+  // Disconnect Email
+  const disconnectEmail = () => {
+    const updatedPreferences = {
+      ...alertPreferences,
+      channels: {
+        ...alertPreferences.channels,
+        email: { enabled: false, address: '' }
+      }
+    };
+    setAlertPreferences(updatedPreferences);
+    // Save immediately when email is disconnected
+    saveAlertPreferences(updatedPreferences);
+  };
+
+  // Send test alert
+  const sendTestAlert = async () => {
+    if (!currentUser) {
+      alert('Please log in to send test alerts');
+      return;
+    }
+
+    setTestAlertLoading(true);
+    setTestAlertStatus(null);
+    
+    try {
+      const userId = getUserId();
+      const response = await fetch(`${config.API_BASE_URL}/api/alerts/test`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId: userId,
+          alertType: 'test',
+          message: 'This is a test alert from FXSentinel to verify your connection is working!'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setTestAlertStatus({
+          type: 'success',
+          message: '✅ Test alert sent successfully! Check your Telegram.'
+        });
+      } else {
+        throw new Error(data.error || 'Failed to send test alert');
+      }
+    } catch (error) {
+      console.error('Error sending test alert:', error);
+      setTestAlertStatus({
+        type: 'error',
+        message: `❌ Failed to send test alert: ${error.message}`
+      });
+    } finally {
+      setTestAlertLoading(false);
+    }
   };
 
   return (
@@ -140,12 +405,6 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       <div className="alerts-container">
         {/* Navigation Tabs */}
         <div className="alerts-tabs">
-          <button 
-            className={`tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </button>
           <button 
             className={`tab-btn ${activeTab === 'setup' ? 'active' : ''}`}
             onClick={() => setActiveTab('setup')}
@@ -166,139 +425,16 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           </button>
         </div>
 
+        {/* Settings Save Indicator */}
+        {savingSettings && (
+          <div className="settings-save-indicator">
+            <span>Saving settings...</span>
+          </div>
+        )}
+
         {/* Tab Content */}
         <div className="alerts-tab-content">
           
-          {/* Overview Tab */}
-          {activeTab === 'overview' && (
-            <div className="alerts-overview-content">
-              <div className="overview-grid">
-                <div className="overview-card">
-                  <h3>Telegram Alerts</h3>
-                  <div className="alert-status-indicator">
-                    {alertPreferences.channels.telegram.enabled ? (
-                      <div className="status-success">
-                        <span className="status-icon">✓</span>
-                        <span>Connected as @{alertPreferences.channels.telegram.username}</span>
-                      </div>
-                    ) : (
-                      <div className="status-warning">
-                        <span className="status-icon">!</span>
-                        <span>Not connected</span>
-                      </div>
-                    )}
-                  </div>
-                  <button 
-                    className="setup-btn"
-                    onClick={() => setActiveTab('setup')}
-                  >
-                    {alertPreferences.channels.telegram.enabled ? 'Manage' : 'Connect'}
-                  </button>
-                </div>
-
-                <div className="overview-card">
-                  <h3>Email Alerts</h3>
-                  <div className="alert-status-indicator">
-                    {alertPreferences.channels.email.enabled ? (
-                      <div className="status-success">
-                        <span className="status-icon">✓</span>
-                        <span>Connected to {alertPreferences.channels.email.address}</span>
-                      </div>
-                    ) : (
-                      <div className="status-warning">
-                        <span className="status-icon">!</span>
-                        <span>Not connected</span>
-                      </div>
-                    )}
-                  </div>
-                  <button 
-                    className="setup-btn"
-                    onClick={() => setActiveTab('setup')}
-                  >
-                    {alertPreferences.channels.email.enabled ? 'Manage' : 'Connect'}
-                  </button>
-                </div>
-
-                <div className="overview-card">
-                  <h3>Alert Types</h3>
-                  <div className="alert-types-summary">
-                    <div className="type-item">
-                      <span className="type-icon">•</span>
-                      <span>Live News: {alertPreferences.preferences.alertTypes.liveNews ? 'ON' : 'OFF'}</span>
-                    </div>
-                    <div className="type-item">
-                      <span className="type-icon">•</span>
-                      <span>Pre-News: {alertPreferences.preferences.alertTypes.preNews ? 'ON' : 'OFF'}</span>
-                    </div>
-                    <div className="type-item">
-                      <span className="type-icon">•</span>
-                      <span>Post-News: {alertPreferences.preferences.alertTypes.postNews ? 'ON' : 'OFF'}</span>
-                    </div>
-                  </div>
-                  <button 
-                    className="setup-btn"
-                    onClick={() => setActiveTab('preferences')}
-                  >
-                    Configure
-                  </button>
-                </div>
-
-                <div className="overview-card">
-                  <h3>Impact Levels</h3>
-                  <div className="impact-summary">
-                    <div className="impact-item high">
-                      <span className="impact-dot">●</span>
-                      <span>High: {alertPreferences.preferences.impactLevels.high ? 'ON' : 'OFF'}</span>
-                    </div>
-                    <div className="impact-item medium">
-                      <span className="impact-dot">●</span>
-                      <span>Medium: {alertPreferences.preferences.impactLevels.medium ? 'ON' : 'OFF'}</span>
-                    </div>
-                    <div className="impact-item low">
-                      <span className="impact-dot">●</span>
-                      <span>Low: {alertPreferences.preferences.impactLevels.low ? 'ON' : 'OFF'}</span>
-                    </div>
-                  </div>
-                  <button 
-                    className="setup-btn"
-                    onClick={() => setActiveTab('preferences')}
-                  >
-                    Configure
-                  </button>
-                </div>
-              </div>
-
-              <div className="recent-alerts-preview">
-                <h3>Recent Alerts</h3>
-                <div className="alerts-preview-list">
-                  {alerts.slice(0, 3).map(alert => (
-                    <div key={alert.id} className="alert-preview-item">
-                      <div className="alert-preview-icon">
-                        {alert.type === 'telegram' ? 'T' : 'E'}
-                      </div>
-                      <div className="alert-preview-content">
-                        <h4>{alert.event}</h4>
-                        <p>{alert.status === 'sent' ? 'Delivered' : 'Scheduled'}</p>
-                        <small>{formatTimeForTimezone(alert.timestamp, null, 'datetime')}</small>
-                      </div>
-                    </div>
-                  ))}
-                  {alerts.length === 0 && (
-                    <div className="no-alerts">
-                      <p>No alerts sent yet. Set up your preferences to start receiving alerts!</p>
-                    </div>
-                  )}
-                </div>
-                <button 
-                  className="view-all-btn"
-                  onClick={() => setActiveTab('history')}
-                >
-                  View All Alerts
-                </button>
-              </div>
-            </div>
-          )}
-
           {/* Setup Tab */}
           {activeTab === 'setup' && (
             <div className="setup-content">
@@ -356,18 +492,23 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                       <div className="success-icon">✓</div>
                       <p>Telegram bot connected successfully!</p>
                       <p>You'll now receive alerts on Telegram</p>
+                      <div className="test-alert-section">
+                        <button 
+                          className="test-alert-btn"
+                          onClick={sendTestAlert}
+                          disabled={testAlertLoading}
+                        >
+                          {testAlertLoading ? 'Sending...' : 'Send Test Alert'}
+                        </button>
+                        {testAlertStatus && (
+                          <p className={`test-alert-status ${testAlertStatus.type}`}>
+                            {testAlertStatus.message}
+                          </p>
+                        )}
+                      </div>
                       <button 
                         className="disconnect-btn"
-                        onClick={() => {
-                          setTelegramSetup({ step: 'connect', loading: false });
-                          setAlertPreferences(prev => ({
-                            ...prev,
-                            channels: {
-                              ...prev.channels,
-                              telegram: { enabled: false, chatId: '', username: '' }
-                            }
-                          }));
-                        }}
+                        onClick={disconnectTelegram}
                       >
                         Disconnect
                       </button>
@@ -376,7 +517,16 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                 </div>
 
                 {/* Email Setup */}
-                <div className="setup-card">
+                <div className="setup-card email-setup-card">
+                  <div className="coming-soon-overlay">
+                    <div className="coming-soon-content">
+                      <div className="coming-soon-icon">🚀</div>
+                      <h4>Coming Soon</h4>
+                      <p>Email alerts will be available in the next update</p>
+                      <div className="coming-soon-badge">MVP: Telegram Only</div>
+                    </div>
+                  </div>
+                  
                   <h3>Email Alerts Setup</h3>
                   <p>Receive alerts via email as backup or primary method</p>
                   
@@ -394,13 +544,14 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                           value={emailInput}
                           onChange={(e) => setEmailInput(e.target.value)}
                           className="email-input"
+                          disabled
                         />
                         <button 
                           className="setup-email-btn"
                           onClick={setupEmailAlerts}
-                          disabled={!emailInput || !emailInput.includes('@')}
+                          disabled={true}
                         >
-                          Connect Email
+                          Coming Soon
                         </button>
                       </div>
                     </div>
@@ -411,15 +562,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                       <p>Alerts will be sent to: {alertPreferences.channels.email.address}</p>
                       <button 
                         className="disconnect-btn"
-                        onClick={() => {
-                          setAlertPreferences(prev => ({
-                            ...prev,
-                            channels: {
-                              ...prev.channels,
-                              email: { enabled: false, address: '' }
-                            }
-                          }));
-                        }}
+                        onClick={disconnectEmail}
                       >
                         Disconnect
                       </button>

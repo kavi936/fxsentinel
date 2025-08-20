@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Auth Debug Test</title>
+</head>
+<body>
+    <h1>🔍 Authentication Debug Test</h1>
+    
+    <div id="status">Loading...</div>
+    
+    <button onclick="testAuth()">Test Authentication</button>
+    <button onclick="testAPI()">Test API Call</button>
+    
+    <div id="results"></div>
+
+    <script>
+        async function testAuth() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>🔍 Authentication Test Results:</h3>';
+            
+            // Test 1: Check if we can access the API directly
+            try {
+                const response = await fetch('http://localhost:5001/api/alerts/user-settings?userId=test@example.com');
+                const data = await response.json();
+                
+                results.innerHTML += `
+                    <p><strong>✅ API Test:</strong> Success</p>
+                    <p><strong>Response:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                results.innerHTML += `
+                    <p><strong>❌ API Test:</strong> Failed</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+            }
+            
+            // Test 2: Check what user ID would be sent
+            const testUserIds = [
+                'test@example.com',
+                'authenticated_user',
+                'current_user_id',
+                'user123@gmail.com'
+            ];
+            
+            results.innerHTML += '<h4>🧪 User ID Validation:</h4>';
+            testUserIds.forEach(userId => {
+                const isValid = userId && 
+                              !['current_user_id', 'authenticated_user', 'test_user', 'mock_user', ''].includes(userId) &&
+                              (userId.includes('@') || userId.length > 15);
+                
+                results.innerHTML += `<p>${userId}: ${isValid ? '✅ VALID' : '❌ INVALID'}</p>`;
+            });
+        }
+        
+        async function testAPI() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h3>🔍 API Test Results:</h3>';
+            
+            const testCases = [
+                { userId: 'test@example.com', expected: 'allowed' },
+                { userId: 'authenticated_user', expected: 'blocked' },
+                { userId: 'current_user_id', expected: 'blocked' },
+                { userId: 'user123@gmail.com', expected: 'allowed' }
+            ];
+            
+            for (const testCase of testCases) {
+                try {
+                    const response = await fetch(`http://localhost:5001/api/alerts/user-settings?userId=${testCase.userId}`);
+                    const status = response.status;
+                    const isAllowed = status === 200;
+                    
+                    results.innerHTML += `
+                        <p><strong>${testCase.userId}:</strong> 
+                        ${isAllowed ? '✅ ALLOWED' : '❌ BLOCKED'} (Status: ${status})</p>
+                    `;
+                } catch (error) {
+                    results.innerHTML += `
+                        <p><strong>${testCase.userId}:</strong> ❌ ERROR: ${error.message}</p>
+                    `;
+                }
+            }
+        }
+        
+        // Check if backend is running
+        fetch('http://localhost:5001/api/alerts/user-settings?userId=test@example.com')
+            .then(() => {
+                document.getElementById('status').innerHTML = '✅ Backend is running';
+            })
+            .catch(() => {
+                document.getElementById('status').innerHTML = '❌ Backend is not running - start it with: cd backend && python3 app.py';
+            });
+    </script>
+</body>
+</html>

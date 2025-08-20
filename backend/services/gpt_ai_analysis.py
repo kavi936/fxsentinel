@@ -115,7 +115,7 @@ class GPTAIAnalyzer:
             try:
                 self.client = openai.OpenAI(
                     api_key=self.api_key,
-                    timeout=30.0  # 30 second timeout for API calls
+                    timeout=60.0  # 60 second timeout for API calls
                 )
                 print(f"🔍 GPT Analyzer initialized with API key: VALID (30s timeout)")
             except Exception as e:
