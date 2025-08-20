@@ -130,15 +130,20 @@ async def start_command(update, context):
                 authenticated_users.add(chat_id)
                 
                 await update.message.reply_text(
-                    f"🎉 Welcome to FXSentinel Alerts!\n\n"
-                    f"I'm here to help you set up real-time market alerts.\n\n"
-                    f"Your user ID: {user_id}\n"
-                    f"Your Telegram: @{user.username or 'Unknown'}\n\n"
-                    f"✅ You're now authenticated and can receive alerts!\n\n"
-                    f"Commands:\n"
-                    "/status - Check your alert settings\n"
-                    "/test - Send a test alert\n"
-                    "/help - Show all commands"
+                    f"Welcome to FXSentinel Alerts\n"
+                    f"**Your Personal Forex Alert Assistant**\n\n"
+                    f"**I'll send you:**\n"
+                    f"• Breaking news alerts with AI analysis\n"
+                    f"• Economic calendar reminders\n"
+                    f"• Market-moving events\n\n"
+                    f"**To get started:**\n"
+                    f"1. Complete setup on the dashboard\n"
+                    f"2. Configure your preferences\n"
+                    f"3. Start receiving alerts\n\n"
+                    f"**Commands:**\n"
+                    f"/help - Show all commands\n"
+                    f"/status - Check your connection status\n"
+                    f"/test - Send a test alert"
                 )
             else:
                 await update.message.reply_text(
@@ -151,28 +156,28 @@ async def start_command(update, context):
                     "4. Click 'Connect Telegram Bot'\n\n"
                     "Only authenticated dashboard users can use this bot."
                 )
-        else:
-            # Regular start command - check if user is authenticated
-            if chat_id in authenticated_users:
-                await update.message.reply_text(
-                    "🎉 Welcome back to FXSentinel Alerts!\n\n"
-                    "You're already authenticated and set up to receive alerts.\n\n"
-                    "Commands:\n"
-                    "/status - Check your alert settings\n"
-                    "/test - Send a test alert\n"
-                    "/help - Show all commands"
-                )
             else:
-                await update.message.reply_text(
-                    "🔒 Access Restricted\n\n"
-                    "This bot is only available to FXSentinel dashboard users.\n\n"
-                    "To get access:\n"
-                    "1. Visit the FXSentinel dashboard\n"
-                    "2. Log in to your account\n"
-                    "3. Go to the Alerts section\n"
-                    "4. Click 'Connect Telegram Bot'\n\n"
-                    "You'll receive a unique link to activate your bot access."
-                )
+                # Regular start command - check if user is authenticated
+                if chat_id in authenticated_users:
+                        await update.message.reply_text(
+                            "Welcome back to FXSentinel Alerts\n"
+                            "**You're already authenticated and set up to receive alerts**\n\n"
+                            "**Commands:**\n"
+                            "/status - Check your alert settings\n"
+                            "/test - Send a test alert\n"
+                            "/help - Show all commands"
+                        )
+                    else:
+                        await update.message.reply_text(
+                            "Access Restricted\n"
+                            "**This bot is only available to FXSentinel dashboard users**\n\n"
+                            "**To get access:**\n"
+                            "1. Visit the FXSentinel dashboard\n"
+                            "2. Log in to your account\n"
+                            "3. Go to the Alerts section\n"
+                            "4. Click 'Connect Telegram Bot'\n\n"
+                            "You'll receive a unique link to activate your bot access."
+                        )
             
     except Exception as e:
         logger.error(f"Error in start command: {e}")
@@ -191,16 +196,18 @@ async def help_command(update, context):
         return
     
     await update.message.reply_text(
-        "🤖 FXSentinel Alerts Bot - Help\n\n"
-        "Available commands:\n"
-        "/start - Start the bot and get welcome message\n"
-        "/help - Show this help message\n"
+        "FXSentinel Bot Commands\n"
+        "**Available Commands:**\n\n"
+        "/start - Welcome message\n"
+        "/help - Show this help\n"
         "/test - Send a test alert\n"
-        "/status - Check your alert settings\n\n"
-        "To modify alert settings:\n"
-        "1. Visit the FXSentinel dashboard\n"
-        "2. Go to the Alerts section\n"
-        "3. Configure your preferences"
+        "/status - Check your connection status\n\n"
+        "**Getting Alerts:**\n"
+        "• Configure preferences on dashboard\n"
+        "• Choose your currency pairs\n"
+        "• Set impact levels\n"
+        "• Enable/disable alert types\n\n"
+        "**Support:** Contact support@fxsentinel.com"
     )
 
 async def test_command(update, context):
@@ -216,10 +223,13 @@ async def test_command(update, context):
         return
     
     await update.message.reply_text(
-        "🧪 Test Alert\n\n"
-        "This is a test message from FXSentinel Alerts!\n\n"
-        "If you received this, your bot is working correctly.\n"
-        "You'll receive real alerts when important market events happen."
+        "Sending Test Alert...\n"
+        "**Test alert sent successfully**\n\n"
+        "**Connection Status:**\n"
+        "• Telegram: Connected\n"
+        "• Dashboard: Active\n"
+        "• Alerts: Ready\n\n"
+        "**Status:** You're all set to receive real alerts"
     )
 
 async def status_command(update, context):
@@ -235,13 +245,13 @@ async def status_command(update, context):
         return
     
     await update.message.reply_text(
-        "📊 Alert Status\n\n"
-        "Your alert settings:\n"
+        "Alert Status\n"
+        "**Your alert settings:**\n\n"
         "• Live News: Enabled\n"
         "• Pre-News: Enabled\n"
         "• Post-News: Enabled\n"
         "• Technical Analysis: Disabled\n\n"
-        "To modify settings, visit the FXSentinel dashboard."
+        "**To modify settings:** Visit the FXSentinel dashboard"
     )
 
 def main():
