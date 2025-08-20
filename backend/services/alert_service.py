@@ -366,36 +366,35 @@ Sent at: {datetime.now().strftime('%H:%M UTC')}
         """Format alert message for Telegram"""
         if alert_type == 'liveNews':
             return f"""
-🔥 <b>BREAKING: {alert_data.get('title', 'Market News')}</b>
+🚨 BREAKING FOREX NEWS
+**{alert_data.get('title', 'Market News')}**
 
-📊 <b>Impact:</b> {alert_data.get('impact_level', 'Medium').upper()}
-💱 <b>Pairs:</b> {', '.join(alert_data.get('currency_pairs', []))}
+**Time:** {datetime.now().strftime('%H:%M UTC')} | **Impact:** {alert_data.get('impact_level', 'Medium').upper()}
+**Pairs:** {', '.join(alert_data.get('currency_pairs', []))}
 
-🤖 <b>AI Analysis:</b>
+**AI Analysis:**
 {alert_data.get('analysis', 'Analysis not available')}
-
-⏰ {datetime.now().strftime('%H:%M UTC')}
             """.strip()
         
         elif alert_type == 'preNews':
             return f"""
-🚨 <b>UPCOMING: {alert_data.get('event_title', 'Economic Event')}</b>
+📅 ECONOMIC EVENT ALERT
+**{alert_data.get('event_title', 'Economic Event')}**
 
-⏰ <b>Time:</b> {alert_data.get('event_time', 'TBD')}
-📈 <b>Expected:</b> {alert_data.get('expected_value', 'N/A')}
-🎯 <b>Key Levels:</b> {alert_data.get('key_levels', 'N/A')}
+**Time:** {alert_data.get('event_time', 'TBD')} | **Expected:** {alert_data.get('expected_value', 'N/A')}
+**Key Levels:** {alert_data.get('key_levels', 'N/A')}
 
-💡 <b>Market Impact:</b>
+**Market Impact:**
 {alert_data.get('impact_analysis', 'Analysis not available')}
             """.strip()
         
         else:
             return f"""
-📊 <b>{alert_data.get('title', 'Alert')}</b>
+**{alert_data.get('title', 'Alert')}**
 
 {alert_data.get('content', 'No content available')}
 
-⏰ {datetime.now().strftime('%H:%M UTC')}
+**Time:** {datetime.now().strftime('%H:%M UTC')}
             """.strip()
     
     async def _log_alert_history(self, user_id: str, alert_data: Dict[str, Any], sent_via: str):

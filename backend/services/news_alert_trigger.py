@@ -211,10 +211,19 @@ class NewsAlertTrigger:
                 if self._is_quiet_hours(quiet_hours):
                     continue
                 
+                # Get the actual chat ID from Firebase
+                from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                firebase_storage = FirebaseRealtimeStorage()
+                chat_id = firebase_storage.get_telegram_chat_id(user_id)
+                
+                if not chat_id:
+                    logger.warning(f"No chat ID found for user {user_id}")
+                    continue
+                
                 # User should receive this alert
                 users_to_alert.append({
                     'user_id': user_id,
-                    'chat_id': settings.get('channels', {}).get('telegram', {}).get('chatId'),
+                    'chat_id': chat_id,  # Use the actual chat ID from Firebase
                     'settings': settings
                 })
             
@@ -348,6 +357,11 @@ class NewsAlertTrigger:
                 # Save to alert history
                 self._save_alert_history(user_data.get('user_id'), news_item, message)
                 return True
+            elif response.status_code == 400 and "chat not found" in response.text:
+                logger.error(f"Chat not found for user {user_data.get('user_id')} - chat_id: {chat_id}")
+                # This user's chat ID is invalid, we should mark them as disconnected
+                self._mark_user_disconnected(user_data.get('user_id'))
+                return False
             else:
                 logger.error(f"Failed to send alert: {response.status_code} - {response.text}")
                 return False
@@ -377,14 +391,11 @@ class NewsAlertTrigger:
             
             # Base message
             message = f"""
-🚨 **BREAKING FOREX NEWS**
-
+🚨 BREAKING FOREX NEWS
 **{title}**
 
-📊 **Details:**
-• Source: {source}
-• Currency Pairs: {pairs_text}
-• Time: {formatted_time}
+**Time:** {formatted_time} | **Source:** {source}
+**Pairs:** {pairs_text}
             """.strip()
             
             # Add AI analysis if available
@@ -397,25 +408,25 @@ class NewsAlertTrigger:
                     
                     message += f"""
 
-🤖 **AI Analysis:**
+**AI Analysis:**
 {analysis_text}
                     """.strip()
                 else:
                     message += f"""
 
-🤖 **AI Analysis:** Available on dashboard
+**AI Analysis:** Available on dashboard
                     """.strip()
             else:
                 message += f"""
 
-📈 **Market Impact:** Monitor for price action
+**Market Impact:** Monitor for price action
                 """.strip()
             
             # Add footer
             message += f"""
 
-🔗 [Read Full Article]({url})
-📱 Check dashboard for detailed analysis
+**Read Full Article:** {url}
+**Dashboard:** Detailed analysis available
             """.strip()
             
             return message
@@ -431,7 +442,8 @@ class NewsAlertTrigger:
             
             # Call the AI analysis endpoint
             analysis_url = f"{self.api_base_url}/api/enhanced-analysis/{news_id}"
-            response = requests.post(analysis_url, timeout=30)
+            headers = {'Content-Type': 'application/json'}
+            response = requests.post(analysis_url, headers=headers, timeout=30)
             
             if response.status_code == 200:
                 analysis_data = response.json()
@@ -462,11 +474,38 @@ class NewsAlertTrigger:
                 'news_source': news_item.get('source', '')
             }
             
-            firebase_storage.save_alert_history(user_id, alert_data)
+            firebase_storage.log_alert_history(user_id, alert_data)
             return True
             
         except Exception as e:
             logger.error(f"Error saving alert history: {e}")
+            return False
+    
+    def _mark_user_disconnected(self, user_id: str) -> bool:
+        """Mark user as disconnected when chat ID is invalid"""
+        try:
+            from services.firebase_realtime_storage import FirebaseRealtimeStorage
+            firebase_storage = FirebaseRealtimeStorage()
+            
+            # Update user's Telegram settings to disabled
+            user_settings = firebase_storage.get_user_alert_settings(user_id)
+            if user_settings:
+                if 'channels' not in user_settings:
+                    user_settings['channels'] = {}
+                if 'telegram' not in user_settings['channels']:
+                    user_settings['channels']['telegram'] = {}
+                
+                user_settings['channels']['telegram']['enabled'] = False
+                user_settings['channels']['telegram']['chatId'] = ''
+                
+                firebase_storage.update_user_alert_settings(user_id, user_settings)
+                logger.info(f"Marked user {user_id} as disconnected due to invalid chat ID")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error marking user as disconnected: {e}")
             return False
 
 # Global instance
