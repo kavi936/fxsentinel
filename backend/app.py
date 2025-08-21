@@ -1931,26 +1931,24 @@ def send_test_alert():
         try:
             import requests
             
-            # Create test alert content
-            test_content = f"""
-🧪 **FXSentinel Test Alert**
+            # Create test alert content with proper HTML formatting
+            test_content = f"""🧪 <b>FXSentinel Test Alert</b>
 
 {message}
 
-📊 **Test Details:**
+📊 <b>Test Details:</b>
 • Alert Type: {alert_type}
 • User ID: {user_id[:8]}...
 • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
 • Status: ✅ Connection Verified
 
-🎯 **Your alert preferences are working correctly!**
+🎯 <b>Your alert preferences are working correctly!</b>
 You'll receive real alerts for:
 • Breaking news
 • Economic events
 • Market analysis
 
-Stay tuned for real market alerts! 📈
-            """.strip()
+Stay tuned for real market alerts! 📈"""
             
             # Send the alert directly using Telegram Bot API HTTP request
             bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -3616,6 +3614,12 @@ def test_alert_with_data():
         
         # Create alert message using the news alert trigger service
         from services.news_alert_trigger import news_alert_trigger
+        
+        # Ensure the news item has proper data
+        if not news_item.get('timestamp'):
+            news_item['timestamp'] = datetime.now().isoformat()
+        if not news_item.get('source'):
+            news_item['source'] = 'Test Source'
         
         message = news_alert_trigger._create_alert_message(news_item, ai_analysis)
         
