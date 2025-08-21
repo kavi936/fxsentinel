@@ -40,6 +40,14 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
   const [testAlertLoading, setTestAlertLoading] = useState(false);
   const [testAlertStatus, setTestAlertStatus] = useState(null);
 
+  // Alert history functionality
+  const [alertHistory, setAlertHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyFilters, setHistoryFilters] = useState({
+    channel: 'all',
+    type: 'all'
+  });
+
   // Get authenticated user ID
   const getUserId = () => {
     if (!currentUser) {
@@ -55,6 +63,13 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       checkTelegramConnection();
     }
   }, [currentUser]);
+
+  // Load alert history when history tab is active
+  useEffect(() => {
+    if (activeTab === 'history' && currentUser) {
+      loadAlertHistory();
+    }
+  }, [activeTab, currentUser]);
 
   // Check current Telegram connection status
   const checkTelegramConnection = async () => {
@@ -413,6 +428,89 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
     } finally {
       setTestAlertLoading(false);
     }
+  };
+
+  // Load alert history from backend
+  const loadAlertHistory = async () => {
+    try {
+      setHistoryLoading(true);
+      const userId = getUserId();
+      const response = await fetch(`${config.API_BASE_URL}/api/alerts/history?userId=${userId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.history) {
+          setAlertHistory(data.history);
+          console.log('✅ Loaded alert history');
+        } else {
+          console.log('No history found for user');
+          setAlertHistory([]);
+        }
+      } else {
+        console.error('Failed to load alert history:', response.status);
+        setAlertHistory([]);
+      }
+    } catch (error) {
+      console.error('Error loading alert history:', error);
+      setAlertHistory([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Filter alert history based on current filters
+  const getFilteredHistory = () => {
+    return alertHistory.filter(alert => {
+      // Filter by channel
+      if (historyFilters.channel !== 'all') {
+        if (historyFilters.channel === 'telegram' && !alert.sent_via?.includes('telegram')) {
+          return false;
+        }
+        if (historyFilters.channel === 'email' && !alert.sent_via?.includes('email')) {
+          return false;
+        }
+      }
+      
+      // Filter by type
+      if (historyFilters.type !== 'all') {
+        if (alert.alert_type !== historyFilters.type) {
+          return false;
+        }
+      }
+      
+      return true;
+    });
+  };
+
+  // Get alert type display name
+  const getAlertTypeDisplay = (type) => {
+    const typeMap = {
+      'liveNews': 'Live News',
+      'preNews': 'Pre-News',
+      'postNews': 'Post-News',
+      'preEvent': 'Pre-Event',
+      'test': 'Test Alert',
+      'technicalAnalysis': 'Technical Analysis'
+    };
+    return typeMap[type] || type;
+  };
+
+  // Get alert icon based on type
+  const getAlertIcon = (type) => {
+    const iconMap = {
+      'liveNews': '📰',
+      'preNews': '⏰',
+      'postNews': '📊',
+      'preEvent': '📅',
+      'test': '🧪',
+      'technicalAnalysis': '📈'
+    };
+    return iconMap[type] || '📢';
   };
 
   return (
@@ -786,12 +884,20 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
               <div className="history-header">
                 <h3>📋 Alert History</h3>
                 <div className="history-filters">
-                  <select className="filter-select">
+                  <select 
+                    className="filter-select"
+                    value={historyFilters.channel}
+                    onChange={(e) => setHistoryFilters(prev => ({ ...prev, channel: e.target.value }))}
+                  >
                     <option value="all">All Alerts</option>
                     <option value="telegram">Telegram</option>
                     <option value="email">Email</option>
                   </select>
-                  <select className="filter-select">
+                  <select 
+                    className="filter-select"
+                    value={historyFilters.type}
+                    onChange={(e) => setHistoryFilters(prev => ({ ...prev, type: e.target.value }))}
+                  >
                     <option value="all">All Types</option>
                     <option value="liveNews">Live News</option>
                     <option value="preNews">Pre-News</option>
@@ -802,25 +908,35 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
               </div>
               
               <div className="alerts-list">
-                {alerts.map(alert => (
-                  <div key={alert.id} className="alert-item">
-                    <div className="alert-icon">
-                      {alert.type === 'telegram' ? '📱' : '📧'}
-                    </div>
-                    <div className="alert-content">
-                      <h4>{alert.event}</h4>
-                      <p>{alert.status === 'sent' ? 'Delivered' : 'Scheduled'}</p>
-                      <small>{formatTimeForTimezone(alert.timestamp, null, 'datetime')}</small>
-                    </div>
-                    <div className="alert-recipients">
-                      {alert.recipients} recipients
-                    </div>
+                {historyLoading ? (
+                  <div className="loading-alerts">
+                    <p>Loading alert history...</p>
                   </div>
-                ))}
-                {alerts.length === 0 && (
+                ) : getFilteredHistory().length === 0 ? (
                   <div className="no-alerts">
-                    <p>No alerts sent yet. Set up your preferences to start receiving alerts!</p>
+                    <p>No alerts found matching your filters.</p>
                   </div>
+                ) : (
+                  getFilteredHistory().map(alert => (
+                    <div key={alert.id} className="alert-item">
+                      <div className="alert-icon">
+                        {getAlertIcon(alert.alert_type)}
+                      </div>
+                      <div className="alert-content">
+                        <h4>{alert.title || alert.event_title || 'Alert'}</h4>
+                        <p className="alert-type">{getAlertTypeDisplay(alert.alert_type)}</p>
+                        {alert.content && (
+                          <p className="alert-message">{alert.content}</p>
+                        )}
+                        <small>{formatTimeForTimezone(alert.timestamp || alert.sent_at, null, 'datetime')}</small>
+                      </div>
+                      <div className="alert-status">
+                        <span className={`status-badge ${alert.status}`}>
+                          {alert.status === 'sent' ? '✓ Delivered' : '⏳ Scheduled'}
+                        </span>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>

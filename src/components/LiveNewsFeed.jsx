@@ -392,53 +392,137 @@ const LiveNewsFeed = () => {
     return `${days}d ago`;
   };
 
-  const getCurrentNewsList = () => {
-    const currentList = activeTab === 'live' ? news : newsHistory;
+      const getCurrentNewsList = () => {
+        const currentList = activeTab === 'live' ? news : newsHistory;
+        
+        console.log('🦊 React app - getCurrentNewsList - Original news items:', currentList.slice(0, 3).map(item => ({
+            id: item.id,
+            title: item.title,
+            idType: typeof item.id,
+            is_analyzed: item.is_analyzed
+        })));
+        
+        // Remove duplicates based on title similarity
+        const uniqueNews = removeDuplicateNews(currentList);
+        
+        console.log('🦊 React app - getCurrentNewsList - After removeDuplicateNews:', uniqueNews.slice(0, 3).map(item => ({
+            id: item.id,
+            title: item.title,
+            idType: typeof item.id,
+            is_analyzed: item.is_analyzed
+        })));
+        
+        const filteredAndSorted = uniqueNews
+            .filter(item => {
+                // For history tab, only show analyzed news items
+                if (activeTab === 'history' && !item.is_analyzed) {
+                    return false;
+                }
+                
+                // Enhanced filtering logic
+                if (filter === 'all') {
+                    // For 'all' filter, still apply basic forex relevance check
+                    return isForexRelevant(item);
+                } else if (filter === 'high') {
+                    // For 'high' filter, apply strict high-impact criteria
+                    return isHighImpactForex(item);
+                } else {
+                    // For 'medium' and 'low' filters, check impact level
+                    return item.impact?.toLowerCase() === filter && isForexRelevant(item);
+                }
+            })
+            .sort((a, b) => {
+                // Sort by published_at timestamp in descending order (newest first)
+                const dateA = new Date(a.published_at);
+                const dateB = new Date(b.published_at);
+                return dateB - dateA;
+            });
+        
+        console.log('🦊 React app - getCurrentNewsList - Final result:', filteredAndSorted.slice(0, 3).map(item => ({
+            id: item.id,
+            title: item.title,
+            idType: typeof item.id,
+            is_analyzed: item.is_analyzed
+        })));
+        
+        return filteredAndSorted;
+    };
     
-    console.log('🦊 React app - getCurrentNewsList - Original news items:', currentList.slice(0, 3).map(item => ({
-      id: item.id,
-      title: item.title,
-      idType: typeof item.id,
-      is_analyzed: item.is_analyzed
-    })));
+    // Enhanced filtering functions
+    const isForexRelevant = (item) => {
+        const title = (item.title || '').toLowerCase();
+        const summary = (item.summary || '').toLowerCase();
+        const text = `${title} ${summary}`;
+        
+        // Core forex keywords that indicate relevance
+        const coreForexKeywords = [
+            'forex', 'currency', 'fx', 'foreign exchange',
+            'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd',
+            'fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz',
+            'cpi', 'inflation', 'interest rate', 'non-farm payrolls', 'gdp'
+        ];
+        
+        // Economic and market terms that are forex-relevant
+        const forexRelevantTerms = [
+            'commodity', 'oil', 'crude', 'gold', 'silver', 'copper', 'natural gas',
+            'economic', 'economy', 'economic data', 'economic indicator',
+            'trade', 'tariff', 'trade war', 'trade deal', 'trade agreement',
+            'geopolitical', 'geopolitics', 'diplomatic', 'sanctions',
+            'market sentiment', 'risk-off', 'risk-on', 'safe haven'
+        ];
+        
+        const hasCoreForex = coreForexKeywords.some(keyword => text.includes(keyword));
+        const hasForexRelevant = forexRelevantTerms.some(term => text.includes(term));
+        
+        return hasCoreForex || hasForexRelevant;
+    };
     
-    // Remove duplicates based on title similarity
-    const uniqueNews = removeDuplicateNews(currentList);
-    
-    console.log('🦊 React app - getCurrentNewsList - After removeDuplicateNews:', uniqueNews.slice(0, 3).map(item => ({
-      id: item.id,
-      title: item.title,
-      idType: typeof item.id,
-      is_analyzed: item.is_analyzed
-    })));
-    
-    const filteredAndSorted = uniqueNews
-      .filter(item => {
-        // For history tab, only show analyzed news items
-        if (activeTab === 'history' && !item.is_analyzed) {
-          return false;
+    const isHighImpactForex = (item) => {
+        const title = (item.title || '').toLowerCase();
+        const summary = (item.summary || '').toLowerCase();
+        const source = (item.source || '').toLowerCase();
+        const text = `${title} ${summary}`;
+        
+        // Critical forex keywords that should always trigger high impact
+        const criticalKeywords = [
+            'fed', 'federal reserve', 'ecb', 'european central bank', 'boj', 'bank of japan',
+            'boe', 'bank of england', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
+            'nfp', 'non-farm payrolls', 'cpi', 'inflation', 'interest rate', 'monetary policy',
+            'rate decision', 'policy meeting', 'speech', 'testimony', 'breaking', 'urgent'
+        ];
+        
+        // High impact keywords
+        const highImpactKeywords = [
+            'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'interest rate', 'non-farm payrolls', 'gdp',
+            'rate decision', 'policy meeting', 'speech', 'testimony',
+            'trump', 'biden', 'election', 'trade war', 'tariff', 'sanctions', 'geopolitical',
+            'brexit', 'china trade', 'us china', 'market volatility', 'market uncertainty'
+        ];
+        
+        // Credible sources
+        const credibleSources = [
+            'reuters', 'bloomberg', 'cnbc', 'marketwatch', 'forexfactory', 'fxstreet',
+            'investing.com', 'fxempire', 'dailyfx', 'fxcm', 'oanda', 'ig'
+        ];
+        
+        // Check for critical keywords (automatic high impact)
+        const hasCritical = criticalKeywords.some(keyword => text.includes(keyword));
+        if (hasCritical) return true;
+        
+        // Check source credibility
+        const isCredibleSource = credibleSources.some(source_name => source.includes(source_name));
+        
+        // Count high impact keywords
+        const highImpactCount = highImpactKeywords.filter(keyword => text.includes(keyword)).length;
+        
+        // For credible sources, be more lenient but still strict
+        if (isCredibleSource) {
+            return highImpactCount >= 2;
         }
         
-        // Apply impact filter
-        if (filter === 'all') return true;
-        return item.impact?.toLowerCase() === filter;
-      })
-      .sort((a, b) => {
-        // Sort by published_at timestamp in descending order (newest first)
-        const dateA = new Date(a.published_at);
-        const dateB = new Date(b.published_at);
-        return dateB - dateA;
-      });
-    
-    console.log('🦊 React app - getCurrentNewsList - Final result:', filteredAndSorted.slice(0, 3).map(item => ({
-      id: item.id,
-      title: item.title,
-      idType: typeof item.id,
-      is_analyzed: item.is_analyzed
-    })));
-    
-    return filteredAndSorted;
-  };
+        // For non-credible sources, be very strict
+        return highImpactCount >= 3;
+    };
 
   const cleanNewsTitle = (title) => {
     if (!title) return title;

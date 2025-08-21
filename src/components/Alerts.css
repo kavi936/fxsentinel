@@ -927,6 +927,84 @@
   font-weight: 400;
 }
 
+.alert-type {
+  color: #ff4444 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 4px 0 8px 0 !important;
+}
+
+.alert-message {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  margin: 8px 0 8px 0 !important;
+  font-style: italic;
+}
+
+.alert-status {
+  display: flex;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.status-badge.sent {
+  background: rgba(0, 204, 68, 0.2);
+  color: #00cc44;
+  border: 1px solid rgba(0, 204, 68, 0.3);
+}
+
+.status-badge.scheduled {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.loading-alerts {
+  text-align: center;
+  padding: 40px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.loading-alerts::before {
+  content: "⏳";
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.no-alerts {
+  text-align: center;
+  padding: 60px 40px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 1.1rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 15px;
+  border: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+.no-alerts::before {
+  content: "📭";
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
 .alert-recipients {
   background: #ff4444;
   color: white;

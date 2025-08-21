@@ -1,0 +1,20 @@
+[Unit]
+Description=FXSentinel Background Alert Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=kavi
+WorkingDirectory=/Users/kavi/Desktop/fxsentinel
+ExecStart=/usr/bin/python3 /Users/kavi/Desktop/fxsentinel/background_alert_service.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Environment variables
+Environment=PYTHONPATH=/Users/kavi/Desktop/fxsentinel/backend
+
+[Install]
+WantedBy=multi-user.target
