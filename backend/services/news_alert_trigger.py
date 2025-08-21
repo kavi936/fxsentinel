@@ -45,26 +45,22 @@ class NewsAlertTrigger:
     def is_high_impact_news(self, news_item: Dict[str, Any]) -> bool:
         """Determine if news item is high impact and should trigger alerts"""
         try:
-            title = news_item.get('title', '').lower()
-            content = news_item.get('content', '').lower()
-            source = news_item.get('source', '').lower()
+            # Use enhanced forex filter for better accuracy
+            from services.enhanced_forex_filter import EnhancedForexFilter
+            forex_filter = EnhancedForexFilter()
             
-            # Check for high-impact keywords
-            for keyword in self.high_impact_keywords:
-                if keyword in title or keyword in content:
-                    logger.info(f"High impact news detected: {keyword} in '{title[:50]}...'")
-                    return True
+            title = news_item.get('title', '')
+            summary = news_item.get('summary', '')
+            content = news_item.get('content', '')
+            source = news_item.get('source', '')
             
-            # Check source credibility
-            credible_sources = ['reuters', 'bloomberg', 'cnbc', 'marketwatch', 'forexfactory', 'fxstreet']
-            if any(source_name in source for source_name in credible_sources):
-                # Additional check for important keywords in credible sources
-                important_keywords = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'nfp', 'cpi', 'gdp']
-                if any(keyword in title for keyword in important_keywords):
-                    logger.info(f"Important news from credible source: {source} - '{title[:50]}...'")
-                    return True
+            # Use the enhanced filter's strict alert criteria
+            is_high_impact = forex_filter.is_high_impact_for_alerts(title, summary, source)
             
-            return False
+            if is_high_impact:
+                logger.info(f"High impact news detected by enhanced filter: '{title[:50]}...'")
+            
+            return is_high_impact
             
         except Exception as e:
             logger.error(f"Error checking high impact news: {e}")

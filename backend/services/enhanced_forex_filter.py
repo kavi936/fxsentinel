@@ -6,6 +6,7 @@ Uses positive and negative keywords for better accuracy
 
 import re
 from typing import List, Dict, Any, Tuple
+from datetime import datetime, timedelta
 
 class EnhancedForexFilter:
     def __init__(self):
@@ -99,6 +100,27 @@ class EnhancedForexFilter:
             'minutes', 'economic calendar', 'trade', 'trade deal', 'trade agreement', 'politics',
             'congress', 'legislation', 'market sentiment', 'investor confidence'
         ]
+        
+        # Critical forex keywords that should always trigger alerts
+        self.critical_forex_keywords = [
+            'fed', 'federal reserve', 'ecb', 'european central bank', 'boj', 'bank of japan',
+            'boe', 'bank of england', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
+            'nfp', 'non-farm payrolls', 'cpi', 'inflation', 'interest rate', 'monetary policy',
+            'rate decision', 'policy meeting', 'speech', 'testimony', 'breaking', 'urgent'
+        ]
+        
+        # Credible sources that get priority
+        self.credible_sources = [
+            'reuters', 'bloomberg', 'cnbc', 'marketwatch', 'forexfactory', 'fxstreet',
+            'investing.com', 'fxempire', 'dailyfx', 'fxcm', 'oanda', 'ig'
+        ]
+        
+        # Recent market events that might affect filtering
+        self.current_market_context = {
+            'high_volatility_periods': [],
+            'major_events': [],
+            'currency_focus': []
+        }
     
     def is_forex_related(self, title: str, summary: str = "") -> bool:
         """
@@ -144,6 +166,37 @@ class EnhancedForexFilter:
         
         # Exclude if it has negative keywords without forex relevance
         return negative_matches == 0 and positive_matches > 0
+    
+    def is_high_impact_for_alerts(self, title: str, summary: str = "", source: str = "") -> bool:
+        """
+        Strict filtering for alert-worthy news
+        Only returns True for truly high-impact forex news
+        """
+        text = f"{title} {summary}".lower()
+        source_lower = source.lower()
+        
+        # Check for critical forex keywords (automatic high impact)
+        for keyword in self.critical_forex_keywords:
+            if keyword in text:
+                return True
+        
+        # Check source credibility
+        is_credible_source = any(credible in source_lower for credible in self.credible_sources)
+        
+        # For credible sources, be more lenient but still strict
+        if is_credible_source:
+            # Must have at least 2 high-impact keywords or 1 critical keyword
+            high_impact_count = self._count_keyword_matches(text, self.high_impact_keywords)
+            critical_count = self._count_keyword_matches(text, self.critical_forex_keywords)
+            
+            return high_impact_count >= 2 or critical_count >= 1
+        
+        # For non-credible sources, be very strict
+        # Must have at least 3 high-impact keywords or 2 critical keywords
+        high_impact_count = self._count_keyword_matches(text, self.high_impact_keywords)
+        critical_count = self._count_keyword_matches(text, self.critical_forex_keywords)
+        
+        return high_impact_count >= 3 or critical_count >= 2
     
     def get_forex_score(self, title: str, summary: str = "") -> Dict[str, Any]:
         """
@@ -200,142 +253,77 @@ class EnhancedForexFilter:
             if pair in text:
                 currency_pairs.append(pair.upper())
         
-        # Enhanced currency detection - look for individual currencies and suggest pairs
-        currencies_found = []
-        
-        # Currency keywords and their codes
-        currency_keywords = {
-            'dollar': 'USD', 'us dollar': 'USD', 'greenback': 'USD', 'buck': 'USD',
-            'euro': 'EUR', 'european': 'EUR',
-            'pound': 'GBP', 'sterling': 'GBP', 'british pound': 'GBP',
-            'yen': 'JPY', 'japanese yen': 'JPY',
-            'franc': 'CHF', 'swiss franc': 'CHF',
-            'australian dollar': 'AUD', 'aussie': 'AUD',
-            'canadian dollar': 'CAD', 'loonie': 'CAD',
-            'new zealand dollar': 'NZD', 'kiwi': 'NZD',
-            'yuan': 'CNY', 'chinese yuan': 'CNY', 'renminbi': 'CNY',
-            'rupee': 'INR', 'indian rupee': 'INR',
-            'real': 'BRL', 'brazilian real': 'BRL',
-            'peso': 'MXN', 'mexican peso': 'MXN',
-            'won': 'KRW', 'south korean won': 'KRW',
-            'krona': 'SEK', 'swedish krona': 'SEK',
-            'krone': 'NOK', 'norwegian krone': 'NOK',
-            'danish krone': 'DKK',
-            'zloty': 'PLN', 'polish zloty': 'PLN',
-            'koruna': 'CZK', 'czech koruna': 'CZK',
-            'forint': 'HUF', 'hungarian forint': 'HUF',
-            'leu': 'RON', 'romanian leu': 'RON',
-            'lev': 'BGN', 'bulgarian lev': 'BGN',
-            'kuna': 'HRK', 'croatian kuna': 'HRK',
-            'dinar': 'RSD', 'serbian dinar': 'RSD',
-            'lira': 'TRY', 'turkish lira': 'TRY',
-            'rand': 'ZAR', 'south african rand': 'ZAR',
-            'ruble': 'RUB', 'russian ruble': 'RUB',
-            'singapore dollar': 'SGD', 'sgd': 'SGD'
+        # Infer from currency mentions
+        currency_mapping = {
+            'usd': ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+            'eur': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+            'gbp': ['GBP/USD', 'EUR/GBP', 'GBP/JPY'],
+            'jpy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY'],
+            'aud': ['AUD/USD', 'EUR/AUD', 'GBP/AUD'],
+            'cad': ['USD/CAD', 'EUR/CAD', 'GBP/CAD'],
+            'chf': ['USD/CHF', 'EUR/CHF', 'GBP/CHF'],
+            'nzd': ['NZD/USD', 'EUR/NZD', 'GBP/NZD']
         }
         
-        # Country to currency mapping for better detection
-        country_currency_map = {
-            # Major countries
-            'united states': 'USD', 'us ': 'USD', 'usa': 'USD', 'america': 'USD', 'american': 'USD',
-            'european union': 'EUR', 'eu ': 'EUR', 'eurozone': 'EUR', 'europe': 'EUR', 'european': 'EUR',
-            'united kingdom': 'GBP', 'uk ': 'GBP', 'britain': 'GBP', 'british': 'GBP', 'england': 'GBP',
-            'japan': 'JPY', 'japanese': 'JPY',
-            'australia': 'AUD', 'australian': 'AUD',
-            'canada': 'CAD', 'canadian': 'CAD',
-            'switzerland': 'CHF', 'swiss': 'CHF',
-            'new zealand': 'NZD', 'nz ': 'NZD',
-            'china': 'CNY', 'chinese': 'CNY',
-            'india': 'INR', 'indian': 'INR',
-            'brazil': 'BRL', 'brazilian': 'BRL',
-            'mexico': 'MXN', 'mexican': 'MXN',
-            'south korea': 'KRW', 'korean': 'KRW',
-            'sweden': 'SEK', 'swedish': 'SEK',
-            'norway': 'NOK', 'norwegian': 'NOK',
-            'denmark': 'DKK', 'danish': 'DKK',
-            'poland': 'PLN', 'polish': 'PLN',
-            'czech republic': 'CZK', 'czech': 'CZK',
-            'hungary': 'HUF', 'hungarian': 'HUF',
-            'romania': 'RON', 'romanian': 'RON',
-            'bulgaria': 'BGN', 'bulgarian': 'BGN',
-            'croatia': 'HRK', 'croatian': 'HRK',
-            'serbia': 'RSD', 'serbian': 'RSD',
-            'turkey': 'TRY', 'turkish': 'TRY',
-            'south africa': 'ZAR', 'african': 'ZAR',
-            'russia': 'RUB', 'russian': 'RUB',
-            'singapore': 'SGD',
-            
-            # Individual Eurozone countries (map to EUR)
-            'germany': 'EUR', 'german': 'EUR', 'deutschland': 'EUR',
-            'france': 'EUR', 'french': 'EUR',
-            'italy': 'EUR', 'italian': 'EUR',
-            'spain': 'EUR', 'spanish': 'EUR',
-            'netherlands': 'EUR', 'dutch': 'EUR',
-            'belgium': 'EUR', 'belgian': 'EUR',
-            'austria': 'EUR', 'austrian': 'EUR',
-            'finland': 'EUR', 'finnish': 'EUR',
-            'ireland': 'EUR', 'irish': 'EUR',
-            'portugal': 'EUR', 'portuguese': 'EUR',
-            'greece': 'EUR', 'greek': 'EUR',
-            'slovenia': 'EUR', 'slovenian': 'EUR',
-            'slovakia': 'EUR', 'slovak': 'EUR',
-            'estonia': 'EUR', 'estonian': 'EUR',
-            'latvia': 'EUR', 'latvian': 'EUR',
-            'lithuania': 'EUR', 'lithuanian': 'EUR',
-            'luxembourg': 'EUR', 'luxembourgish': 'EUR',
-            'malta': 'EUR', 'maltese': 'EUR',
-            'cyprus': 'EUR', 'cypriot': 'EUR'
+        for currency, pairs in currency_mapping.items():
+            if currency in text:
+                currency_pairs.extend(pairs)
+        
+        # Remove duplicates and return
+        return list(set(currency_pairs))
+    
+    def should_trigger_alert(self, news_item: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Comprehensive decision on whether to trigger an alert
+        Returns detailed reasoning for the decision
+        """
+        title = news_item.get('title', '')
+        summary = news_item.get('summary', '')
+        content = news_item.get('content', '')
+        source = news_item.get('source', '')
+        
+        # Get forex score
+        forex_score = self.get_forex_score(title, summary)
+        
+        # Check if it's high impact for alerts
+        is_high_impact = self.is_high_impact_for_alerts(title, summary, source)
+        
+        # Extract currency pairs
+        currency_pairs = self.extract_currency_pairs(title, summary)
+        
+        # Decision logic
+        should_alert = False
+        reasoning = []
+        
+        if not forex_score['is_forex']:
+            reasoning.append("Not forex-related")
+        elif not is_high_impact:
+            reasoning.append("Not high-impact enough for alerts")
+        else:
+            should_alert = True
+            reasoning.append("High-impact forex news")
+        
+        # Additional factors
+        if source.lower() in [s.lower() for s in self.credible_sources]:
+            reasoning.append("Credible source")
+        
+        if forex_score['confidence'] > 70:
+            reasoning.append("High confidence score")
+        
+        return {
+            'should_alert': should_alert,
+            'reasoning': reasoning,
+            'forex_score': forex_score,
+            'currency_pairs': currency_pairs,
+            'impact_level': forex_score['impact_level'],
+            'confidence': forex_score['confidence']
         }
-        
-        # Find currencies mentioned in the text
-        for keyword, currency_code in currency_keywords.items():
-            if keyword in text:
-                currencies_found.append(currency_code)
-        
-        # Find currencies based on country names
-        for country, currency_code in country_currency_map.items():
-            if country in text:
-                currencies_found.append(currency_code)
-        
-        # Also check for currency codes directly
-        currency_codes = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'AUD', 'CAD', 'NZD', 'CNY', 'INR', 'BRL', 'MXN', 'KRW', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'HRK', 'RSD', 'TRY', 'ZAR', 'RUB', 'SGD']
-        for code in currency_codes:
-            if code.lower() in text:
-                currencies_found.append(code)
-        
-        # Remove duplicates
-        currencies_found = list(set(currencies_found))
-        
-        # If we found currencies but no exact pairs, suggest relevant pairs
-        if currencies_found and not currency_pairs:
-            # Major currency pairs to suggest based on found currencies
-            major_pairs = {
-                'USD': ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'USD/CAD', 'AUD/USD'],
-                'EUR': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF', 'EUR/CAD', 'EUR/AUD'],
-                'GBP': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF', 'GBP/CAD', 'GBP/AUD'],
-                'JPY': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY', 'CAD/JPY', 'CHF/JPY'],
-                'AUD': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY', 'AUD/CAD', 'AUD/CHF'],
-                'CAD': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'CAD/JPY', 'AUD/CAD', 'CAD/CHF'],
-                'CHF': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'CHF/JPY', 'AUD/CHF', 'CAD/CHF'],
-                'NZD': ['NZD/USD', 'EUR/NZD', 'GBP/NZD', 'NZD/JPY', 'AUD/NZD', 'NZD/CAD']
-            }
-            
-            # Add relevant pairs for each currency found
-            for currency in currencies_found:
-                if currency in major_pairs:
-                    # Add top 3 most liquid pairs for each currency
-                    currency_pairs.extend(major_pairs[currency][:3])
-            
-            # Remove duplicates and limit to reasonable number
-            currency_pairs = list(set(currency_pairs))[:6]
-        
-        return currency_pairs
     
     def _count_keyword_matches(self, text: str, keywords: List[str]) -> int:
-        """Count how many keywords match in the text"""
+        """Count how many keywords are found in the text"""
         count = 0
         for keyword in keywords:
-            if keyword.lower() in text:
+            if keyword in text:
                 count += 1
         return count
     
@@ -343,9 +331,33 @@ class EnhancedForexFilter:
         """Find which specific keywords matched"""
         matches = []
         for keyword in keywords:
-            if keyword.lower() in text:
+            if keyword in text:
                 matches.append(keyword)
         return matches
+    
+    def update_market_context(self, context: Dict[str, Any]):
+        """Update current market context for better filtering"""
+        self.current_market_context.update(context)
+    
+    def filter_news_list(self, news_list: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Filter a list of news items, keeping only forex-relevant ones
+        """
+        filtered_news = []
+        
+        for news_item in news_list:
+            title = news_item.get('title', '')
+            summary = news_item.get('summary', '')
+            
+            if self.is_forex_related(title, summary):
+                # Add forex score to the news item
+                forex_score = self.get_forex_score(title, summary)
+                news_item['forex_score'] = forex_score
+                news_item['currency_pairs'] = self.extract_currency_pairs(title, summary)
+                
+                filtered_news.append(news_item)
+        
+        return filtered_news
 
 # Global instance
 enhanced_forex_filter = EnhancedForexFilter()

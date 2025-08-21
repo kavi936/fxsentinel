@@ -9,7 +9,7 @@ import json
 def test_alert_endpoint():
     """Test the test alert endpoint"""
     
-    user_id = "0E0xJnQpYzZb8YkfQfSiwKYc8Fz2"  # Test user ID
+    user_id = "demo_user@example.com"  # Test user ID
     
     print("🧪 Testing Alert Functionality")
     print("=" * 50)
@@ -62,7 +62,7 @@ def test_alert_endpoint():
                 print(f"✅ Found {len(alerts)} alerts in history")
                 
                 # Look for test alert
-                test_alerts = [alert for alert in alerts if alert.get("type") == "test"]
+                test_alerts = [alert for alert in alerts if alert.get("alert_type") == "test"]
                 if test_alerts:
                     print("✅ Test alert found in history!")
                     latest_test = test_alerts[0]

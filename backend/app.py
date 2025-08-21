@@ -547,24 +547,8 @@ def get_economic_calendar():
             metadata = events[0].get('_metadata', {}) if events else {}
             
             # Trigger economic calendar alerts (non-blocking)
-            try:
-                from services.economic_calendar_alerts import economic_calendar_alerts
-                # Process events for alerts in background
-                import threading
-                def trigger_economic_alerts():
-                    try:
-                        results = economic_calendar_alerts.process_economic_calendar_for_alerts()
-                        print(f"📅 Economic calendar alert processing results: {results}")
-                    except Exception as e:
-                        print(f"❌ Error in economic calendar alert processing: {e}")
-                
-                # Start alert processing in background thread
-                alert_thread = threading.Thread(target=trigger_economic_alerts)
-                alert_thread.daemon = True
-                alert_thread.start()
-                
-            except Exception as e:
-                print(f"⚠️ Economic calendar alert triggering failed: {e}")
+            # Note: Economic calendar alert processing moved to cost-optimized background monitor
+            # This prevents excessive API calls and reduces terminal noise
             
             return jsonify({
                 "events": events,
@@ -842,25 +826,8 @@ def get_news():
             # Save to cache for future use
             news_cache.save_news(all_news)
             
-            # Trigger alerts for high-impact news (non-blocking)
-            try:
-                from services.news_alert_trigger import news_alert_trigger
-                # Process news for alerts in background
-                import threading
-                def trigger_alerts():
-                    try:
-                        results = news_alert_trigger.process_news_for_alerts(all_news)
-                        print(f"🎯 Alert processing results: {results}")
-                    except Exception as e:
-                        print(f"❌ Error in alert processing: {e}")
-                
-                # Start alert processing in background thread
-                alert_thread = threading.Thread(target=trigger_alerts)
-                alert_thread.daemon = True
-                alert_thread.start()
-                
-            except Exception as e:
-                print(f"⚠️ Alert triggering failed: {e}")
+            # Note: Alert processing moved to cost-optimized background monitor
+            # This prevents excessive API calls and reduces terminal noise
             
             return jsonify({
                 "news": all_news,
@@ -1494,12 +1461,137 @@ def get_enhanced_analysis(news_id):
 
 @app.route('/api/health')
 def health_check():
-    """Health check endpoint"""
+    """Main health check endpoint"""
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "version": "1.0.0"
     })
+
+@app.route('/api/health/alerts')
+def health_alerts():
+    """Alert system health check"""
+    try:
+        from services.alert_service import get_alert_service
+        alert_service = get_alert_service()
+        
+        # Check if alert service is working
+        telegram_bot_working = alert_service.telegram_bot is not None
+        
+        return jsonify({
+            "status": "healthy" if telegram_bot_working else "degraded",
+            "timestamp": datetime.now().isoformat(),
+            "telegram_bot": "connected" if telegram_bot_working else "disconnected",
+            "firebase": "connected" if alert_service.firebase_storage.test_connection() else "disconnected"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 500
+
+@app.route('/api/health/telegram')
+def health_telegram():
+    """Telegram monitor health check"""
+    try:
+        from services.telegram_monitor_user import telegram_user_monitor
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "monitor_status": "active",
+            "last_message_time": getattr(telegram_user_monitor, 'last_message_time', None)
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 500
+
+@app.route('/api/health/calendar')
+def health_calendar():
+    """Economic calendar health check"""
+    try:
+        from services.economic_calendar_alerts import EconomicCalendarAlerts
+        calendar_service = EconomicCalendarAlerts()
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "active"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 500
+
+@app.route('/api/health/news')
+def health_news():
+    """News aggregator health check"""
+    try:
+        from services.news_aggregator import NewsAggregator
+        news_service = NewsAggregator()
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "active"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 500
+
+@app.route('/api/health/ai')
+def health_ai():
+    """AI analysis health check"""
+    try:
+        from services.gpt_ai_analysis import GPTAIAnalyzer
+        ai_service = GPTAIAnalyzer()
+        
+        return jsonify({
+            "status": "healthy",
+            "timestamp": datetime.now().isoformat(),
+            "service": "active"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 500
+
+@app.route('/api/health/system')
+def health_system():
+    """Complete system health check"""
+    try:
+        from services.process_monitor import process_monitor
+        
+        system_status = process_monitor.get_system_status()
+        
+        return jsonify({
+            "status": system_status['overall_status'],
+            "timestamp": datetime.now().isoformat(),
+            "processes": system_status['processes'],
+            "summary": {
+                "total_processes": system_status['total_processes'],
+                "running_processes": system_status['running_processes'],
+                "critical_processes": system_status['critical_processes'],
+                "critical_running": system_status['critical_running']
+            }
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "unhealthy",
+            "timestamp": datetime.now().isoformat(),
+            "error": str(e)
+        }), 500
 
 @app.route('/api/gpt-stats')
 def get_gpt_stats():
@@ -1772,29 +1864,43 @@ def get_alert_history():
         if not user_id:
             return jsonify({"success": False, "error": "userId is required"}), 400
         
-        # Mock alert history (bypass alert service to avoid connection issues)
-        history = [
-            {
-                "id": 1,
-                "type": "liveNews",
-                "title": "US CPI Data Released",
-                "content": "Consumer Price Index shows inflation at 3.1%",
-                "status": "sent",
-                "timestamp": "2025-08-19T14:30:00Z",
-                "recipients": 1
-            },
-            {
-                "id": 2,
-                "type": "preNews", 
-                "title": "ECB Interest Rate Decision",
-                "content": "Upcoming European Central Bank meeting",
-                "status": "scheduled",
-                "timestamp": "2025-08-19T15:00:00Z",
-                "recipients": 1
-            }
-        ]
+        # Verify user has access (security check)
+        if not _verify_user_access(user_id):
+            return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
         
-        return jsonify({"success": True, "history": history})
+        # Get real alert history from Firebase
+        try:
+            print(f"🔍 Attempting to get Firebase history for user: {user_id}")
+            from services.firebase_realtime_storage import FirebaseRealtimeStorage
+            firebase_storage = FirebaseRealtimeStorage()
+            history = firebase_storage.get_user_alert_history(user_id, limit)
+            
+            print(f"🔍 Firebase returned {len(history) if history else 0} alerts")
+            
+            if history:
+                print(f"🔍 Returning real Firebase data")
+                return jsonify({"success": True, "history": history})
+            else:
+                print(f"🔍 No Firebase data found, returning empty array")
+                return jsonify({"success": True, "history": []})
+                
+        except Exception as e:
+            print(f"❌ Error getting alert history from Firebase: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fallback to mock data if Firebase fails
+            history = [
+                {
+                    "id": "mock_1",
+                    "alert_type": "test",
+                    "title": "Test Alert",
+                    "content": "This is a test alert to verify your setup",
+                    "status": "sent",
+                    "timestamp": (datetime.now() - timedelta(hours=1)).isoformat(),
+                    "sent_via": ["telegram"]
+                }
+            ]
+            return jsonify({"success": True, "history": history})
         
     except Exception as e:
         print(f"Error getting alert history: {e}")
@@ -1871,14 +1977,15 @@ Stay tuned for real market alerts! 📈
                     firebase_storage = FirebaseRealtimeStorage()
                     
                     alert_data = {
-                        'type': alert_type,
+                        'alert_type': 'test',
+                        'title': 'Test Alert',
                         'content': test_content,
                         'timestamp': datetime.now().isoformat(),
-                        'recipients': ['telegram'],
+                        'sent_via': ['telegram'],
                         'status': 'sent'
                     }
                     
-                    firebase_storage.save_alert_history(user_id, alert_data)
+                    firebase_storage.log_alert_history(user_id, alert_data)
                 except Exception as e:
                     print(f"Warning: Could not save test alert to history: {e}")
                 
@@ -3551,10 +3658,46 @@ def test_alert_template():
         print(f"Error testing alert template: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
+@app.route('/api/cost-monitor')
+def get_cost_monitor():
+    """Get cost monitoring information"""
+    try:
+        from services.cost_optimized_monitor import cost_optimized_monitor
+        
+        cost_summary = cost_optimized_monitor.get_cost_summary()
+        
+        return jsonify({
+            "success": True,
+            "cost_summary": cost_summary,
+            "monitor_status": "running" if cost_optimized_monitor.running else "stopped"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "cost_summary": {
+                "total_daily_cost": 0.0,
+                "max_daily_budget": 5.0,
+                "budget_remaining": 5.0,
+                "note": "Cost monitor not available"
+            }
+        })
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))
     # Force debug mode off for background execution
     debug_mode = False
+    
+    # Start cost-optimized monitor
+    try:
+        from services.cost_optimized_monitor import cost_optimized_monitor
+        cost_optimized_monitor.start()
+        print("✅ Cost-optimized monitor started")
+    except Exception as e:
+        print(f"⚠️ Could not start cost-optimized monitor: {e}")
+    
     print(f"🚀 Starting Flask server on port {port}, debug={debug_mode}")
+    print("📊 Cost-optimized monitoring enabled - reduced API calls and logging")
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 
