@@ -432,10 +432,23 @@ class NewsAlertTrigger:
         try:
             news_id = str(news_item.get('id', ''))
             
-            # Call the AI analysis endpoint
-            analysis_url = f"{self.api_base_url}/api/enhanced-analysis/{news_id}"
+            # Convert news item to event format for AI analysis
+            event_data = {
+                'event': {
+                    'title': news_item.get('title', 'Unknown News'),
+                    'currency': 'USD',  # Default currency for news
+                    'impact': news_item.get('impact', 'medium'),
+                    'description': news_item.get('summary', news_item.get('title', '')),
+                    'time': news_item.get('timestamp', ''),
+                    'source': news_item.get('source', 'News Source')
+                },
+                'analysisType': 'news_analysis'
+            }
+            
+            # Call the simpler AI analysis endpoint (faster)
+            analysis_url = f"{self.api_base_url}/api/analysis/{news_id}"
             headers = {'Content-Type': 'application/json'}
-            response = requests.post(analysis_url, headers=headers, timeout=30)
+            response = requests.get(analysis_url, headers=headers, timeout=10)
             
             if response.status_code == 200:
                 analysis_data = response.json()
