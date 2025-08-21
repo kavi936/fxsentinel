@@ -33,6 +33,10 @@ class BackgroundAlertService:
         self.last_calendar_check = None
         self.processed_news_ids = set()
         
+        # Economic calendar tracking to prevent duplicates
+        self.sent_economic_events = {}  # Track sent events with timing
+        self.economic_alert_times = [120, 60, 10]  # 2 hours, 1 hour, 10 minutes before
+        
         # Your user configuration
         self.user_id = "0E0xJnQpYzZb8YkfQfSiwKYc8Fz2"
         self.chat_id = "8008493413"
@@ -165,7 +169,7 @@ class BackgroundAlertService:
             logger.error(f"Error checking news alerts: {e}")
     
     def check_economic_calendar_alerts(self):
-        """Check for upcoming economic calendar events and send pre-event alerts"""
+        """Check for upcoming economic calendar events and send pre-event alerts with proper timing"""
         try:
             logger.info("📅 Checking economic calendar for upcoming events...")
             
@@ -178,65 +182,122 @@ class BackgroundAlertService:
             calendar_data = response.json()
             events = calendar_data.get('events', [])
             
-            # Find upcoming high-impact events (next 2 hours)
+            # Find upcoming high-impact events
             now = datetime.now()
-            upcoming_high_impact = []
+            alerts_sent = 0
             
             for event in events:
                 if event.get('impact') == 'high':
+                    event_id = event.get('id', event.get('title', 'unknown'))
+                    event_time_str = event.get('time', '')
+                    
+                    if not event_time_str:
+                        continue
+                    
                     try:
                         # Parse event time
-                        event_time_str = event.get('time', '')
-                        if event_time_str:
-                            # Simple time parsing (you might need to adjust based on your format)
-                            event_time = datetime.strptime(event_time_str, '%H:%M UTC')
-                            event_time = event_time.replace(year=now.year, month=now.month, day=now.day)
-                            
-                            # Check if event is in next 2 hours
-                            time_diff = event_time - now
-                            if timedelta(0) <= time_diff <= timedelta(hours=2):
-                                upcoming_high_impact.append(event)
-                    except:
+                        event_time = datetime.strptime(event_time_str, '%H:%M UTC')
+                        event_time = event_time.replace(year=now.year, month=now.month, day=now.day)
+                        
+                        # Calculate time until event
+                        time_until_event = event_time - now
+                        minutes_until_event = time_until_event.total_seconds() / 60
+                        
+                        # Check if we should send an alert
+                        for alert_minutes in self.economic_alert_times:
+                            if 0 <= minutes_until_event <= alert_minutes and minutes_until_event >= alert_minutes - 5:
+                                # Check if we already sent this alert
+                                alert_key = f"{event_id}_{alert_minutes}"
+                                if alert_key not in self.sent_economic_events:
+                                    # Send the alert
+                                    self._send_economic_calendar_alert(event, alert_minutes)
+                                    self.sent_economic_events[alert_key] = now
+                                    alerts_sent += 1
+                                    logger.info(f"✅ Economic calendar alert sent: {event.get('title', 'Unknown')} ({alert_minutes} min before)")
+                                    break
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing event {event_id}: {e}")
                         continue
             
-            if upcoming_high_impact:
-                logger.info(f"Found {len(upcoming_high_impact)} upcoming high-impact events")
-                
-                # Send pre-event alerts
-                from services.news_alert_trigger import news_alert_trigger
-                
-                for event in upcoming_high_impact[:2]:  # Send alerts for first 2 events
-                    title = event.get('title', 'Unknown')
-                    event_time = event.get('time', 'Unknown')
-                    
-                    # Create pre-event alert
-                    pre_event_alert = {
-                        'title': f'📅 UPCOMING ECONOMIC EVENT: {title}',
-                        'summary': f'High-impact economic event scheduled for {event_time}. Prepare for potential market volatility.',
-                        'source': 'Economic Calendar',
-                        'impact': 'high',
-                        'currency_pairs': ['EUR/USD', 'USD/JPY', 'GBP/USD'],
-                        'published_at': datetime.now().isoformat()
-                    }
-                    
-                    user_data = {
-                        'user_id': self.user_id,
-                        'chat_id': self.chat_id,
-                        'settings': self.user_settings
-                    }
-                    
-                    success = news_alert_trigger._send_alert_to_user(user_data, pre_event_alert, False)
-                    if success:
-                        logger.info(f"✅ Pre-event alert sent: {title[:50]}...")
-                    else:
-                        logger.warning(f"❌ Failed to send pre-event alert: {title[:50]}...")
-                    
-                    time.sleep(2)  # Wait between alerts
+            if alerts_sent > 0:
+                logger.info(f"📨 Sent {alerts_sent} economic calendar alerts")
             else:
-                logger.info("No upcoming high-impact events found")
+                logger.info("No new economic calendar alerts to send")
                 
         except Exception as e:
             logger.error(f"Error checking economic calendar: {e}")
+    
+    def _send_economic_calendar_alert(self, event, minutes_before):
+        """Send a properly formatted economic calendar alert"""
+        try:
+            title = event.get('title', 'Unknown Event')
+            event_time = event.get('time', 'Unknown Time')
+            currency = event.get('currency', 'USD')
+            expected = event.get('expected', 'N/A')
+            previous = event.get('previous', 'N/A')
+            
+            time_text = {
+                120: "2 hours",
+                60: "1 hour", 
+                10: "10 minutes"
+            }.get(minutes_before, f"{minutes_before} minutes")
+            
+            # Create properly formatted alert message
+            alert_message = f"""📅 <b>UPCOMING ECONOMIC EVENT</b>
+
+<b>{title}</b> - Event starts in {time_text}
+
+📊 <b>Event Details:</b>
+• Time: {event_time} UTC
+• Currency: {currency}
+• Expected: {expected}
+• Previous: {previous}
+
+💱 <b>Affected Pairs:</b> {currency}/USD, EUR/{currency}
+
+🎯 <b>Prepare for Market Volatility!</b>
+📱 Check dashboard for detailed analysis"""
+            
+            # Send via Telegram
+            import os
+            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+            if not bot_token:
+                logger.error("Telegram bot token not configured")
+                return False
+            
+            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            telegram_data = {
+                'chat_id': self.chat_id,
+                'text': alert_message,
+                'parse_mode': 'HTML'
+            }
+            
+            response = requests.post(telegram_url, json=telegram_data, timeout=10)
+            
+            if response.status_code == 200:
+                # Save to alert history
+                from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                firebase_storage = FirebaseRealtimeStorage()
+                
+                alert_data = {
+                    'alert_type': 'economic_calendar',
+                    'title': f'Economic Calendar: {title}',
+                    'content': alert_message,
+                    'timestamp': datetime.now().isoformat(),
+                    'sent_via': ['telegram'],
+                    'status': 'sent'
+                }
+                
+                firebase_storage.log_alert_history(self.user_id, alert_data)
+                return True
+            else:
+                logger.error(f"Failed to send economic calendar alert: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error sending economic calendar alert: {e}")
+            return False
 
 def main():
     """Main function to start the background service"""

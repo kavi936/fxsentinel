@@ -367,15 +367,19 @@ class NewsAlertTrigger:
             return False
     
     def _create_alert_message(self, news_item: Dict[str, Any], ai_analysis: Optional[Dict[str, Any]] = None) -> str:
-        """Create formatted alert message with AI analysis"""
+        """Create formatted alert message with AI analysis using proper HTML formatting"""
         try:
-            title = news_item.get('title', '')
-            source = news_item.get('source', '')
+            title = news_item.get('title', 'Unknown Title')
+            source = news_item.get('source', 'Unknown Source')
             url = news_item.get('url', '')
             timestamp = news_item.get('timestamp', '')
+            summary = news_item.get('summary', '')
             
+            # Get currency pairs
             affected_pairs = self.get_affected_currency_pairs(news_item)
-            pairs_text = ', '.join(affected_pairs) if affected_pairs else 'Multiple pairs'
+            if not affected_pairs:
+                affected_pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD']  # Default pairs
+            pairs_text = ', '.join(affected_pairs)
             
             # Format timestamp
             try:
@@ -383,16 +387,21 @@ class NewsAlertTrigger:
                 dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
                 formatted_time = dt.strftime('%H:%M UTC')
             except:
-                formatted_time = timestamp
+                formatted_time = datetime.now().strftime('%H:%M UTC')
             
-            # Base message
-            message = f"""
-🚨 BREAKING FOREX NEWS
-**{title}**
+            # Create properly formatted message with HTML tags
+            message = f"""🚨 <b>BREAKING FOREX NEWS</b>
 
-**Time:** {formatted_time} | **Source:** {source}
-**Pairs:** {pairs_text}
-            """.strip()
+<b>{title}</b>
+
+📊 <b>Details:</b>
+• Time: {formatted_time}
+• Source: {source}
+• Currency Pairs: {pairs_text}"""
+            
+            # Add summary if available
+            if summary:
+                message += f"\n\n📝 <b>Summary:</b>\n{summary}"
             
             # Add AI analysis if available
             if ai_analysis and isinstance(ai_analysis, dict):
@@ -401,35 +410,22 @@ class NewsAlertTrigger:
                     # Truncate analysis if too long
                     if len(analysis_text) > 300:
                         analysis_text = analysis_text[:297] + "..."
-                    
-                    message += f"""
-
-**AI Analysis:**
-{analysis_text}
-                    """.strip()
+                    message += f"\n\n🤖 <b>AI Analysis:</b>\n{analysis_text}"
                 else:
-                    message += f"""
-
-**AI Analysis:** Available on dashboard
-                    """.strip()
+                    message += f"\n\n🤖 <b>AI Analysis:</b> Available on dashboard"
             else:
-                message += f"""
-
-**Market Impact:** Monitor for price action
-                """.strip()
+                message += f"\n\n📈 <b>Market Impact:</b> Monitor for price action"
             
             # Add footer
-            message += f"""
-
-**Read Full Article:** {url}
-**Dashboard:** Detailed analysis available
-            """.strip()
+            if url:
+                message += f"\n\n🔗 <a href='{url}'>Read Full Article</a>"
+            message += "\n📱 Check dashboard for detailed analysis"
             
             return message
             
         except Exception as e:
             logger.error(f"Error creating alert message: {e}")
-            return f"🚨 Breaking Forex News: {news_item.get('title', 'Unknown')}"
+            return f"🚨 <b>Breaking Forex News:</b> {news_item.get('title', 'Unknown')}"
     
     def _trigger_ai_analysis(self, news_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Trigger AI analysis for the news item and return the analysis"""
