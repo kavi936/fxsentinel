@@ -140,6 +140,28 @@ zz Modify Profile section to fit rules of closing subscriptions for stripe payer
 
 Modify Landing page to look amazing
 
+Modify welvome-trail page to look amazing 
+
+Alert bot needs some work
+
+News calendar displaying news needs work, sometimes says its completed but its not, sorting between beginning of week and ending of week needs work. quick filters needs work.
+
+Market sentiment card, needs to be better
+
+Set dev emails
+
+Set Customer feedback system:
+
+Refund Policy: Clear policy for handling refunds
+Support Email: Basic help desk for billing questions
+FAQ Page: Common billing questions and answers
+Contact Support: Easy way for users to get help
+
+Monitoring Setup (1-2 days)
+
+Stripe Dashboard: Monitor for payment issues
+Error Alerts: Get notified of problems immediately
+User Analytics: Track conversion and churn rates
 
 
 

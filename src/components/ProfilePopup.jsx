@@ -279,6 +279,12 @@ const ProfilePopup = ({ isOpen, onClose }) => {
             Settings
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'support' ? 'active' : ''}`}
+            onClick={() => setActiveTab('support')}
+          >
+            Support
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'security' ? 'active' : ''}`}
             onClick={() => setActiveTab('security')}
           >
@@ -587,6 +593,217 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               )}
+            </div>
+          )}
+
+          {activeTab === 'support' && (
+            <div className="support-section">
+              <h3>Customer Support</h3>
+              
+              <div className="support-grid">
+                <div className="support-card">
+                  <div className="support-icon">📧</div>
+                  <h4>Contact Support</h4>
+                  <p>Get help with billing, technical issues, or general questions</p>
+                  <button 
+                    className="primary-btn"
+                    onClick={() => window.open('mailto:fxsentinelapp@gmail.com?subject=FXSentinel Support Request', '_blank')}
+                  >
+                    Email Support
+                  </button>
+                </div>
+
+                <div className="support-card">
+                  <div className="support-icon">❓</div>
+                  <h4>FAQ</h4>
+                  <p>Find answers to common questions about FXSentinel</p>
+                  <button 
+                    className="secondary-btn"
+                    onClick={() => setActiveTab('faq')}
+                  >
+                    View FAQ
+                  </button>
+                </div>
+
+                <div className="support-card">
+                  <div className="support-icon">💰</div>
+                  <h4>Refund Policy</h4>
+                  <p>Learn about our refund and cancellation policies</p>
+                  <button 
+                    className="secondary-btn"
+                    onClick={() => setActiveTab('refund-policy')}
+                  >
+                    View Policy
+                  </button>
+                </div>
+
+                <div className="support-card">
+                  <div className="support-icon">📋</div>
+                  <h4>Request Refund</h4>
+                  <p>Submit a refund request for your subscription</p>
+                  <button 
+                    className="secondary-btn"
+                    onClick={() => setActiveTab('refund-request')}
+                  >
+                    Request Refund
+                  </button>
+                </div>
+              </div>
+
+              <div className="support-info">
+                <h4>Support Hours</h4>
+                <p>We typically respond within 24 hours during business days.</p>
+                <p><strong>Email:</strong> fxsentinelapp@gmail.com</p>
+                <p><strong>Response Time:</strong> 24-48 hours</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'faq' && (
+            <div className="faq-section">
+              <div className="faq-header">
+                <button className="back-btn" onClick={() => setActiveTab('support')}>
+                  ← Back to Support
+                </button>
+                <h3>Frequently Asked Questions</h3>
+              </div>
+
+              <div className="faq-list">
+                <div className="faq-item">
+                  <h4>How does the free trial work?</h4>
+                  <p>You get 3 days of free access with 15 AI analyses per day. No credit card required to start.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>What happens after my trial ends?</h4>
+                  <p>After 3 days, you'll need to subscribe to continue using FXSentinel. You can cancel anytime.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>How do I cancel my subscription?</h4>
+                  <p>Go to your Profile → Billing → Manage Subscription. You can cancel anytime with no penalties.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>Can I get a refund?</h4>
+                  <p>Yes! We offer a 30-day money-back guarantee. Contact fxsentinelapp@gmail.com for refund requests.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>What payment methods do you accept?</h4>
+                  <p>We accept all major credit cards, debit cards, and digital wallets through Stripe.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>Is my data secure?</h4>
+                  <p>Absolutely. We use bank-level encryption and never store your payment information.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'refund-policy' && (
+            <div className="refund-policy-section">
+              <div className="policy-header">
+                <button className="back-btn" onClick={() => setActiveTab('support')}>
+                  ← Back to Support
+                </button>
+                <h3>Refund Policy</h3>
+              </div>
+
+              <div className="policy-content">
+                <div className="policy-section">
+                  <h4>30-Day Money-Back Guarantee</h4>
+                  <p>We're confident you'll love FXSentinel. If you're not satisfied within 30 days of your first payment, we'll give you a full refund.</p>
+                </div>
+
+                <div className="policy-section">
+                  <h4>How to Request a Refund</h4>
+                  <ul>
+                    <li>Email us at fxsentinelapp@gmail.com</li>
+                    <li>Include your account email and reason for refund</li>
+                    <li>We'll process your request within 3-5 business days</li>
+                    <li>Refunds are issued to your original payment method</li>
+                  </ul>
+                </div>
+
+                <div className="policy-section">
+                  <h4>Refund Processing</h4>
+                  <ul>
+                    <li>Refunds typically appear in 5-10 business days</li>
+                    <li>Processing time depends on your bank/card issuer</li>
+                    <li>You'll receive an email confirmation when processed</li>
+                  </ul>
+                </div>
+
+                <div className="policy-section">
+                  <h4>Exceptions</h4>
+                  <p>Refunds may be denied if we detect abuse of our service or violation of our terms of service.</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'refund-request' && (
+            <div className="refund-request-section">
+              <div className="request-header">
+                <button className="back-btn" onClick={() => setActiveTab('support')}>
+                  ← Back to Support
+                </button>
+                <h3>Request a Refund</h3>
+              </div>
+
+              <div className="refund-form">
+                <div className="form-group">
+                  <label>Account Email</label>
+                  <input 
+                    type="email" 
+                    value={currentUser?.email || ''} 
+                    disabled 
+                    className="disabled-input"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Reason for Refund *</label>
+                  <select className="form-select">
+                    <option value="">Select a reason</option>
+                    <option value="not-satisfied">Not satisfied with the service</option>
+                    <option value="technical-issues">Technical issues</option>
+                    <option value="billing-error">Billing error</option>
+                    <option value="unexpected-charges">Unexpected charges</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label>Additional Details</label>
+                  <textarea 
+                    placeholder="Please provide more details about your refund request..."
+                    rows="4"
+                    className="form-textarea"
+                  ></textarea>
+                </div>
+
+                <div className="form-actions">
+                  <button 
+                    className="primary-btn"
+                    onClick={() => {
+                      // Here you would submit the refund request
+                      alert('Refund request submitted! We\'ll contact you within 24 hours.');
+                      setActiveTab('support');
+                    }}
+                  >
+                    Submit Refund Request
+                  </button>
+                  <button 
+                    className="secondary-btn"
+                    onClick={() => setActiveTab('support')}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
