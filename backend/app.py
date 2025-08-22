@@ -1,5 +1,7 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
@@ -51,6 +53,14 @@ if os.getenv('OPENAI_API_KEY'):
 
 app = Flask(__name__)
 
+# Initialize rate limiter
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
 # Configure CORS to allow requests from all origins (including file:// and null origins)
 CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False)
 
@@ -61,6 +71,14 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    
+    # Add security headers
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
     return response
 
 # Configure OpenAI (you'll need to set OPENAI_API_KEY environment variable)
@@ -3794,6 +3812,7 @@ def check_analysis_permission(user_id):
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/create-checkout-session', methods=['POST'])
+@limiter.limit("10 per minute")  # Limit checkout attempts
 def create_checkout_session():
     """Create a Stripe Checkout Session for trial subscription"""
     try:
@@ -3856,6 +3875,7 @@ def create_checkout_session():
         return jsonify(error_data), status_code
 
 @app.route('/api/verify-checkout-session', methods=['POST'])
+@limiter.limit("20 per minute")  # Limit verification attempts
 def verify_checkout_session():
     """Verify a completed checkout session and update user status"""
     try:
@@ -3924,6 +3944,7 @@ def verify_checkout_session():
         return jsonify(error_data), status_code
 
 @app.route('/api/create-portal-session', methods=['POST'])
+@limiter.limit("5 per minute")  # Limit portal access
 def create_portal_session():
     """Create Stripe Customer Portal session for subscription management"""
     try:
@@ -4044,6 +4065,7 @@ def upgrade_subscription():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stripe-webhook', methods=['POST'])
+@limiter.exempt  # Webhooks should not be rate limited
 def stripe_webhook():
     """Handle Stripe webhook events"""
     try:
