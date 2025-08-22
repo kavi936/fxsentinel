@@ -10,9 +10,37 @@ import time
 import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
+import stripe
+
+# Firebase initialization
+try:
+    import firebase_admin
+    from firebase_admin import credentials, firestore, initialize_app
+    
+    # Initialize Firebase if not already initialized
+    if not firebase_admin._apps:
+        # Use service account key if available, otherwise use default credentials
+        if os.path.exists('firebase-service-account.json'):
+            cred = credentials.Certificate('firebase-service-account.json')
+            initialize_app(cred)
+        else:
+            # Use default credentials (for development)
+            initialize_app()
+        
+        print("✅ Firebase initialized successfully")
+    else:
+        print("✅ Firebase already initialized")
+        
+except ImportError:
+    print("⚠️ Firebase Admin SDK not installed")
+except Exception as e:
+    print(f"⚠️ Firebase initialization failed: {e}")
 
 # Load environment variables from .env file
 load_dotenv()
+
+# Initialize Stripe
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 # Debug: Check if environment variables are loaded
 print(f"🔍 Environment Debug:")
@@ -542,50 +570,73 @@ def get_economic_calendar():
         # Fetch events from Finnhub
         events = finnhub_calendar.get_economic_calendar(start_date, end_date)
         
-        if events:
+        if events and len(events) > 0:
             # Extract metadata from first event if available
             metadata = events[0].get('_metadata', {}) if events else {}
             
-            # Trigger economic calendar alerts (non-blocking)
-            # Note: Economic calendar alert processing moved to cost-optimized background monitor
-            # This prevents excessive API calls and reduces terminal noise
+            # Validate that we have real events (not empty or test data)
+            real_events = [e for e in events if e.get('title') and e.get('title') not in [
+                'US CPI Data Release', 'ECB Interest Rate Decision', 'US Retail Sales'
+            ]]
             
-            return jsonify({
-                "events": events,
-                "source": "Finnhub",
-                "last_updated": datetime.now().isoformat(),
-                "total_events": len(events),
-                "status": "success",
-                "data_quality": metadata.get('data_quality', 'unknown'),
-                "demo_api_limitations": metadata.get('demo_api_limitations', False),
-                "wrong_year_events_filtered": metadata.get('wrong_year_events_filtered', 0),
-                "correct_year_events_found": metadata.get('correct_year_events_found', 0),
-                "requested_year": metadata.get('requested_year', datetime.now().year),
-                "current_year": metadata.get('current_year', datetime.now().year),
-                "recommendation": metadata.get('recommendation', 'data_acceptable')
-            })
+            if len(real_events) > 0:
+                # Use real events
+                events = real_events
+                source = "Finnhub"
+                status = "success"
+            else:
+                # No real events found, but we have some data
+                print("⚠️ Only test events found in Finnhub data")
+                source = "finnhub_test_data"
+                status = "test_data_only"
         else:
-            # Fallback to mock data if Finnhub fails
-            print("⚠️ No events from Finnhub, using fallback data")
+            # No events from Finnhub
+            print("⚠️ No events from Finnhub API")
+            source = "no_data"
+            status = "no_data"
+            events = []
+            
+        # Only use fallback data if we have absolutely no real data
+        if not events or source == "no_data":
+            print("⚠️ Using fallback data due to no real events available")
             fallback_events = get_mock_economic_events()
             return jsonify({
                 "events": fallback_events,
                 "source": "fallback_data",
                 "last_updated": datetime.now().isoformat(),
                 "total_events": len(fallback_events),
-                "status": "fallback"
+                "status": "fallback",
+                "warning": "Using fallback data - real events unavailable"
             })
+        
+        return jsonify({
+            "events": events,
+            "source": source,
+            "last_updated": datetime.now().isoformat(),
+            "total_events": len(events),
+            "status": status,
+            "data_quality": metadata.get('data_quality', 'unknown'),
+            "demo_api_limitations": metadata.get('demo_api_limitations', False),
+            "wrong_year_events_filtered": metadata.get('wrong_year_events_filtered', 0),
+            "correct_year_events_found": metadata.get('correct_year_events_found', 0),
+            "requested_year": metadata.get('requested_year', datetime.now().year),
+            "current_year": metadata.get('current_year', datetime.now().year),
+            "recommendation": metadata.get('recommendation', 'data_acceptable')
+        })
             
     except Exception as e:
         print(f"❌ Error in economic calendar endpoint: {e}")
-        # Return fallback data on error
+        # Only use fallback data on critical errors
+        print("⚠️ Critical error - using fallback data")
         fallback_events = get_mock_economic_events()
         return jsonify({
             "events": fallback_events,
             "source": "fallback_data",
             "last_updated": datetime.now().isoformat(),
             "total_events": len(fallback_events),
-            "status": "error"
+            "status": "error",
+            "error": str(e),
+            "warning": "Using fallback data due to critical error"
         })
 
 def get_mock_economic_events():
@@ -3687,6 +3738,350 @@ def get_cost_monitor():
                 "note": "Cost monitor not available"
             }
         })
+
+# Stripe Payment Routes
+from services.stripe_service import StripeService
+from services.error_handler import StripeErrorHandler
+from services.retry_handler import RetryHandler, PaymentRetryHandler
+
+stripe_service = StripeService()
+
+@app.route('/api/create-customer', methods=['POST'])
+def create_customer():
+    """Create a Stripe customer for a new user"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        email = data.get('email')
+        name = data.get('name')
+        
+        customer = stripe_service.create_customer(user_id, email, name)
+        
+        return jsonify({
+            'success': True,
+            'customer_id': customer.id
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/subscription-status/<user_id>', methods=['GET'])
+def get_subscription_status(user_id):
+    """Get subscription status for a user"""
+    try:
+        # Get email from query parameter for developer check
+        email = request.args.get('email')
+        
+        status = stripe_service.get_subscription_status(user_id, email)
+        return jsonify(status)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/check-analysis-permission/<user_id>', methods=['GET'])
+def check_analysis_permission(user_id):
+    """Check if user can perform an AI analysis"""
+    try:
+        # Get email from query parameter for developer check
+        email = request.args.get('email')
+        
+        permission_data = stripe_service.can_perform_analysis(user_id, email)
+        
+        # If user can perform analysis, increment the count (but not for developers)
+        if permission_data.get('can_perform', False) and not permission_data.get('status') == 'developer':
+            stripe_service.increment_analysis_count(user_id)
+        
+        return jsonify(permission_data)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/create-checkout-session', methods=['POST'])
+def create_checkout_session():
+    """Create a Stripe Checkout Session for trial subscription"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        email = data.get('email')
+        name = data.get('name')
+        
+        # Validate required fields
+        if not all([user_id, email]):
+            return jsonify({'error': 'Missing required fields: user_id and email'}), 400
+        
+        # Get the base URL for success/cancel redirects
+        base_url = request.host_url.rstrip('/')
+        
+        def create_session():
+            return stripe.checkout.Session.create(
+                customer_email=email,
+                line_items=[{
+                    'price': os.getenv('STRIPE_PRICE_ID'),
+                    'quantity': 1,
+                }],
+                mode='subscription',
+                subscription_data={
+                    'trial_period_days': int(os.getenv('TRIAL_DAYS', 3)),
+                    'metadata': {'firebase_user_id': user_id}
+                },
+                success_url=f'{base_url}/dashboard?session_id={{CHECKOUT_SESSION_ID}}',
+                cancel_url=f'{base_url}/trial-welcome',
+                metadata={
+                    'firebase_user_id': user_id,
+                    'user_name': name
+                }
+            )
+        
+        # Use retry mechanism for checkout session creation
+        checkout_session = RetryHandler.retry_operation(
+            create_session,
+            max_attempts=3,
+            context={'operation': 'create_checkout_session', 'user_id': user_id},
+            user_id=user_id
+        )
+        
+        return jsonify({'session_url': checkout_session.url})
+        
+    except stripe.error.StripeError as e:
+        error_data, status_code = StripeErrorHandler.create_error_response(
+            e, 
+            context={'operation': 'create_checkout_session', 'user_id': user_id},
+            user_id=user_id
+        )
+        return jsonify(error_data), status_code
+        
+    except Exception as e:
+        error_data, status_code = StripeErrorHandler.create_error_response(
+            e,
+            context={'operation': 'create_checkout_session', 'user_id': user_id},
+            user_id=user_id
+        )
+        return jsonify(error_data), status_code
+
+@app.route('/api/verify-checkout-session', methods=['POST'])
+def verify_checkout_session():
+    """Verify a completed checkout session and update user status"""
+    try:
+        data = request.get_json()
+        session_id = data.get('session_id')
+        
+        if not session_id:
+            return jsonify({'error': 'Session ID required'}), 400
+        
+        def retrieve_session():
+            return stripe.checkout.Session.retrieve(session_id)
+        
+        # Use retry mechanism for session retrieval
+        session = RetryHandler.retry_operation(
+            retrieve_session,
+            max_attempts=3,
+            context={'operation': 'verify_checkout_session', 'session_id': session_id}
+        )
+        
+        if session.payment_status == 'paid' or session.payment_status == 'no_payment_required':
+            # Get user ID from session metadata
+            user_id = session.metadata.get('firebase_user_id')
+            
+            if user_id and stripe_service.firebase_available and stripe_service.db:
+                try:
+                    # Update user status in Firebase
+                    stripe_service.db.collection('users').document(user_id).update({
+                        'subscription_status': 'trial',
+                        'trial_start_date': datetime.now(),
+                        'trial_end_date': datetime.now() + timedelta(days=stripe_service.trial_days),
+                        'daily_analysis_count': 0,
+                        'last_analysis_reset': datetime.now().date(),
+                        'stripe_customer_id': session.customer,
+                        'subscription_id': session.subscription
+                    })
+                    
+                    return jsonify({
+                        'success': True,
+                        'subscription_status': 'trial',
+                        'trial_end_date': (datetime.now() + timedelta(days=stripe_service.trial_days)).isoformat()
+                    })
+                except Exception as firebase_error:
+                    error_data, status_code = StripeErrorHandler.create_error_response(
+                        firebase_error,
+                        context={'operation': 'verify_checkout_session', 'session_id': session_id, 'user_id': user_id},
+                        user_id=user_id
+                    )
+                    return jsonify(error_data), status_code
+            else:
+                return jsonify({'error': 'User not found or database unavailable'}), 404
+        
+        return jsonify({'error': 'Invalid session or payment not completed'}), 400
+        
+    except stripe.error.StripeError as e:
+        error_data, status_code = StripeErrorHandler.create_error_response(
+            e,
+            context={'operation': 'verify_checkout_session', 'session_id': session_id}
+        )
+        return jsonify(error_data), status_code
+        
+    except Exception as e:
+        error_data, status_code = StripeErrorHandler.create_error_response(
+            e,
+            context={'operation': 'verify_checkout_session', 'session_id': session_id}
+        )
+        return jsonify(error_data), status_code
+
+@app.route('/api/create-portal-session', methods=['POST'])
+def create_portal_session():
+    """Create Stripe Customer Portal session for subscription management"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        return_url = data.get('return_url')
+        
+        if not user_id:
+            return jsonify({'error': 'User ID required'}), 400
+        
+        # Get user's Stripe customer ID from Firebase
+        if stripe_service.firebase_available and stripe_service.db:
+            try:
+                user_doc = stripe_service.db.collection('users').document(user_id).get()
+                if user_doc.exists:
+                    customer_id = user_doc.get('stripe_customer_id')
+                    
+                    if not customer_id:
+                        return jsonify({'error': 'No subscription found for this user'}), 404
+                    
+                    # Create portal session
+                    session = stripe.billing_portal.Session.create(
+                        customer=customer_id,
+                        return_url=return_url,
+                    )
+                    
+                    return jsonify({'url': session.url})
+                else:
+                    return jsonify({'error': 'User not found'}), 404
+            except Exception as firebase_error:
+                print(f"Firebase error: {firebase_error}")
+                return jsonify({'error': 'Database error'}), 500
+        else:
+            return jsonify({'error': 'Database not available'}), 500
+            
+    except Exception as e:
+        print(f"Error creating portal session: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/create-payment-intent', methods=['POST'])
+def create_payment_intent():
+    """Create a setup intent for trial payment method collection"""
+    try:
+        data = request.get_json()
+        customer_id = data.get('customer_id')
+        
+        # Create a setup intent (no charge, just collect payment method)
+        setup_intent = stripe.SetupIntent.create(
+            customer=customer_id,
+            payment_method_types=['card'],
+            usage='off_session',  # For future payments
+        )
+        
+        return jsonify({
+            'client_secret': setup_intent.client_secret
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/setup-trial-subscription', methods=['POST'])
+def setup_trial_subscription():
+    """Setup trial subscription with payment method"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        customer_id = data.get('customer_id')
+        payment_method_id = data.get('payment_method_id')
+        
+        # Setup payment method
+        stripe_service.setup_payment_method(customer_id, payment_method_id)
+        
+        # Create trial subscription
+        subscription = stripe_service.create_trial_subscription(customer_id)
+        
+        # Update user in Firebase
+        if stripe_service.firebase_available and stripe_service.db:
+            stripe_service.db.collection('users').document(user_id).update({
+                'subscription_id': subscription.id,
+                'subscription_status': 'trial',
+                'trial_start_date': datetime.now(),
+                'trial_end_date': datetime.now() + timedelta(days=stripe_service.trial_days),
+                'daily_analysis_count': 0,
+                'last_analysis_reset': datetime.now().date()
+            })
+        
+        return jsonify({
+            'success': True,
+            'subscription_id': subscription.id,
+            'trial_end_date': (datetime.now() + timedelta(days=stripe_service.trial_days)).isoformat()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upgrade-subscription', methods=['POST'])
+def upgrade_subscription():
+    """Upgrade user to paid subscription immediately"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        customer_id = data.get('customer_id')
+        
+        # Create immediate subscription (no trial)
+        subscription = stripe_service.create_subscription_after_trial(customer_id)
+        
+        # Update user in Firebase
+        if stripe_service.firebase_available and stripe_service.db:
+            stripe_service.db.collection('users').document(user_id).update({
+                'subscription_id': subscription.id,
+                'subscription_status': 'active',
+                'current_period_end': datetime.fromtimestamp(subscription['current_period_end'])
+            })
+        
+        return jsonify({
+            'success': True,
+            'subscription_id': subscription.id
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/stripe-webhook', methods=['POST'])
+def stripe_webhook():
+    """Handle Stripe webhook events"""
+    try:
+        payload = request.get_data()
+        sig_header = request.headers.get('Stripe-Signature')
+        
+        if not sig_header:
+            print("⚠️ No Stripe signature header found")
+            return jsonify({'error': 'No signature header'}), 400
+        
+        print(f"📡 Received Stripe webhook: {request.headers.get('Stripe-Signature', 'No signature')[:20]}...")
+        
+        def process_webhook():
+            stripe_service.handle_webhook(payload, sig_header)
+        
+        # Use retry mechanism for webhook processing
+        from services.retry_handler import WebhookRetryHandler
+        WebhookRetryHandler.retry_webhook_processing(
+            process_webhook,
+            max_attempts=3,
+            context={'operation': 'stripe_webhook', 'signature': sig_header[:20]}
+        )
+        
+        print("✅ Webhook processed successfully")
+        return jsonify({'success': True}), 200
+        
+    except ValueError as e:
+        print(f"❌ Invalid webhook payload: {e}")
+        return jsonify({'error': 'Invalid payload'}), 400
+    except stripe.error.SignatureVerificationError as e:
+        print(f"❌ Invalid webhook signature: {e}")
+        return jsonify({'error': 'Invalid signature'}), 400
+    except Exception as e:
+        error_data, status_code = StripeErrorHandler.create_error_response(
+            e,
+            context={'operation': 'stripe_webhook', 'signature': sig_header[:20] if sig_header else 'None'}
+        )
+        return jsonify(error_data), status_code
 
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development

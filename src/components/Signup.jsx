@@ -61,7 +61,7 @@ const Signup = () => {
 
     try {
       await signup(formData.email, formData.password, formData.firstName, formData.lastName);
-      navigate('/dashboard');
+      navigate('/auth-redirect');
     } catch (err) {
       setError('Failed to create account. Please try again.');
     } finally {
@@ -215,7 +215,7 @@ const Signup = () => {
           onClick={async () => {
             try {
               await signInWithGoogle();
-              navigate('/dashboard');
+              navigate('/auth-redirect');
             } catch (err) {
               setError('Failed to sign in with Google. Please try again.');
             }

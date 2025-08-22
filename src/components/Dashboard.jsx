@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import axios from 'axios';
 import { config } from '../config';
 import './Dashboard.css';
@@ -15,6 +16,7 @@ import MarketStatusPopup from './MarketStatusPopup';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
+  const { unreadCount, addSubscriptionNotification } = useNotifications();
   const navigate = useNavigate();
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,6 +51,64 @@ function Dashboard() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [marketStatusOpen, setMarketStatusOpen] = useState(false);
+  const [sessionVerificationStatus, setSessionVerificationStatus] = useState(null);
+
+  // Check for checkout session verification on mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+      console.log('🔍 Found session_id in URL, verifying checkout session...');
+      verifyCheckoutSession(sessionId);
+    }
+  }, []);
+
+  // Verify checkout session
+  const verifyCheckoutSession = async (sessionId) => {
+    try {
+      setSessionVerificationStatus('verifying');
+      
+      const response = await fetch('/api/verify-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('✅ Checkout session verified successfully:', data);
+        setSessionVerificationStatus('success');
+        
+        // Add notification for successful trial activation
+        addSubscriptionNotification('trial_started');
+        
+        // Remove the session_id from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Show success message (optional)
+        setTimeout(() => {
+          setSessionVerificationStatus(null);
+        }, 3000);
+      } else {
+        console.error('❌ Failed to verify checkout session');
+        setSessionVerificationStatus('error');
+        
+        // Remove the session_id from URL even if verification failed
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    } catch (error) {
+      console.error('Error verifying checkout session:', error);
+      setSessionVerificationStatus('error');
+      
+      // Remove the session_id from URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  };
 
   // Fetch news data on mount
   useEffect(() => {
@@ -619,6 +679,33 @@ function Dashboard() {
 
   return (
     <div className={`dashboard ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''}`}>
+      {/* Session Verification Status Notification */}
+      {sessionVerificationStatus === 'verifying' && (
+        <div className="verification-notification verifying">
+          <div className="verification-content">
+            <div className="spinner"></div>
+            <span>Verifying your subscription...</span>
+          </div>
+        </div>
+      )}
+      
+      {sessionVerificationStatus === 'success' && (
+        <div className="verification-notification success">
+          <div className="verification-content">
+            <span>✅ Your trial has been activated successfully!</span>
+            <button onClick={() => setSessionVerificationStatus(null)}>×</button>
+          </div>
+        </div>
+      )}
+      
+      {sessionVerificationStatus === 'error' && (
+        <div className="verification-notification error">
+          <div className="verification-content">
+            <span>❌ Failed to verify subscription. Please check your profile for status.</span>
+            <button onClick={() => setSessionVerificationStatus(null)}>×</button>
+          </div>
+        </div>
+      )}
       {/* Compact Static Navbar */}
       <nav className="dashboard-navbar">
         <div className="navbar-container">
@@ -695,7 +782,9 @@ function Dashboard() {
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
-              <span className="notification-badge">3</span>
+              {unreadCount > 0 && (
+                <span className="notification-badge">{unreadCount}</span>
+              )}
             </button>
             <button 
               className="profile-btn" 
@@ -709,12 +798,12 @@ function Dashboard() {
             </button>
             <button 
               className="settings-btn" 
-              title="Settings"
+              title="Timezone Settings"
               onClick={() => setTimezoneSettingsOpen(true)}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12,6 12,12 16,14"/>
               </svg>
             </button>
             <Link to="/" className="home-btn" title="Back to Home">
@@ -813,10 +902,10 @@ function Dashboard() {
                 onClick={() => { setTimezoneSettingsOpen(true); setMobileMenuOpen(false); }}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12,6 12,12 16,14"/>
                 </svg>
-                Settings
+                Timezone Settings
               </button>
               <Link to="/" className="mobile-action-btn" onClick={() => setMobileMenuOpen(false)}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
