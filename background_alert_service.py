@@ -180,7 +180,21 @@ class BackgroundAlertService:
                 return
             
             calendar_data = response.json()
+            
+            # CRITICAL: Check data source to prevent false alerts from fallback/mock data
+            data_source = calendar_data.get('source', 'unknown')
+            if data_source in ['fallback_data', 'mock_data', 'test_data']:
+                logger.warning(f"⚠️ Skipping economic calendar alerts - using {data_source} (potential false alerts)")
+                return
+            
+            # Additional validation: Check if we have real events
             events = calendar_data.get('events', [])
+            if not events:
+                logger.warning("⚠️ No events found in calendar data")
+                return
+            
+            # Log data source for monitoring
+            logger.info(f"📊 Processing {len(events)} events from {data_source}")
             
             # Find upcoming high-impact events
             now = datetime.now()

@@ -1,91 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { useNotifications } from '../contexts/NotificationContext';
 import './NotificationsPopup.css';
 
 const NotificationsPopup = ({ isOpen, onClose }) => {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    removeNotification 
+  } = useNotifications();
   const [activeTab, setActiveTab] = useState('all');
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchNotifications();
-    }
-  }, [isOpen]);
 
-  const fetchNotifications = async () => {
-    setLoading(true);
-    // Simulate API call - replace with actual endpoint
-    setTimeout(() => {
-      setNotifications([
-        {
-          id: 1,
-          type: 'alert',
-          title: 'High Impact News Alert',
-          message: 'US Non-Farm Payrolls data released - EUR/USD showing strong movement',
-          timestamp: new Date(Date.now() - 300000), // 5 minutes ago
-          read: false,
-          priority: 'high'
-        },
-        {
-          id: 2,
-          type: 'system',
-          title: 'System Update',
-          message: 'New features added to the dashboard. Check out the enhanced market analysis.',
-          timestamp: new Date(Date.now() - 1800000), // 30 minutes ago
-          read: true,
-          priority: 'medium'
-        },
-        {
-          id: 3,
-          type: 'alert',
-          title: 'Price Alert',
-          message: 'EUR/USD has reached your target price of 1.0850',
-          timestamp: new Date(Date.now() - 3600000), // 1 hour ago
-          read: false,
-          priority: 'high'
-        },
-        {
-          id: 4,
-          type: 'news',
-          title: 'Market News',
-          message: 'ECB announces new monetary policy measures affecting EUR pairs',
-          timestamp: new Date(Date.now() - 7200000), // 2 hours ago
-          read: true,
-          priority: 'medium'
-        },
-        {
-          id: 5,
-          type: 'alert',
-          title: 'Technical Analysis',
-          message: 'USD/JPY showing bearish divergence on 4H timeframe',
-          timestamp: new Date(Date.now() - 10800000), // 3 hours ago
-          read: false,
-          priority: 'low'
-        }
-      ]);
-      setLoading(false);
-    }, 500);
-  };
 
-  const markAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-  };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    );
-  };
-
-  const deleteNotification = (id) => {
-    setNotifications(prev => prev.filter(notification => notification.id !== id));
-  };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
@@ -153,8 +82,6 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
     return notification.type === activeTab;
   });
 
-  const unreadCount = notifications.filter(n => !n.read).length;
-
   if (!isOpen) return null;
 
   return (
@@ -207,12 +134,7 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
         </div>
 
         <div className="notifications-content">
-          {loading ? (
-            <div className="notifications-loading">
-              <div className="spinner"></div>
-              <p>Loading notifications...</p>
-            </div>
-          ) : filteredNotifications.length === 0 ? (
+          {filteredNotifications.length === 0 ? (
             <div className="no-notifications">
               <div className="no-notifications-icon">📭</div>
               <p>No notifications found</p>
@@ -239,7 +161,7 @@ const NotificationsPopup = ({ isOpen, onClose }) => {
                           className="delete-btn"
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteNotification(notification.id);
+                            removeNotification(notification.id);
                           }}
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

@@ -601,3 +601,341 @@ input:checked + .toggle-slider:before {
     font-size: 1.2rem;
   }
 }
+
+/* Billing Section Styles */
+.billing-section {
+  padding: 24px;
+  color: white;
+}
+
+.billing-section h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  border-bottom: 1px solid rgba(255, 68, 68, 0.3);
+  padding-bottom: 12px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #cccccc;
+}
+
+.loading-state p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.subscription-details {
+  background: rgba(255, 68, 68, 0.05);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.subscription-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.subscription-status h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.trial {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.status-badge.active {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.status-badge.expired {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.status-badge.developer {
+  background: rgba(156, 39, 176, 0.2);
+  color: #9c27b0;
+  border: 1px solid rgba(156, 39, 176, 0.3);
+}
+
+.trial-info,
+.premium-info {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.trial-info p,
+.premium-info p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #cccccc;
+}
+
+.trial-info strong,
+.premium-info strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.developer-info {
+  background: rgba(156, 39, 176, 0.1);
+  border: 1px solid rgba(156, 39, 176, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.developer-info p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #cccccc;
+}
+
+.developer-info strong {
+  color: #9c27b0;
+  font-weight: 600;
+}
+
+.developer-note {
+  background: rgba(156, 39, 176, 0.05);
+  border: 1px solid rgba(156, 39, 176, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.developer-note p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #9c27b0;
+  font-style: italic;
+}
+
+.billing-actions {
+  margin-bottom: 20px;
+}
+
+.primary-btn {
+  background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff6666 0%, #ff8888 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+}
+
+.primary-btn:disabled {
+  background: rgba(255, 68, 68, 0.3);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.secondary-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.secondary-btn:disabled {
+  background: rgba(255, 255, 255, 0.05);
+  cursor: not-allowed;
+  transform: none;
+}
+
+.last-updated {
+  text-align: center;
+  margin-top: 12px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.last-updated small {
+  color: #cccccc;
+  font-size: 0.75rem;
+  font-style: italic;
+}
+
+.usage-progress {
+  margin-top: 12px;
+}
+
+.usage-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.usage-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.usage-progress small {
+  color: #cccccc;
+  font-size: 0.75rem;
+  display: block;
+  text-align: center;
+}
+
+.billing-help {
+  background: rgba(255, 68, 68, 0.05);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.billing-help h4 {
+  margin: 0 0 12px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.billing-help p {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: #cccccc;
+  line-height: 1.5;
+}
+
+.billing-help ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 0.85rem;
+  color: #cccccc;
+}
+
+.billing-help li {
+  margin: 4px 0;
+}
+
+.trial-countdown {
+  color: #ff9800;
+  font-weight: 500;
+  margin-left: 8px;
+}
+
+.upgrade-prompt {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(255, 68, 68, 0.05) 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.upgrade-prompt p {
+  margin: 0 0 12px 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.upgrade-btn {
+  background: linear-gradient(135deg, #ff4444 0%, #cc3333 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.upgrade-btn:hover {
+  background: linear-gradient(135deg, #cc3333 0%, #aa2222 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+}
+
+.no-subscription {
+  text-align: center;
+  padding: 40px 20px;
+  color: #cccccc;
+}
+
+.no-subscription p {
+  margin: 0 0 20px 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+
+
+/* Responsive billing section */
+@media (max-width: 768px) {
+  .billing-section {
+    padding: 20px;
+  }
+  
+  .subscription-status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .status-badge {
+    align-self: flex-start;
+  }
+}

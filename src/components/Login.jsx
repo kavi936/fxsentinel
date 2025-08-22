@@ -30,7 +30,7 @@ const Login = () => {
 
     try {
       await login(formData.email, formData.password);
-      navigate('/dashboard');
+      navigate('/auth-redirect');
     } catch (err) {
       setError('Invalid email or password. Please try again.');
     } finally {
@@ -132,7 +132,7 @@ const Login = () => {
           onClick={async () => {
             try {
               await signInWithGoogle();
-              navigate('/dashboard');
+              navigate('/auth-redirect');
             } catch (err) {
               setError('Failed to sign in with Google. Please try again.');
             }

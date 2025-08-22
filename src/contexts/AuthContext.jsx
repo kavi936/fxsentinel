@@ -24,6 +24,43 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [hasCheckedDeveloperStatus, setHasCheckedDeveloperStatus] = useState(false);
+
+  // Check if user is a developer
+  const checkDeveloperStatus = async (user) => {
+    console.log('🔍 Checking developer status for:', user ? user.email : 'no user');
+    
+    if (!user || !user.email) {
+      console.log('❌ No user or email, setting developer to false');
+      setIsDeveloper(false);
+      setHasCheckedDeveloperStatus(true);
+      return;
+    }
+
+    try {
+      console.log('🌐 Making API request to check developer status...');
+      const response = await fetch(`/api/subscription-status/${user.uid}?email=${user.email}`);
+      console.log('📡 API Response status:', response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('📊 API Response data:', data);
+        const isDev = data.is_developer || false;
+        console.log('🔧 Setting developer status to:', isDev);
+        setIsDeveloper(isDev);
+      } else {
+        console.log('❌ API request failed, setting developer to false');
+        setIsDeveloper(false);
+      }
+    } catch (error) {
+      console.error('❌ Error checking developer status:', error);
+      setIsDeveloper(false);
+    } finally {
+      console.log('✅ Developer status check completed');
+      setHasCheckedDeveloperStatus(true);
+    }
+  };
 
   // Sign up function
   const signup = async (email, password, firstName, lastName) => {
@@ -32,6 +69,10 @@ export const AuthProvider = ({ children }) => {
       await updateProfile(result.user, {
         displayName: `${firstName} ${lastName}`
       });
+      
+      // Check developer status after signup
+      await checkDeveloperStatus(result.user);
+      
       return result;
     } catch (error) {
       throw error;
@@ -41,7 +82,12 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (email, password) => {
     try {
-      return await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Check developer status after login
+      await checkDeveloperStatus(result.user);
+      
+      return result;
     } catch (error) {
       throw error;
     }
@@ -50,6 +96,8 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
+      setIsDeveloper(false);
+      setHasCheckedDeveloperStatus(false);
       return await signOut(auth);
     } catch (error) {
       throw error;
@@ -60,7 +108,12 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      return await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      // Check developer status after Google sign in
+      await checkDeveloperStatus(result.user);
+      
+      return result;
     } catch (error) {
       throw error;
     }
@@ -85,8 +138,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      if (user) {
+        await checkDeveloperStatus(user);
+      } else {
+        setIsDeveloper(false);
+        setHasCheckedDeveloperStatus(true);
+      }
       setLoading(false);
     });
 
@@ -95,6 +154,8 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     currentUser,
+    isDeveloper,
+    hasCheckedDeveloperStatus,
     signup,
     login,
     logout,

@@ -1,11 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import './ProfilePopup.css';
 
 const ProfilePopup = ({ isOpen, onClose }) => {
   const { currentUser, logout } = useAuth();
+  const { addSubscriptionNotification, addUsageNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [usageData, setUsageData] = useState(null);
+  const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
+  const [isLoadingPortal, setIsLoadingPortal] = useState(false);
+  const [isLoadingUsage, setIsLoadingUsage] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState(null);
   const [formData, setFormData] = useState({
     displayName: currentUser?.displayName || '',
     email: currentUser?.email || '',
@@ -63,6 +71,107 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     }
   };
 
+  // Check if user is developer
+  const isDeveloper = currentUser?.email === 'kavi.cf412@gmail.com';
+
+  // Fetch subscription status
+  const fetchSubscriptionStatus = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingSubscription(true);
+    try {
+      const response = await fetch(`/api/subscription-status/${currentUser.uid}`);
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionStatus(data);
+        setLastUpdated(new Date());
+      }
+    } catch (error) {
+      console.error('Error fetching subscription status:', error);
+    } finally {
+      setIsLoadingSubscription(false);
+    }
+  };
+
+  // Fetch usage data
+  const fetchUsageData = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingUsage(true);
+    try {
+      const response = await fetch(`/api/check-analysis-permission/${currentUser.uid}?email=${currentUser.email}`);
+      if (response.ok) {
+        const data = await response.json();
+        setUsageData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching usage data:', error);
+    } finally {
+      setIsLoadingUsage(false);
+    }
+  };
+
+  // Handle subscription management
+  const handleManageSubscription = async () => {
+    if (!currentUser) return;
+    
+    setIsLoadingPortal(true);
+    try {
+      const response = await fetch('/api/create-portal-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUser.uid,
+          return_url: window.location.href
+        }),
+      });
+      
+      if (response.ok) {
+        const { url } = await response.json();
+        window.location.href = url; // Redirect to Stripe Customer Portal
+      } else {
+        console.error('Failed to create portal session');
+      }
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+    } finally {
+      setIsLoadingPortal(false);
+    }
+  };
+
+  // Fetch subscription status and usage data when component mounts or user changes
+  useEffect(() => {
+    if (isOpen && currentUser) {
+      fetchSubscriptionStatus();
+      fetchUsageData();
+    }
+  }, [isOpen, currentUser]);
+
+  // Refresh subscription status when returning from Stripe portal
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isOpen && currentUser) {
+        // Refresh status when user returns from Stripe portal
+        fetchSubscriptionStatus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [isOpen, currentUser]);
+
+  // Auto-refresh subscription status and usage data every 30 seconds when popup is open
+  useEffect(() => {
+    if (!isOpen || !currentUser) return;
+
+    const interval = setInterval(() => {
+      fetchSubscriptionStatus();
+      fetchUsageData();
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isOpen, currentUser]);
+
   const getUserDisplayName = (truncate = false) => {
     if (!currentUser) return 'Guest';
     
@@ -95,6 +204,45 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // Calculate trial days remaining
+  const getTrialDaysRemaining = () => {
+    if (!subscriptionStatus?.trial_end_date) return 0;
+    
+    const trialEnd = new Date(subscriptionStatus.trial_end_date);
+    const now = new Date();
+    const diffTime = trialEnd - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, diffDays);
+  };
+
+  // Check for trial ending soon and trigger notifications
+  useEffect(() => {
+    if (subscriptionStatus?.status === 'trial') {
+      const daysRemaining = getTrialDaysRemaining();
+      
+      if (daysRemaining === 1) {
+        addSubscriptionNotification('trial_ending_soon', { daysRemaining: 1 });
+      } else if (daysRemaining === 0) {
+        addSubscriptionNotification('trial_expired');
+      }
+    }
+  }, [subscriptionStatus, addSubscriptionNotification]);
+
+  // Check for usage warnings
+  useEffect(() => {
+    if (usageData) {
+      const { daily_usage, daily_limit } = usageData;
+      const remaining = daily_limit - daily_usage;
+      
+      if (remaining === 0) {
+        addUsageNotification('usage_limit_reached', { used: daily_usage, limit: daily_limit });
+      } else if (remaining <= 2) {
+        addUsageNotification('usage_warning', { used: daily_usage, limit: daily_limit, remaining });
+      }
+    }
+  }, [usageData, addUsageNotification]);
+
   if (!isOpen) return null;
 
   return (
@@ -116,6 +264,13 @@ const ProfilePopup = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('profile')}
           >
             Profile
+          </button>
+
+          <button 
+            className={`tab-btn ${activeTab === 'billing' ? 'active' : ''}`}
+            onClick={() => setActiveTab('billing')}
+          >
+            Billing
           </button>
           <button 
             className={`tab-btn ${activeTab === 'settings' ? 'active' : ''}`}
@@ -281,6 +436,157 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                   <button className="danger-btn">Delete</button>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === 'billing' && (
+            <div className="billing-section">
+              <h3>Subscription & Billing</h3>
+              
+              {isLoadingSubscription ? (
+                <div className="loading-state">
+                  <p>Loading subscription details...</p>
+                </div>
+              ) : isDeveloper ? (
+                <div className="subscription-details developer-account">
+                  <div className="subscription-status">
+                    <h4>Current Plan</h4>
+                    <div className="status-badge developer">
+                      Developer Account
+                    </div>
+                  </div>
+
+                  <div className="developer-info">
+                    <p><strong>Account Type:</strong> Developer</p>
+                    <p><strong>Access Level:</strong> Unlimited</p>
+                    <p><strong>Daily Limit:</strong> Unlimited AI analyses</p>
+                    <p><strong>Payment Required:</strong> No</p>
+                    <p><strong>Purpose:</strong> Development & Testing</p>
+                  </div>
+
+                  <div className="developer-note">
+                    <p>🔧 This is a developer account with full access for testing purposes. No payment required.</p>
+                  </div>
+                </div>
+              ) : subscriptionStatus ? (
+                <div className="subscription-details">
+                  <div className="subscription-status">
+                    <h4>Current Plan</h4>
+                    <div className={`status-badge ${subscriptionStatus.status}`}>
+                      {subscriptionStatus.status === 'trial' ? 'Free Trial' : 
+                       subscriptionStatus.status === 'active' ? 'Premium' : 
+                       subscriptionStatus.status === 'expired' ? 'Expired' : 'Unknown'}
+                    </div>
+                  </div>
+
+                  {subscriptionStatus.status === 'trial' && (
+                    <div className="trial-info">
+                      <p><strong>Trial Period:</strong> 3 days</p>
+                      <p><strong>Daily Limit:</strong> {usageData ? `${usageData.daily_usage}/${usageData.daily_limit}` : 'Loading...'} AI analyses</p>
+                      {subscriptionStatus.trial_end_date && (
+                        <p><strong>Trial Ends:</strong> {new Date(subscriptionStatus.trial_end_date).toLocaleDateString()}
+                          <span className="trial-countdown"> ({getTrialDaysRemaining()} days remaining)</span>
+                        </p>
+                      )}
+                      {usageData && (
+                        <div className="usage-progress">
+                          <div className="usage-bar">
+                            <div 
+                              className="usage-fill" 
+                              style={{ 
+                                width: `${Math.min((usageData.daily_usage / usageData.daily_limit) * 100, 100)}%`,
+                                backgroundColor: usageData.daily_usage >= usageData.daily_limit ? '#f44336' : '#4caf50'
+                              }}
+                            ></div>
+                          </div>
+                          <small>{usageData.daily_usage >= usageData.daily_limit ? 'Limit reached' : `${usageData.daily_limit - usageData.daily_usage} remaining today`}</small>
+                        </div>
+                      )}
+                      <div className="upgrade-prompt">
+                        <p>Upgrade to Premium for unlimited AI analyses and advanced features!</p>
+                        <button 
+                          className="upgrade-btn"
+                          onClick={() => window.location.href = '/trial-welcome'}
+                        >
+                          Upgrade Now
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {subscriptionStatus.status === 'active' && (
+                    <div className="premium-info">
+                      <p><strong>Plan:</strong> Premium ($20/month)</p>
+                      <p><strong>Daily Limit:</strong> {usageData ? `${usageData.daily_usage}/${usageData.daily_limit}` : 'Loading...'} AI analyses</p>
+                      {subscriptionStatus.current_period_end && (
+                        <p><strong>Next Billing:</strong> {new Date(subscriptionStatus.current_period_end).toLocaleDateString()}</p>
+                      )}
+                      {usageData && (
+                        <div className="usage-progress">
+                          <div className="usage-bar">
+                            <div 
+                              className="usage-fill" 
+                              style={{ 
+                                width: `${Math.min((usageData.daily_usage / usageData.daily_limit) * 100, 100)}%`,
+                                backgroundColor: usageData.daily_usage >= usageData.daily_limit ? '#f44336' : '#4caf50'
+                              }}
+                            ></div>
+                          </div>
+                          <small>{usageData.daily_usage >= usageData.daily_limit ? 'Limit reached' : `${usageData.daily_limit - usageData.daily_usage} remaining today`}</small>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!isDeveloper && (
+                    <div className="billing-actions">
+                      <button 
+                        className="primary-btn"
+                        onClick={handleManageSubscription}
+                        disabled={isLoadingPortal}
+                      >
+                        {isLoadingPortal ? 'Loading...' : 'Manage Subscription'}
+                      </button>
+                      
+                      <button 
+                        className="secondary-btn"
+                        onClick={() => {
+                          fetchSubscriptionStatus();
+                          fetchUsageData();
+                        }}
+                        disabled={isLoadingSubscription || isLoadingUsage}
+                        style={{ marginTop: '10px' }}
+                      >
+                        {isLoadingSubscription || isLoadingUsage ? 'Refreshing...' : 'Refresh Status'}
+                      </button>
+                      
+                      {lastUpdated && (
+                        <div className="last-updated">
+                          <small>Last updated: {lastUpdated.toLocaleTimeString()}</small>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="billing-help">
+                    <h4>Need Help?</h4>
+                    <p>You can manage your subscription, update payment methods, and cancel anytime through your Stripe dashboard.</p>
+                    <ul>
+                      <li>Update payment method</li>
+                      <li>View billing history</li>
+                      <li>Cancel subscription</li>
+                      <li>Download invoices</li>
+                    </ul>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-subscription">
+                  <p>No subscription found. Start your free trial to access premium features.</p>
+                  <button className="primary-btn" onClick={() => window.location.href = '/trial-welcome'}>
+                    Start Free Trial
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
