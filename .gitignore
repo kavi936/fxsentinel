@@ -145,3 +145,6 @@ temp/
 
 # Built/compiled files
 working-dashboard.js
+.env
+.env.backup
+*.env
