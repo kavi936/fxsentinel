@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { config } from '../config';
 import './ProfilePopup.css';
 
 const ProfilePopup = ({ isOpen, onClose }) => {
@@ -652,7 +653,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
               <div className="support-info">
                 <h4>Support Hours</h4>
-                <p>We typically respond within 24 hours during business days.</p>
+                <p>We respond within max 24 hours during business days.</p>
                 <p><strong>Email:</strong> fxsentinelapp@gmail.com</p>
                 <p><strong>Response Time:</strong> 24-48 hours</p>
               </div>
@@ -788,10 +789,45 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 <div className="form-actions">
                   <button 
                     className="primary-btn"
-                    onClick={() => {
-                      // Here you would submit the refund request
-                      alert('Refund request submitted! We\'ll contact you within 24 hours.');
-                      setActiveTab('support');
+                    onClick={async () => {
+                      try {
+                        // Get form data
+                        const reasonSelect = document.querySelector('.form-select');
+                        const detailsTextarea = document.querySelector('.form-textarea');
+                        
+                        const reason = reasonSelect ? reasonSelect.value : '';
+                        const details = detailsTextarea ? detailsTextarea.value : '';
+                        
+                        if (!reason) {
+                          alert('Please select a reason for the refund request.');
+                          return;
+                        }
+                        
+                        // Submit refund request
+                        const response = await fetch(config.endpoints.requestRefund, {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                          body: JSON.stringify({
+                            email: currentUser?.email || '',
+                            reason: reason,
+                            details: details
+                          })
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          alert(result.message);
+                          setActiveTab('support');
+                        } else {
+                          alert('Failed to submit refund request. Please try again or contact support directly.');
+                        }
+                      } catch (error) {
+                        console.error('Error submitting refund request:', error);
+                        alert('Failed to submit refund request. Please try again or contact support directly.');
+                      }
                     }}
                   >
                     Submit Refund Request
