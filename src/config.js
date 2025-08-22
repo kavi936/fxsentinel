@@ -36,6 +36,8 @@ export const config = {
     technicalAnalysis: (pair) => `${API_BASE_URL}/api/technical-analysis/${pair}`,
     // Market sentiment endpoints
     marketSentiment: `${API_BASE_URL}/api/market-sentiment`,
-    sentimentRefresh: `${API_BASE_URL}/api/sentiment/refresh`
+    sentimentRefresh: `${API_BASE_URL}/api/sentiment/refresh`,
+    // Refund request endpoint
+    requestRefund: `${API_BASE_URL}/api/request-refund`
   }
 }; 

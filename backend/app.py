@@ -4105,6 +4105,114 @@ def stripe_webhook():
         )
         return jsonify(error_data), status_code
 
+@app.route('/api/request-refund', methods=['POST'])
+@limiter.limit("5 per hour")  # Limit refund requests
+def request_refund():
+    """Handle refund request and send email to support team"""
+    try:
+        data = request.get_json()
+        user_email = data.get('email')
+        reason = data.get('reason')
+        details = data.get('details', '')
+        
+        if not user_email or not reason:
+            return jsonify({'error': 'Email and reason are required'}), 400
+        
+        # Create email content
+        subject = f"Refund Request - {user_email}"
+        content = f"""
+New refund request received:
+
+User Email: {user_email}
+Reason: {reason}
+Additional Details: {details}
+
+Request submitted at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Please review and process this refund request.
+        """
+        
+        # Send email to support team
+        support_email = "fxsentinelapp@gmail.com"
+        
+        # For now, we'll use a simple email sending approach
+        # In production, you'd want to use a proper email service like SendGrid, AWS SES, etc.
+        try:
+            # Import smtplib for email sending
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            # Get email credentials from environment
+            smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+            smtp_port = int(os.getenv('SMTP_PORT', '587'))
+            smtp_username = os.getenv('SMTP_USERNAME')
+            smtp_password = os.getenv('SMTP_PASSWORD')
+            
+            if smtp_username and smtp_password:
+                # Create message
+                msg = MIMEMultipart()
+                msg['From'] = smtp_username
+                msg['To'] = support_email
+                msg['Subject'] = subject
+                
+                # Add body
+                msg.attach(MIMEText(content, 'plain'))
+                
+                # Send email
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.send_message(msg)
+                server.quit()
+                
+                print(f"✅ Refund request email sent to {support_email}")
+                
+            else:
+                # Fallback: just log the request
+                print(f"📧 Refund request received (email not configured):")
+                print(f"   From: {user_email}")
+                print(f"   Reason: {reason}")
+                print(f"   Details: {details}")
+                
+        except Exception as email_error:
+            print(f"⚠️ Failed to send email: {email_error}")
+            # Still log the request even if email fails
+            print(f"📧 Refund request received:")
+            print(f"   From: {user_email}")
+            print(f"   Reason: {reason}")
+            print(f"   Details: {details}")
+        
+        # Store refund request in database for tracking
+        if stripe_service.firebase_available and stripe_service.db:
+            try:
+                refund_doc = {
+                    'user_email': user_email,
+                    'reason': reason,
+                    'details': details,
+                    'status': 'pending',
+                    'created_at': datetime.now(),
+                    'processed_at': None
+                }
+                
+                stripe_service.db.collection('refund_requests').add(refund_doc)
+                print(f"✅ Refund request stored in database")
+                
+            except Exception as db_error:
+                print(f"⚠️ Failed to store refund request in database: {db_error}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Refund request submitted successfully. We will contact you within 24 hours.'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error processing refund request: {e}")
+        return jsonify({
+            'error': 'Failed to submit refund request',
+            'message': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))

@@ -351,14 +351,30 @@
 
 .settings-section h3,
 .security-section h3 {
-  margin: 0 0 20px 0;
-  font-size: 1.2rem;
+  margin: 0 0 24px 0;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  position: relative;
+  padding-bottom: 12px;
+}
+
+.security-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff4444, #cc3333);
+  border-radius: 2px;
 }
 
 .settings-group {
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .settings-group h4 {
@@ -368,13 +384,14 @@
   color: #ffffff;
   padding-bottom: 8px;
   border-bottom: 1px solid rgba(255, 68, 68, 0.2);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .setting-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 0;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px 0;
   border-bottom: 1px solid rgba(255, 68, 68, 0.1);
   transition: all 0.3s ease;
   border-radius: 8px;
@@ -382,8 +399,8 @@
 }
 
 .setting-item:hover {
-  background: rgba(255, 68, 68, 0.1);
-  padding: 16px 12px;
+  background: rgba(255, 68, 68, 0.05);
+  padding: 20px 12px;
   margin: 4px -12px;
 }
 
@@ -392,22 +409,25 @@
 }
 
 .setting-info {
-  flex: 1;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .setting-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 0.9rem;
-  font-weight: 600;
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  font-weight: 700;
   color: #ffffff;
   border: none;
   padding: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .setting-info p {
   margin: 0;
-  font-size: 0.8rem;
-  color: #888888;
+  font-size: 0.85rem;
+  color: #cccccc;
+  line-height: 1.4;
 }
 
 /* Toggle Switch */
@@ -503,6 +523,52 @@ input:checked + .toggle-slider:before {
 
 .logout-btn:hover {
   background: #ff6666;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+}
+
+/* Security Section Button Styling */
+.security-section .secondary-btn {
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ffffff;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.security-section .secondary-btn:hover {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: #ff4444;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.2);
+}
+
+.security-section .logout-btn {
+  background: linear-gradient(135deg, #ff4444, #cc3333);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ffffff;
+  padding: 10px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 80px;
+  transition: all 0.3s ease;
+  align-self: flex-start;
+}
+
+.security-section .logout-btn:hover {
+  background: linear-gradient(135deg, #cc3333, #aa2222);
+  border-color: #ff4444;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
 }
@@ -940,121 +1006,252 @@ input:checked + .toggle-slider:before {
   }
 }
 
-/* Support Section Styles */
+/* Support Section Styles - Enhanced Professional Design */
 .support-section {
-  padding: 20px 0;
+  padding: 16px 0;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(255, 68, 68, 0.03) 100%);
+  border-radius: 12px;
+  margin: 0 -20px;
+  padding: 16px 20px;
+  border: 1px solid rgba(255, 68, 68, 0.1);
+}
+
+.support-section h3 {
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  text-align: center;
+  position: relative;
+  padding-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.support-section h3::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, #ff4444, #cc3333);
+  border-radius: 2px;
 }
 
 .support-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 20px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
 }
 
 .support-card {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px 16px;
   text-align: center;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 68, 68, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.support-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ff4444, #cc3333);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
 }
 
 .support-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: #007bff;
+  transform: translateY(-8px);
+  box-shadow: 0 20px 25px rgba(0, 0, 0, 0.4), 0 10px 10px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 68, 68, 0.3);
+  border-color: #ff4444;
+}
+
+.support-card:hover::before {
+  transform: scaleX(1);
 }
 
 .support-icon {
-  font-size: 32px;
-  margin-bottom: 16px;
+  font-size: 36px;
+  margin-bottom: 12px;
   display: block;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.support-card:hover .support-icon {
+  transform: scale(1.1);
 }
 
 .support-card h4 {
   margin: 0 0 12px 0;
-  color: #2c3e50;
+  color: #ffffff;
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .support-card p {
-  margin: 0 0 20px 0;
-  color: #6c757d;
+  margin: 0 0 16px 0;
+  color: #cccccc;
   font-size: 14px;
   line-height: 1.5;
+  font-weight: 400;
 }
 
 .support-card .primary-btn,
 .support-card .secondary-btn {
   width: 100%;
-  padding: 12px 20px;
+  padding: 10px 16px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.support-card .primary-btn {
+  background: linear-gradient(135deg, #ff4444, #cc3333);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+}
+
+.support-card .primary-btn:hover {
+  background: linear-gradient(135deg, #cc3333, #aa2222);
+  box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.support-card .secondary-btn {
+  background: rgba(255, 68, 68, 0.1);
+  border: 2px solid rgba(255, 68, 68, 0.3);
+  color: #ffffff;
+}
+
+.support-card .secondary-btn:hover {
+  border-color: #ff4444;
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.2);
+  transform: translateY(-2px);
 }
 
 .support-info {
-  background: #e3f2fd;
-  border: 1px solid #bbdefb;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 20px;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(255, 68, 68, 0.05) 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.support-info::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff4444, #cc3333);
 }
 
 .support-info h4 {
   margin: 0 0 12px 0;
-  color: #1976d2;
+  color: #ff4444;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.support-info h4::before {
+  content: '⏰';
+  font-size: 18px;
 }
 
 .support-info p {
   margin: 0 0 8px 0;
-  color: #424242;
+  color: #cccccc;
   font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .support-info p:last-child {
   margin-bottom: 0;
 }
 
-/* FAQ Section Styles */
+.support-info p strong {
+  color: #ff4444;
+  font-weight: 700;
+}
+
+/* FAQ Section Styles - Enhanced */
 .faq-section {
-  padding: 20px 0;
+  padding: 24px 0;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(255, 68, 68, 0.03) 100%);
+  border-radius: 12px;
+  margin: 0 -20px;
+  padding: 24px 20px;
+  border: 1px solid rgba(255, 68, 68, 0.1);
 }
 
 .faq-header {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
+  margin-bottom: 32px;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(255, 68, 68, 0.3);
 }
 
 .back-btn {
-  background: none;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 8px 16px;
-  color: #6c757d;
-  font-size: 14px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 2px solid rgba(255, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 12px 20px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .back-btn:hover {
-  background: #f8f9fa;
-  border-color: #adb5bd;
-  color: #495057;
+  background: rgba(255, 68, 68, 0.2);
+  border-color: #ff4444;
+  color: #ff4444;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
 }
 
 .faq-header h3 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 24px;
-  font-weight: 600;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .faq-list {
@@ -1064,44 +1261,87 @@ input:checked + .toggle-slider:before {
 }
 
 .faq-item {
-  background: #ffffff;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 68, 68, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.faq-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, #ff4444, #cc3333);
+  border-radius: 2px;
+}
+
+.faq-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 68, 68, 0.3);
+  border-color: #ff4444;
 }
 
 .faq-item h4 {
-  margin: 0 0 12px 0;
-  color: #2c3e50;
+  margin: 0 0 16px 0;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  padding-left: 16px;
+  position: relative;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.faq-item h4::before {
+  content: '❓';
+  position: absolute;
+  left: -8px;
+  top: 0;
   font-size: 16px;
-  font-weight: 600;
+  color: #ff4444;
 }
 
 .faq-item p {
   margin: 0;
-  color: #6c757d;
-  font-size: 14px;
-  line-height: 1.6;
+  color: #cccccc;
+  font-size: 15px;
+  line-height: 1.7;
+  padding-left: 16px;
+  font-weight: 400;
 }
 
-/* Refund Policy Section Styles */
+/* Refund Policy Section Styles - Enhanced */
 .refund-policy-section {
-  padding: 20px 0;
+  padding: 24px 0;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(255, 68, 68, 0.03) 100%);
+  border-radius: 12px;
+  margin: 0 -20px;
+  padding: 24px 20px;
+  border: 1px solid rgba(255, 68, 68, 0.1);
 }
 
 .policy-header {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
+  margin-bottom: 32px;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(255, 68, 68, 0.3);
 }
 
 .policy-header h3 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 24px;
-  font-weight: 600;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .policy-content {
@@ -1111,25 +1351,60 @@ input:checked + .toggle-slider:before {
 }
 
 .policy-section {
-  background: #ffffff;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 68, 68, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.policy-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ff4444, #cc3333);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.policy-section:hover::before {
+  transform: scaleX(1);
+}
+
+.policy-section:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 68, 68, 0.3);
+  border-color: #ff4444;
 }
 
 .policy-section h4 {
-  margin: 0 0 12px 0;
-  color: #2c3e50;
-  font-size: 18px;
-  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.policy-section h4::before {
+  content: '✅';
+  font-size: 20px;
 }
 
 .policy-section p {
-  margin: 0 0 12px 0;
-  color: #6c757d;
-  font-size: 14px;
-  line-height: 1.6;
+  margin: 0 0 16px 0;
+  color: #cccccc;
+  font-size: 15px;
+  line-height: 1.7;
+  font-weight: 400;
 }
 
 .policy-section p:last-child {
@@ -1137,50 +1412,81 @@ input:checked + .toggle-slider:before {
 }
 
 .policy-section ul {
-  margin: 0 0 12px 0;
-  padding-left: 20px;
-  color: #6c757d;
-  font-size: 14px;
-  line-height: 1.6;
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+  color: #cccccc;
+  font-size: 15px;
+  line-height: 1.7;
 }
 
 .policy-section li {
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  position: relative;
+  padding-left: 8px;
+}
+
+.policy-section li::before {
+  content: '•';
+  color: #ff4444;
+  font-weight: bold;
+  position: absolute;
+  left: -16px;
 }
 
 .policy-section li:last-child {
   margin-bottom: 0;
 }
 
-/* Refund Request Section Styles */
+/* Refund Request Section Styles - Enhanced */
 .refund-request-section {
-  padding: 20px 0;
+  padding: 24px 0;
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(255, 68, 68, 0.03) 100%);
+  border-radius: 12px;
+  margin: 0 -20px;
+  padding: 24px 20px;
+  border: 1px solid rgba(255, 68, 68, 0.1);
 }
 
 .request-header {
   display: flex;
   align-items: center;
-  margin-bottom: 24px;
-  gap: 16px;
+  margin-bottom: 32px;
+  gap: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid rgba(255, 68, 68, 0.3);
 }
 
 .request-header h3 {
   margin: 0;
-  color: #2c3e50;
-  font-size: 24px;
-  font-weight: 600;
+  color: #ffffff;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .refund-form {
-  background: #ffffff;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 68, 68, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.refund-form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #dc3545, #c82333);
 }
 
 .refund-form .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 24px;
 }
 
 .refund-form .form-group:last-child {
@@ -1190,89 +1496,135 @@ input:checked + .toggle-slider:before {
 .refund-form label {
   display: block;
   margin-bottom: 8px;
-  color: #2c3e50;
-  font-size: 14px;
-  font-weight: 500;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .disabled-input {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 12px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 2px solid rgba(255, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
   width: 100%;
-  font-size: 14px;
-  color: #6c757d;
+  font-size: 15px;
+  color: #cccccc;
   cursor: not-allowed;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .form-select {
-  background: #ffffff;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 12px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 2px solid rgba(255, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 14px 16px;
   width: 100%;
-  font-size: 14px;
-  color: #2c3e50;
+  font-size: 15px;
+  color: #ffffff;
   cursor: pointer;
-  transition: border-color 0.2s ease;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23ff4444' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
 }
 
 .form-select:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: #ff4444;
+  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+  background-color: rgba(255, 68, 68, 0.15);
 }
 
 .form-textarea {
-  background: #ffffff;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 12px;
+  background: rgba(255, 68, 68, 0.1);
+  border: 2px solid rgba(255, 68, 68, 0.3);
+  border-radius: 12px;
+  padding: 16px;
   width: 100%;
-  font-size: 14px;
-  color: #2c3e50;
+  font-size: 15px;
+  color: #ffffff;
   font-family: inherit;
   resize: vertical;
-  min-height: 100px;
-  transition: border-color 0.2s ease;
+  min-height: 120px;
+  transition: all 0.3s ease;
+  font-weight: 400;
+  line-height: 1.6;
 }
 
 .form-textarea:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  border-color: #ff4444;
+  box-shadow: 0 0 0 3px rgba(255, 68, 68, 0.2);
+  background-color: rgba(255, 68, 68, 0.15);
 }
 
 .form-textarea::placeholder {
-  color: #adb5bd;
+  color: #cccccc;
+  font-weight: 400;
 }
 
 .form-actions {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 1px solid #e9ecef;
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid rgba(255, 68, 68, 0.3);
 }
 
 .form-actions .primary-btn,
 .form-actions .secondary-btn {
   flex: 1;
-  padding: 12px 20px;
-  font-size: 14px;
-  font-weight: 500;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-/* Responsive Design */
+.form-actions .primary-btn {
+  background: linear-gradient(135deg, #ff4444, #cc3333);
+  border: none;
+  color: white;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
+}
+
+.form-actions .primary-btn:hover {
+  background: linear-gradient(135deg, #cc3333, #aa2222);
+  box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
+  transform: translateY(-2px);
+}
+
+.form-actions .secondary-btn {
+  background: rgba(255, 68, 68, 0.1);
+  border: 2px solid rgba(255, 68, 68, 0.3);
+  color: #ffffff;
+}
+
+.form-actions .secondary-btn:hover {
+  border-color: #ff4444;
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Responsive Design - Enhanced */
 @media (max-width: 768px) {
   .support-grid {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
   
   .support-card {
-    padding: 20px;
+    padding: 16px 12px;
   }
   
   .faq-header,
@@ -1291,20 +1643,45 @@ input:checked + .toggle-slider:before {
   .form-actions .secondary-btn {
     width: 100%;
   }
+  
+  .support-section,
+  .faq-section,
+  .refund-policy-section,
+  .refund-request-section {
+    margin: 0 -16px;
+    padding: 12px 16px;
+  }
+  
+  .refund-form {
+    padding: 16px 12px;
+  }
 }
 
 @media (max-width: 480px) {
   .support-card {
-    padding: 16px;
+    padding: 12px 10px;
   }
   
   .faq-item,
   .policy-section,
   .refund-form {
-    padding: 16px;
+    padding: 12px 10px;
   }
   
   .support-icon {
-    font-size: 28px;
+    font-size: 32px;
+  }
+  
+  .support-section h3,
+  .faq-header h3,
+  .policy-header h3,
+  .request-header h3 {
+    font-size: 18px;
+  }
+  
+  .support-card h4,
+  .faq-item h4,
+  .policy-section h4 {
+    font-size: 16px;
   }
 }
