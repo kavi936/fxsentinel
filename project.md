@@ -124,21 +124,35 @@ zzEconomic calendar // chart popoup not working
 zz Live news card // Remove finnhub mentions in the live news 
 Live news card // Integrate AI analysis for live news 
 
-Market sentiment // Create LLM powered Market sentiment card using all available data
-Market Sentiment Card // Allow users to do analysis of Forex Pairs.
+zz Market sentiment // Create LLM powered Market sentiment card using all available data
+zz Market Sentiment Card // Allow users to do analysis of Forex Pairs.
 
-Alert Management tab // alerts how it will work configure telegram and email bots
-Markets Tab // Remove - Not needed as of now
+zz Alert Management tab // alerts how it will work configure telegram and email bots
+zz Markets Tab // Remove - Not needed as of now
 
-Fix Notifications pop-up
-Change Icon for settings to time icon // Modify timezone pop up for red theme
+zz Fix Notifications pop-up
+zz Change Icon for settings to time icon // Modify timezone pop up for red theme
 
-Integrate stripe payments before dashbaord acess, after sign up. // 3 day free trial //
-Modify Profile section to fit rules of closing subscriptions for stripe payers.
+zz Integrate stripe payments before dashbaord acess, after sign up. // 3 day free trial //
+zz Modify Profile section to fit rules of closing subscriptions for stripe payers.
+
+
 
 Modify Landing page to look amazing
 
-Product Should be done by now
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 +++++++++++++ Marketing 
 
