@@ -84,12 +84,19 @@
 
 @media (max-width: 480px) {
   .live-ticker {
-    flex-direction: column;
-    gap: 6px;
-    padding: 12px;
+    flex-direction: row;
+    gap: 4px;
+    padding: 8px 12px;
+    font-size: 11px;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
   
   .ticker-separator {
-    display: none;
+    display: inline;
+  }
+  
+  .ticker-item {
+    white-space: nowrap;
   }
 } 
