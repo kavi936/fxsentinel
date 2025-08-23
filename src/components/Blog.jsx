@@ -32,7 +32,7 @@ const Blog = () => {
       title: "Understanding Forex Market Sentiment: A Complete Guide",
       excerpt: "Learn how to analyze and interpret market sentiment to make better trading decisions in the forex market.",
       author: "FXSentinel Team",
-      date: "December 15, 2024",
+      date: "August 15, 2025",
       readTime: "8 min read",
       category: "Trading Education",
       image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop"
@@ -42,7 +42,7 @@ const Blog = () => {
       title: "The Impact of Central Bank Decisions on Currency Pairs",
       excerpt: "Explore how central bank policies and interest rate decisions affect currency movements and trading opportunities.",
       author: "FXSentinel Team",
-      date: "December 12, 2024",
+      date: "August 12, 2025",
       readTime: "10 min read",
       category: "Market Analysis",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop"
@@ -52,7 +52,7 @@ const Blog = () => {
       title: "AI-Powered News Analysis: The Future of Trading",
       excerpt: "Discover how artificial intelligence is revolutionizing the way traders process and react to market news.",
       author: "FXSentinel Team",
-      date: "December 10, 2024",
+      date: "August 10, 2025",
       readTime: "6 min read",
       category: "Technology",
       image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop"
@@ -62,7 +62,7 @@ const Blog = () => {
       title: "Risk Management Strategies for Forex Traders",
       excerpt: "Essential risk management techniques that every forex trader should implement to protect their capital.",
       author: "FXSentinel Team",
-      date: "December 8, 2024",
+      date: "August 8, 2025",
       readTime: "12 min read",
       category: "Trading Education",
       image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop"
@@ -72,7 +72,7 @@ const Blog = () => {
       title: "Economic Indicators Every Trader Should Monitor",
       excerpt: "A comprehensive guide to the key economic indicators that drive currency movements and market volatility.",
       author: "FXSentinel Team",
-      date: "December 5, 2024",
+      date: "August 5, 2025",
       readTime: "9 min read",
       category: "Market Analysis",
       image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop"
@@ -82,7 +82,7 @@ const Blog = () => {
       title: "Building a Profitable Trading Routine",
       excerpt: "Learn how to develop and maintain a consistent trading routine that leads to long-term success.",
       author: "FXSentinel Team",
-      date: "December 3, 2024",
+      date: "August 3, 2025",
       readTime: "7 min read",
       category: "Trading Education",
       image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop"
