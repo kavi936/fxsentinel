@@ -1250,6 +1250,7 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(255, 68, 68, 0.4);
   background: linear-gradient(135deg, var(--accent-red-light) 0%, var(--accent-red) 100%);
+  color: var(--text-white) !important;
 }
 
 .feature-card h3 {
