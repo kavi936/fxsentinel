@@ -154,6 +154,12 @@ Contact
 Call to action section
 Footer section
 
+User-reviews done later
+Features
+Content In FAQ
+
+Modify sign up/login pages for different devices.
+
 Modify welvome-trail page to look amazing 
 
 Alert bot needs some work

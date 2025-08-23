@@ -367,29 +367,58 @@ const LandingPage = () => {
       {/* Features Section */}
       <section id="features" className="features">
         <div className="features-inner">
-          <h2 className="section-title">What FXSentinel Does</h2>
+          <h2 className="section-title">Why Professional Traders Choose FXSentinel</h2>
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">📰</div>
-              <h3>Daily News Aggregation</h3>
-              <p>Curated macroeconomic events from TradingEconomics and ForexFactory - CPI, FOMC, GDP, and more key releases that move markets.</p>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3>Never Miss Market-Moving Events</h3>
+              <p>Stop losing money because you missed the news. We monitor 100+ sources including premium financial data providers and global news feeds to catch every economic release that moves your trades - from major central bank decisions to key economic indicators.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🤖</div>
-              <h3>AI-Powered Analysis</h3>
-              <p>GPT-4 generated insights explaining how each economic event impacts EUR/USD, USD/JPY, and Gold with actionable trading context.</p>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 11H15M9 15H15M9 7H15M5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M7 7H17V9H7V7Z" fill="currentColor"/>
+                  <path d="M7 11H17V13H7V11Z" fill="currentColor"/>
+                  <path d="M7 15H17V17H7V15Z" fill="currentColor"/>
+                </svg>
+              </div>
+              <h3>Understand the "Why" Behind Every Move</h3>
+              <p>Don't just see the numbers - understand what they mean. Our AI analysis instantly explains how each economic event will impact EUR/USD, USD/JPY, and Gold, giving you the context to make smarter trading decisions.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">⚡</div>
-              <h3>Real-Time Alerts</h3>
-              <p>Get instant Telegram notifications for high-impact events with AI summaries and pair-specific market reactions before the news breaks.</p>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3>Get Alerts Before the Market Reacts</h3>
+              <p>While others are still reading the news, you're already positioned. Receive instant Telegram notifications with AI-powered analysis and specific pair reactions within seconds of economic releases.</p>
             </div>
             <div className="feature-card">
-              <div className="feature-icon">🎯</div>
-              <h3>Instrument-Specific Insights</h3>
-              <p>Tailored analysis for major forex pairs and commodities, helping you understand which instruments will be most affected by each event.</p>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="12" cy="12" r="6" stroke="currentColor" strokeWidth="2"/>
+                  <circle cx="12" cy="12" r="2" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </div>
+              <h3>Focus on What Matters to Your Trades</h3>
+              <p>Stop wasting time on irrelevant news. Get targeted analysis for your specific currency pairs and commodities, so you know exactly which instruments will be most affected by each economic event.</p>
             </div>
           </div>
+                      <div className="features-cta">
+              <p className="features-cta-text"><span>Still don't believe us ?</span> 👉</p>
+              <Link to="/signup" className="features-cta-button">Take our 3-day free trial</Link>
+            </div>
         </div>
       </section>
 
@@ -405,10 +434,10 @@ const LandingPage = () => {
               />
             </div>
             <div className="alerts-text">
-              <h2 className="alerts-title">Instant Notifications</h2>
+              <h2 className="alerts-title">Never Miss Out.</h2>
               <p className="alerts-description">
-                Never miss why the markets moved.
-                We deliver through Telegram. Email coming soon.
+                While other traders are still processing the news, you're already positioned for profit. 
+                Get instant Telegram alerts with AI analysis that tells you exactly what to expect.
               </p>
               <div className="telegram-icon">
                 <img 
@@ -427,17 +456,18 @@ const LandingPage = () => {
         <div className="about-inner">
           <div className="about-content">
             <div className="about-text">
-              <h2 className="about-title">Built by Traders, for Traders</h2>
+              <h2 className="about-title">Built By Traders Who Know What You Need</h2>
               <div className="about-text-background">
                 <p>
-                  FXSentinel was created by forex traders who understand the challenges of 
-                  staying informed in today's fast-moving markets. We know that missing a 
-                  key economic release can mean the difference between profit and loss.
+                  We are forex traders who've spent years in the markets, and it is arrogant for anyone to say 
+                  they know exactly what moves the market, but it is undeniable that news plays a major role in 
+                  the market. That's why we built FXSentinel - to solve the exact problem we faced. We know that 
+                  in today's markets, not being able to instantly understand news can cost you thousands.
                 </p>
                 <p>
-                  Our AI system processes thousands of data points from the most trusted 
-                  financial sources to provide you with clear, actionable insights that 
-                  help you make better trading decisions.
+                  Our advanced AI analysis system processes thousands of data points from premium 
+                  financial sources to give you the edge you need. Stop losing money to missed opportunities 
+                  and start trading with confidence. We aim to be the best at what we do.
                 </p>
               </div>
             </div>
@@ -451,7 +481,7 @@ const LandingPage = () => {
                 <p>Monitoring</p>
               </div>
               <div className="stat">
-                <h3 className="counter" data-target="1000">0</h3>
+                <h3 className="counter" data-target="100">0</h3>
                 <p>News Sources</p>
               </div>
             </div>
@@ -462,23 +492,23 @@ const LandingPage = () => {
       {/* Pricing Section */}
       <section id="pricing" className="pricing">
         <div className="pricing-inner">
-          <h2 className="section-title">Simple, Transparent Pricing</h2>
-          <p className="pricing-description">Only one plan, for now.</p>
+          <h2 className="section-title">Start Trading Smarter Today</h2>
+          <p className="pricing-description">One powerful plan that gives you everything you need to beat the market.</p>
           <div className="pricing-single">
             <div className="pricing-card featured">
               <h3>Premium</h3>
               <div className="price">$19.99<span>/month</span></div>
               <ul>
-                <li>Advanced AI analysis</li>
-                <li>All currency pairs</li>
-                <li>Real-time alerts</li>
-                <li>Advanced dashboard</li>
-                <li>Trading recommendations</li>
-                <li>Priority support</li>
-                <li>Custom alert settings</li>
-                <li>Historical analysis</li>
+                <li>Beat the market with instant AI analysis</li>
+                <li>Monitor all major currency pairs</li>
+                <li>Get alerts before news breaks</li>
+                <li>Professional trading dashboard</li>
+                <li>Understand every market move</li>
+                <li>Priority customer support</li>
+                <li>Customize alerts for your strategy</li>
+                <li>Learn from historical patterns</li>
               </ul>
-              <Link to="/signup" className="pricing-button">Start Free Trial</Link>
+              <Link to="/signup" className="pricing-button">Start Beating the Market</Link>
             </div>
           </div>
         </div>
@@ -491,11 +521,11 @@ const LandingPage = () => {
           <div className="faq-grid">
             <div className="faq-item">
               <h3>How accurate is the AI analysis?</h3>
-              <p>Our GPT-4 powered system analyzes historical patterns, market correlations, and economic relationships to provide highly accurate predictions. While no analysis is 100% certain, our AI consistently identifies market-moving events and their likely impact.</p>
+              <p>Our advanced AI analysis system analyzes historical patterns, market correlations, and economic relationships to provide highly accurate predictions. While no analysis is 100% certain, our AI consistently identifies market-moving events and their likely impact.</p>
             </div>
             <div className="faq-item">
               <h3>What data sources do you use?</h3>
-              <p>We aggregate data from TradingEconomics, ForexFactory, Finnhub, Alpha Vantage, and multiple global news APIs. All sources are verified and trusted by professional traders worldwide.</p>
+              <p>We aggregate data from premium financial data providers, economic calendars, and global news sources. All sources are verified and trusted by professional traders worldwide.</p>
             </div>
             <div className="faq-item">
               <h3>How fast are the alerts delivered?</h3>
@@ -558,7 +588,7 @@ const LandingPage = () => {
                 </picture>
                 <span>FXSentinel</span>
               </div>
-              <p>AI-powered forex news analysis for professional traders.</p>
+              <p>Advanced AI analysis system for forex news and professional traders.</p>
             </div>
             <div className="footer-section">
               <h4>Product</h4>
@@ -585,7 +615,7 @@ const LandingPage = () => {
               <h4>Disclaimer</h4>
               <p>
                 FXSentinel is a market intelligence and data analytics platform. We are not a brokerage, 
-                investment advisor, or financial institution. The platform provides AI-powered analysis 
+                investment advisor, or financial institution.                 The platform provides advanced AI analysis system 
                 of forex market events and economic data for informational purposes only. We do not 
                 provide financial advice, investment recommendations, or trading signals. The insights 
                 and analysis provided through our platform should not be considered as certified 

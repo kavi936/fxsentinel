@@ -122,8 +122,8 @@
   font-size: 1.2rem;
 }
 
-/* Trial Section */
-.trial-section {
+/* Plans Section */
+.plans-section {
   padding: 100px 0;
   background: linear-gradient(180deg, #0a0a0a 0%, #111111 100%);
 }
@@ -150,153 +150,199 @@
   margin: 0 auto;
 }
 
-.benefits-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 30px;
-  margin-top: 60px;
+/* Toggle Tabs */
+.plans-toggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 4px;
+  max-width: 300px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.benefit-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(220, 38, 38, 0.1);
-  border-radius: 16px;
-  padding: 40px 30px;
-  text-align: center;
+.toggle-tab {
+  flex: 1;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #9ca3af;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
   transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
+  position: relative;
 }
 
-.benefit-card:hover {
+.toggle-tab.active {
+  background: #dc2626;
+  color: white;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.toggle-tab:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Plans Content */
+.plans-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 500px;
+}
+
+.plan-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  padding: 3rem;
+  text-align: center;
+  backdrop-filter: blur(15px);
+  transition: all 0.3s ease;
+  position: relative;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.plan-card:hover {
   transform: translateY(-8px);
   border-color: rgba(220, 38, 38, 0.3);
-  box-shadow: 0 20px 40px rgba(220, 38, 38, 0.1);
+  box-shadow: 0 25px 50px rgba(220, 38, 38, 0.2);
 }
 
-.benefit-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 25px;
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-}
-
-.benefit-icon svg {
-  width: 40px;
-  height: 40px;
-}
-
-.benefit-card h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 15px;
-  color: #ffffff;
-}
-
-.benefit-card p {
-  color: #9ca3af;
-  line-height: 1.6;
-}
-
-/* Premium Section */
-.premium-section {
-  padding: 100px 0;
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.premium-section::before {
-  content: '';
+/* Plan Badge */
+.plan-badge {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-  opacity: 0.3;
-}
-
-.premium-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-}
-
-.premium-header {
-  margin-bottom: 60px;
-}
-
-.premium-header h2 {
-  font-size: 3rem;
-  font-weight: 700;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #dc2626;
   color: white;
-  margin-bottom: 20px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
 }
 
-.price-tag {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 20px 40px;
-  border-radius: 50px;
-  backdrop-filter: blur(10px);
+.plan-badge.premium {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+}
+
+.plan-card h3 {
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  margin-top: 1rem;
+  background: linear-gradient(135deg, #ffffff 0%, #dc2626 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.02em;
 }
 
 .price {
-  font-size: 3rem;
-  font-weight: 800;
-  color: white;
+  font-size: 3.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 2rem;
+  letter-spacing: -0.03em;
+  display: inline-block;
 }
 
-.period {
-  font-size: 1.25rem;
-  color: rgba(255, 255, 255, 0.8);
+.price span {
+  font-size: 1rem;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-left: 0.25rem;
 }
 
-.premium-features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 60px;
+.features-list {
+  text-align: left;
 }
 
 .feature-item {
   display: flex;
   align-items: flex-start;
-  gap: 20px;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 30px;
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  transition: transform 0.3s ease;
+  gap: 15px;
+  margin-bottom: 1.5rem;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: background 0.3s ease;
 }
 
 .feature-item:hover {
-  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .feature-icon {
-  font-size: 2rem;
+  font-size: 1.2rem;
+  color: #dc2626;
+  font-weight: bold;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .feature-text h4 {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: white;
-  margin-bottom: 8px;
+  margin-bottom: 5px;
 }
 
 .feature-text p {
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
+  color: #9ca3af;
+  font-size: 0.9rem;
+  line-height: 1.5;
 }
+
+/* Trial and Premium specific styles */
+.plan-card.trial {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.plan-card.trial:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.plan-card.premium {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.plan-card.premium:hover {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.08);
+}
+
+
 
 /* CTA Section */
 .cta-section {
@@ -538,12 +584,40 @@
     font-size: 2rem;
   }
   
-  .benefits-grid {
-    grid-template-columns: 1fr;
+  .plans-toggle {
+    max-width: 280px;
+    margin-bottom: 2rem;
   }
   
-  .premium-features {
-    grid-template-columns: 1fr;
+  .toggle-tab {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .plans-content {
+    min-height: 450px;
+  }
+  
+  .plan-card {
+    padding: 2rem;
+    margin: 0 1rem;
+  }
+  
+  .plan-card h3 {
+    font-size: 1.6rem;
+  }
+  
+  .price {
+    font-size: 2.5rem;
+  }
+  
+  .price span {
+    font-size: 0.9rem;
+  }
+  
+  .plan-badge {
+    font-size: 0.75rem;
+    padding: 5px 12px;
   }
   
   .cta-buttons {
@@ -567,13 +641,52 @@
     height: 60px;
   }
   
-  .benefit-card,
-  .feature-item {
-    padding: 25px 20px;
+  .plans-toggle {
+    max-width: 260px;
+    margin-bottom: 1.5rem;
+  }
+  
+  .toggle-tab {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .plans-content {
+    min-height: 400px;
+  }
+  
+  .plan-card {
+    padding: 1.75rem;
+  }
+  
+  .plan-card h3 {
+    font-size: 1.4rem;
   }
   
   .price {
-    font-size: 2rem;
+    font-size: 2.25rem;
+  }
+  
+  .price span {
+    font-size: 0.85rem;
+  }
+  
+  .plan-badge {
+    font-size: 0.7rem;
+    padding: 4px 10px;
+  }
+  
+  .feature-item {
+    padding: 12px;
+    margin-bottom: 1rem;
+  }
+  
+  .feature-text h4 {
+    font-size: 1rem;
+  }
+  
+  .feature-text p {
+    font-size: 0.85rem;
   }
   
   .cta-primary,

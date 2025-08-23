@@ -173,7 +173,14 @@ class StripeService:
             
             user_doc = self.db.collection('users').document(user_id).get()
             if not user_doc.exists:
-                return None
+                # Return default trial status for new users
+                return {
+                    'status': 'trial',
+                    'trial_end_date': (datetime.now() + timedelta(days=self.trial_days)).isoformat(),
+                    'daily_analysis_count': 0,
+                    'analysis_limit': self.trial_limit,
+                    'stripe_customer_id': None
+                }
             
             user_data = user_doc.to_dict()
             return {

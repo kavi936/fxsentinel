@@ -12,6 +12,11 @@ const TrialWelcome = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [activePlan, setActivePlan] = useState('trial');
+
+  // Debug logging
+  console.log('🔍 TrialWelcome - Component rendered');
+  console.log('🔍 TrialWelcome - Current user:', currentUser ? { uid: currentUser.uid, email: currentUser.email } : null);
 
   const handleStartTrial = async () => {
     if (!acceptedTerms) {
@@ -89,103 +94,107 @@ const TrialWelcome = () => {
         </div>
       </div>
 
-      {/* Trial Benefits Section */}
-      <div className="trial-section">
+      {/* Plans Toggle Section */}
+      <div className="plans-section">
         <div className="container">
           <div className="section-header">
-            <h2>Your 3-Day Free Trial</h2>
-            <p>Experience the full power of AI-driven forex analysis</p>
+            <h2>Choose Your Plan</h2>
+            <p>Experience the power of AI-driven forex analysis</p>
           </div>
           
-          <div className="benefits-grid">
-            <div className="benefit-card">
-              <div className="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-              </div>
-              <h3>15 AI Analyses Daily</h3>
-              <p>Get intelligent insights on market movements with our advanced AI algorithms</p>
-            </div>
-            
-            <div className="benefit-card">
-              <div className="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/>
-                </svg>
-              </div>
-              <h3>Real-time Market Data</h3>
-              <p>Live forex prices, economic indicators, and market sentiment analysis</p>
-            </div>
-            
-            <div className="benefit-card">
-              <div className="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
-                </svg>
-              </div>
-              <h3>Economic Calendar</h3>
-              <p>Track important market events and news that impact currency movements</p>
-            </div>
-            
-            <div className="benefit-card">
-              <div className="benefit-icon">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-                </svg>
-              </div>
-              <h3>Smart Alerts</h3>
-              <p>Get notified of significant market changes and trading opportunities</p>
-            </div>
+          {/* Toggle Tabs */}
+          <div className="plans-toggle">
+            <button 
+              className={`toggle-tab ${activePlan === 'trial' ? 'active' : ''}`}
+              onClick={() => setActivePlan('trial')}
+            >
+              Free Trial
+            </button>
+            <button 
+              className={`toggle-tab ${activePlan === 'premium' ? 'active' : ''}`}
+              onClick={() => setActivePlan('premium')}
+            >
+              Premium
+            </button>
           </div>
-        </div>
-      </div>
-
-      {/* Premium Upgrade Section */}
-      <div className="premium-section">
-        <div className="container">
-          <div className="premium-content">
-            <div className="premium-header">
-              <h2>Upgrade to Premium</h2>
-              <div className="price-tag">
-                <span className="price">$20</span>
-                <span className="period">/month</span>
+          
+          {/* Plans Content */}
+          <div className="plans-content">
+            {activePlan === 'trial' && (
+              <div className="plan-card trial">
+                <div className="plan-badge">Free Trial</div>
+                <h3>3-Day Free Trial</h3>
+                <div className="price">$0<span>/3 days</span></div>
+                <div className="features-list">
+                  <div className="feature-item">
+                    <div className="feature-icon">✓</div>
+                    <div className="feature-text">
+                      <h4>15 AI Analyses Daily</h4>
+                      <p>Get intelligent insights on market movements</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">✓</div>
+                    <div className="feature-text">
+                      <h4>Real-time Market Data</h4>
+                      <p>Live forex prices and economic indicators</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">✓</div>
+                    <div className="feature-text">
+                      <h4>Economic Calendar</h4>
+                      <p>Track important market events</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">✓</div>
+                    <div className="feature-text">
+                      <h4>Smart Alerts</h4>
+                      <p>Get notified of market changes</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
             
-            <div className="premium-features">
-              <div className="feature-item">
-                <div className="feature-icon">🚀</div>
-                <div className="feature-text">
-                  <h4>100 AI Analyses Per Day</h4>
-                  <p>Unlimited access to our advanced AI analysis</p>
+            {activePlan === 'premium' && (
+              <div className="plan-card premium">
+                <div className="plan-badge premium">Premium</div>
+                <h3>Premium Plan</h3>
+                <div className="price">$20<span>/month</span></div>
+                <div className="features-list">
+                  <div className="feature-item">
+                    <div className="feature-icon">🚀</div>
+                    <div className="feature-text">
+                      <h4>100 AI Analyses Per Day</h4>
+                      <p>Unlimited access to our advanced AI analysis</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">🎯</div>
+                    <div className="feature-text">
+                      <h4>Advanced Analytics</h4>
+                      <p>Deep market insights and predictive analytics</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">⚡</div>
+                    <div className="feature-text">
+                      <h4>Priority Support</h4>
+                      <p>24/7 dedicated customer support</p>
+                    </div>
+                  </div>
+                  <div className="feature-item">
+                    <div className="feature-icon">🔧</div>
+                    <div className="feature-text">
+                      <h4>Custom Alerts</h4>
+                      <p>Personalized notification settings</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              <div className="feature-item">
-                <div className="feature-icon">🎯</div>
-                <div className="feature-text">
-                  <h4>Advanced Analytics</h4>
-                  <p>Deep market insights and predictive analytics</p>
-                </div>
-              </div>
-              
-              <div className="feature-item">
-                <div className="feature-icon">⚡</div>
-                <div className="feature-text">
-                  <h4>Priority Support</h4>
-                  <p>24/7 dedicated customer support</p>
-                </div>
-              </div>
-              
-              <div className="feature-item">
-                <div className="feature-icon">🔧</div>
-                <div className="feature-text">
-                  <h4>Custom Alerts</h4>
-                  <p>Personalized notification settings</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

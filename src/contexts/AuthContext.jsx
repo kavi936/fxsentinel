@@ -55,6 +55,13 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('❌ Error checking developer status:', error);
+      
+      // If it's a JSON parsing error, the backend might be down
+      if (error.message && error.message.includes('Unexpected token')) {
+        console.error('❌ Backend server might be down or returning HTML instead of JSON');
+        console.error('💡 Please ensure the backend server is running on port 5001');
+      }
+      
       setIsDeveloper(false);
     } finally {
       console.log('✅ Developer status check completed');
