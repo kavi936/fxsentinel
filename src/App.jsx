@@ -7,6 +7,8 @@ import TrialWelcomeRoute from './components/TrialWelcomeRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthRedirect from './components/AuthRedirect';
 import Blog from './components/Blog';
+import Disclaimer from './components/Disclaimer';
+import Privacy from './components/Privacy';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import BannerNotifications from './components/BannerNotifications';
@@ -25,6 +27,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth-redirect" element={<AuthRedirect />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/trial-welcome" element={
                 <ProtectedRoute>
                   <TrialWelcomeRoute />

@@ -572,10 +572,9 @@ const LandingPage = () => {
               <a href="#contact">Contact</a>
             </div>
             <div className="footer-section">
-              <h4>Support</h4>
-              <a href="#contact">Contact Us</a>
-              <a href="#">Documentation</a>
-              <a href="#">API</a>
+              <h4>Legal</h4>
+              <Link to="/disclaimer">Disclaimer</Link>
+              <Link to="/privacy">Privacy Policy</Link>
             </div>
           </div>
           
