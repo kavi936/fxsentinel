@@ -82,7 +82,7 @@ const TrialWelcome = () => {
             Welcome to <span className="highlight">FXSentinel</span>
           </h1>
           <p className="hero-subtitle">
-            Your AI-powered forex trading companion is ready to revolutionize your trading strategy
+            We dont want to bullsh#t you, take our free trial and help us make a better product. Thank you.
           </p>
           
           {error && (
@@ -121,77 +121,142 @@ const TrialWelcome = () => {
           {/* Plans Content */}
           <div className="plans-content">
             {activePlan === 'trial' && (
-              <div className="plan-card trial">
-                <div className="plan-badge">Free Trial</div>
+              <div className="trial-welcome-plan-card trial">
+                <div className="trial-welcome-plan-badge">Free Trial</div>
                 <h3>3-Day Free Trial</h3>
-                <div className="price">$0<span>/3 days</span></div>
-                <div className="features-list">
-                  <div className="feature-item">
-                    <div className="feature-icon">✓</div>
-                    <div className="feature-text">
+                <div className="trial-welcome-price">$0<span>/3 days</span></div>
+                <div className="trial-welcome-plan-description">
+                  <p>Experience the power of AI-driven forex analysis with our comprehensive trial package</p>
+                </div>
+                <div className="trial-welcome-features-list">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">🤖</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>15 AI Analyses Daily</h4>
-                      <p>Get intelligent insights on market movements</p>
+                      <p>Advanced AI analysis of economic events and news with trading insights and market impact assessment</p>
                     </div>
                   </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">✓</div>
-                    <div className="feature-text">
-                      <h4>Real-time Market Data</h4>
-                      <p>Live forex prices and economic indicators</p>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📊</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>Live Market Data</h4>
+                      <p>Real-time forex prices from TradingView API with 15 major currency pairs and price change indicators</p>
                     </div>
                   </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">✓</div>
-                    <div className="feature-text">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📅</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>Economic Calendar</h4>
-                      <p>Track important market events</p>
+                      <p>Track high-impact economic events with AI analysis of expected vs actual data and market implications</p>
                     </div>
                   </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">✓</div>
-                    <div className="feature-text">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">🔔</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>Smart Alerts</h4>
-                      <p>Get notified of market changes</p>
+                      <p>Telegram alerts for breaking news and economic events with AI analysis and currency pair identification</p>
                     </div>
                   </div>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📰</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>Live News Feed</h4>
+                      <p>Real-time news from Reuters, Bloomberg, CNBC with AI-powered sentiment analysis and forex impact</p>
+                    </div>
+                  </div>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📱</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>Mobile Responsive</h4>
+                      <p>Access your trading insights anywhere with our fully responsive web application</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="trial-welcome-trial-limitations">
+                  <h4>Trial Limitations</h4>
+                  <ul>
+                    <li>Limited to 15 AI analyses per day</li>
+                    <li>Basic alert functionality</li>
+                    <li>Standard support response time</li>
+                  </ul>
                 </div>
               </div>
             )}
             
             {activePlan === 'premium' && (
-              <div className="plan-card premium">
-                <div className="plan-badge premium">Premium</div>
+              <div className="trial-welcome-plan-card premium">
+                <div className="trial-welcome-plan-badge premium">Premium</div>
                 <h3>Premium Plan</h3>
-                <div className="price">$20<span>/month</span></div>
-                <div className="features-list">
-                  <div className="feature-item">
-                    <div className="feature-icon">🚀</div>
-                    <div className="feature-text">
+                <div className="trial-welcome-price">$20<span>/month</span></div>
+                <div className="trial-welcome-plan-description">
+                  <p>Unlock unlimited access to our most advanced AI analysis tools and premium features</p>
+                </div>
+                <div className="trial-welcome-features-list">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">🚀</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>100 AI Analyses Per Day</h4>
-                      <p>Unlimited access to our advanced AI analysis</p>
+                      <p>Unlimited access to our most advanced AI models with enhanced accuracy and deeper market insights</p>
                     </div>
                   </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">🎯</div>
-                    <div className="feature-text">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">🎯</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>Advanced Analytics</h4>
-                      <p>Deep market insights and predictive analytics</p>
+                      <p>Deep market insights, predictive analytics, risk assessment, and portfolio optimization recommendations</p>
                     </div>
                   </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">⚡</div>
-                    <div className="feature-text">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">⚡</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>Priority Support</h4>
-                      <p>24/7 dedicated customer support</p>
+                      <p>24/7 dedicated customer support with priority response times and personalized assistance</p>
                     </div>
                   </div>
-                  <div className="feature-item">
-                    <div className="feature-icon">🔧</div>
-                    <div className="feature-text">
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">🔧</div>
+                    <div className="trial-welcome-feature-text">
                       <h4>Custom Alerts</h4>
-                      <p>Personalized notification settings</p>
+                      <p>Personalized notification settings, custom price targets, and advanced alert filtering options</p>
                     </div>
                   </div>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📊</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>Enhanced Charting</h4>
+                      <p>Professional-grade charting with multiple timeframes, technical indicators, and advanced drawing tools</p>
+                    </div>
+                  </div>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📈</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>Performance Tracking</h4>
+                      <p>Track your trading performance, analyze risk metrics, and get detailed performance reports</p>
+                    </div>
+                  </div>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">🔍</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>Market Scanner</h4>
+                      <p>Advanced market scanner to identify trading opportunities across multiple currency pairs simultaneously</p>
+                    </div>
+                  </div>
+                  <div className="trial-welcome-feature-item">
+                    <div className="trial-welcome-feature-icon">📱</div>
+                    <div className="trial-welcome-feature-text">
+                      <h4>API Access</h4>
+                      <p>Access our data and analysis through API for integration with your existing trading systems</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="trial-welcome-premium-benefits">
+                  <h4>Premium Benefits</h4>
+                  <ul>
+                    <li>Unlimited AI analyses (100/day)</li>
+                    <li>Advanced risk management tools</li>
+                    <li>Priority customer support</li>
+                    <li>Exclusive market insights</li>
+                  </ul>
                 </div>
               </div>
             )}
@@ -207,18 +272,42 @@ const TrialWelcome = () => {
             <p>Join thousands of traders using FXSentinel to make informed decisions</p>
             
             {/* Terms and Conditions */}
-            <div className="terms-section">
-              <div className="terms-content">
+            <div className="trial-welcome-terms-section">
+              <div className="trial-welcome-terms-content">
                 <h3>Terms & Conditions</h3>
-                <div className="terms-text">
-                  <p><strong>Trial Period:</strong> 3-day free trial with limited usage (15 AI analyses/day)</p>
-                  <p><strong>Automatic Billing:</strong> $20/month will be charged after trial unless cancelled</p>
-                  <p><strong>Usage Limits:</strong> Trial users are heavily limited; upgrade for full access</p>
-                  <p><strong>Cancellation:</strong> Cancel anytime through your Stripe dashboard</p>
-                  <p><strong>Payment Method:</strong> Required to start trial (no charge during trial period)</p>
+                <div className="trial-welcome-terms-text">
+                  <div className="trial-welcome-terms-group">
+                    <h4>Trial Period</h4>
+                    <p>3-day free trial with 15 AI analyses/day. No charges during trial period.</p>
+                  </div>
+                  
+                  <div className="trial-welcome-terms-group">
+                    <h4>Automatic Billing</h4>
+                    <p>$20/month charged after trial unless cancelled. Cancel anytime before trial ends.</p>
+                  </div>
+                  
+                  <div className="trial-welcome-terms-group">
+                    <h4>Usage Limits</h4>
+                    <p>Trial users have basic features with daily limits. Upgrade for unlimited access.</p>
+                  </div>
+                  
+                  <div className="trial-welcome-terms-group">
+                    <h4>Cancellation Policy</h4>
+                    <p>Cancel anytime through account settings. No cancellation fees or penalties.</p>
+                  </div>
+                  
+                  <div className="trial-welcome-terms-group">
+                    <h4>Payment Method</h4>
+                    <p>Valid payment method required to start trial. Secure Stripe payment processing.</p>
+                  </div>
+                  
+                  <div className="trial-welcome-terms-group">
+                    <h4>Data & Privacy</h4>
+                    <p>Bank-level security protection. We never share your data with third parties.</p>
+                  </div>
                 </div>
                 
-                <div className="terms-checkbox">
+                <div className="trial-welcome-terms-checkbox">
                   <label>
                     <input
                       type="checkbox"
@@ -259,15 +348,31 @@ const TrialWelcome = () => {
             <div className="trial-guarantee">
               <div className="guarantee-item">
                 <span className="guarantee-icon">🔒</span>
-                <span>Secure payment processing</span>
+                <div className="guarantee-text">
+                  <h4>Secure Payment</h4>
+                  <p>Bank-level encryption and secure Stripe processing</p>
+                </div>
               </div>
               <div className="guarantee-item">
                 <span className="guarantee-icon">⏰</span>
-                <span>3-day free trial</span>
+                <div className="guarantee-text">
+                  <h4>3-Day Free Trial</h4>
+                  <p>No charges during trial period</p>
+                </div>
               </div>
               <div className="guarantee-item">
                 <span className="guarantee-icon">❌</span>
-                <span>Cancel anytime</span>
+                <div className="guarantee-text">
+                  <h4>Cancel Anytime</h4>
+                  <p>No cancellation fees or penalties</p>
+                </div>
+              </div>
+              <div className="guarantee-item">
+                <span className="guarantee-icon">💬</span>
+                <div className="guarantee-text">
+                  <h4>24/7 Support</h4>
+                  <p>Get help whenever you need it</p>
+                </div>
               </div>
             </div>
           </div>
