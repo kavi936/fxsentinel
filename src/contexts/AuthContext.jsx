@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth } from '../config/firebase';
+import { config } from '../config';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       console.log('🌐 Making API request to check developer status...');
-      const response = await fetch(`/api/subscription-status/${user.uid}?email=${user.email}`);
+      const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${user.uid}?email=${user.email}`);
       console.log('📡 API Response status:', response.status);
       
       if (response.ok) {

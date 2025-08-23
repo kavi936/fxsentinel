@@ -60,7 +60,7 @@ function Dashboard() {
       if (!currentUser) return;
       
       try {
-        const response = await fetch(`/api/subscription-status/${currentUser.uid}`);
+        const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}`);
         if (response.ok) {
           const data = await response.json();
           setSubscriptionStatus(data);
@@ -99,7 +99,7 @@ function Dashboard() {
     try {
       setSessionVerificationStatus('verifying');
       
-      const response = await fetch('/api/verify-checkout-session', {
+      const response = await fetch(`${config.API_BASE_URL}/api/verify-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

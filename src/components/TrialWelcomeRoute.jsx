@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { config } from '../config';
 import TrialWelcome from './TrialWelcome';
 
 const TrialWelcomeRoute = () => {
@@ -29,7 +30,7 @@ const TrialWelcomeRoute = () => {
 
       try {
         // Check subscription status
-        const response = await fetch(`/api/subscription-status/${currentUser.uid}`);
+        const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}`);
         if (response.ok) {
           const data = await response.json();
           console.log('🔍 TrialWelcomeRoute - Subscription data:', data);
