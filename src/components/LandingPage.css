@@ -927,36 +927,6 @@ body {
   animation: fadeInUp 1s ease-out 0.8s both;
 }
 
-/* Live Market Ticker */
-.live-ticker {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.ticker-label {
-  color: var(--accent-red);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.ticker-item {
-  color: var(--text-white);
-  font-weight: 500;
-  font-size: 0.95rem;
-  font-family: 'Space Grotesk', monospace;
-}
-
-.ticker-separator {
-  color: var(--text-gray);
-  font-size: 0.8rem;
-}
-
 .hero-buttons {
   display: flex;
   gap: 1rem;
@@ -1041,6 +1011,10 @@ body {
   transition: all 0.3s ease;
   border: none;
   cursor: pointer;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .primary-button:hover {
@@ -1837,20 +1811,72 @@ body {
   }
   
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 2.2rem;
+    line-height: 1.2;
+    margin-bottom: 1rem;
   }
   
   .hero-badge {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    margin-bottom: 1rem;
   }
   
-  .live-ticker {
-    flex-direction: row;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    flex-wrap: nowrap;
-    overflow: hidden;
+  .hero-subtitle {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-buttons {
+    margin-bottom: 1.5rem;
+  }
+  
+  .primary-button {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Hero section mobile optimizations */
+  .hero {
+    min-height: 80vh;
+    padding: 2rem 0;
+  }
+  
+  .hero-inner {
+    padding: 0 15px;
+  }
+  
+  .hero-content {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  .hero-badge-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  .live-ticker-container {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Data Powered By Section */
+  .data-powered {
+    padding: 3rem 0;
+  }
+  
+  .data-powered-title {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .data-powered-logos {
+    gap: 1rem;
+  }
+  
+  .data-logo {
+    height: 30px;
+    width: auto;
   }
   
   /* Hide desktop navigation on mobile */
@@ -1872,6 +1898,40 @@ body {
   
   .about-content {
     grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .about {
+    padding: 4rem 0;
+  }
+  
+  .about-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .about-text-background {
+    padding: 1.5rem;
+  }
+  
+  .about-text-background p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  
+  .about-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .stat h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .stat p {
+    font-size: 0.8rem;
   }
   
   .features-grid {
@@ -1879,13 +1939,283 @@ body {
     gap: 1.5rem;
   }
   
+  .features {
+    padding: 4rem 0;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+  }
+  
+  .feature-card {
+    padding: 1.5rem;
+  }
+  
+  .feature-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .feature-card p {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .feature-icon {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
   .pricing-grid {
     grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   
+  .pricing {
+    padding: 4rem 0;
+  }
+  
+  .pricing-description {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .pricing-card {
+    padding: 1.5rem;
+  }
+  
+  .pricing-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .price {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .price span {
+    font-size: 1rem;
+  }
+  
+  .pricing-card ul {
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .pricing-card li {
+    font-size: 0.9rem;
+  }
+  
+  .pricing-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
   .pricing-card.featured {
     transform: none;
+  }
+  
+  /* FAQ Section */
+  .faq {
+    padding: 4rem 0;
+  }
+  
+  .faq-inner {
+    padding: 0 15px;
+  }
+  
+  .faq .section-title {
+    font-size: 2rem;
+    margin-bottom: 2.5rem;
+  }
+  
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .faq-item {
+    padding: 1.5rem;
+    margin-bottom: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .faq-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .faq-item p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Alerts Showcase Section */
+  .alerts-showcase {
+    padding: 4rem 0;
+  }
+  
+  .alerts-showcase-inner {
+    padding: 0 20px;
+  }
+  
+  .alerts-content {
+    flex-direction: column;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .phone-mockup {
+    order: 2;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+  
+  .phone-image {
+    width: 100%;
+    height: auto;
+    max-width: 300px;
+  }
+  
+  .alerts-text {
+    order: 1;
+  }
+  
+  .alerts-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .alerts-description {
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+  }
+  
+  .telegram-icon {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .telegram-logo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  /* Contact Section */
+  .contact {
+    padding: 4rem 0;
+  }
+  
+  .section-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .contact-single {
+    padding: 1.5rem;
+  }
+  
+  .contact-header h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .contact-single p {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .contact-single span {
+    font-size: 0.8rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .email-button {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Footer Section */
+  .footer {
+    padding: 3rem 0 1rem 0;
+  }
+  
+  .footer-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    text-align: center;
+  }
+  
+  .footer-section {
+    align-items: center;
+  }
+  
+  .footer-section h4 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-section a {
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .footer-logo {
+    margin-bottom: 1rem;
+  }
+  
+  .footer-logo .logo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .disclaimer-section {
+    margin-top: 2rem;
+  }
+  
+  .disclaimer-content h4 {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .disclaimer-content p {
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+  
+  /* Additional mobile optimizations */
+  .hero-inner {
+    padding: 2rem 1rem;
+  }
+  
+  .features-inner,
+  .about-inner,
+  .pricing-inner,
+  .faq-inner,
+  .contact-inner {
+    padding: 0 20px;
+  }
+  
+  .data-powered-inner {
+    padding: 0 20px;
+  }
+  
+  .alerts-showcase-inner {
+    padding: 0 20px;
+  }
+  
+  .footer-inner {
+    padding: 0 20px;
   }
   
   /* Adjust navbar container for mobile */
@@ -1931,7 +2261,7 @@ body {
   }
   
   .section-title {
-    font-size: 2rem;
+    font-size: 1.8rem;
     margin-bottom: 2rem;
   }
   
@@ -1980,7 +2310,7 @@ body {
   }
   
   .section-title {
-    font-size: 2rem;
+    font-size: 1.6rem;
   }
   
   /* Adjust mobile menu padding for very small screens */
@@ -2728,6 +3058,131 @@ body.mobile-menu-open {
   .logo-scroll {
     gap: 1.5rem;
     animation: scroll-left 12s linear infinite;
+  }
+  
+  /* Additional optimizations for very small screens */
+  .hero-title {
+    font-size: 1.8rem;
+    line-height: 1.1;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  .hero-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .hero-inner {
+    padding: 0 10px;
+  }
+  
+  .hero-badge-container {
+    margin-bottom: 1rem;
+  }
+  
+  .live-ticker-container {
+    margin-bottom: 1rem;
+  }
+  
+  .hero-buttons {
+    margin-bottom: 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.4rem;
+  }
+  
+  .feature-card {
+    padding: 1.25rem;
+  }
+  
+  .feature-card h3 {
+    font-size: 1.1rem;
+  }
+  
+  .feature-card p {
+    font-size: 0.85rem;
+  }
+  
+  .alerts-title {
+    font-size: 1.8rem;
+  }
+  
+  .alerts-description {
+    font-size: 0.9rem;
+  }
+  
+  .about-title {
+    font-size: 1.8rem;
+  }
+  
+  .about-text-background {
+    padding: 1.25rem;
+  }
+  
+  .about-text-background p {
+    font-size: 0.9rem;
+  }
+  
+  .pricing-card {
+    padding: 1.25rem;
+  }
+  
+  .price {
+    font-size: 1.8rem;
+  }
+  
+  .faq-item {
+    padding: 1.25rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .faq-item h3 {
+    font-size: 1rem;
+    line-height: 1.2;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .faq-item p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .faq-inner {
+    padding: 0 10px;
+  }
+  
+  .faq .section-title {
+    font-size: 1.4rem;
+    margin-bottom: 2rem;
+  }
+  
+  .contact-single {
+    padding: 1.25rem;
+  }
+  
+  .contact-header h3 {
+    font-size: 1.3rem;
+  }
+  
+  .footer-section h4 {
+    font-size: 1rem;
+  }
+  
+  .footer-section a {
+    font-size: 0.85rem;
+  }
+  
+  .disclaimer-content p {
+    font-size: 0.75rem;
   }
   
   /* Fade effects removed for seamless scrolling */
