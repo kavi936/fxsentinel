@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { config } from '../config';
 import './TrialWelcome.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
@@ -29,7 +30,7 @@ const TrialWelcome = () => {
 
     try {
       // Create Stripe Checkout Session
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch(`${config.API_BASE_URL}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
