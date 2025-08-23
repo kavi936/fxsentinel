@@ -205,6 +205,12 @@ const LandingPage = () => {
             <Link to="/signup" className="signup-button">Sign Up</Link>
           </div>
           
+          {/* Mobile Auth Buttons */}
+          <div className="nav-auth mobile-only">
+            <Link to="/login" className="login-button">Login</Link>
+            <Link to="/signup" className="signup-button">Sign Up</Link>
+          </div>
+          
           {/* Mobile Menu Button */}
           <button 
             className={`mobile-menu-button ${isMobileMenuOpen ? 'active' : ''}`}
@@ -226,10 +232,6 @@ const LandingPage = () => {
             <button onClick={() => scrollToSection('faq')} className="mobile-nav-link">FAQ</button>
             <Link to="/blog" className="mobile-nav-link" onClick={closeMobileMenu}>Blog</Link>
             <button onClick={() => scrollToSection('contact')} className="mobile-nav-link">Contact</button>
-          </div>
-          <div className="mobile-menu-auth">
-            <Link to="/login" className="mobile-login-button" onClick={closeMobileMenu}>Login</Link>
-            <Link to="/signup" className="mobile-signup-button" onClick={closeMobileMenu}>Sign Up</Link>
           </div>
         </div>
       </nav>
@@ -286,11 +288,8 @@ const LandingPage = () => {
             
             <div className="hero-buttons">
               <Link to="/login" className="primary-button">
-                Explore FXSentinel
+                Start Free Trial
               </Link>
-              <button className="secondary-button">
-                How it works
-              </button>
             </div>
           </div>
         </div>

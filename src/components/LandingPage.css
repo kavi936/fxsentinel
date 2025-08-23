@@ -140,6 +140,17 @@ body {
   width: 100%;
 }
 
+.mobile-only {
+  display: none !important;
+}
+
+/* Ensure mobile-only is hidden on desktop */
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none !important;
+  }
+}
+
 .nav-links a {
   color: var(--text-gray);
   text-decoration: none;
@@ -1835,14 +1846,32 @@ body {
   }
   
   .live-ticker {
-    flex-direction: column;
+    flex-direction: row;
     gap: 0.5rem;
-    padding: 1rem;
+    padding: 0.75rem 1rem;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
   
   /* Hide desktop navigation on mobile */
   .desktop-only {
     display: none !important;
+  }
+  
+  /* Show mobile-only elements on mobile */
+  .mobile-only {
+    display: flex !important;
+  }
+  
+  /* Mobile auth buttons styling */
+  .mobile-only .nav-auth {
+    gap: 0.5rem;
+  }
+  
+  .mobile-only .login-button,
+  .mobile-only .signup-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
   }
   
   /* Show mobile menu button on mobile */
@@ -1871,6 +1900,15 @@ body {
   /* Adjust navbar container for mobile */
   .nav-container {
     padding: 0 15px;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+  }
+  
+  /* Center mobile auth buttons */
+  .mobile-only .nav-auth {
+    gap: 0.5rem;
+    justify-content: center;
+    margin: 0 auto;
   }
   
   /* Ensure logo doesn't get too small */
