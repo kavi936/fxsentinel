@@ -7,6 +7,7 @@ import tradingviewLogo from '../assets/tradingview-nobg.png';
 import finnhubLogo from '../assets/finnhub-nobg.png';
 import fxstreetLogo from '../assets/fxstreet-nobg.png';
 import cnbcLogo from '../assets/CNBC.png';
+import telegramLogo from '../assets/telegram.png';
 import LiveTicker from './LiveTicker';
 
 const LandingPage = () => {
@@ -387,6 +388,35 @@ const LandingPage = () => {
               <div className="feature-icon">🎯</div>
               <h3>Instrument-Specific Insights</h3>
               <p>Tailored analysis for major forex pairs and commodities, helping you understand which instruments will be most affected by each event.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Alerts Section */}
+      <section className="alerts-showcase">
+        <div className="alerts-showcase-inner">
+          <div className="alerts-content">
+            <div className="phone-mockup">
+              <img 
+                src="/src/assets/IMG_8110-portrait.png" 
+                alt="FXSentinel Alerts on iPhone" 
+                className="phone-image"
+              />
+            </div>
+            <div className="alerts-text">
+              <h2 className="alerts-title">Instant Notifications</h2>
+              <p className="alerts-description">
+                Never miss why the markets moved.
+                We deliver through Telegram. Email coming soon.
+              </p>
+              <div className="telegram-icon">
+                <img 
+                  src={telegramLogo} 
+                  alt="Telegram" 
+                  className="telegram-logo"
+                />
+              </div>
             </div>
           </div>
         </div>
