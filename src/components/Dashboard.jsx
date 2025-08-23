@@ -52,6 +52,36 @@ function Dashboard() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [marketStatusOpen, setMarketStatusOpen] = useState(false);
   const [sessionVerificationStatus, setSessionVerificationStatus] = useState(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+
+  // Check subscription status on mount
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const response = await fetch(`/api/subscription-status/${currentUser.uid}`);
+        if (response.ok) {
+          const data = await response.json();
+          setSubscriptionStatus(data);
+          
+          // Additional security check - redirect if no valid subscription
+          const validStatuses = ['trial', 'active', 'developer'];
+          if (!validStatuses.includes(data.status)) {
+            console.warn('⚠️ User does not have valid subscription status, redirecting to trial welcome');
+            navigate('/trial-welcome');
+            return;
+          }
+          
+          console.log('✅ User has valid subscription status:', data.status);
+        }
+      } catch (error) {
+        console.error('Error checking subscription status:', error);
+      }
+    };
+    
+    checkSubscriptionStatus();
+  }, [currentUser, navigate]);
 
   // Check for checkout session verification on mount
   useEffect(() => {
