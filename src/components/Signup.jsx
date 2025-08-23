@@ -88,7 +88,7 @@ const Signup = () => {
             </picture>
           </Link>
           <h1>Create Your Account</h1>
-          <p>Join thousands of traders using FXSentinel</p>
+          <p>Join FXSentinel and start trading smarter</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">

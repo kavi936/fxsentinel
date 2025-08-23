@@ -270,7 +270,7 @@ const TrialWelcome = () => {
         <div className="container">
           <div className="cta-content">
             <h2>Ready to Start Your Trading Journey?</h2>
-            <p>Join thousands of traders using FXSentinel to make informed decisions</p>
+            <p>Join FXSentinel and start making informed trading decisions</p>
             
             {/* Terms and Conditions */}
             <div className="trial-welcome-terms-section">

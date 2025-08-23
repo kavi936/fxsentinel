@@ -271,7 +271,7 @@ const LandingPage = () => {
             <div className="hero-badge-container">
               <div className="hero-badge">
                 <span className="badge-dot"></span>
-                AI-Powered • Real-Time • Trusted by 10K+ Traders
+                AI-Powered • Real-Time • Built for Professional Traders
               </div>
             </div>
             
@@ -436,7 +436,7 @@ const LandingPage = () => {
             <div className="alerts-text">
               <h2 className="alerts-title">Never Miss Out.</h2>
               <p className="alerts-description">
-                While other traders are still processing the news, you're already positioned for profit. 
+                While other traders are still processing the news, you could be positioned for profit. 
                 Get instant Telegram alerts with AI analysis that tells you exactly what to expect.
               </p>
               <div className="telegram-icon">
@@ -467,7 +467,7 @@ const LandingPage = () => {
                 <p>
                   Our advanced AI analysis system processes thousands of data points from premium 
                   financial sources to give you the edge you need. Stop losing money to missed opportunities 
-                  and start trading with confidence. We aim to be the best at what we do.
+                  and start trading with confidence. We're building the best tool for what we do.
                 </p>
               </div>
             </div>
@@ -493,13 +493,13 @@ const LandingPage = () => {
       <section id="pricing" className="pricing">
         <div className="pricing-inner">
           <h2 className="section-title">Start Trading Smarter Today</h2>
-          <p className="pricing-description">One powerful plan that gives you everything you need to beat the market.</p>
+          <p className="pricing-description">One powerful plan that gives you everything you need to understand market moves.</p>
           <div className="pricing-single">
             <div className="pricing-card featured">
               <h3>Premium</h3>
               <div className="price">$19.99<span>/month</span></div>
               <ul>
-                <li>Beat the market with instant AI analysis</li>
+                <li>Understand the market with instant AI analysis</li>
                 <li>Monitor all major currency pairs</li>
                 <li>Get alerts before news breaks</li>
                 <li>Professional trading dashboard</li>
@@ -508,7 +508,7 @@ const LandingPage = () => {
                 <li>Customize alerts for your strategy</li>
                 <li>Learn from historical patterns</li>
               </ul>
-              <Link to="/signup" className="pricing-button">Start Beating the Market</Link>
+              <Link to="/signup" className="pricing-button">Start Understanding the Market</Link>
             </div>
           </div>
         </div>
@@ -521,7 +521,7 @@ const LandingPage = () => {
           <div className="faq-grid">
             <div className="faq-item">
               <h3>How accurate is the AI analysis?</h3>
-              <p>Our advanced AI analysis system analyzes historical patterns, market correlations, and economic relationships to provide highly accurate predictions. While no analysis is 100% certain, our AI consistently identifies market-moving events and their likely impact.</p>
+              <p>Our advanced AI analysis system analyzes historical patterns, market correlations, and economic relationships to provide insights into market movements. While no analysis is 100% certain, our AI identifies market-moving events and their potential impact based on historical data.</p>
             </div>
             <div className="faq-item">
               <h3>What data sources do you use?</h3>
