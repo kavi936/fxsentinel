@@ -273,7 +273,7 @@ const Privacy = () => {
           </div>
 
           <div className="privacy-footer">
-            <p><strong>Last updated:</strong> December 2024</p>
+            <p><strong>Last updated:</strong> August 2025</p>
             <p>
               By using FXSentinel, you acknowledge that you have read and understood this 
               Privacy Policy and consent to the collection, use, and disclosure of your 

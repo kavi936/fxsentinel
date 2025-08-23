@@ -359,6 +359,63 @@ const LandingPage = () => {
                   className="data-logo"
                 />
               </div>
+              {/* Additional duplicates for longer loop */}
+              <div className="logo-item">
+                <img 
+                  src={tradingviewLogo} 
+                  alt="TradingView" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={finnhubLogo} 
+                  alt="Finnhub" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={fxstreetLogo} 
+                  alt="FXStreet" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={cnbcLogo} 
+                  alt="CNBC" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={tradingviewLogo} 
+                  alt="TradingView" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={finnhubLogo} 
+                  alt="Finnhub" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={fxstreetLogo} 
+                  alt="FXStreet" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={cnbcLogo} 
+                  alt="CNBC" 
+                  className="data-logo"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -628,7 +685,7 @@ const LandingPage = () => {
           </div>
           
           <div className="footer-bottom">
-            <p>&copy; 2024 FXSentinel. All rights reserved.</p>
+            <p>&copy; 2025 FXSentinel. All rights reserved.</p>
           </div>
         </div>
       </footer>

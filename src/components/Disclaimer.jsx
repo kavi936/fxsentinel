@@ -159,7 +159,7 @@ const Disclaimer = () => {
           </div>
 
           <div className="disclaimer-page-footer">
-            <p><strong>Last updated:</strong> December 2024</p>
+            <p><strong>Last updated:</strong> August 2025</p>
             <p>
               By using FXSentinel, you acknowledge that you have read, understood, and agree 
               to be bound by this disclaimer.
