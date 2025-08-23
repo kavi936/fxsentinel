@@ -140,6 +140,20 @@ zz Modify Profile section to fit rules of closing subscriptions for stripe payer
 
 Modify Landing page to look amazing
 
+@https://www.mrktedge.ai/ :
+
+Header section 
+Hero section 
+'Data powered by' section
+User reviews section
+Features
+Notification (Part of Main value sell off)
+Pricing
+FAQ
+Contact 
+Call to action section
+Footer section
+
 Modify welvome-trail page to look amazing 
 
 Alert bot needs some work

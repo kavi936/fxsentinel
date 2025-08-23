@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import './LandingPage.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import tradingviewLogo from '../assets/tradingview-nobg.png';
+import finnhubLogo from '../assets/finnhub-nobg.png';
+import fxstreetLogo from '../assets/fxstreet-nobg.png';
+import cnbcLogo from '../assets/CNBC.png';
 import LiveTicker from './LiveTicker';
 
 const LandingPage = () => {
@@ -189,6 +193,9 @@ const LandingPage = () => {
             <button onClick={() => scrollToSection('features')} className="nav-link-button">Features</button>
             <button onClick={() => scrollToSection('about')} className="nav-link-button">About</button>
             <button onClick={() => scrollToSection('pricing')} className="nav-link-button">Pricing</button>
+            <button onClick={() => scrollToSection('faq')} className="nav-link-button">FAQ</button>
+            <Link to="/blog" className="nav-link-button">Blog</Link>
+            <button onClick={() => scrollToSection('contact')} className="nav-link-button">Contact</button>
           </div>
           
           {/* Desktop Auth Buttons */}
@@ -207,8 +214,6 @@ const LandingPage = () => {
             <span></span>
             <span></span>
           </button>
-          
-
         </div>
         
         {/* Mobile Navigation Menu */}
@@ -217,6 +222,9 @@ const LandingPage = () => {
             <button onClick={() => scrollToSection('features')} className="mobile-nav-link">Features</button>
             <button onClick={() => scrollToSection('about')} className="mobile-nav-link">About</button>
             <button onClick={() => scrollToSection('pricing')} className="mobile-nav-link">Pricing</button>
+            <button onClick={() => scrollToSection('faq')} className="mobile-nav-link">FAQ</button>
+            <Link to="/blog" className="mobile-nav-link" onClick={closeMobileMenu}>Blog</Link>
+            <button onClick={() => scrollToSection('contact')} className="mobile-nav-link">Contact</button>
           </div>
           <div className="mobile-menu-auth">
             <Link to="/login" className="mobile-login-button" onClick={closeMobileMenu}>Login</Link>
@@ -287,6 +295,74 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Data Powered By Section */}
+      <section className="data-powered">
+        <div className="data-powered-inner">
+          <h2 className="data-powered-title">DATA DRIVEN BY</h2>
+          <div className="data-powered-logos">
+            <div className="logo-scroll">
+              <div className="logo-item">
+                <img 
+                  src={tradingviewLogo} 
+                  alt="TradingView" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={finnhubLogo} 
+                  alt="Finnhub" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={fxstreetLogo} 
+                  alt="FXStreet" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={cnbcLogo} 
+                  alt="CNBC" 
+                  className="data-logo"
+                />
+              </div>
+              {/* Duplicate logos for seamless scrolling */}
+              <div className="logo-item">
+                <img 
+                  src={tradingviewLogo} 
+                  alt="TradingView" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={finnhubLogo} 
+                  alt="Finnhub" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={fxstreetLogo} 
+                  alt="FXStreet" 
+                  className="data-logo"
+                />
+              </div>
+              <div className="logo-item">
+                <img 
+                  src={cnbcLogo} 
+                  alt="CNBC" 
+                  className="data-logo"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="features">
         <div className="features-inner">
@@ -321,17 +397,17 @@ const LandingPage = () => {
         <div className="about-inner">
           <div className="about-content">
             <div className="about-text">
-              <h2 className="about-title">About FXSentinel</h2>
+              <h2 className="about-title">Built by Traders, for Traders</h2>
               <div className="about-text-background">
                 <p>
-                  FXSentinel is a cutting-edge platform designed specifically for forex traders 
-                  who need to stay informed about macroeconomic events and their potential impact 
-                  on currency markets.
+                  FXSentinel was created by forex traders who understand the challenges of 
+                  staying informed in today's fast-moving markets. We know that missing a 
+                  key economic release can mean the difference between profit and loss.
                 </p>
                 <p>
-                  Our AI system processes thousands of news sources, economic indicators, and 
-                  market data to provide you with actionable insights that help you make better 
-                  trading decisions.
+                  Our AI system processes thousands of data points from the most trusted 
+                  financial sources to provide you with clear, actionable insights that 
+                  help you make better trading decisions.
                 </p>
               </div>
             </div>
@@ -357,41 +433,85 @@ const LandingPage = () => {
       <section id="pricing" className="pricing">
         <div className="pricing-inner">
           <h2 className="section-title">Simple, Transparent Pricing</h2>
-          <div className="pricing-grid">
-            <div className="pricing-card">
-              <h3>Starter</h3>
-              <div className="price">FREE<span></span></div>
-              <ul>
-                <li>Basic news analysis</li>
-                <li>5 currency pairs</li>
-                <li>Email alerts</li>
-                <li>Basic dashboard</li>
-              </ul>
-              <Link to="/signup" className="pricing-button">Start Free Trial</Link>
-            </div>
+          <p className="pricing-description">Only one plan, for now.</p>
+          <div className="pricing-single">
             <div className="pricing-card featured">
-              <h3>Professional</h3>
-              <div className="price">$20<span>/month</span></div>
+              <h3>Premium</h3>
+              <div className="price">$19.99<span>/month</span></div>
               <ul>
                 <li>Advanced AI analysis</li>
                 <li>All currency pairs</li>
                 <li>Real-time alerts</li>
                 <li>Advanced dashboard</li>
                 <li>Trading recommendations</li>
+                <li>Priority support</li>
+                <li>Custom alert settings</li>
+                <li>Historical analysis</li>
               </ul>
               <Link to="/signup" className="pricing-button">Start Free Trial</Link>
             </div>
-            <div className="pricing-card coming-soon">
-              <h3>Enterprise</h3>
-              <div className="price">Custom</div>
-              <ul>
-                <li>Custom integrations</li>
-                <li>API access</li>
-                <li>Dedicated support</li>
-                <li>White-label options</li>
-              </ul>
-              <button className="pricing-button">Contact Sales</button>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="faq">
+        <div className="faq-inner">
+          <h2 className="section-title">Frequently Asked Questions</h2>
+          <div className="faq-grid">
+            <div className="faq-item">
+              <h3>How accurate is the AI analysis?</h3>
+              <p>Our GPT-4 powered system analyzes historical patterns, market correlations, and economic relationships to provide highly accurate predictions. While no analysis is 100% certain, our AI consistently identifies market-moving events and their likely impact.</p>
             </div>
+            <div className="faq-item">
+              <h3>What data sources do you use?</h3>
+              <p>We aggregate data from TradingEconomics, ForexFactory, Finnhub, Alpha Vantage, and multiple global news APIs. All sources are verified and trusted by professional traders worldwide.</p>
+            </div>
+            <div className="faq-item">
+              <h3>How fast are the alerts delivered?</h3>
+              <p>Our system delivers alerts within seconds of economic releases. Telegram notifications are instant, and our AI analysis is typically available within 30-60 seconds of the data release.</p>
+            </div>
+            <div className="faq-item">
+              <h3>Can I customize which events I receive alerts for?</h3>
+              <p>Yes! Professional subscribers can customize their alert preferences by currency pair, impact level, and specific economic indicators. You'll only receive alerts for events that matter to your trading strategy.</p>
+            </div>
+            <div className="faq-item">
+              <h3>Is my trading data secure?</h3>
+              <p>Absolutely. We use bank-level encryption and never store your trading positions or account information. We only process market data and economic events to provide analysis.</p>
+            </div>
+            <div className="faq-item">
+              <h3>Can I cancel my subscription anytime?</h3>
+              <p>Yes, you can cancel your subscription at any time with no questions asked. Your access will continue until the end of your current billing period.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="contact">
+        <div className="contact-inner">
+          <h2 className="section-title">Get in Touch</h2>
+          <p className="section-subtitle">
+            Have questions? We're here to help you.
+          </p>
+          <div className="contact-single">
+            <div className="contact-header">
+              <svg className="email-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <polyline points="22,6 12,13 2,6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3>Contact Us</h3>
+            </div>
+            <p>fxsentinelapp@gmail.com</p>
+            <span>We guarantee to respond within 24 hours</span>
+            <a 
+              href="mailto:fxsentinelapp@gmail.com" 
+              className="email-button"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Email Us
+            </a>
           </div>
         </div>
       </section>
@@ -419,12 +539,12 @@ const LandingPage = () => {
             <div className="footer-section">
               <h4>Company</h4>
               <a href="#about">About</a>
-              <a href="#">Blog</a>
-              <a href="#">Contact</a>
+              <a href="#faq">FAQ</a>
+              <a href="#contact">Contact</a>
             </div>
             <div className="footer-section">
               <h4>Support</h4>
-              <a href="#">Help Center</a>
+              <a href="#contact">Contact Us</a>
               <a href="#">Documentation</a>
               <a href="#">API</a>
             </div>
