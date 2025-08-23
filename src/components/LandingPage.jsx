@@ -8,6 +8,7 @@ import finnhubLogo from '../assets/finnhub-nobg.png';
 import fxstreetLogo from '../assets/fxstreet-nobg.png';
 import cnbcLogo from '../assets/CNBC.png';
 import telegramLogo from '../assets/telegram.png';
+import phoneImage from '../assets/IMG_8110-portrait.png';
 import LiveTicker from './LiveTicker';
 
 const LandingPage = () => {
@@ -398,7 +399,7 @@ const LandingPage = () => {
           <div className="alerts-content">
             <div className="phone-mockup">
               <img 
-                src="/src/assets/IMG_8110-portrait.png" 
+                src={phoneImage} 
                 alt="FXSentinel Alerts on iPhone" 
                 className="phone-image"
               />
