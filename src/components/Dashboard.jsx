@@ -745,6 +745,12 @@ function Dashboard() {
               >
                 Alerts
               </button>
+              <button 
+                className={`nav-tab ${activeTab === 'contact' ? 'active' : ''}`}
+                onClick={() => window.location.href = '/#contact'}
+              >
+                Contact
+              </button>
             </div>
           </div>
           
