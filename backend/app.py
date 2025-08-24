@@ -3794,23 +3794,7 @@ def get_subscription_status(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/dashboard')
-def dashboard_redirect():
-    """Redirect dashboard requests to frontend"""
-    if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
-        frontend_url = 'https://fxsentinel-production.up.railway.app'
-    else:
-        frontend_url = 'http://localhost:3000'
-    return redirect(f'{frontend_url}/dashboard')
 
-@app.route('/trial-welcome')
-def trial_welcome_redirect():
-    """Redirect trial-welcome requests to frontend"""
-    if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
-        frontend_url = 'https://fxsentinel-production.up.railway.app'
-    else:
-        frontend_url = 'http://localhost:3000'
-    return redirect(f'{frontend_url}/trial-welcome')
 
 @app.route('/api/check-trial-eligibility/<email>', methods=['GET'])
 @limiter.limit("10 per minute")  # Limit eligibility checks
@@ -3889,11 +3873,8 @@ def create_checkout_session():
             }), 403
         
         # Get the frontend URL for success/cancel redirects
-        # For production, use the frontend URL, for development use localhost
-        if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
-            frontend_url = 'https://fxsentinel-production.up.railway.app'
-        else:
-            frontend_url = 'http://localhost:3000'  # React dev server
+        # Always use the production frontend URL for Stripe redirects
+        frontend_url = 'https://fxsentinel-production.up.railway.app'
         
         def create_session():
             return stripe.checkout.Session.create(
