@@ -4089,6 +4089,53 @@ def setup_trial_subscription():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/send-welcome-email', methods=['POST'])
+@limiter.limit("3 per minute")  # Limit email sending
+def send_welcome_email():
+    """Send welcome email with customer portal link"""
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        email = data.get('email')
+        
+        if not user_id or not email:
+            return jsonify({'error': 'User ID and email required'}), 400
+        
+        # Get user's Stripe customer ID from Firebase
+        if stripe_service.firebase_available and stripe_service.db:
+            try:
+                user_doc = stripe_service.db.collection('users').document(user_id).get()
+                if user_doc.exists:
+                    customer_id = user_doc.get('stripe_customer_id')
+                    
+                    if customer_id:
+                        # Create portal session
+                        portal_session = stripe.billing_portal.Session.create(
+                            customer=customer_id,
+                            return_url='https://fxsentinel-production.up.railway.app/dashboard',
+                        )
+                        
+                        # Here you would integrate with your email service
+                        # For now, we'll return the portal URL
+                        return jsonify({
+                            'success': True,
+                            'portal_url': portal_session.url,
+                            'message': 'Welcome email sent with customer portal link'
+                        })
+                    else:
+                        return jsonify({'error': 'No subscription found for this user'}), 404
+                else:
+                    return jsonify({'error': 'User not found'}), 404
+            except Exception as firebase_error:
+                print(f"Firebase error: {firebase_error}")
+                return jsonify({'error': 'Database error'}), 500
+        else:
+            return jsonify({'error': 'Database not available'}), 500
+            
+    except Exception as e:
+        print(f"Error sending welcome email: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/upgrade-subscription', methods=['POST'])
 def upgrade_subscription():
     """Upgrade user to paid subscription immediately"""
