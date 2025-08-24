@@ -4323,6 +4323,16 @@ Please review and process this refund request.
             'message': str(e)
         }), 500
 
+@app.route('/<path:path>')
+def catch_all(path):
+    """Catch-all route to redirect non-API routes to frontend"""
+    # Don't redirect API routes
+    if path.startswith('api/'):
+        return jsonify({'error': 'API endpoint not found'}), 404
+    
+    # Redirect all other routes to frontend
+    return redirect(f'https://fxsentinel-production.up.railway.app/{path}')
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))
