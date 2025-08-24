@@ -3986,8 +3986,8 @@ def verify_checkout_session():
                     'trial_end_date': (datetime.now() + timedelta(days=stripe_service.trial_days)).isoformat(),
                     'firebase_status': 'unavailable'
                 })
-            else:
-                return jsonify({'error': 'User not found or database unavailable'}), 404
+        else:
+            return jsonify({'error': 'User not found or database unavailable'}), 404
         
         return jsonify({'error': 'Invalid session or payment not completed'}), 400
         
