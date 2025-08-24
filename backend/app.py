@@ -4186,7 +4186,7 @@ def send_welcome_email():
                         # Create portal session
                         portal_session = stripe.billing_portal.Session.create(
                             customer=customer_id,
-                            return_url='https://fxsentinel-production.up.railway.app/dashboard',
+                            return_url='https://fxsentinel.io/dashboard',
                         )
                         
                         # Here you would integrate with your email service
