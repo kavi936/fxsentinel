@@ -4089,6 +4089,16 @@ def setup_trial_subscription():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/dashboard')
+def dashboard_redirect():
+    """Redirect dashboard requests to frontend"""
+    return redirect('https://fxsentinel-production.up.railway.app/dashboard')
+
+@app.route('/trial-welcome')
+def trial_welcome_redirect():
+    """Redirect trial-welcome requests to frontend"""
+    return redirect('https://fxsentinel-production.up.railway.app/trial-welcome')
+
 @app.route('/api/send-welcome-email', methods=['POST'])
 @limiter.limit("3 per minute")  # Limit email sending
 def send_welcome_email():
