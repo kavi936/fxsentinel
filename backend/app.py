@@ -14,8 +14,8 @@ from datetime import datetime
 from dotenv import load_dotenv
 import stripe
 from firebase_admin import credentials, firestore, initialize_app
-from backend.services.stripe_service import StripeService
-from backend.services.coupon_service import CouponService
+from services.stripe_service import StripeService
+from services.coupon_service import CouponService
 
 # Firebase initialization
 try:
