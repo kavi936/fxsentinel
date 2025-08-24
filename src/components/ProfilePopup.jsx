@@ -513,7 +513,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                         <p>Upgrade to Premium for unlimited AI analyses and advanced features!</p>
                         <button 
                           className="upgrade-btn"
-                          onClick={() => window.location.href = '/trial-welcome'}
+                          onClick={() => window.location.href = 'https://billing.stripe.com/p/login/4gM28s2oMbKSbhO4lt83C00'}
                         >
                           Upgrade Now
                         </button>
@@ -549,10 +549,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     <div className="billing-actions">
                       <button 
                         className="primary-btn"
-                        onClick={handleManageSubscription}
-                        disabled={isLoadingPortal}
+                        onClick={() => window.location.href = 'https://billing.stripe.com/p/login/4gM28s2oMbKSbhO4lt83C00'}
                       >
-                        {isLoadingPortal ? 'Loading...' : 'Manage Subscription'}
+                        Manage Subscription
                       </button>
                       
                       <button 
