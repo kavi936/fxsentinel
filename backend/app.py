@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory, redirect
+from flask import Flask, jsonify, request, send_from_directory, redirect, render_template
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -13,6 +13,9 @@ import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
 import stripe
+from firebase_admin import credentials, firestore, initialize_app
+from backend.services.stripe_service import StripeService
+from backend.services.coupon_service import CouponService
 
 # Firebase initialization
 try:
@@ -3860,6 +3863,7 @@ def create_checkout_session():
         user_id = data.get('user_id')
         email = data.get('email')
         name = data.get('name')
+        coupon_code = data.get('coupon_code')  # New: support for coupon codes
         
         # Validate required fields
         if not all([user_id, email]):
@@ -3872,29 +3876,45 @@ def create_checkout_session():
                 'message': 'This email address has already used a free trial. Please sign in to your existing account or use a different email address.'
             }), 403
         
+        # Validate coupon if provided
+        coupon_service = CouponService()
+        if coupon_code:
+            coupon_validation = coupon_service.validate_coupon(coupon_code)
+            if not coupon_validation['valid']:
+                return jsonify({
+                    'error': 'Invalid coupon code',
+                    'message': coupon_validation.get('reason', 'Coupon code is invalid or expired.')
+                }), 400
+        
         # Get the frontend URL for success/cancel redirects
         # Use the correct frontend domain for Stripe redirects
         frontend_url = 'https://fxsentinel.io'
         
         def create_session():
-            return stripe.checkout.Session.create(
-                customer_email=email,
-                line_items=[{
+            session_params = {
+                'customer_email': email,
+                'line_items': [{
                     'price': os.getenv('STRIPE_PRICE_ID'),
                     'quantity': 1,
                 }],
-                mode='subscription',
-                subscription_data={
+                'mode': 'subscription',
+                'subscription_data': {
                     'trial_period_days': int(os.getenv('TRIAL_DAYS', 3)),
                     'metadata': {'firebase_user_id': user_id}
                 },
-                success_url=f'{frontend_url}/dashboard?session_id={{CHECKOUT_SESSION_ID}}',
-                cancel_url=f'{frontend_url}/trial-welcome',
-                metadata={
+                'success_url': f'{frontend_url}/dashboard?session_id={{CHECKOUT_SESSION_ID}}',
+                'cancel_url': f'{frontend_url}/trial-welcome',
+                'metadata': {
                     'firebase_user_id': user_id,
                     'user_name': name
                 }
-            )
+            }
+            
+            # Add coupon if provided
+            if coupon_code:
+                session_params['discounts'] = [{'coupon': coupon_code}]
+            
+            return stripe.checkout.Session.create(**session_params)
         
         # Use retry mechanism for checkout session creation
         checkout_session = RetryHandler.retry_operation(
@@ -3921,6 +3941,39 @@ def create_checkout_session():
             user_id=user_id
         )
         return jsonify(error_data), status_code
+
+@app.route('/api/validate-coupon', methods=['POST'])
+@limiter.limit("20 per minute")  # Limit coupon validation attempts
+def validate_coupon():
+    """Validate a coupon code before checkout"""
+    try:
+        data = request.get_json()
+        coupon_code = data.get('coupon_code')
+        
+        if not coupon_code:
+            return jsonify({'error': 'Coupon code required'}), 400
+        
+        coupon_service = CouponService()
+        validation_result = coupon_service.validate_coupon(coupon_code)
+        
+        if validation_result['valid']:
+            return jsonify({
+                'valid': True,
+                'coupon': {
+                    'code': coupon_code,
+                    'percent_off': validation_result['coupon'].percent_off,
+                    'description': validation_result['coupon'].metadata.get('description', ''),
+                    'type': validation_result['type']
+                }
+            })
+        else:
+            return jsonify({
+                'valid': False,
+                'error': validation_result.get('reason', 'Invalid coupon code')
+            }), 400
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/verify-checkout-session', methods=['POST'])
 @limiter.limit("20 per minute")  # Limit verification attempts

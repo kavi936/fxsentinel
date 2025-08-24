@@ -14,6 +14,9 @@ const TrialWelcome = () => {
   const [error, setError] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [activePlan, setActivePlan] = useState('trial');
+  const [couponCode, setCouponCode] = useState('');
+  const [couponValid, setCouponValid] = useState(null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
 
   // Debug logging
   console.log('🔍 TrialWelcome - Component rendered');
@@ -49,6 +52,7 @@ const TrialWelcome = () => {
           user_id: currentUser.uid,
           email: currentUser.email,
           name: currentUser.displayName || currentUser.email,
+          coupon_code: couponCode.trim().toUpperCase() || undefined,
         }),
       });
 
@@ -70,6 +74,65 @@ const TrialWelcome = () => {
 
   const handleSkipTrial = () => {
     navigate('/');
+  };
+
+  const validateCoupon = async (code) => {
+    if (!code.trim()) {
+      setCouponValid(null);
+      return;
+    }
+
+    setValidatingCoupon(true);
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/api/validate-coupon`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ coupon_code: code.trim().toUpperCase() }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok && data.valid) {
+        setCouponValid({
+          valid: true,
+          discount: data.coupon.percent_off,
+          description: data.coupon.description
+        });
+      } else {
+        setCouponValid({
+          valid: false,
+          error: data.error || 'Invalid coupon code'
+        });
+      }
+    } catch (error) {
+      setCouponValid({
+        valid: false,
+        error: 'Failed to validate coupon'
+      });
+    } finally {
+      setValidatingCoupon(false);
+    }
+  };
+
+  const handleCouponChange = (e) => {
+    const code = e.target.value;
+    setCouponCode(code);
+    
+    // Clear validation when user starts typing
+    if (couponValid) {
+      setCouponValid(null);
+    }
+    
+    // Validate coupon after user stops typing (debounce)
+    if (code.trim()) {
+      const timeoutId = setTimeout(() => {
+        validateCoupon(code);
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
+    }
   };
 
   return (
@@ -327,6 +390,43 @@ const TrialWelcome = () => {
                     />
                     <span>I accept the terms and conditions and understand I will be charged $20/month after the trial unless I cancel</span>
                   </label>
+                </div>
+              </div>
+            </div>
+
+            {/* Coupon Code Section */}
+            <div className="coupon-section">
+              <div className="coupon-input-group">
+                <label htmlFor="coupon-code">Have a coupon code?</label>
+                <div className="coupon-input-wrapper">
+                  <input
+                    type="text"
+                    id="coupon-code"
+                    placeholder="Enter coupon code (e.g., FRIENDS30)"
+                    value={couponCode}
+                    onChange={handleCouponChange}
+                    className={`coupon-input ${couponValid?.valid ? 'valid' : couponValid?.valid === false ? 'invalid' : ''}`}
+                    disabled={isLoading}
+                  />
+                  {validatingCoupon && (
+                    <div className="coupon-loading">
+                      <span className="loading-spinner small"></span>
+                    </div>
+                  )}
+                  {couponValid?.valid && (
+                    <div className="coupon-success">
+                      <span className="coupon-icon">✅</span>
+                      <span className="coupon-message">
+                        {couponValid.discount}% off - {couponValid.description}
+                      </span>
+                    </div>
+                  )}
+                  {couponValid?.valid === false && (
+                    <div className="coupon-error">
+                      <span className="coupon-icon">❌</span>
+                      <span className="coupon-message">{couponValid.error}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
