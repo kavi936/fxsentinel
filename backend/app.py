@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, redirect
 from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -3794,6 +3794,24 @@ def get_subscription_status(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/dashboard')
+def dashboard_redirect():
+    """Redirect dashboard requests to frontend"""
+    if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+        frontend_url = 'https://fxsentinel-production.up.railway.app'
+    else:
+        frontend_url = 'http://localhost:3000'
+    return redirect(f'{frontend_url}/dashboard')
+
+@app.route('/trial-welcome')
+def trial_welcome_redirect():
+    """Redirect trial-welcome requests to frontend"""
+    if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+        frontend_url = 'https://fxsentinel-production.up.railway.app'
+    else:
+        frontend_url = 'http://localhost:3000'
+    return redirect(f'{frontend_url}/trial-welcome')
+
 @app.route('/api/check-trial-eligibility/<email>', methods=['GET'])
 @limiter.limit("10 per minute")  # Limit eligibility checks
 def check_trial_eligibility(email):
@@ -3870,8 +3888,12 @@ def create_checkout_session():
                 'message': 'This email address has already used a free trial. Please sign in to your existing account or use a different email address.'
             }), 403
         
-        # Get the base URL for success/cancel redirects
-        base_url = request.host_url.rstrip('/')
+        # Get the frontend URL for success/cancel redirects
+        # For production, use the frontend URL, for development use localhost
+        if os.getenv('RAILWAY_ENVIRONMENT') == 'production':
+            frontend_url = 'https://fxsentinel-production.up.railway.app'
+        else:
+            frontend_url = 'http://localhost:3000'  # React dev server
         
         def create_session():
             return stripe.checkout.Session.create(
@@ -3885,8 +3907,8 @@ def create_checkout_session():
                     'trial_period_days': int(os.getenv('TRIAL_DAYS', 3)),
                     'metadata': {'firebase_user_id': user_id}
                 },
-                success_url=f'{base_url}/dashboard?session_id={{CHECKOUT_SESSION_ID}}',
-                cancel_url=f'{base_url}/trial-welcome',
+                success_url=f'{frontend_url}/dashboard?session_id={{CHECKOUT_SESSION_ID}}',
+                cancel_url=f'{frontend_url}/trial-welcome',
                 metadata={
                     'firebase_user_id': user_id,
                     'user_name': name
