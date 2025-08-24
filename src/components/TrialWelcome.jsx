@@ -29,6 +29,16 @@ const TrialWelcome = () => {
     setError('');
 
     try {
+      // First check trial eligibility
+      const eligibilityResponse = await fetch(`${config.API_BASE_URL}/api/check-trial-eligibility/${encodeURIComponent(currentUser.email)}`);
+      const eligibilityData = await eligibilityResponse.json();
+      
+      if (!eligibilityData.eligible) {
+        setError(eligibilityData.message || 'This email has already used a free trial. Please sign in to your existing account or use a different email address.');
+        setIsLoading(false);
+        return;
+      }
+
       // Create Stripe Checkout Session
       const response = await fetch(`${config.API_BASE_URL}/api/create-checkout-session`, {
         method: 'POST',
@@ -44,7 +54,7 @@ const TrialWelcome = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Failed to create checkout session');
+        throw new Error(data.error || data.message || 'Failed to create checkout session');
       }
 
       const { session_url } = await response.json();

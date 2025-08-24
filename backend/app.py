@@ -3794,6 +3794,44 @@ def get_subscription_status(user_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/check-trial-eligibility/<email>', methods=['GET'])
+@limiter.limit("10 per minute")  # Limit eligibility checks
+def check_trial_eligibility(email):
+    """Check if an email is eligible for a trial"""
+    try:
+        if not email:
+            return jsonify({'error': 'Email required'}), 400
+        
+        # Decode URL-encoded email
+        import urllib.parse
+        email = urllib.parse.unquote(email)
+        
+        # Check if Firebase is available for stripe_service
+        if not stripe_service.firebase_available:
+            # If Firebase is not available, allow trial (fallback behavior)
+            return jsonify({
+                'email': email,
+                'eligible': True,
+                'trial_history': [],
+                'message': 'Eligible for trial (Firebase not available)',
+                'firebase_status': 'unavailable'
+            })
+        
+        is_eligible = stripe_service.check_trial_eligibility(email)
+        trial_history = stripe_service.get_trial_history(email)
+        
+        return jsonify({
+            'email': email,
+            'eligible': is_eligible,
+            'trial_history': trial_history,
+            'message': 'Trial already used' if not is_eligible else 'Eligible for trial',
+            'firebase_status': 'available'
+        })
+        
+    except Exception as e:
+        print(f"Error checking trial eligibility: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/check-analysis-permission/<user_id>', methods=['GET'])
 def check_analysis_permission(user_id):
     """Check if user can perform an AI analysis"""
@@ -3824,6 +3862,13 @@ def create_checkout_session():
         # Validate required fields
         if not all([user_id, email]):
             return jsonify({'error': 'Missing required fields: user_id and email'}), 400
+        
+        # Check trial eligibility
+        if not stripe_service.check_trial_eligibility(email):
+            return jsonify({
+                'error': 'Trial already used',
+                'message': 'This email address has already used a free trial. Please sign in to your existing account or use a different email address.'
+            }), 403
         
         # Get the base URL for success/cancel redirects
         base_url = request.host_url.rstrip('/')
@@ -3911,6 +3956,9 @@ def verify_checkout_session():
                         'stripe_customer_id': session.customer,
                         'subscription_id': session.subscription
                     })
+                    
+                    # Mark trial as used for this email
+                    stripe_service.mark_trial_used(user_id, session.customer_email)
                     
                     return jsonify({
                         'success': True,
@@ -4104,6 +4152,8 @@ def stripe_webhook():
             context={'operation': 'stripe_webhook', 'signature': sig_header[:20] if sig_header else 'None'}
         )
         return jsonify(error_data), status_code
+
+
 
 @app.route('/api/request-refund', methods=['POST'])
 @limiter.limit("5 per hour")  # Limit refund requests
