@@ -81,7 +81,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     
     setIsLoadingSubscription(true);
     try {
-      const response = await fetch(`/api/subscription-status/${currentUser.uid}`);
+      const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}`);
       if (response.ok) {
         const data = await response.json();
         setSubscriptionStatus(data);
@@ -100,7 +100,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     
     setIsLoadingUsage(true);
     try {
-      const response = await fetch(`/api/check-analysis-permission/${currentUser.uid}?email=${currentUser.email}`);
+      const response = await fetch(`${config.API_BASE_URL}/api/check-analysis-permission/${currentUser.uid}?email=${currentUser.email}`);
       if (response.ok) {
         const data = await response.json();
         setUsageData(data);
@@ -118,7 +118,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     
     setIsLoadingPortal(true);
     try {
-      const response = await fetch('/api/create-portal-session', {
+      const response = await fetch(`${config.API_BASE_URL}/api/create-portal-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
