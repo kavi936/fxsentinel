@@ -10,10 +10,16 @@ import cnbcLogo from '../assets/CNBC.png';
 import telegramLogo from '../assets/telegram.png';
 import phoneImage from '../assets/IMG_8110-portrait.png';
 import LiveTicker from './LiveTicker';
+import { trackLandingPageView, trackSignupClick, trackEngagement, trackFeatureUsage } from '../utils/analytics';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Track landing page view on component mount
+  useEffect(() => {
+    trackLandingPageView();
+  }, []);
 
 
   useEffect(() => {
@@ -203,13 +209,31 @@ const LandingPage = () => {
           {/* Desktop Auth Buttons */}
           <div className="nav-auth desktop-only">
             <Link to="/login" className="login-button">Login</Link>
-            <Link to="/signup" className="signup-button">Sign Up</Link>
+            <Link 
+              to="/signup" 
+              className="signup-button"
+              onClick={() => {
+                trackSignupClick('nav_desktop');
+                trackEngagement('nav_signup_click');
+              }}
+            >
+              Sign Up
+            </Link>
           </div>
           
           {/* Mobile Auth Buttons */}
           <div className="nav-auth mobile-only">
             <Link to="/login" className="login-button">Login</Link>
-            <Link to="/signup" className="signup-button">Sign Up</Link>
+            <Link 
+              to="/signup" 
+              className="signup-button"
+              onClick={() => {
+                trackSignupClick('nav_mobile');
+                trackEngagement('nav_signup_click');
+              }}
+            >
+              Sign Up
+            </Link>
           </div>
           
           {/* Mobile Menu Button */}
@@ -288,7 +312,14 @@ const LandingPage = () => {
             <LiveTicker />
             
             <div className="hero-buttons">
-              <Link to="/login" className="primary-button">
+              <Link 
+                to="/login" 
+                className="primary-button"
+                onClick={() => {
+                  trackSignupClick('hero_button');
+                  trackEngagement('hero_trial_button_click');
+                }}
+              >
                 Start Free Trial
               </Link>
             </div>
@@ -491,7 +522,7 @@ const LandingPage = () => {
               />
             </div>
             <div className="alerts-text">
-              <h2 className="alerts-title">Never Miss Out.</h2>
+              <h2 className="alerts-title">Never Miss The 'Why'.</h2>
               <p className="alerts-description">
                 While other traders are still processing the news, you could be positioned for profit. 
                 Get instant Telegram alerts with AI analysis that tells you exactly what to expect.
