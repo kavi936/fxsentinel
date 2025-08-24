@@ -463,3 +463,82 @@ class StripeService:
         except Exception as e:
             print(f"Error getting user by customer ID: {e}")
             return None
+
+    def check_trial_eligibility(self, email):
+        """Check if email is eligible for a trial (hasn't used one before)"""
+        if not email or not self.firebase_available or not self.db:
+            return True  # Allow trial if we can't check
+            
+        try:
+            # Check if this email has ever had a trial or paid subscription
+            users_ref = self.db.collection('users')
+            query = users_ref.where('email', '==', email.lower()).limit(1)
+            docs = query.get()
+            
+            for doc in docs:
+                user_data = doc.to_dict()
+                # Check if user has ever had a trial or paid subscription
+                subscription_status = user_data.get('subscription_status')
+                has_used_trial = user_data.get('has_used_trial', False)
+                
+                if subscription_status in ['trial', 'active', 'expired', 'cancelled'] or has_used_trial:
+                    print(f"❌ Email {email} has already used a trial or had a subscription")
+                    return False
+            
+            print(f"✅ Email {email} is eligible for trial")
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Error checking trial eligibility for {email}: {e}")
+            return True  # Allow trial if we can't check
+
+    def mark_trial_used(self, user_id, email):
+        """Mark that this email has used a trial"""
+        if not self.firebase_available or not self.db:
+            return
+            
+        try:
+            # Update current user
+            self.db.collection('users').document(user_id).update({
+                'has_used_trial': True,
+                'trial_used_at': datetime.now()
+            })
+            
+            # Also mark in a separate collection for easy querying
+            self.db.collection('trial_history').add({
+                'email': email.lower(),
+                'user_id': user_id,
+                'trial_started_at': datetime.now(),
+                'ip_address': 'tracked_separately'  # You can add IP tracking if needed
+            })
+            
+            print(f"✅ Marked trial as used for {email}")
+            
+        except Exception as e:
+            print(f"❌ Error marking trial as used for {email}: {e}")
+
+    def get_trial_history(self, email):
+        """Get trial history for an email"""
+        if not email or not self.firebase_available or not self.db:
+            return []
+            
+        try:
+            # Check trial history collection
+            trial_ref = self.db.collection('trial_history')
+            query = trial_ref.where('email', '==', email.lower()).order_by('trial_started_at', direction=firestore.Query.DESCENDING)
+            docs = query.get()
+            
+            history = []
+            for doc in docs:
+                data = doc.to_dict()
+                history.append({
+                    'user_id': data.get('user_id'),
+                    'trial_started_at': data.get('trial_started_at'),
+                    'email': data.get('email')
+                })
+            
+            return history
+            
+        except Exception as e:
+            print(f"❌ Error getting trial history for {email}: {e}")
+            return []
