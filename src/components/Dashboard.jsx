@@ -13,6 +13,7 @@ import TimezoneSettings from './TimezoneSettings';
 import NotificationsPopup from './NotificationsPopup';
 import ProfilePopup from './ProfilePopup';
 import MarketStatusPopup from './MarketStatusPopup';
+import ReviewBanner from './ReviewBanner';
 import { trackEngagement, trackFeatureUsage, trackTrialStart } from '../utils/analytics';
 
 function Dashboard() {
@@ -1017,6 +1018,8 @@ function Dashboard() {
         marketStatus={marketStatus}
       />
 
+      {/* Review Banner */}
+      <ReviewBanner />
 
   </div>
   );

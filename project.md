@@ -183,6 +183,8 @@ Stripe Dashboard: Monitor for payment issues
 Error Alerts: Get notified of problems immediately
 User Analytics: Track conversion and churn rates
 
+TEST30A or TEST30B (for testing)
+
 1. EPP4B35M - 30% off (1-time use)
 2. Y8GKUK3K - 30% off (1-time use)
 3. J5VYP4TE - 30% off (1-time use)
