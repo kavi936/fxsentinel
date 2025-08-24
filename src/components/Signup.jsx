@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import { trackSignupCompletion, trackError, trackEngagement } from '../utils/analytics';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -18,6 +19,11 @@ const Signup = () => {
   const [passwordStrength, setPasswordStrength] = useState('');
   const navigate = useNavigate();
   const { signup, signInWithGoogle } = useAuth();
+
+  // Track signup page view
+  React.useEffect(() => {
+    trackEngagement('signup_page_view');
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -46,24 +52,42 @@ const Signup = () => {
     setIsLoading(true);
     setError('');
 
+    // Track signup attempt
+    trackEngagement('signup_form_submit', {
+      email: formData.email,
+      hasFirstName: !!formData.firstName,
+      hasLastName: !!formData.lastName
+    });
+
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
+      trackError('signup_validation_error', { error: 'password_mismatch' });
       setIsLoading(false);
       return;
     }
 
     if (formData.password.length < 8) {
       setError('Password must be at least 8 characters long');
+      trackError('signup_validation_error', { error: 'password_too_short' });
       setIsLoading(false);
       return;
     }
 
     try {
       await signup(formData.email, formData.password, formData.firstName, formData.lastName);
+      trackSignupCompletion('email', {
+        email: formData.email,
+        hasFirstName: !!formData.firstName,
+        hasLastName: !!formData.lastName
+      });
       navigate('/auth-redirect');
     } catch (err) {
       setError('Failed to create account. Please try again.');
+      trackError('signup_failure', { 
+        error: err.message || 'unknown_error',
+        email: formData.email 
+      });
     } finally {
       setIsLoading(false);
     }

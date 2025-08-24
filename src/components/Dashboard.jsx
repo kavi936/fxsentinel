@@ -13,6 +13,7 @@ import TimezoneSettings from './TimezoneSettings';
 import NotificationsPopup from './NotificationsPopup';
 import ProfilePopup from './ProfilePopup';
 import MarketStatusPopup from './MarketStatusPopup';
+import { trackEngagement, trackFeatureUsage, trackTrialStart } from '../utils/analytics';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -53,6 +54,14 @@ function Dashboard() {
   const [marketStatusOpen, setMarketStatusOpen] = useState(false);
   const [sessionVerificationStatus, setSessionVerificationStatus] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+
+  // Track dashboard view and trial start
+  useEffect(() => {
+    trackEngagement('dashboard_view');
+    if (subscriptionStatus?.status === 'trial') {
+      trackTrialStart();
+    }
+  }, [subscriptionStatus]);
 
   // Check subscription status on mount
   useEffect(() => {
