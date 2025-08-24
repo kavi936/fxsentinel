@@ -162,13 +162,13 @@ Modify sign up/login pages for different devices.
 
 Modify welvome-trail page to look amazing 
 
+
+
 Alert bot needs some work
 
 News calendar displaying news needs work, sometimes says its completed but its not, sorting between beginning of week and ending of week needs work. quick filters needs work.
 
 Market sentiment card, needs to be better
-
-Set dev emails
 
 Set Customer feedback system:
 

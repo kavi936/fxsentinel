@@ -25,67 +25,73 @@ const Blog = () => {
     setIsMobileMenuOpen(false);
   };
 
-  // Sample blog posts data
+  // Updated blog posts data with the 6 new topics
   const blogPosts = [
     {
       id: 1,
-      title: "Understanding Forex Market Sentiment: A Complete Guide",
-      excerpt: "Learn how to analyze and interpret market sentiment to make better trading decisions in the forex market.",
+      slug: 'ai-powered-news-analysis-future-of-trading',
+      title: "AI-Powered News Analysis: The Future of Trading",
+      excerpt: "Discover how artificial intelligence is revolutionizing the way traders process and react to market news, providing real-time insights and predictive analytics.",
       author: "FXSentinel Team",
       date: "August 15, 2025",
       readTime: "8 min read",
-      category: "Trading Education",
-      image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop"
+      category: "Technology",
+      image: logoPng
     },
     {
       id: 2,
+      slug: 'central-bank-decisions-currency-pairs',
       title: "The Impact of Central Bank Decisions on Currency Pairs",
-      excerpt: "Explore how central bank policies and interest rate decisions affect currency movements and trading opportunities.",
+      excerpt: "Explore how central bank policies and interest rate decisions affect currency movements and create trading opportunities across major pairs.",
       author: "FXSentinel Team",
       date: "August 12, 2025",
       readTime: "10 min read",
       category: "Market Analysis",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop"
+      image: logoPng
     },
     {
       id: 3,
-      title: "AI-Powered News Analysis: The Future of Trading",
-      excerpt: "Discover how artificial intelligence is revolutionizing the way traders process and react to market news.",
+      slug: 'understanding-forex-market-sentiment',
+      title: "Understanding Forex Market Sentiment: A Complete Guide",
+      excerpt: "Learn how to analyze and interpret market sentiment to make better trading decisions in the forex market using advanced tools and techniques.",
       author: "FXSentinel Team",
       date: "August 10, 2025",
-      readTime: "6 min read",
-      category: "Technology",
-      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=250&fit=crop"
+      readTime: "12 min read",
+      category: "Trading Education",
+      image: logoPng
     },
     {
       id: 4,
-      title: "Risk Management Strategies for Forex Traders",
-      excerpt: "Essential risk management techniques that every forex trader should implement to protect their capital.",
+      slug: 'turning-news-actionable-signals',
+      title: "Turning News into Actionable Signals",
+      excerpt: "Master the art of converting breaking news and economic events into profitable trading signals with systematic analysis approaches.",
       author: "FXSentinel Team",
       date: "August 8, 2025",
-      readTime: "12 min read",
+      readTime: "9 min read",
       category: "Trading Education",
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop"
+      image: logoPng
     },
     {
       id: 5,
-      title: "Economic Indicators Every Trader Should Monitor",
-      excerpt: "A comprehensive guide to the key economic indicators that drive currency movements and market volatility.",
+      slug: 'traders-guide-decoding-market-volatility',
+      title: "A Trader's Guide to Decoding Market Volatility",
+      excerpt: "Navigate through market volatility with confidence using proven strategies and tools to identify opportunities during turbulent times.",
       author: "FXSentinel Team",
       date: "August 5, 2025",
-      readTime: "9 min read",
+      readTime: "11 min read",
       category: "Market Analysis",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=250&fit=crop"
+      image: logoPng
     },
     {
       id: 6,
-      title: "Building a Profitable Trading Routine",
-      excerpt: "Learn how to develop and maintain a consistent trading routine that leads to long-term success.",
+      slug: 'ai-detects-hidden-patterns-macroeconomic-news',
+      title: "How AI Detects Hidden Patterns in Macroeconomic News",
+      excerpt: "Explore the cutting-edge AI technologies that uncover hidden correlations and patterns in economic data for superior trading insights.",
       author: "FXSentinel Team",
       date: "August 3, 2025",
       readTime: "7 min read",
-      category: "Trading Education",
-      image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=400&h=250&fit=crop"
+      category: "Technology",
+      image: logoPng
     }
   ];
 
@@ -166,40 +172,26 @@ const Blog = () => {
           <div className="blog-grid">
             {blogPosts.map((post) => (
               <article key={post.id} className="blog-card">
-                <div className="blog-card-image">
-                  <img src={post.image} alt={post.title} />
-                  <div className="blog-card-category">{post.category}</div>
-                </div>
-                <div className="blog-card-content">
-                  <div className="blog-card-meta">
-                    <span className="blog-card-date">{post.date}</span>
-                    <span className="blog-card-read-time">{post.readTime}</span>
+                <Link to={`/blog/${post.slug}`} className="blog-card-link">
+                  <div className="blog-card-image">
+                    <img src={post.image} alt={post.title} />
+                    <div className="blog-card-category">{post.category}</div>
                   </div>
-                  <h2 className="blog-card-title">{post.title}</h2>
-                  <p className="blog-card-excerpt">{post.excerpt}</p>
-                  <div className="blog-card-author">
-                    <span>By {post.author}</span>
+                  <div className="blog-card-content">
+                    <div className="blog-card-meta">
+                      <span className="blog-card-date">{post.date}</span>
+                      <span className="blog-card-read-time">{post.readTime}</span>
+                    </div>
+                    <h2 className="blog-card-title">{post.title}</h2>
+                    <p className="blog-card-excerpt">{post.excerpt}</p>
+                    <div className="blog-card-author">
+                      <span>By {post.author}</span>
+                    </div>
+                    <span className="blog-card-read-more">Read More</span>
                   </div>
-                  <button className="blog-card-read-more">Read More</button>
-                </div>
+                </Link>
               </article>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Newsletter Signup */}
-      <section className="blog-newsletter">
-        <div className="newsletter-inner">
-          <h2>Stay Updated</h2>
-          <p>Get the latest trading insights and market analysis delivered to your inbox</p>
-          <div className="newsletter-form">
-            <input 
-              type="email" 
-              placeholder="Enter your email address" 
-              className="newsletter-input"
-            />
-            <button className="newsletter-button">Subscribe</button>
           </div>
         </div>
       </section>
