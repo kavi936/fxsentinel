@@ -126,6 +126,9 @@ function Dashboard() {
         // Add notification for successful trial activation
         addSubscriptionNotification('trial_started');
         
+        // Refresh subscription status after successful verification
+        await checkSubscriptionStatus();
+        
         // Remove the session_id from URL
         window.history.replaceState({}, document.title, window.location.pathname);
         
