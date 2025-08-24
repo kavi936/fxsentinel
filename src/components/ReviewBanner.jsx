@@ -38,10 +38,10 @@ const ReviewBanner = ({ onClose }) => {
 
     // Open review platform
     const reviewUrls = {
-      producthunt: 'https://www.producthunt.com/posts/fxsentinel',
       trustpilot: 'https://www.trustpilot.com/review/fxsentinel.io',
-      twitter: 'https://twitter.com/intent/tweet?text=Just%20tried%20%40FXSentinel%20-%20amazing%20AI-powered%20forex%20analysis!%20%23forex%20%23trading',
-      linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=https://fxsentinel.io'
+      twitter: 'https://x.com/intent/tweet?text=Just%20tried%20%40fxsentinel%20-%20amazing%20AI-powered%20forex%20analysis!%20%23forex%20%23trading%20%23fxsentinel',
+      tradingview: 'https://www.tradingview.com/symbols/FOREX/',
+      reddit: 'https://www.reddit.com/r/forex/submit?url=https://fxsentinel.io&title=Check%20out%20FXSentinel%20-%20AI-powered%20forex%20analysis'
     };
 
     if (reviewUrls[platform]) {
@@ -84,14 +84,6 @@ const ReviewBanner = ({ onClose }) => {
           <div className="review-platforms">
             <button 
               className="review-btn primary"
-              onClick={() => handleReviewClick('producthunt')}
-            >
-              <span className="platform-icon">🚀</span>
-              Review on Product Hunt
-            </button>
-            
-            <button 
-              className="review-btn secondary"
               onClick={() => handleReviewClick('trustpilot')}
             >
               <span className="platform-icon">🛡️</span>
@@ -99,11 +91,27 @@ const ReviewBanner = ({ onClose }) => {
             </button>
             
             <button 
-              className="review-btn social"
+              className="review-btn secondary"
               onClick={() => handleReviewClick('twitter')}
             >
               <span className="platform-icon">🐦</span>
-              Share on Twitter
+              Share on X (Twitter)
+            </button>
+            
+            <button 
+              className="review-btn social"
+              onClick={() => handleReviewClick('tradingview')}
+            >
+              <span className="platform-icon">📊</span>
+              Share on TradingView
+            </button>
+            
+            <button 
+              className="review-btn social"
+              onClick={() => handleReviewClick('reddit')}
+            >
+              <span className="platform-icon">🤖</span>
+              Share on Reddit
             </button>
           </div>
           

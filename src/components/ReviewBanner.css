@@ -87,8 +87,8 @@
 }
 
 .review-platforms {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
@@ -182,6 +182,7 @@
   }
   
   .review-platforms {
+    grid-template-columns: 1fr;
     gap: 6px;
   }
   
