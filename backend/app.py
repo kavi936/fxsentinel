@@ -3873,8 +3873,8 @@ def create_checkout_session():
             }), 403
         
         # Get the frontend URL for success/cancel redirects
-        # Always use the production frontend URL for Stripe redirects
-        frontend_url = 'https://fxsentinel-production.up.railway.app'
+        # Use the correct frontend domain for Stripe redirects
+        frontend_url = 'https://fxsentinel.io'
         
         def create_session():
             return stripe.checkout.Session.create(
@@ -4092,12 +4092,12 @@ def setup_trial_subscription():
 @app.route('/dashboard')
 def dashboard_redirect():
     """Redirect dashboard requests to frontend"""
-    return redirect('https://fxsentinel-production.up.railway.app/dashboard')
+    return redirect('https://fxsentinel.io/dashboard')
 
 @app.route('/trial-welcome')
 def trial_welcome_redirect():
     """Redirect trial-welcome requests to frontend"""
-    return redirect('https://fxsentinel-production.up.railway.app/trial-welcome')
+    return redirect('https://fxsentinel.io/trial-welcome')
 
 @app.route('/api/send-welcome-email', methods=['POST'])
 @limiter.limit("3 per minute")  # Limit email sending
@@ -4331,7 +4331,7 @@ def catch_all(path):
         return jsonify({'error': 'API endpoint not found'}), 404
     
     # Redirect all other routes to frontend
-    return redirect(f'https://fxsentinel-production.up.railway.app/{path}')
+    return redirect(f'https://fxsentinel.io/{path}')
 
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
