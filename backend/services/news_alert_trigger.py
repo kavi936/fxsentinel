@@ -306,7 +306,7 @@ class NewsAlertTrigger:
             logger.error(f"Error processing news for alerts: {e}")
             return {'error': str(e)}
     
-    def _send_alert_to_user(self, user_data: Dict[str, Any], news_item: Dict[str, Any], needs_ai_analysis: bool) -> bool:
+    async def _send_alert_to_user(self, user_data: Dict[str, Any], news_item: Dict[str, Any], needs_ai_analysis: bool) -> bool:
         """Send alert to a specific user"""
         try:
             user_id = user_data.get('user_id')
@@ -347,7 +347,19 @@ class NewsAlertTrigger:
             
             # Process alert with subscription validation
             import asyncio
-            success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+            try:
+                # Check if we're already in an event loop
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    # We're in an event loop, create a task
+                    task = loop.create_task(alert_service.process_alert(alert_data, user_settings, user_id))
+                    success = await task
+                else:
+                    # No event loop running, use asyncio.run
+                    success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+            except RuntimeError:
+                # Fallback for when asyncio.run can't be used
+                success = await alert_service.process_alert(alert_data, user_settings, user_id)
             
             if success:
                 logger.info(f"Alert sent successfully to user {user_id}")
