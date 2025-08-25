@@ -596,7 +596,7 @@ const LandingPage = () => {
                 <li>Customize alerts for your strategy</li>
                 <li>Learn from historical patterns</li>
               </ul>
-              <Link to="/signup" className="pricing-button">Start Understanding the Market</Link>
+              <Link to="/signup" className="pricing-button">Start Your 3-Day Free Trial</Link>
             </div>
           </div>
         </div>

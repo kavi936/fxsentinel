@@ -156,7 +156,7 @@ const TrialWelcome = () => {
             Welcome to <span className="highlight">FXSentinel</span>
           </h1>
           <p className="hero-subtitle">
-            We dont want to bullsh#t you, take our free trial and help us make a better product. Thank you.
+            We dont want to bullsh#t you, and sell a bad product. Take our free trial and help us make it better. Thank you.
           </p>
           
           {error && (

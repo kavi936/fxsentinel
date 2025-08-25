@@ -1951,8 +1951,8 @@ body {
   
   /* Force all text content to break properly on mobile */
   p, h1, h2, h3, h4, h5, h6, span, div {
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
     max-width: 100vw !important;
     overflow-x: hidden !important;
   }
@@ -2100,6 +2100,20 @@ body {
     margin-bottom: 2rem;
   }
   
+  /* Make section titles smaller on mobile except for Features and Pricing */
+  .faq .section-title,
+  .contact .section-title,
+  .about-title,
+  .alerts-title {
+    font-size: 1.6rem;
+  }
+  
+  /* Override the more specific Features and Pricing section titles for mobile */
+  .features .section-title,
+  .pricing .section-title {
+    font-size: 1.8rem;
+  }
+  
   .feature-card {
     padding: 1.5rem;
   }
@@ -2195,8 +2209,11 @@ body {
   .faq {
     padding: 6rem 0;
     overflow-x: hidden;
-    width: 100vw;
-    max-width: 100vw;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    /* Override global max-width for FAQ section */
+    max-width: 100% !important;
   }
   
   .faq-inner {
@@ -2214,6 +2231,12 @@ body {
     overflow-x: hidden !important;
   }
   
+  /* Override global max-width for FAQ items specifically */
+  .faq-inner .faq-item {
+    max-width: calc(100vw - 40px) !important;
+    overflow-x: hidden !important;
+  }
+  
   .faq .section-title {
     font-size: 2rem;
     margin-bottom: 2.5rem;
@@ -2225,47 +2248,49 @@ body {
     width: 100%;
     max-width: 100%;
     overflow: hidden;
+    /* Ensure grid items don't overflow */
+    padding: 0 20px;
+    box-sizing: border-box;
   }
   
-  /* Force text to break on mobile */
+  /* Force text to break on mobile - but more naturally */
   .faq-item * {
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
     hyphens: auto !important;
   }
   
   /* Handle very long words specifically */
   .faq-item h3,
   .faq-item p {
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
     hyphens: auto !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     width: 100% !important;
   }
   
   /* Specific fix for paragraph text with long phrases */
   .faq-item p {
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
     hyphens: auto !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     width: 100% !important;
-    white-space: pre-wrap !important;
+    white-space: normal !important;
     word-spacing: normal !important;
   }
   
-  /* Ultra-aggressive text breaking for problematic content */
+  /* Improved text breaking for problematic content */
   .faq-item p,
   .faq-item h3 {
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+    overflow-wrap: normal !important;
     hyphens: auto !important;
-    max-width: 100vw !important;
+    max-width: 100% !important;
     width: 100% !important;
-    white-space: pre-wrap !important;
+    white-space: normal !important;
     word-spacing: normal !important;
-    text-overflow: ellipsis !important;
   }
   
   .faq-item {
@@ -2275,14 +2300,18 @@ body {
     overflow-wrap: break-word;
     hyphens: auto;
     overflow: hidden;
-    max-width: 100%;
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
     word-break: break-word;
     min-height: 120px;
     white-space: normal;
-    text-overflow: ellipsis;
+    /* Prevent overflow by constraining width - override global max-width */
+    max-width: calc(100vw - 40px) !important;
+    margin-left: auto;
+    margin-right: auto;
+    /* Ensure content stays within bounds */
+    position: relative;
   }
   
   .faq-item h3 {
@@ -2293,13 +2322,13 @@ body {
     overflow-wrap: break-word;
     hyphens: auto;
     overflow: hidden;
-    max-width: 100%;
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
     word-break: break-word;
     white-space: normal;
-    text-overflow: ellipsis;
+    /* Ensure text doesn't overflow */
+    max-width: 100%;
   }
   
   .faq-item p {
@@ -2310,13 +2339,13 @@ body {
     overflow-wrap: break-word;
     hyphens: auto;
     overflow: hidden;
-    max-width: 100%;
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
     word-break: break-word;
     white-space: normal;
-    text-overflow: ellipsis;
+    /* Ensure text doesn't overflow */
+    max-width: 100%;
   }
   
   /* Alerts Showcase Section */
@@ -2570,6 +2599,12 @@ body {
   }
   
   .section-title {
+    font-size: 1.8rem;
+  }
+  
+  /* Override the more specific Features and Pricing section titles for very small mobile */
+  .features .section-title,
+  .pricing .section-title {
     font-size: 1.6rem;
   }
   
@@ -2881,6 +2916,34 @@ body.mobile-menu-open {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
   gap: 2rem;
+}
+
+/* Fix for screens smaller than 560px where 500px minmax doesn't work */
+@media (max-width: 560px) {
+  .faq-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 15px;
+  }
+  
+  .faq-item {
+    padding: 2rem 1.25rem;
+    margin-bottom: 1rem;
+    /* Ensure proper containment for smaller screens */
+    max-width: calc(100vw - 30px) !important;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .faq-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1.25rem;
+  }
+  
+  .faq-item p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
 }
 
 .faq-item {
@@ -3430,12 +3493,15 @@ body.mobile-menu-open {
     overflow-wrap: break-word;
     hyphens: auto;
     overflow: hidden;
-    max-width: 100%;
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
     word-break: break-word;
     min-height: 140px;
+    /* Prevent overflow by constraining width - override global max-width */
+    max-width: calc(100vw - 40px) !important;
+    margin-left: auto;
+    margin-right: auto;
   }
   
   .faq-item h3 {
@@ -3508,7 +3574,7 @@ body.mobile-menu-open {
     overflow-wrap: break-word;
     hyphens: auto;
     overflow: hidden;
-    max-width: calc(100% - 10px);
+    max-width: calc(100vw - 20px) !important;
     box-sizing: border-box;
     min-height: 160px;
   }
@@ -3534,9 +3600,9 @@ body.mobile-menu-open {
     overflow: hidden;
     max-width: 100%;
     box-sizing: border-box;
-    word-break: break-all !important;
-    overflow-wrap: anywhere !important;
-    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    white-space: normal !important;
   }
   
   .faq-inner {
