@@ -47,6 +47,9 @@ load_dotenv()
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
+# Initialize background alert worker
+from services.background_alert_worker import background_alert_worker
+
 # Debug: Check if environment variables are loaded
 print(f"🔍 Environment Debug:")
 print(f"   OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
@@ -55,6 +58,9 @@ if os.getenv('OPENAI_API_KEY'):
     print(f"   API Key Preview: {api_key[:10]}...{api_key[-4:]}")
 
 app = Flask(__name__)
+
+# Initialize background alert worker with Flask app
+background_alert_worker.init_app(app)
 
 # Initialize rate limiter
 limiter = Limiter(
