@@ -4617,6 +4617,17 @@ def telegram_webhook():
                                                 if isinstance(telegram_settings, dict) and telegram_settings.get('chatId') == str(chat_id):
                                                     user_id = safe_user_id
                                                     print(f"Found user with chat_id {chat_id} in settings")
+                                                    
+                                                    # Create mapping for future use
+                                                    mapping_data = {
+                                                        'user_id': safe_user_id,
+                                                        'chat_id': str(chat_id),
+                                                        'username': username,
+                                                        'created_at': datetime.now().isoformat(),
+                                                        'status': 'active'
+                                                    }
+                                                    firebase._make_request('PUT', mapping_path, mapping_data)
+                                                    print(f"Created mapping for chat_id {chat_id}")
                                                     break
                         
                         if user_id:
