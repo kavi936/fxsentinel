@@ -98,6 +98,23 @@
   background: transparent;
 }
 
+/* Adjust dashboard when mobile warning banner is present */
+.dashboard.has-mobile-warning {
+  padding-top: 200px; /* Adjust based on banner height */
+}
+
+@media (max-width: 768px) {
+  .dashboard.has-mobile-warning {
+    padding-top: 180px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard.has-mobile-warning {
+    padding-top: 160px;
+  }
+}
+
 /* When Alerts tab is active, make dashboard background transparent */
 .dashboard.alerts-active {
   background: transparent;

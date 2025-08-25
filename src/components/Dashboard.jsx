@@ -14,6 +14,7 @@ import NotificationsPopup from './NotificationsPopup';
 import ProfilePopup from './ProfilePopup';
 import MarketStatusPopup from './MarketStatusPopup';
 import ReviewBanner from './ReviewBanner';
+import MobileWarningBanner from './MobileWarningBanner';
 import { trackEngagement, trackFeatureUsage, trackTrialStart } from '../utils/analytics';
 
 function Dashboard() {
@@ -55,6 +56,7 @@ function Dashboard() {
   const [marketStatusOpen, setMarketStatusOpen] = useState(false);
   const [sessionVerificationStatus, setSessionVerificationStatus] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [mobileWarningVisible, setMobileWarningVisible] = useState(false);
 
   // Track dashboard view and trial start
   useEffect(() => {
@@ -721,7 +723,7 @@ function Dashboard() {
   }
 
   return (
-    <div className={`dashboard ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''}`}>
+    <div className={`dashboard ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''} ${mobileWarningVisible ? 'has-mobile-warning' : ''}`}>
       {/* Session Verification Status Notification */}
       {sessionVerificationStatus === 'verifying' && (
         <div className="verification-notification verifying">
@@ -1020,6 +1022,9 @@ function Dashboard() {
 
       {/* Review Banner */}
       <ReviewBanner />
+
+      {/* Mobile Warning Banner */}
+      <MobileWarningBanner onVisibilityChange={setMobileWarningVisible} />
 
   </div>
   );
