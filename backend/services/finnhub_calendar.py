@@ -249,12 +249,17 @@ class FinnhubCalendarService:
             if event_date and event_time:
                 try:
                     # Finnhub format: "2024-01-15" and "13:30"
+                    # Finnhub API returns times in UTC, not GST
                     datetime_str = f"{event_date} {event_time}"
                     event_datetime = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
                     
-                    # Format for display
+                    # Finnhub times are already in UTC, so no conversion needed
+                    # Format for display (show in UTC - frontend will convert to user timezone)
                     display_date = event_datetime.strftime('%a, %b %d')
                     display_time = event_datetime.strftime('%H:%M UTC')
+                    
+                    # Use UTC time for status determination (already in UTC)
+                    # No conversion needed
                 except ValueError:
                     display_date = event_date
                     display_time = event_time
@@ -265,8 +270,13 @@ class FinnhubCalendarService:
                     if ' ' in event_time and len(event_time) > 10:
                         # Time field contains both date and time
                         event_datetime = datetime.strptime(event_time, '%Y-%m-%d %H:%M:%S')
+                        
+                        # Finnhub times are already in UTC, so no conversion needed
                         display_date = event_datetime.strftime('%a, %b %d')
                         display_time = event_datetime.strftime('%H:%M UTC')
+                        
+                        # Use UTC time for status determination (already in UTC)
+                        # No conversion needed
                     else:
                         # Just time, use today's date
                         today = datetime.now()
@@ -308,8 +318,29 @@ class FinnhubCalendarService:
             # Determine event type
             event_type = self._determine_event_type(event.get('event', ''))
             
-            # Get status
-            status = self._determine_status(event_datetime) if 'event_datetime' in locals() else 'UPCOMING'
+            # Get status with better fallback logic
+            if 'event_datetime' in locals() and event_datetime is not None:
+                try:
+                    status = self._determine_status(event_datetime)
+                except Exception as e:
+                    print(f"⚠️ Error determining status for event '{event.get('event', 'Unknown')}': {e}")
+                    # If we can't determine status, check if it's likely past based on date only
+                    if event_date:
+                        try:
+                            event_date_obj = datetime.strptime(event_date, '%Y-%m-%d')
+                            today = datetime.now()
+                            if event_date_obj.date() < today.date():
+                                status = 'COMPLETED'
+                            elif event_date_obj.date() == today.date():
+                                status = 'UPCOMING'  # Default to upcoming for today's events
+                            else:
+                                status = 'UPCOMING'
+                        except:
+                            status = 'UPCOMING'
+                    else:
+                        status = 'UPCOMING'
+            else:
+                status = 'UPCOMING'
             
             # Handle None values and format economic data
             def format_economic_value(value, unit=''):
@@ -611,7 +642,14 @@ class FinnhubCalendarService:
     
     def _determine_status(self, event_datetime: datetime) -> str:
         """Determine event status based on datetime"""
-        now = datetime.now()
+        # Get current time in UTC to avoid timezone issues
+        from datetime import timezone
+        now = datetime.now(timezone.utc)
+        
+        # If event_datetime is naive (no timezone), assume it's in UTC
+        # Finnhub API provides times in UTC
+        if event_datetime.tzinfo is None:
+            event_datetime = event_datetime.replace(tzinfo=timezone.utc)
         
         if event_datetime < now:
             return 'COMPLETED'

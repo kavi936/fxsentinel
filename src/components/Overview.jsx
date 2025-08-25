@@ -73,6 +73,21 @@ const Overview = () => {
   // Timezone state
   const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
 
+  // Format last updated time
+  const formatLastUpdated = (timestamp) => {
+    if (!timestamp) return '';
+    const now = new Date();
+    const diffMs = now - timestamp;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
   // Format economic calendar time
   const formatCalendarTime = (timeStr, dateStr) => {
     try {
@@ -162,6 +177,7 @@ const Overview = () => {
   const [calendarLoading, setCalendarLoading] = useState(true);
   const [calendarError, setCalendarError] = useState(null);
   const [calendarSource, setCalendarSource] = useState('loading');
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Chart popup state
   const [chartPopupOpen, setChartPopupOpen] = useState(false);
@@ -194,6 +210,27 @@ const Overview = () => {
   useEffect(() => {
     fetchEconomicCalendar();
   }, [selectedDateRange]);
+
+  // Auto-refresh calendar data every 5 minutes to get updated status and new events
+  useEffect(() => {
+    const autoRefreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refreshing calendar data...');
+      fetchEconomicCalendar();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Cleanup interval on unmount
+    return () => clearInterval(autoRefreshInterval);
+  }, []);
+
+  // Real-time status updates every minute (for events that are about to become imminent/completed)
+  useEffect(() => {
+    const statusUpdateInterval = setInterval(() => {
+      // Force re-render to update status indicators
+      setEconomicEvents(prevEvents => [...prevEvents]);
+    }, 60 * 1000); // 1 minute
+
+    return () => clearInterval(statusUpdateInterval);
+  }, []);
 
   const fetchEconomicCalendar = async () => {
     try {
@@ -237,6 +274,9 @@ const Overview = () => {
         
         console.log(`✅ Fetched ${data.events.length} economic events from ${data.source} for ${startDate} to ${endDate}`);
         console.log(`📊 Data quality: ${data.data_quality || 'unknown'}, Recommendation: ${data.recommendation || 'unknown'}`);
+        
+        // Set last updated timestamp
+        setLastUpdated(new Date());
       } else {
         throw new Error(data.message || 'Failed to fetch economic calendar');
       }
@@ -472,6 +512,9 @@ const Overview = () => {
   const handleDateClick = (day) => {
     console.log('📅 Date clicked:', day.date.toDateString(), 'Type:', day.type);
     
+    // Clear quick select option when manually selecting a date
+    setQuickSelectOption('custom');
+    
     if (isSelectingRange) {
       // Range selection mode
       if (!rangeStartDate) {
@@ -507,6 +550,9 @@ const Overview = () => {
     if (isSelectingRange) {
       // Cancel range selection
       setRangeStartDate(null);
+    } else {
+      // Starting range selection - clear quick select option
+      setQuickSelectOption('custom');
     }
   };
 
@@ -546,12 +592,14 @@ const Overview = () => {
         endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
         break;
       case 'last-week':
-        const lastWeekStart = new Date(today.getTime() - (dayOfWeek + 7) * 24 * 60 * 60 * 1000);
+        const dayOfWeekLast = today.getDay();
+        const lastWeekStart = new Date(today.getTime() - (dayOfWeekLast + 7) * 24 * 60 * 60 * 1000);
         startDate = lastWeekStart;
         endDate = new Date(lastWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
         break;
       case 'next-week':
-        const nextWeekStart = new Date(today.getTime() + (7 - dayOfWeek) * 24 * 60 * 60 * 1000);
+        const dayOfWeekNext = today.getDay();
+        const nextWeekStart = new Date(today.getTime() + (7 - dayOfWeekNext) * 24 * 60 * 60 * 1000);
         startDate = nextWeekStart;
         endDate = new Date(nextWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
         break;
@@ -573,12 +621,17 @@ const Overview = () => {
     }
 
     setSelectedDateRange({ start: startDate, end: endDate });
+    
+    // Clear manual date selection by setting selectedDate to the start date of the range
+    // This ensures the calendar grid shows the correct selected date for the quick select option
+    setSelectedDate(startDate);
+    
+    // Clear any range selection state
+    setRangeStartDate(null);
+    setIsSelectingRange(false);
+    
     console.log('📅 Quick select date range:', startDate.toDateString(), 'to', endDate.toDateString());
-    // Also update the selected date to the start date for single-day selections
-    if (['today', 'yesterday', 'tomorrow'].includes(option)) {
-      setSelectedDate(startDate);
-      console.log('📅 Updated selected date:', startDate.toDateString());
-    }
+    console.log('📅 Updated selected date to match quick select:', startDate.toDateString());
   };
 
   // Save preferences and close modal
@@ -1452,22 +1505,47 @@ const Overview = () => {
                     <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
                   </svg>
                 </button>
-                <button className={`calendar-refresh-btn ${isRefreshing ? 'refreshing' : ''}`} onClick={handleRefresh} disabled={isRefreshing}>
+                <button 
+                  className={`calendar-refresh-btn ${isRefreshing ? 'refreshing' : ''}`} 
+                  onClick={handleRefresh} 
+                  disabled={isRefreshing}
+                  title={`Refresh calendar data${lastUpdated ? ` (Last updated: ${formatLastUpdated(lastUpdated)})` : ''}`}
+                >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>
+                  {lastUpdated && <span className="auto-refresh-indicator" title="Auto-refresh every 5 minutes">🔄</span>}
                 </button>
               </div>
             </div>
             <div className="calendar-content">
               {/* Filter status indicator */}
               <div className="filter-status">
-                <span className="filter-info">
-                  Showing {getFilteredEvents().length} of {economicEvents.length} events
-                  {calendarSource && <span className="data-source"> • Source: {calendarSource}</span>}
-
-                  <span className="date-range-info"> • Date: {formatDateRange(selectedDateRange.start, selectedDateRange.end)}</span>
-                </span>
+                <div className="filter-info-grid">
+                  <div className="filter-info-main">
+                    <span className="events-count">
+                      Showing <strong>{getFilteredEvents().length}</strong> of <strong>{economicEvents.length}</strong> events
+                    </span>
+                  </div>
+                  <div className="filter-info-details">
+                    {calendarSource && (
+                      <div className="info-item">
+                        <span className="info-label">Source:</span>
+                        <span className="info-value">{calendarSource}</span>
+                      </div>
+                    )}
+                    {lastUpdated && (
+                      <div className="info-item">
+                        <span className="info-label">Updated:</span>
+                        <span className="info-value">{formatLastUpdated(lastUpdated)}</span>
+                      </div>
+                    )}
+                    <div className="info-item">
+                      <span className="info-label">Date:</span>
+                      <span className="info-value">{formatDateRange(selectedDateRange.start, selectedDateRange.end)}</span>
+                    </div>
+                  </div>
+                </div>
                 {/* Active filters indicator */}
                 <div className="active-filters">
                   {(() => {
@@ -2259,6 +2337,12 @@ const Overview = () => {
 
             {/* Quick Select Section */}
             <div className="quick-select-section">
+              {/* Custom Range Indicator */}
+              {quickSelectOption === 'custom' && (
+                <div className="custom-range-indicator">
+                  <span className="custom-range-text">Custom Range Selected</span>
+                </div>
+              )}
               <div className="quick-select-grid">
                 <div className="quick-select-column">
                   <button 
