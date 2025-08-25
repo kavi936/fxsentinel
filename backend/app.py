@@ -4478,38 +4478,128 @@ def telegram_test():
 def telegram_webhook():
     """Handle Telegram webhook updates"""
     try:
-        from services.telegram_bot_setup import telegram_bot_setup
-        import asyncio
-        
         # Get the update from Telegram
         update_data = request.get_json()
         
         if not update_data:
             return jsonify({'status': 'error', 'message': 'No update data'}), 400
         
-        # Process the update asynchronously
-        async def process_update():
+        # Log the incoming update
+        print(f"📨 Received Telegram update: {update_data}")
+        
+        # Extract message information
+        message = update_data.get('message', {})
+        text = message.get('text', '')
+        chat_id = message.get('chat', {}).get('id')
+        user = message.get('from', {})
+        user_id = user.get('id')
+        username = user.get('username', 'Unknown')
+        
+        print(f"📝 Message: {text}")
+        print(f"💬 Chat ID: {chat_id}")
+        print(f"👤 User: @{username} (ID: {user_id})")
+        
+        # Handle /start command
+        if text == '/start':
             try:
-                from telegram import Update
-                update = Update.de_json(update_data, telegram_bot_setup.bot)
+                # Send welcome message
+                bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+                if bot_token and chat_id:
+                    welcome_message = {
+                        "chat_id": chat_id,
+                        "text": "🎉 Welcome to FXSentinel Alerts!\n\nI'm your personal market alert assistant. I'll send you real-time notifications about:\n• 🔥 Breaking forex news\n• 📊 Economic data releases\n• 🎯 High-impact market events\n\nTo get started, visit the FXSentinel app and click 'Connect Telegram Bot'.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands",
+                        "parse_mode": "HTML"
+                    }
+                    
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json=welcome_message
+                    )
+                    
+                    if response.status_code == 200:
+                        print(f"✅ Welcome message sent to chat {chat_id}")
+                    else:
+                        print(f"❌ Failed to send welcome message: {response.status_code}")
                 
-                # Process the update
-                await telegram_bot_setup.application.process_update(update)
-                return True
             except Exception as e:
-                logger.error(f"Error processing Telegram update: {e}")
-                return False
+                print(f"❌ Error sending welcome message: {e}")
         
-        # Run the async function
-        success = asyncio.run(process_update())
+        # Handle /help command
+        elif text == '/help':
+            try:
+                bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+                if bot_token and chat_id:
+                    help_message = {
+                        "chat_id": chat_id,
+                        "text": "🤖 FXSentinel Bot Commands:\n\n/start - Welcome message and setup instructions\n/help - Show this help message\n/status - Check your alert settings\n/test - Send a test alert\n\nFor support, visit https://fxsentinel.io",
+                        "parse_mode": "HTML"
+                    }
+                    
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json=help_message
+                    )
+                    
+                    if response.status_code == 200:
+                        print(f"✅ Help message sent to chat {chat_id}")
+                    else:
+                        print(f"❌ Failed to send help message: {response.status_code}")
+                
+            except Exception as e:
+                print(f"❌ Error sending help message: {e}")
         
-        if success:
-            return jsonify({'status': 'ok'})
+        # Handle /test command
+        elif text == '/test':
+            try:
+                bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+                if bot_token and chat_id:
+                    test_message = {
+                        "chat_id": chat_id,
+                        "text": "🧪 Test Alert\n\nThis is a test message from FXSentinel Bot!\n\n✅ Your connection is working properly.\n\nYou'll receive real alerts for:\n• Breaking news\n• Economic events\n• Market analysis\n\nStay tuned for real market alerts! 📈",
+                        "parse_mode": "HTML"
+                    }
+                    
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json=test_message
+                    )
+                    
+                    if response.status_code == 200:
+                        print(f"✅ Test message sent to chat {chat_id}")
+                    else:
+                        print(f"❌ Failed to send test message: {response.status_code}")
+                
+            except Exception as e:
+                print(f"❌ Error sending test message: {e}")
+        
+        # Handle unknown commands
         else:
-            return jsonify({'status': 'error', 'message': 'Failed to process update'}), 500
+            try:
+                bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+                if bot_token and chat_id:
+                    unknown_message = {
+                        "chat_id": chat_id,
+                        "text": "❓ Unknown command\n\nAvailable commands:\n/start - Welcome message\n/help - Show help\n/status - Check settings\n/test - Send test alert\n\nFor support, visit https://fxsentinel.io",
+                        "parse_mode": "HTML"
+                    }
+                    
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json=unknown_message
+                    )
+                    
+                    if response.status_code == 200:
+                        print(f"✅ Unknown command response sent to chat {chat_id}")
+                    else:
+                        print(f"❌ Failed to send unknown command response: {response.status_code}")
+                
+            except Exception as e:
+                print(f"❌ Error sending unknown command response: {e}")
+        
+        return jsonify({'status': 'ok', 'message': 'Update processed'})
             
     except Exception as e:
-        logger.error(f"Error in Telegram webhook: {e}")
+        print(f"❌ Error in Telegram webhook: {e}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/telegram/setup-webhook', methods=['POST'])
