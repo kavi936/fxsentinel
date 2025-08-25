@@ -269,10 +269,6 @@ class NewsAlertTrigger:
             for news_item in news_items:
                 news_id = str(news_item.get('id', ''))
                 
-                # Skip if already processed
-                if news_id in self.last_processed_news:
-                    continue
-                
                 # Check if forex high impact
                 if not self.is_forex_high_impact(news_item):
                     continue
@@ -302,13 +298,6 @@ class NewsAlertTrigger:
                         error_msg = f"Error sending alert to user {user_data.get('user_id')}: {e}"
                         logger.error(error_msg)
                         results['errors'].append(error_msg)
-                
-                # Mark as processed
-                self.last_processed_news.add(news_id)
-                
-                # Keep only last 1000 processed news IDs to prevent memory issues
-                if len(self.last_processed_news) > 1000:
-                    self.last_processed_news = set(list(self.last_processed_news)[-500:])
             
             logger.info(f"News processing complete: {results}")
             return results
@@ -320,8 +309,15 @@ class NewsAlertTrigger:
     def _send_alert_to_user(self, user_data: Dict[str, Any], news_item: Dict[str, Any], needs_ai_analysis: bool) -> bool:
         """Send alert to a specific user"""
         try:
-            chat_id = user_data.get('chat_id')
-            if not chat_id:
+            user_id = user_data.get('user_id')
+            if not user_id:
+                logger.error("No user_id provided for alert")
+                return False
+            
+            # Check deduplication first
+            from .unified_alert_deduplication import should_send_news_alert
+            if not should_send_news_alert(news_item, user_id):
+                logger.debug(f"News alert duplicate prevented for user {user_id}")
                 return False
             
             # Trigger AI analysis first if needed
@@ -329,50 +325,48 @@ class NewsAlertTrigger:
             if needs_ai_analysis:
                 ai_analysis = self._trigger_ai_analysis(news_item)
             
-            # Create alert message with AI analysis if available
-            message = self._create_alert_message(news_item, ai_analysis)
-            
-            # Send via Telegram
-            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-            if not bot_token:
-                logger.error("Telegram bot token not configured")
-                return False
-            
-            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            telegram_data = {
-                'chat_id': chat_id,
-                'text': message,
-                'parse_mode': 'HTML'
+            # Create alert data
+            alert_data = {
+                'title': news_item.get('title', 'Breaking Forex News'),
+                'content': self._create_alert_content(news_item, ai_analysis),
+                'type': 'liveNews',
+                'impact_level': news_item.get('impact', 'medium'),
+                'currency_pairs': self.get_affected_currency_pairs(news_item),
+                'source': news_item.get('source', 'Unknown'),
+                'url': news_item.get('url', ''),
+                'timestamp': news_item.get('timestamp', ''),
+                'ai_analysis': ai_analysis
             }
             
-            response = requests.post(telegram_url, json=telegram_data, timeout=10)
+            # Get user settings
+            user_settings = user_data.get('settings', {})
             
-            if response.status_code == 200:
-                logger.info(f"Alert sent successfully to user {user_data.get('user_id')}")
-                
+            # Use alert service to process the alert (includes subscription validation)
+            from .alert_service import get_alert_service
+            alert_service = get_alert_service()
+            
+            # Process alert with subscription validation
+            import asyncio
+            success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+            
+            if success:
+                logger.info(f"Alert sent successfully to user {user_id}")
                 # Save to alert history
-                self._save_alert_history(user_data.get('user_id'), news_item, message)
+                self._save_alert_history(user_id, news_item, alert_data['content'])
                 return True
-            elif response.status_code == 400 and "chat not found" in response.text:
-                logger.error(f"Chat not found for user {user_data.get('user_id')} - chat_id: {chat_id}")
-                # This user's chat ID is invalid, we should mark them as disconnected
-                self._mark_user_disconnected(user_data.get('user_id'))
-                return False
             else:
-                logger.error(f"Failed to send alert: {response.status_code} - {response.text}")
+                logger.warning(f"Alert not sent to user {user_id} (subscription check failed or user preferences)")
                 return False
                 
         except Exception as e:
             logger.error(f"Error sending alert to user: {e}")
             return False
     
-    def _create_alert_message(self, news_item: Dict[str, Any], ai_analysis: Optional[Dict[str, Any]] = None) -> str:
-        """Create formatted alert message with AI analysis using proper HTML formatting"""
+    def _create_alert_content(self, news_item: Dict[str, Any], ai_analysis: Optional[Dict[str, Any]] = None) -> str:
+        """Create alert content without HTML formatting"""
         try:
             title = news_item.get('title', 'Unknown Title')
             source = news_item.get('source', 'Unknown Source')
-            url = news_item.get('url', '')
-            timestamp = news_item.get('timestamp', '')
             summary = news_item.get('summary', '')
             
             # Get currency pairs
@@ -384,24 +378,18 @@ class NewsAlertTrigger:
             # Format timestamp
             try:
                 from datetime import datetime
+                timestamp = news_item.get('timestamp', '')
                 dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
                 formatted_time = dt.strftime('%H:%M UTC')
             except:
                 formatted_time = datetime.now().strftime('%H:%M UTC')
             
-            # Create properly formatted message with HTML tags
-            message = f"""🚨 <b>BREAKING FOREX NEWS</b>
-
-<b>{title}</b>
-
-📊 <b>Details:</b>
-• Time: {formatted_time}
-• Source: {source}
-• Currency Pairs: {pairs_text}"""
+            # Create content
+            content = f"Time: {formatted_time}\nSource: {source}\nCurrency Pairs: {pairs_text}"
             
             # Add summary if available
             if summary:
-                message += f"\n\n📝 <b>Summary:</b>\n{summary}"
+                content += f"\n\nSummary: {summary}"
             
             # Add AI analysis if available
             if ai_analysis and isinstance(ai_analysis, dict):
@@ -410,22 +398,17 @@ class NewsAlertTrigger:
                     # Truncate analysis if too long
                     if len(analysis_text) > 300:
                         analysis_text = analysis_text[:297] + "..."
-                    message += f"\n\n🤖 <b>AI Analysis:</b>\n{analysis_text}"
+                    content += f"\n\nAI Analysis: {analysis_text}"
                 else:
-                    message += f"\n\n🤖 <b>AI Analysis:</b> Available on dashboard"
+                    content += f"\n\nAI Analysis: Available on dashboard"
             else:
-                message += f"\n\n📈 <b>Market Impact:</b> Monitor for price action"
+                content += f"\n\nMarket Impact: Monitor for price action"
             
-            # Add footer
-            if url:
-                message += f"\n\n🔗 <a href='{url}'>Read Full Article</a>"
-            message += "\n📱 Check dashboard for detailed analysis"
-            
-            return message
+            return content
             
         except Exception as e:
-            logger.error(f"Error creating alert message: {e}")
-            return f"🚨 <b>Breaking Forex News:</b> {news_item.get('title', 'Unknown')}"
+            logger.error(f"Error creating alert content: {e}")
+            return "Breaking forex news - check dashboard for details"
     
     def _trigger_ai_analysis(self, news_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Trigger AI analysis for the news item and return the analysis"""

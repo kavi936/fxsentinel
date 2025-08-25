@@ -54,6 +54,27 @@ class TelegramBotSetup:
         except Exception as e:
             logger.error(f"Error setting up bot handlers: {e}")
     
+    async def _check_subscription_status(self, user_id: str, email: str = None) -> Dict[str, Any]:
+        """Check if user has valid subscription status with caching"""
+        try:
+            from .subscription_cache import get_subscription_status_async
+            
+            is_valid, error = await get_subscription_status_async(user_id)
+            
+            return {
+                'has_access': is_valid,
+                'status': 'valid' if is_valid else 'invalid',
+                'error': error
+            }
+            
+        except Exception as e:
+            logger.error(f"Error checking subscription status: {e}")
+            return {
+                'has_access': False,
+                'status': 'error',
+                'error': str(e)
+            }
+    
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /start command"""
         try:
@@ -65,6 +86,25 @@ class TelegramBotSetup:
                 user_id = context.args[0]
                 logger.info(f"User {user_id} starting bot setup via link")
                 
+                # Check subscription status before allowing setup
+                subscription_check = await self._check_subscription_status(
+                    user_id, 
+                    user.username or user.first_name
+                )
+                
+                if not subscription_check['has_access']:
+                    await update.message.reply_text(
+                        "❌ Access Denied\n\n"
+                        "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
+                        "To continue using alerts:\n"
+                        "1. Visit https://fxsentinel.io\n"
+                        "2. Log in to your account\n"
+                        "3. Renew your subscription\n"
+                        "4. Try connecting again\n\n"
+                        "If you believe this is an error, please contact support."
+                    )
+                    return
+                
                 # Store temporary setup data
                 context.user_data['setup_user_id'] = user_id
                 context.user_data['setup_step'] = 'waiting_confirmation'
@@ -73,7 +113,8 @@ class TelegramBotSetup:
                     f"🎉 Welcome to FXSentinel Alerts!\n\n"
                     f"I'm here to help you set up real-time market alerts.\n\n"
                     f"Your user ID: {user_id}\n"
-                    f"Your Telegram: @{user.username or 'Unknown'}\n\n"
+                    f"Your Telegram: @{user.username or 'Unknown'}\n"
+                    f"Subscription Status: {subscription_check['status'].title()}\n\n"
                     f"To complete setup, please send: /connect {user_id}\n\n"
                     f"Or type /help for more commands."
                 )
@@ -114,6 +155,25 @@ class TelegramBotSetup:
             user_id = context.args[0]
             logger.info(f"User {user_id} attempting to connect Telegram account")
             
+            # Check subscription status before allowing connection
+            subscription_check = await self._check_subscription_status(
+                user_id, 
+                user.username or user.first_name
+            )
+            
+            if not subscription_check['has_access']:
+                await update.message.reply_text(
+                    "❌ Connection Failed\n\n"
+                    "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
+                    "To continue using alerts:\n"
+                    "1. Visit https://fxsentinel.io\n"
+                    "2. Log in to your account\n"
+                    "3. Renew your subscription\n"
+                    "4. Try connecting again\n\n"
+                    "If you believe this is an error, please contact support."
+                )
+                return
+            
             # Verify the connection
             result = await self.alert_service.verify_telegram_connection(
                 user_id=user_id,
@@ -125,6 +185,7 @@ class TelegramBotSetup:
                 await update.message.reply_text(
                     "✅ Connection successful!\n\n"
                     "Your Telegram account is now connected to FXSentinel Alerts.\n\n"
+                    f"Subscription Status: {subscription_check['status'].title()}\n\n"
                     "You'll receive notifications about:\n"
                     "• 🔥 Breaking forex news\n"
                     "• 📊 Economic data releases\n"
@@ -163,6 +224,22 @@ class TelegramBotSetup:
                 )
                 return
             
+            # Check subscription status
+            subscription_check = await self._check_subscription_status(user_id)
+            
+            if not subscription_check['has_access']:
+                await update.message.reply_text(
+                    "❌ Access Denied\n\n"
+                    "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
+                    "To continue using alerts:\n"
+                    "1. Visit https://fxsentinel.io\n"
+                    "2. Log in to your account\n"
+                    "3. Renew your subscription\n"
+                    "4. Try connecting again\n\n"
+                    "If you believe this is an error, please contact support."
+                )
+                return
+            
             # Get user's alert settings
             settings = await self.alert_service.get_user_alert_settings(user_id)
             
@@ -175,6 +252,9 @@ class TelegramBotSetup:
             
             # Format status message
             status_msg = "📊 Your Alert Settings:\n\n"
+            
+            # Subscription status
+            status_msg += f"💳 Subscription: {subscription_check['status'].title()}\n\n"
             
             # Alert types
             alert_types = settings.get('alert_types', {})
@@ -217,6 +297,22 @@ class TelegramBotSetup:
                 await update.message.reply_text(
                     "❌ Your Telegram account is not connected to FXSentinel.\n\n"
                     "Please visit the FXSentinel app and click 'Connect Telegram Bot' to get started."
+                )
+                return
+            
+            # Check subscription status
+            subscription_check = await self._check_subscription_status(user_id)
+            
+            if not subscription_check['has_access']:
+                await update.message.reply_text(
+                    "❌ Access Denied\n\n"
+                    "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
+                    "To continue using alerts:\n"
+                    "1. Visit https://fxsentinel.io\n"
+                    "2. Log in to your account\n"
+                    "3. Renew your subscription\n"
+                    "4. Try connecting again\n\n"
+                    "If you believe this is an error, please contact support."
                 )
                 return
             

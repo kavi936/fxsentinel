@@ -10,6 +10,7 @@ import requests
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
+import re # Added for date/time parsing
 
 # Load environment variables
 load_dotenv()
@@ -24,7 +25,6 @@ class EconomicCalendarAlerts:
         self.api_base_url = os.getenv('API_BASE_URL', 'http://localhost:5001')
         self.alert_hours_before = [2, 1]  # Send alerts 2 hours and 1 hour before
         self.alert_minutes_before = [10]  # Send alerts 10 minutes before
-        self.processed_events = set()  # Track processed events to prevent duplicates
         
         # High-impact event types that should trigger alerts
         self.high_impact_types = [
@@ -39,19 +39,149 @@ class EconomicCalendarAlerts:
             'interest rate', 'monetary policy', 'retail sales', 'employment'
         ]
     
+    def _validate_event_data(self, event: Dict[str, Any]) -> bool:
+        """Validate that event data is legitimate and not historical/mock data"""
+        try:
+            # Check for required fields
+            if not event.get('title') or not event.get('time') or not event.get('date'):
+                logger.debug(f"Event missing required fields: {event.get('title', 'Unknown')}")
+                return False
+            
+            # Check data source quality
+            raw_data = event.get('raw_data', {})
+            if not raw_data:
+                logger.debug(f"Event missing raw_data: {event.get('title', 'Unknown')}")
+                return False
+            
+            # Parse event datetime
+            event_datetime = self._parse_event_datetime(event)
+            if not event_datetime:
+                logger.debug(f"Could not parse event datetime: {event.get('title', 'Unknown')}")
+                return False
+            
+            # Check if event is in the future (not historical)
+            now = datetime.now()
+            if event_datetime <= now:
+                logger.debug(f"Event is in the past: {event.get('title', 'Unknown')} at {event_datetime}")
+                return False
+            
+            # Check if event is too far in the future (more than 7 days)
+            if event_datetime > now + timedelta(days=7):
+                logger.debug(f"Event too far in future: {event.get('title', 'Unknown')} at {event_datetime}")
+                return False
+            
+            # Check for suspicious patterns (midnight events, weekend events for non-speeches)
+            hour = event_datetime.hour
+            weekday = event_datetime.weekday()
+            title = event.get('title', '').lower()
+            
+            # Allow midnight events only for important speeches
+            if hour == 0 and 'speech' not in title and 'meeting' not in title:
+                logger.debug(f"Suspicious midnight event: {event.get('title', 'Unknown')}")
+                return False
+            
+            # Allow weekend events only for important speeches/meetings
+            if weekday >= 5 and not any(keyword in title for keyword in ['speech', 'meeting', 'conference']):
+                logger.debug(f"Weekend event without justification: {event.get('title', 'Unknown')}")
+                return False
+            
+            # Check event status
+            status = event.get('status', '').upper()
+            if status not in ['UPCOMING', 'IMMINENT']:
+                logger.debug(f"Event status not upcoming: {event.get('title', 'Unknown')} - {status}")
+                return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error validating event data: {e}")
+            return False
+    
+    def _parse_event_datetime(self, event: Dict[str, Any]) -> Optional[datetime]:
+        """Parse event datetime from various formats"""
+        try:
+            time_str = event.get('time', '')
+            date_str = event.get('date', '')
+            
+            if not time_str or not date_str:
+                return None
+            
+            # Try different datetime formats
+            datetime_formats = [
+                '%H:%M UTC',  # "14:30 UTC"
+                '%Y-%m-%d %H:%M:%S',  # "2024-01-15 14:30:00"
+                '%a, %b %d %H:%M UTC',  # "Mon, Jan 15 14:30 UTC"
+                '%Y-%m-%d %H:%M',  # "2024-01-15 14:30"
+            ]
+            
+            # Combine date and time
+            datetime_str = f"{date_str} {time_str}"
+            
+            for fmt in datetime_formats:
+                try:
+                    # Try parsing with current year if not specified
+                    if '%Y' not in fmt:
+                        current_year = datetime.now().year
+                        datetime_str_with_year = f"{current_year} {datetime_str}"
+                        return datetime.strptime(datetime_str_with_year, f"%Y {fmt}")
+                    else:
+                        return datetime.strptime(datetime_str, fmt)
+                except ValueError:
+                    continue
+            
+            # If all formats fail, try to extract time and date separately
+            try:
+                # Extract time (HH:MM format)
+                time_match = re.search(r'(\d{1,2}):(\d{2})', time_str)
+                if time_match:
+                    hour = int(time_match.group(1))
+                    minute = int(time_match.group(2))
+                    
+                    # Extract date components
+                    date_match = re.search(r'(\w{3}),?\s+(\w{3})\s+(\d{1,2})', date_str)
+                    if date_match:
+                        day_name = date_match.group(1)
+                        month_name = date_match.group(2)
+                        day = int(date_match.group(3))
+                        
+                        # Map month names to numbers
+                        month_map = {
+                            'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+                            'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+                        }
+                        
+                        month = month_map.get(month_name.lower(), 1)
+                        current_year = datetime.now().year
+                        
+                        return datetime(current_year, month, day, hour, minute)
+            except:
+                pass
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error parsing event datetime: {e}")
+            return None
+    
     def is_high_impact_event(self, event: Dict[str, Any]) -> bool:
         """Determine if event is high impact and should trigger alerts"""
         try:
+            # First validate the event data
+            if not self._validate_event_data(event):
+                return False
+            
             title = event.get('title', '').lower()
             event_type = event.get('type', '').upper()
             impact = event.get('impact', '').lower()
             
             # Check impact level
             if impact == 'high':
+                logger.info(f"High impact event detected: {title[:50]}...")
                 return True
             
             # Check event type
             if any(event_type in high_type for high_type in self.high_impact_types):
+                logger.info(f"High impact event type detected: {title[:50]}...")
                 return True
             
             # Check title keywords
@@ -99,52 +229,49 @@ class EconomicCalendarAlerts:
             return []
     
     def should_send_pre_event_alert(self, event: Dict[str, Any]) -> bool:
-        """Determine if we should send a pre-event alert for this event"""
+        """Determine if pre-event alert should be sent for this event"""
         try:
             # Check if it's a high-impact event
             if not self.is_high_impact_event(event):
                 return False
             
-            # Check if event is upcoming (not past)
-            event_time = event.get('time', '')
-            event_date = event.get('date', '')
-            
-            if not event_time or not event_date:
+            # Get event datetime
+            event_datetime = self._parse_event_datetime(event)
+            if not event_datetime:
                 return False
             
-            # Parse event datetime
-            try:
-                # This is a simplified parser - you might need to adjust based on your date format
-                event_datetime = datetime.strptime(f"{event_date} {event_time}", "%a, %b %d %H:%M UTC")
-                now = datetime.now()
-                
-                # Check if event is within next 24 hours
-                if event_datetime > now and event_datetime <= now + timedelta(hours=24):
+            # Check if we're within alert timing windows
+            now = datetime.now()
+            time_until_event = event_datetime - now
+            minutes_until_event = time_until_event.total_seconds() / 60
+            
+            # Check hour-based alerts (2h and 1h before)
+            for hours in self.alert_hours_before:
+                alert_minutes = hours * 60
+                if 0 <= minutes_until_event <= alert_minutes and minutes_until_event >= alert_minutes - 5:
+                    logger.info(f"Pre-event alert triggered: {event.get('title', 'Unknown')} in {hours}h")
                     return True
-                    
-            except Exception as e:
-                logger.error(f"Error parsing event datetime: {e}")
-                return False
+            
+            # Check minute-based alerts (10min before)
+            for minutes in self.alert_minutes_before:
+                if 0 <= minutes_until_event <= minutes and minutes_until_event >= minutes - 2:
+                    logger.info(f"Final reminder triggered: {event.get('title', 'Unknown')} in {minutes}min")
+                    return True
             
             return False
             
         except Exception as e:
-            logger.error(f"Error checking pre-event alert need: {e}")
+            logger.error(f"Error checking pre-event alert: {e}")
             return False
     
     def get_alert_timing(self, event: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get all alert timings for an event (2h, 1h, 10min before)"""
         try:
-            event_time = event.get('time', '')
-            event_date = event.get('date', '')
-            
-            if not event_time or not event_date:
+            event_datetime = self._parse_event_datetime(event)
+            if not event_datetime:
                 return []
             
-            # Parse event datetime
-            event_datetime = datetime.strptime(f"{event_date} {event_time}", "%a, %b %d %H:%M UTC")
             now = datetime.now()
-            
             alert_timings = []
             
             # Check hour-based alerts (2h and 1h before)
@@ -174,62 +301,66 @@ class EconomicCalendarAlerts:
             return []
     
     def get_users_to_alert(self, event: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Get list of users who should receive this pre-event alert"""
+        """Get list of users who should receive alerts for this event"""
         try:
-            # Get all users with alert settings
+            # Get affected currency pairs
+            affected_pairs = self.get_affected_currency_pairs(event)
+            if not affected_pairs:
+                logger.debug(f"No currency pairs found for event: {event.get('title', 'Unknown')}")
+                return []
+            
+            # Get all users with economic calendar alerts enabled
             from services.firebase_realtime_storage import FirebaseRealtimeStorage
             firebase_storage = FirebaseRealtimeStorage()
+            all_users = firebase_storage.get_all_users()
             
-            all_users = firebase_storage.get_all_users_with_alerts()
             users_to_alert = []
             
-            affected_pairs = self.get_affected_currency_pairs(event)
-            
-            for user_data in all_users:
-                user_id = user_data.get('user_id')
-                settings = user_data.get('settings', {})
-                
-                # Get the actual chat ID from Firebase
-                chat_id = firebase_storage.get_telegram_chat_id(user_id)
-                if not chat_id:
-                    continue
-                
-                # Check if user has Telegram enabled
-                telegram_enabled = settings.get('channels', {}).get('telegram', {}).get('enabled', False)
-                if not telegram_enabled:
-                    continue
-                
-                # Check user preferences
-                preferences = settings.get('preferences', {})
-                
-                # Check if user wants pre-news alerts
-                alert_types = preferences.get('alertTypes', {})
-                if not alert_types.get('preNews', True):  # Default to True
-                    continue
-                
-                # Check if user is interested in affected currency pairs
-                user_pairs = preferences.get('currencyPairs', [])
-                if affected_pairs and user_pairs:
-                    # Check if any affected pairs match user's preferences
+            for user_id, user_data in all_users.items():
+                try:
+                    settings = user_data.get('settings', {})
+                    preferences = settings.get('alerts', {})
+                    
+                    # Check if economic calendar alerts are enabled
+                    if not preferences.get('economicCalendar', {}).get('enabled', False):
+                        continue
+                    
+                    # Check if user has Telegram enabled
+                    if not preferences.get('channels', {}).get('telegram', {}).get('enabled', False):
+                        continue
+                    
+                    # Check currency pair preferences
+                    user_pairs = preferences.get('currencyPairs', {})
                     if not any(pair in user_pairs for pair in affected_pairs):
                         continue
+                    
+                    # Check impact level
+                    impact_levels = preferences.get('impactLevels', {})
+                    if not impact_levels.get('high', True):  # Default to True
+                        continue
+                    
+                    # Check quiet hours
+                    quiet_hours = preferences.get('quietHours', {})
+                    if self._is_quiet_hours(quiet_hours):
+                        continue
+                    
+                    # Get the actual chat ID from Firebase
+                    chat_id = firebase_storage.get_telegram_chat_id(user_id)
+                    
+                    if not chat_id:
+                        logger.warning(f"No chat ID found for user {user_id}")
+                        continue
+                    
+                    # User should receive this alert
+                    users_to_alert.append({
+                        'user_id': user_id,
+                        'chat_id': chat_id,
+                        'settings': settings
+                    })
                 
-                # Check impact level
-                impact_levels = preferences.get('impactLevels', {})
-                if not impact_levels.get('high', True):  # Default to True
+                except Exception as e:
+                    logger.error(f"Error processing user {user_id}: {e}")
                     continue
-                
-                # Check quiet hours
-                quiet_hours = preferences.get('quietHours', {})
-                if self._is_quiet_hours(quiet_hours):
-                    continue
-                
-                # User should receive this alert
-                users_to_alert.append({
-                    'user_id': user_id,
-                    'chat_id': chat_id,  # Use the actual chat ID from Firebase
-                    'settings': settings
-                })
             
             return users_to_alert
             
@@ -264,79 +395,71 @@ class EconomicCalendarAlerts:
             return False
     
     def process_economic_calendar_for_alerts(self) -> Dict[str, Any]:
-        """Process economic calendar events and send pre-event alerts"""
+        """Process economic calendar and send alerts for upcoming events"""
         try:
             results = {
-                'total_events_checked': 0,
+                'total_events': 0,
                 'high_impact_events': 0,
                 'alerts_sent': 0,
                 'errors': []
             }
             
-            # Get economic calendar events
+            # Get economic calendar data
             try:
                 response = requests.get(f"{self.api_base_url}/api/economic-calendar", timeout=10)
-                if response.status_code == 200:
-                    data = response.json()
-                    events = data.get('events', [])
-                else:
-                    logger.error(f"Failed to fetch economic calendar: {response.status_code}")
+                if response.status_code != 200:
+                    logger.warning(f"Failed to get economic calendar: {response.status_code}")
                     return results
+                
+                calendar_data = response.json()
+                
+                # Check data source quality
+                data_source = calendar_data.get('source', 'unknown')
+                if data_source in ['fallback_data', 'mock_data', 'test_data', 'demo_data']:
+                    logger.warning(f"⚠️ Skipping economic calendar alerts - using {data_source} (potential false alerts)")
+                    return results
+                
+                events = calendar_data.get('events', [])
+                results['total_events'] = len(events)
+                
+                logger.info(f"📊 Processing {len(events)} events from {data_source}")
+                
             except Exception as e:
                 logger.error(f"Error fetching economic calendar: {e}")
                 return results
             
-            results['total_events_checked'] = len(events)
-            
+            # Process each event
             for event in events:
-                event_id = str(event.get('id', ''))
+                try:
+                    # Check if this event should trigger an alert
+                    if not self.should_send_pre_event_alert(event):
+                        continue
+                    
+                    results['high_impact_events'] += 1
+                    logger.info(f"Processing high-impact event: {event.get('title', '')[:50]}...")
+                    
+                    # Get users to alert
+                    users_to_alert = self.get_users_to_alert(event)
+                    
+                    if not users_to_alert:
+                        logger.info("No users to alert for this event")
+                        continue
+                    
+                    # Send alerts to users
+                    for user_data in users_to_alert:
+                        try:
+                            success = self._send_pre_event_alert(user_data, event)
+                            if success:
+                                results['alerts_sent'] += 1
+                        except Exception as e:
+                            error_msg = f"Error sending alert to user {user_data.get('user_id')}: {e}"
+                            logger.error(error_msg)
+                            results['errors'].append(error_msg)
                 
-                # Skip if already processed
-                if event_id in self.processed_events:
-                    continue
-                
-                # Check if we should send pre-event alert
-                if not self.should_send_pre_event_alert(event):
-                    continue
-                
-                results['high_impact_events'] += 1
-                logger.info(f"Processing high-impact economic event: {event.get('title', '')[:50]}...")
-                
-                # Get alert timings for this event
-                alert_timings = self.get_alert_timing(event)
-                
-                if not alert_timings:
-                    logger.info("No alert timings found for this event")
-                    continue
-                
-                # Get users to alert
-                users_to_alert = self.get_users_to_alert(event)
-                
-                if not users_to_alert:
-                    logger.info("No users to alert for this economic event")
-                    continue
-                
-                # Send alerts for each timing
-                for timing in alert_timings:
-                    # Check if it's time to send this alert
-                    now = datetime.now()
-                    if abs((timing['time'] - now).total_seconds()) <= 300:  # Within 5 minutes of target time
-                        for user_data in users_to_alert:
-                            try:
-                                success = self._send_pre_event_alert(user_data, event, timing)
-                                if success:
-                                    results['alerts_sent'] += 1
-                            except Exception as e:
-                                error_msg = f"Error sending {timing['type']} alert to user {user_data.get('user_id')}: {e}"
-                                logger.error(error_msg)
-                                results['errors'].append(error_msg)
-                
-                # Mark as processed
-                self.processed_events.add(event_id)
-                
-                # Keep only last 1000 processed event IDs to prevent memory issues
-                if len(self.processed_events) > 1000:
-                    self.processed_events = set(list(self.processed_events)[-500:])
+                except Exception as e:
+                    error_msg = f"Error processing event {event.get('title', 'Unknown')}: {e}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
             
             logger.info(f"Economic calendar processing complete: {results}")
             return results
@@ -345,137 +468,115 @@ class EconomicCalendarAlerts:
             logger.error(f"Error processing economic calendar for alerts: {e}")
             return {'error': str(e)}
     
-    def _send_pre_event_alert(self, user_data: Dict[str, Any], event: Dict[str, Any], timing: Dict[str, Any] = None) -> bool:
+    def _send_pre_event_alert(self, user_data: Dict[str, Any], event: Dict[str, Any]) -> bool:
         """Send pre-event alert to a specific user"""
         try:
-            chat_id = user_data.get('chat_id')
-            if not chat_id:
+            user_id = user_data.get('user_id')
+            if not user_id:
+                logger.error("No user_id provided for economic alert")
                 return False
             
-            # Create pre-event alert message
-            message = self._create_pre_event_alert_message(event, timing)
+            # Check deduplication
+            from .unified_alert_deduplication import should_send_economic_alert
             
-            # Send via Telegram
-            bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-            if not bot_token:
-                logger.error("Telegram bot token not configured")
+            # Get alert timing
+            event_datetime = self._parse_event_datetime(event)
+            if not event_datetime:
                 return False
             
-            telegram_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
-            telegram_data = {
-                'chat_id': chat_id,
-                'text': message,
-                'parse_mode': 'HTML'
+            now = datetime.now()
+            time_until_event = event_datetime - now
+            minutes_until_event = time_until_event.total_seconds() / 60
+            
+            # Determine alert timing
+            alert_timing = "unknown"
+            if minutes_until_event <= 10 and minutes_until_event >= 8:
+                alert_timing = "10min_before"
+            elif minutes_until_event <= 60 and minutes_until_event >= 55:
+                alert_timing = "1h_before"
+            elif minutes_until_event <= 120 and minutes_until_event >= 115:
+                alert_timing = "2h_before"
+            
+            # Check if this alert should be sent (not a duplicate)
+            if not should_send_economic_alert(event, user_id, alert_timing):
+                logger.debug(f"Economic alert duplicate prevented for user {user_id}")
+                return False
+            
+            # Create alert data
+            alert_data = {
+                'title': event.get('title', 'Economic Event'),
+                'content': self._create_economic_alert_content(event, alert_timing),
+                'type': 'economicCalendar',
+                'impact_level': event.get('impact', 'medium'),
+                'currency_pairs': self.get_affected_currency_pairs(event),
+                'source': 'Economic Calendar',
+                'event_time': event.get('time', ''),
+                'event_date': event.get('date', ''),
+                'timestamp': datetime.now().isoformat()
             }
             
-            response = requests.post(telegram_url, json=telegram_data, timeout=10)
+            # Get user settings
+            user_settings = user_data.get('settings', {})
             
-            if response.status_code == 200:
-                logger.info(f"Pre-event alert sent successfully to user {user_data.get('user_id')}")
-                
-                # Save to alert history
-                self._save_pre_event_alert_history(user_data.get('user_id'), event, message)
+            # Use alert service to process the alert (includes subscription validation)
+            from .alert_service import get_alert_service
+            alert_service = get_alert_service()
+            
+            # Process alert with subscription validation
+            import asyncio
+            success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+            
+            if success:
+                logger.info(f"Economic alert sent successfully to user {user_id}")
                 return True
             else:
-                logger.error(f"Failed to send pre-event alert: {response.status_code} - {response.text}")
+                logger.warning(f"Economic alert not sent to user {user_id} (subscription check failed or user preferences)")
                 return False
                 
         except Exception as e:
-            logger.error(f"Error sending pre-event alert to user: {e}")
+            logger.error(f"Error sending economic alert to user: {e}")
             return False
     
-    def _create_pre_event_alert_message(self, event: Dict[str, Any], timing: Dict[str, Any] = None) -> str:
-        """Create formatted pre-event alert message"""
+    def _create_economic_alert_content(self, event: Dict[str, Any], alert_timing: str) -> str:
+        """Create economic alert content"""
         try:
-            title = event.get('title', '')
-            event_type = event.get('type', '')
+            title = event.get('title', 'Unknown Event')
+            event_time = event.get('time', '')
+            event_date = event.get('date', '')
             currency = event.get('currency', '')
-            time = event.get('time', '')
-            date = event.get('date', '')
-            impact = event.get('impact', '')
-            previous = event.get('previous', '')
-            expected = event.get('expected', '')
+            impact = event.get('impact', 'medium')
             
+            # Get currency pairs
             affected_pairs = self.get_affected_currency_pairs(event)
             pairs_text = ', '.join(affected_pairs) if affected_pairs else 'Multiple pairs'
             
-            # Determine message type and timing text
-            if timing and timing.get('message_type') == 'final_reminder':
-                header = "🚨 ECONOMIC EVENT REMINDER"
-                timing_text = "Event starts in 10 minutes"
-                action_text = "Final position preparation"
+            # Format timing message
+            if alert_timing == "10min_before":
+                timing_msg = "Event starts in 10 minutes"
+            elif alert_timing == "1h_before":
+                timing_msg = "Event starts in 1 hour"
+            elif alert_timing == "2h_before":
+                timing_msg = "Event starts in 2 hours"
             else:
-                header = "📅 ECONOMIC EVENT ALERT"
-                timing_text = "Event starts in 1-2 hours"
-                action_text = "Prepare for market volatility"
+                timing_msg = "Event starting soon"
             
-            message = f"""
-{header}
-**{title}** - {timing_text}
-
-**Time:** {time} UTC | **Date:** {date}
-**Impact:** {impact.upper()} | **Currency:** {currency}
-
-**Event Details:**
-• Type: {event_type}
-• Affected Pairs: {pairs_text}
-
-**Market Expectations:**
-• Previous: {previous}
-• Expected: {expected}
-
-**Action Required:** {action_text}
-**Dashboard:** Check for detailed analysis
-            """.strip()
+            # Create content
+            content = f"📅 **UPCOMING ECONOMIC EVENT**\n\n"
+            content += f"🔴 **{title}**\n"
+            content += f"⏰ **{timing_msg}**\n\n"
+            content += f"📊 **Event Details:**\n"
+            content += f"• Time: {event_time} UTC\n"
+            content += f"• Date: {event_date}\n"
+            content += f"• Currency: {currency}\n"
+            content += f"• Impact: {impact.upper()}\n"
+            content += f"• Affected Pairs: {pairs_text}\n\n"
+            content += f"🎯 **Prepare for Market Volatility!**"
             
-            return message
+            return content
             
         except Exception as e:
-            logger.error(f"Error creating pre-event alert message: {e}")
-            return f"📅 Upcoming Economic Event: {event.get('title', 'Unknown')}"
-    
-    def _save_pre_event_alert_history(self, user_id: str, event: Dict[str, Any], message: str) -> bool:
-        """Save pre-event alert to user's history"""
-        try:
-            from services.firebase_realtime_storage import FirebaseRealtimeStorage
-            firebase_storage = FirebaseRealtimeStorage()
-            
-            alert_data = {
-                'type': 'preEvent',
-                'content': message,
-                'timestamp': datetime.now().isoformat(),
-                'recipients': ['telegram'],
-                'status': 'sent',
-                'event_id': str(event.get('id', '')),
-                'event_title': event.get('title', ''),
-                'event_type': event.get('type', ''),
-                'event_currency': event.get('currency', ''),
-                'event_time': event.get('time', ''),
-                'event_date': event.get('date', '')
-            }
-            
-            # Save to Firebase using the existing method
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
-            path = f"alerts/users/{safe_user_id}/alert_history"
-            
-            # Get existing history and append new alert
-            existing_history = firebase_storage._make_request('GET', path) or []
-            if not isinstance(existing_history, list):
-                existing_history = []
-            
-            existing_history.append(alert_data)
-            
-            # Keep only last 50 alerts to prevent database bloat
-            if len(existing_history) > 50:
-                existing_history = existing_history[-50:]
-            
-            firebase_storage._make_request('PUT', path, existing_history)
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error saving pre-event alert history: {e}")
-            return False
+            logger.error(f"Error creating economic alert content: {e}")
+            return "Economic event alert"
 
 # Global instance
 economic_calendar_alerts = EconomicCalendarAlerts()

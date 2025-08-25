@@ -1550,11 +1550,50 @@ def health_alerts():
         # Check if alert service is working
         telegram_bot_working = alert_service.telegram_bot is not None
         
+        # Check robust alert service if available
+        robust_service_status = None
+        robust_service_running = False
+        try:
+            from services.robust_alert_service import get_service_health
+            robust_service_status = get_service_health()
+            robust_service_running = robust_service_status.get('status') == 'running'
+        except ImportError:
+            robust_service_status = {"status": "not_available"}
+        
+        # Check subscription cache status
+        subscription_cache_status = None
+        try:
+            from services.subscription_cache import get_cache_stats
+            subscription_cache_status = get_cache_stats()
+        except ImportError:
+            subscription_cache_status = {"status": "not_available"}
+        
+        # Check robust Telegram service status
+        telegram_service_status = None
+        try:
+            from services.robust_telegram_service import get_telegram_service_stats
+            telegram_service_status = get_telegram_service_stats()
+        except ImportError:
+            telegram_service_status = {"status": "not_available"}
+        
+        # Determine overall status
+        if telegram_bot_working and robust_service_running:
+            overall_status = "healthy"
+        elif telegram_bot_working:
+            overall_status = "degraded"  # Telegram works but no background service
+        else:
+            overall_status = "unhealthy"
+        
         return jsonify({
-            "status": "healthy" if telegram_bot_working else "degraded",
+            "status": overall_status,
             "timestamp": datetime.now().isoformat(),
             "telegram_bot": "connected" if telegram_bot_working else "disconnected",
-            "firebase": "connected" if alert_service.firebase_storage.test_connection() else "disconnected"
+            "firebase": "connected" if alert_service.firebase_storage.test_connection() else "disconnected",
+            "robust_service": robust_service_status,
+            "subscription_cache": subscription_cache_status,
+            "robust_telegram_service": telegram_service_status,
+            "alerts_working": robust_service_running,
+            "message": "Alerts will work for online users" if robust_service_running else "Alerts only work when manually started"
         })
     except Exception as e:
         return jsonify({
@@ -2116,6 +2155,15 @@ def setup_telegram_bot():
         if not _verify_user_access(user_id):
             return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
         
+        # Check subscription status
+        subscription_valid = _check_subscription_status(user_id)
+        if not subscription_valid:
+            return jsonify({
+                "success": False, 
+                "error": "Subscription required. Please renew your subscription to use Telegram alerts.",
+                "subscription_required": True
+            }), 403
+        
         # Generate unique, time-limited token for this user
         setup_token = _generate_setup_token(user_id)
         print(f"🔧 DEBUG: Generated token for user {user_id}: {setup_token}")
@@ -2152,6 +2200,15 @@ def verify_telegram_connection():
         if not _verify_user_access(user_id):
             return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
         
+        # Check subscription status
+        subscription_valid = _check_subscription_status(user_id)
+        if not subscription_valid:
+            return jsonify({
+                "success": False, 
+                "error": "Subscription required. Please renew your subscription to use Telegram alerts.",
+                "subscription_required": True
+            }), 403
+        
         # Check if user has completed bot setup (optional check)
         chat_id = _get_user_chat_id(user_id)
         if chat_id:
@@ -2172,6 +2229,24 @@ def verify_telegram_connection():
     except Exception as e:
         print(f"Error verifying Telegram connection: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+def _check_subscription_status(user_id):
+    """Check if user has valid subscription status with caching"""
+    try:
+        from services.subscription_cache import get_subscription_status_sync
+        
+        is_valid, error = get_subscription_status_sync(user_id)
+        
+        if error:
+            print(f"Error checking subscription status for {user_id}: {error}")
+            return False
+        
+        print(f"🔍 Subscription check for user {user_id}: Valid: {is_valid}")
+        return is_valid
+        
+    except Exception as e:
+        print(f"Error checking subscription status: {e}")
+        return False  # Deny access if we can't verify subscription
 
 # Security helper functions
 def _verify_user_access(user_id):
@@ -2557,17 +2632,24 @@ def get_market_sentiment():
         print("🔍 Fetching market sentiment data...")
         
         # Import the sentiment service
+        import importlib
+        import services.market_sentiment_service
+        importlib.reload(services.market_sentiment_service)
         from services.market_sentiment_service import market_sentiment_service
         
         # Get sentiment data
         sentiment_data = market_sentiment_service.get_market_sentiment()
         
         print(f"✅ Successfully fetched sentiment data for trading day: {sentiment_data.get('trading_day')}")
+        print(f"🔍 Market status: {sentiment_data.get('market_status')}")
+        print(f"🔍 Is market closed: {sentiment_data.get('is_market_closed')}")
         
         return jsonify(sentiment_data)
         
     except Exception as e:
         print(f"❌ Error fetching market sentiment: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
             'error': 'Failed to fetch market sentiment',
             'message': str(e),
@@ -4403,6 +4485,19 @@ if __name__ == '__main__':
     # Force debug mode off for background execution
     debug_mode = False
     
+    # Start robust alert service for production
+    try:
+        from services.robust_alert_service import start_robust_alert_service
+        import threading
+        
+        # Start robust alert service in a separate thread
+        alert_thread = threading.Thread(target=start_robust_alert_service, daemon=True)
+        alert_thread.start()
+        print("✅ Robust alert service started in background")
+    except Exception as e:
+        print(f"⚠️ Could not start robust alert service: {e}")
+        print("   Alerts will not work for online users!")
+    
     # Start cost-optimized monitor
     try:
         from services.cost_optimized_monitor import cost_optimized_monitor
@@ -4412,5 +4507,6 @@ if __name__ == '__main__':
         print(f"⚠️ Could not start cost-optimized monitor: {e}")
     
     print(f"🚀 Starting Flask server on port {port}, debug={debug_mode}")
+    print("📊 Robust alert service enabled - alerts will work for online users")
     print("📊 Cost-optimized monitoring enabled - reduced API calls and logging")
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 
