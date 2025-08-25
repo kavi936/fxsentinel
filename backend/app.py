@@ -61,7 +61,8 @@ limiter = Limiter(
     app=app,
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"
+    storage_uri="memory://",
+    enabled=False  # Temporarily disable rate limiting for testing
 )
 
 # Configure CORS to allow requests from all origins (including file:// and null origins)
@@ -1532,6 +1533,7 @@ def get_enhanced_analysis(news_id):
         return jsonify({"error": "Failed to generate GPT analysis"}), 500
 
 @app.route('/api/health')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_check():
     """Main health check endpoint"""
     return jsonify({
@@ -1541,6 +1543,7 @@ def health_check():
     })
 
 @app.route('/api/health/alerts')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_alerts():
     """Alert system health check"""
     try:
@@ -1603,6 +1606,7 @@ def health_alerts():
         }), 500
 
 @app.route('/api/health/telegram')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_telegram():
     """Telegram monitor health check"""
     try:
@@ -1622,6 +1626,7 @@ def health_telegram():
         }), 500
 
 @app.route('/api/health/calendar')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_calendar():
     """Economic calendar health check"""
     try:
@@ -1641,6 +1646,7 @@ def health_calendar():
         }), 500
 
 @app.route('/api/health/news')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_news():
     """News aggregator health check"""
     try:
@@ -1660,6 +1666,7 @@ def health_news():
         }), 500
 
 @app.route('/api/health/ai')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_ai():
     """AI analysis health check"""
     try:
@@ -1679,6 +1686,7 @@ def health_ai():
         }), 500
 
 @app.route('/api/health/system')
+@limiter.exempt  # Health endpoints should not be rate limited
 def health_system():
     """Complete system health check"""
     try:
