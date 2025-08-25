@@ -4590,25 +4590,38 @@ def telegram_webhook():
                         from services.firebase_realtime_storage import FirebaseRealtimeStorage
                         firebase = FirebaseRealtimeStorage()
                         
-                        # Find user by chat_id
+                        # Find user by chat_id using the new mapping system
                         user_id = None
-                        users_ref = firebase.db.collection('users')
-                        for user_doc in users_ref.stream():
-                            user_id = user_doc.id
-                            # Check Telegram settings
-                            telegram_ref = user_doc.reference.collection('alert_settings').document('telegram')
-                            telegram_doc = telegram_ref.get()
+                        
+                        # First try to find the mapping directly
+                        mapping_path = f"telegram_mappings/{chat_id}"
+                        mapping_result = firebase._make_request('GET', mapping_path)
+                        
+                        if mapping_result and isinstance(mapping_result, dict) and 'user_id' in mapping_result:
+                            user_id = mapping_result['user_id']
+                            print(f"Found user mapping for chat_id {chat_id}: {user_id}")
+                        else:
+                            # If no direct mapping, search through all users (legacy support)
+                            print(f"No direct mapping found for chat_id {chat_id}, searching through users...")
+                            users_path = "alerts/users"
+                            users_result = firebase._make_request('GET', users_path)
                             
-                            if telegram_doc.exists:
-                                telegram_data = telegram_doc.to_dict()
-                                if telegram_data.get('chat_id') == str(chat_id):
-                                    break
-                            user_id = None
+                            if users_result and isinstance(users_result, dict):
+                                for safe_user_id, user_data in users_result.items():
+                                    if isinstance(user_data, dict) and 'settings' in user_data:
+                                        settings = user_data['settings']
+                                        if isinstance(settings, dict) and 'channels' in settings:
+                                            channels = settings['channels']
+                                            if isinstance(channels, dict) and 'telegram' in channels:
+                                                telegram_settings = channels['telegram']
+                                                if isinstance(telegram_settings, dict) and telegram_settings.get('chatId') == str(chat_id):
+                                                    user_id = safe_user_id
+                                                    print(f"Found user with chat_id {chat_id} in settings")
+                                                    break
                         
                         if user_id:
                             # Get user settings
                             user_settings = firebase.get_user_alert_settings(user_id)
-                            telegram_settings = user_settings.get('telegram', {})
                             
                             # Check subscription status
                             from services.subscription_cache import get_subscription_status_sync
@@ -4625,12 +4638,12 @@ def telegram_webhook():
                                 status_message += "❌ <b>Subscription:</b> Expired\n"
                             
                             status_message += f"\n📋 <b>Alert Settings:</b>\n"
-                            status_message += f"• News Alerts: {'✅' if telegram_settings.get('news_alerts', False) else '❌'}\n"
-                            status_message += f"• Economic Calendar: {'✅' if telegram_settings.get('economic_calendar', False) else '❌'}\n"
-                            status_message += f"• Market Analysis: {'✅' if telegram_settings.get('market_analysis', False) else '❌'}\n"
+                            status_message += f"• Live News: {'✅' if user_settings.get('live_news_alerts', False) else '❌'}\n"
+                            status_message += f"• Economic Calendar: {'✅' if user_settings.get('economic_calendar_alerts', False) else '❌'}\n"
+                            status_message += f"• AI Analysis: {'✅' if user_settings.get('ai_analysis_enabled', False) else '❌'}\n"
                             
                             status_message += f"\n🎯 <b>Currency Pairs:</b>\n"
-                            currency_pairs = telegram_settings.get('currency_pairs', [])
+                            currency_pairs = user_settings.get('currency_pairs', [])
                             if currency_pairs:
                                 for pair in currency_pairs[:5]:  # Show first 5
                                     status_message += f"• {pair}\n"
@@ -4640,7 +4653,7 @@ def telegram_webhook():
                                 status_message += "• No pairs configured\n"
                             
                             status_message += f"\n📈 <b>Impact Levels:</b>\n"
-                            impact_levels = telegram_settings.get('impact_levels', [])
+                            impact_levels = user_settings.get('impact_levels', [])
                             if impact_levels:
                                 for level in impact_levels:
                                     status_message += f"• {level.title()}\n"
