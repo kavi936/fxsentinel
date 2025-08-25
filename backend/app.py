@@ -4572,6 +4572,111 @@ def telegram_webhook():
             except Exception as e:
                 print(f"❌ Error sending test message: {e}")
         
+        # Handle /status command
+        elif text == '/status':
+            try:
+                bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+                if bot_token and chat_id:
+                    # Try to get user status from Firebase
+                    try:
+                        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                        firebase = FirebaseRealtimeStorage()
+                        
+                        # Find user by chat_id
+                        user_id = None
+                        users_ref = firebase.db.collection('users')
+                        for user_doc in users_ref.stream():
+                            user_id = user_doc.id
+                            # Check Telegram settings
+                            telegram_ref = user_doc.reference.collection('alert_settings').document('telegram')
+                            telegram_doc = telegram_ref.get()
+                            
+                            if telegram_doc.exists:
+                                telegram_data = telegram_doc.to_dict()
+                                if telegram_data.get('chat_id') == str(chat_id):
+                                    break
+                            user_id = None
+                        
+                        if user_id:
+                            # Get user settings
+                            user_settings = firebase.get_user_alert_settings(user_id)
+                            telegram_settings = user_settings.get('telegram', {})
+                            
+                            # Check subscription status
+                            from services.subscription_cache import get_subscription_status_sync
+                            is_valid, error = get_subscription_status_sync(user_id)
+                            
+                            status_message = f"📊 <b>FXSentinel Alert Status</b>\n\n"
+                            status_message += f"🆔 <b>User ID:</b> {user_id}\n"
+                            status_message += f"💬 <b>Chat ID:</b> {chat_id}\n"
+                            status_message += f"📱 <b>Telegram:</b> @{username}\n\n"
+                            
+                            if is_valid:
+                                status_message += "✅ <b>Subscription:</b> Active\n"
+                            else:
+                                status_message += "❌ <b>Subscription:</b> Expired\n"
+                            
+                            status_message += f"\n📋 <b>Alert Settings:</b>\n"
+                            status_message += f"• News Alerts: {'✅' if telegram_settings.get('news_alerts', False) else '❌'}\n"
+                            status_message += f"• Economic Calendar: {'✅' if telegram_settings.get('economic_calendar', False) else '❌'}\n"
+                            status_message += f"• Market Analysis: {'✅' if telegram_settings.get('market_analysis', False) else '❌'}\n"
+                            
+                            status_message += f"\n🎯 <b>Currency Pairs:</b>\n"
+                            currency_pairs = telegram_settings.get('currency_pairs', [])
+                            if currency_pairs:
+                                for pair in currency_pairs[:5]:  # Show first 5
+                                    status_message += f"• {pair}\n"
+                                if len(currency_pairs) > 5:
+                                    status_message += f"• ... and {len(currency_pairs) - 5} more\n"
+                            else:
+                                status_message += "• No pairs configured\n"
+                            
+                            status_message += f"\n📈 <b>Impact Levels:</b>\n"
+                            impact_levels = telegram_settings.get('impact_levels', [])
+                            if impact_levels:
+                                for level in impact_levels:
+                                    status_message += f"• {level.title()}\n"
+                            else:
+                                status_message += "• All levels\n"
+                            
+                        else:
+                            status_message = f"📊 <b>FXSentinel Alert Status</b>\n\n"
+                            status_message += f"❌ <b>Status:</b> Not Connected\n\n"
+                            status_message += f"💬 <b>Chat ID:</b> {chat_id}\n"
+                            status_message += f"📱 <b>Telegram:</b> @{username}\n\n"
+                            status_message += f"To connect your account:\n"
+                            status_message += f"1. Visit https://fxsentinel.io\n"
+                            status_message += f"2. Log in to your account\n"
+                            status_message += f"3. Go to Alerts tab\n"
+                            status_message += f"4. Click 'Connect Telegram Bot'\n"
+                            
+                    except Exception as e:
+                        print(f"❌ Error getting user status: {e}")
+                        status_message = f"📊 <b>FXSentinel Alert Status</b>\n\n"
+                        status_message += f"❌ <b>Status:</b> Error retrieving settings\n\n"
+                        status_message += f"💬 <b>Chat ID:</b> {chat_id}\n"
+                        status_message += f"📱 <b>Telegram:</b> @{username}\n\n"
+                        status_message += f"Please try again or contact support."
+                    
+                    status_response = {
+                        "chat_id": chat_id,
+                        "text": status_message,
+                        "parse_mode": "HTML"
+                    }
+                    
+                    response = requests.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json=status_response
+                    )
+                    
+                    if response.status_code == 200:
+                        print(f"✅ Status message sent to chat {chat_id}")
+                    else:
+                        print(f"❌ Failed to send status message: {response.status_code}")
+                
+            except Exception as e:
+                print(f"❌ Error sending status message: {e}")
+        
         # Handle unknown commands
         else:
             try:
