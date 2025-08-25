@@ -64,7 +64,9 @@ const fallbackSentiment = {
   market_drivers: [],
   market_outlook: 'Market sentiment analysis is currently updating. Please check back shortly.',
   confidence_score: 0.5,
-  data_sources: ['Fallback']
+  data_sources: ['Fallback'],
+  is_market_closed: false,
+  market_status: 'open'
 };
 
 export const useMarketSentiment = () => {

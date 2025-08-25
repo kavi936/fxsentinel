@@ -57,6 +57,8 @@ class MarketSentiment:
     market_outlook: str
     confidence_score: float
     data_sources: List[str]
+    is_market_closed: bool = False
+    market_status: str = "open"  # "open", "closed", "weekend", "holiday"
 
 class MarketSentimentService:
     """Main market sentiment calculation service"""
@@ -105,6 +107,42 @@ class MarketSentimentService:
             self.last_reset_date = current_date
             self._save_cache()
     
+    def _check_market_status(self) -> Dict[str, Any]:
+        """Check if markets are currently open or closed"""
+        current_time = datetime.now(timezone.utc)
+        
+        # Check if it's weekend
+        is_weekend = current_time.weekday() >= 5  # Saturday = 5, Sunday = 6
+        
+        if is_weekend:
+            return {
+                'is_market_closed': True,
+                'market_status': 'weekend',
+                'message': 'Markets are closed for the weekend'
+            }
+        
+        # Check if it's during market hours (simplified - forex markets are open 24/5)
+        # But we can check for optimal trading hours
+        hour = current_time.hour
+        
+        # Major forex sessions:
+        # Asian session: 00:00-09:00 UTC
+        # London session: 08:00-17:00 UTC  
+        # New York session: 13:00-22:00 UTC
+        
+        if 0 <= hour <= 23:  # Forex markets are open 24/5
+            return {
+                'is_market_closed': False,
+                'market_status': 'open',
+                'message': 'Markets are open'
+            }
+        else:
+            return {
+                'is_market_closed': True,
+                'market_status': 'closed',
+                'message': 'Markets are closed'
+            }
+    
     def _reset_daily_data(self):
         """Reset sentiment data for new trading day"""
         self.current_sentiment = None
@@ -115,6 +153,14 @@ class MarketSentimentService:
         try:
             # Check for daily reset
             self._check_daily_reset()
+            
+            # Check market status first
+            market_status = self._check_market_status()
+            
+            # If markets are closed, return market closed sentiment
+            if market_status['is_market_closed']:
+                logger.info(f"Markets are {market_status['market_status']}, returning market closed sentiment")
+                return self._get_market_closed_sentiment()
             
             # Calculate fresh sentiment if needed
             if not self.current_sentiment:
@@ -131,6 +177,9 @@ class MarketSentimentService:
     def _calculate_market_sentiment(self) -> MarketSentiment:
         """Calculate comprehensive market sentiment"""
         logger.info("Calculating fresh market sentiment...")
+        
+        # Check market status first
+        market_status = self._check_market_status()
         
         # Get market conditions
         market_conditions = self._calculate_market_conditions()
@@ -155,7 +204,9 @@ class MarketSentimentService:
             market_drivers=market_drivers,
             market_outlook=market_outlook,
             confidence_score=confidence_score,
-            data_sources=['TradingView', 'News Analysis', 'Technical Indicators']
+            data_sources=['TradingView', 'News Analysis', 'Technical Indicators'],
+            is_market_closed=market_status['is_market_closed'],
+            market_status=market_status['market_status']
         )
     
     def _calculate_market_conditions(self) -> List[MarketCondition]:
@@ -540,7 +591,9 @@ class MarketSentimentService:
             ],
             'market_outlook': sentiment.market_outlook,
             'confidence_score': sentiment.confidence_score,
-            'data_sources': sentiment.data_sources
+            'data_sources': sentiment.data_sources,
+            'is_market_closed': sentiment.is_market_closed,
+            'market_status': sentiment.market_status
         }
     
     def _get_default_market_conditions(self) -> List[MarketCondition]:
@@ -579,7 +632,90 @@ class MarketSentimentService:
             'market_drivers': [],
             'market_outlook': 'Market sentiment analysis is currently updating. Please check back shortly.',
             'confidence_score': 0.5,
-            'data_sources': ['Fallback']
+            'data_sources': ['Fallback'],
+            'is_market_closed': False,
+            'market_status': 'open'
+        }
+    
+    def _get_market_closed_sentiment(self) -> Dict[str, Any]:
+        """Get sentiment data when markets are closed"""
+        market_status = self._check_market_status()
+        
+        return {
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'trading_day': datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+            'market_conditions': [
+                {
+                    'name': 'Market Status',
+                    'value': 'closed',
+                    'percentage': 0,
+                    'detail': market_status['message'],
+                    'trend': 'stable'
+                },
+                {
+                    'name': 'Last Session',
+                    'value': 'completed',
+                    'percentage': 100,
+                    'detail': 'Previous trading session data',
+                    'trend': 'stable'
+                },
+                {
+                    'name': 'Next Opening',
+                    'value': 'pending',
+                    'percentage': 0,
+                    'detail': 'Markets will reopen on next trading day',
+                    'trend': 'stable'
+                }
+            ],
+            'pairs_sentiment': [
+                {
+                    'pair': 'EURUSD',
+                    'sentiment': 'neutral',
+                    'percentage': 50,
+                    'price_change': 0.0,
+                    'rsi': 50.0,
+                    'volatility': 0.0
+                },
+                {
+                    'pair': 'GBPUSD',
+                    'sentiment': 'neutral',
+                    'percentage': 50,
+                    'price_change': 0.0,
+                    'rsi': 50.0,
+                    'volatility': 0.0
+                },
+                {
+                    'pair': 'USDJPY',
+                    'sentiment': 'neutral',
+                    'percentage': 50,
+                    'price_change': 0.0,
+                    'rsi': 50.0,
+                    'volatility': 0.0
+                },
+                {
+                    'pair': 'USDCHF',
+                    'sentiment': 'neutral',
+                    'percentage': 50,
+                    'price_change': 0.0,
+                    'rsi': 50.0,
+                    'volatility': 0.0
+                }
+            ],
+            'market_drivers': [
+                {
+                    'title': 'Markets Closed',
+                    'description': market_status['message'],
+                    'impact': 'low',
+                    'sentiment': 'neutral',
+                    'source': 'System',
+                    'timestamp': datetime.now(timezone.utc).isoformat()
+                }
+            ],
+            'market_outlook': f"Markets are currently {market_status['market_status']}. Live sentiment analysis will resume when markets reopen.",
+            'confidence_score': 1.0,
+            'data_sources': ['System Status'],
+            'is_market_closed': True,
+            'market_status': market_status['market_status']
         }
 
 # Global instance

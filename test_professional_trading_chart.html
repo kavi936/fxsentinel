@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Trading Chart - Advanced Features</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .feature-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            background: rgba(255, 68, 68, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
+        }
+        
+        .feature-section h2 {
+            color: #FF4444;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        
+        .chart-demo {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .chart-header {
+            margin-bottom: 20px;
+        }
+        
+        .chart-header h3 {
+            margin: 0 0 16px 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            border: 1px solid rgba(255, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .stat-change .positive {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .stat-change .negative {
+            color: #FF4444;
+            font-weight: 600;
+        }
+        
+        .stat-subtitle {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .chart-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .timeframe-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .timeframe-selector label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .timeframe-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .timeframe-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .timeframe-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: rgba(255, 68, 68, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .timeframe-btn.active {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(255, 68, 68, 0.1) 100%);
+            border-color: rgba(255, 68, 68, 0.5);
+            color: #FF4444;
+            font-weight: 600;
+        }
+        
+        .chart-options {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .option-group label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .option-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .option-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: rgba(255, 68, 68, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .option-btn.active {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.15) 0%, rgba(255, 68, 68, 0.05) 100%);
+            border-color: rgba(255, 68, 68, 0.4);
+            color: #FF4444;
+            font-weight: 600;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            grid-template-rows: 1fr 40px;
+            gap: 16px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            position: relative;
+        }
+        
+        .y-axis {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-right: 12px;
+        }
+        
+        .y-axis-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+        
+        .chart-area {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        
+        .x-axis {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 60px;
+        }
+        
+        .x-axis-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            transform: rotate(-45deg);
+            transform-origin: center;
+        }
+        
+        .feature-highlight {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid #FF4444;
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .feature-highlight h4 {
+            margin: 0 0 8px 0;
+            color: #FF4444;
+        }
+        
+        .feature-highlight p {
+            margin: 0;
+            font-size: 14px;
+        }
+        
+        .tooltip-demo {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 68, 68, 0.5);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            min-width: 180px;
+            z-index: 1000;
+        }
+        
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        
+        .outlier-badge {
+            background: #FF0000;
+            color: white;
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tooltip-date {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 4px;
+        }
+        
+        .tooltip-change {
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+        
+        .tooltip-change .positive {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+        
+        .tooltip-change .negative {
+            color: #FF4444;
+            font-weight: 600;
+        }
+        
+        .tooltip-warning {
+            font-size: 10px;
+            color: #FFA500;
+            font-weight: 600;
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px solid rgba(255, 165, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>📈 Professional Trading Chart - Advanced Features</h1>
+        
+        <div class="feature-section">
+            <h2>🎯 Advanced Statistics for Traders</h2>
+            <div class="feature-highlight">
+                <h4>✅ Real-time Change Tracking</h4>
+                <p>Shows immediate value changes with percentage calculations for quick decision making</p>
+            </div>
+            
+            <div class="chart-demo">
+                <div class="chart-header">
+                    <h3>Consumer Price Index (CPI) - Professional Analysis</h3>
+                    <div class="chart-stats">
+                        <div class="stat-card">
+                            <div class="stat-label">Latest Value</div>
+                            <div class="stat-value">3.123%</div>
+                            <div class="stat-change">
+                                <span class="positive">+0.045% (+1.46%)</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Volatility</div>
+                            <div class="stat-value">2.34%</div>
+                            <div class="stat-subtitle">Historical volatility</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Moving Average</div>
+                            <div class="stat-value">3.156%</div>
+                            <div class="stat-subtitle">5-period MA</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Data Quality</div>
+                            <div class="stat-value">94%</div>
+                            <div class="stat-subtitle">Clean data points</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feature-section">
+            <h2>🔧 Professional Chart Controls</h2>
+            <div class="feature-highlight">
+                <h4>✅ Advanced Chart Features</h4>
+                <p>Traders can toggle outlier detection, moving averages, and volatility bands for customized analysis</p>
+            </div>
+            
+            <div class="chart-demo">
+                <div class="chart-controls">
+                    <div class="timeframe-selector">
+                        <label>Historical Data Period:</label>
+                        <div class="timeframe-buttons">
+                            <button class="timeframe-btn">6 Months</button>
+                            <button class="timeframe-btn active">1 Year</button>
+                            <button class="timeframe-btn">2 Years</button>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-options">
+                        <div class="option-group">
+                            <label>Chart Features:</label>
+                            <div class="option-buttons">
+                                <button class="option-btn active">🔍 Outliers</button>
+                                <button class="option-btn active">📈 MA</button>
+                                <button class="option-btn active">📊 Volatility</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feature-section">
+            <h2>🔍 Advanced Outlier Detection</h2>
+            <div class="feature-highlight">
+                <h4>✅ Statistical Outlier Analysis</h4>
+                <p>Automatically detects and flags statistical outliers using 2.5 standard deviations, helping traders identify unusual market events</p>
+            </div>
+            
+            <div class="chart-demo">
+                <div class="chart-grid">
+                    <div class="y-axis">
+                        <div class="y-axis-label">4.500%</div>
+                        <div class="y-axis-label">4.000%</div>
+                        <div class="y-axis-label">3.500%</div>
+                        <div class="y-axis-label">3.000%</div>
+                        <div class="y-axis-label">2.500%</div>
+                    </div>
+                    
+                    <div class="chart-area">
+                        <!-- Simulated chart with outlier -->
+                        <svg width="100%" height="100%" viewBox="0 0 100 100">
+                            <!-- Volatility bands -->
+                            <polygon
+                                fill="rgba(255, 68, 68, 0.05)"
+                                stroke="rgba(255, 68, 68, 0.1)"
+                                stroke-width="0.5"
+                                points="10,60 20,65 30,70 40,75 50,80 60,75 70,70 80,65 90,60"
+                            />
+                            
+                            <!-- Moving average -->
+                            <polyline
+                                fill="none"
+                                stroke="rgba(255, 255, 255, 0.6)"
+                                stroke-width="1.5"
+                                stroke-dasharray="3,3"
+                                points="10,65 20,68 30,70 40,72 50,74 60,72 70,70 80,68 90,66"
+                            />
+                            
+                            <!-- Main data line -->
+                            <polyline
+                                fill="none"
+                                stroke="#FF4444"
+                                stroke-width="2"
+                                points="10,65 20,68 30,70 40,75 50,85 60,75 70,70 80,68 90,66"
+                            />
+                            
+                            <!-- Data points -->
+                            <circle cx="10" cy="65" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            <circle cx="20" cy="68" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            <circle cx="30" cy="70" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            <circle cx="40" cy="75" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            
+                            <!-- Outlier point -->
+                            <circle cx="50" cy="85" r="4" fill="#FF0000" stroke="#FFFFFF" stroke-width="2"/>
+                            <circle cx="50" cy="85" r="7" fill="none" stroke="#FF0000" stroke-width="1" stroke-dasharray="2,2"/>
+                            
+                            <circle cx="60" cy="75" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            <circle cx="70" cy="70" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            <circle cx="80" cy="68" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                            <circle cx="90" cy="66" r="4" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        </svg>
+                        
+                        <!-- Professional tooltip demo -->
+                        <div class="tooltip-demo" style="left: 50%; top: 20%;">
+                            <div class="tooltip-header">
+                                <strong>4.850%</strong>
+                                <span class="outlier-badge">OUTLIER</span>
+                            </div>
+                            <div class="tooltip-date">Sep 15, 2024</div>
+                            <div class="tooltip-change">
+                                Change: <span class="positive">+1.100%</span>
+                            </div>
+                            <div class="tooltip-warning">
+                                ⚠️ Statistical outlier detected
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="x-axis">
+                        <div class="x-axis-label">Jan 24</div>
+                        <div class="x-axis-label">Apr 24</div>
+                        <div class="x-axis-label">Jul 24</div>
+                        <div class="x-axis-label">Oct 24</div>
+                        <div class="x-axis-label">Jan 25</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feature-section">
+            <h2>📊 Technical Analysis Features</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="feature-highlight">
+                    <h4>🎯 Moving Averages</h4>
+                    <p>5-period moving average with dashed line overlay for trend identification</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>📈 Volatility Bands</h4>
+                    <p>Historical volatility calculation with visual bands showing price movement ranges</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🔍 Outlier Detection</h4>
+                    <p>Statistical outlier detection using 2.5 standard deviations with visual indicators</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>📊 Data Quality Metrics</h4>
+                    <p>Real-time data quality assessment showing percentage of clean data points</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>💹 Change Tracking</h4>
+                    <p>Immediate value changes with percentage calculations for quick analysis</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🎨 Professional Tooltips</h4>
+                    <p>Enhanced tooltips with outlier warnings, change calculations, and detailed information</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="feature-section">
+            <h2>🚀 Trading Benefits</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                <div class="feature-highlight">
+                    <h4>⚡ Quick Decision Making</h4>
+                    <p>Real-time change tracking and volatility metrics help traders make faster, informed decisions</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🎯 Risk Management</h4>
+                    <p>Outlier detection and data quality metrics help identify potential data issues and unusual market events</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>📊 Technical Analysis</h4>
+                    <p>Moving averages and volatility bands provide essential technical analysis tools for trend identification</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🔍 Data Validation</h4>
+                    <p>Advanced data quality checks ensure traders are working with reliable, clean data</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
