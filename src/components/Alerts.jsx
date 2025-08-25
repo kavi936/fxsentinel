@@ -234,6 +234,13 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           loading: false
         });
       } else {
+        // Handle subscription validation error
+        if (data.subscription_required) {
+          alert('Subscription Required\n\nYour subscription has expired or you don\'t have access to Telegram alerts. Please renew your subscription to continue using alerts.');
+          setTelegramSetup(prev => ({ ...prev, loading: false }));
+          return;
+        }
+        
         throw new Error(data.error || 'Failed to setup Telegram bot');
       }
     } catch (error) {
@@ -261,23 +268,36 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       const data = await response.json();
       
       if (data.success && data.connected) {
-        setTelegramSetup({ step: 'complete', loading: false });
-        const updatedPreferences = {
-          ...alertPreferences,
+        setTelegramSetup({
+          step: 'complete',
+          botUsername: data.botUsername || '@FXSentinelBot',
+          instructions: [],
+          loading: false
+        });
+        
+        // Update alert preferences
+        setAlertPreferences(prev => ({
+          ...prev,
           channels: {
-            ...alertPreferences.channels,
-            telegram: { enabled: true, chatId: data.chatId, username: data.username }
+            ...prev.channels,
+            telegram: { 
+              enabled: true, 
+              chatId: data.chatId || '', 
+              username: data.username || ''
+            }
           }
-        };
-        setAlertPreferences(updatedPreferences);
-        // Save immediately when Telegram is connected
-        await saveAlertPreferences(updatedPreferences);
-      } else if (data.success && !data.connected) {
-        // User has access but bot not connected yet
-        alert('Bot setup not completed. Please complete the bot setup first.');
-        setTelegramSetup(prev => ({ ...prev, loading: false }));
+        }));
+        
+        alert('Telegram bot connected successfully! You will now receive alerts on Telegram.');
       } else {
-        throw new Error(data.error || 'Failed to verify connection');
+        // Handle subscription validation error
+        if (data.subscription_required) {
+          alert('Subscription Required\n\nYour subscription has expired or you don\'t have access to Telegram alerts. Please renew your subscription to continue using alerts.');
+          setTelegramSetup(prev => ({ ...prev, loading: false }));
+          return;
+        }
+        
+        throw new Error(data.error || 'Failed to verify Telegram connection');
       }
     } catch (error) {
       console.error('Error verifying Telegram connection:', error);

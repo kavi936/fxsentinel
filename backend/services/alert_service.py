@@ -150,22 +150,27 @@ class AlertService:
                 "error": str(e)
             }
     
-    async def send_telegram_alert(self, chat_id: str, message: str, parse_mode: str = 'HTML') -> bool:
-        """Send alert via Telegram"""
+    async def send_telegram_alert(self, chat_id: str, message: str, user_id: str = None, parse_mode: str = 'HTML') -> bool:
+        """Send alert via robust Telegram service"""
         try:
-            if not self.telegram_bot:
-                logger.warning("Telegram bot not configured, cannot send alert")
-                return False
+            from .robust_telegram_service import send_telegram_message_async
             
-            await self.telegram_bot.send_message(
+            success, error = await send_telegram_message_async(
                 chat_id=chat_id,
                 text=message,
-                parse_mode=parse_mode
+                user_id=user_id,
+                message_type="alert"
             )
-            return True
+            
+            if success:
+                logger.info(f"Telegram alert sent to {chat_id}")
+                return True
+            else:
+                logger.error(f"Failed to send Telegram alert to {chat_id}: {error}")
+                return False
             
         except Exception as e:
-            logger.error(f"Failed to send Telegram alert: {e}")
+            logger.error(f"Error sending Telegram alert to {chat_id}: {e}")
             return False
     
     def send_email_alert(self, email: str, subject: str, content: str) -> bool:
@@ -180,9 +185,16 @@ class AlertService:
             logger.error(f"Failed to send email alert: {e}")
             return False
     
-    async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any]) -> bool:
+    async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any], user_id: str = None) -> bool:
         """Process and send alert to user based on their settings"""
         try:
+            # Check subscription status if user_id is provided
+            if user_id:
+                subscription_valid = await self._check_user_subscription(user_id)
+                if not subscription_valid:
+                    logger.warning(f"User {user_id} has invalid subscription, skipping alert")
+                    return False
+            
             # Check if user wants this type of alert
             if not self._should_send_alert(alert_data, user_settings):
                 return False
@@ -197,7 +209,8 @@ class AlertService:
             if user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
                 telegram_success = await self.send_telegram_alert(
                     user_settings['channels']['telegram']['chatId'],
-                    self._format_telegram_message(alert_data)
+                    self._format_telegram_message(alert_data),
+                    user_id=user_id
                 )
                 success = success and telegram_success
             
@@ -214,6 +227,26 @@ class AlertService:
         except Exception as e:
             logger.error(f"Error processing alert: {e}")
             return False
+    
+    async def _check_user_subscription(self, user_id: str) -> bool:
+        """Check if user has valid subscription status with caching"""
+        try:
+            from .subscription_cache import get_subscription_status_async
+            
+            is_valid, error = await get_subscription_status_async(user_id)
+            
+            if error:
+                logger.error(f"Subscription check error for user {user_id}: {error}")
+                return False
+            
+            if not is_valid:
+                logger.info(f"User {user_id} subscription invalid - Access denied")
+            
+            return is_valid
+            
+        except Exception as e:
+            logger.error(f"Error checking user subscription: {e}")
+            return False  # Deny access if we can't verify subscription
     
     def _should_send_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any]) -> bool:
         """Check if user should receive this alert based on their preferences"""
