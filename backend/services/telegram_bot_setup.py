@@ -182,6 +182,9 @@ class TelegramBotSetup:
             )
             
             if result.get('success'):
+                # Store the chat_id to user_id mapping for future lookups
+                await self._store_chat_id_mapping(str(chat_id), user_id)
+                
                 await update.message.reply_text(
                     "✅ Connection successful!\n\n"
                     "Your Telegram account is now connected to FXSentinel Alerts.\n\n"
@@ -417,27 +420,78 @@ Visit the FXSentinel app or contact support.
             logger.error(f"Error handling message: {e}")
     
     async def _find_user_by_chat_id(self, chat_id: str) -> Optional[str]:
-        """Find user ID by Telegram chat ID"""
+        """Find user ID by Telegram chat ID using Firebase Realtime Database"""
         try:
-            # Search through all users to find matching chat_id
-            users_ref = self.alert_service.db.collection('users')
-            async for user_doc in users_ref.stream():
-                user_id = user_doc.id
-                
-                # Check Telegram settings
-                telegram_ref = user_doc.reference.collection('alert_settings').document('telegram')
-                telegram_doc = await telegram_ref.get()
-                
-                if telegram_doc.exists:
-                    telegram_data = telegram_doc.to_dict()
-                    if telegram_data.get('chat_id') == chat_id:
-                        return user_id
+            # Use Firebase Realtime Database to find user by chat_id
+            # We'll store a mapping of chat_id to user_id in the database
+            import hashlib
             
+            # First, try to find the mapping directly
+            mapping_path = f"telegram_mappings/{chat_id}"
+            mapping_result = self.alert_service.firebase_storage._make_request('GET', mapping_path)
+            
+            if mapping_result and isinstance(mapping_result, dict) and 'user_id' in mapping_result:
+                logger.info(f"Found user mapping for chat_id {chat_id}: {mapping_result['user_id']}")
+                return mapping_result['user_id']
+            
+            # If no direct mapping, we need to search through all users
+            # This is less efficient but handles legacy data
+            logger.info(f"No direct mapping found for chat_id {chat_id}, searching through users...")
+            
+            # Get all users from the alerts directory
+            users_path = "alerts/users"
+            users_result = self.alert_service.firebase_storage._make_request('GET', users_path)
+            
+            if not users_result or not isinstance(users_result, dict):
+                logger.warning("No users found in Firebase Realtime Database")
+                return None
+            
+            # Search through each user's settings to find matching chat_id
+            for safe_user_id, user_data in users_result.items():
+                if isinstance(user_data, dict) and 'settings' in user_data:
+                    settings = user_data['settings']
+                    if isinstance(settings, dict) and 'channels' in settings:
+                        channels = settings['channels']
+                        if isinstance(channels, dict) and 'telegram' in channels:
+                            telegram_settings = channels['telegram']
+                            if isinstance(telegram_settings, dict) and telegram_settings.get('chatId') == chat_id:
+                                # Found the user, now we need to get the original user_id
+                                # Since we're using hashed user_ids, we need to store this mapping
+                                logger.info(f"Found user with chat_id {chat_id} in settings")
+                                
+                                # Try to get the original user_id from a reverse mapping
+                                # For now, we'll return the hashed ID and let the calling code handle it
+                                return safe_user_id
+            
+            logger.warning(f"No user found with chat_id {chat_id}")
             return None
             
         except Exception as e:
             logger.error(f"Error finding user by chat_id: {e}")
             return None
+    
+    async def _store_chat_id_mapping(self, chat_id: str, user_id: str) -> bool:
+        """Store mapping of chat_id to user_id in Firebase Realtime Database"""
+        try:
+            mapping_data = {
+                'user_id': user_id,
+                'chat_id': chat_id,
+                'created_at': datetime.now().isoformat()
+            }
+            
+            mapping_path = f"telegram_mappings/{chat_id}"
+            result = self.alert_service.firebase_storage._make_request('PUT', mapping_path, mapping_data)
+            
+            if result is not None:
+                logger.info(f"Stored chat_id mapping: {chat_id} -> {user_id}")
+                return True
+            else:
+                logger.error(f"Failed to store chat_id mapping for {chat_id}")
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error storing chat_id mapping: {e}")
+            return False
     
     async def send_welcome_alert(self, user_id: str, chat_id: str):
         """Send welcome alert to new user"""
