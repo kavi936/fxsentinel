@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FXSentinel Alert Bot Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            border-left: 5px solid #007bff;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .status-card.healthy {
+            border-left-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        }
+
+        .status-card.warning {
+            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        }
+
+        .status-card.error {
+            border-left-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+
+        .card-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .card-content {
+            color: #555;
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 500;
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .refresh-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            background: #0056b3;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .auto-refresh input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+
+        .last-updated {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #6c757d;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 30px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-rate {
+            font-size: 2em;
+            font-weight: bold;
+            text-align: center;
+            margin: 10px 0;
+        }
+
+        .success-rate.high {
+            color: #28a745;
+        }
+
+        .success-rate.medium {
+            color: #ffc107;
+        }
+
+        .success-rate.low {
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 FXSentinel Alert Bot Dashboard</h1>
+            <p>Real-time monitoring of your alert bot system</p>
+        </div>
+
+        <div id="loading" class="loading">
+            <h3>Loading system status...</h3>
+        </div>
+
+        <div id="error" class="error-message" style="display: none;">
+            <strong>Error:</strong> <span id="error-text"></span>
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="status-grid">
+                <div id="alert-service-card" class="status-card">
+                    <div class="card-header">
+                        <div class="card-icon">🤖</div>
+                        <div class="card-title">Alert Service</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Status:</span>
+                            <span id="service-status" class="metric-value">Unknown</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Uptime:</span>
+                            <span id="service-uptime" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Last Check:</span>
+                            <span id="last-check" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Error Count:</span>
+                            <span id="error-count" class="metric-value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="alerts-card" class="status-card">
+                    <div class="card-header">
+                        <div class="card-icon">📨</div>
+                        <div class="card-title">Alert Activity</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Alerts Sent Today:</span>
+                            <span id="alerts-sent" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Alerts Failed Today:</span>
+                            <span id="alerts-failed" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Success Rate:</span>
+                            <div id="success-rate" class="success-rate">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="telegram-card" class="status-card">
+                    <div class="card-header">
+                        <div class="card-icon">📱</div>
+                        <div class="card-title">Telegram Connection</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Bot Status:</span>
+                            <span id="telegram-status" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Connection:</span>
+                            <span id="telegram-connection" class="metric-value">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="system-card" class="status-card">
+                    <div class="card-header">
+                        <div class="card-icon">⚙️</div>
+                        <div class="card-title">System Health</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="metric">
+                            <span class="metric-label">Overall Status:</span>
+                            <span id="overall-status" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Firebase:</span>
+                            <span id="firebase-status" class="metric-value">-</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Users Processed:</span>
+                            <span id="users-processed" class="metric-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="auto-refresh">
+                    <input type="checkbox" id="auto-refresh" checked>
+                    <label for="auto-refresh">Auto-refresh every 30 seconds</label>
+                </div>
+                <button id="refresh-btn" class="refresh-btn">🔄 Refresh Now</button>
+                <div class="last-updated">
+                    Last updated: <span id="last-updated">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AlertBotDashboard {
+            constructor() {
+                this.baseUrl = window.location.hostname === 'localhost' ? 'http://localhost:5001' : '';
+                this.autoRefreshInterval = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.loadStatus();
+                this.startAutoRefresh();
+            }
+
+            bindEvents() {
+                document.getElementById('refresh-btn').addEventListener('click', () => {
+                    this.loadStatus();
+                });
+
+                document.getElementById('auto-refresh').addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        this.startAutoRefresh();
+                    } else {
+                        this.stopAutoRefresh();
+                    }
+                });
+            }
+
+            async loadStatus() {
+                try {
+                    this.showLoading();
+                    
+                    const response = await fetch(`${this.baseUrl}/api/health/alerts`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.updateDashboard(data);
+                    this.hideLoading();
+                    this.updateLastUpdated();
+                    
+                } catch (error) {
+                    this.showError(`Failed to load status: ${error.message}`);
+                    this.hideLoading();
+                }
+            }
+
+            updateDashboard(data) {
+                const robustService = data.robust_service || {};
+                
+                // Update Alert Service Card
+                this.updateServiceStatus(robustService);
+                
+                // Update Alert Activity Card
+                this.updateAlertActivity(robustService);
+                
+                // Update Telegram Card
+                this.updateTelegramStatus(data);
+                
+                // Update System Health Card
+                this.updateSystemHealth(data, robustService);
+                
+                // Show dashboard
+                document.getElementById('dashboard').style.display = 'block';
+            }
+
+            updateServiceStatus(robustService) {
+                const status = robustService.status || 'unknown';
+                const uptime = robustService.uptime_seconds || 0;
+                const lastCheck = robustService.last_successful_check;
+                const errorCount = robustService.error_count || 0;
+
+                document.getElementById('service-status').textContent = status.toUpperCase();
+                document.getElementById('service-uptime').textContent = this.formatUptime(uptime);
+                document.getElementById('last-check').textContent = this.formatLastCheck(lastCheck);
+                document.getElementById('error-count').textContent = errorCount;
+
+                const card = document.getElementById('alert-service-card');
+                this.updateCardStatus(card, status, errorCount);
+            }
+
+            updateAlertActivity(robustService) {
+                const alertsSent = robustService.alerts_sent_today || 0;
+                const alertsFailed = robustService.alerts_failed_today || 0;
+                const total = alertsSent + alertsFailed;
+                const successRate = total > 0 ? (alertsSent / total * 100) : 0;
+
+                document.getElementById('alerts-sent').textContent = alertsSent;
+                document.getElementById('alerts-failed').textContent = alertsFailed;
+                
+                const successRateElement = document.getElementById('success-rate');
+                successRateElement.textContent = `${successRate.toFixed(1)}%`;
+                
+                // Update success rate color
+                successRateElement.className = 'success-rate';
+                if (successRate >= 90) {
+                    successRateElement.classList.add('high');
+                } else if (successRate >= 70) {
+                    successRateElement.classList.add('medium');
+                } else {
+                    successRateElement.classList.add('low');
+                }
+
+                const card = document.getElementById('alerts-card');
+                this.updateCardStatus(card, 'healthy', 0);
+            }
+
+            updateTelegramStatus(data) {
+                const telegramStatus = data.telegram_bot || 'disconnected';
+                const telegramConnection = data.robust_telegram_service?.status || 'unknown';
+
+                document.getElementById('telegram-status').textContent = telegramStatus.toUpperCase();
+                document.getElementById('telegram-connection').textContent = telegramConnection.toUpperCase();
+
+                const card = document.getElementById('telegram-card');
+                this.updateCardStatus(card, telegramStatus === 'connected' ? 'healthy' : 'error', 0);
+            }
+
+            updateSystemHealth(data, robustService) {
+                const overallStatus = data.status || 'unknown';
+                const firebaseStatus = data.firebase || 'disconnected';
+                const usersProcessed = robustService.users_processed || 0;
+
+                document.getElementById('overall-status').textContent = overallStatus.toUpperCase();
+                document.getElementById('firebase-status').textContent = firebaseStatus.toUpperCase();
+                document.getElementById('users-processed').textContent = usersProcessed;
+
+                const card = document.getElementById('system-card');
+                this.updateCardStatus(card, overallStatus, 0);
+            }
+
+            updateCardStatus(card, status, errorCount) {
+                // Remove existing status classes
+                card.classList.remove('healthy', 'warning', 'error');
+                
+                // Add appropriate status class
+                if (status === 'running' || status === 'healthy' || status === 'connected') {
+                    card.classList.add('healthy');
+                } else if (status === 'degraded' || errorCount > 0) {
+                    card.classList.add('warning');
+                } else {
+                    card.classList.add('error');
+                }
+            }
+
+            formatUptime(seconds) {
+                if (seconds < 60) {
+                    return `${Math.floor(seconds)}s`;
+                } else if (seconds < 3600) {
+                    return `${Math.floor(seconds / 60)}m`;
+                } else {
+                    return `${Math.floor(seconds / 3600)}h`;
+                }
+            }
+
+            formatLastCheck(lastCheck) {
+                if (!lastCheck) return 'Never';
+                
+                try {
+                    const lastCheckTime = new Date(lastCheck);
+                    const now = new Date();
+                    const diffMs = now - lastCheckTime;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    
+                    if (diffMins < 1) return 'Just now';
+                    if (diffMins < 60) return `${diffMins}m ago`;
+                    
+                    const diffHours = Math.floor(diffMins / 60);
+                    return `${diffHours}h ago`;
+                } catch (error) {
+                    return 'Invalid';
+                }
+            }
+
+            showLoading() {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('error').style.display = 'none';
+            }
+
+            hideLoading() {
+                document.getElementById('loading').style.display = 'none';
+            }
+
+            showError(message) {
+                document.getElementById('error-text').textContent = message;
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('dashboard').style.display = 'none';
+            }
+
+            updateLastUpdated() {
+                const now = new Date();
+                document.getElementById('last-updated').textContent = now.toLocaleTimeString();
+            }
+
+            startAutoRefresh() {
+                this.stopAutoRefresh();
+                this.autoRefreshInterval = setInterval(() => {
+                    this.loadStatus();
+                }, 30000); // 30 seconds
+            }
+
+            stopAutoRefresh() {
+                if (this.autoRefreshInterval) {
+                    clearInterval(this.autoRefreshInterval);
+                    this.autoRefreshInterval = null;
+                }
+            }
+        }
+
+        // Initialize dashboard when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new AlertBotDashboard();
+        });
+    </script>
+</body>
+</html>
