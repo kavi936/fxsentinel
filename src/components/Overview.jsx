@@ -1685,7 +1685,7 @@ const Overview = () => {
                 <div className="ai-loading-state">
                   <div className="loading-spinner"></div>
                   <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
-                  <div className="loading-subtext">AI is processing market data and generating insights... Good things take time.</div>
+                  <div className="loading-subtext">AI is processing market data and generating insights, est 15 - 60 seconds. Good things take time.</div>
                 </div>
               )}
 
@@ -1981,13 +1981,32 @@ const Overview = () => {
               </div>
             </div>
             <div className="sentiment-content">
-              <div className="market-conditions-overview">
-                <div className="conditions-header">
-                  <h3>Market Conditions</h3>
-                  <span className="update-time">
-                    {sentimentLoading ? 'Updating...' : `Updated ${formatTimeAgo(lastUpdate || sentiment.timestamp)}`}
-                  </span>
-                </div>
+              <React.Fragment>
+                {sentiment.is_market_closed ? (
+                  /* Market Closed State */
+                  <div className="market-closed-state">
+                    <div className="market-closed-icon">🔒</div>
+                    <div className="market-closed-title">Markets Closed</div>
+                    <div className="market-closed-message">
+                      {sentiment.market_status === 'weekend' 
+                        ? 'Markets are closed for the weekend. Live sentiment analysis will resume on Monday.'
+                        : 'Markets are currently closed. Live sentiment analysis will resume when markets reopen.'
+                      }
+                    </div>
+                    <div className="market-closed-status">
+                      <span className="status-badge">{sentiment.market_status.toUpperCase()}</span>
+                    </div>
+                  </div>
+                ) : (
+                  /* Market Open State */
+                  <React.Fragment>
+                    <div className="market-conditions-overview">
+                      <div className="conditions-header">
+                        <h3>Market Conditions</h3>
+                        <span className="update-time">
+                          {sentimentLoading ? 'Updating...' : `Updated ${formatTimeAgo(lastUpdate || sentiment.timestamp)}`}
+                        </span>
+                      </div>
                 
                 <div className="conditions-grid">
                   {sentiment.market_conditions.map((condition, index) => (
@@ -2093,8 +2112,11 @@ const Overview = () => {
                   <button className="action-btn secondary">Set Alerts</button>
                 </div>
               </div>
+                    </React.Fragment>
+                  )}
+                </React.Fragment>
+              </div>
             </div>
-          </div>
 
           {/* Live News + Analysis Card */}
           <div className="live-news-analysis-card">

@@ -56,6 +56,90 @@ class FinnhubHistoricalService:
                 
         return None
 
+    def _deduplicate_data(self, historical_data: List[Dict]) -> List[Dict]:
+        """
+        Remove duplicate data points for the same date, keeping the most recent/relevant one
+        
+        Args:
+            historical_data: List of historical data points
+            
+        Returns:
+            Deduplicated list of historical data points
+        """
+        if not historical_data:
+            return []
+        
+        print(f"📊 Starting deduplication with {len(historical_data)} points")
+        
+        # Group by date
+        date_groups = {}
+        for point in historical_data:
+            date = point.get('date')
+            if date:
+                if date not in date_groups:
+                    date_groups[date] = []
+                date_groups[date].append(point)
+        
+        # For each date, select the best data point
+        deduplicated = []
+        duplicates_removed = 0
+        
+        for date, points in date_groups.items():
+            if len(points) == 1:
+                deduplicated.append(points[0])
+            else:
+                # Multiple points for same date - select the best one
+                # Score each point based on data quality
+                best_point = max(points, key=lambda p: 
+                    (p.get('expected') is not None,  # Prefer points with expected values
+                     p.get('previous') is not None,  # Prefer points with previous values
+                     p.get('event_name', '').lower().count('official'),  # Prefer official releases
+                     len(p.get('country', '')),  # Prefer more specific country data
+                     p.get('event_name', '').lower().count('final'),  # Prefer final releases
+                     p.get('event_name', '').lower().count('preliminary') == 0))  # Avoid preliminary data
+                deduplicated.append(best_point)
+                duplicates_removed += len(points) - 1
+        
+        # Sort by date (oldest first)
+        deduplicated.sort(key=lambda x: x.get('date', ''))
+        
+        print(f"📊 Deduplication complete: {len(historical_data)} -> {len(deduplicated)} points (removed {duplicates_removed} duplicates)")
+        return deduplicated
+
+    def _validate_data_point(self, value: float, indicator: str) -> bool:
+        """
+        Validate if a data point is reasonable for the given indicator
+        
+        Args:
+            value: The numeric value to validate
+            indicator: The economic indicator name
+            
+        Returns:
+            True if the value is reasonable, False otherwise
+        """
+        if value is None or not isinstance(value, (int, float)):
+            return False
+            
+        # Define reasonable ranges for different indicators (much stricter)
+        indicator_ranges = {
+            'cpi': (-10, 30),  # CPI can be negative (deflation) but not extreme
+            'inflation': (-10, 30),
+            'gdp': (-20, 20),  # GDP growth rates (more realistic range)
+            'unemployment': (0, 30),  # Unemployment rates (more realistic)
+            'employment': (-50, 100),  # Employment changes
+            'retail sales': (-20, 50),  # Retail sales changes
+            'interest rate': (-5, 25),  # Interest rates
+            'manufacturing': (0, 70)  # PMI and manufacturing indices
+        }
+        
+        indicator_lower = indicator.lower()
+        for key, (min_val, max_val) in indicator_ranges.items():
+            if key in indicator_lower:
+                return min_val <= value <= max_val
+        
+        # Default validation for unknown indicators (much stricter)
+        return -50 <= value <= 100
+
     def get_historical_data_for_indicator(self, indicator_name: str, months: int = 24) -> List[Dict]:
         """
         Get historical data for a specific economic indicator
@@ -140,6 +224,8 @@ class FinnhubHistoricalService:
             
             # Transform to chart-friendly format
             historical_data = []
+            filtered_count = 0
+            
             for event in indicator_events:
                 try:
                     # Parse the date from time field
@@ -152,8 +238,8 @@ class FinnhubHistoricalService:
                         raw_actual = event.get('actual')
                         parsed_actual = self._parse_economic_value(raw_actual)
                         
-                        # Only include data points with valid numeric values
-                        if parsed_actual is not None:
+                        # Validate the data point
+                        if parsed_actual is not None and self._validate_data_point(parsed_actual, indicator_name):
                             historical_data.append({
                                 'date': event_date.strftime('%Y-%m-%d'),
                                 'value': parsed_actual,
@@ -164,11 +250,17 @@ class FinnhubHistoricalService:
                                 'country': event.get('country', ''),
                                 'raw_value': raw_actual  # Keep original for debugging
                             })
+                        else:
+                            filtered_count += 1
+                            print(f"⚠️ Skipping invalid data point: {raw_actual} for {indicator_name}")
                 except Exception as e:
                     print(f"⚠️ Error parsing event date: {e}")
                     continue
             
-            print(f"✅ Found {len(historical_data)} valid historical data points for {indicator_name}")
+            # Deduplicate the data
+            historical_data = self._deduplicate_data(historical_data)
+            
+            print(f"✅ Found {len(historical_data)} valid historical data points for {indicator_name} (filtered out {filtered_count} invalid points)")
             return historical_data
             
         except Exception as e:

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historical Chart Improvements Test</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .improvement-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 68, 68, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
+        }
+        
+        .timeframe-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .timeframe-selector label {
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .timeframe-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .timeframe-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .timeframe-btn:hover {
+            background: rgba(255, 68, 68, 0.1);
+            border-color: rgba(255, 68, 68, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .timeframe-btn.active {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.2) 0%, rgba(255, 68, 68, 0.1) 100%);
+            border-color: rgba(255, 68, 68, 0.5);
+            color: #FF4444;
+            font-weight: 600;
+        }
+        
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            border: 1px solid rgba(255, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .trend-up { color: #4CAF50; }
+        .trend-down { color: #FF4444; }
+        .trend-stable { color: #FFA500; }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            grid-template-rows: 1fr 40px;
+            gap: 16px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+        }
+        
+        .y-axis {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-right: 12px;
+        }
+        
+        .y-axis-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+        
+        .chart-area {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .grid-line {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+        
+        .x-axis {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 60px;
+        }
+        
+        .x-axis-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            transform: rotate(-45deg);
+            transform-origin: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Historical Chart Improvements</h1>
+        
+        <div class="improvement-section">
+            <h2>✅ Improvement 1: Better Timeframe Controls</h2>
+            <p><strong>Before:</strong> Confusing dropdown with "Timeframe:" label</p>
+            <p><strong>After:</strong> Clear button group with "Historical Data Period:" label</p>
+            
+            <div class="timeframe-selector">
+                <label>Historical Data Period:</label>
+                <div class="timeframe-buttons">
+                    <button class="timeframe-btn">6 Months</button>
+                    <button class="timeframe-btn active">1 Year</button>
+                    <button class="timeframe-btn">2 Years</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="improvement-section">
+            <h2>✅ Improvement 2: Rounded Values (3 Decimal Places)</h2>
+            <p><strong>Before:</strong> Raw decimal values like 3.123456789</p>
+            <p><strong>After:</strong> Clean rounded values like 3.123%</p>
+            
+            <div class="chart-stats">
+                <div class="stat-card">
+                    <div class="stat-label">Latest Value</div>
+                    <div class="stat-value">3.123%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Average</div>
+                    <div class="stat-value">3.156%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Range</div>
+                    <div class="stat-value">2.890% - 3.450%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trend</div>
+                    <div class="stat-value trend-up">↗️ Up</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="improvement-section">
+            <h2>✅ Improvement 3: Enhanced Chart Visualization</h2>
+            <p><strong>Before:</strong> Basic bar chart with poor readability</p>
+            <p><strong>After:</strong> Professional line chart with grid, axes, and data points</p>
+            
+            <div class="chart-grid">
+                <div class="y-axis">
+                    <div class="y-axis-label">3.500%</div>
+                    <div class="y-axis-label">3.250%</div>
+                    <div class="y-axis-label">3.000%</div>
+                    <div class="y-axis-label">2.750%</div>
+                    <div class="y-axis-label">2.500%</div>
+                </div>
+                
+                <div class="chart-area">
+                    <div class="grid-lines">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+                    
+                    <!-- Simulated line chart -->
+                    <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <polyline
+                            fill="none"
+                            stroke="#FF4444"
+                            stroke-width="2"
+                            points="10,80 20,70 30,75 40,60 50,65 60,50 70,55 80,40 90,45"
+                        />
+                        <circle cx="10" cy="80" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="20" cy="70" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="30" cy="75" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="40" cy="60" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="50" cy="65" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="60" cy="50" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="70" cy="55" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="80" cy="40" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="90" cy="45" r="4" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                    </svg>
+                </div>
+                
+                <div class="x-axis">
+                    <div class="x-axis-label">Jan 24</div>
+                    <div class="x-axis-label">Apr 24</div>
+                    <div class="x-axis-label">Jul 24</div>
+                    <div class="x-axis-label">Oct 24</div>
+                    <div class="x-axis-label">Jan 25</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="improvement-section">
+            <h2>📋 Summary of Improvements</h2>
+            <ul>
+                <li><strong>Timeframe Controls:</strong> Clear button group instead of confusing dropdown</li>
+                <li><strong>Value Formatting:</strong> All values rounded to 3 decimal places for consistency</li>
+                <li><strong>Chart Design:</strong> Professional line chart with proper axes, grid lines, and data points</li>
+                <li><strong>Statistics Display:</strong> Card-based layout with clear labels and trend indicators</li>
+                <li><strong>Visual Hierarchy:</strong> Better organization and spacing for improved readability</li>
+                <li><strong>Interactive Elements:</strong> Hover effects and visual feedback for better UX</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

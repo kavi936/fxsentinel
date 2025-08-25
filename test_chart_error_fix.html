@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Error Fix Test</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .fix-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 68, 68, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
+        }
+        
+        .fix-section h3 {
+            color: #FF4444;
+            margin-top: 0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+        
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #FF4444;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 Chart Error Fixes Applied</h1>
+        
+        <div class="fix-section">
+            <h3>✅ Variable Scope Issues Fixed</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Added validData parameter to generateYAxisLabels function
+            </div>
+            <div class="code-block">
+// Before: Missing validData parameter
+const generateYAxisLabels = (config, unit) => {
+  const values = validData.map(d => d.value); // ❌ validData not defined
+}
+
+// After: Added validData parameter
+const generateYAxisLabels = (config, unit, validData) => {
+  const values = validData.map(d => d.value); // ✅ validData properly passed
+}
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>✅ Division by Zero Prevention</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Added fallback values to prevent division by zero errors
+            </div>
+            <div class="code-block">
+// Before: Potential division by zero
+const range = maxValue - minValue;
+const stepValue = (maxValue - minValue) / steps;
+
+// After: Safe division with fallbacks
+const range = maxValue - minValue || 1;
+const stepValue = (maxValue - minValue) / steps || 1;
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>✅ Comprehensive Error Handling</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Added try-catch blocks to all chart rendering functions
+            </div>
+            <div class="code-block">
+// Added to all helper functions:
+try {
+  // Chart rendering logic
+} catch (error) {
+  console.error('Error in function:', error);
+  return fallbackUI;
+}
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>✅ Data Validation Enhanced</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Added null checks and better data filtering
+            </div>
+            <div class="code-block">
+// Before: Basic filtering
+const validData = data.filter(point => 
+  point.value !== null && 
+  typeof point.value === 'number'
+);
+
+// After: Enhanced validation
+const validData = data.filter(point => 
+  point && 
+  point.value !== null && 
+  point.value !== undefined && 
+  typeof point.value === 'number' && 
+  !isNaN(point.value)
+);
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>✅ Tooltip Error Handling</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Added error handling to tooltip event handlers
+            </div>
+            <div class="code-block">
+onMouseEnter={(e) => {
+  try {
+    const rect = e.target.closest('svg').getBoundingClientRect();
+    // Tooltip logic
+  } catch (error) {
+    console.error('Error setting tooltip:', error);
+  }
+}}
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>✅ Error Boundary Implementation</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Added comprehensive error boundary with user-friendly error display
+            </div>
+            <div class="code-block">
+try {
+  // Main chart rendering
+} catch (error) {
+  console.error('Error rendering chart:', error);
+  return (
+    <div className="no-chart-data">
+      <div className="no-data-icon">❌</div>
+      <p>Error rendering chart</p>
+      <details>
+        <summary>Error details</summary>
+        <pre>{error.message}</pre>
+      </details>
+    </div>
+  );
+}
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>🎯 Expected Results</h3>
+            <div class="status success">
+                <strong>Chart should now:</strong>
+                <ul>
+                    <li>✅ Load without React errors</li>
+                    <li>✅ Handle invalid data gracefully</li>
+                    <li>✅ Display proper error messages</li>
+                    <li>✅ Prevent division by zero crashes</li>
+                    <li>✅ Show tooltips without errors</li>
+                    <li>✅ Handle all value types correctly</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

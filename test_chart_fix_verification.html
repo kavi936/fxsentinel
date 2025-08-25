@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Fix Verification</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .fix-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(255, 68, 68, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
+        }
+        
+        .fix-section h3 {
+            color: #FF4444;
+            margin-top: 0;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .status.success {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+        
+        .status.error {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #FF4444;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>✅ Chart Fix Verification</h1>
+        
+        <div class="fix-section">
+            <h3>🔧 JSX Syntax Error Fixed</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Adjacent JSX elements properly wrapped in React.Fragment
+            </div>
+            <div class="code-block">
+// Before: Multiple elements without wrapper
+) : (
+  <div>Market Conditions</div>
+  <div>Sentiment Breakdown</div>
+  <div>Market Drivers</div>
+)}
+
+// After: Properly wrapped in React.Fragment
+) : (
+  <React.Fragment>
+    <div>Market Conditions</div>
+    <div>Sentiment Breakdown</div>
+    <div>Market Drivers</div>
+  </React.Fragment>
+)}
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>📊 Chart Axis Issues Addressed</h3>
+            <div class="status success">
+                <strong>Fixed:</strong> Y-axis and X-axis label generation with proper error handling
+            </div>
+            <div class="code-block">
+// Y-axis generation with proper calculations
+const generateYAxisLabels = (config, unit, validData) => {
+  const steps = config.yAxisSteps;
+  const values = validData.map(d => d.value);
+  const maxValue = Math.max(...values);
+  const minValue = Math.min(...values);
+  const range = maxValue - minValue || 1; // Prevent division by zero
+  const stepValue = range / steps;
+  
+  return Array.from({ length: steps + 1 }, (_, i) => {
+    const value = maxValue - (i * stepValue);
+    return formatValue(value, unit);
+  });
+};
+
+// X-axis generation with proper date formatting
+const generateXAxisLabels = (validData) => {
+  const maxLabels = 6;
+  const step = Math.max(1, Math.floor(validData.length / maxLabels));
+  
+  return validData
+    .filter((_, index) => index % step === 0 || index === validData.length - 1)
+    .slice(0, maxLabels)
+    .map((point, index) => {
+      const date = new Date(point.date);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        year: '2-digit' 
+      });
+    });
+};
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>🎯 Professional Trading Features</h3>
+            <div class="status success">
+                <strong>Implemented:</strong> Advanced chart features for traders
+            </div>
+            <ul>
+                <li>✅ <strong>Outlier Detection:</strong> Statistical outlier detection with visual indicators</li>
+                <li>✅ <strong>Moving Averages:</strong> 5-period moving average with dashed line overlay</li>
+                <li>✅ <strong>Volatility Bands:</strong> Historical volatility calculation with visual bands</li>
+                <li>✅ <strong>Professional Tooltips:</strong> Enhanced tooltips with outlier warnings and change calculations</li>
+                <li>✅ <strong>Advanced Statistics:</strong> Real-time change tracking, volatility metrics, data quality assessment</li>
+                <li>✅ <strong>Chart Controls:</strong> Toggle features for outliers, moving averages, and volatility bands</li>
+            </ul>
+        </div>
+        
+        <div class="fix-section">
+            <h3>🚀 Expected Results</h3>
+            <div class="status success">
+                <strong>Chart should now:</strong>
+                <ul>
+                    <li>✅ Load without JSX syntax errors</li>
+                    <li>✅ Display proper Y-axis labels with correct formatting</li>
+                    <li>✅ Show X-axis date labels in readable format</li>
+                    <li>✅ Handle outliers with visual indicators</li>
+                    <li>✅ Display moving averages and volatility bands</li>
+                    <li>✅ Show professional tooltips with detailed information</li>
+                    <li>✅ Provide advanced trading statistics</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="fix-section">
+            <h3>🔍 Testing Instructions</h3>
+            <ol>
+                <li>Open the FXSentinel app</li>
+                <li>Navigate to the economic calendar</li>
+                <li>Click on a news item with historical data (graph icon)</li>
+                <li>Verify the chart popup opens without errors</li>
+                <li>Check that Y-axis shows proper value labels</li>
+                <li>Verify X-axis shows readable date labels</li>
+                <li>Test the chart controls (outliers, MA, volatility)</li>
+                <li>Hover over data points to see professional tooltips</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

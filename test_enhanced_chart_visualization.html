@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Chart Visualization Test</title>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .chart-demo {
+            margin-bottom: 60px;
+            padding: 30px;
+            background: rgba(255, 68, 68, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 68, 68, 0.2);
+        }
+        
+        .chart-header {
+            margin-bottom: 24px;
+        }
+        
+        .chart-header h3 {
+            margin: 0 0 16px 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .chart-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+            border: 1px solid rgba(255, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        
+        .trend-up { color: #4CAF50; }
+        .trend-down { color: #FF4444; }
+        .trend-stable { color: #FFA500; }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            grid-template-rows: 1fr 40px;
+            gap: 16px;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            position: relative;
+        }
+        
+        .y-axis {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-right: 12px;
+        }
+        
+        .y-axis-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+        
+        .chart-area {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .grid-line {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            width: 100%;
+        }
+        
+        .x-axis {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-left: 60px;
+        }
+        
+        .x-axis-label {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+            transform: rotate(-45deg);
+            transform-origin: center;
+        }
+        
+        .value-type-info {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+            margin-top: 8px;
+        }
+        
+        .feature-highlight {
+            background: rgba(255, 68, 68, 0.1);
+            border-left: 3px solid #FF4444;
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 0 6px 6px 0;
+        }
+        
+        .feature-highlight h4 {
+            margin: 0 0 8px 0;
+            color: #FF4444;
+        }
+        
+        .feature-highlight p {
+            margin: 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Enhanced Chart Visualization - Complete Overhaul</h1>
+        
+        <div class="chart-demo">
+            <h2>📊 Percentage Values (CPI, Unemployment Rate)</h2>
+            <div class="feature-highlight">
+                <h4>✅ Smart Value Type Detection</h4>
+                <p>Automatically detects percentage values and optimizes chart display with larger data points and trend lines</p>
+            </div>
+            
+            <div class="chart-header">
+                <h3>Consumer Price Index (CPI) Historical Data</h3>
+                <div class="chart-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Latest Value</div>
+                        <div class="stat-value">3.123%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average</div>
+                        <div class="stat-value">3.156%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Range</div>
+                        <div class="stat-value">2.890% - 3.450%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Trend</div>
+                        <div class="stat-value trend-up">↗️ Up</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-grid">
+                <div class="y-axis">
+                    <div class="y-axis-label">3.500%</div>
+                    <div class="y-axis-label">3.300%</div>
+                    <div class="y-axis-label">3.100%</div>
+                    <div class="y-axis-label">2.900%</div>
+                    <div class="y-axis-label">2.700%</div>
+                    <div class="y-axis-label">2.500%</div>
+                </div>
+                
+                <div class="chart-area">
+                    <div class="grid-lines">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+                    
+                    <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <!-- Trend line -->
+                        <polyline
+                            fill="none"
+                            stroke="rgba(255, 68, 68, 0.3)"
+                            stroke-width="1"
+                            stroke-dasharray="2,2"
+                            points="10,80 20,70 30,75 40,60 50,65 60,50 70,55 80,40 90,45"
+                        />
+                        
+                        <!-- Main data line -->
+                        <polyline
+                            fill="none"
+                            stroke="#FF4444"
+                            stroke-width="3"
+                            points="10,80 20,70 30,75 40,60 50,65 60,50 70,55 80,40 90,45"
+                        />
+                        
+                        <!-- Data points with larger radius for percentages -->
+                        <circle cx="10" cy="80" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="20" cy="70" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="30" cy="75" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="40" cy="60" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="50" cy="65" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="60" cy="50" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="70" cy="55" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="80" cy="40" r="4" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="90" cy="45" r="5" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                    </svg>
+                </div>
+                
+                <div class="x-axis">
+                    <div class="x-axis-label">Jan 24</div>
+                    <div class="x-axis-label">Apr 24</div>
+                    <div class="x-axis-label">Jul 24</div>
+                    <div class="x-axis-label">Oct 24</div>
+                    <div class="x-axis-label">Jan 25</div>
+                </div>
+            </div>
+            
+            <p class="value-type-info">Value type: Percentage (Percentage values 0-100%)</p>
+        </div>
+        
+        <div class="chart-demo">
+            <h2>💰 Large Numbers (GDP, Employment)</h2>
+            <div class="feature-highlight">
+                <h4>✅ Optimized for Large Values</h4>
+                <p>Smaller data points and no labels for large numbers to prevent clutter, with simplified grid</p>
+            </div>
+            
+            <div class="chart-header">
+                <h3>Non-Farm Payrolls Historical Data</h3>
+                <div class="chart-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Latest Value</div>
+                        <div class="stat-value">185,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average</div>
+                        <div class="stat-value">182,500</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Range</div>
+                        <div class="stat-value">165,000 - 200,000</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Trend</div>
+                        <div class="stat-value trend-stable">→ Stable</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-grid">
+                <div class="y-axis">
+                    <div class="y-axis-label">200,000</div>
+                    <div class="y-axis-label">190,000</div>
+                    <div class="y-axis-label">180,000</div>
+                    <div class="y-axis-label">170,000</div>
+                    <div class="y-axis-label">160,000</div>
+                </div>
+                
+                <div class="chart-area">
+                    <div class="grid-lines">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+                    
+                    <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <!-- Main data line -->
+                        <polyline
+                            fill="none"
+                            stroke="#FF4444"
+                            stroke-width="2"
+                            points="10,60 20,65 30,55 40,70 50,45 60,50 70,40 80,35 90,30"
+                        />
+                        
+                        <!-- Data points with smaller radius for large numbers -->
+                        <circle cx="10" cy="60" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="20" cy="65" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="30" cy="55" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="40" cy="70" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="50" cy="45" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="60" cy="50" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="70" cy="40" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="80" cy="35" r="2" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="90" cy="30" r="3" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                    </svg>
+                </div>
+                
+                <div class="x-axis">
+                    <div class="x-axis-label">Jan 24</div>
+                    <div class="x-axis-label">Apr 24</div>
+                    <div class="x-axis-label">Jul 24</div>
+                    <div class="x-axis-label">Oct 24</div>
+                    <div class="x-axis-label">Jan 25</div>
+                </div>
+            </div>
+            
+            <p class="value-type-info">Value type: Large Number (Large numeric values thousands/millions)</p>
+        </div>
+        
+        <div class="chart-demo">
+            <h2>📈 Index Values (PMI, Consumer Confidence)</h2>
+            <div class="feature-highlight">
+                <h4>✅ Interactive Tooltips</h4>
+                <p>Hover over data points to see exact values and dates with smooth animations</p>
+            </div>
+            
+            <div class="chart-header">
+                <h3>Purchasing Managers Index (PMI) Historical Data</h3>
+                <div class="chart-stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Latest Value</div>
+                        <div class="stat-value">52.500</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Average</div>
+                        <div class="stat-value">51.200</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Range</div>
+                        <div class="stat-value">48.500 - 54.200</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Trend</div>
+                        <div class="stat-value trend-down">↘️ Down</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chart-grid">
+                <div class="y-axis">
+                    <div class="y-axis-label">55.000</div>
+                    <div class="y-axis-label">53.000</div>
+                    <div class="y-axis-label">51.000</div>
+                    <div class="y-axis-label">49.000</div>
+                    <div class="y-axis-label">47.000</div>
+                </div>
+                
+                <div class="chart-area">
+                    <div class="grid-lines">
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                        <div class="grid-line"></div>
+                    </div>
+                    
+                    <svg width="100%" height="100%" viewBox="0 0 100 100">
+                        <!-- Main data line -->
+                        <polyline
+                            fill="none"
+                            stroke="#FF4444"
+                            stroke-width="2"
+                            points="10,40 20,35 30,45 40,30 50,25 60,20 70,15 80,10 90,5"
+                        />
+                        
+                        <!-- Data points -->
+                        <circle cx="10" cy="40" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="20" cy="35" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="30" cy="45" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="40" cy="30" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="50" cy="25" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="60" cy="20" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="70" cy="15" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="80" cy="10" r="3" fill="#FF6666" stroke="#FFFFFF" stroke-width="1"/>
+                        <circle cx="90" cy="5" r="4" fill="#FF4444" stroke="#FFFFFF" stroke-width="1"/>
+                    </svg>
+                </div>
+                
+                <div class="x-axis">
+                    <div class="x-axis-label">Jan 24</div>
+                    <div class="x-axis-label">Apr 24</div>
+                    <div class="x-axis-label">Jul 24</div>
+                    <div class="x-axis-label">Oct 24</div>
+                    <div class="x-axis-label">Jan 25</div>
+                </div>
+            </div>
+            
+            <p class="value-type-info">Value type: Index (Index values 0-1000 range)</p>
+        </div>
+        
+        <div class="chart-demo">
+            <h2>🎯 Key Improvements Summary</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="feature-highlight">
+                    <h4>🔍 Smart Value Type Detection</h4>
+                    <p>Automatically detects percentage, large numbers, small decimals, and index values to optimize chart display</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>📊 Adaptive Chart Configuration</h4>
+                    <p>Different grid lines, data point sizes, and label visibility based on value type for optimal readability</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🎨 Enhanced Visual Design</h4>
+                    <p>Professional line charts with trend lines, proper axes, grid lines, and smooth animations</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🖱️ Interactive Features</h4>
+                    <p>Hover tooltips, data point highlighting, and smooth transitions for better user experience</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>📱 Performance Optimized</h4>
+                    <p>Limited to 30 data points for smooth rendering, with efficient SVG-based visualization</p>
+                </div>
+                
+                <div class="feature-highlight">
+                    <h4>🎯 Value Formatting</h4>
+                    <p>Consistent 3-decimal place rounding for all values with proper unit display</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

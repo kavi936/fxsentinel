@@ -4469,6 +4469,92 @@ Please review and process this refund request.
             'message': str(e)
         }), 500
 
+@app.route('/api/telegram/test', methods=['GET'])
+def telegram_test():
+    """Test route for Telegram webhook"""
+    return jsonify({'status': 'ok', 'message': 'Telegram test route working'})
+
+@app.route('/api/telegram/webhook', methods=['POST'])
+def telegram_webhook():
+    """Handle Telegram webhook updates"""
+    try:
+        from services.telegram_bot_setup import telegram_bot_setup
+        import asyncio
+        
+        # Get the update from Telegram
+        update_data = request.get_json()
+        
+        if not update_data:
+            return jsonify({'status': 'error', 'message': 'No update data'}), 400
+        
+        # Process the update asynchronously
+        async def process_update():
+            try:
+                from telegram import Update
+                update = Update.de_json(update_data, telegram_bot_setup.bot)
+                
+                # Process the update
+                await telegram_bot_setup.application.process_update(update)
+                return True
+            except Exception as e:
+                logger.error(f"Error processing Telegram update: {e}")
+                return False
+        
+        # Run the async function
+        success = asyncio.run(process_update())
+        
+        if success:
+            return jsonify({'status': 'ok'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to process update'}), 500
+            
+    except Exception as e:
+        logger.error(f"Error in Telegram webhook: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/telegram/setup-webhook', methods=['POST'])
+def setup_telegram_webhook():
+    """Setup Telegram webhook URL"""
+    try:
+        from services.telegram_bot_setup import telegram_bot_setup
+        import asyncio
+        
+        # Get the webhook URL from the request
+        data = request.get_json()
+        webhook_url = data.get('webhook_url') if data else None
+        
+        if not webhook_url:
+            # Use the current server URL
+            webhook_url = f"{request.host_url.rstrip('/')}/api/telegram/webhook"
+        
+        async def setup_webhook():
+            try:
+                # Set the webhook
+                await telegram_bot_setup.bot.set_webhook(url=webhook_url)
+                logger.info(f"Telegram webhook set to: {webhook_url}")
+                return True
+            except Exception as e:
+                logger.error(f"Error setting webhook: {e}")
+                return False
+        
+        success = asyncio.run(setup_webhook())
+        
+        if success:
+            return jsonify({
+                'success': True,
+                'webhook_url': webhook_url,
+                'message': 'Webhook setup successful'
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Failed to setup webhook'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Error setting up webhook: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/<path:path>')
 def catch_all(path):
     """Catch-all route to redirect non-API routes to frontend"""
