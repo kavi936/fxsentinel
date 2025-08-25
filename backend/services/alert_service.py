@@ -206,14 +206,39 @@ class AlertService:
             # Send via configured channels
             success = True
             
+            # Check for Telegram alerts - handle both old and new settings structure
+            telegram_enabled = False
+            chat_id = None
+            
+            # New structure: channels.telegram.enabled
             if user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
+                telegram_enabled = True
+                chat_id = user_settings['channels']['telegram'].get('chatId')
+            # Old structure: telegram_enabled (direct)
+            elif user_settings.get('telegram_enabled', False):
+                telegram_enabled = True
+                # Get chat_id from mapping if not in settings
+                if user_id:
+                    mapping_path = f"telegram_mappings"
+                    all_mappings = self.firebase_storage._make_request('GET', mapping_path)
+                    if all_mappings and isinstance(all_mappings, dict):
+                        for cid, mapping_data in all_mappings.items():
+                            if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
+                                chat_id = cid
+                                break
+            
+            if telegram_enabled and chat_id:
                 telegram_success = await self.send_telegram_alert(
-                    user_settings['channels']['telegram']['chatId'],
+                    chat_id,
                     self._format_telegram_message(alert_data),
                     user_id=user_id
                 )
                 success = success and telegram_success
+                logger.info(f"Telegram alert sent to chat_id {chat_id}")
+            elif telegram_enabled and not chat_id:
+                logger.warning(f"Telegram enabled but no chat_id found for user {user_id}")
             
+            # Check for email alerts
             if user_settings.get('channels', {}).get('email', {}).get('enabled'):
                 email_success = self.send_email_alert(
                     user_settings['channels']['email']['address'],
@@ -251,21 +276,40 @@ class AlertService:
     def _should_send_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any]) -> bool:
         """Check if user should receive this alert based on their preferences"""
         try:
+            # Handle both old and new settings structure
             preferences = user_settings.get('preferences', {})
+            
+            # If no preferences structure, use direct settings
+            if not preferences:
+                preferences = user_settings
             
             # Check impact level
             alert_impact = alert_data.get('impact_level', 'medium')
-            if not preferences.get('impactLevels', {}).get(alert_impact, True):
-                return False
+            impact_levels = preferences.get('impactLevels', preferences.get('impact_levels', {}))
+            
+            # Handle both dict and list formats
+            if isinstance(impact_levels, dict):
+                if not impact_levels.get(alert_impact, True):
+                    return False
+            elif isinstance(impact_levels, list):
+                if alert_impact not in impact_levels:
+                    return False
             
             # Check alert type
             alert_type = alert_data.get('type', 'unknown')
-            if not preferences.get('alertTypes', {}).get(alert_type, True):
-                return False
+            alert_types = preferences.get('alertTypes', preferences.get('alert_types', {}))
+            
+            # Handle both dict and list formats
+            if isinstance(alert_types, dict):
+                if not alert_types.get(alert_type, True):
+                    return False
+            elif isinstance(alert_types, list):
+                if alert_type not in alert_types:
+                    return False
             
             # Check currency pairs (if specified)
             alert_pairs = alert_data.get('currency_pairs', [])
-            user_pairs = preferences.get('currencyPairs', [])
+            user_pairs = preferences.get('currencyPairs', preferences.get('currency_pairs', []))
             if alert_pairs and user_pairs:
                 # Check if any alert pairs match user's preferred pairs
                 if not any(pair in user_pairs for pair in alert_pairs):
