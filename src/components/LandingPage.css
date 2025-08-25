@@ -1991,8 +1991,13 @@ body {
   
   /* Hero section mobile optimizations */
   .hero {
-    min-height: 80vh;
+    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height for mobile browsers */
     padding: 2rem 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   .hero-inner {
@@ -2002,6 +2007,11 @@ body {
   .hero-content {
     max-width: 100%;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
   }
   
   .hero-badge-container {
@@ -2634,6 +2644,13 @@ body {
   }
   
   /* Improve hero section on very small screens */
+  .hero {
+    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height for mobile browsers */
+    padding: 1.5rem 0;
+  }
+  
   .hero-badge {
     font-size: 0.75rem;
     padding: 0.3rem 0.6rem;
@@ -2642,6 +2659,16 @@ body {
   .hero-subtitle {
     font-size: 1rem;
     line-height: 1.5;
+  }
+  
+  .hero-content {
+    max-width: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
   }
   
   /* Improve features and pricing on very small screens */
