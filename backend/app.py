@@ -4948,16 +4948,41 @@ def telegram_webhook():
                     
                     response = requests.post(
                         f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                        json=welcome_message
+                        json=welcome_message,
+                        timeout=10
                     )
                     
                     if response.status_code == 200:
                         print(f"✅ Welcome message sent to chat {chat_id}")
+                        return jsonify({'status': 'ok', 'message': 'Welcome message sent'})
                     else:
                         print(f"❌ Failed to send welcome message: {response.status_code}")
+                        # Send fallback message
+                        fallback_message = {
+                            "chat_id": chat_id,
+                            "text": "🎉 Welcome to FXSentinel Alerts!\n\nI'm your personal market alert assistant.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands",
+                            "parse_mode": "HTML"
+                        }
+                        requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=fallback_message, timeout=10)
+                        return jsonify({'status': 'ok', 'message': 'Fallback welcome message sent'})
+                else:
+                    print(f"❌ Bot token or chat_id missing: token={bool(bot_token)}, chat_id={chat_id}")
+                    return jsonify({'status': 'error', 'message': 'Bot configuration error'}), 500
                 
             except Exception as e:
                 print(f"❌ Error sending welcome message: {e}")
+                # Try to send a simple fallback message
+                try:
+                    if bot_token and chat_id:
+                        simple_message = {
+                            "chat_id": chat_id,
+                            "text": "🎉 Welcome to FXSentinel Alerts!\n\nCommands:\n/status - Check settings\n/test - Test alert\n/help - Help",
+                            "parse_mode": "HTML"
+                        }
+                        requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=simple_message, timeout=5)
+                except:
+                    pass
+                return jsonify({'status': 'error', 'message': str(e)}), 500
         
         # Handle /help command
         elif text == '/help':
@@ -4972,16 +4997,22 @@ def telegram_webhook():
                     
                     response = requests.post(
                         f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                        json=help_message
+                        json=help_message,
+                        timeout=10
                     )
                     
                     if response.status_code == 200:
                         print(f"✅ Help message sent to chat {chat_id}")
+                        return jsonify({'status': 'ok', 'message': 'Help message sent'})
                     else:
                         print(f"❌ Failed to send help message: {response.status_code}")
+                        return jsonify({'status': 'error', 'message': f'Failed to send help: {response.status_code}'}), 500
+                else:
+                    return jsonify({'status': 'error', 'message': 'Bot configuration error'}), 500
                 
             except Exception as e:
                 print(f"❌ Error sending help message: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
         
         # Handle /test command
         elif text == '/test':
@@ -4996,16 +5027,22 @@ def telegram_webhook():
                     
                     response = requests.post(
                         f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                        json=test_message
+                        json=test_message,
+                        timeout=10
                     )
                     
                     if response.status_code == 200:
                         print(f"✅ Test message sent to chat {chat_id}")
+                        return jsonify({'status': 'ok', 'message': 'Test message sent'})
                     else:
                         print(f"❌ Failed to send test message: {response.status_code}")
+                        return jsonify({'status': 'error', 'message': f'Failed to send test: {response.status_code}'}), 500
+                else:
+                    return jsonify({'status': 'error', 'message': 'Bot configuration error'}), 500
                 
             except Exception as e:
                 print(f"❌ Error sending test message: {e}")
+                return jsonify({'status': 'error', 'message': str(e)}), 500
         
         # Handle /status command
         elif text == '/status':
