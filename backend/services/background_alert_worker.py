@@ -150,24 +150,42 @@ class BackgroundAlertWorker:
                         date_str = event.get('date', '')
                         
                         if time_str and date_str:
-                            # Parse event datetime (simplified parsing)
+                            # Parse event datetime with proper year handling
                             datetime_str = f"{date_str} {time_str}"
                             event_datetime = datetime.strptime(datetime_str, "%a, %b %d %H:%M UTC")
                             
-                            # Add current year if not present
-                            if event_datetime.year == 1900:  # Default year
-                                event_datetime = event_datetime.replace(year=datetime.now().year)
+                            # CRITICAL FIX: Always use current year for economic calendar events
+                            # The date format doesn't include year, so we need to add it
+                            current_year = datetime.now().year
+                            event_datetime = event_datetime.replace(year=current_year)
+                            
+                            # Additional validation: If the event date is in the past relative to current date,
+                            # it might be from next year (e.g., if we're in December and event is in January)
+                            current_date = datetime.now().date()
+                            event_date = event_datetime.date()
+                            
+                            # If event date is more than 30 days in the past, assume it's next year
+                            if (current_date - event_date).days > 30:
+                                event_datetime = event_datetime.replace(year=current_year + 1)
+                                logger.debug(f"Adjusted event year to next year: {event.get('title', 'Unknown')} -> {event_datetime}")
                             
                             time_until_event = event_datetime - now
                             minutes_until_event = time_until_event.total_seconds() / 60
+                            
+                            # Add detailed logging for debugging
+                            logger.debug(f"Event: {event.get('title', 'Unknown')} | Parsed: {event_datetime} | Minutes until: {minutes_until_event:.1f}")
                             
                             # Only send alerts if within timing windows
                             if (8 <= minutes_until_event <= 10 or      # 10min before
                                 55 <= minutes_until_event <= 60 or    # 1h before
                                 115 <= minutes_until_event <= 120):   # 2h before
+                                logger.info(f"🎯 Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
                                 self._send_economic_alert(event)
                             else:
-                                logger.debug(f"Event {event.get('title', 'Unknown')} not within alert timing windows ({minutes_until_event:.1f} minutes away)")
+                                if minutes_until_event > 0:  # Only log future events
+                                    logger.debug(f"Event {event.get('title', 'Unknown')} not within alert timing windows ({minutes_until_event:.1f} minutes away)")
+                                else:
+                                    logger.debug(f"Event {event.get('title', 'Unknown')} is in the past ({minutes_until_event:.1f} minutes ago)")
                     except Exception as e:
                         logger.error(f"Error checking event timing: {e}")
                         continue
