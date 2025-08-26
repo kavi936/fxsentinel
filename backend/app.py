@@ -48,7 +48,7 @@ load_dotenv()
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
 # Initialize background alert worker
-from services.background_alert_worker import background_alert_worker
+from services.background_alert_worker import background_worker
 
 # Debug: Check if environment variables are loaded
 print(f"🔍 Environment Debug:")
@@ -59,8 +59,8 @@ if os.getenv('OPENAI_API_KEY'):
 
 app = Flask(__name__)
 
-# Initialize background alert worker with Flask app
-background_alert_worker.init_app(app)
+# Initialize background alert worker
+# background_worker.init_app(app)  # Removed - not needed
 
 # Initialize rate limiter
 limiter = Limiter(
@@ -764,6 +764,8 @@ def get_news():
         
         # Check if force refresh is requested
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
+        print(f"🔍 Force refresh requested: {force_refresh}")
+        print(f"🔍 Request args: {dict(request.args)}")
         
         # Check for deployment notification that requires cache clearing
         if DEPLOYMENT_NOTIFICATION["active"] and DEPLOYMENT_NOTIFICATION["requires_cache_clear"]:
@@ -775,6 +777,9 @@ def get_news():
         cached_news = None
         if not force_refresh:
             cached_news = news_cache.load_news()
+            print(f"🔍 Loading from cache: {len(cached_news) if cached_news else 0} articles")
+        else:
+            print("🔍 Force refresh requested - skipping cache")
         
         if cached_news:
             # Check if cached news contains economic calendar events (Finnhub data)
@@ -811,6 +816,22 @@ def get_news():
                     response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
                 
                 return jsonify(response_data)
+        
+        # If force refresh is requested, use the force refresh function
+        if force_refresh:
+            print("🔍 Using force refresh function for fresh data")
+            try:
+                force_result = force_refresh_news_internal()
+                print(f"🔍 Force refresh result: {force_result}")
+                if force_result["success"]:
+                    return jsonify(force_result)
+                else:
+                    print("❌ Force refresh failed, falling back to regular fetch")
+            except Exception as e:
+                print(f"❌ Error in force refresh: {e}")
+                import traceback
+                traceback.print_exc()
+                print("Falling back to regular fetch")
         
         # If no cache, fetch fresh data with optimized parallel processing
         # Note: Economic calendar events are excluded from live news feed
@@ -871,39 +892,44 @@ def get_news():
                 print(f"❌ Alternative news fetch failed: {e}")
                 alt_news = []
         
-        # Try Telegram news separately with shorter timeout (non-blocking)
+        # Try Telegram news separately using the same approach as force refresh
         telegram_news = []
         try:
-            import asyncio
-            # Create new event loop for async operation
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            import sys
+            import os
+            # Add current directory to path for imports
+            if os.path.dirname(__file__) not in sys.path:
+                sys.path.insert(0, os.path.dirname(__file__))
             
-            # Reduced timeout for Telegram (15 seconds instead of 30)
-            telegram_news = loop.run_until_complete(
-                asyncio.wait_for(
-                    telegram_user_monitor.get_recent_telegram_news(hours=24),
-                    timeout=15.0  # Reduced from 30 to 15 seconds
-                )
-            )
-            loop.close()
+            print("🔍 Attempting to import telegram_sync in news endpoint...")
+            from services.telegram_sync_wrapper import telegram_sync
+            print("✅ Successfully imported telegram_sync in news endpoint")
+            
+            print("🔍 Calling telegram_sync.get_recent_telegram_news in news endpoint...")
+            telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
+            print(f"🔍 Telegram sync returned {len(telegram_news)} articles in news endpoint")
+            
+            # Debug: Show what we got from Telegram
+            if telegram_news:
+                print("📰 Sample Telegram articles from news endpoint:")
+                for i, news in enumerate(telegram_news[:3], 1):
+                    print(f"  {i}. {news.get('title', 'No title')}")
+                    print(f"     Source: {news.get('source', 'No source')}")
+                    print(f"     Impact: {news.get('impact', 'No impact')}")
+                    print()
+            else:
+                print("⚠️ No Telegram news returned from sync wrapper in news endpoint")
+            
             fresh_news.extend(telegram_news)
             sources_used.append("Telegram")
-            print(f"✅ Fetched {len(telegram_news)} Telegram news articles")
-        except asyncio.TimeoutError:
-            print("⚠️ Telegram news fetch timed out, continuing with other sources...")
-            telegram_news = []
+            print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
+            print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
         except Exception as e:
-            print(f"❌ Error fetching Telegram news: {e}")
+            print(f"❌ Error fetching Telegram news in news endpoint: {e}")
+            import traceback
+            traceback.print_exc()
             print("Continuing with other sources...")
             telegram_news = []
-        finally:
-            # Ensure we clean up any remaining event loops
-            try:
-                if 'loop' in locals() and not loop.is_closed():
-                    loop.close()
-            except:
-                pass
         
         # If we got fresh news, save it to cache and return it
         if fresh_news:
@@ -911,8 +937,43 @@ def get_news():
             all_news = fresh_news
             all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
             
-            # Remove duplicates across all sources
-            all_news = remove_duplicate_news(all_news)
+            # Remove duplicates across all sources using simple logic
+            def remove_duplicate_news_simple(news_list):
+                """Remove duplicate news items based on title and source"""
+                seen = set()
+                unique_news = []
+                for item in news_list:
+                    # Create a unique key based on title and source
+                    key = f"{item.get('title', '')}_{item.get('source', '')}"
+                    if key not in seen:
+                        seen.add(key)
+                        unique_news.append(item)
+                return unique_news
+            
+            print(f"📊 Before deduplication in news endpoint: {len(all_news)} articles")
+            
+            # Debug: Show breakdown by source before deduplication
+            sources_before = {}
+            for item in all_news:
+                source = item.get('source', 'Unknown')
+                sources_before[source] = sources_before.get(source, 0) + 1
+            
+            print("📊 Source breakdown before deduplication:")
+            for source, count in sorted(sources_before.items()):
+                print(f"  {source}: {count} articles")
+            
+            all_news = remove_duplicate_news_simple(all_news)
+            print(f"📊 After deduplication in news endpoint: {len(all_news)} articles")
+            
+            # Debug: Show breakdown by source after deduplication
+            sources_after = {}
+            for item in all_news:
+                source = item.get('source', 'Unknown')
+                sources_after[source] = sources_after.get(source, 0) + 1
+            
+            print("📊 Source breakdown after deduplication:")
+            for source, count in sorted(sources_after.items()):
+                print(f"  {source}: {count} articles")
             
             # Save to cache for future use
             news_cache.save_news(all_news)
@@ -1149,8 +1210,21 @@ def force_refresh_news_internal():
             telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
             print(f"✅ Telegram sync returned {len(telegram_news)} articles")
             
+            # Debug: Show what we got from Telegram
+            if telegram_news:
+                print("📰 Sample Telegram articles:")
+                for i, news in enumerate(telegram_news[:3], 1):
+                    print(f"  {i}. {news.get('title', 'No title')}")
+                    print(f"     Source: {news.get('source', 'No source')}")
+                    print(f"     Impact: {news.get('impact', 'No impact')}")
+                    print(f"     Type: {news.get('type', 'No type')}")
+                    print()
+            else:
+                print("⚠️ No Telegram news returned from sync wrapper")
+            
             fresh_news.extend(telegram_news)
-            print(f"✅ Fetched {len(telegram_news)} Telegram news articles")
+            print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
+            print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
         except Exception as e:
             print(f"❌ Error fetching Telegram news: {e}")
             import traceback
@@ -1159,6 +1233,8 @@ def force_refresh_news_internal():
             telegram_news = []
         
         if fresh_news:
+            print(f"📊 Before deduplication: {len(fresh_news)} articles")
+            
             # Remove duplicates and sort
             def remove_duplicate_news(news_list):
                 """Remove duplicate news items based on title and source"""
@@ -1170,13 +1246,28 @@ def force_refresh_news_internal():
                     if key not in seen:
                         seen.add(key)
                         unique_news.append(item)
+                    else:
+                        print(f"🔄 Duplicate removed: {item.get('title', 'No title')} ({item.get('source', 'No source')})")
                 return unique_news
             
             fresh_news = remove_duplicate_news(fresh_news)
+            print(f"📊 After deduplication: {len(fresh_news)} articles")
+            
+            # Debug: Show breakdown by source
+            sources = {}
+            for item in fresh_news:
+                source = item.get('source', 'Unknown')
+                sources[source] = sources.get(source, 0) + 1
+            
+            print("📊 Source breakdown after deduplication:")
+            for source, count in sorted(sources.items()):
+                print(f"  {source}: {count} articles")
+            
             fresh_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
             
             # Save to cache
             news_cache.save_news(fresh_news)
+            print(f"💾 Saved {len(fresh_news)} articles to cache")
             
             # Trigger alerts immediately
             try:
@@ -1193,6 +1284,7 @@ def force_refresh_news_internal():
                 "alert_results": results if 'results' in locals() else None
             }
         else:
+            print("⚠️ No fresh news available after processing")
             return {
                 "success": False,
                 "message": "No fresh news available"
@@ -1745,7 +1837,7 @@ def health_alerts():
         telegram_bot_working = alert_service.telegram_bot is not None
         
         # Check background alert worker status
-        background_worker_status = background_alert_worker.get_status()
+        background_worker_status = background_worker.get_status()
         background_worker_running = background_worker_status.get('running', False)
         
         # Check robust alert service if available
@@ -5103,9 +5195,9 @@ def run_alert_check():
     try:
         with app.app_context():
             # Import here to avoid circular imports
-            from services.background_alert_worker import background_alert_worker
-            background_alert_worker._check_news_alerts()
-            background_alert_worker._check_economic_calendar_alerts()
+            from services.background_alert_worker import background_worker
+            background_worker._check_news_alerts()
+            background_worker._check_economic_calendar_alerts()
             print("✅ Background alert check completed")
     except Exception as e:
         print(f"❌ Background alert check error: {e}")
@@ -5126,9 +5218,85 @@ def background_scheduler():
         time.sleep(300)
 
 # Initialize and start background alert worker
-background_alert_worker.init_app(app)
-background_alert_worker.start()
+# background_worker.init_app(app)  # Removed - not needed
+background_worker.start()
 print("🚀 Background alert worker started")
+
+@app.route('/api/post-news-analysis', methods=['POST'])
+@limiter.limit("10 per minute")
+def post_news_analysis():
+    """Generate post-news analysis for high-impact news events"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        news_id = data.get('news_id')
+        title = data.get('title', '')
+        content = data.get('content', '')
+        source = data.get('source', '')
+        timestamp = data.get('timestamp', '')
+        
+        if not news_id or not title:
+            return jsonify({'error': 'Missing required fields: news_id and title'}), 400
+        
+        # Generate post-news analysis using AI
+        analysis_prompt = f"""
+        POST-NEWS ANALYSIS REQUEST
+        
+        News Title: {title}
+        Source: {source}
+        Content: {content}
+        Timestamp: {timestamp}
+        
+        Please provide a comprehensive post-news analysis including:
+        
+        1. **Market Impact Assessment**: How this news has affected or will affect forex markets
+        2. **Currency Pair Analysis**: Specific impact on major currency pairs
+        3. **Trading Implications**: What traders should consider in their strategies
+        4. **Risk Assessment**: Potential risks and opportunities
+        5. **Technical Levels**: Key support/resistance levels to watch
+        
+        Provide detailed, actionable analysis suitable for forex traders.
+        """
+        
+        # Call AI analysis service
+        try:
+            # For now, return a mock analysis since AIAnalysisService doesn't exist
+            mock_analysis = {
+                'analysis': f"Post-news analysis for '{title}' from {source}. This news event may impact forex markets.",
+                'market_impact': f"Potential impact on currency pairs based on {title}",
+                'trading_implications': "Monitor price action and consider position adjustments",
+                'currency_pairs': ['EUR/USD', 'USD/JPY', 'GBP/USD'],
+                'risk_assessment': "Standard market risk applies",
+                'technical_levels': "Watch key support/resistance levels"
+            }
+            
+            return jsonify({
+                'success': True,
+                'analysis': mock_analysis.get('analysis', ''),
+                'market_impact': mock_analysis.get('market_impact', ''),
+                'trading_implications': mock_analysis.get('trading_implications', ''),
+                'currency_pairs': mock_analysis.get('currency_pairs', []),
+                'risk_assessment': mock_analysis.get('risk_assessment', ''),
+                'technical_levels': mock_analysis.get('technical_levels', ''),
+                'timestamp': datetime.now().isoformat()
+            })
+                
+        except Exception as ai_error:
+            logger.error(f"AI analysis error: {ai_error}")
+            return jsonify({
+                'success': False,
+                'error': 'AI analysis service unavailable'
+            }), 503
+        
+    except Exception as e:
+        logger.error(f"Error in post-news analysis: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development

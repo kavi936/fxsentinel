@@ -82,20 +82,8 @@ const LiveNewsFeed = () => {
       
       let response;
       if (forceRefresh) {
-        // Force refresh endpoint
-        response = await fetch(`${config.API_BASE_URL}/api/force-refresh-news`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' }
-        });
-        const forceData = await response.json();
-        
-        if (forceData.success) {
-          console.log('🔄 Force refresh successful:', forceData.message);
-          // Now fetch the updated news
-          response = await fetch(config.endpoints.news);
-        } else {
-          throw new Error('Force refresh failed');
-        }
+        // Force refresh endpoint with force_refresh parameter to get fresh data including Telegram
+        response = await fetch(`${config.API_BASE_URL}/api/news?force_refresh=true`);
       } else {
         response = await fetch(config.endpoints.news);
       }
