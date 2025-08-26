@@ -1651,6 +1651,26 @@ def health_calendar():
             "error": str(e)
         }), 500
 
+@app.route('/api/alerts/trigger-check', methods=['POST'])
+@limiter.exempt
+def trigger_alert_check():
+    """Manually trigger alert checking"""
+    try:
+        # Run alert checking
+        run_alert_check()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Alert check triggered successfully',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @app.route('/api/health/news')
 @limiter.exempt  # Health endpoints should not be rate limited
 def health_news():
@@ -4797,6 +4817,39 @@ def catch_all(path):
     
     # Redirect all other routes to frontend
     return redirect(f'https://fxsentinel.io/{path}')
+
+# Simple background task for alert checking
+def run_alert_check():
+    """Run alert checking in background"""
+    try:
+        with app.app_context():
+            # Import here to avoid circular imports
+            from services.background_alert_worker import background_alert_worker
+            background_alert_worker._check_news_alerts()
+            background_alert_worker._check_economic_calendar_alerts()
+            print("✅ Background alert check completed")
+    except Exception as e:
+        print(f"❌ Background alert check error: {e}")
+
+# Schedule background task to run every 5 minutes
+import threading
+import time
+
+def background_scheduler():
+    """Background scheduler for alert checking"""
+    while True:
+        try:
+            run_alert_check()
+        except Exception as e:
+            print(f"Background scheduler error: {e}")
+        
+        # Wait 5 minutes
+        time.sleep(300)
+
+# Start background scheduler in a separate thread
+scheduler_thread = threading.Thread(target=background_scheduler, daemon=True)
+scheduler_thread.start()
+print("🚀 Background alert scheduler started")
 
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
