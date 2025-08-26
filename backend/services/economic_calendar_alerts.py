@@ -522,9 +522,25 @@ class EconomicCalendarAlerts:
             from .alert_service import get_alert_service
             alert_service = get_alert_service()
             
-            # Process alert with subscription validation
-            import asyncio
-            success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+            # Process alert with subscription validation using proper async handling
+            try:
+                import asyncio
+                # Check if we're already in an event loop
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running():
+                        # We're in an event loop, create a task
+                        task = loop.create_task(alert_service.process_alert(alert_data, user_settings, user_id))
+                        success = loop.run_until_complete(task)
+                    else:
+                        # No event loop running, use asyncio.run
+                        success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+                except RuntimeError:
+                    # Fallback for when asyncio.run can't be used
+                    success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+            except Exception as e:
+                logger.error(f"Error in async alert processing: {e}")
+                success = False
             
             if success:
                 logger.info(f"Economic alert sent successfully to user {user_id}")
