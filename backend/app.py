@@ -5358,62 +5358,39 @@ def bot_statistics():
         firebase = FirebaseRealtimeStorage()
         alert_service = get_alert_service()
         
-        # Get all users
-        all_users = firebase.get_all_users()
+        # Get users with alerts
+        users_with_alerts = firebase.get_all_users_with_alerts()
         
         # Get user statistics
-        total_users = len(all_users)
+        total_users = len(users_with_alerts)
         active_users = 0
         telegram_connected_users = 0
         alert_enabled_users = 0
-        subscription_active_users = 0
-        
-        # Get chat ID mappings
-        chat_id_mappings = firebase.get_all_chat_id_mappings()
-        total_chat_ids = len(chat_id_mappings)
         
         # Analyze each user
         user_details = []
-        for user_id, user_data in all_users.items():
+        for user_data in users_with_alerts:
+            user_id = user_data.get('user_id', 'unknown')
+            settings = user_data.get('settings', {})
+            chat_id = user_data.get('telegram_chat_id')
+            
             user_info = {
                 'user_id': user_id,
-                'email': user_data.get('email', 'Unknown'),
-                'telegram_connected': False,
-                'alerts_enabled': False,
-                'subscription_active': False,
-                'alert_settings': {},
-                'last_activity': user_data.get('last_activity', 'Unknown')
+                'telegram_connected': bool(chat_id),
+                'alerts_enabled': bool(settings),
+                'alert_settings': settings,
+                'chat_id': chat_id
             }
             
-            # Check Telegram connection
-            chat_id = chat_id_mappings.get(user_id)
+            # Count statistics
             if chat_id:
-                user_info['telegram_connected'] = True
-                user_info['chat_id'] = chat_id
                 telegram_connected_users += 1
-            
-            # Check alert settings
-            alert_settings = user_data.get('alert_settings', {})
-            if alert_settings:
-                user_info['alert_settings'] = alert_settings
-                if alert_settings.get('live_news_alerts') or alert_settings.get('economic_calendar_alerts'):
-                    user_info['alerts_enabled'] = True
-                    alert_enabled_users += 1
-            
-            # Check subscription (simplified check)
-            if user_data.get('subscription_status') == 'active' or user_data.get('trial_active'):
-                user_info['subscription_active'] = True
-                subscription_active_users += 1
-            
-            # Count as active if they have any settings
-            if user_info['telegram_connected'] or user_info['alerts_enabled']:
+            if settings:
+                alert_enabled_users += 1
+            if chat_id or settings:
                 active_users += 1
             
             user_details.append(user_info)
-        
-        # Get recent alert statistics
-        recent_alerts = firebase.get_recent_alert_history(hours=24)
-        alerts_last_24h = len(recent_alerts)
         
         # Get background worker stats
         worker_stats = background_worker.get_status()
@@ -5424,13 +5401,9 @@ def bot_statistics():
                 'active_users': active_users,
                 'telegram_connected_users': telegram_connected_users,
                 'alert_enabled_users': alert_enabled_users,
-                'subscription_active_users': subscription_active_users,
-                'total_chat_ids': total_chat_ids,
-                'alerts_last_24h': alerts_last_24h,
                 'background_worker_status': worker_stats
             },
             'user_details': user_details,
-            'chat_id_mappings': chat_id_mappings,
             'timestamp': datetime.now().isoformat()
         })
         
@@ -5448,24 +5421,20 @@ def bot_users():
         from services.firebase_realtime_storage import FirebaseRealtimeStorage
         
         firebase = FirebaseRealtimeStorage()
-        all_users = firebase.get_all_users()
-        chat_id_mappings = firebase.get_all_chat_id_mappings()
+        users_with_alerts = firebase.get_all_users_with_alerts()
         
         users_info = []
-        for user_id, user_data in all_users.items():
-            chat_id = chat_id_mappings.get(user_id)
-            alert_settings = user_data.get('alert_settings', {})
+        for user_data in users_with_alerts:
+            user_id = user_data.get('user_id', 'unknown')
+            settings = user_data.get('settings', {})
+            chat_id = user_data.get('telegram_chat_id')
             
             user_info = {
                 'user_id': user_id,
-                'email': user_data.get('email', 'Unknown'),
                 'chat_id': chat_id,
                 'telegram_connected': bool(chat_id),
-                'alert_settings': alert_settings,
-                'subscription_status': user_data.get('subscription_status', 'unknown'),
-                'trial_active': user_data.get('trial_active', False),
-                'created_at': user_data.get('created_at', 'Unknown'),
-                'last_activity': user_data.get('last_activity', 'Unknown')
+                'alert_settings': settings,
+                'has_settings': bool(settings)
             }
             users_info.append(user_info)
         
@@ -5489,7 +5458,14 @@ def bot_chat_ids():
         from services.firebase_realtime_storage import FirebaseRealtimeStorage
         
         firebase = FirebaseRealtimeStorage()
-        chat_id_mappings = firebase.get_all_chat_id_mappings()
+        users_with_alerts = firebase.get_all_users_with_alerts()
+        
+        chat_id_mappings = {}
+        for user_data in users_with_alerts:
+            user_id = user_data.get('user_id', 'unknown')
+            chat_id = user_data.get('telegram_chat_id')
+            if chat_id:
+                chat_id_mappings[user_id] = chat_id
         
         return jsonify({
             'chat_id_mappings': chat_id_mappings,
@@ -5512,21 +5488,25 @@ def bot_alert_history():
         
         firebase = FirebaseRealtimeStorage()
         
-        # Get last 24 hours of alerts
-        recent_alerts = firebase.get_recent_alert_history(hours=24)
+        # Get users with alerts
+        users_with_alerts = firebase.get_all_users_with_alerts()
         
-        # Group by user
+        # Get alert history for each user
+        all_alerts = []
         alerts_by_user = {}
-        for alert in recent_alerts:
-            user_id = alert.get('user_id', 'unknown')
-            if user_id not in alerts_by_user:
-                alerts_by_user[user_id] = []
-            alerts_by_user[user_id].append(alert)
+        
+        for user_data in users_with_alerts:
+            user_id = user_data.get('user_id', 'unknown')
+            user_alerts = firebase.get_user_alert_history(user_id, limit=50)
+            
+            if user_alerts:
+                alerts_by_user[user_id] = user_alerts
+                all_alerts.extend(user_alerts)
         
         return jsonify({
-            'recent_alerts': recent_alerts,
+            'recent_alerts': all_alerts,
             'alerts_by_user': alerts_by_user,
-            'total_alerts': len(recent_alerts),
+            'total_alerts': len(all_alerts),
             'users_with_alerts': len(alerts_by_user),
             'timestamp': datetime.now().isoformat()
         })
