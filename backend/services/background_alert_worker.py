@@ -139,7 +139,9 @@ class BackgroundAlertWorker:
             # Process upcoming high-impact events
             now = datetime.now()
             for event in events:
-                if event.get('impact') == 'high':
+                # Only process high-impact events that are upcoming
+                if (event.get('impact') == 'high' and 
+                    event.get('status', '').upper() in ['UPCOMING', 'IMMINENT']):
                     self._send_economic_alert(event)
                     
         except Exception as e:
