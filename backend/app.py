@@ -5298,6 +5298,55 @@ def post_news_analysis():
             'error': str(e)
         }), 500
 
+# Background worker management endpoints
+@app.route('/api/background-worker/status')
+@limiter.exempt
+def background_worker_status():
+    """Check background worker status"""
+    try:
+        # Check if background worker is running
+        worker_running = background_worker.running if hasattr(background_worker, 'running') else False
+        worker_thread = background_worker.thread if hasattr(background_worker, 'thread') else None
+        thread_alive = worker_thread.is_alive() if worker_thread else False
+        
+        return jsonify({
+            'worker_running': worker_running,
+            'thread_alive': thread_alive,
+            'last_check': background_worker.last_check.isoformat() if hasattr(background_worker, 'last_check') and background_worker.last_check else None,
+            'check_interval': background_worker.check_interval if hasattr(background_worker, 'check_interval') else None,
+            'status': 'running' if worker_running and thread_alive else 'stopped'
+        })
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/background-worker/start', methods=['POST'])
+@limiter.exempt
+def start_background_worker():
+    """Start background worker manually"""
+    try:
+        if not background_worker.running:
+            background_worker.start()
+            return jsonify({
+                'success': True,
+                'message': 'Background worker started',
+                'status': 'running'
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'message': 'Background worker already running',
+                'status': 'running'
+            })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))
