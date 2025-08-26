@@ -5523,6 +5523,34 @@ def bot_alert_history():
             'status': 'error'
         }), 500
 
+@app.route('/api/restart-background-worker', methods=['POST'])
+@limiter.exempt
+def restart_background_worker():
+    """Restart the background worker to pick up new code"""
+    try:
+        from services.background_alert_worker import background_worker
+        
+        # Stop the current worker
+        background_worker.stop()
+        
+        # Wait a moment
+        import time
+        time.sleep(2)
+        
+        # Start the worker again
+        background_worker.start()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Background worker restarted successfully',
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))
@@ -5553,34 +5581,4 @@ if __name__ == '__main__':
     print(f"🚀 Starting Flask server on port {port}, debug={debug_mode}")
     print("📊 Robust alert service enabled - alerts will work for online users")
     print("📊 Cost-optimized monitoring enabled - reduced API calls and logging")
-    
-    # Add restart endpoint for background worker
-    @app.route('/api/restart-background-worker', methods=['POST'])
-    @limiter.exempt
-    def restart_background_worker():
-        """Restart the background worker to pick up new code"""
-        try:
-            from services.background_alert_worker import background_worker
-            
-            # Stop the current worker
-            background_worker.stop()
-            
-            # Wait a moment
-            import time
-            time.sleep(2)
-            
-            # Start the worker again
-            background_worker.start()
-            
-            return jsonify({
-                'success': True,
-                'message': 'Background worker restarted successfully',
-                'timestamp': datetime.now().isoformat()
-            })
-        except Exception as e:
-            return jsonify({
-                'success': False,
-                'error': str(e)
-            }), 500
-    
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 
