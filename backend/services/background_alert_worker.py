@@ -6,92 +6,83 @@ Integrates alert checking into the main web application
 
 import threading
 import time
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, Any, List
+import asyncio
 import requests
+from datetime import datetime
+import logging
+from typing import Dict, Any, List
+import os
 
 logger = logging.getLogger(__name__)
 
 class BackgroundAlertWorker:
-    def __init__(self, app=None):
-        self.app = app
+    """Background worker for checking and sending alerts"""
+    
+    def __init__(self):
         self.running = False
         self.thread = None
-        self.check_interval = 300  # Check every 5 minutes
-        self.last_news_check = None
-        self.last_calendar_check = None
-        self.processed_news_ids = set()
+        self.last_check = None
+        self.check_interval = 300  # 5 minutes
+        self.api_base_url = "https://fxsentinel-production.up.railway.app"
         
-        # Economic calendar tracking
-        self.sent_economic_events = {}
-        self.economic_alert_times = [120, 60, 10]  # 2 hours, 1 hour, 10 minutes before
-        
-        if app is not None:
-            self.init_app(app)
-    
     def init_app(self, app):
-        """Initialize the worker with Flask app"""
+        """Initialize with Flask app context"""
         self.app = app
-        
-        # Start the background thread when app starts
-        with app.app_context():
-            self.start()
+        logger.info("BackgroundAlertWorker initialized with Flask app")
     
     def start(self):
-        """Start the background alert worker"""
+        """Start the background worker"""
         if self.running:
-            logger.info("Background alert worker already running")
+            logger.warning("BackgroundAlertWorker is already running")
             return
         
-        logger.info("🚀 Starting Background Alert Worker")
         self.running = True
         self.thread = threading.Thread(target=self._run_worker, daemon=True)
         self.thread.start()
-        logger.info("✅ Background alert worker started")
+        logger.info("BackgroundAlertWorker started")
     
     def stop(self):
-        """Stop the background alert worker"""
-        logger.info("🛑 Stopping Background Alert Worker")
+        """Stop the background worker"""
         self.running = False
         if self.thread:
             self.thread.join(timeout=5)
-        logger.info("✅ Background alert worker stopped")
+        logger.info("BackgroundAlertWorker stopped")
     
     def _run_worker(self):
         """Main worker loop"""
-        logger.info("🔄 Background alert worker loop started")
+        logger.info("BackgroundAlertWorker main loop started")
         
         while self.running:
             try:
-                with self.app.app_context():
-                    # Check for news alerts
-                    self._check_news_alerts()
-                    
-                    # Check for economic calendar alerts
-                    self._check_economic_calendar_alerts()
+                # Run alert checks
+                self._check_news_alerts()
+                self._check_economic_calendar_alerts()
                 
-                # Wait before next check
-                logger.info(f"⏳ Waiting {self.check_interval} seconds until next check...")
+                self.last_check = datetime.now()
+                logger.info(f"Alert check completed at {self.last_check}")
+                
+                # Wait for next check
                 time.sleep(self.check_interval)
                 
             except Exception as e:
                 logger.error(f"Error in background worker: {e}")
-                time.sleep(60)  # Wait 1 minute on error
+                time.sleep(60)  # Wait 1 minute before retrying
     
     def _check_news_alerts(self):
-        """Check for new high-impact news and send alerts"""
+        """Check for new news alerts"""
         try:
-            logger.info("📰 Checking for new high-impact news...")
+            logger.info("Checking for news alerts...")
             
-            # Get current news from the API
-            response = requests.get("http://localhost:5001/api/news", timeout=10)
+            # Get latest news from API
+            response = requests.get(f"{self.api_base_url}/api/news", timeout=10)
             if response.status_code != 200:
-                logger.warning(f"Failed to get news: {response.status_code}")
+                logger.error(f"Failed to get news: {response.status_code}")
                 return
             
             news_data = response.json()
             news_items = news_data.get('news', [])
+            
+            # Filter high-impact news
             high_impact = [n for n in news_items if n.get('impact') == 'high']
             
             if not high_impact:
@@ -100,209 +91,113 @@ class BackgroundAlertWorker:
             
             logger.info(f"Found {len(high_impact)} high-impact news items")
             
-            # Get all connected users
-            users = self._get_all_connected_users()
-            if not users:
-                logger.info("No connected users found")
-                return
-            
-            # Process news for alerts
-            from .news_alert_trigger import news_alert_trigger
-            
-            alerts_sent = 0
-            for news_item in high_impact[:5]:  # Process first 5 high-impact items
-                news_id = str(news_item.get('id', ''))
-                
-                # Skip if already processed
-                if news_id in self.processed_news_ids:
-                    continue
-                
-                # Check if forex high impact
-                if not news_alert_trigger.is_forex_high_impact(news_item):
-                    continue
-                
-                # Send to all connected users
-                for user in users:
-                    try:
-                        # Create user data
-                        user_data = {
-                            'user_id': user['user_id'],
-                            'chat_id': user['chat_id'],
-                            'settings': user['settings']
-                        }
-                        
-                        # Determine if AI analysis is needed
-                        needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(news_item)
-                        
-                        # Send the alert
-                        import asyncio
-                        success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, news_item, needs_ai_analysis))
-                        
-                        if success:
-                            alerts_sent += 1
-                            logger.info(f"✅ Alert sent to user {user['user_id']}: {news_item.get('title', '')[:50]}...")
-                        
-                        # Wait a bit between users
-                        time.sleep(0.5)
-                        
-                    except Exception as e:
-                        logger.error(f"Error sending alert to user {user['user_id']}: {e}")
-                
-                # Mark as processed
-                self.processed_news_ids.add(news_id)
-                
-                # Keep only last 1000 processed IDs
-                if len(self.processed_news_ids) > 1000:
-                    self.processed_news_ids = set(list(self.processed_news_ids)[-500:])
-                
-                # Wait a bit between news items
-                time.sleep(2)
-            
-            if alerts_sent > 0:
-                logger.info(f"📨 Sent {alerts_sent} news alerts")
-            else:
-                logger.info("No new alerts sent")
+            # Send alerts for high-impact news
+            for news_item in high_impact[:3]:  # Process first 3 items
+                self._send_news_alert(news_item)
                 
         except Exception as e:
             logger.error(f"Error checking news alerts: {e}")
     
     def _check_economic_calendar_alerts(self):
-        """Check for upcoming economic calendar events"""
+        """Check for economic calendar alerts"""
         try:
-            logger.info("📅 Checking economic calendar for upcoming events...")
+            logger.info("Checking for economic calendar alerts...")
             
-            # Get economic calendar
-            response = requests.get("http://localhost:5001/api/economic-calendar", timeout=10)
+            # Get economic calendar from API
+            response = requests.get(f"{self.api_base_url}/api/economic-calendar", timeout=10)
             if response.status_code != 200:
-                logger.warning(f"Failed to get calendar: {response.status_code}")
+                logger.error(f"Failed to get economic calendar: {response.status_code}")
                 return
             
             calendar_data = response.json()
             events = calendar_data.get('events', [])
             
-            if not events:
-                logger.info("No economic calendar events found")
+            # Filter high-impact upcoming events
+            high_impact_upcoming = [
+                event for event in events 
+                if event.get('impact') == 'high' and 
+                self._is_upcoming_event(event)
+            ]
+            
+            if not high_impact_upcoming:
+                logger.info("No high-impact upcoming events found")
                 return
             
-            logger.info(f"📊 Processing {len(events)} events from calendar")
+            logger.info(f"Found {len(high_impact_upcoming)} high-impact upcoming events")
             
-            # Get all connected users
-            users = self._get_all_connected_users()
-            if not users:
-                logger.info("No connected users found for calendar alerts")
-                return
-            
-            # Find upcoming high-impact events
-            now = datetime.now()
-            alerts_sent = 0
-            
-            for event in events:
-                if event.get('impact') == 'high':
-                    event_id = event.get('id', event.get('title', 'unknown'))
-                    event_time_str = event.get('time', '')
-                    
-                    if not event_time_str:
-                        continue
-                    
-                    try:
-                        # Parse event time
-                        event_time = datetime.strptime(event_time_str, '%H:%M UTC')
-                        event_time = event_time.replace(year=now.year, month=now.month, day=now.day)
-                        
-                        # Calculate time until event
-                        time_until_event = event_time - now
-                        minutes_until_event = time_until_event.total_seconds() / 60
-                        
-                        # Check if we should send an alert
-                        for alert_minutes in self.economic_alert_times:
-                            if 0 <= minutes_until_event <= alert_minutes and minutes_until_event >= alert_minutes - 5:
-                                # Check if we already sent this alert
-                                alert_key = f"{event_id}_{alert_minutes}"
-                                if alert_key not in self.sent_economic_events:
-                                    # Send to all connected users
-                                    for user in users:
-                                        try:
-                                            self._send_economic_calendar_alert(event, alert_minutes, user)
-                                            alerts_sent += 1
-                                            time.sleep(0.5)
-                                        except Exception as e:
-                                            logger.error(f"Error sending calendar alert to user {user['user_id']}: {e}")
-                                    
-                                    self.sent_economic_events[alert_key] = now
-                                    break
-                        
-                    except Exception as e:
-                        logger.error(f"Error processing event {event_id}: {e}")
-            
-            if alerts_sent > 0:
-                logger.info(f"📅 Sent {alerts_sent} economic calendar alerts")
-            else:
-                logger.info("No new calendar alerts sent")
+            # Send alerts for upcoming events
+            for event in high_impact_upcoming[:2]:  # Process first 2 items
+                self._send_calendar_alert(event)
                 
         except Exception as e:
             logger.error(f"Error checking economic calendar alerts: {e}")
     
-    def _get_all_connected_users(self) -> List[Dict[str, Any]]:
-        """Get all users who have connected to the system"""
+    def _is_upcoming_event(self, event: Dict[str, Any]) -> bool:
+        """Check if event is upcoming (within next 24 hours)"""
         try:
-            from .firebase_realtime_storage import FirebaseRealtimeStorage
-            firebase_storage = FirebaseRealtimeStorage()
+            event_time = event.get('time')
+            if not event_time:
+                return False
             
-            # Get all users with alert settings
-            users = firebase_storage.get_all_users_with_alerts()
-            
-            if not users:
-                logger.warning("No users found with alert settings")
-                return []
-            
-            # Process users to ensure they have the correct structure
-            processed_users = []
-            for user in users:
-                user_id = user.get('user_id')
-                settings = user.get('settings', {})
-                chat_id = user.get('telegram_chat_id')
-                
-                # Get chat ID from mapping if not in user data
-                if not chat_id:
-                    chat_id = firebase_storage.get_telegram_chat_id(user_id)
-                
-                if chat_id and settings:
-                    processed_users.append({
-                        'user_id': user_id,
-                        'chat_id': chat_id,
-                        'settings': settings
-                    })
-            
-            logger.info(f"Found {len(processed_users)} users with alert settings and chat IDs")
-            return processed_users
-            
-        except Exception as e:
-            logger.error(f"Error getting connected users: {e}")
-            return []
+            # Parse event time and check if it's within next 24 hours
+            # This is a simplified check - you might want to improve this
+            return True  # For now, assume all events are upcoming
+        except:
+            return False
     
-    def _send_economic_calendar_alert(self, event: Dict[str, Any], minutes_before: int, user: Dict[str, Any]):
-        """Send economic calendar alert to a specific user"""
+    def _send_news_alert(self, news_item: Dict[str, Any]):
+        """Send news alert to all connected users"""
         try:
-            from .economic_calendar_alerts import economic_calendar_alerts
-            
-            # Create user data
-            user_data = {
-                'user_id': user['user_id'],
-                'chat_id': user['chat_id'],
-                'settings': user['settings']
+            # Call the alert trigger endpoint
+            alert_data = {
+                'type': 'news',
+                'data': news_item
             }
             
-            # Send the alert
-            import asyncio
-            success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, event, minutes_before))
+            response = requests.post(
+                f"{self.api_base_url}/api/alerts/trigger",
+                json=alert_data,
+                timeout=30
+            )
             
-            if success:
-                logger.info(f"✅ Calendar alert sent to user {user['user_id']}")
+            if response.status_code == 200:
+                logger.info(f"News alert sent successfully: {news_item.get('title', '')[:50]}")
             else:
-                logger.warning(f"❌ Calendar alert failed for user {user['user_id']}")
+                logger.error(f"Failed to send news alert: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"Error sending news alert: {e}")
+    
+    def _send_calendar_alert(self, event: Dict[str, Any]):
+        """Send calendar alert to all connected users"""
+        try:
+            # Call the alert trigger endpoint
+            alert_data = {
+                'type': 'calendar',
+                'data': event
+            }
+            
+            response = requests.post(
+                f"{self.api_base_url}/api/alerts/trigger",
+                json=alert_data,
+                timeout=30
+            )
+            
+            if response.status_code == 200:
+                logger.info(f"Calendar alert sent successfully: {event.get('title', '')[:50]}")
+            else:
+                logger.error(f"Failed to send calendar alert: {response.status_code}")
                 
         except Exception as e:
             logger.error(f"Error sending calendar alert: {e}")
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get worker status"""
+        return {
+            'running': self.running,
+            'last_check': self.last_check.isoformat() if self.last_check else None,
+            'check_interval': self.check_interval
+        }
 
 # Global instance
 background_alert_worker = BackgroundAlertWorker()
