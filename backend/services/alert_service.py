@@ -206,12 +206,24 @@ class AlertService:
             # Send via configured channels
             success = True
             
-            # Check for Telegram alerts - handle both old and new settings structure
+            # Check for Telegram alerts - handle multiple settings structures
             telegram_enabled = False
             chat_id = None
             
+            # Direct telegram setting: telegram: true
+            if user_settings.get('telegram', False):
+                telegram_enabled = True
+                # Get chat_id from mapping since it's not in settings
+                if user_id:
+                    mapping_path = f"telegram_mappings"
+                    all_mappings = self.firebase_storage._make_request('GET', mapping_path)
+                    if all_mappings and isinstance(all_mappings, dict):
+                        for cid, mapping_data in all_mappings.items():
+                            if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
+                                chat_id = cid
+                                break
             # New structure: channels.telegram.enabled
-            if user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
+            elif user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
                 telegram_enabled = True
                 chat_id = user_settings['channels']['telegram'].get('chatId')
             # Old structure: telegram_enabled (direct)
