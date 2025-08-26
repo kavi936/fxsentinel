@@ -5076,12 +5076,15 @@ def telegram_webhook():
                                 status_message += "❌ <b>Subscription:</b> Expired\n"
                             
                             status_message += f"\n📋 <b>Alert Settings:</b>\n"
-                            status_message += f"• Live News: {'✅' if user_settings.get('live_news_alerts', False) else '❌'}\n"
-                            status_message += f"• Economic Calendar: {'✅' if user_settings.get('economic_calendar_alerts', False) else '❌'}\n"
-                            status_message += f"• AI Analysis: {'✅' if user_settings.get('ai_analysis_enabled', False) else '❌'}\n"
+                            # Read from the correct nested structure
+                            preferences = user_settings.get('preferences', {})
+                            alert_types = preferences.get('alertTypes', {})
+                            status_message += f"• Live News: {'✅' if alert_types.get('liveNews', False) else '❌'}\n"
+                            status_message += f"• Economic Calendar: {'✅' if alert_types.get('postNews', False) else '❌'}\n"
+                            status_message += f"• AI Analysis: {'✅' if alert_types.get('technicalAnalysis', False) else '❌'}\n"
                             
                             status_message += f"\n🎯 <b>Currency Pairs:</b>\n"
-                            currency_pairs = user_settings.get('currency_pairs', [])
+                            currency_pairs = preferences.get('currencyPairs', [])
                             if currency_pairs:
                                 for pair in currency_pairs[:5]:  # Show first 5
                                     status_message += f"• {pair}\n"
@@ -5091,10 +5094,11 @@ def telegram_webhook():
                                 status_message += "• No pairs configured\n"
                             
                             status_message += f"\n📈 <b>Impact Levels:</b>\n"
-                            impact_levels = user_settings.get('impact_levels', [])
+                            impact_levels = preferences.get('impactLevels', {})
                             if impact_levels:
-                                for level in impact_levels:
-                                    status_message += f"• {level.title()}\n"
+                                for level, enabled in impact_levels.items():
+                                    if enabled:
+                                        status_message += f"• {level.title()}\n"
                             else:
                                 status_message += "• All levels\n"
                             
