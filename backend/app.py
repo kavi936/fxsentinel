@@ -1559,6 +1559,10 @@ def health_alerts():
         # Check if alert service is working
         telegram_bot_working = alert_service.telegram_bot is not None
         
+        # Check background alert worker status
+        background_worker_status = background_alert_worker.get_status()
+        background_worker_running = background_worker_status.get('running', False)
+        
         # Check robust alert service if available
         robust_service_status = None
         robust_service_running = False
@@ -1586,7 +1590,7 @@ def health_alerts():
             telegram_service_status = {"status": "not_available"}
         
         # Determine overall status
-        if telegram_bot_working and robust_service_running:
+        if telegram_bot_working and (background_worker_running or robust_service_running):
             overall_status = "healthy"
         elif telegram_bot_working:
             overall_status = "degraded"  # Telegram works but no background service
@@ -1598,11 +1602,12 @@ def health_alerts():
             "timestamp": datetime.now().isoformat(),
             "telegram_bot": "connected" if telegram_bot_working else "disconnected",
             "firebase": "connected" if alert_service.firebase_storage.test_connection() else "disconnected",
+            "background_worker": background_worker_status,
             "robust_service": robust_service_status,
             "subscription_cache": subscription_cache_status,
             "robust_telegram_service": telegram_service_status,
-            "alerts_working": robust_service_running,
-            "message": "Alerts will work for online users" if robust_service_running else "Alerts only work when manually started"
+            "alerts_working": background_worker_running or robust_service_running,
+            "message": "Alerts will work automatically for all users" if (background_worker_running or robust_service_running) else "Alerts only work when manually started"
         })
     except Exception as e:
         return jsonify({
@@ -1669,6 +1674,95 @@ def trigger_alert_check():
             'success': False,
             'error': str(e),
             'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/alerts/trigger', methods=['POST'])
+@limiter.exempt
+def trigger_alert():
+    """Trigger alert for background worker"""
+    try:
+        data = request.get_json()
+        alert_type = data.get('type')
+        alert_data = data.get('data')
+        
+        if not alert_type or not alert_data:
+            return jsonify({
+                'success': False,
+                'error': 'Missing type or data'
+            }), 400
+        
+        # Import here to avoid circular imports
+        from services.news_alert_trigger import news_alert_trigger
+        from services.economic_calendar_alerts import economic_calendar_alerts
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        
+        # Get all connected users
+        firebase = FirebaseRealtimeStorage()
+        mapping_path = "telegram_mappings"
+        all_mappings = firebase._make_request('GET', mapping_path)
+        
+        if not all_mappings or not isinstance(all_mappings, dict):
+            return jsonify({
+                'success': True,
+                'message': 'No connected users found'
+            })
+        
+        # Process each mapping
+        alerts_sent = 0
+        for chat_id, mapping_data in all_mappings.items():
+            if isinstance(mapping_data, dict) and 'user_id' in mapping_data:
+                user_id = mapping_data['user_id']
+                
+                # Skip test users with invalid chat IDs
+                if chat_id == '123456789':
+                    continue
+                
+                # Get user settings
+                user_settings = firebase.get_user_alert_settings(user_id)
+                if not user_settings:
+                    continue
+                
+                # Check if user has Telegram enabled
+                if not user_settings.get('telegram_enabled', False):
+                    continue
+                
+                # Create user data
+                user_data = {
+                    'user_id': user_id,
+                    'chat_id': chat_id,
+                    'settings': user_settings
+                }
+                
+                # Send alert based on type
+                if alert_type == 'news':
+                    # Determine if AI analysis is needed
+                    needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(alert_data)
+                    
+                    # Send the alert
+                    import asyncio
+                    success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
+                    
+                    if success:
+                        alerts_sent += 1
+                
+                elif alert_type == 'calendar':
+                    # Send calendar alert
+                    import asyncio
+                    success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
+                    
+                    if success:
+                        alerts_sent += 1
+        
+        return jsonify({
+            'success': True,
+            'message': f'Sent {alerts_sent} alerts',
+            'alerts_sent': alerts_sent
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
         }), 500
 
 @app.route('/api/health/news')
@@ -4846,10 +4940,10 @@ def background_scheduler():
         # Wait 5 minutes
         time.sleep(300)
 
-# Start background scheduler in a separate thread
-scheduler_thread = threading.Thread(target=background_scheduler, daemon=True)
-scheduler_thread.start()
-print("🚀 Background alert scheduler started")
+# Initialize and start background alert worker
+background_alert_worker.init_app(app)
+background_alert_worker.start()
+print("🚀 Background alert worker started")
 
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
