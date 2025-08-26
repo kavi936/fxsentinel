@@ -10,12 +10,16 @@ import os
 import json
 import time
 import asyncio
+import logging
 from datetime import datetime
 from dotenv import load_dotenv
 import stripe
 from firebase_admin import credentials, firestore, initialize_app
 from services.stripe_service import StripeService
 from services.coupon_service import CouponService
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 # Firebase initialization
 try:
@@ -2021,20 +2025,52 @@ def trigger_alert():
                     # Determine if AI analysis is needed
                     needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(alert_data)
                     
-                    # Send the alert
-                    import asyncio
-                    success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
-                    
-                    if success:
-                        alerts_sent += 1
+                    # Send the alert using async handling
+                    try:
+                        import asyncio
+                        # Check if we're already in an event loop
+                        try:
+                            loop = asyncio.get_event_loop()
+                            if loop.is_running():
+                                # We're in an event loop, create a task
+                                task = loop.create_task(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
+                                success = loop.run_until_complete(task)
+                            else:
+                                # No event loop running, use asyncio.run
+                                success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
+                        except RuntimeError:
+                            # Fallback for when asyncio.run can't be used
+                            success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
+                        
+                        if success:
+                            alerts_sent += 1
+                    except Exception as e:
+                        logger.error(f"Error sending news alert to user {user_id}: {e}")
+                        continue
                 
                 elif alert_type == 'calendar':
-                    # Send calendar alert
-                    import asyncio
-                    success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
-                    
-                    if success:
-                        alerts_sent += 1
+                    # Send calendar alert using async handling
+                    try:
+                        import asyncio
+                        # Check if we're already in an event loop
+                        try:
+                            loop = asyncio.get_event_loop()
+                            if loop.is_running():
+                                # We're in an event loop, create a task
+                                task = loop.create_task(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
+                                success = loop.run_until_complete(task)
+                            else:
+                                # No event loop running, use asyncio.run
+                                success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
+                        except RuntimeError:
+                            # Fallback for when asyncio.run can't be used
+                            success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
+                        
+                        if success:
+                            alerts_sent += 1
+                    except Exception as e:
+                        logger.error(f"Error sending calendar alert to user {user_id}: {e}")
+                        continue
         
         return jsonify({
             'success': True,
