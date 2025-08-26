@@ -2049,22 +2049,10 @@ def trigger_alert():
                         continue
                 
                 elif alert_type == 'calendar':
-                    # Send calendar alert using async handling
+                    # Send calendar alert using the correct method name
                     try:
-                        import asyncio
-                        # Check if we're already in an event loop
-                        try:
-                            loop = asyncio.get_event_loop()
-                            if loop.is_running():
-                                # We're in an event loop, create a task
-                                task = loop.create_task(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
-                                success = loop.run_until_complete(task)
-                            else:
-                                # No event loop running, use asyncio.run
-                                success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
-                        except RuntimeError:
-                            # Fallback for when asyncio.run can't be used
-                            success = asyncio.run(economic_calendar_alerts._send_calendar_alert_to_user(user_data, alert_data, 60))
+                        # The economic calendar alerts service uses synchronous methods
+                        success = economic_calendar_alerts._send_pre_event_alert(user_data, alert_data)
                         
                         if success:
                             alerts_sent += 1
