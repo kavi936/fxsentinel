@@ -25,7 +25,12 @@ class SessionIsolatedTelegramWrapper:
         self.api_id = os.getenv('TELEGRAM_API_ID')
         self.api_hash = os.getenv('TELEGRAM_API_HASH')
         self.phone = os.getenv('TELEGRAM_PHONE')
-        self.original_session_name = 'fxsentinel_user_session'
+        
+        # Use production session file if available, otherwise fall back to local
+        if os.path.exists('telegram_session_production.session'):
+            self.original_session_name = 'telegram_session_production'
+        else:
+            self.original_session_name = 'fxsentinel_user_session'
         
         if not all([self.api_id, self.api_hash, self.phone]):
             print("❌ Missing Telegram API credentials")
