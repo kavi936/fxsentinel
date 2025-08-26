@@ -142,7 +142,35 @@ class BackgroundAlertWorker:
                 # Only process high-impact events that are upcoming
                 if (event.get('impact') == 'high' and 
                     event.get('status', '').upper() in ['UPCOMING', 'IMMINENT']):
-                    self._send_economic_alert(event)
+                    
+                    # Check if event is within alert timing windows (2h, 1h, 10min before)
+                    try:
+                        from datetime import datetime
+                        time_str = event.get('time', '')
+                        date_str = event.get('date', '')
+                        
+                        if time_str and date_str:
+                            # Parse event datetime (simplified parsing)
+                            datetime_str = f"{date_str} {time_str}"
+                            event_datetime = datetime.strptime(datetime_str, "%a, %b %d %H:%M UTC")
+                            
+                            # Add current year if not present
+                            if event_datetime.year == 1900:  # Default year
+                                event_datetime = event_datetime.replace(year=datetime.now().year)
+                            
+                            time_until_event = event_datetime - now
+                            minutes_until_event = time_until_event.total_seconds() / 60
+                            
+                            # Only send alerts if within timing windows
+                            if (8 <= minutes_until_event <= 10 or      # 10min before
+                                55 <= minutes_until_event <= 60 or    # 1h before
+                                115 <= minutes_until_event <= 120):   # 2h before
+                                self._send_economic_alert(event)
+                            else:
+                                logger.debug(f"Event {event.get('title', 'Unknown')} not within alert timing windows ({minutes_until_event:.1f} minutes away)")
+                    except Exception as e:
+                        logger.error(f"Error checking event timing: {e}")
+                        continue
                     
         except Exception as e:
             logger.error(f"Error checking economic calendar alerts: {e}")
