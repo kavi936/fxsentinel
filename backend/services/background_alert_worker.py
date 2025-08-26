@@ -54,6 +54,17 @@ class BackgroundAlertWorker:
             self.thread.join(timeout=5)
         logger.info("BackgroundAlertWorker stopped")
     
+    def get_status(self):
+        """Get the current status of the background worker"""
+        return {
+            'running': self.running,
+            'thread_alive': self.thread.is_alive() if self.thread else False,
+            'last_check': self.last_check.isoformat() if self.last_check else None,
+            'check_interval': self.check_interval,
+            'post_news_interval': self.post_news_interval,
+            'last_post_news_check': self.last_post_news_check.isoformat() if self.last_post_news_check else None
+        }
+    
     def _run_worker(self):
         """Main worker loop"""
         logger.info("BackgroundAlertWorker main loop started")
