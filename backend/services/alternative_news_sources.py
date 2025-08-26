@@ -54,10 +54,10 @@ class AlternativeNewsSources:
         self.high_impact_keywords = ['cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'interest rate', 'non-farm payrolls', 'gdp', 'trump', 'tariffs']
         self.medium_impact_keywords = ['retail sales', 'manufacturing', 'unemployment', 'employment', 'trade balance']
         
-    def is_forex_related(self, title: str, summary: str) -> bool:
+    def is_forex_related(self, title: str, summary: str, source: str = "") -> bool:
         """Check if article is forex-related using enhanced filtering"""
         from .enhanced_forex_filter import enhanced_forex_filter
-        return enhanced_forex_filter.is_forex_related(title, summary)
+        return enhanced_forex_filter.is_forex_related(title, summary, source)
     
     def determine_impact_level(self, title: str, summary: str) -> str:
         """Determine impact level using enhanced filtering"""
@@ -84,8 +84,8 @@ class AlternativeNewsSources:
             articles = []
             
             for entry in feed.entries[:15]:  # Limit to 15 most recent articles
-                # Check if article is forex-related
-                if self.is_forex_related(entry.title, entry.summary):
+                # Check if article is forex-related using improved filtering
+                if self.is_forex_related(entry.title, entry.summary, source_name):
                     article = self.parse_article(entry, source_name)
                     if article:
                         articles.append(article)

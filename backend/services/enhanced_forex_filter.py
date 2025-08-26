@@ -2,6 +2,7 @@
 """
 Enhanced Forex Filtering System
 Uses positive and negative keywords for better accuracy
+Improved to exclude irrelevant news for forex traders
 """
 
 import re
@@ -67,23 +68,56 @@ class EnhancedForexFilter:
             'dollar strength', 'dollar weakness', 'currency strength', 'currency weakness'
         ]
         
-        # Negative keywords (exclude if present)
+        # Enhanced negative keywords (exclude if present)
         self.negative_keywords = [
             # Cryptocurrency
             'cryptocurrency', 'bitcoin', 'ethereum', 'crypto', 'blockchain', 'defi', 'nft',
             'altcoin', 'stablecoin', 'token', 'ico', 'airdrop', 'mining', 'wallet',
+            'crypto exchange', 'crypto trading', 'crypto market', 'crypto price',
             
             # Stocks and equities (but keep if they mention forex/currency impact)
             'stock', 'equity', 'shares', 'dividend', 'earnings', 'revenue', 'profit', 'loss',
             'market cap', 'pe ratio', 'ipo', 'secondary offering', 'buyback', 'split',
+            'stock market', 'stock exchange', 'stock price', 'stock trading',
+            'nasdaq', 's&p 500', 'dow jones', 'ftse', 'dax', 'nikkei',
             
             # Real estate (but keep if they mention forex/currency impact)
             'real estate', 'property', 'mortgage', 'housing', 'home', 'apartment', 'rental',
             'commercial property', 'reit', 'construction', 'builder',
+            'home sales', 'housing market', 'mortgage rates', 'property market',
             
-            # Other non-forex (but keep if they mention forex/currency impact)
+            # Other non-forex financial instruments
             'bonds', 'treasury', 'corporate bond', 'municipal bond', 'yield curve',
-            'options', 'futures', 'derivatives', 'hedge fund', 'mutual fund', 'etf'
+            'options', 'futures', 'derivatives', 'hedge fund', 'mutual fund', 'etf',
+            'commodity futures', 'futures trading', 'options trading',
+            
+            # Company-specific news (unless it's about forex impact)
+            'quarterly results', 'earnings call', 'analyst rating', 'price target',
+            'merger', 'acquisition', 'takeover', 'bankruptcy', 'restructuring',
+            'ceo', 'executive', 'board of directors', 'shareholder',
+            
+            # Technology and innovation (unless forex-related)
+            'artificial intelligence', 'ai', 'machine learning', 'automation',
+            'startup', 'venture capital', 'tech company', 'software', 'app',
+            'social media', 'internet', 'digital', 'online platform',
+            
+            # Entertainment and lifestyle
+            'movie', 'film', 'celebrity', 'entertainment', 'sports', 'athlete',
+            'music', 'concert', 'festival', 'lifestyle', 'fashion', 'beauty',
+            'food', 'restaurant', 'travel', 'tourism', 'hotel',
+            
+            # Health and medical (unless economic impact)
+            'medical', 'healthcare', 'pharmaceutical', 'drug', 'treatment',
+            'hospital', 'doctor', 'patient', 'disease', 'vaccine',
+            
+            # Local and regional news (unless forex impact)
+            'local news', 'city council', 'mayor', 'governor', 'state',
+            'community', 'neighborhood', 'local business', 'regional',
+            
+            # Non-financial business news
+            'retail store', 'restaurant chain', 'fast food', 'coffee shop',
+            'automotive', 'car', 'vehicle', 'transportation', 'logistics',
+            'energy company', 'utility', 'telecommunications', 'media company'
         ]
         
         # High impact keywords for scoring
@@ -115,6 +149,12 @@ class EnhancedForexFilter:
             'investing.com', 'fxempire', 'dailyfx', 'fxcm', 'oanda', 'ig'
         ]
         
+        # Forex-focused sources that should be prioritized
+        self.forex_focused_sources = [
+            'fxstreet', 'forexfactory', 'fxempire', 'dailyfx', 'forexlive',
+            'investing.com', 'fxcm', 'oanda', 'ig', 'forex.com'
+        ]
+        
         # Recent market events that might affect filtering
         self.current_market_context = {
             'high_volatility_periods': [],
@@ -122,12 +162,14 @@ class EnhancedForexFilter:
             'currency_focus': []
         }
     
-    def is_forex_related(self, title: str, summary: str = "") -> bool:
+    def is_forex_related(self, title: str, summary: str = "", source: str = "") -> bool:
         """
         Enhanced forex filtering using positive and negative keywords
         More intelligent filtering to include economic and commodity news that impacts forex
+        Improved to exclude irrelevant news for forex traders
         """
         text = f"{title} {summary}".lower()
+        source_lower = source.lower()
         
         # Count positive and negative keyword matches
         positive_matches = self._count_keyword_matches(text, self.positive_keywords)
@@ -153,19 +195,50 @@ class EnhancedForexFilter:
         has_core_forex = any(term in text for term in core_forex_terms)
         has_forex_relevant = any(term in text for term in forex_relevant_terms)
         
-        # Decision logic:
-        # 1. If it has core forex terms, include it (regardless of negative keywords)
-        # 2. If it has forex-relevant terms AND positive keywords, include it
-        # 3. If it has only negative keywords without forex relevance, exclude it
+        # Check if source is forex-focused (more lenient filtering)
+        is_forex_source = any(forex_source in source_lower for forex_source in self.forex_focused_sources)
         
+        # Enhanced decision logic:
+        # 1. First check for strong negative keywords that should exclude regardless
+        strong_negative_keywords = [
+            'cryptocurrency', 'bitcoin', 'ethereum', 'crypto', 'blockchain', 'defi', 'nft',
+            'earnings', 'revenue', 'profit', 'loss',
+            'real estate', 'property', 'mortgage', 'housing', 'home',
+            'movie', 'film', 'celebrity', 'entertainment', 'sports', 'athlete',
+            'music', 'concert', 'festival', 'lifestyle', 'fashion', 'beauty',
+            'food', 'restaurant', 'travel', 'tourism', 'hotel',
+            'medical', 'healthcare', 'pharmaceutical', 'drug', 'treatment',
+            'local news', 'city council', 'mayor', 'governor', 'community'
+        ]
+        
+        # Check for stock market news that mentions forex impact
+        stock_forex_keywords = ['dollar', 'currency', 'forex', 'usd', 'eur', 'gbp', 'jpy']
+        has_stock_forex_impact = any(term in text for term in stock_forex_keywords)
+        
+        # If it mentions stocks but also forex impact, include it
+        if ('stock' in text or 'equity' in text or 'shares' in text) and has_stock_forex_impact:
+            return True
+        
+        has_strong_negative = any(term in text for term in strong_negative_keywords)
+        if has_strong_negative:
+            return False  # Exclude if it has strong negative keywords
+        
+        # 2. If it has core forex terms, include it
         if has_core_forex:
-            return True  # Always include if it has core forex terms
+            return True
         
+        # 3. If it's from a forex-focused source, be more lenient
+        if is_forex_source and positive_matches > 0:
+            return True  # Include forex source content with positive keywords
+        
+        # 4. If it has forex-relevant terms AND positive keywords, include it
         if has_forex_relevant and positive_matches > 0:
-            return True  # Include economic/commodity news that's forex-relevant
+            # But exclude if it has too many negative keywords
+            return negative_matches <= 1  # Allow 1 negative keyword for context
         
-        # Exclude if it has negative keywords without forex relevance
-        return negative_matches == 0 and positive_matches > 0
+        # 5. For general sources, be more strict
+        # Exclude if it has negative keywords without strong forex relevance
+        return negative_matches == 0 and positive_matches >= 2
     
     def is_high_impact_for_alerts(self, title: str, summary: str = "", source: str = "") -> bool:
         """
@@ -182,9 +255,10 @@ class EnhancedForexFilter:
         
         # Check source credibility
         is_credible_source = any(credible in source_lower for credible in self.credible_sources)
+        is_forex_source = any(forex_source in source_lower for forex_source in self.forex_focused_sources)
         
         # For credible sources, be more lenient but still strict
-        if is_credible_source:
+        if is_credible_source or is_forex_source:
             # Must have at least 2 high-impact keywords or 1 critical keyword
             high_impact_count = self._count_keyword_matches(text, self.high_impact_keywords)
             critical_count = self._count_keyword_matches(text, self.critical_forex_keywords)
