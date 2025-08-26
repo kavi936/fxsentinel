@@ -2,6 +2,7 @@
 """
 Smart News Alert Trigger Service
 Filters high-impact news and sends alerts to users based on their preferences
+FIXED: Repeated alerts, improved AI analysis, added post-news analysis
 """
 
 import os
@@ -23,6 +24,7 @@ class NewsAlertTrigger:
         """Initialize the news alert trigger service"""
         self.api_base_url = os.getenv('API_BASE_URL', 'http://localhost:5001')
         self.last_processed_news = set()  # Track processed news IDs
+        self.news_alert_history = {}  # Track sent alerts per user
         self.high_impact_keywords = [
             'fed', 'federal reserve', 'ecb', 'european central bank', 'boe', 'bank of england',
             'boj', 'bank of japan', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
@@ -41,6 +43,10 @@ class NewsAlertTrigger:
             'USD/CAD': ['canadian', 'cad', 'boc', 'canada'],
             'NZD/USD': ['new zealand', 'nzd', 'rbnz', 'kiwi']
         }
+        
+        # Post-news analysis tracking
+        self.post_news_analysis_queue = {}  # Track news that needs post-analysis
+        self.analysis_cooldown = 300  # 5 minutes cooldown before post-analysis
     
     def is_high_impact_news(self, news_item: Dict[str, Any]) -> bool:
         """Determine if news item is high impact and should trigger alerts"""
@@ -161,6 +167,30 @@ class NewsAlertTrigger:
             logger.error(f"Error determining AI analysis need: {e}")
             return False
     
+    def should_send_post_news_analysis(self, news_item: Dict[str, Any]) -> bool:
+        """Determine if news should get post-news analysis after initial alert"""
+        try:
+            # Only high-impact forex news gets post-analysis
+            if not self.is_forex_high_impact(news_item):
+                return False
+            
+            # Check if it's a major economic release
+            title = news_item.get('title', '').lower()
+            post_analysis_keywords = [
+                'cpi', 'inflation', 'nfp', 'non-farm payrolls', 'gdp', 'unemployment',
+                'fed', 'ecb', 'boe', 'boj', 'interest rate', 'monetary policy',
+                'retail sales', 'manufacturing', 'employment'
+            ]
+            
+            if any(keyword in title for keyword in post_analysis_keywords):
+                return True
+            
+            return False
+            
+        except Exception as e:
+            logger.error(f"Error determining post-news analysis need: {e}")
+            return False
+    
     def get_users_to_alert(self, news_item: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Get list of users who should receive this alert based on their preferences"""
         try:
@@ -263,6 +293,8 @@ class NewsAlertTrigger:
                 'high_impact_count': 0,
                 'alerts_sent': 0,
                 'ai_analysis_triggered': 0,
+                'post_news_queued': 0,
+                'duplicates_prevented': 0,
                 'errors': []
             }
             
@@ -286,6 +318,11 @@ class NewsAlertTrigger:
                 # Determine if AI analysis is needed
                 needs_ai_analysis = self.should_analyze_with_ai(news_item)
                 
+                # Check if post-news analysis should be queued
+                if self.should_send_post_news_analysis(news_item):
+                    self._queue_post_news_analysis(news_item)
+                    results['post_news_queued'] += 1
+                
                 # Send alerts (AI analysis is triggered within _send_alert_to_user if needed)
                 for user_data in users_to_alert:
                     try:
@@ -294,6 +331,8 @@ class NewsAlertTrigger:
                             results['alerts_sent'] += 1
                             if needs_ai_analysis:
                                 results['ai_analysis_triggered'] += 1
+                        else:
+                            results['duplicates_prevented'] += 1
                     except Exception as e:
                         error_msg = f"Error sending alert to user {user_data.get('user_id')}: {e}"
                         logger.error(error_msg)
@@ -314,10 +353,22 @@ class NewsAlertTrigger:
                 logger.error("No user_id provided for alert")
                 return False
             
-            # Check deduplication first
+            # IMPROVED DEDUPLICATION: Check if this exact news was already sent to this user
+            news_id = str(news_item.get('id', ''))
+            title = news_item.get('title', '')
+            source = news_item.get('source', '')
+            
+            # Create a unique key for this news-user combination
+            alert_key = f"{user_id}_{news_id}_{title[:50]}_{source}"
+            
+            if alert_key in self.news_alert_history:
+                logger.debug(f"Duplicate news alert prevented for user {user_id}: {title[:30]}...")
+                return False
+            
+            # Check unified deduplication as backup
             from .unified_alert_deduplication import should_send_news_alert
             if not should_send_news_alert(news_item, user_id):
-                logger.debug(f"News alert duplicate prevented for user {user_id}")
+                logger.debug(f"News alert duplicate prevented by unified system for user {user_id}")
                 return False
             
             # Trigger AI analysis first if needed
@@ -363,6 +414,8 @@ class NewsAlertTrigger:
             
             if success:
                 logger.info(f"Alert sent successfully to user {user_id}")
+                # Mark as sent in our history
+                self.news_alert_history[alert_key] = datetime.now()
                 # Save to alert history
                 self._save_alert_history(user_id, news_item, alert_data['content'])
                 return True
@@ -373,6 +426,205 @@ class NewsAlertTrigger:
         except Exception as e:
             logger.error(f"Error sending alert to user: {e}")
             return False
+    
+    def _queue_post_news_analysis(self, news_item: Dict[str, Any]):
+        """Queue news item for post-news analysis"""
+        try:
+            news_id = str(news_item.get('id', ''))
+            title = news_item.get('title', '')
+            
+            # Add to post-news analysis queue
+            self.post_news_analysis_queue[news_id] = {
+                'news_item': news_item,
+                'queued_at': datetime.now(),
+                'title': title
+            }
+            
+            logger.info(f"Queued news for post-analysis: {title[:50]}...")
+            
+            # Clean up old entries (older than 24 hours)
+            cutoff_time = datetime.now() - timedelta(hours=24)
+            expired_keys = []
+            for key, data in self.post_news_analysis_queue.items():
+                if data['queued_at'] < cutoff_time:
+                    expired_keys.append(key)
+            
+            for key in expired_keys:
+                del self.post_news_analysis_queue[key]
+                
+        except Exception as e:
+            logger.error(f"Error queuing post-news analysis: {e}")
+    
+    async def process_post_news_analysis(self):
+        """Process queued news items for post-news analysis"""
+        try:
+            if not self.post_news_analysis_queue:
+                return
+            
+            logger.info(f"Processing {len(self.post_news_analysis_queue)} queued news items for post-analysis")
+            
+            current_time = datetime.now()
+            processed_count = 0
+            
+            for news_id, queue_data in list(self.post_news_analysis_queue.items()):
+                try:
+                    news_item = queue_data['news_item']
+                    queued_at = queue_data['queued_at']
+                    
+                    # Check if enough time has passed since initial alert
+                    time_since_queued = (current_time - queued_at).total_seconds()
+                    if time_since_queued < self.analysis_cooldown:
+                        continue
+                    
+                    # Trigger post-news analysis
+                    post_analysis = await self._trigger_post_news_analysis(news_item)
+                    
+                    if post_analysis:
+                        # Send post-news analysis to users
+                        await self._send_post_news_analysis(news_item, post_analysis)
+                        processed_count += 1
+                    
+                    # Remove from queue
+                    del self.post_news_analysis_queue[news_id]
+                    
+                except Exception as e:
+                    logger.error(f"Error processing post-news analysis for {news_id}: {e}")
+                    # Remove from queue on error
+                    del self.post_news_analysis_queue[news_id]
+            
+            if processed_count > 0:
+                logger.info(f"Completed post-news analysis for {processed_count} news items")
+                
+        except Exception as e:
+            logger.error(f"Error processing post-news analysis: {e}")
+    
+    async def _trigger_post_news_analysis(self, news_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Trigger post-news analysis for a news item"""
+        try:
+            news_id = str(news_item.get('id', ''))
+            title = news_item.get('title', '')
+            
+            # Create post-news analysis request
+            analysis_data = {
+                'news_id': news_id,
+                'title': title,
+                'content': news_item.get('summary', ''),
+                'source': news_item.get('source', ''),
+                'analysis_type': 'post_news_analysis',
+                'timestamp': news_item.get('timestamp', '')
+            }
+            
+            # Call post-news analysis endpoint
+            analysis_url = f"{self.api_base_url}/api/post-news-analysis"
+            headers = {'Content-Type': 'application/json'}
+            
+            response = requests.post(analysis_url, json=analysis_data, timeout=30)
+            
+            if response.status_code == 200:
+                analysis_result = response.json()
+                logger.info(f"Post-news analysis completed for: {title[:50]}...")
+                return analysis_result
+            else:
+                logger.error(f"Failed to trigger post-news analysis: {response.status_code}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error triggering post-news analysis: {e}")
+            return None
+    
+    async def _send_post_news_analysis(self, news_item: Dict[str, Any], analysis: Dict[str, Any]):
+        """Send post-news analysis to users"""
+        try:
+            # Get users who should receive post-news analysis
+            users_to_alert = self.get_users_to_alert(news_item)
+            
+            if not users_to_alert:
+                return
+            
+            # Create post-news alert data
+            alert_data = {
+                'title': f"Post-News Analysis: {news_item.get('title', 'Market Update')}",
+                'content': self._create_post_news_content(news_item, analysis),
+                'type': 'postNews',
+                'impact_level': 'high',
+                'currency_pairs': self.get_affected_currency_pairs(news_item),
+                'source': news_item.get('source', 'Unknown'),
+                'timestamp': datetime.now().isoformat(),
+                'analysis': analysis
+            }
+            
+            # Send to each user
+            from .alert_service import get_alert_service
+            alert_service = get_alert_service()
+            
+            for user_data in users_to_alert:
+                try:
+                    user_id = user_data.get('user_id')
+                    user_settings = user_data.get('settings', {})
+                    
+                    # Check if user wants post-news alerts
+                    alert_types = user_settings.get('preferences', {}).get('alertTypes', {})
+                    if not alert_types.get('postNews', True):
+                        continue
+                    
+                    # Send the post-news analysis
+                    success = await alert_service.process_alert(alert_data, user_settings, user_id)
+                    
+                    if success:
+                        logger.info(f"Post-news analysis sent to user {user_id}")
+                    
+                except Exception as e:
+                    logger.error(f"Error sending post-news analysis to user {user_data.get('user_id')}: {e}")
+                    
+        except Exception as e:
+            logger.error(f"Error sending post-news analysis: {e}")
+    
+    def _create_post_news_content(self, news_item: Dict[str, Any], analysis: Dict[str, Any]) -> str:
+        """Create content for post-news analysis alert"""
+        try:
+            title = news_item.get('title', 'Unknown Title')
+            source = news_item.get('source', 'Unknown Source')
+            
+            # Get currency pairs
+            affected_pairs = self.get_affected_currency_pairs(news_item)
+            if not affected_pairs:
+                affected_pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD']  # Default pairs
+            pairs_text = ', '.join(affected_pairs)
+            
+            # Format timestamp
+            formatted_time = datetime.now().strftime('%H:%M UTC')
+            
+            # Create content
+            content = f"POST-NEWS ANALYSIS\n\n"
+            content += f"Original News: {title}\n"
+            content += f"Source: {source}\n"
+            content += f"Currency Pairs: {pairs_text}\n"
+            content += f"Analysis Time: {formatted_time}\n\n"
+            
+            # Add analysis content
+            if analysis and isinstance(analysis, dict):
+                analysis_text = analysis.get('analysis', '')
+                market_impact = analysis.get('market_impact', '')
+                trading_implications = analysis.get('trading_implications', '')
+                
+                if analysis_text:
+                    content += f"Analysis:\n{analysis_text}\n\n"
+                
+                if market_impact:
+                    content += f"Market Impact:\n{market_impact}\n\n"
+                
+                if trading_implications:
+                    content += f"Trading Implications:\n{trading_implications}\n\n"
+            else:
+                content += "Analysis available on dashboard\n\n"
+            
+            content += "Check dashboard for detailed charts and analysis"
+            
+            return content
+            
+        except Exception as e:
+            logger.error(f"Error creating post-news content: {e}")
+            return "Post-news analysis available on dashboard"
     
     def _create_alert_content(self, news_item: Dict[str, Any], ai_analysis: Optional[Dict[str, Any]] = None) -> str:
         """Create alert content without HTML formatting"""
@@ -397,11 +649,17 @@ class NewsAlertTrigger:
                 formatted_time = datetime.now().strftime('%H:%M UTC')
             
             # Create content
-            content = f"Time: {formatted_time}\nSource: {source}\nCurrency Pairs: {pairs_text}"
+            content = f"BREAKING FOREX NEWS\n\n"
+            content += f"Title: {title}\n"
+            content += f"Time: {formatted_time}\n"
+            content += f"Source: {source}\n"
+            content += f"Currency Pairs: {pairs_text}\n"
             
             # Add summary if available
             if summary:
-                content += f"\n\nSummary: {summary}"
+                content += f"\nSummary:\n{summary[:200]}"
+                if len(summary) > 200:
+                    content += "..."
             
             # Add AI analysis if available
             if ai_analysis and isinstance(ai_analysis, dict):
@@ -410,11 +668,13 @@ class NewsAlertTrigger:
                     # Truncate analysis if too long
                     if len(analysis_text) > 300:
                         analysis_text = analysis_text[:297] + "..."
-                    content += f"\n\nAI Analysis: {analysis_text}"
+                    content += f"\n\nAI Analysis:\n{analysis_text}"
                 else:
                     content += f"\n\nAI Analysis: Available on dashboard"
             else:
                 content += f"\n\nMarket Impact: Monitor for price action"
+            
+            content += f"\n\nCheck dashboard for detailed analysis"
             
             return content
             
@@ -507,6 +767,27 @@ class NewsAlertTrigger:
         except Exception as e:
             logger.error(f"Error marking user as disconnected: {e}")
             return False
+    
+    def cleanup_old_history(self):
+        """Clean up old alert history to prevent memory bloat"""
+        try:
+            current_time = datetime.now()
+            cutoff_time = current_time - timedelta(hours=24)
+            
+            # Clean up news alert history
+            expired_keys = []
+            for key, sent_time in self.news_alert_history.items():
+                if sent_time < cutoff_time:
+                    expired_keys.append(key)
+            
+            for key in expired_keys:
+                del self.news_alert_history[key]
+            
+            if expired_keys:
+                logger.info(f"Cleaned up {len(expired_keys)} old alert history entries")
+                
+        except Exception as e:
+            logger.error(f"Error cleaning up alert history: {e}")
 
 # Global instance
 news_alert_trigger = NewsAlertTrigger()

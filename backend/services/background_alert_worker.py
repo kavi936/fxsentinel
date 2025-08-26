@@ -1,34 +1,37 @@
 #!/usr/bin/env python3
 """
-Background Alert Worker for Flask App
-Integrates alert checking into the main web application
+Background Alert Worker
+Processes alerts and post-news analysis in the background
 """
 
-import threading
 import time
+import logging
+import threading
 import asyncio
 import requests
-from datetime import datetime
-import logging
+from datetime import datetime, timedelta
 from typing import Dict, Any, List
-import os
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class BackgroundAlertWorker:
     """Background worker for checking and sending alerts"""
     
-    def __init__(self):
+    def __init__(self, check_interval: int = 60):
+        """Initialize the background worker"""
+        self.check_interval = check_interval  # seconds
         self.running = False
         self.thread = None
         self.last_check = None
-        self.check_interval = 300  # 5 minutes
-        self.api_base_url = "https://fxsentinel-production.up.railway.app"
+        self.api_base_url = 'http://localhost:5001'
         
-    def init_app(self, app):
-        """Initialize with Flask app context"""
-        self.app = app
-        logger.info("BackgroundAlertWorker initialized with Flask app")
+        # Post-news analysis processing
+        self.post_news_interval = 300  # 5 minutes
+        self.last_post_news_check = None
+        
+        logger.info("BackgroundAlertWorker initialized")
     
     def start(self):
         """Start the background worker"""
@@ -43,6 +46,9 @@ class BackgroundAlertWorker:
     
     def stop(self):
         """Stop the background worker"""
+        if not self.running:
+            return
+        
         self.running = False
         if self.thread:
             self.thread.join(timeout=5)
@@ -57,6 +63,9 @@ class BackgroundAlertWorker:
                 # Run alert checks
                 self._check_news_alerts()
                 self._check_economic_calendar_alerts()
+                
+                # Process post-news analysis
+                self._process_post_news_analysis()
                 
                 self.last_check = datetime.now()
                 logger.info(f"Alert check completed at {self.last_check}")
@@ -103,52 +112,69 @@ class BackgroundAlertWorker:
         try:
             logger.info("Checking for economic calendar alerts...")
             
-            # Get economic calendar from API
+            # Get economic calendar
             response = requests.get(f"{self.api_base_url}/api/economic-calendar", timeout=10)
             if response.status_code != 200:
-                logger.error(f"Failed to get economic calendar: {response.status_code}")
+                logger.error(f"Failed to get calendar: {response.status_code}")
                 return
             
             calendar_data = response.json()
             events = calendar_data.get('events', [])
             
-            # Filter high-impact upcoming events
-            high_impact_upcoming = [
-                event for event in events 
-                if event.get('impact') == 'high' and 
-                self._is_upcoming_event(event)
-            ]
-            
-            if not high_impact_upcoming:
-                logger.info("No high-impact upcoming events found")
+            if not events:
+                logger.info("No economic events found")
                 return
             
-            logger.info(f"Found {len(high_impact_upcoming)} high-impact upcoming events")
-            
-            # Send alerts for upcoming events
-            for event in high_impact_upcoming[:2]:  # Process first 2 items
-                self._send_calendar_alert(event)
-                
+            # Process upcoming high-impact events
+            now = datetime.now()
+            for event in events:
+                if event.get('impact') == 'high':
+                    self._send_economic_alert(event)
+                    
         except Exception as e:
             logger.error(f"Error checking economic calendar alerts: {e}")
     
-    def _is_upcoming_event(self, event: Dict[str, Any]) -> bool:
-        """Check if event is upcoming (within next 24 hours)"""
+    def _process_post_news_analysis(self):
+        """Process post-news analysis queue"""
         try:
-            event_time = event.get('time')
-            if not event_time:
-                return False
+            # Check if it's time to process post-news analysis
+            current_time = datetime.now()
+            if (self.last_post_news_check and 
+                (current_time - self.last_post_news_check).total_seconds() < self.post_news_interval):
+                return
             
-            # Parse event time and check if it's within next 24 hours
-            # This is a simplified check - you might want to improve this
-            return True  # For now, assume all events are upcoming
-        except:
-            return False
+            logger.info("Processing post-news analysis queue...")
+            
+            # Import the news alert trigger
+            from services.news_alert_trigger import news_alert_trigger
+            
+            # Process post-news analysis asynchronously
+            try:
+                # Create event loop for async processing
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+                # Process post-news analysis
+                loop.run_until_complete(news_alert_trigger.process_post_news_analysis())
+                
+                # Clean up old history
+                news_alert_trigger.cleanup_old_history()
+                
+                loop.close()
+                
+                self.last_post_news_check = current_time
+                logger.info("Post-news analysis processing completed")
+                
+            except Exception as e:
+                logger.error(f"Error in async post-news processing: {e}")
+                
+        except Exception as e:
+            logger.error(f"Error processing post-news analysis: {e}")
     
     def _send_news_alert(self, news_item: Dict[str, Any]):
-        """Send news alert to all connected users"""
+        """Send news alert"""
         try:
-            # Call the alert trigger endpoint
+            # Trigger alert via API
             alert_data = {
                 'type': 'news',
                 'data': news_item
@@ -157,21 +183,22 @@ class BackgroundAlertWorker:
             response = requests.post(
                 f"{self.api_base_url}/api/alerts/trigger",
                 json=alert_data,
-                timeout=30
+                timeout=10
             )
             
             if response.status_code == 200:
-                logger.info(f"News alert sent successfully: {news_item.get('title', '')[:50]}")
+                result = response.json()
+                logger.info(f"News alert triggered: {result.get('alerts_sent', 0)} alerts sent")
             else:
-                logger.error(f"Failed to send news alert: {response.status_code}")
+                logger.error(f"Failed to trigger news alert: {response.status_code}")
                 
         except Exception as e:
             logger.error(f"Error sending news alert: {e}")
     
-    def _send_calendar_alert(self, event: Dict[str, Any]):
-        """Send calendar alert to all connected users"""
+    def _send_economic_alert(self, event: Dict[str, Any]):
+        """Send economic calendar alert"""
         try:
-            # Call the alert trigger endpoint
+            # Trigger alert via API
             alert_data = {
                 'type': 'calendar',
                 'data': event
@@ -180,24 +207,40 @@ class BackgroundAlertWorker:
             response = requests.post(
                 f"{self.api_base_url}/api/alerts/trigger",
                 json=alert_data,
-                timeout=30
+                timeout=10
             )
             
             if response.status_code == 200:
-                logger.info(f"Calendar alert sent successfully: {event.get('title', '')[:50]}")
+                result = response.json()
+                logger.info(f"Economic alert triggered: {result.get('alerts_sent', 0)} alerts sent")
             else:
-                logger.error(f"Failed to send calendar alert: {response.status_code}")
+                logger.error(f"Failed to trigger economic alert: {response.status_code}")
                 
         except Exception as e:
-            logger.error(f"Error sending calendar alert: {e}")
-    
-    def get_status(self) -> Dict[str, Any]:
-        """Get worker status"""
-        return {
-            'running': self.running,
-            'last_check': self.last_check.isoformat() if self.last_check else None,
-            'check_interval': self.check_interval
-        }
+            logger.error(f"Error sending economic alert: {e}")
 
 # Global instance
-background_alert_worker = BackgroundAlertWorker()
+background_worker = BackgroundAlertWorker()
+
+def start_background_worker():
+    """Start the background alert worker"""
+    background_worker.start()
+
+def stop_background_worker():
+    """Stop the background alert worker"""
+    background_worker.stop()
+
+if __name__ == "__main__":
+    # Test the background worker
+    try:
+        start_background_worker()
+        print("Background worker started. Press Ctrl+C to stop.")
+        
+        # Keep running
+        while True:
+            time.sleep(1)
+            
+    except KeyboardInterrupt:
+        print("\nStopping background worker...")
+        stop_background_worker()
+        print("Background worker stopped.")
