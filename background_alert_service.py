@@ -14,6 +14,9 @@ import requests
 # Add backend to path
 sys.path.append('backend')
 
+# Import unified deduplication service
+from services.unified_alert_deduplication import UnifiedAlertDeduplication
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -31,10 +34,11 @@ class BackgroundAlertService:
         self.check_interval = 300  # Check every 5 minutes
         self.last_news_check = None
         self.last_calendar_check = None
-        self.processed_news_ids = set()
         
-        # Economic calendar tracking to prevent duplicates
-        self.sent_economic_events = {}  # Track sent events with timing
+        # Initialize unified deduplication service
+        self.deduplication = UnifiedAlertDeduplication()
+        
+        # Economic calendar alert times
         self.economic_alert_times = [120, 60, 10]  # 2 hours, 1 hour, 10 minutes before
         
         # Your user configuration
@@ -125,8 +129,8 @@ class BackgroundAlertService:
             for news_item in high_impact[:5]:  # Process first 5 high-impact items
                 news_id = str(news_item.get('id', ''))
                 
-                # Skip if already processed
-                if news_id in self.processed_news_ids:
+                # Check if this news item is a duplicate using unified deduplication
+                if self.deduplication.is_news_duplicate(news_item, self.user_id):
                     continue
                 
                 # Check if forex high impact
@@ -150,12 +154,7 @@ class BackgroundAlertService:
                     alerts_sent += 1
                     logger.info(f"✅ Alert sent: {news_item.get('title', '')[:50]}...")
                     
-                    # Mark as processed
-                    self.processed_news_ids.add(news_id)
-                    
-                    # Keep only last 1000 processed IDs
-                    if len(self.processed_news_ids) > 1000:
-                        self.processed_news_ids = set(list(self.processed_news_ids)[-500:])
+                    # Note: Deduplication is handled by the unified service
                 
                 # Wait a bit between alerts
                 time.sleep(2)
@@ -220,12 +219,11 @@ class BackgroundAlertService:
                         # Check if we should send an alert
                         for alert_minutes in self.economic_alert_times:
                             if 0 <= minutes_until_event <= alert_minutes and minutes_until_event >= alert_minutes - 5:
-                                # Check if we already sent this alert
-                                alert_key = f"{event_id}_{alert_minutes}"
-                                if alert_key not in self.sent_economic_events:
+                                # Check if this economic event alert is a duplicate using unified deduplication
+                                alert_timing = f"{alert_minutes}min_before"
+                                if not self.deduplication.is_economic_event_duplicate(event, self.user_id, alert_timing):
                                     # Send the alert
                                     self._send_economic_calendar_alert(event, alert_minutes)
-                                    self.sent_economic_events[alert_key] = now
                                     alerts_sent += 1
                                     logger.info(f"✅ Economic calendar alert sent: {event.get('title', 'Unknown')} ({alert_minutes} min before)")
                                     break
