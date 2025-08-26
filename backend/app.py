@@ -992,12 +992,26 @@ def force_refresh_news():
         # Fetch Telegram news using synchronous wrapper
         telegram_news = []
         try:
+            import sys
+            import os
+            # Add current directory to path for imports
+            if os.path.dirname(__file__) not in sys.path:
+                sys.path.insert(0, os.path.dirname(__file__))
+            
+            print("🔍 Attempting to import telegram_sync...")
             from services.telegram_sync_wrapper import telegram_sync
+            print("✅ Successfully imported telegram_sync")
+            
+            print("🔍 Calling telegram_sync.get_recent_telegram_news...")
             telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
+            print(f"✅ Telegram sync returned {len(telegram_news)} articles")
+            
             fresh_news.extend(telegram_news)
             print(f"✅ Fetched {len(telegram_news)} Telegram news articles")
         except Exception as e:
             print(f"❌ Error fetching Telegram news: {e}")
+            import traceback
+            traceback.print_exc()
             print("Continuing with other sources...")
             telegram_news = []
         
