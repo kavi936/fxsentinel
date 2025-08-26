@@ -67,6 +67,16 @@ class TelegramUserMonitor:
             logger.error(f"Could not acquire session lock: {e}")
             return False
     
+    def _wait_for_session_lock(self, timeout=30):
+        """Wait for session lock to be available"""
+        import time
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            if self._acquire_session_lock():
+                return True
+            time.sleep(1)
+        return False
+    
     def _release_session_lock(self):
         """Release the session lock"""
         if self._session_lock_file:
@@ -91,9 +101,9 @@ class TelegramUserMonitor:
                     logger.info("Telegram client already connected")
                     return True
                 
-                # Acquire session lock
-                if not self._acquire_session_lock():
-                    logger.error("Could not acquire session lock, another process may be using it")
+                # Acquire session lock with retry
+                if not self._wait_for_session_lock(timeout=30):
+                    logger.error("Could not acquire session lock after timeout, another process may be using it")
                     return False
                 
                 # Create client with user session (not bot)
@@ -311,6 +321,9 @@ class TelegramUserMonitor:
         except Exception as e:
             logger.error(f"Error getting recent Telegram news: {e}")
             return []
+        finally:
+            # Always release the session lock after the operation
+            self._release_session_lock()
 
 # Global instance
 telegram_user_monitor = TelegramUserMonitor()

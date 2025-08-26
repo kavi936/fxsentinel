@@ -989,38 +989,17 @@ def force_refresh_news():
         except Exception as e:
             print(f"❌ Error fetching alternative news: {e}")
         
-        # Fetch Telegram news
+        # Fetch Telegram news using synchronous wrapper
         telegram_news = []
         try:
-            import asyncio
-            # Create new event loop for async operation
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            
-            # Fetch Telegram news with timeout
-            telegram_news = loop.run_until_complete(
-                asyncio.wait_for(
-                    telegram_user_monitor.get_recent_telegram_news(hours=24),
-                    timeout=15.0
-                )
-            )
-            loop.close()
+            from services.telegram_sync_wrapper import telegram_sync
+            telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
             fresh_news.extend(telegram_news)
             print(f"✅ Fetched {len(telegram_news)} Telegram news articles")
-        except asyncio.TimeoutError:
-            print("⚠️ Telegram news fetch timed out, continuing with other sources...")
-            telegram_news = []
         except Exception as e:
             print(f"❌ Error fetching Telegram news: {e}")
             print("Continuing with other sources...")
             telegram_news = []
-        finally:
-            # Ensure we clean up any remaining event loops
-            try:
-                if 'loop' in locals() and not loop.is_closed():
-                    loop.close()
-            except:
-                pass
         
         if fresh_news:
             # Remove duplicates and sort
