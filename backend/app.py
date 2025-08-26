@@ -765,6 +765,12 @@ def get_news():
         # Check if force refresh is requested
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
         
+        # Check for deployment notification that requires cache clearing
+        if DEPLOYMENT_NOTIFICATION["active"] and DEPLOYMENT_NOTIFICATION["requires_cache_clear"]:
+            print("🧹 Deployment notification active - clearing cache for user")
+            news_cache.clear_cache()
+            force_refresh = True
+        
         # First, try to get cached data immediately (unless force refresh)
         cached_news = None
         if not force_refresh:
@@ -792,13 +798,19 @@ def get_news():
                 for item in cached_news:
                     if 'id' in item:
                         item['id'] = str(item['id'])
-                return jsonify({
+                response_data = {
                     "news": cached_news,
                     "last_updated": datetime.now().isoformat(),
                     "sources": ["cached_data"],
                     "total_articles": len(cached_news),
                     "cache_status": "cached"
-                })
+                }
+                
+                # Add deployment notification if active
+                if DEPLOYMENT_NOTIFICATION["active"]:
+                    response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+                
+                return jsonify(response_data)
         
         # If no cache, fetch fresh data with optimized parallel processing
         # Note: Economic calendar events are excluded from live news feed
@@ -908,24 +920,36 @@ def get_news():
             # Note: Alert processing moved to cost-optimized background monitor
             # This prevents excessive API calls and reduces terminal noise
             
-            return jsonify({
+            response_data = {
                 "news": all_news,
                 "last_updated": datetime.now().isoformat(),
                 "sources": sources_used,
                 "total_articles": len(all_news),
                 "cache_status": "fresh"
-            })
+            }
+            
+            # Add deployment notification if active
+            if DEPLOYMENT_NOTIFICATION["active"]:
+                response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+            
+            return jsonify(response_data)
         else:
             # No fresh news available, use mock data as fallback
             print("⚠️ No fresh news available, using mock data")
             mock_news = get_mock_news()
-            return jsonify({
+            response_data = {
                 "news": mock_news,
                 "last_updated": datetime.now().isoformat(),
                 "sources": ["fallback_data"],
                 "total_articles": len(mock_news),
                 "cache_status": "fallback"
-            })
+            }
+            
+            # Add deployment notification if active
+            if DEPLOYMENT_NOTIFICATION["active"]:
+                response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+            
+            return jsonify(response_data)
                 
     except Exception as e:
         print(f"❌ Error in news endpoint: {e}")
@@ -937,31 +961,150 @@ def get_news():
                 # Remove duplicates from fallback cached news as well
                 cached_news = remove_duplicate_news(cached_news)
                 print(f"✅ Error occurred, using cached news ({len(cached_news)} articles)")
-                return jsonify({
+                response_data = {
                     "news": cached_news,
                     "last_updated": datetime.now().isoformat(),
                     "sources": ["cached_data"],
                     "total_articles": len(cached_news),
                     "cache_status": "cached_fallback"
-                })
+                }
+                
+                # Add deployment notification if active
+                if DEPLOYMENT_NOTIFICATION["active"]:
+                    response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+                
+                return jsonify(response_data)
         except:
             pass
         
         # Last resort: mock data
         mock_news = get_mock_news()
-        return jsonify({
+        response_data = {
             "news": mock_news,
             "last_updated": datetime.now().isoformat(),
             "sources": ["fallback_data"],
             "total_articles": len(mock_news),
             "cache_status": "fallback"
-        })
+        }
+        
+        # Add deployment notification if active
+        if DEPLOYMENT_NOTIFICATION["active"]:
+            response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+        
+        return jsonify(response_data)
 
-@app.route('/api/force-refresh-news', methods=['POST'])
-def force_refresh_news():
-    """Force refresh news and trigger alerts immediately"""
+# Global deployment notification flag
+DEPLOYMENT_NOTIFICATION = {
+    "active": False,
+    "timestamp": None,
+    "message": "",
+    "version": "1.0.0",
+    "requires_cache_clear": False
+}
+
+@app.route('/api/deployment-notification', methods=['GET'])
+def get_deployment_notification():
+    """Get current deployment notification status"""
+    return jsonify(DEPLOYMENT_NOTIFICATION)
+
+@app.route('/api/deployment-notification', methods=['POST'])
+def set_deployment_notification():
+    """Set deployment notification to force all users to refresh and clear cache"""
     try:
-        print("🔄 Force refreshing news...")
+        data = request.get_json() or {}
+        message = data.get('message', 'System update deployed - clearing cache and refreshing news feed')
+        version = data.get('version', '1.0.0')
+        requires_cache_clear = data.get('requires_cache_clear', True)  # Default to True
+        
+        global DEPLOYMENT_NOTIFICATION
+        DEPLOYMENT_NOTIFICATION = {
+            "active": True,
+            "timestamp": datetime.now().isoformat(),
+            "message": message,
+            "version": version,
+            "requires_cache_clear": requires_cache_clear
+        }
+        
+        print(f"🚀 Deployment notification activated: {message}")
+        if requires_cache_clear:
+            print("🧹 Cache clearing required for all users")
+        
+        # Force refresh news immediately
+        force_refresh_result = force_refresh_news_internal()
+        
+        return jsonify({
+            "success": True,
+            "message": "Deployment notification activated",
+            "deployment_notification": DEPLOYMENT_NOTIFICATION,
+            "force_refresh_result": force_refresh_result
+        })
+    except Exception as e:
+        print(f"❌ Error setting deployment notification: {e}")
+        return jsonify({
+            "success": False,
+            "message": f"Error: {str(e)}"
+        }), 500
+
+@app.route('/api/clear-deployment-notification', methods=['POST'])
+def clear_deployment_notification():
+    """Clear deployment notification"""
+    global DEPLOYMENT_NOTIFICATION
+    DEPLOYMENT_NOTIFICATION = {
+        "active": False,
+        "timestamp": None,
+        "message": "",
+        "version": "1.0.0",
+        "requires_cache_clear": False
+    }
+    
+    print("✅ Deployment notification cleared")
+    
+    return jsonify({
+        "success": True,
+        "message": "Deployment notification cleared"
+    })
+
+@app.route('/api/clear-all-caches', methods=['POST'])
+def clear_all_caches():
+    """Clear all server-side caches"""
+    try:
+        # Clear news cache
+        from services.news_cache import news_cache
+        news_cache.clear_cache()
+        
+        # Clear any other caches
+        try:
+            from services.gpt_analyzer import gpt_analyzer
+            if hasattr(gpt_analyzer, 'clear_cache'):
+                gpt_analyzer.clear_cache()
+        except:
+            pass
+        
+        try:
+            from services.enhanced_macro_analyzer import enhanced_macro_analyzer
+            if hasattr(enhanced_macro_analyzer, 'clear_cache'):
+                enhanced_macro_analyzer.clear_cache()
+        except:
+            pass
+        
+        print("🧹 All server-side caches cleared")
+        
+        return jsonify({
+            "success": True,
+            "message": "All server-side caches cleared",
+            "timestamp": datetime.now().isoformat()
+        })
+    except Exception as e:
+        print(f"❌ Error clearing caches: {e}")
+        return jsonify({
+            "success": False,
+            "message": f"Error clearing caches: {str(e)}"
+        }), 500
+
+def force_refresh_news_internal():
+    """Internal function to force refresh news (used by deployment notification)"""
+    try:
+        print("🔄 Force refreshing news (internal)...")
         
         # Clear cache to force fresh fetch
         from services.news_cache import news_cache
@@ -1017,7 +1160,6 @@ def force_refresh_news():
         
         if fresh_news:
             # Remove duplicates and sort
-            # Import the function from the correct location
             def remove_duplicate_news(news_list):
                 """Remove duplicate news items based on title and source"""
                 seen = set()
@@ -1044,17 +1186,34 @@ def force_refresh_news():
             except Exception as e:
                 print(f"❌ Error triggering alerts: {e}")
             
-            return jsonify({
+            return {
                 "success": True,
                 "message": f"Force refreshed {len(fresh_news)} news articles",
                 "articles_count": len(fresh_news),
                 "alert_results": results if 'results' in locals() else None
-            })
+            }
         else:
-            return jsonify({
+            return {
                 "success": False,
                 "message": "No fresh news available"
-            }), 404
+            }
+    except Exception as e:
+        print(f"❌ Error in force refresh (internal): {e}")
+        return {
+            "success": False,
+            "message": f"Error: {str(e)}"
+        }
+
+@app.route('/api/force-refresh-news', methods=['POST'])
+def force_refresh_news():
+    """Force refresh news and trigger alerts immediately"""
+    try:
+        result = force_refresh_news_internal()
+        
+        if result["success"]:
+            return jsonify(result)
+        else:
+            return jsonify(result), 404
             
     except Exception as e:
         print(f"❌ Error in force refresh: {e}")
