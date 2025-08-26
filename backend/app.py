@@ -1990,8 +1990,8 @@ def trigger_alert():
             if isinstance(mapping_data, dict) and 'user_id' in mapping_data:
                 user_id = mapping_data['user_id']
                 
-                # Skip test users with invalid chat IDs
-                if chat_id == '123456789':
+                # Skip test users with invalid chat IDs (only if they're actually test users)
+                if chat_id == '123456789' and user_id.startswith('test_'):
                     continue
                 
                 # Get user settings
@@ -1999,8 +1999,14 @@ def trigger_alert():
                 if not user_settings:
                     continue
                 
-                # Check if user has Telegram enabled
-                if not user_settings.get('telegram_enabled', False):
+                # Check if user has Telegram enabled (handle multiple settings structures)
+                telegram_enabled = (
+                    user_settings.get('telegram_enabled', False) or  # Old structure
+                    user_settings.get('telegram', False) or  # Direct telegram setting
+                    user_settings.get('channels', {}).get('telegram', {}).get('enabled', False)  # New structure
+                )
+                
+                if not telegram_enabled:
                     continue
                 
                 # Create user data
