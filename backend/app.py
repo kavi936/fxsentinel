@@ -5347,6 +5347,196 @@ def start_background_worker():
             'status': 'error'
         }), 500
 
+@app.route('/api/bot/stats')
+@limiter.exempt
+def bot_statistics():
+    """Get comprehensive bot statistics"""
+    try:
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        from services.alert_service import get_alert_service
+        
+        firebase = FirebaseRealtimeStorage()
+        alert_service = get_alert_service()
+        
+        # Get all users
+        all_users = firebase.get_all_users()
+        
+        # Get user statistics
+        total_users = len(all_users)
+        active_users = 0
+        telegram_connected_users = 0
+        alert_enabled_users = 0
+        subscription_active_users = 0
+        
+        # Get chat ID mappings
+        chat_id_mappings = firebase.get_all_chat_id_mappings()
+        total_chat_ids = len(chat_id_mappings)
+        
+        # Analyze each user
+        user_details = []
+        for user_id, user_data in all_users.items():
+            user_info = {
+                'user_id': user_id,
+                'email': user_data.get('email', 'Unknown'),
+                'telegram_connected': False,
+                'alerts_enabled': False,
+                'subscription_active': False,
+                'alert_settings': {},
+                'last_activity': user_data.get('last_activity', 'Unknown')
+            }
+            
+            # Check Telegram connection
+            chat_id = chat_id_mappings.get(user_id)
+            if chat_id:
+                user_info['telegram_connected'] = True
+                user_info['chat_id'] = chat_id
+                telegram_connected_users += 1
+            
+            # Check alert settings
+            alert_settings = user_data.get('alert_settings', {})
+            if alert_settings:
+                user_info['alert_settings'] = alert_settings
+                if alert_settings.get('live_news_alerts') or alert_settings.get('economic_calendar_alerts'):
+                    user_info['alerts_enabled'] = True
+                    alert_enabled_users += 1
+            
+            # Check subscription (simplified check)
+            if user_data.get('subscription_status') == 'active' or user_data.get('trial_active'):
+                user_info['subscription_active'] = True
+                subscription_active_users += 1
+            
+            # Count as active if they have any settings
+            if user_info['telegram_connected'] or user_info['alerts_enabled']:
+                active_users += 1
+            
+            user_details.append(user_info)
+        
+        # Get recent alert statistics
+        recent_alerts = firebase.get_recent_alert_history(hours=24)
+        alerts_last_24h = len(recent_alerts)
+        
+        # Get background worker stats
+        worker_stats = background_worker.get_status()
+        
+        return jsonify({
+            'bot_statistics': {
+                'total_users': total_users,
+                'active_users': active_users,
+                'telegram_connected_users': telegram_connected_users,
+                'alert_enabled_users': alert_enabled_users,
+                'subscription_active_users': subscription_active_users,
+                'total_chat_ids': total_chat_ids,
+                'alerts_last_24h': alerts_last_24h,
+                'background_worker_status': worker_stats
+            },
+            'user_details': user_details,
+            'chat_id_mappings': chat_id_mappings,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/bot/users')
+@limiter.exempt
+def bot_users():
+    """Get detailed user information"""
+    try:
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        
+        firebase = FirebaseRealtimeStorage()
+        all_users = firebase.get_all_users()
+        chat_id_mappings = firebase.get_all_chat_id_mappings()
+        
+        users_info = []
+        for user_id, user_data in all_users.items():
+            chat_id = chat_id_mappings.get(user_id)
+            alert_settings = user_data.get('alert_settings', {})
+            
+            user_info = {
+                'user_id': user_id,
+                'email': user_data.get('email', 'Unknown'),
+                'chat_id': chat_id,
+                'telegram_connected': bool(chat_id),
+                'alert_settings': alert_settings,
+                'subscription_status': user_data.get('subscription_status', 'unknown'),
+                'trial_active': user_data.get('trial_active', False),
+                'created_at': user_data.get('created_at', 'Unknown'),
+                'last_activity': user_data.get('last_activity', 'Unknown')
+            }
+            users_info.append(user_info)
+        
+        return jsonify({
+            'users': users_info,
+            'total_users': len(users_info),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/bot/chat-ids')
+@limiter.exempt
+def bot_chat_ids():
+    """Get all Telegram chat ID mappings"""
+    try:
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        
+        firebase = FirebaseRealtimeStorage()
+        chat_id_mappings = firebase.get_all_chat_id_mappings()
+        
+        return jsonify({
+            'chat_id_mappings': chat_id_mappings,
+            'total_mappings': len(chat_id_mappings),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
+@app.route('/api/bot/alert-history')
+@limiter.exempt
+def bot_alert_history():
+    """Get recent alert history"""
+    try:
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        
+        firebase = FirebaseRealtimeStorage()
+        
+        # Get last 24 hours of alerts
+        recent_alerts = firebase.get_recent_alert_history(hours=24)
+        
+        # Group by user
+        alerts_by_user = {}
+        for alert in recent_alerts:
+            user_id = alert.get('user_id', 'unknown')
+            if user_id not in alerts_by_user:
+                alerts_by_user[user_id] = []
+            alerts_by_user[user_id].append(alert)
+        
+        return jsonify({
+            'recent_alerts': recent_alerts,
+            'alerts_by_user': alerts_by_user,
+            'total_alerts': len(recent_alerts),
+            'users_with_alerts': len(alerts_by_user),
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
+        }), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))
