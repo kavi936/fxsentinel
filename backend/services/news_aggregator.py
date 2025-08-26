@@ -81,8 +81,8 @@ class NewsAggregator:
             articles = []
             
             for entry in feed.entries[:10]:  # Increased from 5 to 10 most recent articles
-                # Check if article is forex-related
-                if self.is_forex_related(entry.title, entry.summary):
+                # Check if article is forex-related using improved filtering
+                if self.is_forex_related(entry.title, entry.summary, source_name):
                     article = self.parse_article(entry, source_name)
                     if article:
                         articles.append(article)
@@ -97,10 +97,10 @@ class NewsAggregator:
             logger.error(f"Error fetching RSS feed from {source_name}: {str(e)}")
             return []
     
-    def is_forex_related(self, title: str, summary: str) -> bool:
+    def is_forex_related(self, title: str, summary: str, source: str = "") -> bool:
         """Check if article is forex-related using enhanced filtering"""
         from .enhanced_forex_filter import enhanced_forex_filter
-        return enhanced_forex_filter.is_forex_related(title, summary)
+        return enhanced_forex_filter.is_forex_related(title, summary, source)
     
     def determine_impact_level(self, title: str, summary: str) -> str:
         """Determine the impact level using enhanced filtering"""
