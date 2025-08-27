@@ -12,4 +12,5 @@ def health():
     """Health check"""
     return jsonify({'status': 'healthy', 'webhook': 'working'})
 
-handler = app
+# Export for Vercel
+app.debug = False

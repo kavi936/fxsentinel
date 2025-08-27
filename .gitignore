@@ -148,3 +148,4 @@ working-dashboard.js
 .env
 .env.backup
 *.env
+.vercel

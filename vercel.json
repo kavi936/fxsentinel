@@ -7,12 +7,20 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "api/webhook.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/stripe-webhook",
-      "dest": "/api/stripe-webhook.json"
+      "dest": "/api/webhook.js"
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/webhook.js"
     },
     {
       "src": "/fxsentinel_logo_nobg.(png|webp)",
