@@ -9,18 +9,18 @@
       }
     },
     {
-      "src": "api/webhook.py",
-      "use": "@vercel/python"
+      "src": "api/webhook.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/stripe-webhook",
-      "dest": "/api/webhook.py"
+      "dest": "/api/webhook.js"
     },
     {
       "src": "/api/health",
-      "dest": "/api/webhook.py"
+      "dest": "/api/webhook.js"
     },
     {
       "src": "/fxsentinel_logo_nobg.(png|webp)",
