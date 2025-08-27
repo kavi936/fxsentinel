@@ -19,6 +19,10 @@
       "dest": "/fxsentinel_og.$1"
     },
     {
+      "src": "/fxsentinelSmall.png",
+      "dest": "/fxsentinelSmall.png"
+    },
+    {
       "src": "/logo-simple.svg",
       "dest": "/logo-simple.svg"
     },
