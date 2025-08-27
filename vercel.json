@@ -7,9 +7,17 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
     {
       "src": "/fxsentinel_logo_nobg.(png|webp)",
       "dest": "/fxsentinel_logo_nobg.$1"
