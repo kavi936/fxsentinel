@@ -2,7 +2,7 @@ module.exports = (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Stripe-Signature');
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -13,6 +13,8 @@ module.exports = (req, res) => {
   // Handle webhook endpoint
   if (req.url === '/api/stripe-webhook' && req.method === 'POST') {
     console.log('📡 Stripe webhook received');
+    
+    // Return 200 status code for Stripe
     res.status(200).json({
       success: true,
       message: 'Webhook received'
