@@ -11,11 +11,23 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "api/test.py",
+      "use": "@vercel/python"
     }
   ],
   "routes": [
     {
+      "src": "/api/test",
+      "dest": "/api/test.py"
+    },
+    {
       "src": "/api/(.*)",
+      "dest": "/api/index.py"
+    },
+    {
+      "src": "/webhook/(.*)",
       "dest": "/api/index.py"
     },
     {
