@@ -1927,6 +1927,15 @@ body {
   box-shadow: 0 6px 20px rgba(255, 68, 68, 0.3);
 }
 
+.telegram-button {
+  border-color: var(--accent-red);
+}
+
+.telegram-button:hover {
+  border-color: var(--accent-red);
+  box-shadow: 0 6px 20px rgba(255, 68, 68, 0.3);
+}
+
 .attribution {
   margin-top: 0.5rem;
   font-size: 0.875rem;
