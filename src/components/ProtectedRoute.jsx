@@ -9,7 +9,7 @@ const ProtectedRoute = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
 
-  // Check if user is developer
+  // Check if user is developer (for immediate access, but backend will validate)
   const isDeveloper = currentUser?.email === 'kavi.cf412@gmail.com';
 
   useEffect(() => {
@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
         return;
       }
 
-      // Developer accounts always have access
+      // Developer accounts get immediate access (backend will validate)
       if (isDeveloper) {
         setHasAccess(true);
         setIsLoading(false);
@@ -41,6 +41,9 @@ const ProtectedRoute = ({ children }) => {
                                 data.status === 'beta_tester';
           
           setHasAccess(hasValidAccess);
+          
+          // Log for debugging
+          console.log('🔍 ProtectedRoute - User:', currentUser.email, 'Status:', data.status, 'Access:', hasValidAccess);
         } else {
           // No subscription found - redirect to trial welcome
           setHasAccess(false);
