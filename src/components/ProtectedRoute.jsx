@@ -29,7 +29,7 @@ const ProtectedRoute = ({ children }) => {
 
       try {
         // Check subscription status
-        const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}`);
+        const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}?email=${encodeURIComponent(currentUser.email)}`);
         if (response.ok) {
           const data = await response.json();
           setSubscriptionStatus(data);

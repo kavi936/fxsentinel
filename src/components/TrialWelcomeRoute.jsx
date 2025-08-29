@@ -30,10 +30,11 @@ const TrialWelcomeRoute = () => {
 
       try {
         // Check subscription status
-        const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}`);
+        const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}?email=${encodeURIComponent(currentUser.email)}`);
         if (response.ok) {
           const data = await response.json();
           console.log('🔍 TrialWelcomeRoute - Subscription data:', data);
+          console.log('🔍 TrialWelcomeRoute - User email:', currentUser.email);
           setSubscriptionStatus(data);
           
           // Check if user has valid access
