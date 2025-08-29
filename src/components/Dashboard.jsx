@@ -78,7 +78,7 @@ function Dashboard() {
           setSubscriptionStatus(data);
           
           // Additional security check - redirect if no valid subscription
-          const validStatuses = ['trial', 'active', 'developer'];
+          const validStatuses = ['trial', 'active', 'developer', 'beta_tester'];
           if (!validStatuses.includes(data.status)) {
             console.warn('⚠️ User does not have valid subscription status, redirecting to trial welcome');
             navigate('/trial-welcome');

@@ -528,6 +528,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     <div className={`status-badge ${subscriptionStatus.status}`}>
                       {subscriptionStatus.status === 'trial' ? 'Free Trial' : 
                        subscriptionStatus.status === 'active' ? 'Premium' : 
+                       subscriptionStatus.status === 'beta_tester' ? 'Beta Tester' :
                        subscriptionStatus.status === 'expired' ? 'Expired' : 'Unknown'}
                     </div>
                   </div>
