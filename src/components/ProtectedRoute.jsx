@@ -37,7 +37,8 @@ const ProtectedRoute = ({ children }) => {
           // Check if user has valid access
           const hasValidAccess = data.status === 'trial' || 
                                 data.status === 'active' || 
-                                data.status === 'developer';
+                                data.status === 'developer' ||
+                                data.status === 'beta_tester';
           
           setHasAccess(hasValidAccess);
         } else {

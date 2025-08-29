@@ -74,6 +74,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
   // Check if user is developer
   const isDeveloper = currentUser?.email === 'kavi.cf412@gmail.com';
+  
+  // Check if user is beta tester (this will be determined by the backend)
+  const isBetaTester = subscriptionStatus?.status === 'beta_tester';
 
   // Fetch subscription status
   const fetchSubscriptionStatus = async () => {
@@ -303,7 +306,13 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 <div className="profile-info">
                   <h3>{getUserDisplayName()}</h3>
                   <p className="user-email">{currentUser?.email || 'No email'}</p>
-                  <p className="user-status">Active</p>
+                  <p className="user-status">
+                    {isDeveloper ? 'Developer' : 
+                     isBetaTester ? 'Beta Tester' : 
+                     subscriptionStatus?.status === 'trial' ? 'Trial User' :
+                     subscriptionStatus?.status === 'active' ? 'Premium User' :
+                     subscriptionStatus?.status === 'expired' ? 'Expired' : 'Active'}
+                  </p>
                 </div>
               </div>
 
@@ -473,6 +482,43 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
                   <div className="developer-note">
                     <p>🔧 This is a developer account with full access for testing purposes. No payment required.</p>
+                  </div>
+                </div>
+              ) : isBetaTester ? (
+                <div className="subscription-details beta-tester-account">
+                  <div className="subscription-status">
+                    <h4>Current Plan</h4>
+                    <div className="status-badge beta-tester">
+                      Beta Tester Account
+                    </div>
+                  </div>
+
+                  <div className="beta-tester-info">
+                    <p><strong>Account Type:</strong> Beta Tester</p>
+                    <p><strong>Access Level:</strong> Premium</p>
+                    <p><strong>Daily Limit:</strong> {usageData ? `${usageData.daily_usage}/${usageData.daily_limit}` : 'Loading...'} AI analyses</p>
+                    <p><strong>Payment Required:</strong> No</p>
+                    <p><strong>Duration:</strong> Lifetime</p>
+                    <p><strong>Purpose:</strong> Early Access & Feedback</p>
+                  </div>
+
+                  {usageData && (
+                    <div className="usage-progress">
+                      <div className="usage-bar">
+                        <div 
+                          className="usage-fill" 
+                          style={{ 
+                            width: `${Math.min((usageData.daily_usage / usageData.daily_limit) * 100, 100)}%`,
+                            backgroundColor: usageData.daily_usage >= usageData.daily_limit ? '#f44336' : '#4caf50'
+                          }}
+                        ></div>
+                      </div>
+                      <small>{usageData.daily_usage >= usageData.daily_limit ? 'Limit reached' : `${usageData.daily_limit - usageData.daily_usage} remaining today`}</small>
+                    </div>
+                  )}
+
+                  <div className="beta-tester-note">
+                    <p>🎯 Thank you for being a beta tester! You have lifetime access to FXSentinel with premium features. Your feedback helps us improve the app.</p>
                   </div>
                 </div>
               ) : subscriptionStatus ? (
