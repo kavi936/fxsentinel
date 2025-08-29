@@ -845,6 +845,87 @@ input:checked + .toggle-slider:before {
   font-style: italic;
 }
 
+/* Beta Tester Actions */
+.beta-tester-actions {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(255, 193, 7, 0.05);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+}
+
+/* Beta Tester Help Section */
+.beta-tester-help {
+  background: rgba(255, 193, 7, 0.05);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 20px;
+}
+
+.beta-tester-help h4 {
+  color: #ffc107;
+  margin-bottom: 12px;
+  font-size: 1rem;
+}
+
+.beta-tester-help p {
+  color: #cccccc;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.beta-tester-help ul {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 16px;
+}
+
+.beta-tester-help li {
+  color: #cccccc;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  padding-left: 16px;
+  position: relative;
+}
+
+.beta-tester-help li:before {
+  content: '✓';
+  color: #ffc107;
+  position: absolute;
+  left: 0;
+  font-weight: bold;
+}
+
+.beta-tester-feedback {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 12px;
+}
+
+.beta-tester-feedback p {
+  color: #ffc107;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.beta-tester-feedback .secondary-btn {
+  background: rgba(255, 193, 7, 0.2);
+  border: 1px solid rgba(255, 193, 7, 0.4);
+  color: #ffc107;
+  font-size: 0.8rem;
+  padding: 8px 16px;
+}
+
+.beta-tester-feedback .secondary-btn:hover {
+  background: rgba(255, 193, 7, 0.3);
+  border-color: rgba(255, 193, 7, 0.6);
+  color: #ffffff;
+}
+
 .billing-actions {
   margin-bottom: 20px;
 }

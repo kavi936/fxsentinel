@@ -592,7 +592,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     </div>
                   )}
 
-                  {!isDeveloper && (
+                  {!isDeveloper && !isBetaTester && (
                     <div className="billing-actions">
                       <button 
                         className="primary-btn"
@@ -621,16 +621,61 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     </div>
                   )}
 
-                  <div className="billing-help">
-                    <h4>Need Help?</h4>
-                    <p>You can manage your subscription, update payment methods, and cancel anytime through your Stripe dashboard.</p>
-                    <ul>
-                      <li>Update payment method</li>
-                      <li>View billing history</li>
-                      <li>Cancel subscription</li>
-                      <li>Download invoices</li>
-                    </ul>
-                  </div>
+                  {isBetaTester && (
+                    <div className="beta-tester-actions">
+                      <button 
+                        className="secondary-btn"
+                        onClick={() => {
+                          fetchSubscriptionStatus();
+                          fetchUsageData();
+                        }}
+                        disabled={isLoadingSubscription || isLoadingUsage}
+                      >
+                        {isLoadingSubscription || isLoadingUsage ? 'Refreshing...' : 'Refresh Status'}
+                      </button>
+                      
+                      {lastUpdated && (
+                        <div className="last-updated">
+                          <small>Last updated: {lastUpdated.toLocaleTimeString()}</small>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {!isBetaTester && (
+                    <div className="billing-help">
+                      <h4>Need Help?</h4>
+                      <p>You can manage your subscription, update payment methods, and cancel anytime through your Stripe dashboard.</p>
+                      <ul>
+                        <li>Update payment method</li>
+                        <li>View billing history</li>
+                        <li>Cancel subscription</li>
+                        <li>Download invoices</li>
+                      </ul>
+                    </div>
+                  )}
+
+                  {isBetaTester && (
+                    <div className="beta-tester-help">
+                      <h4>Beta Tester Support</h4>
+                      <p>As a beta tester, you have lifetime access to FXSentinel. No payment management needed!</p>
+                      <ul>
+                        <li>Lifetime access to all features</li>
+                        <li>15 AI analyses per day</li>
+                        <li>Premium features included</li>
+                        <li>Direct support for feedback</li>
+                      </ul>
+                      <div className="beta-tester-feedback">
+                        <p><strong>Have feedback?</strong> We'd love to hear from you!</p>
+                        <button 
+                          className="secondary-btn"
+                          onClick={() => window.open('mailto:fxsentinelapp@gmail.com?subject=Beta Tester Feedback', '_blank')}
+                        >
+                          Send Feedback
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="no-subscription">
