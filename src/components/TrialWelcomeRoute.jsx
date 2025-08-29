@@ -37,10 +37,11 @@ const TrialWelcomeRoute = () => {
           setSubscriptionStatus(data);
           
           // Check if user has valid access
-          // Only users with 'active' or 'developer' status should bypass trial welcome
+          // Only users with 'active', 'developer', or 'beta_tester' status should bypass trial welcome
           // Users with 'trial' status should see the trial welcome page
           const hasValidAccess = data.status === 'active' || 
-                                data.status === 'developer';
+                                data.status === 'developer' ||
+                                data.status === 'beta_tester';
           
           console.log('🔍 TrialWelcomeRoute - User status:', data.status, 'Has access:', hasValidAccess);
           setHasAccess(hasValidAccess);

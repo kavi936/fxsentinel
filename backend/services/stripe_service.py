@@ -29,13 +29,38 @@ class StripeService:
         # Developer emails for bypassing payment
         developer_emails_str = os.getenv('DEVELOPER_EMAILS', '')
         self.developer_emails = [email.strip() for email in developer_emails_str.split(',') if email.strip()]
+        
+        # Beta tester emails for lifetime access
+        beta_tester_emails_str = os.getenv('BETA_TESTER_EMAILS', '')
+        self.beta_tester_emails = [email.strip() for email in beta_tester_emails_str.split(',') if email.strip()]
+        
         print(f"🔧 Developer emails loaded: {self.developer_emails}")
+        print(f"🎯 Beta tester emails loaded: {self.beta_tester_emails}")
 
     def is_developer_email(self, email):
         """Check if email is in developer whitelist"""
         if not email:
             return False
         return email.lower() in [dev_email.lower() for dev_email in self.developer_emails]
+
+    def is_beta_tester_email(self, email):
+        """Check if email is in beta tester whitelist"""
+        if not email:
+            return False
+        return email.lower() in [beta_email.lower() for beta_email in self.beta_tester_emails]
+
+    def get_beta_tester_access_status(self, email):
+        """Get beta tester access status for an email"""
+        is_beta_tester = self.is_beta_tester_email(email)
+        if is_beta_tester:
+            return {
+                'is_beta_tester': True,
+                'status': 'beta_tester',
+                'daily_usage': 0,
+                'daily_limit': self.trial_limit,  # Same as trial users (15 per day)
+                'can_perform': True
+            }
+        return {'is_beta_tester': False}
 
     def get_developer_access_status(self, email):
         """Get developer access status for an email"""
@@ -161,6 +186,17 @@ class StripeService:
                     'is_developer': True
                 }
             
+            # Check if user is a beta tester
+            if email and self.is_beta_tester_email(email):
+                return {
+                    'status': 'beta_tester',
+                    'trial_end_date': None,
+                    'daily_analysis_count': 0,
+                    'analysis_limit': self.trial_limit,  # Same as trial users (15 per day)
+                    'stripe_customer_id': None,
+                    'is_beta_tester': True
+                }
+            
             if not self.firebase_available or not self.db:
                 # Return default trial status if Firebase not available
                 return {
@@ -211,6 +247,15 @@ class StripeService:
                     'daily_usage': 0,
                     'daily_limit': 999999,  # Unlimited for developers
                     'status': 'developer'
+                }
+            
+            # Check if user is a beta tester
+            if email and self.is_beta_tester_email(email):
+                return {
+                    'can_perform': True,
+                    'daily_usage': 0,
+                    'daily_limit': self.trial_limit,  # Same as trial users (15 per day)
+                    'status': 'beta_tester'
                 }
             
             if not self.firebase_available:

@@ -804,6 +804,47 @@ input:checked + .toggle-slider:before {
   font-style: italic;
 }
 
+/* Beta Tester Account Styles */
+.status-badge.beta-tester {
+  background: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.beta-tester-info {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.beta-tester-info p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #cccccc;
+}
+
+.beta-tester-info strong {
+  color: #ffc107;
+  font-weight: 600;
+}
+
+.beta-tester-note {
+  background: rgba(255, 193, 7, 0.05);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.beta-tester-note p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #ffc107;
+  font-style: italic;
+}
+
 .billing-actions {
   margin-bottom: 20px;
 }
