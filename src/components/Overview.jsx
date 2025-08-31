@@ -6,6 +6,7 @@ import { config } from '../config';
 import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
 import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
+import InfoIcon from './InfoIcon.jsx';
 
 const Overview = () => {
   // Helper function to capitalize sentiment values
@@ -1671,6 +1672,10 @@ const Overview = () => {
             <div className="ai-header">
               <div className="header-main">
                 <h2 className="ai-title">AI ANALYSIS</h2>
+                <InfoIcon 
+                  tooltipText="AI Analysis System: Our advanced machine learning algorithms process economic data and news events. The system analyzes historical patterns, market correlations, and economic relationships to provide trading insights. Analysis includes immediate market impact, trading implications, and confidence scores based on data quality and market conditions."
+                  position="bottom"
+                />
                 {selectedEvent && (
                   <div className="selected-event-info">
                     <span className="event-name">{selectedEvent.title}</span>
@@ -1976,6 +1981,10 @@ const Overview = () => {
             <div className="sentiment-header">
               <div className="header-main">
                 <h2 className="sentiment-title">MARKET SENTIMENT</h2>
+                <InfoIcon 
+                  tooltipText="Market Sentiment Analysis: Our system combines multiple data sources including price action, volatility patterns, and market correlations. We analyze RSI, volatility metrics, and risk appetite indicators to provide a comprehensive view of current market conditions. Sentiment is calculated using proprietary algorithms that process real-time market data."
+                  position="bottom"
+                />
               </div>
               <div className="sentiment-controls">
                 <button 
