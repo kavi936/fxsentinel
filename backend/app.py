@@ -1630,7 +1630,7 @@ def get_technical_analysis(pair):
 
 @app.route('/api/enhanced-analysis/<news_id>', methods=['GET', 'POST'])
 def get_enhanced_analysis(news_id):
-    """Get comprehensive GPT-powered analysis for economic events"""
+    """Get comprehensive GPT-powered analysis for economic events with data validation"""
     print(f"🚨🚨🚨 ENHANCED ANALYSIS ENDPOINT CALLED - ID: {news_id} 🚨🚨🚨")
     try:
         # Get event data from request body if POST, otherwise from Finnhub calendar
@@ -1647,66 +1647,91 @@ def get_enhanced_analysis(news_id):
         if not event:
             return jsonify({"error": "Event not found"}), 404
         
-        # Create GPT market context with real market data and enhanced positioning data
-        gpt_market_context = GPTMarketContext(
-            current_prices={
+        # Import the data validation service
+        from services.data_validator import economic_data_validator
+        
+        # Validate the event data before analysis
+        print(f"🔍 Validating event data: {event.get('title', 'Unknown')}")
+        is_valid, validated_event, validation_errors = economic_data_validator.validate_event_data(event)
+        
+        if not is_valid:
+            print(f"❌ Event data validation failed: {validation_errors}")
+            return jsonify({
+                "error": "Event data validation failed",
+                "validation_errors": validation_errors,
+                "event_title": event.get('title', 'Unknown'),
+                "recommendation": "Event data quality issues detected - analysis may be unreliable"
+            }), 400
+        
+        print(f"✅ Event data validation passed: {validated_event.get('title', 'Unknown')}")
+        
+        # Create GPT market context with live market data
+        from services.live_market_data import live_market_data_service
+        
+        # Get live market data from TradingView
+        print("🔄 Fetching live market data from TradingView")
+        live_market_data = live_market_data_service.get_live_market_data()
+        
+        # Create enhanced market context
+        gpt_market_context = MarketContext(
+            current_prices=live_market_data.get('current_prices', {
                 'EUR/USD': 1.0850,
                 'USD/JPY': 148.50,
                 'GBP/USD': 1.2650,
                 'USD/CHF': 0.8650,
                 'AUD/USD': 0.6650,
                 'USD/CAD': 1.3550
-            },
-            recent_volatility={
-                'EUR/USD': 0.008,
-                'USD/JPY': 0.012,
-                'GBP/USD': 0.010,
-                'USD/CHF': 0.007,
-                'AUD/USD': 0.009,
-                'USD/CAD': 0.006
-            },
-            market_sentiment={
+            }),
+            recent_volatility=live_market_data.get('recent_volatility', {
+                'EUR/USD': 'Medium',
+                'USD/JPY': 'Medium',
+                'GBP/USD': 'Medium',
+                'USD/CHF': 'Low',
+                'AUD/USD': 'Medium',
+                'USD/CAD': 'Low'
+            }),
+            market_sentiment=live_market_data.get('market_sentiment', {
                 'EUR/USD': 'neutral',
-                'USD/JPY': 'bullish',
-                'GBP/USD': 'bearish',
+                'USD/JPY': 'neutral',
+                'GBP/USD': 'neutral',
                 'USD/CHF': 'neutral',
                 'AUD/USD': 'neutral',
                 'USD/CAD': 'neutral'
-            },
-            key_levels={
+            }),
+            key_levels=live_market_data.get('key_levels', {
                 'EUR/USD': {'support': [1.0800, 1.0750, 1.0700], 'resistance': [1.0900, 1.0950, 1.1000]},
                 'USD/JPY': {'support': [148.00, 147.50, 147.00], 'resistance': [149.00, 149.50, 150.00]},
                 'GBP/USD': {'support': [1.2600, 1.2550, 1.2500], 'resistance': [1.2700, 1.2750, 1.2800]}
-            },
+            }),
             economic_calendar=[],
-            bond_yields={'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8},
-            equity_indices={'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000},
-            commodity_prices={'GOLD': 2000, 'OIL': 75, 'SILVER': 25},
-            # Enhanced positioning data
-            retail_sentiment={
+            bond_yields=live_market_data.get('bond_yields', {'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8}),
+            equity_indices=live_market_data.get('equity_indices', {'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000}),
+            commodity_prices=live_market_data.get('commodity_prices', {'GOLD': 2000, 'OIL': 75, 'SILVER': 25}),
+            # Enhanced positioning data from live market data
+            retail_sentiment=live_market_data.get('retail_sentiment', {
                 'EUR/USD': 0.65,
                 'USD/JPY': 0.35,
                 'GBP/USD': 0.50,
                 'USD/CHF': 0.70,
                 'AUD/USD': 0.40,
                 'USD/CAD': 0.55
-            },
-            futures_positioning={
+            }),
+            futures_positioning=live_market_data.get('futures_positioning', {
                 'EUR/USD': 15000,
                 'USD/JPY': -8000,
                 'GBP/USD': 5000,
                 'USD/CHF': 12000,
                 'AUD/USD': -3000,
                 'USD/CAD': 2000
-            },
-            institutional_flow={
+            }),
+            institutional_flow=live_market_data.get('institutional_flow', {
                 'EUR/USD': 25.5,
                 'USD/JPY': -15.2,
                 'GBP/USD': 8.7,
                 'USD/CHF': 18.3,
                 'AUD/USD': -12.1,
                 'USD/CAD': 5.4
-            },
+            }),
             time_to_event=3600,  # 1 hour until event
             liquidity_level=2,   # Medium liquidity
             scenario_probabilities={
@@ -1718,21 +1743,23 @@ def get_enhanced_analysis(news_id):
         
         # Use analysis_type from request or determine based on actual data availability
         if 'analysis_type' not in locals():
-            has_actual_data = event.get('actual') and event.get('actual') not in ['N/A', '', None]
+            has_actual_data = validated_event.get('actual') and validated_event.get('actual') not in ['N/A', '', None, '--']
             analysis_type = "post_event" if has_actual_data else "pre_event"
         
-        print(f"📊 Analysis type: {analysis_type.upper()} (Actual data: {event.get('actual', 'Not available')})")
+        print(f"📊 Analysis type: {analysis_type.upper()} (Actual data: {validated_event.get('actual', 'Not available')})")
+        print(f"📊 Market data source: {live_market_data.get('data_source', 'unknown')}")
+        print(f"📊 Data quality: {live_market_data.get('data_quality', 'unknown')}")
         
-        # Get GPT-powered comprehensive analysis using new streamlined system
+        # Get GPT-powered comprehensive analysis using validated data and live market context
         try:
-            print(f"🚨🚨🚨 USING NEW STREAMLINED GPT ANALYZER 🚨🚨🚨")
-            gpt_analysis = gpt_ai_analyzer.analyze_macro_event(event, gpt_market_context, analysis_type)
+            print(f"🚨🚨🚨 USING ENHANCED GPT ANALYZER WITH VALIDATION 🚨🚨🚨")
+            gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type)
         except Exception as e:
-            print(f"🚨🚨🚨 NEW GPT ANALYZER FAILED - USING FALLBACK 🚨🚨🚨")
+            print(f"🚨🚨🚨 ENHANCED GPT ANALYZER FAILED - USING FALLBACK 🚨🚨🚨")
             print(f"Error: {e}")
             # Fallback to enhanced analysis
             gpt_analysis = enhanced_ai_analyzer.analyze_macro_event(
-                event, 
+                validated_event, 
                 gpt_market_context, 
                 analysis_type
             )
@@ -1740,7 +1767,10 @@ def get_enhanced_analysis(news_id):
         # Debug: Log what we're getting from GPT
         print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
         print(f"🚨 Analysis Type: {type(gpt_analysis)}")
-        print(f"🚨 Analysis Keys: {list(gpt_analysis.keys()) if isinstance(gpt_analysis, dict) else 'Not a dict'}")
+        print(f"🚨 Analysis Keys: {list(gpt_analysis.__dict__.keys()) if hasattr(gpt_analysis, '__dict__') else 'Not an object'}")
+        print(f"🚨 Data Quality: {getattr(gpt_analysis, 'data_quality', 'unknown')}")
+        print(f"🚨 Validation Status: {getattr(gpt_analysis, 'validation_status', 'unknown')}")
+        print(f"🚨 Market Data Source: {getattr(gpt_analysis, 'market_data_source', 'unknown')}")
         print(f"🚨 Sample Analysis: {str(gpt_analysis)[:200]}...")
         print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
         
@@ -1772,52 +1802,34 @@ def get_enhanced_analysis(news_id):
                 'model_used': gpt_analysis.model_used,
                 'cost_estimate': gpt_analysis.cost_estimate,
                 'cache_hit': gpt_analysis.cache_hit,
-                'definition_source': gpt_analysis.definition_source
+                'definition_source': gpt_analysis.definition_source,
+                
+                # Data quality information (NEW)
+                'data_quality': getattr(gpt_analysis, 'data_quality', 'unknown'),
+                'validation_status': getattr(gpt_analysis, 'validation_status', 'unknown'),
+                'market_data_source': getattr(gpt_analysis, 'market_data_source', 'unknown')
             }
         elif isinstance(gpt_analysis, dict):
-            # Optimized ChatGPT analyzer returns dict (includes professional sections)
-            enhanced_analysis = {
-                'event': event,
-                'event_summary': gpt_analysis.get('event_summary', {}),
-                'market_reaction': gpt_analysis.get('market_reaction', {}),
-                'economic_significance': gpt_analysis.get('economic_significance', {}),
-                'policy_implications': gpt_analysis.get('policy_implications', {}),
-                'trading_strategy': gpt_analysis.get('trading_strategy', {}),
-                'risk_assessment': gpt_analysis.get('risk_assessment', {}),
-                'metadata': gpt_analysis.get('metadata', {}),
-                'analysis_type': analysis_type,
-                'model_used': gpt_analysis.get('metadata', {}).get('model_used', 'optimized_chatgpt'),
-                'cache_status': gpt_analysis.get('metadata', {}).get('cache_status', 'unknown'),
-                'analysis_timestamp': gpt_analysis.get('metadata', {}).get('analysis_timestamp', datetime.now().isoformat()),
-                # Professional template sections
-                'summary': gpt_analysis.get('summary'),
-                'market_impact': gpt_analysis.get('market_impact'),
-                'policy_context': gpt_analysis.get('policy_context'),
-                'trading_view': gpt_analysis.get('trading_view'),
-                'big_picture': gpt_analysis.get('big_picture')
-            }
+            # Fallback structure
+            enhanced_analysis = gpt_analysis
         else:
-            # New streamlined GPT analysis format
+            # Unknown structure
             enhanced_analysis = {
-                'event': event,
-                'event_summary': getattr(gpt_analysis, 'event_summary', {}),
-                'market_reaction': getattr(gpt_analysis, 'market_reaction', {}),
-                'implications_takeaways': getattr(gpt_analysis, 'implications_takeaways', {}),
-                'trading_plan': getattr(gpt_analysis, 'trading_plan', {}),
-                'big_picture': getattr(gpt_analysis, 'big_picture', {}),
-                'confidence_score': getattr(gpt_analysis, 'confidence_score', 70),
-                'analysis_timestamp': getattr(gpt_analysis, 'analysis_timestamp', datetime.now().isoformat()),
-                'analysis_type': getattr(gpt_analysis, 'analysis_type', analysis_type),
-                'model_used': getattr(gpt_analysis, 'model_used', 'gpt_ai_analyzer'),
-                'cost_estimate': getattr(gpt_analysis, 'cost_estimate', 0),
-                'cache_hit': getattr(gpt_analysis, 'cache_hit', False)
+                'error': 'Unknown analysis structure',
+                'raw_analysis': str(gpt_analysis)
             }
         
         return jsonify(enhanced_analysis)
         
     except Exception as e:
-        print(f"Error generating GPT analysis: {e}")
-        return jsonify({"error": "Failed to generate GPT analysis"}), 500
+        print(f"❌ Error in enhanced analysis endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": "Analysis failed",
+            "message": str(e),
+            "event_id": news_id
+        }), 500
 
 @app.route('/api/health')
 @limiter.exempt  # Health endpoints should not be rate limited
