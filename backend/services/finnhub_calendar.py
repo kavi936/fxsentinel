@@ -346,11 +346,50 @@ class FinnhubCalendarService:
             def format_economic_value(value, unit=''):
                 if value is None or value == 'None':
                     return '--'
-                if isinstance(value, (int, float)):
-                    if unit:
-                        return f"{value}{unit}"
-                    return str(value)
-                return str(value) if value else '--'
+                
+                # Convert to string for processing
+                value_str = str(value).strip()
+                if not value_str or value_str == 'None':
+                    return '--'
+                
+                # Check if value already has a unit
+                if any(unit_char in value_str for unit_char in ['%', 'K', 'M', 'B', 'T']):
+                    return value_str
+                
+                # Try to convert to number for formatting
+                try:
+                    num_value = float(value_str)
+                    
+                    # Determine unit based on event type and value magnitude
+                    event_lower = event.get('event', '').lower()
+                    
+                    # Employment-related events (Non-Farm Payrolls, etc.)
+                    if any(keyword in event_lower for keyword in ['employment', 'payroll', 'jobs', 'non-farm', 'nfp', 'nonfarm', 'adp', 'wage', 'earnings']):
+                        if num_value >= 1000:  # Large employment numbers
+                            return f"{num_value:.0f}K"
+                        else:
+                            return f"{num_value:.0f}"
+                    
+                    # Percentage-based events (CPI, GDP, etc.)
+                    elif any(keyword in event_lower for keyword in ['cpi', 'inflation', 'gdp', 'rate', 'unemployment']):
+                        if num_value < 10:  # Small percentages
+                            return f"{num_value:.1f}%"
+                        else:
+                            return f"{num_value:.0f}%"
+                    
+                    # Index-based events (PMI, etc.)
+                    elif any(keyword in event_lower for keyword in ['pmi', 'index', 'manufacturing']):
+                        return f"{num_value:.1f}"
+                    
+                    # Default formatting with provided unit
+                    elif unit:
+                        return f"{num_value}{unit}"
+                    else:
+                        return f"{num_value:.1f}"
+                        
+                except (ValueError, TypeError):
+                    # If we can't convert to number, return as string
+                    return value_str
             
             # Get unit from event
             unit = event.get('unit', '')
@@ -388,8 +427,29 @@ class FinnhubCalendarService:
                                 min_val, max_val = config['range']
                                 expected = max(min_val, min(max_val, expected))
                                 
-                                # Format with unit
-                                if config['unit'] == '%':
+                                # Format with unit using the same logic as format_economic_value
+                                event_lower = event_name.lower()
+                                
+                                # Employment-related events
+                                if any(keyword in event_lower for keyword in ['employment', 'payroll', 'jobs', 'non-farm', 'nfp', 'nonfarm', 'adp', 'wage', 'earnings']):
+                                    if expected >= 1000:
+                                        return f"{expected:.0f}K"
+                                    else:
+                                        return f"{expected:.0f}"
+                                
+                                # Percentage-based events
+                                elif any(keyword in event_lower for keyword in ['cpi', 'inflation', 'gdp', 'rate', 'unemployment']):
+                                    if expected < 10:
+                                        return f"{expected:.1f}%"
+                                    else:
+                                        return f"{expected:.0f}%"
+                                
+                                # Index-based events
+                                elif any(keyword in event_lower for keyword in ['pmi', 'index', 'manufacturing']):
+                                    return f"{expected:.1f}"
+                                
+                                # Default formatting
+                                elif config['unit'] == '%':
                                     return f"{expected:.1f}%"
                                 elif config['unit'] == 'K':
                                     return f"{expected:.0f}K"

@@ -49,6 +49,21 @@
 - [ ] Ensure proper scaling on different screen sizes
 - [ ] Test calendar layout on various resolutions
 
+### 3.6. **Economic Calendar Value Formatting** ✅ RESOLVED
+**Problem**: Economic calendar shows raw numbers (73, 78) instead of formatted values (73K, 78K)
+**Status**: ✅ IMPLEMENTED - Smart value formatting with proper units
+**Files Modified**:
+- `backend/services/finnhub_calendar.py`
+
+**Tasks**:
+- [x] Fix format_economic_value function to detect event types
+- [x] Add proper unit formatting for employment data (K suffix)
+- [x] Add proper unit formatting for percentage data (% suffix)
+- [x] Add proper unit formatting for index data (decimal precision)
+- [x] Improve enhanced expected value generation formatting
+
+**Resolution**: Enhanced the format_economic_value function to intelligently detect event types and apply appropriate units. Non-Farm Payrolls will now show "73K" and "78K" instead of raw numbers.
+
 ## 🟡 **Priority: Functional Issues**
 
 ### 4. **Filter and Sorting Problems** 🟡 MEDIUM PRIORITY
