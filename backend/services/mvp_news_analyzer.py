@@ -246,40 +246,70 @@ class MVPNewsAnalyzer:
             # Initialize OpenAI client
             client = openai.OpenAI(api_key=api_key, timeout=30.0)
             
-            # Create optimized prompt for two-paragraph format
+            # Create enhanced prompt for trader-focused analysis
             title = news_item.get('title', '')
             summary = news_item.get('summary', '')
             source = news_item.get('source', '')
             
-            prompt = f"""
+            # Extract currency pairs from the news
+            currency_pairs = self._extract_currency_pairs(title, summary)
             
-Analyze this news article and provide a two-paragraph analysis in the following format:
+            prompt = f"""
+You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
 
-NEWS: {title}
-SUMMARY: {summary}
-SOURCE: {source}
+NEWS TO ANALYZE:
+Title: {title}
+Summary: {summary}
+Source: {source}
+Affected Currency Pairs: {currency_pairs}
 
-IMPORTANT: Even if the summary is brief, and the news article may not be entirely relevant to forex traders analyze the title and context to provide meaningful forex insights. For central bank events, consider the broader market implications. Think outside the box and possible implications of the news.
+ANALYSIS REQUIREMENTS:
 
-Please provide:
-1. NEWS IMPACT PARAGRAPH (2-3 sentences): Explain the market implications and sentiment
-2. TRADING IMPLICATIONS PARAGRAPH (2-3 sentences): Include immediate reaction, key pairs, volatility, and trading strategies
+1. **Market Impact Analysis** (2-3 sentences):
+   - Explain the specific market implications and sentiment
+   - Focus on which currency pairs are most affected and why
+   - Include magnitude of expected impact (high/medium/low)
+   - Reference current market context and positioning
 
-Format your response as JSON:
+2. **Trading Intelligence** (2-3 sentences):
+   - Provide actionable market intelligence (NOT trade recommendations)
+   - Identify key levels to watch and market dynamics
+   - Explain what traders should monitor and why
+   - Include timeframe expectations and volatility outlook
+
+3. **Currency-Specific Analysis**:
+   - Focus on the most relevant currency pairs from the news
+   - Explain the specific impact on each major pair
+   - Consider cross-market correlations and safe-haven flows
+
+4. **Risk Context**:
+   - Identify potential market risks and uncertainties
+   - Explain what could amplify or dampen the impact
+   - Consider political, economic, and technical factors
+
+IMPORTANT GUIDELINES:
+- Be specific about currency pairs and market dynamics
+- Provide concrete market intelligence, not generic statements
+- Focus on "what to watch" rather than "what to do"
+- Consider current market positioning and sentiment
+- Include specific price levels and timeframes when relevant
+- Avoid generic phrases like "monitor for opportunities"
+
+RESPONSE FORMAT (JSON):
 {{
-    "news_impact": "Your news impact paragraph here...",
-    "trading_implications": "Your trading implications paragraph here...",
-    "immediate_reaction": "neutral",
+    "news_impact": "Specific market impact explanation with currency focus...",
+    "trading_implications": "Actionable market intelligence and what to watch...",
+    "immediate_reaction": "bullish_usd|bearish_usd|neutral",
     "key_pairs": ["EUR/USD", "USD/JPY"],
-    "volatility": "medium",
-    "timeframe": "1-24 hours",
+    "volatility": "high|medium|low",
+    "timeframe": "specific timeframe like 'next 2-4 hours' or 'London session'",
     "confidence": 85
 }}
 
-IMPORTANT: For immediate_reaction, use ONLY one of these values: "bullish_usd", "bearish_usd", or "neutral"
-For volatility, use ONLY one of these values: "high", "medium", or "low"
-
-Focus on actionable forex trading insights. For central bank events, consider volatility and uncertainty in markets."""
+For immediate_reaction, use ONLY: "bullish_usd", "bearish_usd", or "neutral"
+For volatility, use ONLY: "high", "medium", or "low"
+For confidence, use 50-95 based on clarity and certainty of the news impact.
+"""
             
             # Call GPT
             print(f"🔍 Calling GPT API...")
@@ -341,6 +371,34 @@ Focus on actionable forex trading insights. For central bank events, consider vo
             # Fallback to free analysis
             return self._analyze_with_free(news_item)
     
+    def _extract_currency_pairs(self, title: str, summary: str) -> List[str]:
+        """Extract relevant currency pairs from news content"""
+        text = f"{title} {summary}".lower()
+        pairs = []
+        
+        # Define currency keywords and their corresponding pairs
+        currency_mapping = {
+            'euro': 'EUR/USD', 'eur': 'EUR/USD', 'ecb': 'EUR/USD',
+            'dollar': 'USD/JPY', 'usd': 'USD/JPY', 'fed': 'USD/JPY',
+            'pound': 'GBP/USD', 'gbp': 'GBP/USD', 'boe': 'GBP/USD',
+            'yen': 'USD/JPY', 'jpy': 'USD/JPY', 'boj': 'USD/JPY',
+            'franc': 'USD/CHF', 'chf': 'USD/CHF', 'snb': 'USD/CHF',
+            'australian': 'AUD/USD', 'aud': 'AUD/USD', 'rba': 'AUD/USD',
+            'canadian': 'USD/CAD', 'cad': 'USD/CAD', 'boc': 'USD/CAD',
+            'new zealand': 'NZD/USD', 'nzd': 'NZD/USD', 'rbnz': 'NZD/USD'
+        }
+        
+        # Check for currency mentions
+        for keyword, pair in currency_mapping.items():
+            if keyword in text and pair not in pairs:
+                pairs.append(pair)
+        
+        # If no specific currencies found, return major pairs
+        if not pairs:
+            pairs = ['EUR/USD', 'USD/JPY']
+        
+        return pairs[:3]  # Limit to top 3 most relevant pairs
+    
     def _analyze_sentiment(self, text: str) -> Dict[str, Any]:
         """Analyze sentiment of text"""
         text_lower = text.lower()
@@ -382,25 +440,29 @@ Focus on actionable forex trading insights. For central bank events, consider vo
         """Generate news impact paragraph"""
         sentiment_text = sentiment['sentiment']
         
+        # Extract currency pairs from title
+        currency_pairs = self._extract_currency_pairs(title, "")
+        pairs_text = ', '.join(currency_pairs[:2])  # Focus on top 2 pairs
+        
         if sentiment_text == 'positive':
-            return f"{title} from {source} has significant implications for forex markets. This news suggests positive market sentiment that may strengthen affected currencies. The development increases the probability of bullish movements as markets anticipate improved economic conditions. The credibility of this news source and positive market context suggests upward pressure on currency pairs."
+            return f"{title} from {source} creates bullish sentiment for {pairs_text}. This news suggests strengthening fundamentals that may drive currency appreciation. The development increases probability of upward movements as markets price in improved economic conditions. Focus on {pairs_text} for maximum impact during the next trading session."
         elif sentiment_text == 'negative':
-            return f"{title} from {source} has significant implications for forex markets. This news indicates negative market sentiment that may weaken affected currencies. The development increases the probability of bearish movements as markets anticipate economic challenges. The credibility of this news source and negative market context suggests downward pressure on currency pairs."
+            return f"{title} from {source} creates bearish sentiment for {pairs_text}. This news suggests weakening fundamentals that may drive currency depreciation. The development increases probability of downward movements as markets price in economic challenges. Focus on {pairs_text} for maximum impact during the next trading session."
         else:
-            return f"{title} from {source} has moderate implications for forex markets. This news shows neutral market sentiment with mixed signals for affected currencies. The development maintains the probability of sideways movements as markets await clearer directional signals. The credibility of this news source and neutral market context suggests range-bound trading for currency pairs."
+            return f"{title} from {source} has mixed implications for {pairs_text}. This news shows neutral sentiment with conflicting signals for affected currencies. The development maintains probability of sideways movements as markets await clearer directional signals. Monitor {pairs_text} for breakout opportunities during the next trading session."
     
     def _generate_trading_implications_paragraph(self, sentiment: Dict, news_item: Dict) -> str:
         """Generate trading implications paragraph"""
         sentiment_text = sentiment['sentiment']
-        currency_pairs = news_item.get('currency_pairs', ['EUR/USD'])
-        pairs_text = ', '.join(currency_pairs)
+        currency_pairs = self._extract_currency_pairs(news_item.get('title', ''), news_item.get('summary', ''))
+        pairs_text = ', '.join(currency_pairs[:2])
         
         if sentiment_text == 'positive':
-            return f"**Immediate Reaction:** Bullish USD. **Key Pairs Affected:** {pairs_text}. **Expected Volatility:** Medium. **Trading Strategy 1:** Sentiment Following - Bullish on {currency_pairs[0]} with entry zone current price to +10 pips, stop loss at -20 pips, take profit at +30 pips. Risk level: Medium. **Trading Strategy 2:** Momentum Breakout - Bullish on {currency_pairs[0]} with entry zone current price to +15 pips, stop loss at -25 pips, take profit at +40 pips. Risk level: Medium."
+            return f"Focus on {pairs_text} for bullish momentum opportunities. Monitor key resistance levels and watch for breakout confirmations. Expect increased volatility during the next 2-4 hours as markets digest this news. Key levels to watch: current price +20 pips resistance, -15 pips support. Risk management crucial as sentiment-driven moves can be volatile."
         elif sentiment_text == 'negative':
-            return f"**Immediate Reaction:** Bearish USD. **Key Pairs Affected:** {pairs_text}. **Expected Volatility:** Medium. **Trading Strategy 1:** Sentiment Following - Bearish on {currency_pairs[0]} with entry zone current price to -10 pips, stop loss at +20 pips, take profit at -30 pips. Risk level: Medium. **Trading Strategy 2:** Momentum Breakdown - Bearish on {currency_pairs[0]} with entry zone current price to -15 pips, stop loss at +25 pips, take profit at -40 pips. Risk level: Medium."
+            return f"Focus on {pairs_text} for bearish momentum opportunities. Monitor key support levels and watch for breakdown confirmations. Expect increased volatility during the next 2-4 hours as markets digest this news. Key levels to watch: current price -20 pips support, +15 pips resistance. Risk management crucial as sentiment-driven moves can be volatile."
         else:
-            return f"**Immediate Reaction:** Neutral. **Key Pairs Affected:** {pairs_text}. **Expected Volatility:** Low. **Trading Strategy 1:** Wait for Confirmation - Monitor {currency_pairs[0]} for clear directional signals before entering positions. Risk level: Low. **Trading Strategy 2:** Range Trading - Consider range-bound strategies on {currency_pairs[0]} between support and resistance levels. Risk level: Low."
+            return f"Monitor {pairs_text} for breakout opportunities in either direction. Current neutral sentiment suggests range-bound trading until clearer signals emerge. Expect low to medium volatility during the next 2-4 hours. Key levels to watch: current price ±15 pips for potential breakout zones. Wait for confirmation before taking directional positions."
     
     def _sentiment_to_reaction(self, sentiment: Dict) -> str:
         """Convert sentiment to immediate reaction"""
@@ -446,13 +508,17 @@ Focus on actionable forex trading insights. For central bank events, consider vo
         title = news_item.get('title', 'News Event')
         source = news_item.get('source', 'Unknown')
         
+        # Extract currency pairs from title
+        currency_pairs = self._extract_currency_pairs(title, news_item.get('summary', ''))
+        pairs_text = ', '.join(currency_pairs[:2])
+        
         return MVPAnalysisResult(
-            news_impact=f"{title} from {source} has moderate implications for forex markets. This news shows neutral market sentiment with mixed signals for affected currencies. The development maintains the probability of sideways movements as markets await clearer directional signals.",
-            trading_implications="Based on this news, traders should monitor key currency pairs for potential trading opportunities. The immediate market reaction may be volatile, so risk management is crucial. Focus on major pairs like EUR/USD and USD/JPY, and be prepared for both bullish and bearish scenarios depending on market interpretation.",
+            news_impact=f"{title} from {source} has mixed implications for {pairs_text}. This news shows neutral sentiment with conflicting signals for affected currencies. The development maintains probability of sideways movements as markets await clearer directional signals. Monitor {pairs_text} for breakout opportunities during the next trading session.",
+            trading_implications=f"Monitor {pairs_text} for breakout opportunities in either direction. Current neutral sentiment suggests range-bound trading until clearer signals emerge. Expect low to medium volatility during the next 2-4 hours. Key levels to watch: current price ±15 pips for potential breakout zones. Wait for confirmation before taking directional positions.",
             immediate_reaction="neutral",
-            key_pairs=['EUR/USD', 'USD/JPY'],
+            key_pairs=currency_pairs,
             volatility="low",
-            timeframe="1-24_hours",
+            timeframe="next 2-4 hours",
             confidence=50,
             analysis_type="free_enhanced",
             risk_assessment={
