@@ -1791,60 +1791,7 @@
   border: 1px solid rgba(34, 197, 94, 0.3);
 }
 
-/* Market Context Section */
-.market-context {
-  margin: 20px 0;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
 
-.market-context h5 {
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.context-sections {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.context-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.context-label {
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.context-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.context-item {
-  font-size: 12px;
-  color: #ffffff;
-  background: rgba(59, 130, 246, 0.2);
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-weight: 500;
-  text-transform: capitalize;
-}
 
 /* Responsive Design - Enhanced */
 @media (max-width: 768px) {

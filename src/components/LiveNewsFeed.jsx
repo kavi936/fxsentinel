@@ -955,44 +955,7 @@ const LiveNewsFeed = () => {
                           </div>
                         )}
                         
-                        {/* Market Context */}
-                        {aiAnalysis.market_context && (
-                          <div className="market-context">
-                            <h5>Market Context</h5>
-                            <div className="context-sections">
-                              {aiAnalysis.market_context.economic_factors && (
-                                <div className="context-section">
-                                  <span className="context-label">Economic Factors:</span>
-                                  <div className="context-items">
-                                    {aiAnalysis.market_context.economic_factors.map((factor, index) => (
-                                      <span key={index} className="context-item">{factor}</span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {aiAnalysis.market_context.technical_levels && (
-                                <div className="context-section">
-                                  <span className="context-label">Technical Levels:</span>
-                                  <div className="context-items">
-                                    {aiAnalysis.market_context.technical_levels.map((level, index) => (
-                                      <span key={index} className="context-item">{level}</span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                              {aiAnalysis.market_context.sentiment_drivers && (
-                                <div className="context-section">
-                                  <span className="context-label">Sentiment Drivers:</span>
-                                  <div className="context-items">
-                                    {aiAnalysis.market_context.sentiment_drivers.map((driver, index) => (
-                                      <span key={index} className="context-item">{driver}</span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
+
                         
 
                         

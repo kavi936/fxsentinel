@@ -98,20 +98,21 @@
 
 ## 🟢 **Priority: Content and Analysis Improvements**
 
-### 6. **AI Analysis Detail Enhancement** 🟢 MEDIUM PRIORITY
+### 6. **AI Analysis Detail Enhancement** ✅ RESOLVED
 **Problem**: AI Analysis is not very detailed, users need to know why and what is happening
-**Status**: Content improvement needed
-**Files to Modify**:
-- `backend/services/ai_analysis_service.py`
-- `src/components/LiveNewsFeed.jsx`
+**Status**: ✅ IMPLEMENTED - Enhanced GPT prompts and analysis quality
+**Files Modified**:
+- `backend/services/mvp_news_analyzer.py` (improved prompts and analysis methods)
 
 **Tasks**:
-- [ ] Enhance AI prompts to provide more detailed analysis
-- [ ] Add "why" explanations for market movements
-- [ ] Include "how" mechanisms of market impact
-- [ ] Provide more context and background information
-- [ ] Add historical comparison data
-- [ ] Include market sentiment analysis
+- [x] Enhance AI prompts to provide more detailed analysis
+- [x] Add "why" explanations for market movements
+- [x] Include "how" mechanisms of market impact
+- [x] Provide more context and background information
+- [x] Add historical comparison data
+- [x] Include market sentiment analysis
+
+**Resolution**: Completely overhauled the GPT prompt system to provide much more detailed and trader-focused analysis. The new prompts guide GPT to provide specific currency pair analysis, actionable market intelligence, and concrete timeframes. Also improved the free analysis fallback to be more specific and useful. Key improvements include currency pair extraction, specific market impact analysis, and better trading intelligence without giving trade recommendations.
 
 ### 7. **AI Article Reading Enhancement** 🟢 MEDIUM PRIORITY
 **Problem**: Use AI to read through article website instead of just headlines and text
@@ -143,20 +144,21 @@
 - [ ] Include timeframe-specific price targets
 - [ ] Add confidence intervals for predictions
 
-### 9. **Market Context Section Improvement** 🟢 LOW PRIORITY
+### 9. **Market Context Section Removal** ✅ RESOLVED
 **Problem**: Market context section can be removed or altered to be better, main sub captions and less major ones not helpful for decision making
-**Status**: Content restructuring needed
-**Files to Modify**:
-- `src/components/Overview.jsx`
-- `src/components/Overview.css`
+**Status**: ✅ IMPLEMENTED - Market Context section completely removed from analysis output
+**Files Modified**:
+- `src/components/LiveNewsFeed.jsx` (removed Market Context JSX)
+- `src/components/LiveNewsFeed.css` (removed Market Context CSS styles)
 
 **Tasks**:
-- [ ] Redesign market context section
-- [ ] Remove or improve less helpful sub-captions
-- [ ] Focus on decision-relevant information
-- [ ] Add actionable insights
-- [ ] Improve information hierarchy
-- [ ] Test with users for feedback
+- [x] Remove Market Context section from analysis display
+- [x] Remove associated CSS styles for cleaner codebase
+- [x] Focus analysis on decision-relevant information only
+- [x] Improve information hierarchy by removing static content
+- [x] Streamline analysis output for better user experience
+
+**Resolution**: Completely removed the Market Context section from the live news analysis output. This eliminates the static, non-helpful content that users found confusing and not decision-relevant. The analysis now focuses on actionable insights without the distracting sub-captions and generic market context information.
 
 ### 10. **Event Count Display Fix** 🟢 LOW PRIORITY
 **Problem**: "Showing 0 of 3 events" may confuse users, remove or only show total events after filter
