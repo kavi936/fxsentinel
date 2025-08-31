@@ -1,0 +1,202 @@
+/* Info Icon Component Styles */
+.info-icon-container {
+  position: relative;
+  display: inline-block;
+  margin-left: 8px;
+  cursor: help;
+}
+
+.info-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.2);
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  transition: all 0.2s ease;
+  color: rgba(128, 128, 128, 0.8);
+}
+
+.info-icon:hover {
+  background: rgba(128, 128, 128, 0.3);
+  border-color: rgba(128, 128, 128, 0.5);
+  color: rgba(128, 128, 128, 1);
+  transform: scale(1.1);
+}
+
+.info-icon svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Tooltip Styles */
+.info-tooltip {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  max-width: 380px;
+  min-width: 320px;
+  background: rgba(0, 0, 0, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: tooltipFadeIn 0.2s ease-out;
+  white-space: normal;
+  word-wrap: break-word;
+  pointer-events: none;
+}
+
+/* Ensure tooltips appear above everything - using maximum z-index */
+.news-calendar .info-tooltip,
+.market-sentiment-card .info-tooltip,
+.ai-analysis-card .info-tooltip,
+.live-news-analysis-card .info-tooltip,
+.news-calendar * .info-tooltip,
+.market-sentiment-card * .info-tooltip,
+.ai-analysis-card * .info-tooltip,
+.live-news-analysis-card * .info-tooltip,
+.calendar-content .info-tooltip,
+.sentiment-content .info-tooltip,
+.ai-content .info-tooltip,
+.news-content .info-tooltip,
+.info-tooltip {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+}
+
+/* Specific overrides for problematic sections */
+.market-closed-state .info-tooltip,
+.market-closed-state + .info-tooltip,
+.news-content .info-tooltip,
+.news-content + .info-tooltip,
+.sentiment-content .info-tooltip,
+.sentiment-content + .info-tooltip {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+}
+
+/* Force tooltips to appear above all card content */
+.market-sentiment-card .info-tooltip,
+.live-news-analysis-card .info-tooltip {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  transform: translateX(-50%) !important;
+}
+
+/* Ensure tooltips are rendered at the document body level */
+.info-tooltip {
+  z-index: 2147483647 !important;
+  position: fixed !important;
+  transform: translateX(-50%) !important;
+}
+
+.info-tooltip-top {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.info-tooltip-bottom {
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.info-tooltip-left {
+  right: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.info-tooltip-right {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.tooltip-content {
+  font-weight: 400;
+  text-align: left;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+
+.info-tooltip-top .tooltip-arrow {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: rgba(0, 0, 0, 0.95);
+}
+
+.info-tooltip-bottom .tooltip-arrow {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: rgba(0, 0, 0, 0.95);
+}
+
+.info-tooltip-left .tooltip-arrow {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left-color: rgba(0, 0, 0, 0.95);
+}
+
+.info-tooltip-right .tooltip-arrow {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right-color: rgba(0, 0, 0, 0.95);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .info-tooltip {
+    max-width: 300px;
+    min-width: 260px;
+    font-size: 12px;
+    padding: 14px 16px;
+    line-height: 1.5;
+  }
+  
+  .info-icon {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .info-icon svg {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .info-tooltip {
+    max-width: 280px;
+    min-width: 240px;
+    font-size: 11px;
+    padding: 12px 14px;
+  }
+}
