@@ -5616,6 +5616,191 @@ def restart_background_worker():
             'error': str(e)
         }), 500
 
+@app.route('/api/trigger-alerts', methods=['POST'])
+@limiter.exempt
+def trigger_alerts():
+    """Trigger alert processing via webhook - called by external cron jobs"""
+    try:
+        logger.info("🔄 Alert trigger received via webhook")
+        
+        # Import alert processing functions
+        from services.background_alert_worker import background_worker
+        
+        # Process news alerts
+        news_alerts_processed = False
+        try:
+            background_worker._check_news_alerts()
+            news_alerts_processed = True
+            logger.info("✅ News alerts processed successfully")
+        except Exception as e:
+            logger.error(f"❌ Error processing news alerts: {e}")
+        
+        # Process economic calendar alerts
+        calendar_alerts_processed = False
+        try:
+            background_worker._check_economic_calendar_alerts()
+            calendar_alerts_processed = True
+            logger.info("✅ Economic calendar alerts processed successfully")
+        except Exception as e:
+            logger.error(f"❌ Error processing calendar alerts: {e}")
+        
+        # Process post-news analysis
+        post_news_processed = False
+        try:
+            background_worker._process_post_news_analysis()
+            post_news_processed = True
+            logger.info("✅ Post-news analysis processed successfully")
+        except Exception as e:
+            logger.error(f"❌ Error processing post-news analysis: {e}")
+        
+        return jsonify({
+            'success': True,
+            'news_alerts_processed': news_alerts_processed,
+            'calendar_alerts_processed': calendar_alerts_processed,
+            'post_news_processed': post_news_processed,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Error in alert trigger: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/health/alert-service')
+@limiter.exempt
+def alert_service_health():
+    """Health check for alert service - called by monitoring services"""
+    try:
+        from services.background_alert_worker import background_worker
+        
+        # Check background worker status
+        worker_status = background_worker.get_status()
+        
+        # Check if worker is running
+        worker_healthy = worker_status.get('running', False) and worker_status.get('thread_alive', False)
+        
+        # Check last check time
+        last_check = worker_status.get('last_check')
+        if last_check:
+            last_check_time = datetime.fromisoformat(last_check.replace('Z', '+00:00'))
+            time_since_check = datetime.now(last_check_time.tzinfo) - last_check_time
+            recent_check = time_since_check.total_seconds() < 300  # 5 minutes
+        else:
+            recent_check = False
+        
+        # Overall health status
+        service_healthy = worker_healthy and recent_check
+        
+        health_status = {
+            'service_status': 'healthy' if service_healthy else 'unhealthy',
+            'last_check': datetime.now().isoformat(),
+            'worker_running': worker_healthy,
+            'recent_check': recent_check,
+            'background_worker': worker_status,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return jsonify(health_status)
+        
+    except Exception as e:
+        logger.error(f"❌ Health check error: {e}")
+        return jsonify({
+            'service_status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/deployment-health-check')
+@limiter.exempt
+def deployment_health_check():
+    """Comprehensive health check after deployment - ensures bot is working"""
+    try:
+        from services.background_alert_worker import background_worker
+        
+        # Check all critical services
+        services_status = {
+            'background_worker': False,
+            'telegram_bot': False,
+            'news_api': False,
+            'ai_service': False,
+            'database': True  # Assume database is working if we can reach this endpoint
+        }
+        
+        # Check background worker
+        try:
+            worker_status = background_worker.get_status()
+            services_status['background_worker'] = (
+                worker_status.get('running', False) and 
+                worker_status.get('thread_alive', False)
+            )
+        except Exception as e:
+            logger.error(f"Background worker check failed: {e}")
+        
+        # Check Telegram bot
+        try:
+            # Test Telegram bot connectivity
+            import requests
+            telegram_test = requests.get('https://api.telegram.org/bot' + os.getenv('TELEGRAM_BOT_TOKEN', '') + '/getMe', timeout=5)
+            services_status['telegram_bot'] = telegram_test.status_code == 200
+        except Exception as e:
+            logger.error(f"Telegram bot check failed: {e}")
+        
+        # Check news API
+        try:
+            news_test = requests.get(f"{request.host_url}api/news", timeout=10)
+            services_status['news_api'] = news_test.status_code == 200
+        except Exception as e:
+            logger.error(f"News API check failed: {e}")
+        
+        # Check AI service
+        try:
+            services_status['ai_service'] = bool(os.getenv('OPENAI_API_KEY'))
+        except Exception as e:
+            logger.error(f"AI service check failed: {e}")
+        
+        # Auto-restart background worker if it's down
+        if not services_status['background_worker']:
+            logger.warning("🔄 Background worker is down, attempting restart...")
+            try:
+                background_worker.stop()
+                import time
+                time.sleep(2)
+                background_worker.start()
+                logger.info("✅ Background worker restarted successfully")
+                
+                # Check again after restart
+                time.sleep(5)
+                worker_status = background_worker.get_status()
+                services_status['background_worker'] = (
+                    worker_status.get('running', False) and 
+                    worker_status.get('thread_alive', False)
+                )
+            except Exception as e:
+                logger.error(f"❌ Failed to restart background worker: {e}")
+        
+        # Overall status
+        all_healthy = all(services_status.values())
+        
+        # Log status for monitoring
+        logger.info(f"🔍 Deployment health check: {services_status}")
+        
+        return jsonify({
+            'status': 'healthy' if all_healthy else 'restarting',
+            'services': services_status,
+            'timestamp': datetime.now().isoformat(),
+            'message': 'All services healthy' if all_healthy else 'Some services need attention'
+        })
+        
+    except Exception as e:
+        logger.error(f"❌ Deployment health check error: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 if __name__ == '__main__':
     # Use Railway's PORT environment variable or default to 5001 for local development
     port = int(os.environ.get('PORT', 5001))

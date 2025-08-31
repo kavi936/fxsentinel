@@ -232,6 +232,17 @@ const Overview = () => {
     return () => clearInterval(statusUpdateInterval);
   }, []);
 
+  // Auto-refresh when fallback data is detected
+  useEffect(() => {
+    if (calendarSource === 'fallback_data' && !isRefreshing) {
+      console.log('🔄 Fallback data detected, triggering automatic refresh...');
+      // Add a small delay to avoid immediate refresh loops
+      setTimeout(() => {
+        handleRefresh();
+      }, 2000); // 2 second delay
+    }
+  }, [calendarSource, isRefreshing]);
+
   const fetchEconomicCalendar = async () => {
     try {
       setCalendarLoading(true);
@@ -1514,7 +1525,6 @@ const Overview = () => {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>
-                  {lastUpdated && <span className="auto-refresh-indicator" title="Auto-refresh every 5 minutes">🔄</span>}
                 </button>
               </div>
             </div>
@@ -1524,7 +1534,7 @@ const Overview = () => {
                 <div className="filter-info-grid">
                   <div className="filter-info-main">
                     <span className="events-count">
-                      Showing <strong>{getFilteredEvents().length}</strong> of <strong>{economicEvents.length}</strong> events
+                      Showing <strong>{getFilteredEvents().length}</strong> events
                     </span>
                   </div>
                   <div className="filter-info-details">
