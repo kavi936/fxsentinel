@@ -28,6 +28,18 @@
       "dest": "/fxsentinelSmall.png"
     },
     {
+      "src": "/og-image.jpg",
+      "dest": "/og-image.jpg"
+    },
+    {
+      "src": "/twitter-image.jpg",
+      "dest": "/twitter-image.jpg"
+    },
+    {
+      "src": "/Landing_page_image.png",
+      "dest": "/Landing_page_image.png"
+    },
+    {
       "src": "/logo-simple.svg",
       "dest": "/logo-simple.svg"
     },
