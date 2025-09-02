@@ -4,6 +4,7 @@ Background Alert Worker
 Processes alerts and post-news analysis in the background
 """
 
+import os
 import time
 import logging
 import threading
@@ -25,7 +26,8 @@ class BackgroundAlertWorker:
         self.running = False
         self.thread = None
         self.last_check = None
-        self.api_base_url = 'http://localhost:5001'
+        # Use environment variable for production, fallback to localhost for development
+        self.api_base_url = os.getenv('API_BASE_URL', 'http://localhost:5001')
         
         # Post-news analysis processing
         self.post_news_interval = 300  # 5 minutes
