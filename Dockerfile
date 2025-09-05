@@ -25,5 +25,5 @@ LABEL build_date="2024-01-15"
 # Expose port
 EXPOSE 8000
 
-# Start command - run the main Flask app
-CMD ["python3", "app.py"]
+# Start command - run the main Flask app from backend directory
+CMD ["sh", "-c", "cd backend && python3 app.py"]
