@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 8000
 
 # Start command - run the main Flask app
-CMD ["python3", "app.py"]
+CMD ["python3", "main.py"]
