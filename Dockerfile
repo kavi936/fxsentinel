@@ -18,6 +18,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
+# Add cache-busting label to force rebuild
+LABEL build_version="2.0.0"
+LABEL build_date="2024-01-15"
+
 # Expose port
 EXPOSE 8000
 
