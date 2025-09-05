@@ -6,6 +6,7 @@ Detects when alerts should be sent and triggers them automatically
 
 import asyncio
 import logging
+import time
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from .alert_service import get_alert_service
@@ -28,17 +29,20 @@ class AlertTriggers:
         try:
             logger.info("Checking for live news alerts...")
             
-            # Get recent news from WatcherGuru (last 30 minutes)
-            recent_news = await telegram_user_monitor.get_recent_telegram_news(hours=0.5)
+            # Get recent news from WatcherGuru (last 5 minutes to reduce duplicates)
+            recent_news = await telegram_user_monitor.get_recent_telegram_news(hours=0.08)
             
             if not recent_news:
                 logger.info("No recent news found")
                 return
             
             for news_item in recent_news:
+                # Create more unique news ID with timestamp
+                news_id = f"{news_item.get('id', '')}_{news_item.get('title', '')}_{news_item.get('published_at', '')}_{int(time.time())}"
+                
                 # Skip if already processed
-                news_id = news_item.get('id') or f"{news_item.get('title', '')}_{news_item.get('published_at', '')}"
                 if news_id in self.processed_news_ids:
+                    logger.info(f"Skipping duplicate news: {news_item.get('title', '')[:50]}...")
                     continue
                 
                 # Only alert for high-impact news
