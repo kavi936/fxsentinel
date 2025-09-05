@@ -29,4 +29,4 @@ WORKDIR /app/backend
 EXPOSE 8000
 
 # Start command - run the main Flask app
-CMD ["python", "main.py"]
+CMD ["python", "app.py"]
