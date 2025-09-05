@@ -68,15 +68,12 @@ class RobustTelegramService:
     """
     
     def __init__(self):
-        self.bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-        self.bot_username = os.getenv('TELEGRAM_BOT_USERNAME')
+        self.bot_token = None
+        self.bot_username = None
+        self.enabled = None  # Will be determined on first use
+        self.initialized = False
         
-        if not self.bot_token:
-            logger.warning("TELEGRAM_BOT_TOKEN not found - Telegram service will be disabled")
-            self.enabled = False
-        else:
-            self.enabled = True
-            logger.info("Robust Telegram Service initialized")
+        logger.info("Robust Telegram Service initialized (will check token on first use)")
         
         # Rate limiting
         self.rate_limit = RateLimitInfo()
@@ -108,7 +105,26 @@ class RobustTelegramService:
         # Start processing thread
         self.processing_thread = None
         self.shutdown_event = threading.Event()
-        self._start_processing()
+        # Don't start processing until token is available
+        # self._start_processing()
+    
+    def _ensure_initialized(self):
+        """Initialize token and start processing when first needed"""
+        if self.initialized:
+            return
+        
+        self.bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
+        self.bot_username = os.getenv('TELEGRAM_BOT_USERNAME')
+        
+        if not self.bot_token:
+            logger.warning("TELEGRAM_BOT_TOKEN not found - Telegram service will be disabled")
+            self.enabled = False
+        else:
+            self.enabled = True
+            logger.info("Robust Telegram Service token initialized")
+            self._start_processing()
+        
+        self.initialized = True
     
     def _start_processing(self):
         """Start the message processing thread"""
@@ -232,6 +248,7 @@ class RobustTelegramService:
         Send message asynchronously with retry logic
         Returns: (success, error_message)
         """
+        self._ensure_initialized()
         if not self.enabled:
             return False, "Telegram service disabled"
         
@@ -270,6 +287,7 @@ class RobustTelegramService:
         Send message synchronously with retry logic
         Returns: (success, error_message)
         """
+        self._ensure_initialized()
         if not self.enabled:
             return False, "Telegram service disabled"
         
@@ -446,6 +464,7 @@ class RobustTelegramService:
     
     def get_service_stats(self) -> Dict[str, Any]:
         """Get service statistics"""
+        self._ensure_initialized()
         return {
             'enabled': self.enabled,
             'messages_sent': self.messages_sent,
