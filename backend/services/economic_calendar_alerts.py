@@ -576,17 +576,17 @@ class EconomicCalendarAlerts:
             else:
                 timing_msg = "Event starting soon"
             
-            # Create content
-            content = f"📅 **UPCOMING ECONOMIC EVENT**\n\n"
-            content += f"🔴 **{title}**\n"
-            content += f"⏰ **{timing_msg}**\n\n"
-            content += f"📊 **Event Details:**\n"
+            # Create content with HTML formatting for Telegram
+            content = f"📅 <b>UPCOMING ECONOMIC EVENT</b>\n\n"
+            content += f"🔴 <b>{title}</b>\n"
+            content += f"⏰ <b>{timing_msg}</b>\n\n"
+            content += f"📊 <b>Event Details:</b>\n"
             content += f"• Time: {event_time} UTC\n"
             content += f"• Date: {event_date}\n"
             content += f"• Currency: {currency}\n"
             content += f"• Impact: {impact.upper()}\n"
             content += f"• Affected Pairs: {pairs_text}\n\n"
-            content += f"🎯 **Prepare for Market Volatility!**"
+            content += f"🎯 <b>Prepare for Market Volatility!</b>"
             
             return content
             
