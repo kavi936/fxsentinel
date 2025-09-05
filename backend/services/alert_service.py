@@ -27,11 +27,16 @@ class AlertService:
     def __init__(self):
         """Initialize the alert service"""
         self.telegram_bot = None
+        self.telegram_bot_initialized = False
         self.firebase_storage = FirebaseRealtimeStorage()
-        self._initialize_services()
+        # Don't initialize Telegram bot during __init__ to avoid build-time token access
+        logger.info("AlertService initialized (Telegram bot will be initialized on first use)")
     
-    def _initialize_services(self):
-        """Initialize Telegram bot and Firebase Realtime Database"""
+    def _ensure_telegram_bot(self):
+        """Initialize Telegram bot only when needed (lazy initialization)"""
+        if self.telegram_bot_initialized:
+            return
+        
         try:
             # Initialize Telegram bot with proper connection settings
             bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -49,6 +54,16 @@ class AlertService:
             else:
                 logger.warning("TELEGRAM_BOT_TOKEN not found in environment")
             
+            self.telegram_bot_initialized = True
+                
+        except Exception as e:
+            logger.error(f"Failed to initialize Telegram bot: {e}")
+            self.telegram_bot = None
+            self.telegram_bot_initialized = True  # Mark as initialized to avoid retries
+    
+    def _initialize_services(self):
+        """Initialize Firebase Realtime Database (Telegram bot is lazy-loaded)"""
+        try:
             # Test Firebase Realtime Database connection
             if self.firebase_storage.test_connection():
                 logger.info("Firebase Realtime Database connected")
@@ -56,12 +71,12 @@ class AlertService:
                 logger.warning("Firebase Realtime Database connection failed")
                 
         except Exception as e:
-            logger.error(f"Failed to initialize services: {e}")
-            self.telegram_bot = None
+            logger.error(f"Failed to initialize Firebase: {e}")
     
     async def setup_telegram_bot(self, user_id: str) -> Dict[str, Any]:
         """Generate unique bot link for user setup"""
         try:
+            self._ensure_telegram_bot()
             if not self.telegram_bot:
                 # Return mock setup for testing when bot is not configured
                 logger.warning("Telegram bot not configured, returning mock setup")
@@ -119,6 +134,7 @@ class AlertService:
     async def verify_telegram_connection(self, user_id: str) -> Dict[str, Any]:
         """Verify user has completed Telegram bot setup"""
         try:
+            self._ensure_telegram_bot()
             if not self.telegram_bot:
                 # Return mock verification when bot is not configured
                 logger.warning("Telegram bot not configured, returning mock verification")
