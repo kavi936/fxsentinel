@@ -8,7 +8,9 @@ import os
 import sys
 import time
 import logging
+import threading
 from datetime import datetime
+from flask import Flask, jsonify
 
 # Add current directory to path
 sys.path.append('.')
@@ -23,6 +25,31 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Create Flask app for health checks
+app = Flask(__name__)
+
+# Global worker reference
+background_worker = None
+
+@app.route('/')
+def root():
+    """Root endpoint"""
+    return "FXSentinel Background Worker is running", 200
+
+@app.route('/api/health')
+def health():
+    """Health check endpoint for Railway"""
+    global background_worker
+    
+    status = {
+        "status": "healthy",
+        "service": "background-worker",
+        "worker_running": background_worker is not None and background_worker.running if background_worker else False,
+        "timestamp": time.time()
+    }
+    
+    return jsonify(status), 200
+
 def main():
     """Main function to start the background worker"""
     try:
@@ -32,6 +59,22 @@ def main():
         api_base_url = os.getenv('API_BASE_URL', 'http://localhost:5001')
         logger.info(f"🌐 API Base URL: {api_base_url}")
         
+        # Debug: Log environment variable status (without exposing the actual token)
+        token_exists = bool(os.getenv('TELEGRAM_BOT_TOKEN'))
+        token_value = os.getenv('TELEGRAM_BOT_TOKEN')
+        logger.info(f"🔍 TELEGRAM_BOT_TOKEN exists: {token_exists}")
+        if token_value:
+            logger.info(f"🔍 TELEGRAM_BOT_TOKEN length: {len(token_value)} characters")
+            logger.info(f"🔍 TELEGRAM_BOT_TOKEN starts with: {token_value[:10]}...")
+        else:
+            logger.warning("🔍 TELEGRAM_BOT_TOKEN is None or empty")
+        
+        # Log all environment variables that start with TELEGRAM or API
+        telegram_vars = {k: v for k, v in os.environ.items() if k.startswith('TELEGRAM')}
+        api_vars = {k: v for k, v in os.environ.items() if k.startswith('API')}
+        logger.info(f"🔍 TELEGRAM-related env vars: {list(telegram_vars.keys())}")
+        logger.info(f"🔍 API-related env vars: {list(api_vars.keys())}")
+        
         # Check required environment variables
         required_vars = ['TELEGRAM_BOT_TOKEN']
         missing_vars = [var for var in required_vars if not os.getenv(var)]
@@ -39,40 +82,51 @@ def main():
         if missing_vars:
             logger.error(f"❌ Missing required environment variables: {missing_vars}")
             logger.error("Please set these in your Railway environment variables")
+            logger.error("🔧 Current environment variables:")
+            for key, value in os.environ.items():
+                if any(keyword in key.upper() for keyword in ['TELEGRAM', 'API', 'BOT', 'TOKEN']):
+                    logger.error(f"   {key}: {'*' * len(value) if 'TOKEN' in key.upper() else value}")
+            
+            # Still start Flask app for health checks even without token
+            logger.warning("⚠️ Starting Flask app in monitoring mode (no alerts will be sent)")
+            port = int(os.environ.get('PORT', 8080))
+            app.run(host='0.0.0.0', port=port, debug=False)
             return
         
         logger.info("✅ Environment variables configured")
         
         # Import and start the background worker
         try:
-            from services.background_alert_worker import start_background_worker, background_worker
+            from services.background_alert_worker import BackgroundAlertWorker
             
             logger.info("📦 Background worker imported successfully")
             
-            # Start the worker
-            start_background_worker()
+            # Start the worker in a separate thread
+            global background_worker
+            background_worker = BackgroundAlertWorker()
+            worker_thread = threading.Thread(target=background_worker.start, daemon=True)
+            worker_thread.start()
             
             logger.info("✅ Background worker started successfully")
             logger.info("🔄 Worker is now monitoring for alerts...")
             
-            # Keep the process running
-            while True:
-                # Check if worker is still running
-                if not background_worker.running:
-                    logger.warning("⚠️ Background worker stopped, restarting...")
-                    start_background_worker()
-                
-                # Log status every 5 minutes
-                time.sleep(300)
-                status = background_worker.get_status()
-                logger.info(f"📊 Worker Status: {status}")
+            # Start Flask app
+            port = int(os.environ.get('PORT', 8080))
+            logger.info(f"🌐 Starting Flask app on port {port}")
+            app.run(host='0.0.0.0', port=port, debug=False)
                 
         except ImportError as e:
             logger.error(f"❌ Failed to import background worker: {e}")
             logger.error("Make sure all required services are available")
+            # Still start Flask app for health checks
+            port = int(os.environ.get('PORT', 8080))
+            app.run(host='0.0.0.0', port=port, debug=False)
             return
         except Exception as e:
             logger.error(f"❌ Error starting background worker: {e}")
+            # Still start Flask app for health checks
+            port = int(os.environ.get('PORT', 8080))
+            app.run(host='0.0.0.0', port=port, debug=False)
             return
             
     except KeyboardInterrupt:
