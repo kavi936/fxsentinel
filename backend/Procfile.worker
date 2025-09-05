@@ -1,0 +1,3 @@
+# Railway Procfile for Background Worker
+# This should be used for the background worker deployment
+worker: python railway_worker.py
