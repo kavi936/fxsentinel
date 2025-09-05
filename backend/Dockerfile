@@ -21,5 +21,5 @@ COPY . .
 # Expose port
 EXPOSE 8000
 
-# Start command - run the simple worker
-CMD ["python", "simple_worker.py"]
+# Start command - run the main Flask app
+CMD ["python3", "app.py"]
