@@ -95,14 +95,17 @@ class BackgroundAlertWorker:
         try:
             logger.info("Checking for news alerts...")
             
-            # Get latest news from API
-            response = requests.get(f"{self.api_base_url}/api/news", timeout=10)
-            if response.status_code != 200:
-                logger.error(f"Failed to get news: {response.status_code}")
-                return
-            
-            news_data = response.json()
-            news_items = news_data.get('news', [])
+            # Try to use local function first (if running as part of main app)
+            news_items = self._get_news_local()
+            if news_items is None:
+                # Fallback to HTTP API call
+                response = requests.get(f"{self.api_base_url}/api/news", timeout=10)
+                if response.status_code != 200:
+                    logger.error(f"Failed to get news: {response.status_code}")
+                    return
+                
+                news_data = response.json()
+                news_items = news_data.get('news', [])
             
             # Filter high-impact news
             high_impact = [n for n in news_items if n.get('impact') == 'high']
@@ -120,19 +123,36 @@ class BackgroundAlertWorker:
         except Exception as e:
             logger.error(f"Error checking news alerts: {e}")
     
+    def _get_news_local(self):
+        """Try to get news using local function (if running as part of main app)"""
+        try:
+            # Try to import and use the local news function
+            from flask import current_app
+            with current_app.app_context():
+                # Import the news aggregator directly
+                from .news_aggregator import news_aggregator
+                news_items = news_aggregator.get_latest_news()
+                return news_items
+        except Exception as e:
+            logger.debug(f"Could not get news locally: {e}")
+            return None
+    
     def _check_economic_calendar_alerts(self):
         """Check for economic calendar alerts"""
         try:
             logger.info("Checking for economic calendar alerts...")
             
-            # Get economic calendar
-            response = requests.get(f"{self.api_base_url}/api/economic-calendar", timeout=10)
-            if response.status_code != 200:
-                logger.error(f"Failed to get calendar: {response.status_code}")
-                return
-            
-            calendar_data = response.json()
-            events = calendar_data.get('events', [])
+            # Try to use local function first (if running as part of main app)
+            events = self._get_economic_calendar_local()
+            if events is None:
+                # Fallback to HTTP API call
+                response = requests.get(f"{self.api_base_url}/api/economic-calendar", timeout=10)
+                if response.status_code != 200:
+                    logger.error(f"Failed to get calendar: {response.status_code}")
+                    return
+                
+                calendar_data = response.json()
+                events = calendar_data.get('events', [])
             
             if not events:
                 logger.info("No economic events found")
@@ -194,6 +214,20 @@ class BackgroundAlertWorker:
                     
         except Exception as e:
             logger.error(f"Error checking economic calendar alerts: {e}")
+    
+    def _get_economic_calendar_local(self):
+        """Try to get economic calendar using local function (if running as part of main app)"""
+        try:
+            # Try to import and use the local economic calendar function
+            from flask import current_app
+            with current_app.app_context():
+                # Import the finnhub calendar directly
+                from .finnhub_calendar import finnhub_calendar
+                events = finnhub_calendar.get_economic_calendar()
+                return events
+        except Exception as e:
+            logger.debug(f"Could not get economic calendar locally: {e}")
+            return None
     
     def _process_post_news_analysis(self):
         """Process post-news analysis queue"""
