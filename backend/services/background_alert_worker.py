@@ -280,16 +280,32 @@ class BackgroundAlertWorker:
         except Exception as e:
             logger.error(f"Error sending economic alert: {e}")
 
-# Global instance
-background_worker = BackgroundAlertWorker()
+# Global instance - lazy initialization
+_background_worker = None
+
+def get_background_worker():
+    """Get the background worker instance (lazy initialization)"""
+    global _background_worker
+    if _background_worker is None:
+        _background_worker = BackgroundAlertWorker()
+    return _background_worker
 
 def start_background_worker():
     """Start the background alert worker"""
-    background_worker.start()
+    worker = get_background_worker()
+    worker.start()
 
 def stop_background_worker():
     """Stop the background alert worker"""
-    background_worker.stop()
+    worker = get_background_worker()
+    worker.stop()
+
+# For backward compatibility - this will be created when first accessed
+class _LazyBackgroundWorker:
+    def __getattr__(self, name):
+        return getattr(get_background_worker(), name)
+
+background_worker = _LazyBackgroundWorker()
 
 if __name__ == "__main__":
     # Test the background worker

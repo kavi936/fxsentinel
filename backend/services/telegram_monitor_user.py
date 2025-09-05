@@ -325,5 +325,19 @@ class TelegramUserMonitor:
             # Always release the session lock after the operation
             self._release_session_lock()
 
-# Global instance
-telegram_user_monitor = TelegramUserMonitor()
+# Global instance - lazy initialization
+_telegram_user_monitor = None
+
+def get_telegram_user_monitor():
+    """Get the telegram user monitor instance (lazy initialization)"""
+    global _telegram_user_monitor
+    if _telegram_user_monitor is None:
+        _telegram_user_monitor = TelegramUserMonitor()
+    return _telegram_user_monitor
+
+# For backward compatibility - this will be created when first accessed
+class _LazyTelegramUserMonitor:
+    def __getattr__(self, name):
+        return getattr(get_telegram_user_monitor(), name)
+
+telegram_user_monitor = _LazyTelegramUserMonitor()
