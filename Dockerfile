@@ -22,8 +22,11 @@ COPY . .
 LABEL build_version="2.0.0"
 LABEL build_date="2024-01-15"
 
+# Set working directory to backend
+WORKDIR /app/backend
+
 # Expose port
 EXPOSE 8000
 
-# Start command - run the main Flask app from backend directory
-CMD ["sh", "-c", "cd backend && python main.py"]
+# Start command - run the main Flask app
+CMD ["python", "main.py"]
