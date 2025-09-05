@@ -74,6 +74,8 @@ def main():
         # Start Flask app
         port = int(os.environ.get('PORT', 8080))
         logger.info(f"🌐 Starting Flask app on port {port}")
+        logger.info(f"🌐 Host: 0.0.0.0, Port: {port}")
+        logger.info(f"🌐 Environment PORT: {os.environ.get('PORT', 'Not set')}")
         app.run(host='0.0.0.0', port=port, debug=False)
             
     except KeyboardInterrupt:
