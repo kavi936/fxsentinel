@@ -25,5 +25,5 @@ LABEL build_date="2024-01-15"
 # Expose port
 EXPOSE 8000
 
-# Start command - run the test app
-CMD ["python3", "test_app.py"]
+# Start command - run the test app from backend directory
+CMD ["python3", "backend/test_app.py"]
