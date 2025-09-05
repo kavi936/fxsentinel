@@ -11,8 +11,9 @@ import logging
 import threading
 from datetime import datetime
 
-# Add current directory to path
+# Add current directory and backend directory to path
 sys.path.append('.')
+sys.path.append('./backend')
 
 # Configure logging for Railway
 logging.basicConfig(
