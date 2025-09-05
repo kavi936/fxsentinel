@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 FXSentinel Background Worker Entry Point
-Railway auto-detection entry point
+Railway auto-detection entry point for the background worker service
 """
 
 import os
