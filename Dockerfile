@@ -1,4 +1,4 @@
-# Dockerfile for FXSentinel Background Worker
+# Dockerfile for FXSentinel Main App
 FROM python:3.11-slim
 
 # Set working directory
@@ -19,8 +19,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Add cache-busting label to force rebuild
-LABEL build_version="2.0.0"
+LABEL build_version="3.0.0"
 LABEL build_date="2024-01-15"
+
+# Verify the file structure
+RUN ls -la /app/
+RUN ls -la /app/backend/
 
 # Set working directory to backend
 WORKDIR /app/backend
