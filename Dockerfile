@@ -18,8 +18,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the entire application code
 COPY . .
 
+# Explicitly verify key files are present
+RUN echo "=== VERIFYING KEY FILES ===" && \
+    ls -la main_app.py && \
+    ls -la backend/ && \
+    ls -la backend/services/ | head -10
+
 # Add cache-busting label to force rebuild
-LABEL build_version="9.0.0"
+LABEL build_version="10.0.0"
 LABEL build_date="2024-01-15"
 
 # Debug: Show what was actually copied
