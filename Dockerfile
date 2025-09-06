@@ -19,8 +19,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Add cache-busting label to force rebuild
-LABEL build_version="6.0.0"
+LABEL build_version="7.0.0"
 LABEL build_date="2024-01-15"
+
+# Debug: Show what was actually copied
+RUN echo "=== ROOT DIRECTORY ===" && ls -la /app/
+RUN echo "=== BACKEND DIRECTORY ===" && ls -la /app/backend/ || echo "BACKEND DIRECTORY NOT FOUND"
+RUN echo "=== BACKEND APP.PY ===" && ls -la /app/backend/app.py || echo "APP.PY NOT FOUND"
 
 # Set working directory to backend where the main app is
 WORKDIR /app/backend
