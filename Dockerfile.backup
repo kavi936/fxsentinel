@@ -15,22 +15,27 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application code
+# Copy the entire application code
 COPY . .
 
+# Debug: Show what files are actually present
+RUN echo "=== ALL FILES IN ROOT ===" && ls -la
+RUN echo "=== CHECKING FOR MAIN_APP.PY ===" && find . -name "main_app.py" -type f
+RUN echo "=== CHECKING FOR BACKEND ===" && find . -name "backend" -type d
+RUN echo "=== PYTHON FILES ===" && find . -name "*.py" | head -10
+
 # Add cache-busting label to force rebuild
-LABEL build_version="3.0.0"
+LABEL build_version="10.0.0"
 LABEL build_date="2024-01-15"
 
-# Verify the file structure
-RUN ls -la /app/
-RUN ls -la /app/backend/
-
-# Set working directory to backend
-WORKDIR /app/backend
+# Debug: Show what was actually copied
+RUN echo "=== ROOT DIRECTORY ===" && ls -la /app/
+RUN echo "=== BACKEND DIRECTORY ===" && ls -la /app/backend/ || echo "BACKEND DIRECTORY NOT FOUND"
+RUN echo "=== MAIN APP.PY ===" && ls -la /app/main_app.py || echo "MAIN_APP.PY NOT FOUND"
+RUN echo "=== BACKEND SERVICES ===" && ls -la /app/backend/services/ || echo "BACKEND SERVICES NOT FOUND"
 
 # Expose port
 EXPOSE 8000
 
-# Start command - run the main Flask app
-CMD ["python", "app.py"]
+# Start command - run the Flask app from root directory
+CMD ["python", "main_app.py"]
