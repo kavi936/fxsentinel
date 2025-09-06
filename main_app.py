@@ -7,12 +7,16 @@ import requests
 from bs4 import BeautifulSoup
 import openai
 import os
+import sys
 import json
 import time
 import asyncio
 import logging
 from datetime import datetime
 from dotenv import load_dotenv
+
+# Add backend directory to Python path for imports
+sys.path.append(os.path.join(os.path.dirname(__file__), 'backend'))
 import stripe
 from firebase_admin import credentials, firestore, initialize_app
 from services.stripe_service import StripeService
