@@ -9,14 +9,17 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy backend requirements first for better caching
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy ALL files from current directory to /app
 COPY . .
+
+# Set working directory to backend
+WORKDIR /app/backend
 
 # Force rebuild - increment version
 LABEL build_version="11.0.0"
@@ -34,12 +37,12 @@ RUN echo "=== DEBUGGING BUILD CONTEXT ===" && \
     echo "Python files:" && \
     find . -name "*.py" | head -5
 
-# Expose port
-EXPOSE 8000
+# Expose port (Railway will override with PORT env var)
+EXPOSE 5001
 
 # Set environment variable for Flask
-ENV FLASK_APP=main_app.py
+ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 
-# Start the application
-CMD ["python", "main_app.py"]
+# Start the application (now from backend directory)
+CMD ["python3", "app.py"]

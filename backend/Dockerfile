@@ -18,8 +18,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the application code
 COPY . .
 
+# Debug: Show what's actually in the container
+RUN echo "=== DEBUGGING BUILD CONTEXT ===" && \
+    echo "Current directory: $(pwd)" && \
+    echo "Files in root:" && \
+    ls -la && \
+    echo "Looking for app.py:" && \
+    find . -name "app.py" -type f && \
+    echo "Python files:" && \
+    find . -name "*.py" | head -10
+
 # Expose port
 EXPOSE 8000
 
 # Start command - run the main Flask app
-CMD ["python3", "main.py"]
+CMD ["python3", "app.py"]
