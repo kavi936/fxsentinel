@@ -10,16 +10,15 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy backend requirements first for better caching
-COPY backend/requirements.txt .
+COPY backend/requirements.txt /app/backend/requirements.txt
 
 # Install Python dependencies
+WORKDIR /app/backend
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy ALL files from current directory to /app
+# Copy the entire project (needed for imports)
+WORKDIR /app
 COPY . .
-
-# Set working directory to backend
-WORKDIR /app/backend
 
 # Force rebuild - increment version
 LABEL build_version="11.0.0"
@@ -41,8 +40,8 @@ RUN echo "=== DEBUGGING BUILD CONTEXT ===" && \
 EXPOSE 5001
 
 # Set environment variable for Flask
-ENV FLASK_APP=app.py
+ENV FLASK_APP=backend/app.py
 ENV FLASK_ENV=production
 
-# Start the application (now from backend directory)
-CMD ["python3", "app.py"]
+# Start the application using the main.py entry point
+CMD ["python3", "main.py"]
