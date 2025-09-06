@@ -32,7 +32,7 @@ def check_dockerfile():
     
     checks = [
         ("FROM python:", "Python base image"),
-        ("COPY backend/requirements.txt", "Requirements copying"),
+        ("COPY requirements.txt", "Requirements copying"),
         ("RUN pip install", "Dependencies installation"),
         ("CMD [\"python3\", \"main.py\"]", "Correct startup command")
     ]
