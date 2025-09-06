@@ -27,11 +27,8 @@ RUN echo "=== ROOT DIRECTORY ===" && ls -la /app/
 RUN echo "=== BACKEND DIRECTORY ===" && ls -la /app/backend/ || echo "BACKEND DIRECTORY NOT FOUND"
 RUN echo "=== BACKEND APP.PY ===" && ls -la /app/backend/app.py || echo "APP.PY NOT FOUND"
 
-# Set working directory to backend where the main app is
-WORKDIR /app/backend
-
 # Expose port
 EXPOSE 8000
 
-# Start command - run the Flask app from backend directory
-CMD ["python", "app.py"]
+# Start command - run the Flask app from root directory
+CMD ["python", "main_app.py"]
