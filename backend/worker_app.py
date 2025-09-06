@@ -46,7 +46,7 @@ def health():
         "service": "background-worker",
         "worker_running": background_worker is not None and background_worker.running if background_worker else False,
         "timestamp": time.time(),
-        "version": "2.0.0"  # Version bump to force cache refresh
+        "version": "3.0.0"  # Version bump to force cache refresh
     }
     
     return jsonify(status), 200
@@ -54,7 +54,7 @@ def health():
 def main():
     """Main function to start the background worker"""
     try:
-        logger.info("🚀 Starting FXSentinel Background Worker v2.0.0 on Railway")
+        logger.info("🚀 Starting FXSentinel Background Worker v3.0.0 on Railway")
         logger.info("🔄 Cache-busting deployment - fresh code loaded")
         
         # Log environment configuration
@@ -106,8 +106,7 @@ def main():
             # Start the worker in a separate thread
             global background_worker
             background_worker = BackgroundAlertWorker()
-            worker_thread = threading.Thread(target=background_worker.start, daemon=True)
-            worker_thread.start()
+            background_worker.start()  # This sets running=True internally
             
             logger.info("✅ Background worker started successfully")
             logger.info("🔄 Worker is now monitoring for alerts...")
