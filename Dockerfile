@@ -19,18 +19,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Add cache-busting label to force rebuild
-LABEL build_version="4.0.0"
+LABEL build_version="6.0.0"
 LABEL build_date="2024-01-15"
 
-# Verify the file structure
-RUN ls -la /app/
-RUN ls -la /app/backend/ || echo "Backend directory not found"
-
-# Set working directory to backend
+# Set working directory to backend where the main app is
 WORKDIR /app/backend
 
 # Expose port
 EXPOSE 8000
 
-# Start command - run the main Flask app
+# Start command - run the Flask app from backend directory
 CMD ["python", "app.py"]
