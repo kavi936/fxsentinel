@@ -15,11 +15,11 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the entire application code
-COPY . .
+# Copy the backend directory explicitly
+COPY backend/ ./backend/
 
 # Add cache-busting label to force rebuild
-LABEL build_version="7.0.0"
+LABEL build_version="8.0.0"
 LABEL build_date="2024-01-15"
 
 # Debug: Show what was actually copied
