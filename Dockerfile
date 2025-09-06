@@ -9,19 +9,17 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend requirements first for better caching
-COPY backend/requirements.txt /app/backend/requirements.txt
+# Copy requirements first for better caching
+COPY requirements.txt /app/requirements.txt
 
 # Install Python dependencies
-WORKDIR /app/backend
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire project (needed for imports)
-WORKDIR /app
 COPY . .
 
 # Force rebuild - increment version
-LABEL build_version="11.0.0"
+LABEL build_version="12.0.0"
 LABEL build_date="2024-01-15"
 
 # Debug: Show what's actually in the container
@@ -40,7 +38,7 @@ RUN echo "=== DEBUGGING BUILD CONTEXT ===" && \
 EXPOSE 5001
 
 # Set environment variable for Flask
-ENV FLASK_APP=backend/app.py
+ENV FLASK_APP=main.py
 ENV FLASK_ENV=production
 
 # Start the application using the main.py entry point
