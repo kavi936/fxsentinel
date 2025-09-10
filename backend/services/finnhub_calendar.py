@@ -3,7 +3,14 @@ import os
 from datetime import datetime, timedelta
 import json
 from typing import List, Dict, Optional
-from .cached_economic_calendar import cached_economic_calendar
+
+# Try to import cached economic calendar, but make it optional
+try:
+    from .cached_economic_calendar import cached_economic_calendar
+    CACHED_CALENDAR_AVAILABLE = True
+except ImportError:
+    CACHED_CALENDAR_AVAILABLE = False
+    cached_economic_calendar = None
 
 class FinnhubCalendarService:
     """Service for fetching economic calendar data from Finnhub API"""
@@ -38,8 +45,8 @@ class FinnhubCalendarService:
         # Check if API key is available
         if not self.api_key:
             print("⚠️ Finnhub API key not configured - trying cached data")
-            # Try to get data from cache
-            if cached_economic_calendar.is_cache_available():
+            # Try to get data from cache if available
+            if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
                 print("✅ Using cached economic calendar data")
                 return cached_economic_calendar.get_economic_calendar(start_date, end_date)
             else:
@@ -159,8 +166,8 @@ class FinnhubCalendarService:
         except requests.exceptions.RequestException as e:
             print(f"❌ Error fetching Finnhub calendar: {e}")
             print("🔄 Trying cached data as fallback...")
-            # Try to get data from cache as fallback
-            if cached_economic_calendar.is_cache_available():
+            # Try to get data from cache as fallback if available
+            if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
                 print("✅ Using cached economic calendar data as fallback")
                 return cached_economic_calendar.get_economic_calendar(start_date, end_date)
             else:
@@ -169,8 +176,8 @@ class FinnhubCalendarService:
         except Exception as e:
             print(f"❌ Unexpected error in Finnhub calendar: {e}")
             print("🔄 Trying cached data as fallback...")
-            # Try to get data from cache as fallback
-            if cached_economic_calendar.is_cache_available():
+            # Try to get data from cache as fallback if available
+            if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
                 print("✅ Using cached economic calendar data as fallback")
                 return cached_economic_calendar.get_economic_calendar(start_date, end_date)
             else:
