@@ -125,7 +125,13 @@ class EnhancedForexFilter:
             'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'interest rate', 'non-farm payrolls', 'gdp',
             'rate decision', 'policy meeting', 'speech', 'testimony',
             'trump', 'biden', 'election', 'trade war', 'tariff', 'sanctions', 'geopolitical',
-            'brexit', 'china trade', 'us china', 'market volatility', 'market uncertainty'
+            'brexit', 'china trade', 'us china', 'market volatility', 'market uncertainty',
+            # Added forex-specific terms
+            'fx option', 'option expiries', 'new york cut', 'london cut', 'asian session',
+            'consumer prices', 'bank lending', 'lending rate', 'monetary policy',
+            'currency pair', 'forex market', 'fx market', 'currency market',
+            'economic data', 'economic indicator', 'economic release',
+            'central bank', 'bank rate', 'policy rate', 'benchmark rate'
         ]
         
         # Medium impact keywords for scoring
@@ -140,7 +146,10 @@ class EnhancedForexFilter:
             'fed', 'federal reserve', 'ecb', 'european central bank', 'boj', 'bank of japan',
             'boe', 'bank of england', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
             'nfp', 'non-farm payrolls', 'cpi', 'inflation', 'interest rate', 'monetary policy',
-            'rate decision', 'policy meeting', 'speech', 'testimony', 'breaking', 'urgent'
+            'rate decision', 'policy meeting', 'speech', 'testimony', 'breaking', 'urgent',
+            # Added critical forex terms
+            'fx option', 'option expiries', 'consumer prices', 'bank lending', 'lending rate',
+            'central bank', 'bank rate', 'policy rate', 'benchmark rate', 'economic data'
         ]
         
         # Credible sources that get priority
@@ -259,11 +268,11 @@ class EnhancedForexFilter:
         
         # For credible sources, be more lenient but still strict
         if is_credible_source or is_forex_source:
-            # Must have at least 2 high-impact keywords or 1 critical keyword
+            # Must have at least 1 high-impact keyword or 1 critical keyword
             high_impact_count = self._count_keyword_matches(text, self.high_impact_keywords)
             critical_count = self._count_keyword_matches(text, self.critical_forex_keywords)
             
-            return high_impact_count >= 2 or critical_count >= 1
+            return high_impact_count >= 1 or critical_count >= 1
         
         # For non-credible sources, be very strict
         # Must have at least 3 high-impact keywords or 2 critical keywords
