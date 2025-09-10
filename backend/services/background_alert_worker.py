@@ -33,6 +33,9 @@ class BackgroundAlertWorker:
         self.post_news_interval = 300  # 5 minutes
         self.last_post_news_check = None
         
+        # Track processed news IDs to avoid duplicates
+        self.processed_news_ids = set()
+        
         logger.info("BackgroundAlertWorker initialized")
     
     def start(self):
@@ -116,9 +119,21 @@ class BackgroundAlertWorker:
             
             logger.info(f"Found {len(high_impact)} high-impact news items")
             
-            # Send alerts for high-impact news
-            for news_item in high_impact[:3]:  # Process first 3 items
-                self._send_news_alert(news_item)
+            # Send alerts for high-impact news (only new items)
+            new_news_items = []
+            for news_item in high_impact:
+                news_id = news_item.get('id')
+                if news_id and news_id not in self.processed_news_ids:
+                    new_news_items.append(news_item)
+                    self.processed_news_ids.add(news_id)
+            
+            # Process up to 3 new items
+            if new_news_items:
+                logger.info(f"Processing {len(new_news_items[:3])} new high-impact news items")
+                for news_item in new_news_items[:3]:
+                    self._send_news_alert(news_item)
+            else:
+                logger.info("No new high-impact news items to process")
                 
         except Exception as e:
             logger.error(f"Error checking news alerts: {e}")
