@@ -99,6 +99,7 @@ def main():
         
         # Import and start the background worker
         try:
+            # Import only the essential worker without heavy dependencies
             from services.background_alert_worker import BackgroundAlertWorker
             
             logger.info("📦 Background worker imported successfully")

@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 import json
 from typing import List, Dict, Optional
+from .cached_economic_calendar import cached_economic_calendar
 
 class FinnhubCalendarService:
     """Service for fetching economic calendar data from Finnhub API"""
@@ -25,7 +26,7 @@ class FinnhubCalendarService:
     
     def get_economic_calendar(self, start_date: str = None, end_date: str = None) -> List[Dict]:
         """
-        Fetch economic calendar events from Finnhub
+        Fetch economic calendar events from Finnhub with cached fallback
         
         Args:
             start_date: Start date in YYYY-MM-DD format (default: today)
@@ -36,8 +37,14 @@ class FinnhubCalendarService:
         """
         # Check if API key is available
         if not self.api_key:
-            print("⚠️ Finnhub API key not configured - returning empty calendar")
-            return []
+            print("⚠️ Finnhub API key not configured - trying cached data")
+            # Try to get data from cache
+            if cached_economic_calendar.is_cache_available():
+                print("✅ Using cached economic calendar data")
+                return cached_economic_calendar.get_economic_calendar(start_date, end_date)
+            else:
+                print("❌ No cached data available - returning empty calendar")
+                return []
             
         try:
             # Set default dates if not provided
@@ -151,10 +158,24 @@ class FinnhubCalendarService:
             
         except requests.exceptions.RequestException as e:
             print(f"❌ Error fetching Finnhub calendar: {e}")
-            return []
+            print("🔄 Trying cached data as fallback...")
+            # Try to get data from cache as fallback
+            if cached_economic_calendar.is_cache_available():
+                print("✅ Using cached economic calendar data as fallback")
+                return cached_economic_calendar.get_economic_calendar(start_date, end_date)
+            else:
+                print("❌ No cached data available - returning empty calendar")
+                return []
         except Exception as e:
             print(f"❌ Unexpected error in Finnhub calendar: {e}")
-            return []
+            print("🔄 Trying cached data as fallback...")
+            # Try to get data from cache as fallback
+            if cached_economic_calendar.is_cache_available():
+                print("✅ Using cached economic calendar data as fallback")
+                return cached_economic_calendar.get_economic_calendar(start_date, end_date)
+            else:
+                print("❌ No cached data available - returning empty calendar")
+                return []
     
     def _is_event_in_date_range(self, event: Dict, start_date: str, end_date: str) -> bool:
         """
