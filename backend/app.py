@@ -2040,22 +2040,14 @@ def trigger_alert():
                     # Send the alert using async handling
                     try:
                         import asyncio
-                        # Check if we're already in an event loop
-                        try:
-                            loop = asyncio.get_event_loop()
-                            if loop.is_running():
-                                # We're in an event loop, create a task
-                                task = loop.create_task(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
-                                success = loop.run_until_complete(task)
-                            else:
-                                # No event loop running, use asyncio.run
-                                success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
-                        except RuntimeError:
-                            # Fallback for when asyncio.run can't be used
-                            success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
+                        # Use asyncio.run to properly handle the async function
+                        success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
                         
                         if success:
                             alerts_sent += 1
+                            logger.info(f"Successfully sent alert to user {user_id}")
+                        else:
+                            logger.warning(f"Failed to send alert to user {user_id}")
                     except Exception as e:
                         logger.error(f"Error sending news alert to user {user_id}: {e}")
                         continue
