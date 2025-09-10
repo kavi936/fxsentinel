@@ -167,7 +167,7 @@ class BackgroundAlertWorker:
                     
                     # Check if event is within alert timing windows (2h, 1h, 10min before)
                     try:
-                        from datetime import datetime
+                        # datetime is already imported at the top of the file
                         time_str = event.get('time', '')
                         date_str = event.get('date', '')
                         
