@@ -404,16 +404,25 @@ def get_mock_news():
     ]
 
 # Import our AI analysis services
-from services.local_ai_analysis import local_ai_analyzer, MarketContext
+from services.local_ai_analysis import local_ai_analyzer
+# MarketContext from local_ai_analysis removed to avoid conflicts
 from services.news_sentiment_analyzer import news_sentiment_analyzer
 from services.technical_analysis_service import technical_analyzer
 from services.enhanced_ai_analysis import enhanced_ai_analyzer, MarketContext as EnhancedMarketContext
 try:
-    from services.gpt_ai_analysis import gpt_ai_analyzer, MarketContext as GPTMarketContext
+    from services.gpt_ai_analysis import GPTAIAnalyzer, MarketContext as GPTMarketContext
     from services.optimized_chatgpt_analyzer import optimized_chatgpt_analyzer
+    # Create GPT analyzer instance
+    print(f"🔍 DEBUG: Creating GPT analyzer instance...")
+    gpt_ai_analyzer = GPTAIAnalyzer()
+    print(f"🔍 DEBUG: GPT analyzer created successfully!")
+    print(f"🔍 DEBUG: Has _select_model: {hasattr(gpt_ai_analyzer, '_select_model')}")
+    print(f"🔍 DEBUG: Has _get_error_fallback: {hasattr(gpt_ai_analyzer, '_get_error_fallback')}")
     GPT_AVAILABLE = True
 except Exception as e:
     print(f"🔍 GPT Analyzer import failed: {e}")
+    import traceback
+    traceback.print_exc()
     gpt_ai_analyzer = None
     GPT_AVAILABLE = False
 import pandas as pd
@@ -430,8 +439,11 @@ def generate_ai_analysis(event_title, currency, impact):
             'timestamp': datetime.now().isoformat()
         }
         
-        # Create market context (you can enhance this with real market data)
-        market_context = EnhancedMarketContext(
+        # Import basic MarketContext for local analyzer
+        from services.local_ai_analysis import MarketContext as LocalMarketContext
+        
+        # Create basic market context for local AI analyzer
+        market_context = LocalMarketContext(
             current_prices={
                 'EUR/USD': 1.0850,
                 'USD/JPY': 148.50,
@@ -457,16 +469,11 @@ def generate_ai_analysis(event_title, currency, impact):
                 'USD/CAD': 'neutral'
             },
             key_levels={
-                'EUR/USD': {'support': [1.0800, 1.0750, 1.0700], 'resistance': [1.0900, 1.0950, 1.1000]},
-                'USD/JPY': {'support': [148.00, 147.50, 147.00], 'resistance': [149.00, 149.50, 150.00]},
-                'GBP/USD': {'support': [1.2600, 1.2550, 1.2500], 'resistance': [1.2700, 1.2750, 1.2800]}
+                'EUR/USD': {'support': 1.0800, 'resistance': 1.0900},
+                'USD/JPY': {'support': 148.00, 'resistance': 149.00},
+                'GBP/USD': {'support': 1.2600, 'resistance': 1.2700}
             },
-            economic_calendar=[],
-            bond_yields={'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8},
-            equity_indices={'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000},
-            commodity_prices={'GOLD': 2000, 'OIL': 75, 'SILVER': 25},
-            central_bank_expectations={},
-            historical_reactions={}
+            economic_calendar=[]
         )
         
         # Use local AI analyzer for comprehensive analysis
@@ -594,32 +601,99 @@ from services.finnhub_historical import finnhub_historical
 @app.route('/api/economic-calendar')
 def get_economic_calendar():
     """Get economic calendar events from Finnhub API with alert triggering"""
+    print("🚀 ECONOMIC CALENDAR ENDPOINT CALLED - UPDATED VERSION WITH FORMATTING")
     try:
-        # Get query parameters for date range
+        # Get query parameters for date range and timezone
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
+        user_timezone = request.args.get('timezone', 'UTC')  # Default to UTC if not provided
         
         # Fetch events from Finnhub
-        events = finnhub_calendar.get_economic_calendar(start_date, end_date)
+        events = finnhub_calendar.get_economic_calendar(start_date, end_date, user_timezone)
+        
+        # Debug: Check what we got from Finnhub service
+        print(f"🔍 DEBUG: Finnhub service returned {len(events) if events else 0} events")
+        if events and len(events) > 0:
+            print(f"🔍 DEBUG: First event title: '{events[0].get('title', 'NO_TITLE')}'")
+            print(f"🔍 DEBUG: First event source: '{events[0].get('source', 'NO_SOURCE')}'")
+        
+        # Initialize source and status variables
+        source = "unknown"
+        status = "unknown"
         
         if events and len(events) > 0:
             # Extract metadata from first event if available
             metadata = events[0].get('_metadata', {}) if events else {}
             
-            # Validate that we have real events (not empty or test data)
-            real_events = [e for e in events if e.get('title') and e.get('title') not in [
-                'US CPI Data Release', 'ECB Interest Rate Decision', 'US Retail Sales'
-            ]]
+            # Filter for real economic indicators and high-impact events
+            real_events = []
+            print(f"🔍 DEBUG: Processing {len(events)} events")
+            
+            # Define major currencies to filter for (strict filtering)
+            major_currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'CNY']
+            major_countries = ['US', 'EU', 'GB', 'JP', 'AU', 'CA', 'CH', 'NZ', 'CN']
+            
+            # Define real economic indicators
+            economic_indicators = [
+                'CPI', 'inflation', 'GDP', 'unemployment', 'employment', 'payroll', 'retail sales',
+                'manufacturing', 'industrial', 'consumer confidence', 'trade balance', 'interest rate',
+                'central bank', 'federal reserve', 'ECB', 'BOE', 'BOJ', 'RBA', 'BOC', 'SNB',
+                'PMI', 'housing', 'construction', 'durable goods', 'factory orders', 'PPI',
+                'balance of trade', 'current account', 'budget', 'debt', 'monetary policy'
+            ]
+            
+            for i, event in enumerate(events):
+                title = event.get('title', '').lower()
+                impact = event.get('impact', '').lower()
+                currency = event.get('currency', '').upper()
+                country = event.get('country', '').upper()
+                
+                # Strict filtering: Only include events with exact major currencies
+                is_major_currency = (
+                    currency in major_currencies or
+                    country in major_countries or
+                    # Check for major currency/country mentions in title
+                    any(curr in title.upper() for curr in major_currencies) or
+                    any(country_code in title.upper() for country_code in major_countries) or
+                    # Check for specific central bank mentions
+                    any(cb in title.upper() for cb in ['FED', 'ECB', 'BOE', 'BOJ', 'RBA', 'BOC', 'SNB', 'PBOC'])
+                )
+                
+                # Only include events related to major currencies
+                if not is_major_currency:
+                    print(f"🔍 DEBUG: Event {i+1} filtered out (not major currency): '{event.get('title', '')}' (currency: {currency}, country: {country})")
+                    continue
+                
+                # Include high-impact events for major currencies
+                if impact == 'high':
+                    real_events.append(event)
+                    print(f"🔍 DEBUG: Event {i+1} added (high impact major currency): '{event.get('title', '')}'")
+                # Include medium-impact events that are economic indicators for major currencies
+                elif impact == 'medium' and any(indicator in title for indicator in economic_indicators):
+                    real_events.append(event)
+                    print(f"🔍 DEBUG: Event {i+1} added (medium impact economic major currency): '{event.get('title', '')}'")
+                # Include low-impact events only if they are major economic indicators for major currencies
+                elif impact == 'low' and any(indicator in title for indicator in ['cpi', 'gdp', 'unemployment', 'employment', 'interest rate', 'central bank']):
+                    real_events.append(event)
+                    print(f"🔍 DEBUG: Event {i+1} added (low impact major economic major currency): '{event.get('title', '')}'")
+                else:
+                    print(f"🔍 DEBUG: Event {i+1} filtered out (not economic indicator): '{event.get('title', '')}' (impact: {impact})")
             
             if len(real_events) > 0:
                 # Use real events
                 events = real_events
-                source = "Finnhub"
-                status = "success"
+                # Check if events are from cached database
+                if events[0].get('source') == 'cached_database':
+                    source = "cached_database"
+                    status = "cached_data"
+                else:
+                    source = "Finnhub"
+                    status = "success"
+                print(f"✅ Using {len(real_events)} real economic events from {source}")
             else:
                 # No real events found, but we have some data
-                print("⚠️ Only test events found in Finnhub data")
-                source = "finnhub_test_data"
+                print("⚠️ Only test events found in data")
+                source = "test_data"
                 status = "test_data_only"
         else:
             # No events from Finnhub
@@ -628,17 +702,17 @@ def get_economic_calendar():
             status = "no_data"
             events = []
             
-        # Only use fallback data if we have absolutely no real data
-        if not events or source == "no_data":
-            print("⚠️ Using fallback data due to no real events available")
+        # Only use mock events if we have no data at all
+        if not events or source in ["no_data"]:
+            print("⚠️ Using mock events for testing - no data available")
             fallback_events = get_mock_economic_events()
             return jsonify({
                 "events": fallback_events,
-                "source": "fallback_data",
+                "source": "mock_data_for_testing",
                 "last_updated": datetime.now().isoformat(),
                 "total_events": len(fallback_events),
-                "status": "fallback",
-                "warning": "Using fallback data - real events unavailable"
+                "status": "mock_data",
+                "warning": "Using mock events for testing - no data available"
             })
         
         return jsonify({
@@ -1632,27 +1706,40 @@ def get_technical_analysis(pair):
 def get_enhanced_analysis(news_id):
     """Get comprehensive GPT-powered analysis for economic events with data validation"""
     print(f"🚨🚨🚨 ENHANCED ANALYSIS ENDPOINT CALLED - ID: {news_id} 🚨🚨🚨")
+    print(f"🔍 DEBUG: Request method: {request.method}")
+    print(f"🔍 DEBUG: Request headers: {dict(request.headers)}")
     try:
         # Get event data from request body if POST, otherwise from Finnhub calendar
+        print(f"🔍 DEBUG: Getting event data...")
         if request.method == 'POST':
             request_data = request.get_json()
+            print(f"🔍 DEBUG: Request data keys: {list(request_data.keys()) if request_data else 'None'}")
             event = request_data.get('event')
             analysis_type = request_data.get('analysisType', 'pre-event')
             print(f"🚨 Using event data from request: {event.get('title', 'Unknown')} - {event.get('currency', 'Unknown')}")
+            print(f"🔍 DEBUG: Event keys: {list(event.keys()) if event else 'None'}")
         else:
             # Get the economic event by ID from Finnhub calendar data
+            print(f"🔍 DEBUG: Getting event by ID from calendar...")
             event = get_economic_event_by_id(news_id)
             analysis_type = 'pre-event'
+            print(f"🔍 DEBUG: Event from calendar: {event.get('title', 'Unknown') if event else 'None'}")
         
         if not event:
             return jsonify({"error": "Event not found"}), 404
         
         # Import the data validation service
+        print(f"🔍 DEBUG: Importing data validator...")
         from services.data_validator import economic_data_validator
+        print(f"🔍 DEBUG: Data validator imported successfully")
         
         # Validate the event data before analysis
         print(f"🔍 Validating event data: {event.get('title', 'Unknown')}")
+        print(f"🔍 DEBUG: Event data being validated: {event}")
+        print(f"🔍 DEBUG: Event keys: {list(event.keys()) if event else 'None'}")
         is_valid, validated_event, validation_errors = economic_data_validator.validate_event_data(event)
+        print(f"🔍 DEBUG: Validation result - is_valid: {is_valid}, errors: {validation_errors}")
+        print(f"🔍 DEBUG: Validated event: {validated_event}")
         
         if not is_valid:
             print(f"❌ Event data validation failed: {validation_errors}")
@@ -1666,80 +1753,90 @@ def get_enhanced_analysis(news_id):
         print(f"✅ Event data validation passed: {validated_event.get('title', 'Unknown')}")
         
         # Create GPT market context with live market data
+        print(f"🔍 DEBUG: Importing live market data service...")
         from services.live_market_data import live_market_data_service
+        print(f"🔍 DEBUG: Live market data service imported successfully")
         
         # Get live market data from TradingView
         print("🔄 Fetching live market data from TradingView")
         live_market_data = live_market_data_service.get_live_market_data()
+        print(f"🔍 DEBUG: Live market data keys: {list(live_market_data.keys()) if live_market_data else 'None'}")
         
-        # Create enhanced market context
-        gpt_market_context = MarketContext(
-            current_prices=live_market_data.get('current_prices', {
-                'EUR/USD': 1.0850,
-                'USD/JPY': 148.50,
-                'GBP/USD': 1.2650,
-                'USD/CHF': 0.8650,
-                'AUD/USD': 0.6650,
-                'USD/CAD': 1.3550
-            }),
-            recent_volatility=live_market_data.get('recent_volatility', {
-                'EUR/USD': 'Medium',
-                'USD/JPY': 'Medium',
-                'GBP/USD': 'Medium',
-                'USD/CHF': 'Low',
-                'AUD/USD': 'Medium',
-                'USD/CAD': 'Low'
-            }),
-            market_sentiment=live_market_data.get('market_sentiment', {
-                'EUR/USD': 'neutral',
-                'USD/JPY': 'neutral',
-                'GBP/USD': 'neutral',
-                'USD/CHF': 'neutral',
-                'AUD/USD': 'neutral',
-                'USD/CAD': 'neutral'
-            }),
-            key_levels=live_market_data.get('key_levels', {
-                'EUR/USD': {'support': [1.0800, 1.0750, 1.0700], 'resistance': [1.0900, 1.0950, 1.1000]},
-                'USD/JPY': {'support': [148.00, 147.50, 147.00], 'resistance': [149.00, 149.50, 150.00]},
-                'GBP/USD': {'support': [1.2600, 1.2550, 1.2500], 'resistance': [1.2700, 1.2750, 1.2800]}
-            }),
-            economic_calendar=[],
-            bond_yields=live_market_data.get('bond_yields', {'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8}),
-            equity_indices=live_market_data.get('equity_indices', {'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000}),
-            commodity_prices=live_market_data.get('commodity_prices', {'GOLD': 2000, 'OIL': 75, 'SILVER': 25}),
-            # Enhanced positioning data from live market data
-            retail_sentiment=live_market_data.get('retail_sentiment', {
-                'EUR/USD': 0.65,
-                'USD/JPY': 0.35,
-                'GBP/USD': 0.50,
-                'USD/CHF': 0.70,
-                'AUD/USD': 0.40,
-                'USD/CAD': 0.55
-            }),
-            futures_positioning=live_market_data.get('futures_positioning', {
-                'EUR/USD': 15000,
-                'USD/JPY': -8000,
-                'GBP/USD': 5000,
-                'USD/CHF': 12000,
-                'AUD/USD': -3000,
-                'USD/CAD': 2000
-            }),
-            institutional_flow=live_market_data.get('institutional_flow', {
-                'EUR/USD': 25.5,
-                'USD/JPY': -15.2,
-                'GBP/USD': 8.7,
-                'USD/CHF': 18.3,
-                'AUD/USD': -12.1,
-                'USD/CAD': 5.4
-            }),
-            time_to_event=3600,  # 1 hour until event
-            liquidity_level=2,   # Medium liquidity
-            scenario_probabilities={
-                'higher': 0.30,
-                'lower': 0.50,
-                'inline': 0.20
-            }
-        )
+        # Create GPT market context for GPT analyzer
+        print(f"🔍 DEBUG: About to create GPTMarketContext...")
+        print(f"🔍 DEBUG: GPTMarketContext class: {GPTMarketContext}")
+        print(f"🔍 DEBUG: GPTMarketContext parameters: {GPTMarketContext.__annotations__.keys()}")
+        try:
+            # GPTMarketContext expects string volatility values, so keep them as strings
+            raw_volatility = live_market_data.get('recent_volatility', {})
+            
+            gpt_market_context = GPTMarketContext(
+                current_prices=live_market_data.get('current_prices', {
+                    'EUR/USD': 1.0850,
+                    'USD/JPY': 148.50,
+                    'GBP/USD': 1.2650,
+                    'USD/CHF': 0.8650,
+                    'AUD/USD': 0.6650,
+                    'USD/CAD': 1.3550
+                }),
+                recent_volatility=raw_volatility,
+                market_sentiment=live_market_data.get('market_sentiment', {
+                    'EUR/USD': 'neutral',
+                    'USD/JPY': 'neutral',
+                    'GBP/USD': 'neutral',
+                    'USD/CHF': 'neutral',
+                    'AUD/USD': 'neutral',
+                    'USD/CAD': 'neutral'
+                }),
+                key_levels=live_market_data.get('key_levels', {
+                    'EUR/USD': {'support': [1.0800, 1.0750, 1.0700], 'resistance': [1.0900, 1.0950, 1.1000]},
+                    'USD/JPY': {'support': [148.00, 147.50, 147.00], 'resistance': [149.00, 149.50, 150.00]},
+                    'GBP/USD': {'support': [1.2600, 1.2550, 1.2500], 'resistance': [1.2700, 1.2750, 1.2800]}
+                }),
+                economic_calendar=[],
+                bond_yields=live_market_data.get('bond_yields', {'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8}),
+                equity_indices=live_market_data.get('equity_indices', {'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000}),
+                commodity_prices=live_market_data.get('commodity_prices', {'GOLD': 2000, 'OIL': 75, 'SILVER': 25}),
+                # Enhanced positioning data from live market data
+                retail_sentiment=live_market_data.get('retail_sentiment', {
+                    'EUR/USD': 0.65,
+                    'USD/JPY': 0.35,
+                    'GBP/USD': 0.50,
+                    'USD/CHF': 0.70,
+                    'AUD/USD': 0.40,
+                    'USD/CAD': 0.55
+                }),
+                futures_positioning=live_market_data.get('futures_positioning', {
+                    'EUR/USD': 15000,
+                    'USD/JPY': -8000,
+                    'GBP/USD': 5000,
+                    'USD/CHF': 12000,
+                    'AUD/USD': -3000,
+                    'USD/CAD': 2000
+                }),
+                institutional_flow=live_market_data.get('institutional_flow', {
+                    'EUR/USD': 25.5,
+                    'USD/JPY': -15.2,
+                    'GBP/USD': 8.7,
+                    'USD/CHF': 18.3,
+                    'AUD/USD': -12.1,
+                    'USD/CAD': 5.4
+                }),
+                time_to_event=3600,  # 1 hour until event
+                liquidity_level=2,   # Medium liquidity
+                scenario_probabilities={
+                    'higher': 0.30,
+                    'lower': 0.50,
+                    'inline': 0.20
+                }
+            )
+            print(f"🔍 DEBUG: GPTMarketContext created successfully!")
+        except Exception as e:
+            print(f"🔍 DEBUG: ERROR creating GPTMarketContext: {e}")
+            print(f"🔍 DEBUG: Error type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            raise
         
         # Use analysis_type from request or determine based on actual data availability
         if 'analysis_type' not in locals():
@@ -1751,46 +1848,151 @@ def get_enhanced_analysis(news_id):
         print(f"📊 Data quality: {live_market_data.get('data_quality', 'unknown')}")
         
         # Get GPT-powered comprehensive analysis using validated data and live market context
+        print(f"🔍 DEBUG: About to start analysis...")
+        print(f"🔍 DEBUG: gpt_ai_analyzer: {gpt_ai_analyzer}")
+        print(f"🔍 DEBUG: GPT_AVAILABLE: {GPT_AVAILABLE}")
         try:
+            if gpt_ai_analyzer is None:
+                print(f"🚨🚨🚨 GPT ANALYZER IS NONE - SKIPPING TO FALLBACK 🚨🚨🚨")
+                raise Exception("GPT analyzer not available")
+            
+            # Check if GPT analyzer is properly initialized (has required methods)
+            print(f"🔍 DEBUG: Checking GPT analyzer methods...")
+            print(f"🔍 DEBUG: Has _select_model: {hasattr(gpt_ai_analyzer, '_select_model')}")
+            print(f"🔍 DEBUG: Has _get_error_fallback: {hasattr(gpt_ai_analyzer, '_get_error_fallback')}")
+            if not hasattr(gpt_ai_analyzer, '_select_model') or not hasattr(gpt_ai_analyzer, '_get_error_fallback'):
+                print(f"🚨🚨🚨 GPT ANALYZER IS INCOMPLETE - SKIPPING TO FALLBACK 🚨🚨🚨")
+                raise Exception("GPT analyzer implementation incomplete")
+            
             print(f"🚨🚨🚨 USING ENHANCED GPT ANALYZER WITH VALIDATION 🚨🚨🚨")
+            print(f"🔍 DEBUG: About to call gpt_ai_analyzer.analyze_macro_event...")
             gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type)
+            print(f"🔍 DEBUG: GPT analysis completed successfully!")
         except Exception as e:
             print(f"🚨🚨🚨 ENHANCED GPT ANALYZER FAILED - USING FALLBACK 🚨🚨🚨")
             print(f"Error: {e}")
+            print(f"🔍 DEBUG: Error type: {type(e)}")
+            import traceback
+            traceback.print_exc()
+            
+            # Create enhanced market context for fallback
+            print(f"🔍 DEBUG: Creating EnhancedMarketContext for fallback...")
+            print(f"🔍 DEBUG: EnhancedMarketContext class: {EnhancedMarketContext}")
+            print(f"🔍 DEBUG: EnhancedMarketContext parameters: {EnhancedMarketContext.__annotations__.keys()}")
+            # Convert string volatility values to float values
+            volatility_mapping = {'Low': 0.005, 'Medium': 0.010, 'High': 0.020}
+            raw_volatility = live_market_data.get('recent_volatility', {})
+            converted_volatility = {}
+            for pair, vol in raw_volatility.items():
+                if isinstance(vol, str):
+                    converted_volatility[pair] = volatility_mapping.get(vol, 0.010)
+                else:
+                    converted_volatility[pair] = vol
+            
+            # Convert key_levels structure to match enhanced analyzer expectations
+            raw_key_levels = live_market_data.get('key_levels', {})
+            print(f"🔍 DEBUG: Raw key_levels: {raw_key_levels}")
+            converted_key_levels = {}
+            for pair, levels in raw_key_levels.items():
+                if isinstance(levels, dict):
+                    # Convert lists to single float values (take the first value)
+                    converted_key_levels[pair] = {
+                        'support': levels.get('support', [1.0800])[0] if isinstance(levels.get('support'), list) else levels.get('support', 1.0800),
+                        'resistance': levels.get('resistance', [1.0900])[0] if isinstance(levels.get('resistance'), list) else levels.get('resistance', 1.0900)
+                    }
+                else:
+                    converted_key_levels[pair] = {'support': 1.0800, 'resistance': 1.0900}
+            print(f"🔍 DEBUG: Converted key_levels: {converted_key_levels}")
+            
+            enhanced_market_context = EnhancedMarketContext(
+                current_prices=live_market_data.get('current_prices', {
+                    'EUR/USD': 1.0850,
+                    'USD/JPY': 148.50,
+                    'GBP/USD': 1.2650,
+                    'USD/CHF': 0.8650,
+                    'AUD/USD': 0.6650,
+                    'USD/CAD': 1.3550
+                }),
+                recent_volatility=converted_volatility,
+                market_sentiment=live_market_data.get('market_sentiment', {
+                    'EUR/USD': 'neutral',
+                    'USD/JPY': 'bullish',
+                    'GBP/USD': 'bearish',
+                    'USD/CHF': 'neutral',
+                    'AUD/USD': 'neutral',
+                    'USD/CAD': 'neutral'
+                }),
+                key_levels=converted_key_levels,
+                economic_calendar=[],
+                bond_yields=live_market_data.get('bond_yields', {'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8}),
+                equity_indices=live_market_data.get('equity_indices', {'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000}),
+                commodity_prices=live_market_data.get('commodity_prices', {'GOLD': 2000, 'OIL': 75, 'SILVER': 25}),
+                central_bank_expectations={},
+                historical_reactions={}
+            )
             # Fallback to enhanced analysis
+            print(f"🔍 DEBUG: About to call enhanced_ai_analyzer.analyze_macro_event...")
+            print(f"🔍 DEBUG: enhanced_ai_analyzer: {enhanced_ai_analyzer}")
+            print(f"🔍 DEBUG: enhanced_market_context: {enhanced_market_context}")
             gpt_analysis = enhanced_ai_analyzer.analyze_macro_event(
                 validated_event, 
-                gpt_market_context, 
+                enhanced_market_context, 
                 analysis_type
             )
+            print(f"🔍 DEBUG: Enhanced analysis completed successfully!")
         
-        # Debug: Log what we're getting from GPT
-        print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
-        print(f"🚨 Analysis Type: {type(gpt_analysis)}")
-        print(f"🚨 Analysis Keys: {list(gpt_analysis.__dict__.keys()) if hasattr(gpt_analysis, '__dict__') else 'Not an object'}")
-        print(f"🚨 Data Quality: {getattr(gpt_analysis, 'data_quality', 'unknown')}")
-        print(f"🚨 Validation Status: {getattr(gpt_analysis, 'validation_status', 'unknown')}")
-        print(f"🚨 Market Data Source: {getattr(gpt_analysis, 'market_data_source', 'unknown')}")
-        print(f"🚨 Sample Analysis: {str(gpt_analysis)[:200]}...")
-        print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
+            # Debug: Log what we're getting from GPT
+            print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
+            print(f"🚨 Analysis Type: {type(gpt_analysis)}")
+            print(f"🚨 Analysis Class Name: {type(gpt_analysis).__name__}")
+            print(f"🚨 Analysis Keys: {list(gpt_analysis.__dict__.keys()) if hasattr(gpt_analysis, '__dict__') else 'Not an object'}")
+            print(f"🚨 Has immediate_impact: {hasattr(gpt_analysis, 'immediate_impact')}")
+            print(f"🚨 Has headline: {hasattr(gpt_analysis, 'headline')}")
+            print(f"🚨 Data Quality: {getattr(gpt_analysis, 'data_quality', 'unknown')}")
+            print(f"🚨 Validation Status: {getattr(gpt_analysis, 'validation_status', 'unknown')}")
+            print(f"🚨 Market Data Source: {getattr(gpt_analysis, 'market_data_source', 'unknown')}")
+            print(f"🚨 Sample Analysis: {str(gpt_analysis)[:200]}...")
+            print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
         
         # Transform to frontend-compatible format with new structure
-        if hasattr(gpt_analysis, 'headline'):  # New enhanced structure
-            # Enhanced GPT analyzer returns object with quick-scan elements
+        print(f"🔍 DEBUG: Starting response transformation...")
+        if hasattr(gpt_analysis, 'immediate_impact'):  # Enhanced analyzer structure (ComprehensiveAnalysis)
+            print(f"🔍 DEBUG: Using Enhanced Analyzer transformation (ComprehensiveAnalysis)")
+            # Enhanced analyzer returns ComprehensiveAnalysis object
             enhanced_analysis = {
-                # Quick-scan elements (NEW)
+                # Comprehensive analysis structure
+                'immediate_impact': gpt_analysis.immediate_impact,
+                'long_term_impact': gpt_analysis.long_term_impact,
+                'context_expectations': gpt_analysis.context_expectations,
+                'sentiment_analysis': gpt_analysis.sentiment_analysis,
+                'cross_market_links': gpt_analysis.cross_market_links,
+                'market_shifts': gpt_analysis.market_shifts,
+                'big_picture': gpt_analysis.big_picture,
+                
+                # Meta data
+                'confidence_score': gpt_analysis.confidence_score,
+                'analysis_timestamp': gpt_analysis.analysis_timestamp,
+                'event_id': gpt_analysis.event_id,
+                'analysis_type': gpt_analysis.analysis_type,
+                
+                # Data quality information
+                'data_quality': getattr(gpt_analysis, 'data_quality', 'unknown'),
+                'validation_status': getattr(gpt_analysis, 'validation_status', 'unknown'),
+                'market_data_source': getattr(gpt_analysis, 'market_data_source', 'unknown')
+            }
+        elif hasattr(gpt_analysis, 'headline'):  # GPT analyzer structure (GPTAnalysisResult)
+            print(f"🔍 DEBUG: Using GPT Analyzer transformation (GPTAnalysisResult)")
+            # GPT analyzer returns GPTAnalysisResult object
+            enhanced_analysis = {
+                # GPT analysis structure
                 'headline': gpt_analysis.headline,
                 'key_takeaway': gpt_analysis.key_takeaway,
                 'forward_scenarios': gpt_analysis.forward_scenarios,
-                
-                # Comprehensive analysis (EXISTING)
-                'eventSummary': gpt_analysis.event_summary,
+                'event_summary': gpt_analysis.event_summary,
                 'market_reaction': gpt_analysis.market_reaction,
                 'implications_takeaways': gpt_analysis.implications_takeaways,
                 'trading_plan': gpt_analysis.trading_plan,
                 'big_picture': gpt_analysis.big_picture,
-                
-                # Enhanced positioning context (NEW)
                 'positioning_context': gpt_analysis.positioning_context,
                 'next_catalysts': gpt_analysis.next_catalysts,
                 
@@ -1802,21 +2004,23 @@ def get_enhanced_analysis(news_id):
                 'model_used': gpt_analysis.model_used,
                 'cost_estimate': gpt_analysis.cost_estimate,
                 'cache_hit': gpt_analysis.cache_hit,
-                'definition_source': gpt_analysis.definition_source,
                 
-                # Data quality information (NEW)
-                'data_quality': getattr(gpt_analysis, 'data_quality', 'unknown'),
-                'validation_status': getattr(gpt_analysis, 'validation_status', 'unknown'),
-                'market_data_source': getattr(gpt_analysis, 'market_data_source', 'unknown')
+                # Data quality information
+                'data_quality': gpt_analysis.data_quality,
+                'validation_status': gpt_analysis.validation_status,
+                'market_data_source': gpt_analysis.market_data_source
             }
         elif isinstance(gpt_analysis, dict):
+            print(f"🔍 DEBUG: Using dictionary fallback transformation")
             # Fallback structure
             enhanced_analysis = gpt_analysis
         else:
+            print(f"🔍 DEBUG: Using unknown structure transformation")
             # Unknown structure
             enhanced_analysis = {
                 'error': 'Unknown analysis structure',
-                'raw_analysis': str(gpt_analysis)
+                'raw_analysis': str(gpt_analysis),
+                'analysis_type': type(gpt_analysis).__name__
             }
         
         return jsonify(enhanced_analysis)

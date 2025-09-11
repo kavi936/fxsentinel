@@ -160,7 +160,7 @@ class GPTAIAnalyzer:
         
         # Economic indicators cache
         self.economic_indicators_cache = {}
-        self._load_economic_indicators_cache()
+        # Note: _load_economic_indicators_cache method removed - cache will be populated on demand
     
     def analyze_macro_event(self, event: Dict, market_context: MarketContext, 
                           analysis_type: str = "pre_event") -> GPTAnalysisResult:
@@ -997,10 +997,245 @@ class GPTAIAnalyzer:
         # This is a simplified calculation
         return 0.0  # Would need to track actual hits/misses
 
-# Global instance - create safely
-try:
-    gpt_ai_analyzer = GPTAIAnalyzer()
-except Exception as e:
-    print(f"🔍 Error creating GPT analyzer instance: {e}")
-    # Create a minimal instance that will use fallback
-    gpt_ai_analyzer = None
+    def _select_model(self, event: Dict) -> str:
+        """Select appropriate GPT model based on event characteristics"""
+        # For now, use GPT-3.5-turbo for cost efficiency
+        # Could be enhanced to use GPT-4 for high-impact events
+        impact = event.get('impact', 'medium').lower()
+        
+        if impact == 'high':
+            return 'gpt-4-turbo-preview'  # Use GPT-4 for high-impact events
+        else:
+            return 'gpt-3.5-turbo'  # Use GPT-3.5 for medium/low impact events
+    
+    def _get_error_fallback(self, event: Dict, analysis_type: str = "pre_event") -> GPTAnalysisResult:
+        """Generate fallback analysis when GPT API fails"""
+        return self._get_fallback_analysis(event, analysis_type)
+    
+    def _generate_enhanced_gpt_analysis(self, event: Dict, market_context: MarketContext, 
+                                      analysis_type: str, model: str) -> GPTAnalysisResult:
+        """Generate enhanced GPT analysis with real API calls"""
+        try:
+            if not self.client:
+                logger.warning("OpenAI client not available, using fallback")
+                return self._get_fallback_analysis(event, analysis_type)
+            
+            # Prepare the prompt for GPT
+            prompt = self._create_analysis_prompt(event, market_context, analysis_type)
+            
+            # Make API call to OpenAI
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "You are a professional forex market analyst with deep expertise in economic events and their market impact."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.3
+            )
+            
+            # Parse the response
+            gpt_response = response.choices[0].message.content
+            
+            # Convert GPT response to structured analysis
+            analysis_result = self._parse_gpt_response(gpt_response, event, analysis_type, model)
+            
+            # Calculate cost estimate
+            cost_estimate = self._calculate_cost_estimate(response.usage, model)
+            analysis_result.cost_estimate = cost_estimate
+            self.total_cost += cost_estimate
+            
+            return analysis_result
+            
+        except Exception as e:
+            logger.error(f"Error in GPT analysis: {e}")
+            return self._get_fallback_analysis(event, analysis_type)
+    
+    def _create_analysis_prompt(self, event: Dict, market_context: MarketContext, analysis_type: str) -> str:
+        """Create a comprehensive prompt for GPT analysis"""
+        event_title = event.get('title', 'Unknown Event')
+        currency = event.get('currency', 'USD')
+        impact = event.get('impact', 'medium')
+        previous = event.get('previous', 'N/A')
+        expected = event.get('expected', 'N/A')
+        actual = event.get('actual', 'N/A')
+        
+        prompt = f"""
+Analyze the following economic event and provide comprehensive market analysis:
+
+EVENT DETAILS:
+- Title: {event_title}
+- Currency: {currency}
+- Impact Level: {impact}
+- Previous: {previous}
+- Expected: {expected}
+- Actual: {actual}
+- Analysis Type: {analysis_type}
+
+MARKET CONTEXT:
+- Current Prices: {market_context.current_prices}
+- Market Sentiment: {market_context.market_sentiment}
+- Bond Yields: {market_context.bond_yields}
+- Equity Indices: {market_context.equity_indices}
+
+Please provide analysis in the following JSON format:
+{{
+    "headline": "Compelling headline summarizing the key takeaway",
+    "key_takeaway": "Main insight in 1-2 sentences",
+    "forward_scenarios": {{
+        "bullish": "Bullish scenario description",
+        "bearish": "Bearish scenario description", 
+        "neutral": "Neutral scenario description"
+    }},
+    "event_summary": {{
+        "release": "Event description",
+        "outcome": "What happened vs expectations",
+        "previous": "{previous}",
+        "expected": "{expected}",
+        "actual": "{actual}"
+    }},
+    "market_reaction": {{
+        "price_action": "Expected price action",
+        "volatility": "Volatility expectations",
+        "reason": "Why this reaction is expected"
+    }},
+    "implications_takeaways": {{
+        "economic_context": "Economic implications",
+        "policy_implications": "Central bank policy implications",
+        "market_bias": "Overall market bias",
+        "risk_level": "Risk assessment"
+    }},
+    "trading_plan": {{
+        "best_approach": "Recommended trading approach",
+        "avoid_strategies": "Strategies to avoid",
+        "key_levels": "Important price levels",
+        "position_sizing": "Position sizing recommendations",
+        "next_catalysts": "Upcoming events to watch"
+    }},
+    "big_picture": {{
+        "economic_outlook": "Economic outlook implications",
+        "medium_term_direction": "Medium-term market direction",
+        "policy_trajectory": "Policy trajectory implications",
+        "forward_focus": "What to focus on going forward"
+    }},
+    "positioning_context": {{
+        "retail_sentiment": "Retail trader sentiment",
+        "institutional_flow": "Institutional flow analysis",
+        "futures_positioning": "Futures market positioning",
+        "market_bias": "Overall market bias"
+    }},
+    "next_catalysts": [
+        "Upcoming event 1",
+        "Upcoming event 2",
+        "Upcoming event 3"
+    ]
+}}
+
+Provide sophisticated, professional analysis that would be valuable for forex traders.
+"""
+        return prompt
+    
+    def _parse_gpt_response(self, gpt_response: str, event: Dict, analysis_type: str, model: str) -> GPTAnalysisResult:
+        """Parse GPT response into structured analysis"""
+        try:
+            # Try to extract JSON from the response
+            import json
+            import re
+            
+            # Look for JSON in the response
+            json_match = re.search(r'\{.*\}', gpt_response, re.DOTALL)
+            if json_match:
+                analysis_data = json.loads(json_match.group())
+            else:
+                # Fallback if no JSON found
+                analysis_data = self._create_fallback_analysis_data(gpt_response, event)
+            
+            return GPTAnalysisResult(
+                headline=analysis_data.get('headline', f"Analysis for {event.get('title', 'Unknown Event')}"),
+                key_takeaway=analysis_data.get('key_takeaway', 'Market analysis completed'),
+                forward_scenarios=analysis_data.get('forward_scenarios', {}),
+                event_summary=analysis_data.get('event_summary', {}),
+                market_reaction=analysis_data.get('market_reaction', {}),
+                implications_takeaways=analysis_data.get('implications_takeaways', {}),
+                trading_plan=analysis_data.get('trading_plan', {}),
+                big_picture=analysis_data.get('big_picture', {}),
+                positioning_context=analysis_data.get('positioning_context', {}),
+                next_catalysts=analysis_data.get('next_catalysts', []),
+                confidence_score=85.0,  # High confidence for GPT analysis
+                analysis_timestamp=datetime.now().isoformat(),
+                event_id=str(event.get('id', 'unknown')),
+                analysis_type=analysis_type,
+                model_used=model,
+                cost_estimate=0.0  # Will be set by caller
+            )
+            
+        except Exception as e:
+            logger.error(f"Error parsing GPT response: {e}")
+            return self._get_fallback_analysis(event, analysis_type)
+    
+    def _create_fallback_analysis_data(self, gpt_response: str, event: Dict) -> Dict:
+        """Create fallback analysis data from raw GPT response"""
+        return {
+            'headline': f"GPT Analysis: {event.get('title', 'Unknown Event')}",
+            'key_takeaway': gpt_response[:200] + "..." if len(gpt_response) > 200 else gpt_response,
+            'forward_scenarios': {
+                'bullish': 'Analysis suggests potential bullish scenario',
+                'bearish': 'Analysis suggests potential bearish scenario',
+                'neutral': 'Analysis suggests neutral scenario'
+            },
+            'event_summary': {
+                'release': event.get('title', 'Unknown Event'),
+                'outcome': 'GPT analysis completed',
+                'previous': event.get('previous', 'N/A'),
+                'expected': event.get('expected', 'N/A'),
+                'actual': event.get('actual', 'N/A')
+            },
+            'market_reaction': {
+                'price_action': 'GPT analysis suggests market reaction',
+                'volatility': 'Moderate volatility expected',
+                'reason': 'Based on GPT analysis'
+            },
+            'implications_takeaways': {
+                'economic_context': 'GPT analysis of economic implications',
+                'policy_implications': 'GPT analysis of policy implications',
+                'market_bias': 'Neutral',
+                'risk_level': 'Medium'
+            },
+            'trading_plan': {
+                'best_approach': 'Monitor market reaction',
+                'avoid_strategies': 'Avoid aggressive positioning',
+                'key_levels': 'Monitor key support/resistance levels',
+                'position_sizing': 'Conservative sizing recommended',
+                'next_catalysts': ['Monitor upcoming events']
+            },
+            'big_picture': {
+                'economic_outlook': 'GPT analysis of economic outlook',
+                'medium_term_direction': 'Monitor for direction',
+                'policy_trajectory': 'GPT analysis of policy trajectory',
+                'forward_focus': 'Monitor market developments'
+            },
+            'positioning_context': {
+                'retail_sentiment': 'Mixed',
+                'institutional_flow': 'Monitor institutional flows',
+                'futures_positioning': 'Balanced',
+                'market_bias': 'Neutral'
+            },
+            'next_catalysts': ['Monitor upcoming economic events']
+        }
+    
+    def _calculate_cost_estimate(self, usage, model: str) -> float:
+        """Calculate cost estimate for API usage"""
+        if not usage:
+            return 0.0
+        
+        # Cost per 1K tokens
+        costs = {
+            'gpt-4-turbo-preview': 0.03,
+            'gpt-3.5-turbo': 0.002
+        }
+        
+        cost_per_1k = costs.get(model, 0.002)
+        total_tokens = usage.total_tokens if hasattr(usage, 'total_tokens') else 0
+        return (total_tokens / 1000) * cost_per_1k
+
+# Global instance creation removed - let app.py create its own instance

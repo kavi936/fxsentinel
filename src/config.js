@@ -1,6 +1,6 @@
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (window.location.hostname === 'localhost' ? 'http://localhost:5002' : 'https://fxsentinel.io');
+  (window.location.hostname === 'localhost' ? 'http://localhost:5001' : 'https://fxsentinel.io');
 
 // Debug logging (only in development)
 if (window.location.hostname === 'localhost') {

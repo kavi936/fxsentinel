@@ -26,8 +26,14 @@ class MarketContext:
     bond_yields: Dict[str, float]
     equity_indices: Dict[str, float]
     commodity_prices: Dict[str, float]
-    central_bank_expectations: Dict[str, Dict[str, Any]]
-    historical_reactions: Dict[str, List[Dict]]
+    central_bank_expectations: Dict[str, Dict[str, Any]] = None
+    historical_reactions: Dict[str, List[Dict]] = None
+    retail_sentiment: Dict[str, float] = None
+    futures_positioning: Dict[str, float] = None
+    institutional_flow: Dict[str, float] = None
+    time_to_event: int = None
+    liquidity_level: int = None
+    scenario_probabilities: Dict[str, float] = None
 
 @dataclass
 class ComprehensiveAnalysis:
@@ -62,10 +68,16 @@ class ComprehensiveAnalysis:
 
 class EnhancedAIAnalyzer:
     def __init__(self):
+        print(f"🔍 DEBUG: EnhancedAIAnalyzer __init__ starting...")
         self.event_templates = self._load_event_templates()
+        print(f"🔍 DEBUG: Event templates loaded")
         self.historical_patterns = self._load_historical_patterns()
+        print(f"🔍 DEBUG: Historical patterns loaded")
         self.cross_market_correlations = self._load_cross_market_correlations()
+        print(f"🔍 DEBUG: Cross market correlations loaded")
         self.central_bank_policies = self._load_central_bank_policies()
+        print(f"🔍 DEBUG: Central bank policies loaded")
+        print(f"🔍 DEBUG: EnhancedAIAnalyzer __init__ completed")
         
     def analyze_macro_event(self, event: Dict, market_context: MarketContext, 
                           analysis_type: str = "post_event") -> ComprehensiveAnalysis:
@@ -78,8 +90,13 @@ class EnhancedAIAnalyzer:
             analysis_type: "pre_event" (before news) or "post_event" (after news)
         """
         try:
+            print(f"🔍 DEBUG: Starting analyze_macro_event...")
+            print(f"🔍 DEBUG: Event title: {event.get('title', 'Unknown')}")
+            print(f"🔍 DEBUG: Market context type: {type(market_context)}")
             event_type = self._classify_event_type(event['title'])
+            print(f"🔍 DEBUG: Event type classified as: {event_type}")
             event_data = self._extract_event_data(event)
+            print(f"🔍 DEBUG: Event data extracted: {event_data}")
             
             if analysis_type == "pre_event":
                 return self._analyze_pre_event(event_type, event_data, market_context)
@@ -204,17 +221,36 @@ class EnhancedAIAnalyzer:
         }
         
         # Calculate expected volatility
-        base_volatility = market_context.recent_volatility.get('EUR/USD', 0.008)
+        print(f"🔍 DEBUG: About to calculate volatility...")
+        base_volatility_raw = market_context.recent_volatility.get('EUR/USD', 0.008)
+        print(f"🔍 DEBUG: base_volatility_raw = {base_volatility_raw} (type: {type(base_volatility_raw)})")
+        
+        # Convert string volatility to float if needed
+        if isinstance(base_volatility_raw, str):
+            volatility_conversion = {
+                'low': 0.005,
+                'medium': 0.010,
+                'high': 0.020
+            }
+            base_volatility = volatility_conversion.get(base_volatility_raw.lower(), 0.010)
+        else:
+            base_volatility = base_volatility_raw
+            
+        print(f"🔍 DEBUG: base_volatility = {base_volatility} (type: {type(base_volatility)})")
         volatility_multiplier = self._get_volatility_multiplier(event_type, direction, impact_level)
+        print(f"🔍 DEBUG: volatility_multiplier = {volatility_multiplier} (type: {type(volatility_multiplier)})")
         expected_volatility = base_volatility * volatility_multiplier
+        print(f"🔍 DEBUG: expected_volatility = {expected_volatility}")
         
         # Timeframe for immediate impact
+        print(f"🔍 DEBUG: About to calculate key levels...")
         if analysis_type == "pre_event":
             timeframe = "First 15-30 minutes after release"
             key_levels = self._get_key_levels_for_pairs(affected_pairs, market_context)
         else:
             timeframe = "Immediate reaction observed"
             key_levels = self._get_current_levels_for_pairs(affected_pairs, market_context)
+        print(f"🔍 DEBUG: Key levels calculated successfully")
         
         return {
             'direction': immediate_direction,
