@@ -31,7 +31,7 @@ class FinnhubCalendarService:
             print("⚠️ FINNHUB_API_KEY not set - Finnhub features will be disabled")
             self.api_key = None
     
-    def get_economic_calendar(self, start_date: str = None, end_date: str = None) -> List[Dict]:
+    def get_economic_calendar(self, start_date: str = None, end_date: str = None, user_timezone: str = 'UTC') -> List[Dict]:
         """
         Fetch economic calendar events from Finnhub with cached fallback
         
@@ -42,16 +42,23 @@ class FinnhubCalendarService:
         Returns:
             List of economic calendar events
         """
-        # Check if API key is available
+        # For development: Prioritize cached data over API calls
+        # This avoids expensive API calls and uses the downloaded database
+        if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
+            print("✅ Using cached economic calendar data (development mode)")
+            cached_events = cached_economic_calendar.get_economic_calendar(start_date, end_date)
+            # Transform cached events using the same transformation logic as API events
+            transformed_events = []
+            for event in cached_events:
+                transformed_event = self._transform_event(event, user_timezone)
+                if transformed_event:
+                    transformed_events.append(transformed_event)
+            return transformed_events
+        
+        # Fallback: Check if API key is available (for production use)
         if not self.api_key:
-            print("⚠️ Finnhub API key not configured - trying cached data")
-            # Try to get data from cache if available
-            if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
-                print("✅ Using cached economic calendar data")
-                return cached_economic_calendar.get_economic_calendar(start_date, end_date)
-            else:
-                print("❌ No cached data available - returning empty calendar")
-                return []
+            print("⚠️ Finnhub API key not configured - no cached data available")
+            return []
             
         try:
             # Set default dates if not provided
@@ -84,7 +91,7 @@ class FinnhubCalendarService:
             # Transform Finnhub data to our format
             transformed_events = []
             for event in events:
-                transformed_event = self._transform_event(event)
+                transformed_event = self._transform_event(event, user_timezone)
                 if transformed_event:
                     # Additional date filtering to ensure events are within the requested range
                     if self._is_event_in_date_range(transformed_event, start_date, end_date):
@@ -169,7 +176,14 @@ class FinnhubCalendarService:
             # Try to get data from cache as fallback if available
             if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
                 print("✅ Using cached economic calendar data as fallback")
-                return cached_economic_calendar.get_economic_calendar(start_date, end_date)
+                cached_events = cached_economic_calendar.get_economic_calendar(start_date, end_date)
+                # Transform cached events using the same transformation logic as API events
+                transformed_events = []
+                for event in cached_events:
+                    transformed_event = self._transform_event(event, user_timezone)
+                    if transformed_event:
+                        transformed_events.append(transformed_event)
+                return transformed_events
             else:
                 print("❌ No cached data available - returning empty calendar")
                 return []
@@ -179,7 +193,14 @@ class FinnhubCalendarService:
             # Try to get data from cache as fallback if available
             if CACHED_CALENDAR_AVAILABLE and cached_economic_calendar.is_cache_available():
                 print("✅ Using cached economic calendar data as fallback")
-                return cached_economic_calendar.get_economic_calendar(start_date, end_date)
+                cached_events = cached_economic_calendar.get_economic_calendar(start_date, end_date)
+                # Transform cached events using the same transformation logic as API events
+                transformed_events = []
+                for event in cached_events:
+                    transformed_event = self._transform_event(event, user_timezone)
+                    if transformed_event:
+                        transformed_events.append(transformed_event)
+                return transformed_events
             else:
                 print("❌ No cached data available - returning empty calendar")
                 return []
@@ -256,12 +277,110 @@ class FinnhubCalendarService:
             print(f"❌ Error checking date range for event {event.get('title', 'Unknown')}: {e}")
             return False
 
-    def _transform_event(self, event: Dict) -> Optional[Dict]:
+    def _format_datetime_for_timezone(self, utc_datetime: datetime, user_timezone: str) -> tuple:
+        """
+        Format a UTC datetime for display in the user's timezone
+        
+        Args:
+            utc_datetime: UTC datetime object
+            user_timezone: User's selected timezone
+            
+        Returns:
+            Tuple of (formatted_date, formatted_time)
+        """
+        try:
+            # Timezone abbreviations mapping
+            timezone_abbreviations = {
+                'UTC': 'UTC',
+                'America/New_York': 'EST/EDT',
+                'America/Chicago': 'CST/CDT',
+                'America/Denver': 'MST/MDT',
+                'America/Los_Angeles': 'PST/PDT',
+                'Europe/London': 'GMT/BST',
+                'Europe/Paris': 'CET/CEST',
+                'Europe/Berlin': 'CET/CEST',
+                'Asia/Tokyo': 'JST',
+                'Asia/Shanghai': 'CST',
+                'Asia/Singapore': 'SGT',
+                'Australia/Sydney': 'AEST/AEDT',
+                'Australia/Melbourne': 'AEST/AEDT',
+                'Pacific/Auckland': 'NZST/NZDT',
+                'Asia/Dubai': 'GST',
+                'Asia/Kolkata': 'IST',
+                'Asia/Seoul': 'KST',
+                'Asia/Bangkok': 'ICT',
+                'Europe/Moscow': 'MSK',
+                'Africa/Johannesburg': 'SAST'
+            }
+            
+            # Get timezone abbreviation
+            tz_abbr = timezone_abbreviations.get(user_timezone, user_timezone)
+            
+            # For now, we'll use a simple offset-based approach since Python's timezone handling
+            # can be complex. This is a simplified version that works for most cases.
+            
+            # Calculate timezone offset (this is a simplified approach)
+            timezone_offsets = {
+                'UTC': 0,
+                'America/New_York': -5,  # EST (simplified, doesn't handle DST)
+                'America/Chicago': -6,   # CST
+                'America/Denver': -7,    # MST
+                'America/Los_Angeles': -8, # PST
+                'Europe/London': 0,      # GMT (simplified, doesn't handle BST)
+                'Europe/Paris': 1,       # CET
+                'Europe/Berlin': 1,      # CET
+                'Asia/Tokyo': 9,         # JST
+                'Asia/Shanghai': 8,      # CST
+                'Asia/Singapore': 8,     # SGT
+                'Australia/Sydney': 10,  # AEST
+                'Australia/Melbourne': 10, # AEST
+                'Pacific/Auckland': 12,  # NZST
+                'Asia/Dubai': 4,         # GST
+                'Asia/Kolkata': 5.5,     # IST
+                'Asia/Seoul': 9,         # KST
+                'Asia/Bangkok': 7,       # ICT
+                'Europe/Moscow': 3,      # MSK
+                'Africa/Johannesburg': 2 # SAST
+            }
+            
+            # Get offset for the timezone
+            offset_hours = timezone_offsets.get(user_timezone, 0)
+            
+            # Calculate the local time
+            local_datetime = utc_datetime.replace(hour=(utc_datetime.hour + int(offset_hours)) % 24)
+            
+            # Handle day changes
+            if utc_datetime.hour + int(offset_hours) >= 24:
+                # Move to next day
+                from datetime import timedelta
+                local_datetime = local_datetime + timedelta(days=1)
+            elif utc_datetime.hour + int(offset_hours) < 0:
+                # Move to previous day
+                from datetime import timedelta
+                local_datetime = local_datetime - timedelta(days=1)
+            
+            # Format date as "Thu, Sep 11"
+            formatted_date = local_datetime.strftime('%a, %b %d')
+            
+            # Format time with timezone abbreviation
+            formatted_time = local_datetime.strftime('%H:%M') + f' {tz_abbr}'
+            
+            return formatted_date, formatted_time
+            
+        except Exception as e:
+            print(f"❌ Error formatting datetime for timezone {user_timezone}: {e}")
+            # Fallback to UTC
+            formatted_date = utc_datetime.strftime('%a, %b %d')
+            formatted_time = utc_datetime.strftime('%H:%M UTC')
+            return formatted_date, formatted_time
+
+    def _transform_event(self, event: Dict, user_timezone: str = 'UTC') -> Optional[Dict]:
         """
         Transform Finnhub event format to our internal format
         
         Args:
             event: Raw event data from Finnhub
+            user_timezone: User's selected timezone (defaults to UTC)
             
         Returns:
             Transformed event data or None if invalid
@@ -276,15 +395,24 @@ class FinnhubCalendarService:
             
             if event_date and event_time:
                 try:
-                    # Finnhub format: "2024-01-15" and "13:30"
-                    # Finnhub API returns times in UTC, not GST
-                    datetime_str = f"{event_date} {event_time}"
-                    event_datetime = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
-                    
-                    # Finnhub times are already in UTC, so no conversion needed
-                    # Format for display (show in UTC - frontend will convert to user timezone)
-                    display_date = event_datetime.strftime('%a, %b %d')
-                    display_time = event_datetime.strftime('%H:%M UTC')
+                    # Check if time field contains full datetime (from cached data)
+                    if ' ' in event_time and len(event_time) > 10:
+                        # Time field contains both date and time (e.g., "2025-09-11 12:15:00")
+                        event_datetime = datetime.strptime(event_time, '%Y-%m-%d %H:%M:%S')
+                        
+                        # Format date and time based on user's timezone
+                        print(f"🔍 DEBUG: Formatting datetime {event_datetime} for timezone {user_timezone}")
+                        display_date, display_time = self._format_datetime_for_timezone(event_datetime, user_timezone)
+                        print(f"🔍 DEBUG: Formatted result - Date: {display_date}, Time: {display_time}")
+                    else:
+                        # Standard Finnhub format: "2024-01-15" and "13:30"
+                        datetime_str = f"{event_date} {event_time}"
+                        event_datetime = datetime.strptime(datetime_str, '%Y-%m-%d %H:%M')
+                        
+                        # Format date and time based on user's timezone
+                        print(f"🔍 DEBUG: Formatting datetime {event_datetime} for timezone {user_timezone}")
+                        display_date, display_time = self._format_datetime_for_timezone(event_datetime, user_timezone)
+                        print(f"🔍 DEBUG: Formatted result - Date: {display_date}, Time: {display_time}")
                     
                     # Use UTC time for status determination (already in UTC)
                     # No conversion needed
@@ -299,9 +427,10 @@ class FinnhubCalendarService:
                         # Time field contains both date and time
                         event_datetime = datetime.strptime(event_time, '%Y-%m-%d %H:%M:%S')
                         
-                        # Finnhub times are already in UTC, so no conversion needed
-                        display_date = event_datetime.strftime('%a, %b %d')
-                        display_time = event_datetime.strftime('%H:%M UTC')
+                        # Format date and time based on user's timezone
+                        print(f"🔍 DEBUG: Formatting datetime {event_datetime} for timezone {user_timezone}")
+                        display_date, display_time = self._format_datetime_for_timezone(event_datetime, user_timezone)
+                        print(f"🔍 DEBUG: Formatted result - Date: {display_date}, Time: {display_time}")
                         
                         # Use UTC time for status determination (already in UTC)
                         # No conversion needed
