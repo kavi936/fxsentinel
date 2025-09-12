@@ -2104,7 +2104,7 @@ def health_alerts():
             "subscription_cache": subscription_cache_status,
             "robust_telegram_service": telegram_service_status,
             "alerts_working": background_worker_running or robust_service_running,
-            "message": "Alerts will work automatically for all users" if (background_worker_running or robust_service_running) else "Alerts only work when manually started"
+            "message": "Alerts handled by dedicated background worker (fxsentinel-background-worker-v2)" if (background_worker_running or robust_service_running) else "Dedicated background worker not running - check fxsentinel-background-worker-v2"
         })
     except Exception as e:
         return jsonify({
@@ -5498,8 +5498,8 @@ def background_scheduler():
 
 # Initialize and start background alert worker
 # background_worker.init_app(app)  # Removed - not needed
-background_worker.start()
-print("🚀 Background alert worker started")
+# background_worker.start()  # Disabled - using dedicated background worker instead
+print("🚀 Main app started (background worker disabled - using dedicated worker)")
 
 @app.route('/api/post-news-analysis', methods=['POST'])
 @limiter.limit("10 per minute")
