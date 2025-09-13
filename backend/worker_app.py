@@ -51,6 +51,40 @@ def health():
     
     return jsonify(status), 200
 
+@app.route('/api/start-monitoring', methods=['POST'])
+def start_monitoring():
+    """Start the background monitoring thread"""
+    global background_worker
+    
+    try:
+        if background_worker is None:
+            # Import and create the worker
+            from services.background_alert_worker import BackgroundAlertWorker
+            background_worker = BackgroundAlertWorker()
+            logger.info("📦 Background worker created")
+        
+        if not background_worker.running:
+            background_worker.start()
+            logger.info("✅ Background monitoring started")
+            return jsonify({
+                "success": True,
+                "message": "Background monitoring started",
+                "worker_running": background_worker.running
+            }), 200
+        else:
+            return jsonify({
+                "success": True,
+                "message": "Background monitoring already running",
+                "worker_running": background_worker.running
+            }), 200
+            
+    except Exception as e:
+        logger.error(f"❌ Error starting monitoring: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 def main():
     """Main function to start the background worker"""
     try:
