@@ -290,6 +290,9 @@ class BackgroundAlertWorker:
                 'data': news_item
             }
             
+            logger.info(f"🚨 Sending news alert to main app: {news_item.get('title', '')[:50]}...")
+            logger.info(f"📡 API URL: {self.api_base_url}/api/alerts/trigger")
+            
             response = requests.post(
                 f"{self.api_base_url}/api/alerts/trigger",
                 json=alert_data,
@@ -298,12 +301,18 @@ class BackgroundAlertWorker:
             
             if response.status_code == 200:
                 result = response.json()
-                logger.info(f"News alert triggered: {result.get('alerts_sent', 0)} alerts sent")
+                alerts_sent = result.get('alerts_sent', 0)
+                if alerts_sent > 0:
+                    logger.info(f"✅ News alert triggered successfully: {alerts_sent} alerts sent")
+                else:
+                    logger.warning(f"⚠️  News alert triggered but 0 alerts sent - check user settings and mappings")
+                    logger.info(f"📋 Response details: {result}")
             else:
-                logger.error(f"Failed to trigger news alert: {response.status_code}")
+                logger.error(f"❌ Failed to trigger news alert: {response.status_code}")
+                logger.error(f"📋 Response content: {response.text}")
                 
         except Exception as e:
-            logger.error(f"Error sending news alert: {e}")
+            logger.error(f"❌ Error sending news alert: {e}")
     
     def _send_economic_alert(self, event: Dict[str, Any]):
         """Send economic calendar alert"""

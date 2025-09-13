@@ -1998,7 +1998,11 @@ def trigger_alert():
         mapping_path = "telegram_mappings"
         all_mappings = firebase._make_request('GET', mapping_path)
         
+        logger.info(f"🔍 Alert trigger received - Type: {alert_type}")
+        logger.info(f"📊 Found {len(all_mappings) if all_mappings else 0} telegram mappings")
+        
         if not all_mappings or not isinstance(all_mappings, dict):
+            logger.warning("⚠️  No telegram mappings found")
             return jsonify({
                 'success': True,
                 'message': 'No connected users found'
@@ -2027,6 +2031,30 @@ def trigger_alert():
                 )
                 
                 if not telegram_enabled:
+                    logger.debug(f"User {user_id} has Telegram disabled")
+                    continue
+                
+                # Check if user has liveNews alerts enabled (handle multiple settings structures)
+                live_news_enabled = False
+                
+                # Check direct alert_types structure
+                alert_types = user_settings.get('alert_types', {})
+                if isinstance(alert_types, dict):
+                    live_news_enabled = alert_types.get('liveNews', True)  # Default to True
+                elif isinstance(alert_types, list):
+                    live_news_enabled = 'liveNews' in alert_types or 'news' in alert_types
+                else:
+                    live_news_enabled = True  # Default to True if no alert_types
+                
+                # Also check preferences structure
+                preferences = user_settings.get('preferences', {})
+                if preferences and 'alertTypes' in preferences:
+                    pref_alert_types = preferences['alertTypes']
+                    if isinstance(pref_alert_types, dict):
+                        live_news_enabled = pref_alert_types.get('liveNews', live_news_enabled)
+                
+                if not live_news_enabled:
+                    logger.debug(f"User {user_id} has liveNews alerts disabled")
                     continue
                 
                 # Create user data
@@ -2038,6 +2066,10 @@ def trigger_alert():
                 
                 # Send alert based on type
                 if alert_type == 'news':
+                    # FIXED: Trust the dedicated worker's filtering - don't apply additional forex filtering
+                    # The dedicated worker already filtered for high-impact news, so we should process it
+                    logger.info(f"Processing news alert from dedicated worker: {alert_data.get('title', '')[:50]}...")
+                    
                     # Determine if AI analysis is needed
                     needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(alert_data)
                     
@@ -2060,6 +2092,9 @@ def trigger_alert():
                         
                         if success:
                             alerts_sent += 1
+                            logger.info(f"✅ Successfully sent alert to user {user_id}")
+                        else:
+                            logger.warning(f"❌ Failed to send alert to user {user_id}")
                     except Exception as e:
                         logger.error(f"Error sending news alert to user {user_id}: {e}")
                         continue
@@ -2076,6 +2111,7 @@ def trigger_alert():
                         logger.error(f"Error sending calendar alert to user {user_id}: {e}")
                         continue
         
+        logger.info(f"📨 Alert processing complete: {alerts_sent} alerts sent")
         return jsonify({
             'success': True,
             'message': f'Sent {alerts_sent} alerts',
