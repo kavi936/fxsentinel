@@ -14,6 +14,45 @@ const Overview = () => {
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
+  // Helper function to clean up old cache entries
+  const cleanupOldCache = () => {
+    try {
+      const keysToRemove = [];
+      const maxCacheAge = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
+      
+      // Iterate through localStorage keys
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('economic_calendar_')) {
+          try {
+            const data = JSON.parse(localStorage.getItem(key));
+            const cacheAge = Date.now() - data.timestamp;
+            
+            // Remove entries older than 7 days
+            if (cacheAge > maxCacheAge) {
+              keysToRemove.push(key);
+            }
+          } catch (e) {
+            // Invalid cache entry, mark for removal
+            keysToRemove.push(key);
+          }
+        }
+      }
+      
+      // Remove old entries
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        console.log(`🗑️ Removed old cache entry: ${key}`);
+      });
+      
+      if (keysToRemove.length > 0) {
+        console.log(`🗑️ Cleaned up ${keysToRemove.length} old cache entries`);
+      }
+    } catch (e) {
+      console.warn('⚠️ Failed to cleanup old cache:', e);
+    }
+  };
+
   const [isEditing, setIsEditing] = useState(false);
   const [selectedPairs, setSelectedPairs] = useState([]);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
@@ -33,7 +72,7 @@ const Overview = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedDateRange, setSelectedDateRange] = useState({
     start: new Date(),
-    end: new Date()
+    end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) // 2 weeks from today
   });
   const [quickSelectOption, setQuickSelectOption] = useState('this-month');
   const [isSelectingRange, setIsSelectingRange] = useState(false);
@@ -207,6 +246,11 @@ const Overview = () => {
     setSelectedChartEvent(null);
   };
 
+  // Cleanup old cache on mount
+  useEffect(() => {
+    cleanupOldCache();
+  }, []);
+
   // Fetch economic calendar data
   useEffect(() => {
     fetchEconomicCalendar();
@@ -246,16 +290,41 @@ const Overview = () => {
 
   const fetchEconomicCalendar = async () => {
     try {
-      setCalendarLoading(true);
-      setCalendarError(null);
-      
       // Format dates for API request
       const startDate = selectedDateRange.start.toISOString().split('T')[0];
       const endDate = selectedDateRange.end.toISOString().split('T')[0];
+      const cacheKey = `economic_calendar_${startDate}_${endDate}`;
+      
+      // Check localStorage cache first
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          const cacheAge = Date.now() - parsed.timestamp;
+          const maxCacheAge = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+          
+          if (cacheAge < maxCacheAge) {
+            console.log(`📋 Using cached calendar data (age: ${(cacheAge / 3600000).toFixed(1)}h)`);
+            setEconomicEvents(parsed.events);
+            setCalendarSource(parsed.source + ' (cached)');
+            setLastUpdated(new Date(parsed.timestamp));
+            setCalendarLoading(false);
+            setCalendarError(null);
+            // Continue to fetch fresh data in background
+          } else {
+            console.log(`⚠️ Cache expired (age: ${(cacheAge / 3600000).toFixed(1)}h)`);
+          }
+        } catch (e) {
+          console.warn('⚠️ Failed to parse cached data:', e);
+        }
+      }
+      
+      // Always fetch fresh data
+      setCalendarLoading(true);
+      setCalendarError(null);
       
       const url = `${config.endpoints.economicCalendar}?start_date=${startDate}&end_date=${endDate}`;
-      console.log(`📅 Fetching calendar data for ${startDate} to ${endDate}`);
-      console.log(`📅 Selected date range: ${selectedDateRange.start.toDateString()} to ${selectedDateRange.end.toDateString()}`);
+      console.log(`📅 Fetching fresh calendar data for ${startDate} to ${endDate}`);
       
       const response = await fetch(url);
       const data = await response.json();
@@ -264,30 +333,30 @@ const Overview = () => {
         setEconomicEvents(data.events);
         setCalendarSource(data.source || 'API');
         
-        // Debug: Check the actual dates of received events
-        console.log(`📊 Received ${data.events.length} events from API`);
-        const eventDates = data.events.slice(0, 5).map(event => {
-          const rawData = event.raw_data;
-          return {
-            title: event.title,
-            date: rawData?.time?.split(' ')[0] || 'unknown',
-            currency: event.currency
+        // Cache the fresh data in localStorage
+        try {
+          const cacheData = {
+            events: data.events,
+            source: data.source,
+            timestamp: Date.now()
           };
-        });
-        console.log('📊 First 5 events received:', eventDates);
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+          console.log(`💾 Cached ${data.events.length} events to localStorage`);
+        } catch (e) {
+          console.warn('⚠️ Failed to cache data to localStorage:', e);
+        }
         
-        // Handle data quality warnings
+        // Debug logging
+        console.log(`📊 Received ${data.events.length} events from ${data.source}`);
+        
         if (data.demo_api_limitations) {
-          console.warn('⚠️ Demo API limitations detected - some events may be historical data');
+          console.warn('⚠️ Demo API limitations detected');
         }
         if (data.historical_events_filtered > 0) {
-          console.warn(`⚠️ ${data.historical_events_filtered} historical events were filtered out`);
+          console.warn(`⚠️ ${data.historical_events_filtered} historical events filtered`);
         }
         
-        console.log(`✅ Fetched ${data.events.length} economic events from ${data.source} for ${startDate} to ${endDate}`);
-        console.log(`📊 Data quality: ${data.data_quality || 'unknown'}, Recommendation: ${data.recommendation || 'unknown'}`);
-        
-        // Set last updated timestamp
+        console.log(`✅ Fetched ${data.events.length} economic events from ${data.source}`);
         setLastUpdated(new Date());
       } else {
         throw new Error(data.message || 'Failed to fetch economic calendar');
@@ -349,6 +418,12 @@ const Overview = () => {
   // Helper function to extract event date from raw data
   const getEventDateFromRawData = (event) => {
     try {
+      // First try direct date field (for FRED events)
+      if (event.date) {
+        return event.date;
+      }
+      
+      // Fallback to raw_data for legacy events
       const rawData = event.raw_data;
       if (!rawData) return null;
       
@@ -1539,12 +1614,6 @@ const Overview = () => {
                     </span>
                   </div>
                   <div className="filter-info-details">
-                    {calendarSource && (
-                      <div className="info-item">
-                        <span className="info-label">Source:</span>
-                        <span className="info-value">{calendarSource}</span>
-                      </div>
-                    )}
                     {lastUpdated && (
                       <div className="info-item">
                         <span className="info-label">Updated:</span>
@@ -1591,16 +1660,23 @@ const Overview = () => {
                           <h3 className="event-title">{event.title}</h3>
                           <div className="status-box">
                             <span className="currency-badge">{event.currency}</span>
-                            <span className={`event-status-indicator ${event.status.toLowerCase()}`}>{event.status}</span>
+                            <span className={`event-status-indicator ${(event.status || 'upcoming').toLowerCase()}`}>{event.status || 'Upcoming'}</span>
                           </div>
                         </div>
                         <div className="event-meta-row">
                           <span className="event-category">{event.type}</span>
                           <div className="affected-pairs">
                             {event.currencyPairs && event.currencyPairs.length > 0 ? (
-                              event.currencyPairs.map((pair, pairIndex) => (
-                                <span key={pairIndex} className="pair-badge">{pair}</span>
-                              ))
+                              <>
+                                {event.currencyPairs.slice(0, 3).map((pair, pairIndex) => (
+                                  <span key={pairIndex} className="pair-badge">{pair}</span>
+                                ))}
+                                {event.currencyPairs.length > 3 && (
+                                  <span className="pair-badge pair-count">
+                                    +{event.currencyPairs.length - 3} more
+                                  </span>
+                                )}
+                              </>
                             ) : (
                               <span className="pair-badge no-pairs">No specific pairs</span>
                             )}
