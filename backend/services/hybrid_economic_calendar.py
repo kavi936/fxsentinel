@@ -381,9 +381,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',  # 20:30 EST + 4 (next day UTC)
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': '20.0K',
-                'forecast': '-5.4K',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '20.0K',  # Was in "actual"
+                'previous': '-5.4K'  # Was in "forecast"
             },
             {
                 'title': 'Unemployment Rate',
@@ -391,9 +391,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': '4.3%',
-                'forecast': '4.2%',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '4.3%',  # Was in "actual"
+                'previous': '4.2%'  # Was in "forecast"
             },
             
             # THURSDAY, OCTOBER 16
@@ -403,9 +403,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',  # 02:00 EST + 4
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': '0.1%',
-                'forecast': '0.0%',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '0.1%',  # Was in "actual"
+                'previous': '0.0%'  # Was in "forecast"
             },
             {
                 'title': 'Core PPI m/m',
@@ -413,9 +413,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',  # Tentative - using standard 08:30 EST + 4
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': '0.3%',
-                'forecast': '-0.1%',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '0.3%',  # Was in "actual"
+                'previous': '-0.1%'  # Was in "forecast"
             },
             {
                 'title': 'Core Retail Sales m/m',
@@ -423,9 +423,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': '0.3%',
-                'forecast': '0.7%',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '0.3%',  # Was in "actual"
+                'previous': '0.7%'  # Was in "forecast"
             },
             {
                 'title': 'PPI m/m',
@@ -433,9 +433,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': '0.3%',
-                'forecast': '-0.1%',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '0.3%',  # Was in "actual"
+                'previous': '-0.1%'  # Was in "forecast"
             },
             {
                 'title': 'Retail Sales m/m',
@@ -443,9 +443,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': '0.4%',
-                'forecast': '0.6%',
-                'previous': 'N/A'
+                'actual': 'TBD',  # Future event
+                'forecast': '0.4%',  # Was in "actual"
+                'previous': '0.6%'  # Was in "forecast"
             },
             {
                 'title': 'Unemployment Claims',
