@@ -359,18 +359,45 @@ def get_economic_event_by_id(event_id):
         }
 
 def get_currency_pairs(currency):
-    """Get relevant currency pairs for a given currency"""
+    """Get relevant currency pairs for a given currency (max 4 pairs)"""
     pairs_map = {
-        "USD": ["EUR/USD", "USD/JPY", "GBP/USD"],
-        "EUR": ["EUR/USD", "EUR/GBP", "EUR/JPY"],
-        "GBP": ["GBP/USD", "EUR/GBP", "GBP/JPY"],
-        "JPY": ["USD/JPY", "EUR/JPY", "GBP/JPY"],
-        "AUD": ["AUD/USD", "EUR/AUD", "AUD/JPY"],
-        "CAD": ["USD/CAD", "EUR/CAD", "CAD/JPY"],
-        "CHF": ["USD/CHF", "EUR/CHF", "GBP/CHF"],
-        "NZD": ["NZD/USD", "EUR/NZD", "NZD/JPY"]
+        "USD": ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF"],
+        "EUR": ["EUR/USD", "EUR/GBP", "EUR/JPY", "EUR/CHF"],
+        "GBP": ["GBP/USD", "EUR/GBP", "GBP/JPY", "GBP/CHF"],
+        "JPY": ["USD/JPY", "EUR/JPY", "GBP/JPY", "AUD/JPY"],
+        "AUD": ["AUD/USD", "EUR/AUD", "GBP/AUD", "AUD/JPY"],
+        "CAD": ["USD/CAD", "EUR/CAD", "GBP/CAD", "AUD/CAD"],
+        "CHF": ["USD/CHF", "EUR/CHF", "GBP/CHF", "AUD/CHF"],
+        "NZD": ["NZD/USD", "EUR/NZD", "GBP/NZD", "NZD/JPY"]
     }
-    return pairs_map.get(currency, ["EUR/USD", "USD/JPY"])
+    return pairs_map.get(currency, ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF"])
+
+def enforce_currency_pairs_limit(events):
+    """Enforce strict 4-pair limit on all events"""
+    if not events:
+        return events
+    
+    for event in events:
+        currency_pairs = event.get('currencyPairs', [])
+        if len(currency_pairs) > 4:
+            # Keep only the first 4 pairs (most important/liquid)
+            event['currencyPairs'] = currency_pairs[:4]
+        elif len(currency_pairs) == 0:
+            # If no pairs, add default major pairs based on currency
+            currency = event.get('currency', 'USD')
+            default_pairs = {
+                'USD': ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF'],
+                'EUR': ['EURUSD', 'EURGBP', 'EURJPY', 'EURCHF'],
+                'GBP': ['GBPUSD', 'EURGBP', 'GBPJPY', 'GBPCHF'],
+                'JPY': ['USDJPY', 'EURJPY', 'GBPJPY', 'AUDJPY'],
+                'CHF': ['USDCHF', 'EURCHF', 'GBPCHF', 'AUDCHF'],
+                'CAD': ['USDCAD', 'EURCAD', 'GBPCAD', 'AUDCAD'],
+                'AUD': ['AUDUSD', 'EURAUD', 'GBPAUD', 'AUDJPY'],
+                'NZD': ['NZDUSD', 'EURNZD', 'GBPNZD', 'NZDJPY']
+            }
+            event['currencyPairs'] = default_pairs.get(currency, ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF'])
+    
+    return events
 
 def get_mock_news():
     """Fallback mock data if scraping fails"""
@@ -593,209 +620,67 @@ def test_finnhub():
 from services.news_aggregator import news_aggregator
 # Import the telegram monitor
 from services.telegram_monitor_user import telegram_user_monitor
-# Import the Finnhub calendar service
-from services.finnhub_calendar import finnhub_calendar
+# Import economic calendar services
+from services.hybrid_economic_calendar import hybrid_economic_calendar
+# NOTE: Only using hybrid_economic_calendar now - no fallbacks to prevent bugs
 # Import the Finnhub historical service
 from services.finnhub_historical import finnhub_historical
 
 @app.route('/api/economic-calendar')
 def get_economic_calendar():
-    """Get economic calendar events from Finnhub API with alert triggering"""
-    print("🚀 ECONOMIC CALENDAR ENDPOINT CALLED - UPDATED VERSION WITH FORMATTING")
+    """Get economic calendar events from hybrid calendar ONLY (your curated ForexFactory data)"""
+    print("🚀 ECONOMIC CALENDAR ENDPOINT CALLED")
     try:
         # Get query parameters for date range and timezone
         start_date = request.args.get('start_date')
         end_date = request.args.get('end_date')
-        user_timezone = request.args.get('timezone', 'UTC')  # Default to UTC if not provided
+        user_timezone = request.args.get('timezone', 'UTC')
         
-        # Fetch events from Finnhub
-        events = finnhub_calendar.get_economic_calendar(start_date, end_date, user_timezone)
+        # ONLY USE HYBRID CALENDAR - No fallbacks!
+        print("🔄 Fetching from hybrid_economic_calendar (Your Curated ForexFactory Data)...")
+        events = hybrid_economic_calendar.get_economic_events(start_date, end_date)
+        source = "Hybrid Calendar (ForexFactory)"
         
-        # Debug: Check what we got from Finnhub service
-        print(f"🔍 DEBUG: Finnhub service returned {len(events) if events else 0} events")
-        if events and len(events) > 0:
-            print(f"🔍 DEBUG: First event title: '{events[0].get('title', 'NO_TITLE')}'")
-            print(f"🔍 DEBUG: First event source: '{events[0].get('source', 'NO_SOURCE')}'")
-        
-        # Initialize source and status variables
-        source = "unknown"
-        status = "unknown"
-        
-        if events and len(events) > 0:
-            # Extract metadata from first event if available
-            metadata = events[0].get('_metadata', {}) if events else {}
-            
-            # Filter for real economic indicators and high-impact events
-            real_events = []
-            print(f"🔍 DEBUG: Processing {len(events)} events")
-            
-            # Define major currencies to filter for (strict filtering)
-            major_currencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'NZD', 'CNY']
-            major_countries = ['US', 'EU', 'GB', 'JP', 'AU', 'CA', 'CH', 'NZ', 'CN']
-            
-            # Define real economic indicators
-            economic_indicators = [
-                'CPI', 'inflation', 'GDP', 'unemployment', 'employment', 'payroll', 'retail sales',
-                'manufacturing', 'industrial', 'consumer confidence', 'trade balance', 'interest rate',
-                'central bank', 'federal reserve', 'ECB', 'BOE', 'BOJ', 'RBA', 'BOC', 'SNB',
-                'PMI', 'housing', 'construction', 'durable goods', 'factory orders', 'PPI',
-                'balance of trade', 'current account', 'budget', 'debt', 'monetary policy'
-            ]
-            
-            for i, event in enumerate(events):
-                title = event.get('title', '').lower()
-                impact = event.get('impact', '').lower()
-                currency = event.get('currency', '').upper()
-                country = event.get('country', '').upper()
-                
-                # Strict filtering: Only include events with exact major currencies
-                is_major_currency = (
-                    currency in major_currencies or
-                    country in major_countries or
-                    # Check for major currency/country mentions in title
-                    any(curr in title.upper() for curr in major_currencies) or
-                    any(country_code in title.upper() for country_code in major_countries) or
-                    # Check for specific central bank mentions
-                    any(cb in title.upper() for cb in ['FED', 'ECB', 'BOE', 'BOJ', 'RBA', 'BOC', 'SNB', 'PBOC'])
-                )
-                
-                # Only include events related to major currencies
-                if not is_major_currency:
-                    print(f"🔍 DEBUG: Event {i+1} filtered out (not major currency): '{event.get('title', '')}' (currency: {currency}, country: {country})")
-                    continue
-                
-                # Include high-impact events for major currencies
-                if impact == 'high':
-                    real_events.append(event)
-                    print(f"🔍 DEBUG: Event {i+1} added (high impact major currency): '{event.get('title', '')}'")
-                # Include medium-impact events that are economic indicators for major currencies
-                elif impact == 'medium' and any(indicator in title for indicator in economic_indicators):
-                    real_events.append(event)
-                    print(f"🔍 DEBUG: Event {i+1} added (medium impact economic major currency): '{event.get('title', '')}'")
-                # Include low-impact events only if they are major economic indicators for major currencies
-                elif impact == 'low' and any(indicator in title for indicator in ['cpi', 'gdp', 'unemployment', 'employment', 'interest rate', 'central bank']):
-                    real_events.append(event)
-                    print(f"🔍 DEBUG: Event {i+1} added (low impact major economic major currency): '{event.get('title', '')}'")
-                else:
-                    print(f"🔍 DEBUG: Event {i+1} filtered out (not economic indicator): '{event.get('title', '')}' (impact: {impact})")
-            
-            if len(real_events) > 0:
-                # Use real events
-                events = real_events
-                # Check if events are from cached database
-                if events[0].get('source') == 'cached_database':
-                    source = "cached_database"
-                    status = "cached_data"
-                else:
-                    source = "Finnhub"
-                    status = "success"
-                print(f"✅ Using {len(real_events)} real economic events from {source}")
-            else:
-                # No real events found, but we have some data
-                print("⚠️ Only test events found in data")
-                source = "test_data"
-                status = "test_data_only"
-        else:
-            # No events from Finnhub
-            print("⚠️ No events from Finnhub API")
-            source = "no_data"
-            status = "no_data"
-            events = []
-            
-        # Only use mock events if we have no data at all
-        if not events or source in ["no_data"]:
-            print("⚠️ Using mock events for testing - no data available")
-            fallback_events = get_mock_economic_events()
+        if not events:
+            print("❌ No events available - hybrid calendar returned empty")
             return jsonify({
-                "events": fallback_events,
-                "source": "mock_data_for_testing",
+                "events": [],
+                "source": "hybrid_calendar",
                 "last_updated": datetime.now().isoformat(),
-                "total_events": len(fallback_events),
-                "status": "mock_data",
-                "warning": "Using mock events for testing - no data available"
+                "total_events": 0,
+                "status": "no_data",
+                "message": "No events in date range. Update calendar with new events."
             })
+        
+        print(f"✅ Got {len(events)} events from Hybrid Calendar")
+        print(f"🔍 First event: {events[0].get('title', 'Unknown')} on {events[0].get('date', 'Unknown')}")
+        
+        # Light currency pair limit (just ensure max 4 pairs per event)
+        events = enforce_currency_pairs_limit(events)
+        print(f"✅ Currency pairs limited to max 4 per event")
+        print(f"✅ Returning {len(events)} events to frontend")
         
         return jsonify({
             "events": events,
             "source": source,
             "last_updated": datetime.now().isoformat(),
             "total_events": len(events),
-            "status": status,
-            "data_quality": metadata.get('data_quality', 'unknown'),
-            "demo_api_limitations": metadata.get('demo_api_limitations', False),
-            "wrong_year_events_filtered": metadata.get('wrong_year_events_filtered', 0),
-            "correct_year_events_found": metadata.get('correct_year_events_found', 0),
-            "requested_year": metadata.get('requested_year', datetime.now().year),
-            "current_year": metadata.get('current_year', datetime.now().year),
-            "recommendation": metadata.get('recommendation', 'data_acceptable')
+            "status": "success"
         })
             
     except Exception as e:
         print(f"❌ Error in economic calendar endpoint: {e}")
-        # Only use fallback data on critical errors
-        print("⚠️ Critical error - using fallback data")
-        fallback_events = get_mock_economic_events()
+        import traceback
+        traceback.print_exc()
         return jsonify({
-            "events": fallback_events,
-            "source": "fallback_data",
+            "events": [],
+            "source": "error",
             "last_updated": datetime.now().isoformat(),
-            "total_events": len(fallback_events),
+            "total_events": 0,
             "status": "error",
             "error": str(e),
-            "warning": "Using fallback data due to critical error"
-        })
-
-def get_mock_economic_events():
-    """Fallback mock economic calendar data"""
-    today = datetime.now()
-    
-    return [
-        {
-            "id": 1,
-            "time": "13:30 UTC",
-            "date": (today + timedelta(days=1)).strftime('%a, %b %d'),
-            "title": "US CPI Data Release",
-            "type": "ECONOMIC RELEASE",
-            "currency": "USD",
-            "status": "UPCOMING",
-            "impact": "high",
-            "currencyPairs": ["EUR/USD", "USD/JPY"],
-            "previous": "3.2%",
-            "expected": "3.1%",
-            "actual": "--",
-            "source": "fallback_data"
-        },
-        {
-            "id": 2,
-            "time": "12:45 UTC",
-            "date": (today + timedelta(days=2)).strftime('%a, %b %d'),
-            "title": "ECB Interest Rate Decision",
-            "type": "CENTRAL BANK",
-            "currency": "EUR",
-            "status": "UPCOMING",
-            "impact": "high",
-            "currencyPairs": ["EUR/USD", "EUR/GBP"],
-            "previous": "4.50%",
-            "expected": "4.50%",
-            "actual": "--",
-            "source": "fallback_data"
-        },
-        {
-            "id": 3,
-            "time": "14:00 UTC",
-            "date": (today + timedelta(days=2)).strftime('%a, %b %d'),
-            "title": "US Retail Sales",
-            "type": "ECONOMIC RELEASE",
-            "currency": "USD",
-            "status": "UPCOMING",
-            "impact": "medium",
-            "currencyPairs": ["GBP/USD", "USD/CHF"],
-            "previous": "0.2%",
-            "expected": "0.1%",
-            "actual": "--",
-            "source": "fallback_data"
-        }
-    ]
+            "message": "Failed to fetch economic calendar data. Please try again later."
+        }), 500
 
 @app.route('/api/economic-chart/<event_name>')
 def get_economic_chart_data(event_name):
