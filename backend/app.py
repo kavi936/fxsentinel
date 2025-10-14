@@ -1733,180 +1733,80 @@ def get_enhanced_analysis(news_id):
         print(f"📊 Data quality: {live_market_data.get('data_quality', 'unknown')}")
         
         # Get GPT-powered comprehensive analysis using validated data and live market context
-        print(f"🔍 DEBUG: About to start analysis...")
+        # TIER 1 ONLY - No generic fallback to Enhanced analyzer
+        print(f"🔍 DEBUG: About to start GPT Tier 1 analysis...")
         print(f"🔍 DEBUG: gpt_ai_analyzer: {gpt_ai_analyzer}")
         print(f"🔍 DEBUG: GPT_AVAILABLE: {GPT_AVAILABLE}")
-        try:
-            if gpt_ai_analyzer is None:
-                print(f"🚨🚨🚨 GPT ANALYZER IS NONE - SKIPPING TO FALLBACK 🚨🚨🚨")
-                raise Exception("GPT analyzer not available")
-            
-            # Check if GPT analyzer is properly initialized (has required methods)
-            print(f"🔍 DEBUG: Checking GPT analyzer methods...")
-            print(f"🔍 DEBUG: Has _select_model: {hasattr(gpt_ai_analyzer, '_select_model')}")
-            print(f"🔍 DEBUG: Has _get_error_fallback: {hasattr(gpt_ai_analyzer, '_get_error_fallback')}")
-            if not hasattr(gpt_ai_analyzer, '_select_model') or not hasattr(gpt_ai_analyzer, '_get_error_fallback'):
-                print(f"🚨🚨🚨 GPT ANALYZER IS INCOMPLETE - SKIPPING TO FALLBACK 🚨🚨🚨")
-                raise Exception("GPT analyzer implementation incomplete")
-            
-            print(f"🚨🚨🚨 USING ENHANCED GPT ANALYZER WITH VALIDATION 🚨🚨🚨")
-            print(f"🔍 DEBUG: About to call gpt_ai_analyzer.analyze_macro_event...")
-            gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type)
-            print(f"🔍 DEBUG: GPT analysis completed successfully!")
-        except Exception as e:
-            print(f"🚨🚨🚨 ENHANCED GPT ANALYZER FAILED - USING FALLBACK 🚨🚨🚨")
-            print(f"Error: {e}")
-            print(f"🔍 DEBUG: Error type: {type(e)}")
-            import traceback
-            traceback.print_exc()
-            
-            # Create enhanced market context for fallback
-            print(f"🔍 DEBUG: Creating EnhancedMarketContext for fallback...")
-            print(f"🔍 DEBUG: EnhancedMarketContext class: {EnhancedMarketContext}")
-            print(f"🔍 DEBUG: EnhancedMarketContext parameters: {EnhancedMarketContext.__annotations__.keys()}")
-            # Convert string volatility values to float values
-            volatility_mapping = {'Low': 0.005, 'Medium': 0.010, 'High': 0.020}
-            raw_volatility = live_market_data.get('recent_volatility', {})
-            converted_volatility = {}
-            for pair, vol in raw_volatility.items():
-                if isinstance(vol, str):
-                    converted_volatility[pair] = volatility_mapping.get(vol, 0.010)
-                else:
-                    converted_volatility[pair] = vol
-            
-            # Convert key_levels structure to match enhanced analyzer expectations
-            raw_key_levels = live_market_data.get('key_levels', {})
-            print(f"🔍 DEBUG: Raw key_levels: {raw_key_levels}")
-            converted_key_levels = {}
-            for pair, levels in raw_key_levels.items():
-                if isinstance(levels, dict):
-                    # Convert lists to single float values (take the first value)
-                    converted_key_levels[pair] = {
-                        'support': levels.get('support', [1.0800])[0] if isinstance(levels.get('support'), list) else levels.get('support', 1.0800),
-                        'resistance': levels.get('resistance', [1.0900])[0] if isinstance(levels.get('resistance'), list) else levels.get('resistance', 1.0900)
-                    }
-                else:
-                    converted_key_levels[pair] = {'support': 1.0800, 'resistance': 1.0900}
-            print(f"🔍 DEBUG: Converted key_levels: {converted_key_levels}")
-            
-            enhanced_market_context = EnhancedMarketContext(
-                current_prices=live_market_data.get('current_prices', {
-                    'EUR/USD': 1.0850,
-                    'USD/JPY': 148.50,
-                    'GBP/USD': 1.2650,
-                    'USD/CHF': 0.8650,
-                    'AUD/USD': 0.6650,
-                    'USD/CAD': 1.3550
-                }),
-                recent_volatility=converted_volatility,
-                market_sentiment=live_market_data.get('market_sentiment', {
-                    'EUR/USD': 'neutral',
-                    'USD/JPY': 'bullish',
-                    'GBP/USD': 'bearish',
-                    'USD/CHF': 'neutral',
-                    'AUD/USD': 'neutral',
-                    'USD/CAD': 'neutral'
-                }),
-                key_levels=converted_key_levels,
-                economic_calendar=[],
-                bond_yields=live_market_data.get('bond_yields', {'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8}),
-                equity_indices=live_market_data.get('equity_indices', {'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000}),
-                commodity_prices=live_market_data.get('commodity_prices', {'GOLD': 2000, 'OIL': 75, 'SILVER': 25}),
-                central_bank_expectations={},
-                historical_reactions={}
-            )
-            # Fallback to enhanced analysis
-            print(f"🔍 DEBUG: About to call enhanced_ai_analyzer.analyze_macro_event...")
-            print(f"🔍 DEBUG: enhanced_ai_analyzer: {enhanced_ai_analyzer}")
-            print(f"🔍 DEBUG: enhanced_market_context: {enhanced_market_context}")
-            gpt_analysis = enhanced_ai_analyzer.analyze_macro_event(
-                validated_event, 
-                enhanced_market_context, 
-                analysis_type
-            )
-            print(f"🔍 DEBUG: Enhanced analysis completed successfully!")
         
-            # Debug: Log what we're getting from GPT
-            print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
-            print(f"🚨 Analysis Type: {type(gpt_analysis)}")
-            print(f"🚨 Analysis Class Name: {type(gpt_analysis).__name__}")
-            print(f"🚨 Analysis Keys: {list(gpt_analysis.__dict__.keys()) if hasattr(gpt_analysis, '__dict__') else 'Not an object'}")
-            print(f"🚨 Has immediate_impact: {hasattr(gpt_analysis, 'immediate_impact')}")
-            print(f"🚨 Has headline: {hasattr(gpt_analysis, 'headline')}")
-            print(f"🚨 Data Quality: {getattr(gpt_analysis, 'data_quality', 'unknown')}")
-            print(f"🚨 Validation Status: {getattr(gpt_analysis, 'validation_status', 'unknown')}")
-            print(f"🚨 Market Data Source: {getattr(gpt_analysis, 'market_data_source', 'unknown')}")
-            print(f"🚨 Sample Analysis: {str(gpt_analysis)[:200]}...")
-            print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
+        if gpt_ai_analyzer is None:
+            print(f"❌ GPT ANALYZER NOT AVAILABLE - Cannot proceed")
+            return jsonify({
+                "error": "AI Analysis service unavailable",
+                "message": "GPT analyzer is not initialized. Please ensure OpenAI API key is configured.",
+                "event_title": validated_event.get('title', 'Unknown')
+            }), 503
         
-        # Transform to frontend-compatible format with new structure
+        # Use GPT analyzer (Tier 1) - it has built-in event-specific fallbacks
+        print(f"🚨🚨🚨 USING GPT TIER 1 ANALYZER (Event-Specific Analysis) 🚨🚨🚨")
+        print(f"🔍 DEBUG: About to call gpt_ai_analyzer.analyze_macro_event...")
+        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type)
+        print(f"🔍 DEBUG: GPT Tier 1 analysis completed successfully!")
+        
+        # Debug: Log what we're getting from GPT
+        print(f"🚨🚨🚨 AI ANALYSIS DEBUG - EASY TO FIND 🚨🚨🚨")
+        print(f"🚨 Analysis Type: {type(gpt_analysis)}")
+        print(f"🚨 Analysis Class Name: {type(gpt_analysis).__name__}")
+        print(f"🚨 Analysis Keys: {list(gpt_analysis.__dict__.keys()) if hasattr(gpt_analysis, '__dict__') else 'Not an object'}")
+        print(f"🚨 Has headline: {hasattr(gpt_analysis, 'headline')}")
+        print(f"🚨 Model Used: {getattr(gpt_analysis, 'model_used', 'unknown')}")
+        print(f"🚨 Data Quality: {getattr(gpt_analysis, 'data_quality', 'unknown')}")
+        print(f"🚨 Validation Status: {getattr(gpt_analysis, 'validation_status', 'unknown')}")
+        print(f"🚨 Market Data Source: {getattr(gpt_analysis, 'market_data_source', 'unknown')}")
+        print(f"🚨 Cache Hit: {getattr(gpt_analysis, 'cache_hit', False)}")
+        print(f"🚨 Cost Estimate: ${getattr(gpt_analysis, 'cost_estimate', 0.0):.4f}")
+        print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
+        
+        # Transform GPT Tier 1 analysis to frontend-compatible format
         print(f"🔍 DEBUG: Starting response transformation...")
-        if hasattr(gpt_analysis, 'immediate_impact'):  # Enhanced analyzer structure (ComprehensiveAnalysis)
-            print(f"🔍 DEBUG: Using Enhanced Analyzer transformation (ComprehensiveAnalysis)")
-            # Enhanced analyzer returns ComprehensiveAnalysis object
-            enhanced_analysis = {
-                # Comprehensive analysis structure
-                'immediate_impact': gpt_analysis.immediate_impact,
-                'long_term_impact': gpt_analysis.long_term_impact,
-                'context_expectations': gpt_analysis.context_expectations,
-                'sentiment_analysis': gpt_analysis.sentiment_analysis,
-                'cross_market_links': gpt_analysis.cross_market_links,
-                'market_shifts': gpt_analysis.market_shifts,
-                'big_picture': gpt_analysis.big_picture,
-                
-                # Meta data
-                'confidence_score': gpt_analysis.confidence_score,
-                'analysis_timestamp': gpt_analysis.analysis_timestamp,
-                'event_id': gpt_analysis.event_id,
-                'analysis_type': gpt_analysis.analysis_type,
-                
-                # Data quality information
-                'data_quality': getattr(gpt_analysis, 'data_quality', 'unknown'),
-                'validation_status': getattr(gpt_analysis, 'validation_status', 'unknown'),
-                'market_data_source': getattr(gpt_analysis, 'market_data_source', 'unknown')
-            }
-        elif hasattr(gpt_analysis, 'headline'):  # GPT analyzer structure (GPTAnalysisResult)
-            print(f"🔍 DEBUG: Using GPT Analyzer transformation (GPTAnalysisResult)")
-            # GPT analyzer returns GPTAnalysisResult object
-            enhanced_analysis = {
-                # GPT analysis structure
-                'headline': gpt_analysis.headline,
-                'key_takeaway': gpt_analysis.key_takeaway,
-                'forward_scenarios': gpt_analysis.forward_scenarios,
-                'event_summary': gpt_analysis.event_summary,
-                'market_reaction': gpt_analysis.market_reaction,
-                'implications_takeaways': gpt_analysis.implications_takeaways,
-                'trading_plan': gpt_analysis.trading_plan,
-                'big_picture': gpt_analysis.big_picture,
-                'positioning_context': gpt_analysis.positioning_context,
-                'next_catalysts': gpt_analysis.next_catalysts,
-                
-                # Meta data
-                'confidence_score': gpt_analysis.confidence_score,
-                'analysis_timestamp': gpt_analysis.analysis_timestamp,
-                'event_id': gpt_analysis.event_id,
-                'analysis_type': gpt_analysis.analysis_type,
-                'model_used': gpt_analysis.model_used,
-                'cost_estimate': gpt_analysis.cost_estimate,
-                'cache_hit': gpt_analysis.cache_hit,
-                
-                # Data quality information
-                'data_quality': gpt_analysis.data_quality,
-                'validation_status': gpt_analysis.validation_status,
-                'market_data_source': gpt_analysis.market_data_source
-            }
-        elif isinstance(gpt_analysis, dict):
-            print(f"🔍 DEBUG: Using dictionary fallback transformation")
-            # Fallback structure
-            enhanced_analysis = gpt_analysis
-        else:
-            print(f"🔍 DEBUG: Using unknown structure transformation")
-            # Unknown structure
-            enhanced_analysis = {
-                'error': 'Unknown analysis structure',
-                'raw_analysis': str(gpt_analysis),
-                'analysis_type': type(gpt_analysis).__name__
-            }
+        
+        # GPT analyzer ALWAYS returns GPTAnalysisResult object with headline
+        if not hasattr(gpt_analysis, 'headline'):
+            print(f"❌ ERROR: GPT analysis missing expected structure")
+            return jsonify({
+                "error": "Invalid analysis format",
+                "message": "GPT analyzer returned unexpected format",
+                "event_title": validated_event.get('title', 'Unknown')
+            }), 500
+        
+        print(f"🔍 DEBUG: Using GPT Tier 1 transformation (GPTAnalysisResult)")
+        # GPT analyzer returns GPTAnalysisResult object
+        enhanced_analysis = {
+            # GPT analysis structure
+            'headline': gpt_analysis.headline,
+            'key_takeaway': gpt_analysis.key_takeaway,
+            'forward_scenarios': gpt_analysis.forward_scenarios,
+            'event_summary': gpt_analysis.event_summary,
+            'market_reaction': gpt_analysis.market_reaction,
+            'implications_takeaways': gpt_analysis.implications_takeaways,
+            'trading_plan': gpt_analysis.trading_plan,
+            'big_picture': gpt_analysis.big_picture,
+            'positioning_context': gpt_analysis.positioning_context,
+            'next_catalysts': gpt_analysis.next_catalysts,
+            
+            # Meta data
+            'confidence_score': gpt_analysis.confidence_score,
+            'analysis_timestamp': gpt_analysis.analysis_timestamp,
+            'event_id': gpt_analysis.event_id,
+            'analysis_type': gpt_analysis.analysis_type,
+            'model_used': gpt_analysis.model_used,
+            'cost_estimate': gpt_analysis.cost_estimate,
+            'cache_hit': gpt_analysis.cache_hit,
+            
+            # Data quality information
+            'data_quality': gpt_analysis.data_quality,
+            'validation_status': gpt_analysis.validation_status,
+            'market_data_source': gpt_analysis.market_data_source
+        }
         
         return jsonify(enhanced_analysis)
         
@@ -3884,7 +3784,11 @@ def home():
 
 @app.route('/api/pre-event-analysis/<int:news_id>')
 def get_pre_event_analysis(news_id):
-    """Get pre-event analysis for upcoming news events"""
+    """
+    DEPRECATED: Use /api/enhanced-analysis/<news_id> instead
+    This endpoint uses the old Enhanced analyzer (Tier 2) instead of GPT (Tier 1)
+    Get pre-event analysis for upcoming news events
+    """
     try:
         # Get the economic event by ID from Finnhub calendar data
         event = get_economic_event_by_id(news_id)
@@ -3958,7 +3862,11 @@ def get_pre_event_analysis(news_id):
 
 @app.route('/api/post-event-analysis/<int:news_id>')
 def get_post_event_analysis(news_id):
-    """Get post-event analysis for completed news events"""
+    """
+    DEPRECATED: Use /api/enhanced-analysis/<news_id> instead
+    This endpoint uses the old Enhanced analyzer (Tier 2) instead of GPT (Tier 1)
+    Get post-event analysis for completed news events
+    """
     try:
         # Get the economic event by ID from Finnhub calendar data
         event = get_economic_event_by_id(news_id)
