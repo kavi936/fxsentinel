@@ -111,7 +111,11 @@ const Overview = () => {
   } = useMarketSentiment();
 
   // Timezone state
-  const [currentTimezone, setCurrentTimezone] = useState(getUserTimezone());
+  const [currentTimezone, setCurrentTimezone] = useState(() => {
+    const tz = getUserTimezone();
+    console.log('🌍 Initial timezone:', tz);
+    return tz;
+  });
 
   // Format last updated time
   const formatLastUpdated = (timestamp) => {
@@ -131,19 +135,35 @@ const Overview = () => {
   // Format economic calendar time
   const formatCalendarTime = (timeStr, dateStr) => {
     try {
-      // Parse the time and date from the backend format
-      // Backend sends: time="14:30 UTC", date="Tue, Aug 12"
+      // Backend sends: time="14:30 UTC", date="2025-10-06" (YYYY-MM-DD)
       const timeMatch = timeStr.match(/(\d{1,2}):(\d{2})\s*UTC/);
-      const dateMatch = dateStr.match(/(\w{3}),\s*(\w{3})\s*(\d{1,2})/);
       
-      if (timeMatch && dateMatch) {
-        const hour = parseInt(timeMatch[1]);
-        const minute = timeMatch[2];
-        const dayName = dateMatch[1];
+      if (!timeMatch) {
+        console.log('⚠️ Time format not matched:', timeStr);
+        return { time: timeStr, date: dateStr };
+      }
+      
+      const hour = parseInt(timeMatch[1]);
+      const minute = timeMatch[2];
+      
+      // Parse date - backend sends YYYY-MM-DD format
+      let utcDate;
+      
+      // Try YYYY-MM-DD format first (what backend actually sends)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        // Backend format: "2025-10-06"
+        utcDate = new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${minute}:00.000Z`);
+      } 
+      // Fallback to old format if needed (Mon, Oct 6)
+      else {
+        const dateMatch = dateStr.match(/(\w{3}),\s*(\w{3})\s*(\d{1,2})/);
+        if (!dateMatch) {
+          console.log('⚠️ Date format not matched:', dateStr);
+          return { time: timeStr, date: dateStr };
+        }
+        
         const month = dateMatch[2];
         const day = dateMatch[3];
-        
-        // Create a date string that we can parse
         const currentYear = new Date().getFullYear();
         const monthMap = {
           'Jan': 0, 'Feb': 1, 'Mar': 2, 'Apr': 3, 'May': 4, 'Jun': 5,
@@ -151,40 +171,56 @@ const Overview = () => {
         };
         
         const monthIndex = monthMap[month];
-        if (monthIndex !== undefined) {
-          // Create UTC date string and parse it properly as UTC
-          const utcDateString = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(parseInt(day)).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${minute}:00.000Z`;
-          const utcDate = new Date(utcDateString);
-          
-          // Convert to user's timezone
-          if (currentTimezone !== 'UTC') {
-            const convertedTime = utcDate.toLocaleTimeString('en-US', {
-              timeZone: currentTimezone,
-              hour12: false,
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            
-            const convertedDate = utcDate.toLocaleDateString('en-US', {
-              timeZone: currentTimezone,
-              weekday: 'short',
-              month: 'short',
-              day: 'numeric'
-            });
-            
-            const tzAbbr = getTimezoneAbbreviation(currentTimezone);
-            return {
-              time: `${convertedTime} ${tzAbbr}`,
-              date: convertedDate
-            };
-          }
+        if (monthIndex === undefined) {
+          console.log('⚠️ Invalid month:', month);
+          return { time: timeStr, date: dateStr };
         }
+        
+        const utcDateString = `${currentYear}-${String(monthIndex + 1).padStart(2, '0')}-${String(parseInt(day)).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${minute}:00.000Z`;
+        utcDate = new Date(utcDateString);
       }
       
-      // Fallback to original format
-      return { time: timeStr, date: dateStr };
+      // Convert to user's timezone
+      if (currentTimezone !== 'UTC') {
+        const convertedTime = utcDate.toLocaleTimeString('en-US', {
+          timeZone: currentTimezone,
+          hour12: false,
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        
+        const convertedDate = utcDate.toLocaleDateString('en-US', {
+          timeZone: currentTimezone,
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+        
+        const tzAbbr = getTimezoneAbbreviation(currentTimezone);
+        console.log('✅ Converted:', { 
+          original: `${timeStr} on ${dateStr}`, 
+          converted: `${convertedTime} ${tzAbbr} on ${convertedDate}`,
+          timezone: currentTimezone 
+        });
+        
+        return {
+          time: `${convertedTime} ${tzAbbr}`,
+          date: convertedDate
+        };
+      }
+      
+      // If timezone is UTC, format the date nicely but keep UTC
+      const formattedDate = utcDate.toLocaleDateString('en-US', {
+        timeZone: 'UTC',
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+      
+      return { time: timeStr, date: formattedDate };
+      
     } catch (error) {
-      console.error('Error formatting calendar time:', error);
+      console.error('❌ Error formatting calendar time:', error);
       return { time: timeStr, date: dateStr };
     }
   };
@@ -194,6 +230,7 @@ const Overview = () => {
     const checkTimezone = () => {
       const newTimezone = getUserTimezone();
       if (newTimezone !== currentTimezone) {
+        console.log('🌍 Timezone changed (from check):', { old: currentTimezone, new: newTimezone });
         setCurrentTimezone(newTimezone);
       }
     };
@@ -201,6 +238,7 @@ const Overview = () => {
     const timezoneInterval = setInterval(checkTimezone, 1000);
     
     const handleTimezoneChange = (e) => {
+      console.log('🌍 Timezone changed (from event):', { old: currentTimezone, new: e.detail.timezone });
       setCurrentTimezone(e.detail.timezone);
     };
 
@@ -1624,6 +1662,10 @@ const Overview = () => {
                       <span className="info-label">Date:</span>
                       <span className="info-value">{formatDateRange(selectedDateRange.start, selectedDateRange.end)}</span>
                     </div>
+                    <div className="info-item">
+                      <span className="info-label">Timezone:</span>
+                      <span className="info-value">{getTimezoneAbbreviation(currentTimezone)}</span>
+                    </div>
                   </div>
                 </div>
                 {/* Active filters indicator */}
@@ -1639,7 +1681,7 @@ const Overview = () => {
                 {getFilteredEvents().length > 0 ? (
                   getFilteredEvents().map((event) => (
                     <div 
-                      key={event.id} 
+                      key={`${event.id}-${currentTimezone}`}
                       className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
                       onClick={() => handleEventClick(event)}
                     >

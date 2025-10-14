@@ -31,22 +31,43 @@ const TimezoneSettings = ({ isOpen, onClose, onTimezoneChange }) => {
 
   useEffect(() => {
     // Load saved timezone on component mount
-    const savedTimezone = localStorage.getItem('fxSentinel_userTimezone') || 'UTC';
-    setSelectedTimezone(savedTimezone);
+    const savedTimezone = localStorage.getItem('fxSentinel_userTimezone');
+    
+    // Auto-detect timezone on first visit
+    if (!savedTimezone) {
+      try {
+        const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (userTimezone && timezones.some(tz => tz.value === userTimezone)) {
+          setSelectedTimezone(userTimezone);
+          localStorage.setItem('fxSentinel_userTimezone', userTimezone);
+          if (onTimezoneChange) {
+            onTimezoneChange(userTimezone);
+          }
+        } else {
+          setSelectedTimezone('UTC');
+        }
+      } catch (error) {
+        console.error('Error auto-detecting timezone:', error);
+        setSelectedTimezone('UTC');
+      }
+    } else {
+      setSelectedTimezone(savedTimezone);
+    }
     
     // Update current local time every second
     const updateTime = () => {
       try {
         const now = new Date();
+        const currentTz = localStorage.getItem('fxSentinel_userTimezone') || 'UTC';
         const timeString = now.toLocaleTimeString('en-US', {
-          timeZone: savedTimezone,
+          timeZone: currentTz,
           hour12: false,
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit'
         });
         const dateString = now.toLocaleDateString('en-US', {
-          timeZone: savedTimezone,
+          timeZone: currentTz,
           weekday: 'short',
           year: 'numeric',
           month: 'short',
