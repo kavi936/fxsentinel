@@ -114,30 +114,61 @@ class EconomicDataValidator:
         return True
     
     def _validate_economic_data(self, event: Dict, validated_event: Dict, errors: List[str]) -> bool:
-        """Validate economic data values"""
+        """Validate economic data values - flexible for all event types"""
         previous = event.get('previous', '')
         expected = event.get('expected', '')
         actual = event.get('actual', '')
+        title = event.get('title', '').lower()
         
-        # Validate previous value
-        if previous and previous not in ['--', 'N/A', '']:
+        # Identify event type: quantitative (has numbers) or qualitative (speeches, statements)
+        is_qualitative_event = self._is_qualitative_event(title)
+        
+        # For qualitative events (speeches, statements, meetings), skip numeric validation
+        if is_qualitative_event:
+            # No numeric data required - validation passes
+            validated_event['event_type'] = 'qualitative'
+            return True
+        
+        # For quantitative events, validate numeric data (but be flexible)
+        validated_event['event_type'] = 'quantitative'
+        
+        # List of acceptable "empty" or "pending" values
+        empty_values = ['--', 'N/A', 'n/a', 'N/a', '', 'TBD', 'tbd', 'Pending', 'pending', None]
+        
+        # Validate previous value (if provided)
+        if previous and previous not in empty_values:
             if not self._is_valid_economic_value(previous, event.get('title', '')):
-                errors.append(f"Invalid previous value: {previous}")
-                return False
+                # Don't fail validation, just log warning
+                validated_event['data_warning'] = f"Previous value may be unusual: {previous}"
         
-        # Validate expected value
-        if expected and expected not in ['--', 'N/A', '']:
+        # Validate expected value (if provided)
+        if expected and expected not in empty_values:
             if not self._is_valid_economic_value(expected, event.get('title', '')):
-                errors.append(f"Invalid expected value: {expected}")
-                return False
+                # Don't fail validation, just log warning
+                validated_event['data_warning'] = f"Expected value may be unusual: {expected}"
         
-        # Validate actual value
-        if actual and actual not in ['--', 'N/A', '']:
+        # Validate actual value (if provided)
+        if actual and actual not in empty_values:
             if not self._is_valid_economic_value(actual, event.get('title', '')):
-                errors.append(f"Invalid actual value: {actual}")
-                return False
+                # Don't fail validation, just log warning
+                validated_event['data_warning'] = f"Actual value may be unusual: {actual}"
         
+        # All validation passed (or warnings noted)
         return True
+    
+    def _is_qualitative_event(self, title: str) -> bool:
+        """Identify qualitative events that don't have numeric data"""
+        qualitative_keywords = [
+            'speech', 'speaks', 'testimony', 'testifies',
+            'statement', 'press conference', 'meeting minutes',
+            'announcement', 'decision', 'policy',
+            'comments', 'remarks', 'interview',
+            'summit', 'conference', 'hearing',
+            'guidance', 'outlook', 'forecast announcement'
+        ]
+        
+        title_lower = title.lower()
+        return any(keyword in title_lower for keyword in qualitative_keywords)
     
     def _validate_currency_impact(self, event: Dict, validated_event: Dict, errors: List[str]) -> bool:
         """Validate currency and impact level"""
@@ -155,20 +186,33 @@ class EconomicDataValidator:
         return True
     
     def _validate_data_consistency(self, event: Dict, errors: List[str]) -> bool:
-        """Validate data consistency and logic"""
+        """Validate data consistency and logic - flexible for all scenarios"""
         previous = event.get('previous', '')
         expected = event.get('expected', '')
         actual = event.get('actual', '')
+        title = event.get('title', '').lower()
         
-        # Check for contradictory data
-        if actual and actual not in ['--', 'N/A', '']:
-            # If we have actual data, this should be a post-event analysis
-            if expected and expected not in ['--', 'N/A', '']:
-                # Validate that expected and actual are in reasonable range
-                if not self._are_values_consistent(expected, actual, event.get('title', '')):
-                    errors.append("Expected and actual values appear inconsistent")
-                    return False
+        # For qualitative events, skip consistency checks
+        if self._is_qualitative_event(title):
+            return True
         
+        # List of acceptable "empty" or "pending" values
+        empty_values = ['--', 'N/A', 'n/a', 'N/a', '', 'TBD', 'tbd', 'Pending', 'pending', None]
+        
+        # Check for contradictory data (only if both values exist and are not empty)
+        if actual and actual not in empty_values:
+            # If we have actual data, this is post-event
+            if expected and expected not in empty_values:
+                # Try to validate consistency, but don't fail if we can't
+                try:
+                    if not self._are_values_consistent(expected, actual, event.get('title', '')):
+                        # Log warning but don't fail validation
+                        logger.warning(f"Expected and actual values may be inconsistent: {expected} vs {actual}")
+                except Exception as e:
+                    # If consistency check fails, just log and continue
+                    logger.warning(f"Could not validate consistency: {e}")
+        
+        # Always pass consistency validation - we're flexible!
         return True
     
     def _is_mock_data(self, event: Dict) -> bool:

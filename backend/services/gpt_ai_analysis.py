@@ -401,10 +401,14 @@ class GPTAIAnalyzer:
         actual = event.get('actual', 'N/A')
         
         # Determine if this is pre-event or post-event
-        has_actual_data = actual != 'N/A' and actual != '' and actual is not None
+        has_actual_data = actual not in ['N/A', 'TBD', '', None, '--', 'n/a', 'tbd']
         is_post_event = has_actual_data
         
-        # Generate specific analysis based on event type
+        # Check if this is a qualitative event (speech, statement, etc.)
+        if self._is_qualitative_event(event_title):
+            return self._get_qualitative_event_fallback_analysis(event, is_post_event)
+        
+        # Generate specific analysis based on quantitative event type
         if 'non-farm' in event_title.lower() or 'nfp' in event_title.lower():
             return self._get_nfp_fallback_analysis(event, is_post_event)
         elif 'cpi' in event_title.lower() or 'consumer price' in event_title.lower():
@@ -417,6 +421,109 @@ class GPTAIAnalyzer:
             return self._get_employment_fallback_analysis(event, is_post_event)
         else:
             return self._get_generic_fallback_analysis(event, is_post_event)
+    
+    def _is_qualitative_event(self, title: str) -> bool:
+        """Check if event is qualitative (speech, statement) vs quantitative (data release)"""
+        qualitative_keywords = [
+            'speech', 'speaks', 'testimony', 'testifies',
+            'statement', 'press conference', 'meeting minutes',
+            'announcement', 'decision', 'policy',
+            'comments', 'remarks', 'interview',
+            'summit', 'conference', 'hearing',
+            'guidance', 'outlook'
+        ]
+        title_lower = title.lower()
+        return any(keyword in title_lower for keyword in qualitative_keywords)
+    
+    def _get_qualitative_event_fallback_analysis(self, event: Dict, is_post_event: bool) -> GPTAnalysisResult:
+        """Fallback analysis for qualitative events (speeches, statements, announcements)"""
+        event_title = event.get('title', 'Unknown Event')
+        currency = event.get('currency', 'USD')
+        impact = event.get('impact', 'medium')
+        
+        # Identify speaker/institution
+        speaker = "Central Bank Official"
+        if 'powell' in event_title.lower() or 'fed' in event_title.lower():
+            speaker = "Federal Reserve Chair Powell"
+            central_bank = "Federal Reserve"
+        elif 'lagarde' in event_title.lower() or 'ecb' in event_title.lower():
+            speaker = "ECB President Lagarde"
+            central_bank = "European Central Bank"
+        elif 'bailey' in event_title.lower() or 'boe' in event_title.lower():
+            speaker = "BoE Governor Bailey"
+            central_bank = "Bank of England"
+        elif 'ueda' in event_title.lower() or 'boj' in event_title.lower():
+            speaker = "BoJ Governor Ueda"
+            central_bank = "Bank of Japan"
+        else:
+            central_bank = f"{currency} Central Bank"
+        
+        # Determine stance based on event timing
+        stance = "Neutral"
+        if is_post_event:
+            stance_desc = "has spoken"
+        else:
+            stance_desc = "is scheduled to speak"
+        
+        return GPTAnalysisResult(
+            headline=f"🎤 {speaker} {stance_desc.title()} - {currency} Volatility Expected",
+            key_takeaway=f"{speaker} {stance_desc}, providing insights into {central_bank} policy direction. Expect heightened {currency} volatility and potential shifts in market sentiment based on tone and forward guidance.",
+            forward_scenarios={
+                "hawkish": f"🦅 Hawkish Tone: {speaker} signals tighter policy → {currency} strengthens. EUR/USD could test lower levels, USD/JPY higher.",
+                "dovish": f"🕊️ Dovish Tone: {speaker} signals looser policy → {currency} weakens. EUR/USD could rally, USD/JPY lower.",
+                "neutral": f"➡️ Balanced Tone: {speaker} maintains neutral stance → Range-bound trading in {currency} pairs with limited directional moves."
+            },
+            event_summary={
+                "release": event_title,
+                "type": "Qualitative Event - Speech/Statement",
+                "speaker": speaker,
+                "institution": central_bank,
+                "focus": "Market will focus on tone, forward guidance, and policy hints",
+                "data_type": "No quantitative data - sentiment and language analysis"
+            },
+            market_reaction={
+                "price_action": f"{currency} pairs expected to show volatility based on {speaker}'s tone. Watch for hawkish (bullish {currency}) or dovish (bearish {currency}) language. Initial reaction within first 15-30 minutes.",
+                "volatility": f"{impact.title()} volatility expected. Speeches can cause sharp moves if guidance changes or unexpected comments are made.",
+                "reason": f"Central bank communications directly impact monetary policy expectations and currency valuations. {speaker}'s words can shift rate expectations and {currency} strength."
+            },
+            implications_takeaways={
+                "economic_context": f"{central_bank} communications provide insight into policy makers' views on inflation, growth, and labor markets. This guides market expectations for future rate decisions.",
+                "policy_implications": f"Watch for hints about future rate path. Hawkish language suggests potential rate hikes (bullish {currency}), dovish suggests rate cuts or holds (bearish {currency}).",
+                "market_bias": f"Market bias will shift based on tone: Hawkish = Bullish {currency}, Dovish = Bearish {currency}, Neutral = Range-bound.",
+                "risk_level": f"{impact.title()} risk - Speeches can cause unexpected volatility if {speaker} makes surprising statements or policy shifts."
+            },
+            trading_plan={
+                "best_approach": f"Wait for initial reaction to {speaker}'s comments, then trade the follow-through. Avoid positioning heavily before the speech unless you have strong conviction.",
+                "avoid_strategies": "Avoid large positions immediately before speech. Don't fight clear policy signals. Avoid overtrading on every word - focus on overall tone.",
+                "key_levels": f"EUR/USD: Monitor 1.08-1.09 range. USD/JPY: Watch 148.0-149.0 levels. Breakouts indicate strong policy shift.",
+                "position_sizing": f"Conservative sizing before speech, normal sizing after direction confirmed. Use wider stops during volatility.",
+                "next_catalysts": f"Follow-up speeches, {central_bank} meeting minutes, next policy decision, economic data releases."
+            },
+            big_picture={
+                "economic_outlook": f"{speaker}'s comments will shape market expectations for {currency} economic trajectory and {central_bank} policy path.",
+                "medium_term_direction": f"{currency} medium-term direction depends on consistency of central bank messaging. Hawkish trend = sustained {currency} strength.",
+                "policy_trajectory": f"{central_bank} policy path will be guided by economic data and official communications. {speaker}'s comments provide critical policy insights.",
+                "forward_focus": f"Monitor for policy shifts, changes in inflation/growth outlook, and hints about future rate decisions. Watch for confirmation in subsequent data releases."
+            },
+            positioning_context={
+                "retail_sentiment": f"Retail traders typically react emotionally to central bank speeches. Watch for overcrowded trades to fade.",
+                "institutional_flow": f"Institutional investors position based on policy expectations. Large flows occur when {speaker} signals clear policy shifts.",
+                "futures_positioning": f"Futures markets price in rate expectations. Speech can cause rapid repricing if guidance changes.",
+                "market_bias": f"Current bias will shift based on {speaker}'s tone. Markets are sensitive to unexpected policy signals."
+            },
+            next_catalysts=[
+                f"{central_bank} policy meeting and rate decision",
+                f"Follow-up speeches and communications from {central_bank} officials",
+                f"Economic data releases that influence {central_bank} policy (inflation, employment, growth)",
+                f"Global central bank decisions and policy divergence"
+            ],
+            confidence_score=70.0,  # Lower confidence for qualitative events
+            analysis_timestamp=datetime.now().isoformat(),
+            event_id=str(event.get('id', 'unknown')),
+            analysis_type="post_event" if is_post_event else "pre_event",
+            model_used="qualitative_event_fallback",
+            cost_estimate=0.0
+        )
     
     def _get_nfp_fallback_analysis(self, event: Dict, is_post_event: bool) -> GPTAnalysisResult:
         """Specific NFP fallback analysis"""
@@ -891,64 +998,93 @@ class GPTAIAnalyzer:
     def _get_generic_fallback_analysis(self, event: Dict, is_post_event: bool) -> GPTAnalysisResult:
         """Generic fallback analysis for other economic indicators"""
         currency = event.get('currency', 'USD')
+        event_title = event.get('title', 'Economic Event')
+        impact = event.get('impact', 'medium')
         previous = event.get('previous', 'N/A')
         expected = event.get('expected', 'N/A')
         actual = event.get('actual', 'N/A')
         
-        if is_post_event and actual != 'N/A':
-            # Post-event analysis
+        # Normalize empty values
+        empty_values = ['N/A', 'TBD', '', None, '--', 'n/a', 'tbd', 'pending']
+        if previous in empty_values:
+            previous = 'N/A'
+        if expected in empty_values:
+            expected = 'N/A'
+        if actual in empty_values:
+            actual = 'N/A'
+        
+        # Determine if we have enough data for analysis
+        has_data = previous != 'N/A' or expected != 'N/A' or actual != 'N/A'
+        
+        # If no data at all, provide event-type based analysis
+        if not has_data:
+            bias = "Neutral"
+            sentiment = "Neutral"
+            impact_str = "Moderate"
+            data_note = f"Limited data available for {event_title}. Analysis based on event type and typical market impact."
+        elif is_post_event and actual != 'N/A':
+            # Post-event analysis with actual data
             try:
-                actual_val = float(str(actual).replace(',', ''))
-                expected_val = float(str(expected).replace(',', ''))
-                previous_val = float(str(previous).replace(',', ''))
+                actual_val = float(str(actual).replace(',', '').replace('%', ''))
+                expected_val = float(str(expected).replace(',', '').replace('%', '')) if expected != 'N/A' else actual_val
                 
                 if actual_val > expected_val:
                     bias = "Bullish"
                     sentiment = "Positive"
-                    impact = "Strong"
+                    impact_str = "Strong"
                 elif actual_val < expected_val:
                     bias = "Bearish"
                     sentiment = "Negative"
-                    impact = "Strong"
+                    impact_str = "Strong"
                 else:
                     bias = "Neutral"
                     sentiment = "Neutral"
-                    impact = "Moderate"
+                    impact_str = "Moderate"
             except:
+                # Can't parse numbers, default to neutral
                 bias = "Neutral"
                 sentiment = "Neutral"
-                impact = "Moderate"
+                impact_str = "Moderate"
         else:
-            # Pre-event analysis
+            # Pre-event analysis or missing actual data
             bias = "Neutral"
             sentiment = "Neutral"
-            impact = "Moderate"
+            impact_str = "Moderate"
+        
+        # Create appropriate headline and takeaway based on data availability
+        if not has_data:
+            headline_text = f"📊 {event_title} - Market Impact Analysis"
+            takeaway_text = data_note
+        else:
+            headline_text = f"📊 {event_title} - {bias} Bias Expected"
+            takeaway_text = f"Economic data {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show economic trends'} with {impact_str.lower()} {currency} impact."
         
         return GPTAnalysisResult(
-            headline=f"📊 Generic Economic Indicator Analysis - {bias} Bias Expected",
-            key_takeaway=f"Economic data {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show economic trends'} with {impact.lower()} USD impact.",
+            headline=headline_text,
+            key_takeaway=takeaway_text,
             forward_scenarios={
                 "bullish": f"✅ Stronger than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
                 "bearish": f"❌ Weaker than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
                 "neutral": f"➡️ Economic data in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
-                "release": f"Economic data report for {event.get('date', 'Unknown')}",
-                "outcome": f"Economic data {('showed ' + bias.lower() + ' economic trends') if is_post_event else 'expected to show economic trends'} with {impact.lower()} market impact.",
+                "release": f"{event_title} - {event.get('date', 'Unknown')}",
+                "outcome": f"{event_title} {('showed ' + bias.lower() + ' economic trends') if is_post_event else 'expected to show economic trends'} with {impact_str.lower()} market impact.",
                 "previous": previous,
                 "expected": expected,
-                "actual": actual if is_post_event else "Data pending"
+                "actual": actual if is_post_event else "Data pending",
+                "data_availability": "Full data" if has_data else "Limited data"
             },
             market_reaction={
-                "price_action": f"USD pairs expected to show {impact.lower()} volatility with {bias.lower()} bias. EUR/USD and USD/JPY primary movers.",
-                "volatility": f"{impact} volatility expected with 15-25 pip movements on data surprises.",
-                "reason": f"Economic data directly impacts Federal Reserve policy expectations and currency strength."
+                "price_action": f"{currency} pairs expected to show {impact_str.lower()} volatility with {bias.lower()} bias. Primary movers based on {currency} exposure.",
+                "volatility": f"{impact_str} volatility expected with potential price movements based on event impact.",
+                "reason": f"{event_title} impacts {currency} through economic fundamentals and policy expectations."
             },
             implications_takeaways={
-                "economic_context": "Economic data is a key driver of currency valuations, affecting both short-term and long-term interest rates.",
-                "policy_implications": f"{bias} economic data suggests {('hawkish' if bias == 'Bullish' else 'dovish' if bias == 'Bearish' else 'neutral')} Federal Reserve policy bias.",
-                "market_bias": f"{bias} - Economic trends suggest {bias.lower()} USD outlook.",
-                "risk_level": f"{impact} risk with potential for sharp USD movements."
+                "economic_context": f"{event_title} is a key driver of {currency} valuations through economic fundamentals.",
+                "policy_implications": f"{bias} data suggests {('hawkish' if bias == 'Bullish' else 'dovish' if bias == 'Bearish' else 'neutral')} central bank policy bias for {currency}.",
+                "market_bias": f"{bias} - Economic trends suggest {bias.lower()} {currency} outlook.",
+                "risk_level": f"{impact_str} risk with potential {currency} movements based on data surprise factor."
             },
             trading_plan={
                 "best_approach": f"Range trading with breakout potential. Monitor EUR/USD 1.08-1.09 and USD/JPY 148.0-149.0 levels.",
