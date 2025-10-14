@@ -5,10 +5,41 @@
 
 /**
  * Get the user's saved timezone from localStorage
+ * Auto-detects timezone on first visit
  * @returns {string} The user's timezone (defaults to 'UTC')
  */
 export const getUserTimezone = () => {
-  return localStorage.getItem('fxSentinel_userTimezone') || 'UTC';
+  const savedTimezone = localStorage.getItem('fxSentinel_userTimezone');
+  
+  // Auto-detect timezone on first visit
+  if (!savedTimezone) {
+    try {
+      const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
+      // List of supported timezones
+      const supportedTimezones = [
+        'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+        'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai',
+        'Asia/Singapore', 'Australia/Sydney', 'Australia/Melbourne', 'Pacific/Auckland',
+        'Asia/Dubai', 'Asia/Kolkata', 'Asia/Seoul', 'Asia/Bangkok', 'Europe/Moscow',
+        'Africa/Johannesburg'
+      ];
+      
+      // Check if detected timezone is in our supported list
+      if (detectedTimezone && supportedTimezones.includes(detectedTimezone)) {
+        localStorage.setItem('fxSentinel_userTimezone', detectedTimezone);
+        console.log(`🌍 Auto-detected timezone: ${detectedTimezone}`);
+        return detectedTimezone;
+      }
+    } catch (error) {
+      console.error('Error auto-detecting timezone:', error);
+    }
+    
+    // Default to UTC if auto-detection fails
+    return 'UTC';
+  }
+  
+  return savedTimezone;
 };
 
 /**
