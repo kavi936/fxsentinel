@@ -342,13 +342,55 @@ class HybridEconomicCalendar:
                 'previous': '4.7%'
             },
             
-            # TUESDAY, OCTOBER 14
+            # MONDAY, OCTOBER 13 (From ForexFactory JSON Export)
+            {
+                'title': 'Monetary Policy Meeting Minutes',
+                'date': 'Mon, Oct 13',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            
+            # TUESDAY, OCTOBER 14 (From ForexFactory JSON Export)
+            {
+                'title': 'Average Earnings Index 3m/y',
+                'date': 'Tue, Oct 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '4.7%',
+                'previous': '4.7%'
+            },
+            {
+                'title': 'Claimant Count Change',
+                'date': 'Tue, Oct 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '10.3K',
+                'previous': '17.4K'
+            },
+            {
+                'title': 'German ZEW Economic Sentiment',
+                'date': 'Tue, Oct 14',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '41.2',
+                'previous': '37.3'
+            },
             {
                 'title': 'Fed Chair Powell Speaks',
                 'date': 'Tue, Oct 14',
-                'time': '16:20 UTC',  # 12:20 EST + 4
+                'time': '16:20 UTC',
                 'currency': 'USD',
-                'impact': 'medium',
+                'impact': 'high',
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
@@ -356,21 +398,61 @@ class HybridEconomicCalendar:
             {
                 'title': 'BOE Gov Bailey Speaks',
                 'date': 'Tue, Oct 14',
-                'time': '17:00 UTC',  # 13:00 EST + 4
+                'time': '17:00 UTC',
                 'currency': 'GBP',
-                'impact': 'medium',
+                'impact': 'high',
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
+            {
+                'title': 'CPI y/y',
+                'date': 'Tue, Oct 14',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-0.2%',
+                'previous': '-0.4%'
+            },
+            {
+                'title': 'PPI y/y',
+                'date': 'Tue, Oct 14',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-2.3%',
+                'previous': '-2.9%'
+            },
             
-            # WEDNESDAY, OCTOBER 15
+            # WEDNESDAY, OCTOBER 15 (From ForexFactory JSON Export)
+            {
+                'title': 'New Loans',
+                'date': 'Wed, Oct 15',
+                'time': '09:03 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '1490B',
+                'previous': '590B'
+            },
+            {
+                'title': 'Empire State Manufacturing Index',
+                'date': 'Wed, Oct 15',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-1.8',
+                'previous': '-8.7'
+            },
             {
                 'title': 'RBA Gov Bullock Speaks',
                 'date': 'Wed, Oct 15',
-                'time': '19:45 UTC',  # 15:45 EST + 4
+                'time': '19:45 UTC',
                 'currency': 'AUD',
-                'impact': 'medium',
+                'impact': 'high',
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
@@ -378,12 +460,12 @@ class HybridEconomicCalendar:
             {
                 'title': 'Employment Change',
                 'date': 'Thu, Oct 16',
-                'time': '00:30 UTC',  # 20:30 EST + 4 (next day UTC)
+                'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '20.0K',  # Was in "actual"
-                'previous': '-5.4K'  # Was in "forecast"
+                'actual': 'TBD',
+                'forecast': '20.5K',
+                'previous': '-5.4K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -391,67 +473,79 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '4.3%',  # Was in "actual"
-                'previous': '4.2%'  # Was in "forecast"
+                'actual': 'TBD',
+                'forecast': '4.3%',
+                'previous': '4.2%'
             },
             
-            # THURSDAY, OCTOBER 16
+            # THURSDAY, OCTOBER 16 (From ForexFactory JSON Export)
             {
                 'title': 'GDP m/m',
                 'date': 'Thu, Oct 16',
-                'time': '06:00 UTC',  # 02:00 EST + 4
+                'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '0.1%',  # Was in "actual"
-                'previous': '0.0%'  # Was in "forecast"
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.0%'
             },
             {
-                'title': 'Core PPI m/m',
-                'date': 'Thu, Oct 16',
-                'time': '12:30 UTC',  # Tentative - using standard 08:30 EST + 4
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '0.3%',  # Was in "actual"
-                'previous': '-0.1%'  # Was in "forecast"
-            },
-            {
-                'title': 'Core Retail Sales m/m',
+                'title': 'Philly Fed Manufacturing Index',
                 'date': 'Thu, Oct 16',
                 'time': '12:30 UTC',
                 'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '0.3%',  # Was in "actual"
-                'previous': '0.7%'  # Was in "forecast"
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '8.6',
+                'previous': '23.2'
             },
             {
-                'title': 'PPI m/m',
+                'title': 'FOMC Member Waller Speaks',
                 'date': 'Thu, Oct 16',
-                'time': '12:30 UTC',
+                'time': '13:00 UTC',
                 'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '0.3%',  # Was in "actual"
-                'previous': '-0.1%'  # Was in "forecast"
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
             },
             {
-                'title': 'Retail Sales m/m',
+                'title': 'ECB President Lagarde Speaks',
                 'date': 'Thu, Oct 16',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',  # Future event
-                'forecast': '0.4%',  # Was in "actual"
-                'previous': '0.6%'  # Was in "forecast"
+                'time': '16:00 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
             },
             {
-                'title': 'Unemployment Claims',
+                'title': 'BOC Gov Macklem Speaks',
                 'date': 'Thu, Oct 16',
-                'time': '12:30 UTC',
-                'currency': 'USD',
+                'time': '17:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            
+            # SATURDAY, OCTOBER 18 (From ForexFactory JSON Export)
+            {
+                'title': 'ECB President Lagarde Speaks',
+                'date': 'Sat, Oct 18',
+                'time': '13:00 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'BOE Gov Bailey Speaks',
+                'date': 'Sat, Oct 18',
+                'time': '13:00 UTC',
+                'currency': 'GBP',
                 'impact': 'high',
                 'actual': 'TBD',
                 'forecast': 'N/A',
