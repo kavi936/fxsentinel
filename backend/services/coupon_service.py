@@ -80,7 +80,7 @@ class CouponService:
             else:
                 return {'valid': False, 'reason': 'Coupon is invalid'}
                 
-        except stripe.error.InvalidRequestError:
+        except stripe.InvalidRequestError:
             return {'valid': False, 'reason': 'Coupon not found'}
         except Exception as e:
             print(f"❌ Error validating coupon: {e}")
