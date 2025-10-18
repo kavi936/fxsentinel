@@ -539,13 +539,13 @@ class EnhancedAIAnalyzer:
     def _get_affected_pairs(self, currency: str, event_type: str) -> List[str]:
         """Get currency pairs most affected by the event"""
         base_pairs = {
-            'USD': ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+            'USD': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF'],
             'EUR': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
             'GBP': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
             'JPY': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-            'CHF': ['USD/CHF', 'EUR/CHF', 'GBP/CHF'],
-            'AUD': ['AUD/USD', 'AUD/JPY', 'EUR/AUD'],
-            'CAD': ['USD/CAD', 'EUR/CAD', 'GBP/CAD']
+            'CHF': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+            'AUD': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+            'CAD': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD']
         }
         
         return base_pairs.get(currency, ['EUR/USD', 'USD/JPY', 'GBP/USD'])
