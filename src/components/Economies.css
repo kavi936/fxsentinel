@@ -1,0 +1,17 @@
+/* Economies Tab Styles - Following Overview Pattern */
+.economies-tab {
+  padding: 0;
+  margin: 0;
+  background: #000000;
+  min-height: 100vh;
+  color: white;
+}
+
+.economies-content {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  padding-top: 80px; /* Space for fixed navbar (60px) + some spacing */
+  line-height: 1;
+}
+
