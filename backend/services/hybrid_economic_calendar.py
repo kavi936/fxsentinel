@@ -456,6 +456,236 @@ class HybridEconomicCalendar:
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
+            },
+            
+            # MONDAY, OCTOBER 20
+            {
+                'title': 'CPI q/q',
+                'date': 'Sun, Oct 20',
+                'time': '21:45 UTC',  # 3:15 IST - 5:30 (previous day UTC)
+                'currency': 'NZD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.8%',
+                'previous': '0.5%'
+            },
+            
+            # TUESDAY, OCTOBER 21
+            {
+                'title': 'ECB President Lagarde Speaks',
+                'date': 'Tue, Oct 21',
+                'time': '11:00 UTC',  # 16:30 IST - 5:30
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Tue, Oct 21',
+                'time': '12:30 UTC',  # 18:00 IST - 5:30
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '-0.1%',
+                'previous': '-0.1%'
+            },
+            {
+                'title': 'Median CPI y/y',
+                'date': 'Tue, Oct 21',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.0%',
+                'previous': '3.1%'
+            },
+            {
+                'title': 'Trimmed CPI y/y',
+                'date': 'Tue, Oct 21',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.0%',
+                'previous': '3.0%'
+            },
+            {
+                'title': 'Common CPI y/y',
+                'date': 'Tue, Oct 21',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '2.6%',
+                'previous': '2.5%'
+            },
+            {
+                'title': 'Core CPI m/m',
+                'date': 'Tue, Oct 21',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.0%'
+            },
+            
+            # WEDNESDAY, OCTOBER 22
+            {
+                'title': 'Trade Balance',
+                'date': 'Tue, Oct 22',
+                'time': '23:50 UTC',  # 5:20 IST - 5:30 (previous day UTC)
+                'currency': 'JPY',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '-0.09T',
+                'previous': '-0.15T'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Wed, Oct 22',
+                'time': '06:00 UTC',  # 11:30 IST - 5:30
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '4.0%',
+                'previous': '3.8%'
+            },
+            {
+                'title': 'Core CPI y/y',
+                'date': 'Wed, Oct 22',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.7%',
+                'previous': '3.6%'
+            },
+            
+            # THURSDAY, OCTOBER 23
+            {
+                'title': 'Core Retail Sales m/m',
+                'date': 'Thu, Oct 23',
+                'time': '12:30 UTC',  # 18:00 IST - 5:30
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '1.5%',
+                'previous': '-1.2%'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Thu, Oct 23',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '1.0%',
+                'previous': '-0.8%'
+            },
+            
+            # FRIDAY, OCTOBER 24
+            {
+                'title': 'German Flash Manufacturing PMI',
+                'date': 'Fri, Oct 24',
+                'time': '07:30 UTC',  # 13:00 IST - 5:30
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '49.6',
+                'previous': '49.5'
+            },
+            {
+                'title': 'German Flash Services PMI',
+                'date': 'Fri, Oct 24',
+                'time': '07:30 UTC',
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '51.1',
+                'previous': '51.5'
+            },
+            {
+                'title': 'Flash Manufacturing PMI',
+                'date': 'Fri, Oct 24',
+                'time': '08:30 UTC',  # 14:00 IST - 5:30
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '46.9',
+                'previous': '46.2'
+            },
+            {
+                'title': 'Flash Services PMI',
+                'date': 'Fri, Oct 24',
+                'time': '08:30 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '51.4',
+                'previous': '50.8'
+            },
+            {
+                'title': 'NHPI m/m',
+                'date': 'Fri, Oct 24',
+                'time': '12:30 UTC',  # 18:00 IST - 5:30
+                'currency': 'CAD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '-0.3%'
+            },
+            {
+                'title': 'Core CPI m/m',
+                'date': 'Fri, Oct 24',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Fri, Oct 24',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.4%',
+                'previous': '0.4%'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Fri, Oct 24',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '2.9%'
+            },
+            {
+                'title': 'Flash Manufacturing PMI',
+                'date': 'Fri, Oct 24',
+                'time': '13:45 UTC',  # 19:15 IST - 5:30
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '51.9',
+                'previous': '52.0'
+            },
+            {
+                'title': 'Flash Services PMI',
+                'date': 'Fri, Oct 24',
+                'time': '13:45 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '53.5',
+                'previous': '54.2'
             }
         ]
         
