@@ -58,11 +58,12 @@ function Dashboard() {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [mobileWarningVisible, setMobileWarningVisible] = useState(false);
 
-  // Track dashboard view and trial start
+  // Track dashboard view
   useEffect(() => {
     trackEngagement('dashboard_view');
-    if (subscriptionStatus?.status === 'trial') {
-      trackTrialStart();
+    // Track tier information if needed
+    if (subscriptionStatus?.status) {
+      console.log(`📊 User tier: ${subscriptionStatus.status}`);
     }
   }, [subscriptionStatus]);
 
@@ -78,14 +79,14 @@ function Dashboard() {
           setSubscriptionStatus(data);
           
           // Additional security check - redirect if no valid subscription
-          const validStatuses = ['trial', 'active', 'developer', 'beta_tester'];
+          const validStatuses = ['free', 'premium', 'developer'];
           if (!validStatuses.includes(data.status)) {
-            console.warn('⚠️ User does not have valid subscription status, redirecting to trial welcome');
-            navigate('/trial-welcome');
-            return;
+            console.warn('⚠️ User does not have valid subscription status');
+            // Don't redirect - let them stay on dashboard but with limited access
+            // navigate('/login');
           }
           
-          console.log('✅ User has valid subscription status:', data.status);
+          console.log('✅ User subscription status:', data.status);
         }
       } catch (error) {
         console.error('Error checking subscription status:', error);

@@ -313,14 +313,14 @@ const LandingPage = () => {
             
             <div className="hero-buttons">
               <Link 
-                to="/login" 
+                to="/signup" 
                 className="primary-button"
                 onClick={() => {
                   trackSignupClick('hero_button');
-                  trackEngagement('hero_trial_button_click');
+                  trackEngagement('hero_signup_button_click');
                 }}
               >
-                Start Free Trial
+                Start for Free
               </Link>
             </div>
           </div>
@@ -504,8 +504,8 @@ const LandingPage = () => {
             </div>
           </div>
                       <div className="features-cta">
-              <p className="features-cta-text"><span>Still don't believe us ?</span> 👉</p>
-              <Link to="/signup" className="features-cta-button">Take our 3-day free trial</Link>
+              <p className="features-cta-text"><span>Ready to get started?</span> 👉</p>
+              <Link to="/signup" className="features-cta-button">Start Free Today</Link>
             </div>
         </div>
       </section>
@@ -581,22 +581,39 @@ const LandingPage = () => {
       <section id="pricing" className="pricing">
         <div className="pricing-inner">
           <h2 className="section-title">Start Trading Smarter Today</h2>
-          <p className="pricing-description">One powerful plan that gives you everything you need to understand market moves.</p>
-          <div className="pricing-single">
-            <div className="pricing-card featured">
-              <h3>Premium</h3>
-              <div className="price">$19.99<span>/month</span></div>
+          <p className="pricing-description">Choose the plan that fits your trading style. Start free, upgrade anytime.</p>
+          <div className="pricing-grid">
+            <div className="pricing-card">
+              <h3>Free</h3>
+              <div className="price">$0<span>/month</span></div>
+              <p className="pricing-subtitle">Perfect for getting started</p>
               <ul>
-                <li>Understand the market with instant AI analysis</li>
-                <li>Monitor all major currency pairs</li>
-                <li>Get alerts before news breaks</li>
-                <li>Professional trading dashboard</li>
-                <li>Understand every market move</li>
-                <li>Priority customer support</li>
-                <li>Customize alerts for your strategy</li>
-                <li>Learn from historical patterns</li>
+                <li>15 AI analyses per month</li>
+                <li>Real-time market alerts</li>
+                <li>Economic calendar access</li>
+                <li>Live news feed</li>
+                <li>All major currency pairs</li>
+                <li>Telegram notifications</li>
+                <li>Professional dashboard</li>
               </ul>
-              <Link to="/signup" className="pricing-button">Start Your 3-Day Free Trial</Link>
+              <Link to="/signup" className="pricing-button">Get Started Free</Link>
+            </div>
+            <div className="pricing-card featured">
+              <div className="popular-badge">Most Popular</div>
+              <h3>Premium</h3>
+              <div className="price">$14.99<span>/month</span></div>
+              <p className="pricing-subtitle">For serious traders</p>
+              <ul>
+                <li>50 AI analyses per day (~1,500/month)</li>
+                <li>Everything in Free plan</li>
+                <li>Priority support</li>
+                <li>Advanced alert customization</li>
+                <li>Historical pattern analysis</li>
+                <li>Custom currency pair filters</li>
+                <li>Impact level filtering</li>
+                <li>Quiet hours configuration</li>
+              </ul>
+              <Link to="/signup" className="pricing-button">Start Premium</Link>
             </div>
           </div>
         </div>

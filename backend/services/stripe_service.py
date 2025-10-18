@@ -19,48 +19,25 @@ class StripeService:
             self.db = None
             self.firebase_available = False
             
-        self.trial_days = int(os.getenv('TRIAL_DAYS', 3))
-        self.trial_limit = int(os.getenv('TRIAL_ANALYSIS_LIMIT', 15))
-        self.paid_limit = int(os.getenv('PAID_ANALYSIS_LIMIT', 100))
-        self.monthly_price = int(os.getenv('MONTHLY_PRICE', 2000))
-        self.product_id = os.getenv('STRIPE_PRODUCT_ID', 'prod_SuHsXyARgMiS3e')
-        self.price_id = os.getenv('STRIPE_PRICE_ID', 'price_1RyTIYJNDWyJv8IpeKw3dzRB')
+        # Freemium model configuration
+        self.free_limit = int(os.getenv('FREE_ANALYSIS_LIMIT', 15))  # Per month
+        self.premium_limit = int(os.getenv('PREMIUM_ANALYSIS_LIMIT', 50))  # Per day
+        self.premium_price = int(os.getenv('PREMIUM_MONTHLY_PRICE', 1499))  # $14.99 in cents
+        self.product_id = os.getenv('STRIPE_PRODUCT_ID', 'prod_TG0y9LajTpBv6g')
+        self.price_id = os.getenv('STRIPE_PRICE_ID', 'price_1SJUw5JNDWyJv8IpGZOmCT6j')
         
         # Developer emails for bypassing payment
         developer_emails_str = os.getenv('DEVELOPER_EMAILS', '')
         self.developer_emails = [email.strip() for email in developer_emails_str.split(',') if email.strip()]
         
-        # Beta tester emails for lifetime access
-        beta_tester_emails_str = os.getenv('BETA_TESTER_EMAILS', '')
-        self.beta_tester_emails = [email.strip() for email in beta_tester_emails_str.split(',') if email.strip()]
-        
         print(f"🔧 Developer emails loaded: {self.developer_emails}")
-        print(f"🎯 Beta tester emails loaded: {self.beta_tester_emails}")
+        print(f"💰 Freemium Model: Free={self.free_limit}/month, Premium={self.premium_limit}/day, Price=${self.premium_price/100}")
 
     def is_developer_email(self, email):
         """Check if email is in developer whitelist"""
         if not email:
             return False
         return email.lower() in [dev_email.lower() for dev_email in self.developer_emails]
-
-    def is_beta_tester_email(self, email):
-        """Check if email is in beta tester whitelist"""
-        if not email:
-            return False
-        return email.lower() in [beta_email.lower() for beta_email in self.beta_tester_emails]
-
-    def get_beta_tester_access_status(self, email):
-        """Get beta tester access status for an email"""
-        is_beta_tester = self.is_beta_tester_email(email)
-        if is_beta_tester:
-            return {
-                'is_beta_tester': True,
-                'status': 'beta_tester',
-                'daily_usage': 0,
-                'daily_limit': self.trial_limit,  # Same as trial users (15 per day)
-                'can_perform': True
-            }
-        return {'is_beta_tester': False}
 
     def get_developer_access_status(self, email):
         """Get developer access status for an email"""
@@ -70,13 +47,15 @@ class StripeService:
                 'is_developer': True,
                 'status': 'developer',
                 'daily_usage': 0,
+                'monthly_usage': 0,
                 'daily_limit': 999999,  # Unlimited for developers
+                'monthly_limit': 999999,
                 'can_perform': True
             }
         return {'is_developer': False}
 
     def create_customer(self, user_id, email, name):
-        """Create a Stripe customer and link to Firebase user"""
+        """Create a Stripe customer and link to Firebase user with free tier"""
         try:
             customer = stripe.Customer.create(
                 email=email,
@@ -84,16 +63,18 @@ class StripeService:
                 metadata={'firebase_user_id': user_id}
             )
             
-            # Store customer ID in Firebase if available
+            # Store customer ID in Firebase if available and set to free tier
             if self.firebase_available and self.db:
                 try:
+                    today = datetime.now().date()
                     self.db.collection('users').document(user_id).update({
                         'stripe_customer_id': customer.id,
-                        'subscription_status': 'trial',
-                        'trial_start_date': datetime.now(),
-                        'trial_end_date': datetime.now() + timedelta(days=self.trial_days),
+                        'subscription_status': 'free',  # Default to free tier
+                        'monthly_analysis_count': 0,
                         'daily_analysis_count': 0,
-                        'last_analysis_reset': datetime.now().date()
+                        'last_monthly_reset': today.replace(day=1),  # First day of current month
+                        'last_daily_reset': today,
+                        'account_created': datetime.now()
                     })
                 except Exception as firebase_error:
                     print(f"⚠️ Firebase update failed, but Stripe customer created: {firebase_error}")
@@ -106,7 +87,7 @@ class StripeService:
             raise
 
     def create_subscription(self, customer_id, price_id):
-        """Create a subscription for a customer"""
+        """Create a premium subscription for a customer"""
         try:
             subscription = stripe.Subscription.create(
                 customer=customer_id,
@@ -118,22 +99,6 @@ class StripeService:
             return subscription
         except Exception as e:
             print(f"Error creating subscription: {e}")
-            raise
-
-    def create_trial_subscription(self, customer_id):
-        """Create a subscription that starts after trial period"""
-        try:
-            # Create subscription with trial period
-            subscription = stripe.Subscription.create(
-                customer=customer_id,
-                items=[{'price': self.price_id}],
-                trial_period_days=self.trial_days,
-                payment_settings={'save_default_payment_method': 'on_subscription'},
-                metadata={'trial_subscription': 'true'}
-            )
-            return subscription
-        except Exception as e:
-            print(f"Error creating trial subscription: {e}")
             raise
 
     def setup_payment_method(self, customer_id, payment_method_id):
@@ -158,20 +123,6 @@ class StripeService:
             print(f"Error setting up payment method: {e}")
             raise
 
-    def create_subscription_after_trial(self, customer_id):
-        """Create a subscription that starts immediately (after trial)"""
-        try:
-            subscription = stripe.Subscription.create(
-                customer=customer_id,
-                items=[{'price': self.price_id}],
-                payment_settings={'save_default_payment_method': 'on_subscription'},
-                metadata={'post_trial_subscription': 'true'}
-            )
-            return subscription
-        except Exception as e:
-            print(f"Error creating post-trial subscription: {e}")
-            raise
-
     def get_subscription_status(self, user_id, email=None):
         """Get current subscription status for a user"""
         try:
@@ -179,51 +130,46 @@ class StripeService:
             if email and self.is_developer_email(email):
                 return {
                     'status': 'developer',
-                    'trial_end_date': None,
+                    'monthly_analysis_count': 0,
                     'daily_analysis_count': 0,
-                    'analysis_limit': 999999,  # Unlimited for developers
+                    'monthly_limit': 999999,
+                    'daily_limit': 999999,
                     'stripe_customer_id': None,
                     'is_developer': True
                 }
             
-            # Check if user is a beta tester
-            if email and self.is_beta_tester_email(email):
-                return {
-                    'status': 'beta_tester',
-                    'trial_end_date': None,
-                    'daily_analysis_count': 0,
-                    'analysis_limit': self.trial_limit,  # Same as trial users (15 per day)
-                    'stripe_customer_id': None,
-                    'is_beta_tester': True
-                }
-            
             if not self.firebase_available or not self.db:
-                # Return default trial status if Firebase not available
+                # Return default free status if Firebase not available
                 return {
-                    'status': 'trial',
-                    'trial_end_date': (datetime.now() + timedelta(days=self.trial_days)).isoformat(),
+                    'status': 'free',
+                    'monthly_analysis_count': 0,
                     'daily_analysis_count': 0,
-                    'analysis_limit': self.trial_limit,
+                    'monthly_limit': self.free_limit,
+                    'daily_limit': None,
                     'stripe_customer_id': None
                 }
             
             user_doc = self.db.collection('users').document(user_id).get()
             if not user_doc.exists:
-                # Return default trial status for new users
+                # Return default free status for new users
                 return {
-                    'status': 'trial',
-                    'trial_end_date': (datetime.now() + timedelta(days=self.trial_days)).isoformat(),
+                    'status': 'free',
+                    'monthly_analysis_count': 0,
                     'daily_analysis_count': 0,
-                    'analysis_limit': self.trial_limit,
+                    'monthly_limit': self.free_limit,
+                    'daily_limit': None,
                     'stripe_customer_id': None
                 }
             
             user_data = user_doc.to_dict()
+            status = user_data.get('subscription_status', 'free')
+            
             return {
-                'status': user_data.get('subscription_status', 'trial'),
-                'trial_end_date': user_data.get('trial_end_date'),
+                'status': status,
+                'monthly_analysis_count': user_data.get('monthly_analysis_count', 0),
                 'daily_analysis_count': user_data.get('daily_analysis_count', 0),
-                'analysis_limit': self.get_analysis_limit(user_data),
+                'monthly_limit': self.free_limit if status == 'free' else None,
+                'daily_limit': self.premium_limit if status == 'premium' else None,
                 'stripe_customer_id': user_data.get('stripe_customer_id')
             }
         except Exception as e:
@@ -231,31 +177,27 @@ class StripeService:
             return None
 
     def get_analysis_limit(self, user_data):
-        """Get the daily analysis limit based on subscription status"""
-        status = user_data.get('subscription_status', 'trial')
-        if status == 'active':
-            return self.paid_limit
-        return self.trial_limit
+        """Get the analysis limit based on subscription status"""
+        status = user_data.get('subscription_status', 'free')
+        if status == 'premium':
+            return {'type': 'daily', 'limit': self.premium_limit}
+        elif status == 'developer':
+            return {'type': 'unlimited', 'limit': 999999}
+        else:  # free
+            return {'type': 'monthly', 'limit': self.free_limit}
 
     def can_perform_analysis(self, user_id, email=None):
-        """Check if user can perform an AI analysis"""
+        """Check if user can perform an AI analysis based on their tier"""
         try:
             # Check if user is a developer first
             if email and self.is_developer_email(email):
                 return {
                     'can_perform': True,
                     'daily_usage': 0,
-                    'daily_limit': 999999,  # Unlimited for developers
+                    'monthly_usage': 0,
+                    'daily_limit': 999999,
+                    'monthly_limit': 999999,
                     'status': 'developer'
-                }
-            
-            # Check if user is a beta tester
-            if email and self.is_beta_tester_email(email):
-                return {
-                    'can_perform': True,
-                    'daily_usage': 0,
-                    'daily_limit': self.trial_limit,  # Same as trial users (15 per day)
-                    'status': 'beta_tester'
                 }
             
             if not self.firebase_available:
@@ -263,8 +205,10 @@ class StripeService:
                 return {
                     'can_perform': True,
                     'daily_usage': 0,
-                    'daily_limit': self.trial_limit,
-                    'status': 'trial'
+                    'monthly_usage': 0,
+                    'daily_limit': None,
+                    'monthly_limit': self.free_limit,
+                    'status': 'free'
                 }
             
             user_doc = self.db.collection('users').document(user_id).get()
@@ -272,70 +216,106 @@ class StripeService:
                 return {
                     'can_perform': False,
                     'daily_usage': 0,
-                    'daily_limit': 0,
+                    'monthly_usage': 0,
+                    'daily_limit': None,
+                    'monthly_limit': 0,
                     'status': 'no_subscription'
                 }
             
             user_data = user_doc.to_dict()
+            status = user_data.get('subscription_status', 'free')
             today = datetime.now().date()
-            last_reset = user_data.get('last_analysis_reset')
+            current_month_start = today.replace(day=1)
             
-            # Reset daily count if it's a new day
-            if last_reset != today:
-                self.db.collection('users').document(user_id).update({
-                    'daily_analysis_count': 0,
-                    'last_analysis_reset': today
-                })
+            # Reset counters if needed
+            last_daily_reset = user_data.get('last_daily_reset')
+            last_monthly_reset = user_data.get('last_monthly_reset')
+            
+            updates = {}
+            
+            # Reset daily count if it's a new day (for premium users)
+            if last_daily_reset != today:
+                updates['daily_analysis_count'] = 0
+                updates['last_daily_reset'] = today
                 user_data['daily_analysis_count'] = 0
-                user_data['last_analysis_reset'] = today
             
-            # Check trial status
-            if user_data.get('subscription_status') == 'trial':
-                trial_end = user_data.get('trial_end_date')
-                if trial_end and datetime.now() > trial_end:
-                    # Trial expired, update status
-                    self.db.collection('users').document(user_id).update({
-                        'subscription_status': 'expired'
-                    })
-                    return {
-                        'can_perform': False,
-                        'daily_usage': user_data.get('daily_analysis_count', 0),
-                        'daily_limit': self.get_analysis_limit(user_data),
-                        'status': 'expired'
-                    }
+            # Reset monthly count if it's a new month (for free users)
+            if last_monthly_reset != current_month_start:
+                updates['monthly_analysis_count'] = 0
+                updates['last_monthly_reset'] = current_month_start
+                user_data['monthly_analysis_count'] = 0
             
-            # Check daily limit
-            limit = self.get_analysis_limit(user_data)
-            current_count = user_data.get('daily_analysis_count', 0)
-            can_perform = current_count < limit
+            # Apply updates if any
+            if updates:
+                self.db.collection('users').document(user_id).update(updates)
             
-            return {
-                'can_perform': can_perform,
-                'daily_usage': current_count,
-                'daily_limit': limit,
-                'status': user_data.get('subscription_status', 'trial')
-            }
+            # Check limits based on subscription status
+            if status == 'premium':
+                # Premium users: check daily limit
+                daily_count = user_data.get('daily_analysis_count', 0)
+                can_perform = daily_count < self.premium_limit
+                return {
+                    'can_perform': can_perform,
+                    'daily_usage': daily_count,
+                    'monthly_usage': 0,
+                    'daily_limit': self.premium_limit,
+                    'monthly_limit': None,
+                    'status': 'premium'
+                }
+            else:  # free
+                # Free users: check monthly limit
+                monthly_count = user_data.get('monthly_analysis_count', 0)
+                can_perform = monthly_count < self.free_limit
+                return {
+                    'can_perform': can_perform,
+                    'daily_usage': 0,
+                    'monthly_usage': monthly_count,
+                    'daily_limit': None,
+                    'monthly_limit': self.free_limit,
+                    'status': 'free'
+                }
+                
         except Exception as e:
             print(f"Error checking analysis permission: {e}")
             # Default to allowing analysis if there's an error
             return {
                 'can_perform': True,
                 'daily_usage': 0,
-                'daily_limit': self.trial_limit,
-                'status': 'trial'
+                'monthly_usage': 0,
+                'daily_limit': None,
+                'monthly_limit': self.free_limit,
+                'status': 'free'
             }
 
-    def increment_analysis_count(self, user_id):
-        """Increment the daily analysis count for a user"""
+    def increment_analysis_count(self, user_id, email=None):
+        """Increment the analysis count for a user based on their tier"""
         try:
+            # Skip for developers
+            if email and self.is_developer_email(email):
+                return
+            
             if not self.firebase_available or not self.db:
-                # Skip increment if Firebase not available
                 return
                 
-            user_ref = self.db.collection('users').document(user_id)
-            user_ref.update({
-                'daily_analysis_count': firestore.Increment(1)
-            })
+            user_doc = self.db.collection('users').document(user_id).get()
+            if not user_doc.exists:
+                return
+            
+            user_data = user_doc.to_dict()
+            status = user_data.get('subscription_status', 'free')
+            
+            # Increment appropriate counter based on subscription status
+            if status == 'premium':
+                # Premium users: increment daily count
+                self.db.collection('users').document(user_id).update({
+                    'daily_analysis_count': firestore.Increment(1)
+                })
+            else:  # free
+                # Free users: increment monthly count
+                self.db.collection('users').document(user_id).update({
+                    'monthly_analysis_count': firestore.Increment(1)
+                })
+                
         except Exception as e:
             print(f"Error incrementing analysis count: {e}")
 
@@ -371,7 +351,7 @@ class StripeService:
             raise
 
     def handle_subscription_created(self, subscription):
-        """Handle new subscription creation"""
+        """Handle new subscription creation - upgrade user to premium"""
         try:
             customer_id = subscription['customer']
             subscription_id = subscription['id']
@@ -380,13 +360,17 @@ class StripeService:
             user_id = self.get_user_id_by_customer_id(customer_id)
             
             if user_id and self.firebase_available and self.db:
+                today = datetime.now().date()
                 self.db.collection('users').document(user_id).update({
-                    'subscription_status': 'active',
+                    'subscription_status': 'premium',
                     'subscription_id': subscription_id,
                     'current_period_end': datetime.fromtimestamp(subscription['current_period_end']),
+                    'daily_analysis_count': 0,
+                    'last_daily_reset': today,
+                    'upgraded_to_premium_at': datetime.now(),
                     'webhook_processed_at': datetime.now()
                 })
-                print(f"✅ Updated user {user_id} subscription status to active")
+                print(f"✅ Updated user {user_id} subscription status to premium")
             else:
                 print(f"⚠️ Could not update user for customer {customer_id} - user_id: {user_id}, firebase_available: {self.firebase_available}")
         except Exception as e:
@@ -406,21 +390,28 @@ class StripeService:
             if user_id and self.firebase_available and self.db:
                 # Map Stripe status to our status
                 if status == 'active':
-                    mapped_status = 'active'
-                elif status == 'trialing':
-                    mapped_status = 'trial'
+                    mapped_status = 'premium'
                 elif status == 'past_due':
                     mapped_status = 'past_due'
-                elif status == 'canceled':
-                    mapped_status = 'cancelled'
+                elif status == 'canceled' or status == 'cancelled':
+                    mapped_status = 'free'  # Downgrade to free on cancellation
                 else:
-                    mapped_status = 'inactive'
+                    mapped_status = 'free'  # Default to free for any other status
                 
-                self.db.collection('users').document(user_id).update({
+                update_data = {
                     'subscription_status': mapped_status,
                     'current_period_end': datetime.fromtimestamp(subscription['current_period_end']),
                     'webhook_processed_at': datetime.now()
-                })
+                }
+                
+                # Reset to monthly counting if downgrading to free
+                if mapped_status == 'free':
+                    today = datetime.now().date()
+                    update_data['monthly_analysis_count'] = 0
+                    update_data['last_monthly_reset'] = today.replace(day=1)
+                    update_data['downgraded_to_free_at'] = datetime.now()
+                
+                self.db.collection('users').document(user_id).update(update_data)
                 print(f"✅ Updated user {user_id} subscription status to {mapped_status}")
             else:
                 print(f"⚠️ Could not update user for customer {customer_id} - user_id: {user_id}, firebase_available: {self.firebase_available}")
@@ -429,7 +420,7 @@ class StripeService:
             raise
 
     def handle_subscription_deleted(self, subscription):
-        """Handle subscription cancellation"""
+        """Handle subscription cancellation - downgrade to free tier"""
         try:
             customer_id = subscription['customer']
             subscription_id = subscription['id']
@@ -438,12 +429,15 @@ class StripeService:
             user_id = self.get_user_id_by_customer_id(customer_id)
             
             if user_id and self.firebase_available and self.db:
+                today = datetime.now().date()
                 self.db.collection('users').document(user_id).update({
-                    'subscription_status': 'cancelled',
+                    'subscription_status': 'free',  # Downgrade to free tier
                     'subscription_cancelled_at': datetime.now(),
+                    'monthly_analysis_count': 0,
+                    'last_monthly_reset': today.replace(day=1),
                     'webhook_processed_at': datetime.now()
                 })
-                print(f"✅ Updated user {user_id} subscription status to cancelled")
+                print(f"✅ Updated user {user_id} subscription status to free (downgraded from premium)")
             else:
                 print(f"⚠️ Could not update user for customer {customer_id} - user_id: {user_id}, firebase_available: {self.firebase_available}")
         except Exception as e:
@@ -463,11 +457,11 @@ class StripeService:
             if user_id and self.firebase_available and self.db:
                 self.db.collection('users').document(user_id).update({
                     'last_payment_date': datetime.now(),
-                    'subscription_status': 'active',
+                    'subscription_status': 'premium',
                     'last_payment_amount': amount_paid,
                     'webhook_processed_at': datetime.now()
                 })
-                print(f"✅ Updated user {user_id} payment status to active")
+                print(f"✅ Updated user {user_id} payment status to premium")
             else:
                 print(f"⚠️ Could not update user for customer {customer_id} - user_id: {user_id}, firebase_available: {self.firebase_available}")
         except Exception as e:
@@ -508,82 +502,3 @@ class StripeService:
         except Exception as e:
             print(f"Error getting user by customer ID: {e}")
             return None
-
-    def check_trial_eligibility(self, email):
-        """Check if email is eligible for a trial (hasn't used one before)"""
-        if not email or not self.firebase_available or not self.db:
-            return True  # Allow trial if we can't check
-            
-        try:
-            # Check if this email has ever had a trial or paid subscription
-            users_ref = self.db.collection('users')
-            query = users_ref.where('email', '==', email.lower()).limit(1)
-            docs = query.get()
-            
-            for doc in docs:
-                user_data = doc.to_dict()
-                # Check if user has ever had a trial or paid subscription
-                subscription_status = user_data.get('subscription_status')
-                has_used_trial = user_data.get('has_used_trial', False)
-                
-                if subscription_status in ['trial', 'active', 'expired', 'cancelled'] or has_used_trial:
-                    print(f"❌ Email {email} has already used a trial or had a subscription")
-                    return False
-            
-            print(f"✅ Email {email} is eligible for trial")
-            return True
-            
-        except Exception as e:
-            print(f"⚠️ Error checking trial eligibility for {email}: {e}")
-            return True  # Allow trial if we can't check
-
-    def mark_trial_used(self, user_id, email):
-        """Mark that this email has used a trial"""
-        if not self.firebase_available or not self.db:
-            return
-            
-        try:
-            # Update current user
-            self.db.collection('users').document(user_id).update({
-                'has_used_trial': True,
-                'trial_used_at': datetime.now()
-            })
-            
-            # Also mark in a separate collection for easy querying
-            self.db.collection('trial_history').add({
-                'email': email.lower(),
-                'user_id': user_id,
-                'trial_started_at': datetime.now(),
-                'ip_address': 'tracked_separately'  # You can add IP tracking if needed
-            })
-            
-            print(f"✅ Marked trial as used for {email}")
-            
-        except Exception as e:
-            print(f"❌ Error marking trial as used for {email}: {e}")
-
-    def get_trial_history(self, email):
-        """Get trial history for an email"""
-        if not email or not self.firebase_available or not self.db:
-            return []
-            
-        try:
-            # Check trial history collection
-            trial_ref = self.db.collection('trial_history')
-            query = trial_ref.where('email', '==', email.lower()).order_by('trial_started_at', direction=firestore.Query.DESCENDING)
-            docs = query.get()
-            
-            history = []
-            for doc in docs:
-                data = doc.to_dict()
-                history.append({
-                    'user_id': data.get('user_id'),
-                    'trial_started_at': data.get('trial_started_at'),
-                    'email': data.get('email')
-                })
-            
-            return history
-            
-        except Exception as e:
-            print(f"❌ Error getting trial history for {email}: {e}")
-            return []

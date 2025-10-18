@@ -1589,6 +1589,35 @@ body {
   align-items: center;
 }
 
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.popular-badge {
+  position: absolute;
+  top: -15px;
+  right: 20px;
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--accent-red-light) 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(255, 68, 68, 0.4);
+  z-index: 1;
+}
+
+.pricing-subtitle {
+  color: var(--text-gray);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  margin-top: -0.5rem;
+}
+
 .pricing-card {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 68, 68, 0.05) 50%, rgba(255, 255, 255, 0.08) 100%);
   border: 1px solid rgba(255, 68, 68, 0.2);
