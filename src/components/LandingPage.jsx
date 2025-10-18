@@ -276,18 +276,18 @@ const LandingPage = () => {
         <div className="ticker-line-10"></div>
         
         {/* Floating FX News Headlines */}
-        <div className="news-headline-1">EUR/USD: Fed Rate Decision Impact Analysis</div>
-        <div className="news-headline-2">CPI Data Shows Inflation Cooling - USD Weakens</div>
-        <div className="news-headline-3">ECB Policy Meeting: Euro Zone Economic Outlook</div>
-        <div className="news-headline-4">Gold Surges on Safe Haven Demand</div>
-        <div className="news-headline-5">BoE Interest Rate Decision: GBP Volatility Expected</div>
-        <div className="news-headline-6">USD/JPY: Bank of Japan Policy Shift Analysis</div>
-        <div className="news-headline-7">AUD/USD: RBA Monetary Policy Statement Released</div>
-        <div className="news-headline-8">CAD/JPY: Oil Price Volatility Impacts Loonie</div>
-        <div className="news-headline-9">NZD/USD: New Zealand Employment Data Surprises</div>
-        <div className="news-headline-10">EUR/GBP: Brexit Trade Deal Negotiations Update</div>
-        <div className="news-headline-11">USD/CHF: Swiss National Bank Policy Review</div>
-        <div className="news-headline-12">GBP/JPY: UK GDP Growth Exceeds Expectations</div>
+        <div className="news-headline-1">Fed's Powell Signals QT End - Dollar Slides 0.3%</div>
+        <div className="news-headline-2">EUR/USD Breaks Below 1.1700 on Trade Tensions</div>
+        <div className="news-headline-3">USD/JPY: Yen Weakens to Two-Month Low at 150.62</div>
+        <div className="news-headline-4">Gold Eases from Record Highs on Profit-Taking</div>
+        <div className="news-headline-5">Japan Finance Minister Warns on Forex Volatility</div>
+        <div className="news-headline-6">EUR/JPY: Yen Hits Record Low at 176.35 per Euro</div>
+        <div className="news-headline-7">USD/INR: Rupee Plunges to All-Time Low at 88.62</div>
+        <div className="news-headline-8">Swiss National Bank Reaffirms Fair Forex Practices</div>
+        <div className="news-headline-9">USD Strengthens on Safe-Haven Demand Amid Tariffs</div>
+        <div className="news-headline-10">Russia Boosts Daily Forex Sales to Stabilize Rouble</div>
+        <div className="news-headline-11">Reserve Bank of India Intervenes Selling Dollars</div>
+        <div className="news-headline-12">Treasury Yields Decline as Fed Balances Policy Stance</div>
         
         <div className="hero-inner">
           <div className="hero-content">

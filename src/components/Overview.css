@@ -1276,6 +1276,15 @@
   text-transform: none;
 }
 
+.pair-badge.pair-count {
+  background: linear-gradient(135deg, #555555 0%, #666666 100%);
+  font-style: italic;
+  opacity: 0.9;
+  text-transform: lowercase;
+  font-weight: 500;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
 .event-data {
   display: flex;
   align-items: center;
