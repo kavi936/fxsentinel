@@ -206,21 +206,21 @@ class EconomicCalendarAlerts:
             if currency_pairs and isinstance(currency_pairs, list):
                 return currency_pairs
             
-            # Otherwise, infer from currency
+            # Otherwise, infer from currency (max 4 pairs)
             if currency == 'USD':
-                return ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD']
+                return ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF']
             elif currency == 'EUR':
                 return ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF']
             elif currency == 'GBP':
-                return ['GBP/USD', 'EUR/GBP', 'GBP/JPY']
+                return ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF']
             elif currency == 'JPY':
-                return ['USD/JPY', 'EUR/JPY', 'GBP/JPY']
+                return ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY']
             elif currency == 'AUD':
-                return ['AUD/USD', 'EUR/AUD', 'GBP/AUD']
+                return ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY']
             elif currency == 'CAD':
-                return ['USD/CAD', 'EUR/CAD', 'GBP/CAD']
+                return ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD']
             elif currency == 'CHF':
-                return ['USD/CHF', 'EUR/CHF', 'GBP/CHF']
+                return ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF']
             
             return []
             
@@ -477,7 +477,7 @@ class EconomicCalendarAlerts:
                 return False
             
             # Check deduplication
-            from .unified_alert_deduplication import should_send_economic_alert
+            from .alert_deduplication import should_send_economic_alert
             
             # Get alert timing
             event_datetime = self._parse_event_datetime(event)
@@ -497,8 +497,11 @@ class EconomicCalendarAlerts:
             elif minutes_until_event <= 120 and minutes_until_event >= 115:
                 alert_timing = "2h_before"
             
+            # Create event ID for deduplication
+            event_id = f"{event.get('title', '')}_{event.get('time', '')}_{event.get('date', '')}"
+            
             # Check if this alert should be sent (not a duplicate)
-            if not should_send_economic_alert(event, user_id, alert_timing):
+            if not should_send_economic_alert(event_id, user_id, alert_timing):
                 logger.debug(f"Economic alert duplicate prevented for user {user_id}")
                 return False
             
@@ -522,22 +525,21 @@ class EconomicCalendarAlerts:
             from .alert_service import get_alert_service
             alert_service = get_alert_service()
             
-            # Process alert with subscription validation using proper async handling
+            # Process alert with proper async handling (NO nested event loops)
             try:
                 import asyncio
-                # Check if we're already in an event loop
+                
+                # Create new event loop for this operation
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
                 try:
-                    loop = asyncio.get_event_loop()
-                    if loop.is_running():
-                        # We're in an event loop, create a task
-                        task = loop.create_task(alert_service.process_alert(alert_data, user_settings, user_id))
-                        success = loop.run_until_complete(task)
-                    else:
-                        # No event loop running, use asyncio.run
-                        success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
-                except RuntimeError:
-                    # Fallback for when asyncio.run can't be used
-                    success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
+                    success = loop.run_until_complete(
+                        alert_service.process_alert(alert_data, user_settings, user_id)
+                    )
+                finally:
+                    loop.close()
+                    
             except Exception as e:
                 logger.error(f"Error in async alert processing: {e}")
                 success = False
