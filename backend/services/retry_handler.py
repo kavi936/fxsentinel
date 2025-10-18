@@ -37,7 +37,7 @@ class RetryHandler:
                 logger.info(f"Attempting operation (attempt {attempt}/{max_attempts})")
                 return operation()
                 
-            except stripe.error.StripeError as e:
+            except stripe.StripeError as e:
                 last_exception = e
                 
                 # Check if we should retry this error
@@ -102,12 +102,12 @@ class PaymentRetryHandler:
                 logger.info(f"Attempting payment operation (attempt {attempt}/{max_attempts})")
                 return operation()
                 
-            except stripe.error.CardError as e:
+            except stripe.CardError as e:
                 # Card errors should not be retried
                 logger.warning(f"Card error on attempt {attempt}: {e}")
                 raise e
                 
-            except stripe.error.PaymentIntentError as e:
+            except stripe.PaymentIntentError as e:
                 # Payment intent errors might be retryable depending on the state
                 if e.code == 'payment_intent_payment_attempt_failed':
                     if attempt < max_attempts:
@@ -123,7 +123,7 @@ class PaymentRetryHandler:
                     logger.warning(f"Non-retryable payment error: {e}")
                     raise e
                     
-            except stripe.error.APIConnectionError as e:
+            except stripe.APIConnectionError as e:
                 last_exception = e
                 if attempt < max_attempts:
                     delay = 2 ** (attempt - 1)
@@ -157,7 +157,7 @@ class WebhookRetryHandler:
                 logger.info(f"Processing webhook (attempt {attempt}/{max_attempts})")
                 return operation()
                 
-            except stripe.error.SignatureVerificationError as e:
+            except stripe.SignatureVerificationError as e:
                 # Signature errors should not be retried
                 logger.error(f"Webhook signature verification failed: {e}")
                 raise e

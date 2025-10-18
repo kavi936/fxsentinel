@@ -50,7 +50,7 @@ class StripeErrorHandler:
     }
     
     @staticmethod
-    def get_user_friendly_message(stripe_error: stripe.error.StripeError) -> str:
+    def get_user_friendly_message(stripe_error: stripe.StripeError) -> str:
         """Convert Stripe error to user-friendly message"""
         error_code = getattr(stripe_error, 'code', None)
         
@@ -65,15 +65,15 @@ class StripeErrorHandler:
                 return StripeErrorHandler.STRIPE_ERROR_MESSAGES[decline_code]
         
         # Generic messages based on error type
-        if isinstance(stripe_error, stripe.error.CardError):
+        if isinstance(stripe_error, stripe.CardError):
             return "There was an issue with your card. Please check your payment details and try again."
-        elif isinstance(stripe_error, stripe.error.InvalidRequestError):
+        elif isinstance(stripe_error, stripe.InvalidRequestError):
             return "Invalid request. Please check your information and try again."
-        elif isinstance(stripe_error, stripe.error.AuthenticationError):
+        elif isinstance(stripe_error, stripe.AuthenticationError):
             return "Authentication error. Please log in again."
-        elif isinstance(stripe_error, stripe.error.APIConnectionError):
+        elif isinstance(stripe_error, stripe.APIConnectionError):
             return "Connection error. Please check your internet and try again."
-        elif isinstance(stripe_error, stripe.error.StripeError):
+        elif isinstance(stripe_error, stripe.StripeError):
             return "Payment processing error. Please try again or contact support."
         else:
             return "An unexpected error occurred. Please try again or contact support."
@@ -99,7 +99,7 @@ class StripeErrorHandler:
         return error_info
     
     @staticmethod
-    def handle_stripe_error(error: stripe.error.StripeError, context: Dict[str, Any] = None, user_id: str = None) -> Dict[str, Any]:
+    def handle_stripe_error(error: stripe.StripeError, context: Dict[str, Any] = None, user_id: str = None) -> Dict[str, Any]:
         """Handle Stripe errors and return appropriate response"""
         # Log the error
         error_info = StripeErrorHandler.log_error(error, context, user_id)
@@ -108,15 +108,15 @@ class StripeErrorHandler:
         user_message = StripeErrorHandler.get_user_friendly_message(error)
         
         # Determine HTTP status code
-        if isinstance(error, stripe.error.CardError):
+        if isinstance(error, stripe.CardError):
             status_code = 400
-        elif isinstance(error, stripe.error.InvalidRequestError):
+        elif isinstance(error, stripe.InvalidRequestError):
             status_code = 400
-        elif isinstance(error, stripe.error.AuthenticationError):
+        elif isinstance(error, stripe.AuthenticationError):
             status_code = 401
-        elif isinstance(error, stripe.error.APIConnectionError):
+        elif isinstance(error, stripe.APIConnectionError):
             status_code = 503
-        elif isinstance(error, stripe.error.RateLimitError):
+        elif isinstance(error, stripe.RateLimitError):
             status_code = 429
         else:
             status_code = 500
@@ -146,7 +146,7 @@ class StripeErrorHandler:
     @staticmethod
     def create_error_response(error: Exception, context: Dict[str, Any] = None, user_id: str = None) -> tuple:
         """Create Flask response tuple for errors"""
-        if isinstance(error, stripe.error.StripeError):
+        if isinstance(error, stripe.StripeError):
             error_data = StripeErrorHandler.handle_stripe_error(error, context, user_id)
         else:
             error_data = StripeErrorHandler.handle_general_error(error, context, user_id)
@@ -154,18 +154,18 @@ class StripeErrorHandler:
         return error_data, error_data['status_code']
     
     @staticmethod
-    def should_retry(error: stripe.error.StripeError) -> bool:
+    def should_retry(error: stripe.StripeError) -> bool:
         """Determine if an operation should be retried"""
         # Retry on connection errors and rate limits
-        if isinstance(error, (stripe.error.APIConnectionError, stripe.error.RateLimitError)):
+        if isinstance(error, (stripe.APIConnectionError, stripe.RateLimitError)):
             return True
         
         # Don't retry on card errors or authentication errors
-        if isinstance(error, (stripe.error.CardError, stripe.error.AuthenticationError)):
+        if isinstance(error, (stripe.CardError, stripe.AuthenticationError)):
             return False
         
         # Don't retry on invalid requests
-        if isinstance(error, stripe.error.InvalidRequestError):
+        if isinstance(error, stripe.InvalidRequestError):
             return False
         
         return False
