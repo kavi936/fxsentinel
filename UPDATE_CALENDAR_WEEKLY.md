@@ -1,13 +1,49 @@
 # Weekly Economic Calendar Update Guide
 
 ## Overview
-Your economic calendar now uses **curated ForexFactory data** that you update manually once per week. This takes **5 minutes** and ensures accurate, real-time events.
+Your economic calendar uses **curated ForexFactory data** updated weekly. You have **two methods**:
+- **Method 1 (Recommended)**: JSON Export - **30 seconds** ⚡
+- **Method 2**: Manual Copy - **5 minutes**
 
 ## When to Update
-- **Every Monday morning** (covers the week ahead)
-- **Or when major events are announced** (Fed meetings, ECB decisions, etc.)
+- **Every Monday morning** (update previous week + coming week)
+- After major events pass (to add actual values)
 
-## Step-by-Step Instructions
+## Method 1: JSON Export (30 Seconds) ⚡ RECOMMENDED
+
+### Step 1: Download Weekly JSON
+1. Go to: https://www.forexfactory.com/calendar
+2. Set date range to **This Week** or **Next Week**
+3. Click **"Export"** button
+4. Select **"JSON"** format
+5. Save as `ff_calendar_thisweek.json` in `/backend/` folder
+
+### Step 2: Run Import Script
+```bash
+cd /Users/kavi/Desktop/fxsentinel
+python3 import_forexfactory_json.py backend/ff_calendar_thisweek.json
+```
+
+### Step 3: Copy Generated Code
+The script will output Python code. Copy it and paste into:
+`backend/services/hybrid_economic_calendar.py` (inside the `events = [...]` array)
+
+### Step 4: Test & Push
+```bash
+# Test
+python3 -c "from backend.services.hybrid_economic_calendar import hybrid_economic_calendar; print(f'{len(hybrid_economic_calendar.get_economic_events())} events loaded')"
+
+# Push to GitHub (Railway auto-deploys)
+git add backend/services/hybrid_economic_calendar.py
+git commit -m "Update calendar for [date range]"
+git push origin main
+```
+
+**Done! Takes 30 seconds!** ⚡
+
+---
+
+## Method 2: Manual Copy (5 Minutes)
 
 ### 1. Go to ForexFactory Calendar
 Visit: https://www.forexfactory.com/calendar
