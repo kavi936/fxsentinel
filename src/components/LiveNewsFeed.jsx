@@ -613,7 +613,7 @@ const LiveNewsFeed = () => {
     <div className="live-news-feed">
       <div className="news-header">
         <div className="header-main">
-          <h2 className="news-title">LIVE NEWS + ANALYSIS</h2>
+          <h2 className="news-title">LIVE NEWS</h2>
           <InfoIcon 
             tooltipText="Live News + AI Analysis: Our system aggregates financial news from multiple reliable sources and provides AI-powered analysis. The system uses advanced natural language processing to analyze sentiment, identify market implications, and assess potential trading opportunities. Analysis includes confidence scores and affected currency pairs."
             position="bottom"
