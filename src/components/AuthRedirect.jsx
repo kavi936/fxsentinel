@@ -24,16 +24,13 @@ const AuthRedirect = () => {
       return;
     }
 
-    // If user is a developer, go directly to dashboard
+    // All users (including developers and free tier) go directly to dashboard
     if (isDeveloper) {
-      console.log('🔧 Developer detected, bypassing trial welcome');
-      navigate('/dashboard');
-      return;
+      console.log('🔧 Developer detected, going to dashboard');
+    } else {
+      console.log('👤 Free tier user, going to dashboard');
     }
-
-    // For regular users, go to trial welcome
-    console.log('👤 Regular user, showing trial welcome');
-    navigate('/trial-welcome');
+    navigate('/dashboard');
   }, [currentUser, isDeveloper, hasCheckedDeveloperStatus, navigate]);
 
   // Show loading while checking developer status

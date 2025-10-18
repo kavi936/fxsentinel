@@ -34,19 +34,18 @@ const ProtectedRoute = ({ children }) => {
           const data = await response.json();
           setSubscriptionStatus(data);
           
-          // Check if user has valid access
-          const hasValidAccess = data.status === 'trial' || 
-                                data.status === 'active' || 
-                                data.status === 'developer' ||
-                                data.status === 'beta_tester';
+          // Check if user has valid access (freemium model)
+          const hasValidAccess = data.status === 'free' || 
+                                data.status === 'premium' || 
+                                data.status === 'developer';
           
           setHasAccess(hasValidAccess);
           
           // Log for debugging
           console.log('🔍 ProtectedRoute - User:', currentUser.email, 'Status:', data.status, 'Access:', hasValidAccess);
         } else {
-          // No subscription found - redirect to trial welcome
-          setHasAccess(false);
+          // No subscription found - default to free tier access
+          setHasAccess(true);  // Allow access, backend will set to free tier
         }
       } catch (error) {
         console.error('Error checking subscription status:', error);
@@ -97,9 +96,9 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Redirect to trial welcome if no valid subscription
+  // Redirect to login if no valid access
   if (!hasAccess) {
-    return <Navigate to="/trial-welcome" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return children;

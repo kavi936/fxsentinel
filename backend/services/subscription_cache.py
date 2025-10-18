@@ -16,11 +16,10 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 class SubscriptionStatus(Enum):
-    """Subscription status enumeration"""
-    TRIAL = "trial"
-    ACTIVE = "active"
-    EXPIRED = "expired"
-    CANCELLED = "cancelled"
+    """Subscription status enumeration (freemium model)"""
+    FREE = "free"
+    PREMIUM = "premium"
+    PAST_DUE = "past_due"
     DEVELOPER = "developer"
     UNKNOWN = "unknown"
 
@@ -59,25 +58,24 @@ class SubscriptionCache:
         return datetime.now() < cached_sub.expires_at
     
     def _get_valid_statuses(self) -> set:
-        """Get set of valid subscription statuses"""
+        """Get set of valid subscription statuses (freemium model)"""
         return {
-            SubscriptionStatus.TRIAL,
-            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.FREE,
+            SubscriptionStatus.PREMIUM,
             SubscriptionStatus.DEVELOPER
         }
     
     def _parse_stripe_status(self, stripe_data: Dict[str, Any]) -> Tuple[SubscriptionStatus, bool]:
-        """Parse Stripe data and determine subscription status"""
+        """Parse Stripe data and determine subscription status (freemium model)"""
         try:
             status = stripe_data.get('status', 'unknown').lower()
             
-            # Map Stripe status to our enum
+            # Map Stripe status to our enum (freemium model)
             status_map = {
-                'trial': SubscriptionStatus.TRIAL,
-                'active': SubscriptionStatus.ACTIVE,
-                'expired': SubscriptionStatus.EXPIRED,
-                'cancelled': SubscriptionStatus.CANCELLED,
-                'canceled': SubscriptionStatus.CANCELLED,
+                'free': SubscriptionStatus.FREE,
+                'premium': SubscriptionStatus.PREMIUM,
+                'active': SubscriptionStatus.PREMIUM,  # Legacy mapping
+                'past_due': SubscriptionStatus.PAST_DUE,
                 'developer': SubscriptionStatus.DEVELOPER
             }
             

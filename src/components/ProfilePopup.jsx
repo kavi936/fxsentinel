@@ -74,9 +74,6 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
   // Check if user is developer
   const isDeveloper = currentUser?.email === 'kavi.cf412@gmail.com';
-  
-  // Check if user is beta tester (this will be determined by the backend)
-  const isBetaTester = subscriptionStatus?.status === 'beta_tester';
 
   // Fetch subscription status
   const fetchSubscriptionStatus = async () => {
@@ -208,44 +205,34 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  // Calculate trial days remaining
-  const getTrialDaysRemaining = () => {
-    if (!subscriptionStatus?.trial_end_date) return 0;
-    
-    const trialEnd = new Date(subscriptionStatus.trial_end_date);
-    const now = new Date();
-    const diffTime = trialEnd - now;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return Math.max(0, diffDays);
-  };
-
-  // Check for trial ending soon and trigger notifications
+  // Check for usage warnings (freemium model)
   useEffect(() => {
-    if (subscriptionStatus?.status === 'trial') {
-      const daysRemaining = getTrialDaysRemaining();
+    if (usageData && subscriptionStatus) {
+      const status = subscriptionStatus.status;
       
-      if (daysRemaining === 1) {
-        addSubscriptionNotification('trial_ending_soon', { daysRemaining: 1 });
-      } else if (daysRemaining === 0) {
-        addSubscriptionNotification('trial_expired');
+      if (status === 'free') {
+        // Free tier: monthly limit
+        const { monthly_usage, monthly_limit } = usageData;
+        const remaining = monthly_limit - monthly_usage;
+        
+        if (remaining === 0) {
+          addUsageNotification('usage_limit_reached', { used: monthly_usage, limit: monthly_limit });
+        } else if (remaining <= 3) {
+          addUsageNotification('usage_warning', { used: monthly_usage, limit: monthly_limit, remaining });
+        }
+      } else if (status === 'premium') {
+        // Premium tier: daily limit
+        const { daily_usage, daily_limit } = usageData;
+        const remaining = daily_limit - daily_usage;
+        
+        if (remaining === 0) {
+          addUsageNotification('usage_limit_reached', { used: daily_usage, limit: daily_limit });
+        } else if (remaining <= 5) {
+          addUsageNotification('usage_warning', { used: daily_usage, limit: daily_limit, remaining });
+        }
       }
     }
-  }, [subscriptionStatus, addSubscriptionNotification]);
-
-  // Check for usage warnings
-  useEffect(() => {
-    if (usageData) {
-      const { daily_usage, daily_limit } = usageData;
-      const remaining = daily_limit - daily_usage;
-      
-      if (remaining === 0) {
-        addUsageNotification('usage_limit_reached', { used: daily_usage, limit: daily_limit });
-      } else if (remaining <= 2) {
-        addUsageNotification('usage_warning', { used: daily_usage, limit: daily_limit, remaining });
-      }
-    }
-  }, [usageData, addUsageNotification]);
+  }, [usageData, subscriptionStatus, addUsageNotification]);
 
   if (!isOpen) return null;
 
@@ -308,10 +295,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                   <p className="user-email">{currentUser?.email || 'No email'}</p>
                   <p className="user-status">
                     {isDeveloper ? 'Developer' : 
-                     isBetaTester ? 'Beta Tester' : 
-                     subscriptionStatus?.status === 'trial' ? 'Trial User' :
-                     subscriptionStatus?.status === 'active' ? 'Premium User' :
-                     subscriptionStatus?.status === 'expired' ? 'Expired' : 'Active'}
+                     subscriptionStatus?.status === 'free' ? 'Free Plan' :
+                     subscriptionStatus?.status === 'premium' ? 'Premium Plan' :
+                     subscriptionStatus?.status === 'developer' ? 'Developer' : 'Free Plan'}
                   </p>
                 </div>
               </div>
@@ -484,115 +470,98 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     <p>🔧 This is a developer account with full access for testing purposes. No payment required.</p>
                   </div>
                 </div>
-              ) : isBetaTester ? (
-                <div className="subscription-details beta-tester-account">
-                  <div className="subscription-status">
-                    <h4>Current Plan</h4>
-                    <div className="status-badge beta-tester">
-                      Beta Tester Account
-                    </div>
-                  </div>
-
-                  <div className="beta-tester-info">
-                    <p><strong>Account Type:</strong> Beta Tester</p>
-                    <p><strong>Access Level:</strong> Premium</p>
-                    <p><strong>Daily Limit:</strong> {usageData ? `${usageData.daily_usage}/${usageData.daily_limit}` : 'Loading...'} AI analyses</p>
-                    <p><strong>Payment Required:</strong> No</p>
-                    <p><strong>Duration:</strong> Lifetime</p>
-                    <p><strong>Purpose:</strong> Early Access & Feedback</p>
-                  </div>
-
-                  {usageData && (
-                    <div className="usage-progress">
-                      <div className="usage-bar">
-                        <div 
-                          className="usage-fill" 
-                          style={{ 
-                            width: `${Math.min((usageData.daily_usage / usageData.daily_limit) * 100, 100)}%`,
-                            backgroundColor: usageData.daily_usage >= usageData.daily_limit ? '#f44336' : '#4caf50'
-                          }}
-                        ></div>
-                      </div>
-                      <small>{usageData.daily_usage >= usageData.daily_limit ? 'Limit reached' : `${usageData.daily_limit - usageData.daily_usage} remaining today`}</small>
-                    </div>
-                  )}
-
-                  <div className="beta-tester-note">
-                    <p>🎯 Thank you for being a beta tester! You have lifetime access to FXSentinel with premium features. Your feedback helps us improve the app.</p>
-                  </div>
-                </div>
               ) : subscriptionStatus ? (
                 <div className="subscription-details">
                   <div className="subscription-status">
                     <h4>Current Plan</h4>
                     <div className={`status-badge ${subscriptionStatus.status}`}>
-                      {subscriptionStatus.status === 'trial' ? 'Free Trial' : 
-                       subscriptionStatus.status === 'active' ? 'Premium' : 
-                       subscriptionStatus.status === 'beta_tester' ? 'Beta Tester' :
-                       subscriptionStatus.status === 'expired' ? 'Expired' : 'Unknown'}
+                      {subscriptionStatus.status === 'free' ? 'Free Plan' : 
+                       subscriptionStatus.status === 'premium' ? 'Premium Plan' : 
+                       subscriptionStatus.status === 'past_due' ? 'Payment Due' : 'Unknown'}
                     </div>
                   </div>
 
-                  {subscriptionStatus.status === 'trial' && (
-                    <div className="trial-info">
-                      <p><strong>Trial Period:</strong> 3 days</p>
-                      <p><strong>Daily Limit:</strong> {usageData ? `${usageData.daily_usage}/${usageData.daily_limit}` : 'Loading...'} AI analyses</p>
-                      {subscriptionStatus.trial_end_date && (
-                        <p><strong>Trial Ends:</strong> {new Date(subscriptionStatus.trial_end_date).toLocaleDateString()}
-                          <span className="trial-countdown"> ({getTrialDaysRemaining()} days remaining)</span>
-                        </p>
-                      )}
-                      {usageData && (
+                  {subscriptionStatus.status === 'free' && (
+                    <div className="free-info">
+                      <p><strong>Plan:</strong> Free Forever</p>
+                      <p><strong>Monthly Limit:</strong> {subscriptionStatus.monthly_analysis_count !== undefined ? `${subscriptionStatus.monthly_analysis_count}/15` : 'Loading...'} AI analyses</p>
+                      <p><strong>Cost:</strong> $0/month</p>
+                      <p><strong>Resets:</strong> Monthly on the 1st</p>
+                      
+                      {subscriptionStatus.monthly_analysis_count !== undefined && (
                         <div className="usage-progress">
                           <div className="usage-bar">
                             <div 
                               className="usage-fill" 
                               style={{ 
-                                width: `${Math.min((usageData.daily_usage / usageData.daily_limit) * 100, 100)}%`,
-                                backgroundColor: usageData.daily_usage >= usageData.daily_limit ? '#f44336' : '#4caf50'
+                                width: `${Math.min((subscriptionStatus.monthly_analysis_count / 15) * 100, 100)}%`,
+                                backgroundColor: subscriptionStatus.monthly_analysis_count >= 15 ? '#f44336' : '#4caf50'
                               }}
                             ></div>
                           </div>
-                          <small>{usageData.daily_usage >= usageData.daily_limit ? 'Limit reached' : `${usageData.daily_limit - usageData.daily_usage} remaining today`}</small>
+                          <small>
+                            {subscriptionStatus.monthly_analysis_count >= 15 
+                              ? 'Monthly limit reached' 
+                              : `${15 - subscriptionStatus.monthly_analysis_count} remaining this month`}
+                          </small>
                         </div>
                       )}
+                      
                       <div className="upgrade-prompt">
-                        <p>Upgrade to Premium for unlimited AI analyses and advanced features!</p>
+                        <h4>Want More?</h4>
+                        <p>Upgrade to Premium for 50 AI analyses per day!</p>
+                        <ul className="premium-features">
+                          <li>50 analyses per day (~1,500/month)</li>
+                          <li>Priority support</li>
+                          <li>Advanced features</li>
+                          <li>Only $14.99/month</li>
+                        </ul>
                         <button 
                           className="upgrade-btn"
-                          onClick={() => window.location.href = 'https://billing.stripe.com/p/login/4gM28s2oMbKSbhO4lt83C00'}
+                          onClick={handleManageSubscription}
+                          disabled={isLoadingPortal}
                         >
-                          Upgrade Now
+                          {isLoadingPortal ? 'Loading...' : 'Upgrade to Premium'}
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {subscriptionStatus.status === 'active' && (
+                  {subscriptionStatus.status === 'premium' && (
                     <div className="premium-info">
-                      <p><strong>Plan:</strong> Premium ($20/month)</p>
-                      <p><strong>Daily Limit:</strong> {usageData ? `${usageData.daily_usage}/${usageData.daily_limit}` : 'Loading...'} AI analyses</p>
+                      <p><strong>Plan:</strong> Premium ($14.99/month)</p>
+                      <p><strong>Daily Limit:</strong> {subscriptionStatus.daily_analysis_count !== undefined ? `${subscriptionStatus.daily_analysis_count}/50` : 'Loading...'} AI analyses</p>
                       {subscriptionStatus.current_period_end && (
-                        <p><strong>Next Billing:</strong> {new Date(subscriptionStatus.current_period_end).toLocaleDateString()}</p>
+                        <p><strong>Next Billing:</strong> {new Date(subscriptionStatus.current_period_end * 1000).toLocaleDateString()}</p>
                       )}
-                      {usageData && (
+                      <p><strong>Resets:</strong> Daily at midnight</p>
+                      
+                      {subscriptionStatus.daily_analysis_count !== undefined && (
                         <div className="usage-progress">
                           <div className="usage-bar">
                             <div 
                               className="usage-fill" 
                               style={{ 
-                                width: `${Math.min((usageData.daily_usage / usageData.daily_limit) * 100, 100)}%`,
-                                backgroundColor: usageData.daily_usage >= usageData.daily_limit ? '#f44336' : '#4caf50'
+                                width: `${Math.min((subscriptionStatus.daily_analysis_count / 50) * 100, 100)}%`,
+                                backgroundColor: subscriptionStatus.daily_analysis_count >= 50 ? '#f44336' : '#4caf50'
                               }}
                             ></div>
                           </div>
-                          <small>{usageData.daily_usage >= usageData.daily_limit ? 'Limit reached' : `${usageData.daily_limit - usageData.daily_usage} remaining today`}</small>
+                          <small>
+                            {subscriptionStatus.daily_analysis_count >= 50 
+                              ? 'Daily limit reached' 
+                              : `${50 - subscriptionStatus.daily_analysis_count} remaining today`}
+                          </small>
                         </div>
                       )}
+                      
+                      <div className="premium-perks">
+                        <p>✨ Thank you for being a Premium member!</p>
+                      </div>
                     </div>
                   )}
 
-                  {!isDeveloper && !isBetaTester && (
+                  {!isDeveloper && (
                     <div className="billing-actions">
                       <button 
                         className="primary-btn"
@@ -679,9 +648,10 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 </div>
               ) : (
                 <div className="no-subscription">
-                  <p>No subscription found. Start your free trial to access premium features.</p>
-                  <button className="primary-btn" onClick={() => window.location.href = '/trial-welcome'}>
-                    Start Free Trial
+                  <p>Loading subscription information...</p>
+                  <p>If this persists, please refresh the page or contact support.</p>
+                  <button className="primary-btn" onClick={() => window.location.reload()}>
+                    Refresh Page
                   </button>
                 </div>
               )}
@@ -762,18 +732,28 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
               <div className="faq-list">
                 <div className="faq-item">
-                  <h4>How does the free trial work?</h4>
-                  <p>You get 3 days of free access with 15 AI analyses per day. No credit card required to start.</p>
+                  <h4>What's included in the Free plan?</h4>
+                  <p>The Free plan includes 15 AI analyses per month, access to all economic calendar events, live news feeds, and Telegram alerts. No credit card required, free forever.</p>
                 </div>
 
                 <div className="faq-item">
-                  <h4>What happens after my trial ends?</h4>
-                  <p>After 3 days, you'll need to subscribe to continue using FXSentinel. You can cancel anytime.</p>
+                  <h4>What's the difference between Free and Premium?</h4>
+                  <p>Free gives you 15 analyses per month. Premium gives you 50 analyses per day (~1,500/month) for $14.99/month, plus priority support and advanced features.</p>
                 </div>
 
                 <div className="faq-item">
-                  <h4>How do I cancel my subscription?</h4>
-                  <p>Go to your Profile → Billing → Manage Subscription. You can cancel anytime with no penalties.</p>
+                  <h4>How do I upgrade to Premium?</h4>
+                  <p>Go to Profile → Billing → Upgrade to Premium. You'll be redirected to Stripe for secure payment. Instant access after payment.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>How do I cancel my Premium subscription?</h4>
+                  <p>Go to Profile → Billing → Manage Subscription. You can cancel anytime. You'll be downgraded to the Free plan (15/month) with no data loss.</p>
+                </div>
+
+                <div className="faq-item">
+                  <h4>When do usage limits reset?</h4>
+                  <p>Free plan resets monthly on the 1st. Premium plan resets daily at midnight UTC. Developer accounts have unlimited access.</p>
                 </div>
 
                 <div className="faq-item">

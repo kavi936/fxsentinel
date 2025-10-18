@@ -4350,56 +4350,22 @@ def get_subscription_status(user_id):
 
 
 
-@app.route('/api/check-trial-eligibility/<email>', methods=['GET'])
-@limiter.limit("10 per minute")  # Limit eligibility checks
-def check_trial_eligibility(email):
-    """Check if an email is eligible for a trial"""
-    try:
-        if not email:
-            return jsonify({'error': 'Email required'}), 400
-        
-        # Decode URL-encoded email
-        import urllib.parse
-        email = urllib.parse.unquote(email)
-        
-        # Check if Firebase is available for stripe_service
-        if not stripe_service.firebase_available:
-            # If Firebase is not available, allow trial (fallback behavior)
-            return jsonify({
-                'email': email,
-                'eligible': True,
-                'trial_history': [],
-                'message': 'Eligible for trial (Firebase not available)',
-                'firebase_status': 'unavailable'
-            })
-        
-        is_eligible = stripe_service.check_trial_eligibility(email)
-        trial_history = stripe_service.get_trial_history(email)
-        
-        return jsonify({
-            'email': email,
-            'eligible': is_eligible,
-            'trial_history': trial_history,
-            'message': 'Trial already used' if not is_eligible else 'Eligible for trial',
-            'firebase_status': 'available'
-        })
-        
-    except Exception as e:
-        print(f"Error checking trial eligibility: {e}")
-        return jsonify({'error': str(e)}), 500
+# REMOVED: Trial eligibility checking not needed in freemium model
+# All users get free tier by default
 
 @app.route('/api/check-analysis-permission/<user_id>', methods=['GET'])
 def check_analysis_permission(user_id):
-    """Check if user can perform an AI analysis"""
+    """Check if user can perform an AI analysis (freemium model)"""
     try:
         # Get email from query parameter for developer check
         email = request.args.get('email')
         
         permission_data = stripe_service.can_perform_analysis(user_id, email)
         
-        # If user can perform analysis, increment the count (but not for developers)
-        if permission_data.get('can_perform', False) and not permission_data.get('status') == 'developer':
-            stripe_service.increment_analysis_count(user_id)
+        # If user can perform analysis, increment the count
+        # Stripe service handles monthly vs daily increment based on tier
+        if permission_data.get('can_perform', False) and permission_data.get('status') != 'developer':
+            stripe_service.increment_analysis_count(user_id, email)
         
         return jsonify(permission_data)
     except Exception as e:
@@ -4408,24 +4374,17 @@ def check_analysis_permission(user_id):
 @app.route('/api/create-checkout-session', methods=['POST'])
 @limiter.limit("10 per minute")  # Limit checkout attempts
 def create_checkout_session():
-    """Create a Stripe Checkout Session for trial subscription"""
+    """Create a Stripe Checkout Session for premium subscription upgrade"""
     try:
         data = request.get_json()
         user_id = data.get('user_id')
         email = data.get('email')
         name = data.get('name')
-        coupon_code = data.get('coupon_code')  # New: support for coupon codes
+        coupon_code = data.get('coupon_code')  # Optional: support for coupon codes
         
         # Validate required fields
         if not all([user_id, email]):
             return jsonify({'error': 'Missing required fields: user_id and email'}), 400
-        
-        # Check trial eligibility
-        if not stripe_service.check_trial_eligibility(email):
-            return jsonify({
-                'error': 'Trial already used',
-                'message': 'This email address has already used a free trial. Please sign in to your existing account or use a different email address.'
-            }), 403
         
         # Validate coupon if provided
         coupon_service = CouponService()
@@ -4438,7 +4397,6 @@ def create_checkout_session():
                 }), 400
         
         # Get the frontend URL for success/cancel redirects
-        # Use the correct frontend domain for Stripe redirects
         frontend_url = 'https://fxsentinel.io'
         
         def create_session():
@@ -4450,11 +4408,10 @@ def create_checkout_session():
                 }],
                 'mode': 'subscription',
                 'subscription_data': {
-                    'trial_period_days': int(os.getenv('TRIAL_DAYS', 3)),
                     'metadata': {'firebase_user_id': user_id}
                 },
                 'success_url': f'{frontend_url}/dashboard?session_id={{CHECKOUT_SESSION_ID}}',
-                'cancel_url': f'{frontend_url}/trial-welcome',
+                'cancel_url': f'{frontend_url}/dashboard',
                 'metadata': {
                     'firebase_user_id': user_id,
                     'user_name': name
@@ -4670,49 +4627,16 @@ def create_payment_intent():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/setup-trial-subscription', methods=['POST'])
-def setup_trial_subscription():
-    """Setup trial subscription with payment method"""
-    try:
-        data = request.get_json()
-        user_id = data.get('user_id')
-        customer_id = data.get('customer_id')
-        payment_method_id = data.get('payment_method_id')
-        
-        # Setup payment method
-        stripe_service.setup_payment_method(customer_id, payment_method_id)
-        
-        # Create trial subscription
-        subscription = stripe_service.create_trial_subscription(customer_id)
-        
-        # Update user in Firebase
-        if stripe_service.firebase_available and stripe_service.db:
-            stripe_service.db.collection('users').document(user_id).update({
-                'subscription_id': subscription.id,
-                'subscription_status': 'trial',
-                'trial_start_date': datetime.now(),
-                'trial_end_date': datetime.now() + timedelta(days=stripe_service.trial_days),
-                'daily_analysis_count': 0,
-                'last_analysis_reset': datetime.now().date()
-            })
-        
-        return jsonify({
-            'success': True,
-            'subscription_id': subscription.id,
-            'trial_end_date': (datetime.now() + timedelta(days=stripe_service.trial_days)).isoformat()
-        })
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# REMOVED: Trial subscription setup not needed in freemium model
+# Users start on free tier, upgrade via /api/create-checkout-session
 
 @app.route('/dashboard')
 def dashboard_redirect():
     """Redirect dashboard requests to frontend"""
     return redirect('https://fxsentinel.io/dashboard')
 
-@app.route('/trial-welcome')
-def trial_welcome_redirect():
-    """Redirect trial-welcome requests to frontend"""
-    return redirect('https://fxsentinel.io/trial-welcome')
+# REMOVED: Trial welcome page not needed in freemium model
+# New users go directly to dashboard with free tier
 
 @app.route('/api/send-welcome-email', methods=['POST'])
 @limiter.limit("3 per minute")  # Limit email sending
