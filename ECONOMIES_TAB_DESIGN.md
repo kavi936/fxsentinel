@@ -489,3 +489,8 @@ Users understand it's not real-time, but it's **good enough** for quick referenc
 **Owner**: Kavi  
 **Priority**: High (Issue 4)
 
+
+┌─────────────────────────────────────────────────────────┐
+│  ECONOMIC INDICATORS    Central Bank Rates:      🇺🇸 USD: 4.25% 🇪🇺Eur: 2.15% 🇬🇧 GBP: 400%  🇯🇵 JPY: <5% Quick Reference                 Last Update: 2 days ago
+
+└─────────────────────────────────────────────────────────┘
