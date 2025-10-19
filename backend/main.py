@@ -41,12 +41,24 @@ def health():
     """Health check endpoint for Railway"""
     global background_worker
     
-    status = {
-        "status": "healthy",
-        "service": "background-worker",
-        "worker_running": background_worker is not None and background_worker.running if background_worker else False,
-        "timestamp": time.time()
-    }
+    if background_worker:
+        worker_status = background_worker.get_status()
+        worker_health = background_worker.get_health()
+        
+        status = {
+            "status": "healthy" if worker_health['healthy'] else "unhealthy",
+            "service": "production-alert-worker",
+            "worker": worker_status,
+            "health": worker_health,
+            "timestamp": time.time()
+        }
+    else:
+        status = {
+            "status": "unhealthy",
+            "service": "production-alert-worker",
+            "error": "Worker not initialized",
+            "timestamp": time.time()
+        }
     
     return jsonify(status), 200
 
@@ -95,20 +107,21 @@ def main():
         
         logger.info("✅ Environment variables configured")
         
-        # Import and start the background worker
+        # Import and start the NEW production alert worker
         try:
-            from services.background_alert_worker import BackgroundAlertWorker
+            from services.production_alert_worker import get_production_worker
             
-            logger.info("📦 Background worker imported successfully")
+            logger.info("📦 Production alert worker imported successfully")
             
-            # Start the worker in a separate thread
+            # Get and start the worker
             global background_worker
-            background_worker = BackgroundAlertWorker()
-            worker_thread = threading.Thread(target=background_worker.start, daemon=True)
-            worker_thread.start()
+            background_worker = get_production_worker()
+            background_worker.start()
             
-            logger.info("✅ Background worker started successfully")
+            logger.info("✅ Production alert worker started successfully")
             logger.info("🔄 Worker is now monitoring for alerts...")
+            logger.info("📰 News checks: every 2 minutes")
+            logger.info("📅 Calendar checks: every 5 minutes")
             
             # Start Flask app
             port = int(os.environ.get('PORT', 8080))
