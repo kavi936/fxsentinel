@@ -234,13 +234,17 @@ class SessionIsolatedTelegramWrapper:
             # Generate unique ID
             article_id = hash(f"telegram_isolated_{channel_name}_{message.id}_{message_date.isoformat()}")
             
+            # Get current time when item is added to feed
+            added_to_feed_at = datetime.now().isoformat()
+            
             return {
                 'id': abs(article_id),
                 'title': title,
                 'summary': summary + '...' if len(summary) >= 200 else summary,
                 'source': f'Telegram - {channel_name}',
                 'url': '',
-                'published_at': message_date.isoformat(),
+                'published_at': message_date.isoformat(),  # Original message date from Telegram
+                'added_to_feed_at': added_to_feed_at,  # Time when added to live news feed
                 'impact': impact,
                 'currency_pairs': list(set(currency_pairs)),  # Remove duplicates
                 'type': 'TELEGRAM_USER',

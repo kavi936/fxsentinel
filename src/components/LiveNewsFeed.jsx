@@ -421,9 +421,10 @@ const LiveNewsFeed = () => {
                 }
             })
             .sort((a, b) => {
-                // Sort by published_at timestamp in descending order (newest first)
-                const dateA = new Date(a.published_at);
-                const dateB = new Date(b.published_at);
+                // Sort by added_to_feed_at timestamp in descending order (newest additions first)
+                // Fallback to published_at if added_to_feed_at is not available
+                const dateA = new Date(a.added_to_feed_at || a.published_at);
+                const dateB = new Date(b.added_to_feed_at || b.published_at);
                 return dateB - dateA;
             });
         
@@ -734,7 +735,7 @@ const LiveNewsFeed = () => {
                 <div className="news-item-header">
                   <div className="news-source">
                     <span className="source-name">{newsItem.source}</span>
-                    <span className="news-time">{formatTime(newsItem.published_at)}</span>
+                    <span className="news-time">{formatTime(newsItem.added_to_feed_at || newsItem.published_at)}</span>
                   </div>
                   <div className="news-impact">
                     <span 
