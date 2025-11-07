@@ -7,6 +7,7 @@ import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import { trackSignupCompletion, trackError, trackEngagement } from '../utils/analytics';
 
 const Signup = () => {
+  const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -93,6 +94,16 @@ const Signup = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    try {
+      setError('');
+      await signInWithGoogle();
+      navigate('/auth-redirect');
+    } catch (err) {
+      setError('Failed to sign in with Google. Please try again.');
+    }
+  };
+
   return (
     <div className="auth-container">
       <div className="auth-background">
@@ -101,6 +112,20 @@ const Signup = () => {
       
       <div className="auth-card">
         <div className="auth-header">
+          {showForm && (
+            <button 
+              className="auth-back-button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setError('');
+                setShowForm(false);
+              }}
+              type="button"
+            >
+              ← Back
+            </button>
+          )}
           <Link to="/" className="auth-logo">
             <picture>
               <source srcSet={logoWebp} type="image/webp" />
@@ -112,151 +137,172 @@ const Signup = () => {
             </picture>
           </Link>
           <h1>Create Your Account</h1>
-          <p>Join FXSentinel and start trading smarter</p>
+          <p>{showForm ? 'Fill in your details to get started' : 'Join FXSentinel and start trading smarter'}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="auth-error">
-              <span className="error-icon">⚠️</span>
-              {error}
-            </div>
-          )}
-
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="firstName">First Name</label>
-              <input
-                type="text"
-                id="firstName"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="Enter your first name"
-                required
-                className="auth-input"
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="lastName">Last Name</label>
-              <input
-                type="text"
-                id="lastName"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Enter your last name"
-                required
-                className="auth-input"
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              required
-              className="auth-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Create a strong password"
-              required
-              className="auth-input"
-            />
-            {passwordStrength && (
-              <div className={`password-strength ${passwordStrength}`}>
-                Password strength: {passwordStrength}
+        {/* Initial Options View */}
+        {!showForm && (
+          <>
+            {error && (
+              <div className="auth-error">
+                <span className="error-icon">⚠️</span>
+                {error}
               </div>
             )}
-          </div>
 
-          <div className="form-group">
-            <label htmlFor="confirmPassword">Confirm Password</label>
-            <input
-              type="password"
-              id="confirmPassword"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              required
-              className="auth-input"
-            />
-          </div>
+            <button 
+              className="auth-social-button"
+              onClick={handleGoogleSignIn}
+            >
+              <img src="https://www.google.com/favicon.ico" alt="Google" />
+              Continue with Google
+            </button>
 
-          <div className="form-options">
-            <label className="checkbox-container">
-              <input type="checkbox" required />
-              <span className="checkmark"></span>
-              I agree to the{' '}
-              <Link to="/terms" className="auth-link">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="/privacy" className="auth-link">
-                Privacy Policy
-              </Link>
-            </label>
-          </div>
+            <div className="auth-divider">
+              <span>or</span>
+            </div>
 
-          <button 
-            type="submit" 
-            className={`auth-button ${isLoading ? 'loading' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                Creating account...
-              </>
-            ) : (
-              'Create Account'
-            )}
-          </button>
-        </form>
+            <button 
+              className="auth-button"
+              onClick={() => {
+                setError('');
+                setShowForm(true);
+              }}
+              type="button"
+            >
+              Create account with email & password
+            </button>
 
-        <div className="auth-divider">
-          <span>or</span>
-        </div>
+            <div className="auth-footer">
+              <p>
+                Already have an account?{' '}
+                <Link to="/login" className="auth-link">
+                  Sign in
+                </Link>
+              </p>
+            </div>
+          </>
+        )}
 
-        <button 
-          className="auth-social-button"
-          onClick={async () => {
-            try {
-              await signInWithGoogle();
-              navigate('/auth-redirect');
-            } catch (err) {
-              setError('Failed to sign in with Google. Please try again.');
-            }
-          }}
-        >
-          <img src="https://www.google.com/favicon.ico" alt="Google" />
-          Continue with Google
-        </button>
+        {/* Form View */}
+        {showForm && (
+          <>
+            <form onSubmit={handleSubmit} className="auth-form">
+              {error && (
+                <div className="auth-error">
+                  <span className="error-icon">⚠️</span>
+                  {error}
+                </div>
+              )}
 
-        <div className="auth-footer">
-          <p>
-            Already have an account?{' '}
-            <Link to="/login" className="auth-link">
-              Sign in
-            </Link>
-          </p>
-        </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="firstName">First Name</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="Enter your first name"
+                    required
+                    className="auth-input"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="lastName">Last Name</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Enter your last name"
+                    required
+                    className="auth-input"
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">Email Address</label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="Enter your email"
+                  required
+                  className="auth-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password">Password</label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Create a strong password"
+                  required
+                  className="auth-input"
+                />
+                {passwordStrength && (
+                  <div className={`password-strength ${passwordStrength}`}>
+                    Password strength: {passwordStrength}
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  required
+                  className="auth-input"
+                />
+              </div>
+
+              <div className="form-options">
+                <label className="checkbox-container">
+                  <input type="checkbox" required />
+                  <span className="checkmark"></span>
+                  I agree to the{' '}
+                  <Link to="/terms" className="auth-link">
+                    Terms of Service
+                  </Link>{' '}
+                  and{' '}
+                  <Link to="/privacy" className="auth-link">
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
+              <button 
+                type="submit" 
+                className={`auth-button ${isLoading ? 'loading' : ''}`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <span className="spinner"></span>
+                    Creating account...
+                  </>
+                ) : (
+                  'Create Account'
+                )}
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

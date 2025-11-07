@@ -763,9 +763,13 @@ def get_news():
                 cached_news = remove_duplicate_news(cached_news)
                 
                 # Convert all news item IDs to strings to prevent JavaScript precision loss
+                # Also add added_to_feed_at fallback for cached items that don't have it
                 for item in cached_news:
                     if 'id' in item:
                         item['id'] = str(item['id'])
+                    # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
+                    if 'added_to_feed_at' not in item:
+                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
                 response_data = {
                     "news": cached_news,
                     "last_updated": datetime.now().isoformat(),
@@ -898,6 +902,13 @@ def get_news():
         if fresh_news:
             # Combine and sort all news by publication date
             all_news = fresh_news
+            
+            # Ensure all fresh news items have added_to_feed_at set (safeguard)
+            current_time = datetime.now().isoformat()
+            for item in all_news:
+                if 'added_to_feed_at' not in item:
+                    item['added_to_feed_at'] = current_time
+            
             all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
             
             # Remove duplicates across all sources using simple logic
@@ -984,6 +995,15 @@ def get_news():
             if cached_news:
                 # Remove duplicates from fallback cached news as well
                 cached_news = remove_duplicate_news(cached_news)
+                
+                # Convert all news item IDs to strings and add added_to_feed_at fallback
+                for item in cached_news:
+                    if 'id' in item:
+                        item['id'] = str(item['id'])
+                    # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
+                    if 'added_to_feed_at' not in item:
+                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                
                 print(f"✅ Error occurred, using cached news ({len(cached_news)} articles)")
                 response_data = {
                     "news": cached_news,

@@ -139,13 +139,17 @@ class NewsAggregator:
             # Generate unique ID
             article_id = hash(f"{source_name}_{title}_{pub_date.isoformat()}")
             
+            # Get current time when item is added to feed
+            added_to_feed_at = datetime.now().isoformat()
+            
             return {
                 'id': abs(article_id),  # Ensure positive ID
                 'title': title,
                 'summary': summary[:800] + '...' if len(summary) > 800 else summary,  # Increased from 500 to 800 characters for more detailed descriptions
                 'source': source_name,
                 'url': entry.link if hasattr(entry, 'link') else '',
-                'published_at': pub_date.isoformat(),
+                'published_at': pub_date.isoformat(),  # Original publication date from RSS feed
+                'added_to_feed_at': added_to_feed_at,  # Time when added to live news feed
                 'impact': impact,
                 'currency_pairs': currency_pairs,
                 'type': 'RSS_FEED',
