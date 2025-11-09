@@ -3,12 +3,13 @@ import './Economies.css';
 
 function Economies() {
   const [selectedEconomy, setSelectedEconomy] = useState('US');
+  const analysisRef = React.useRef(null);
   // Central bank rates data (will move to backend later)
   const centralBankRates = [
     {
       flag: '🇺🇸',
       country: 'USA',
-      rate: 4.25,
+      rate: 4.00,
       bankName: 'Fed',
       trend: 'down',
       nextMeeting: 'Dec 18, 2024'
@@ -50,6 +51,12 @@ function Economies() {
     return '2 days ago';
   };
 
+  const handleScrollToAnalysis = () => {
+    if (analysisRef.current) {
+      analysisRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <div className="economies-tab">
       <div className="economies-content">
@@ -86,18 +93,23 @@ function Economies() {
         <div className="economies-main-card">
           {/* Card Header */}
           <div className="card-header">
-            <span className="card-header-text">Choose Economy:</span>
-            <select className="economy-selector" value={selectedEconomy} onChange={(e) => setSelectedEconomy(e.target.value)}>
-              <option value="US"><b>🇺🇸 United States</b></option>
-              <option value="EUR"><b>🇪🇺 European Union</b></option>
-              <option value="GBP"><b>🇬🇧 United Kingdom</b></option>
-              <option value="JPY"><b>🇯🇵 Japan</b></option>
-            </select>
+            <div className="card-header-main">
+              <span className="card-header-text">Choose Economy:</span>
+              <select className="economy-selector" value={selectedEconomy} onChange={(e) => setSelectedEconomy(e.target.value)}>
+                <option value="US"><b>🇺🇸 United States</b></option>
+                <option value="EUR"><b>🇪🇺 European Union</b></option>
+                <option value="GBP"><b>🇬🇧 United Kingdom</b></option>
+                <option value="JPY"><b>🇯🇵 Japan</b></option>
+              </select>
+            </div>
+            <button type="button" className="holistic-scan-button" onClick={handleScrollToAnalysis}>
+              Hollistic Scan
+            </button>
           </div>
           
           {/* Card Body */}
           <div className="card-body">
-            <EconomyDetails selectedEconomy={selectedEconomy} />
+            <EconomyDetails selectedEconomy={selectedEconomy} analysisRef={analysisRef} />
           </div>
         </div>
       </div>
@@ -108,8 +120,7 @@ function Economies() {
 export default Economies;
 
 
-function EconomyDetails({ selectedEconomy }) {
-  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+function EconomyDetails({ selectedEconomy, analysisRef }) {
   const [isLoading, setIsLoading] = useState(false);
   const economyData = useMemo(() => ({
     US: {
@@ -386,22 +397,6 @@ function EconomyDetails({ selectedEconomy }) {
 
   return (
     <div className="economy-details">
-      <button
-        className="economy-toggle"
-        type="button"
-        onClick={() => setIsDescriptionOpen((s) => !s)}
-      >
-        <span className="economy-flag">{data.flag}</span>
-        <span className="economy-name">{data.name}</span>
-        <span className="economy-toggle-caret">{isDescriptionOpen ? '▾' : '▸'}</span>
-      </button>
-
-      {isDescriptionOpen && (
-        <div className="economy-description">
-          {data.description}
-        </div>
-      )}
-
       <div className="economic-indicators-grid">
         {data.indicators.map((indicator) => (
           <div key={indicator.id} className="indicator-card">
@@ -447,6 +442,15 @@ function EconomyDetails({ selectedEconomy }) {
             </div>
           </div>
         ))}
+      </div>
+
+      <div className="economy-description">
+        {data.description}
+      </div>
+
+      <div className="economy-analysis" ref={analysisRef}>
+        <h2 className="analysis-title">Hollistic Scan</h2>
+        <p className="analysis-placeholder">Coming soon</p>
       </div>
     </div>
   );
