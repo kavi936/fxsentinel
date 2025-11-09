@@ -780,6 +780,176 @@ class HybridEconomicCalendar:
                 'actual': 'TBD',
                 'forecast': '53.5',
                 'previous': '54.2'
+            },
+
+            # MONDAY, NOVEMBER 10 (From ForexFactory JSON Export)
+            {
+                'title': 'Inflation Expectations q/q',
+                'date': 'Mon, Nov 10',
+                'time': '01:00 UTC',
+                'currency': 'NZD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '2.28%'
+            },
+
+            # TUESDAY, NOVEMBER 11 (From ForexFactory JSON Export)
+            {
+                'title': 'Claimant Count Change',
+                'date': 'Tue, Nov 11',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '20.3K',
+                'previous': '25.8K'
+            },
+            {
+                'title': 'Average Earnings Index 3m/y',
+                'date': 'Tue, Nov 11',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '5.0%',
+                'previous': '5.0%'
+            },
+
+            # WEDNESDAY, NOVEMBER 12 (From ForexFactory JSON Export)
+            {
+                'title': 'FOMC Member Waller Speaks',
+                'date': 'Wed, Nov 12',
+                'time': '14:20 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Employment Change',
+                'date': 'Wed, Nov 12',
+                'time': '23:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '20.3K',
+                'previous': '14.9K'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Wed, Nov 12',
+                'time': '23:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '4.4%',
+                'previous': '4.5%'
+            },
+
+            # THURSDAY, NOVEMBER 13 (From ForexFactory JSON Export)
+            {
+                'title': 'GDP m/m',
+                'date': 'Thu, Nov 13',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'Prelim GDP q/q',
+                'date': 'Thu, Nov 13',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'Core CPI m/m',
+                'date': 'Thu, Nov 13',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Thu, Nov 13',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Thu, Nov 13',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '3.0%'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Thu, Nov 13',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # FRIDAY, NOVEMBER 14 (From ForexFactory JSON Export)
+            {
+                'title': 'Core PPI m/m',
+                'date': 'Fri, Nov 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Core Retail Sales m/m',
+                'date': 'Fri, Nov 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'PPI m/m',
+                'date': 'Fri, Nov 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Fri, Nov 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
             }
         ]
         
