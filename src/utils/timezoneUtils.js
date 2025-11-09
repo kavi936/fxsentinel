@@ -187,83 +187,92 @@ export const getTimezoneAbbreviation = (timezone) => {
  * @param {string} timezone - The target timezone (optional)
  * @returns {string} The formatted time with timezone info
  */
+const formatRelativeTime = (diffMs) => {
+  const safeDiffMs = Math.max(0, diffMs);
+  const totalSeconds = Math.floor(safeDiffMs / 1000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const totalDays = Math.floor(totalHours / 24);
+  const totalWeeks = Math.floor(totalDays / 7);
+  const totalMonths = Math.floor(totalDays / 30);
+  const totalYears = Math.floor(totalDays / 365);
+
+  if (totalMinutes < 1) {
+    return 'Just now';
+  }
+
+  if (totalMinutes < 60) {
+    return totalMinutes === 1 ? '1 min ago' : `${totalMinutes} mins ago`;
+  }
+
+  if (totalHours < 24) {
+    return totalHours === 1 ? '1 hr ago' : `${totalHours} hrs ago`;
+  }
+
+  if (totalDays < 7) {
+    return totalDays === 1 ? '1 day ago' : `${totalDays} days ago`;
+  }
+
+  if (totalWeeks < 5) {
+    return totalWeeks === 1 ? '1 wk ago' : `${totalWeeks} wks ago`;
+  }
+
+  if (totalMonths < 12) {
+    return totalMonths === 1 ? '1 mo ago' : `${totalMonths} mos ago`;
+  }
+
+  return totalYears === 1 ? '1 yr ago' : `${totalYears} yrs ago`;
+};
+
 export const formatNewsTime = (timestamp, timezone = null) => {
   const targetTimezone = timezone || getUserTimezone();
-  const utcDate = new Date(timestamp);
-  const now = new Date();
-  
+  const utcDate = timestamp instanceof Date ? new Date(timestamp.getTime()) : new Date(timestamp);
 
-  
-  // If timezone is UTC, use the original relative time logic
-  if (targetTimezone === 'UTC') {
-    const diffMs = now - utcDate;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / (24 * 3600000));
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    
-    return utcDate.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  if (Number.isNaN(utcDate.getTime())) {
+    return 'Unknown';
   }
-  
-  // For non-UTC timezones, convert the time and show it
+
+  const now = new Date();
+  const diffMs = now - utcDate;
+  const relativeLabel = formatRelativeTime(diffMs);
+
   try {
     const tzAbbr = getTimezoneAbbreviation(targetTimezone);
-    
-    // Calculate time difference for recent items
-    const diffMs = now - utcDate;
-    const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / (24 * 3600000));
-    
-    // For very recent items (within 1 hour), show the actual time
-    if (diffMins < 60) {
-      const convertedTime = utcDate.toLocaleTimeString('en-US', {
+
+    let primaryLabel;
+
+    if (diffHours < 24) {
+      const timeLabel = utcDate.toLocaleTimeString('en-US', {
         timeZone: targetTimezone,
         hour12: false,
         hour: '2-digit',
         minute: '2-digit'
       });
-      return `${convertedTime} ${tzAbbr}`;
-    }
-    
-    // For recent items (within 24 hours), show relative time with timezone
-    if (diffHours < 24) {
-      return `${diffHours}h ago (${tzAbbr})`;
-    }
-    
-    // For older items, show the date and time in user's timezone
-    if (diffDays < 7) {
-      const convertedDateTime = utcDate.toLocaleString('en-US', {
+      primaryLabel = `${timeLabel} ${tzAbbr}`;
+    } else if (diffDays < 7) {
+      primaryLabel = utcDate.toLocaleString('en-US', {
         timeZone: targetTimezone,
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
+      }) + ` ${tzAbbr}`;
+    } else {
+      primaryLabel = utcDate.toLocaleDateString('en-US', {
+        timeZone: targetTimezone,
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
       });
-      return `${convertedDateTime} ${tzAbbr}`;
     }
-    
-    // For very old items, show just the date
-    const convertedDate = utcDate.toLocaleDateString('en-US', {
-      timeZone: targetTimezone,
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-    return `${convertedDate} ${tzAbbr}`;
-    
+
+    return `${primaryLabel} • ${relativeLabel}`;
   } catch (error) {
     console.error('Error formatting news time:', error);
-    return 'Unknown';
+    return relativeLabel;
   }
 };
 
