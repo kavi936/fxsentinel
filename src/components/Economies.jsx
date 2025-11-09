@@ -1,6 +1,57 @@
 import React, { useMemo, useState } from 'react';
 import './Economies.css';
 
+const indicatorDetails = {
+  'interest-rate': {
+    overview:
+      'Policy rates define the cost of overnight liquidity for commercial banks and anchor the entire short-end of the yield curve. Traders watch the path of policy rates to gauge how restrictive or accommodative a central bank stance is relative to inflation and growth.',
+    measurement:
+      'Measured as the target rate (or target range midpoint) announced at scheduled central bank policy meetings. It reflects the price banks pay to borrow reserves and is communicated via official statements, minutes, and press conferences.',
+    impact:
+      'Higher policy rates typically attract capital inflows by improving local yield advantage, which can lift the currency. Conversely, rate cuts or guidance towards lower rates often weaken the currency as investors seek higher returns elsewhere.',
+  },
+  inflation: {
+    overview:
+      'Inflation tracks the change in consumer prices and acts as a proxy for purchasing power erosion. Stable, moderate inflation informs whether monetary policy is appropriately calibrated to growth dynamics.',
+    measurement:
+      'Derived from consumer price indices that aggregate a basket of goods and services. Headline figures include volatile components (food, energy) while core measures strip them out to highlight underlying trends.',
+    impact:
+      'Elevated inflation can undermine a currency by eroding real returns, but if it pushes a central bank towards tighter policy, the currency may strengthen. Soft inflation often relieves pressure on policy makers, which can weigh on rate expectations and the currency.',
+  },
+  'gdp-growth': {
+    overview:
+      'GDP growth summarises the expansion or contraction in overall economic output. It signals whether activity is accelerating, decelerating, or plateauing across consumption, investment, government spending, and net trade.',
+    measurement:
+      'Calculated by national statistical agencies as the percentage change in real GDP (adjusted for inflation) from one quarter to the next, typically annualised for comparability. Revisions are common as more comprehensive data arrives.',
+    impact:
+      'Stronger growth usually boosts currency demand by attracting capital inflows and raising expectations for tighter policy. Weak or negative growth does the opposite, increasing the odds of easing and discouraging foreign investment.',
+  },
+  unemployment: {
+    overview:
+      'The unemployment rate reflects slack in the labour market and the ability of the economy to absorb workers. Persistent cushions or shortages shape wage dynamics and ultimately influence inflation.',
+    measurement:
+      'Reported as the percentage of the labour force that is jobless but actively seeking work, based on monthly household surveys and administrative records. Some regions also track broader underemployment indicators.',
+    impact:
+      'Falling unemployment often signals a tightening labour market that can push wages and inflation higher, encouraging rate hikes and supporting the currency. Rising unemployment can depress wage growth, weaken inflation pressure, and fuel expectations for monetary easing.',
+  },
+  'consumer-confidence': {
+    overview:
+      'Consumer confidence gauges household sentiment about the current and future economic environment. It offers a forward-looking read on consumption, which dominates GDP in most developed markets.',
+    measurement:
+      'Compiled from survey responses that ask households about personal finances, business conditions, employment prospects, and intentions to make large purchases. Scores are indexed against historic baselines.',
+    impact:
+      'Improving confidence can bolster consumption and growth prospects, supporting the currency through higher rate expectations. Deteriorating confidence foreshadows weaker spending, which may prompt looser policy and dampen the currency.',
+  },
+  'trade-balance': {
+    overview:
+      'The trade balance captures the net flow of goods and services across borders—whether an economy exports more than it imports. It shapes FX flows by indicating demand for domestic versus foreign currency.',
+    measurement:
+      'Compiled from customs and payments data as exports minus imports over a given period, typically reported in nominal currency terms. Analysts monitor both monthly prints and rolling averages to smooth volatility.',
+    impact:
+      'A surplus signals net foreign demand for local goods and currency, often supporting exchange rates, while persistent deficits can weigh on a currency unless offset by capital inflows or higher yields.',
+  },
+};
+
 function Economies() {
   const [selectedEconomy, setSelectedEconomy] = useState('US');
   const analysisRef = React.useRef(null);
@@ -122,6 +173,8 @@ export default Economies;
 
 function EconomyDetails({ selectedEconomy, analysisRef }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [expandedIndicatorId, setExpandedIndicatorId] = useState(null);
+  const [chartHover, setChartHover] = useState(null);
   const economyData = useMemo(() => ({
     US: {
       flag: '🇺🇸',
@@ -350,6 +403,70 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
   }), []);
 
   const data = economyData[selectedEconomy] || economyData.US;
+  const toggleIndicatorCard = (indicatorId) => {
+    setExpandedIndicatorId((prev) => (prev === indicatorId ? null : indicatorId));
+  };
+
+  const handleIndicatorKeyDown = (event, indicatorId) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      toggleIndicatorCard(indicatorId);
+    }
+  };
+
+  const getIndicatorInsights = (indicator) => {
+    if (Array.isArray(indicator.insights) && indicator.insights.length > 0) {
+      return indicator.insights;
+    }
+
+    const label = typeof indicator.chartLabel === 'string' ? indicator.chartLabel : 'recent trend';
+
+    return [
+      `${indicator.title} is under review relative to its ${label.toLowerCase()} trajectory.`,
+      'Change-rate, percentile, and consensus comparisons will appear here once live data integrates.',
+      'Holistic Scan will merge this indicator with broader macro drivers in the upcoming release.',
+    ];
+  };
+
+  const getIndicatorDetails = (indicator) => {
+    const defaults = indicatorDetails[indicator.id] || {};
+    return {
+      overview: defaults.overview || indicator.description,
+      measurement:
+        defaults.measurement ||
+        `${indicator.title} measurement methodology will be detailed once official data feeds connect.`,
+      impact:
+        defaults.impact ||
+        `${indicator.title} influence on the currency will be summarised alongside live data releases.`,
+    };
+  };
+
+  const handleChartHover = (indicatorId, event, chartData) => {
+    if (!Array.isArray(chartData) || chartData.length === 0) {
+      return;
+    }
+
+    const rect = event.currentTarget.getBoundingClientRect();
+    const relativeX = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+    const lastIndex = chartData.length - 1;
+    const index = Math.round(relativeX * lastIndex);
+    const value = chartData[index];
+
+    const xPercent = lastIndex === 0 ? 0 : (index / lastIndex) * 100;
+    const yPercent = 100 - value;
+
+    setChartHover({
+      indicatorId,
+      index,
+      value,
+      xPercent,
+      yPercent,
+    });
+  };
+
+  const clearChartHover = () => {
+    setChartHover(null);
+  };
 
   // Generate SVG path for line chart
   const generateLinePath = (data) => {
@@ -398,50 +515,122 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
   return (
     <div className="economy-details">
       <div className="economic-indicators-grid">
-        {data.indicators.map((indicator) => (
-          <div key={indicator.id} className="indicator-card">
-            <div className="indicator-header">
-              <div className="indicator-title">{indicator.title}</div>
-              <div className="indicator-value">{indicator.currentValue}</div>
-            </div>
-            <div className="indicator-description">{indicator.description}</div>
-            <div className="indicator-chart">
-              <div className="mini-chart">
-                <svg className="chart-line" viewBox="0 0 100 100" preserveAspectRatio="none">
-                  <path 
-                    className="chart-path"
-                    d={generateLinePath(indicator.chartData)}
-                  />
-                </svg>
-                <div className="chart-dots">
-                  {generateDotPositions(indicator.chartData).map((position, index) => (
-                    <div 
-                      key={index}
-                      className="chart-dot"
-                      style={{
-                        left: `${position.x}%`,
-                        top: `${position.y}%`
-                      }}
-                    />
-                  ))}
-                </div>
-                <div className="chart-axes">
-                  <div className="chart-axis chart-axis-x"></div>
-                  <div className="chart-axis chart-axis-y"></div>
-                </div>
-                <div className="chart-labels">
-                  <div className="chart-label-x" style={{ left: '0%' }}>0</div>
-                  <div className="chart-label-x" style={{ left: '50%' }}>4</div>
-                  <div className="chart-label-x" style={{ left: '100%' }}>8</div>
-                  <div className="chart-label-y" style={{ top: '0%' }}>100</div>
-                  <div className="chart-label-y" style={{ top: '50%' }}>50</div>
-                  <div className="chart-label-y" style={{ top: '100%' }}>0</div>
-                </div>
+        {data.indicators.map((indicator) => {
+          const isExpanded = expandedIndicatorId === indicator.id;
+          const insightItems = getIndicatorInsights(indicator);
+          const { overview, measurement, impact } = getIndicatorDetails(indicator);
+
+          return (
+            <div
+              key={indicator.id}
+              className={`indicator-card ${isExpanded ? 'expanded' : ''}`}
+              role="button"
+              tabIndex={0}
+              onClick={() => toggleIndicatorCard(indicator.id)}
+              onKeyDown={(event) => handleIndicatorKeyDown(event, indicator.id)}
+              aria-expanded={isExpanded}
+            >
+              <div className="indicator-header">
+                <div className="indicator-title">{indicator.title}</div>
+                <div className="indicator-value">{indicator.currentValue}</div>
               </div>
-              <div className="chart-label">{indicator.chartLabel}</div>
+              <div className="indicator-description">{indicator.description}</div>
+              <div className={`indicator-chart ${isExpanded ? 'expanded' : ''}`}>
+                <div
+                  className="mini-chart"
+                  onMouseMove={(event) => handleChartHover(indicator.id, event, indicator.chartData)}
+                  onMouseLeave={clearChartHover}
+                >
+                  <svg className="chart-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path 
+                      className="chart-path"
+                      d={generateLinePath(indicator.chartData)}
+                    />
+                  </svg>
+                  <div className="chart-dots">
+                    {generateDotPositions(indicator.chartData).map((position, index) => (
+                      <div 
+                        key={index}
+                        className={`chart-dot${
+                          chartHover &&
+                          chartHover.indicatorId === indicator.id &&
+                          chartHover.index === index
+                            ? ' active'
+                            : ''
+                        }`}
+                        style={{
+                          left: `${position.x}%`,
+                          top: `${position.y}%`
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="chart-axes">
+                    <div className="chart-axis chart-axis-x"></div>
+                    <div className="chart-axis chart-axis-y"></div>
+                  </div>
+                  <div className="chart-labels">
+                    <div className="chart-label-x" style={{ left: '0%' }}>0</div>
+                    <div className="chart-label-x" style={{ left: '50%' }}>4</div>
+                    <div className="chart-label-x" style={{ left: '100%' }}>8</div>
+                    <div className="chart-label-y" style={{ top: '0%' }}>100</div>
+                    <div className="chart-label-y" style={{ top: '50%' }}>50</div>
+                    <div className="chart-label-y" style={{ top: '100%' }}>0</div>
+                  </div>
+                  {chartHover && chartHover.indicatorId === indicator.id && (
+                    <div
+                      className="chart-tooltip"
+                      style={{
+                        left: `${chartHover.xPercent}%`,
+                        top: `${chartHover.yPercent}%`,
+                      }}
+                    >
+                      <div className="chart-tooltip-value">
+                        {typeof chartHover.value === 'number'
+                          ? chartHover.value.toFixed(1)
+                          : chartHover.value}
+                      </div>
+                      <div className="chart-tooltip-index">Point {chartHover.index + 1}</div>
+                    </div>
+                  )}
+                </div>
+                <div className="chart-label">{indicator.chartLabel}</div>
+              </div>
+
+              {isExpanded && (
+                <div className="indicator-expanded">
+                  <div className="indicator-expanded-content">
+                    <div className="indicator-expanded-section">
+                      <div className="indicator-section-title">Key insights</div>
+                      <ul className="indicator-insights-list">
+                        {insightItems.map((insight, index) => (
+                          <li key={index} className="indicator-insight-item">
+                            {insight}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="indicator-expanded-section">
+                      <div className="indicator-section-title">Indicator overview</div>
+                      <p className="indicator-section-text">{overview}</p>
+                    </div>
+
+                    <div className="indicator-expanded-section">
+                      <div className="indicator-section-title">How it is measured</div>
+                      <p className="indicator-section-text">{measurement}</p>
+                    </div>
+
+                    <div className="indicator-expanded-section">
+                      <div className="indicator-section-title">Currency impact</div>
+                      <p className="indicator-section-text">{impact}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <div className="economy-description">
