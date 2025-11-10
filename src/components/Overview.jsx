@@ -1309,7 +1309,7 @@ const Overview = () => {
       const savedTickerPairs = localStorage.getItem('fxSentinel_selectedTickerPairs');
       if (savedTickerPairs) {
         const parsed = JSON.parse(savedTickerPairs);
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed.length <= 5) {
+        if (Array.isArray(parsed) && parsed.length > 0) {
           setSelectedTickerPairs(parsed);
           console.log('✅ Loaded saved ticker preferences:', parsed);
         } else {
@@ -1438,7 +1438,7 @@ const Overview = () => {
     { key: 'GBPCHF', label: 'GBP/CHF' }
   ];
 
-  // Currently displayed ticker pairs (max 5) - ordered by selection order
+  // Currently displayed ticker pairs - ordered by selection order
   const tickerPairs = selectedTickerPairs.map(pairKey => 
     allTickerPairs.find(pair => pair.key === pairKey)
   ).filter(Boolean);
@@ -1486,16 +1486,10 @@ const Overview = () => {
         const newPairs = prev.filter(key => key !== pairKey);
         console.log('🗑️ Removed ticker pair:', pairKey, 'New order:', newPairs);
         return newPairs;
-      } else {
-        // Add pair (max 5) - add to the end to maintain order
-        if (prev.length < 5) {
-          const newPairs = [...prev, pairKey];
-          console.log('➕ Added ticker pair:', pairKey, 'New order:', newPairs);
-          return newPairs;
-        }
-        console.log('⚠️ Maximum 5 ticker pairs reached, cannot add:', pairKey);
-        return prev; // Don't add if already at max
       }
+      const newPairs = [...prev, pairKey];
+      console.log('➕ Added ticker pair:', pairKey, 'New order:', newPairs);
+      return newPairs;
     });
   };
 
@@ -2279,7 +2273,7 @@ const Overview = () => {
 
             {/* Modal Instructions */}
             <div className="modal-instructions">
-              <p>Choose which forex pairs to display on your dashboard (max 5 pairs). The order you select them will be the order they appear in the ticker.</p>
+              <p>Choose which forex pairs to display on your dashboard. The order you select them will be the order they appear in the ticker.</p>
             </div>
 
             {/* Forex Pairs Grid */}
@@ -2345,7 +2339,7 @@ const Overview = () => {
 
             {/* Modal Instructions */}
             <div className="modal-instructions">
-              <p>Choose which forex pairs to display in the live market ticker (max 5 pairs). The order you select them will be the order they appear.</p>
+              <p>Choose which forex pairs to display in the live market ticker. The order you select them will be the order they appear.</p>
             </div>
 
             {/* Ticker Pairs Grid */}
