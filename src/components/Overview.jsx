@@ -2694,7 +2694,7 @@ const Overview = () => {
       />
 
       {/* Footer Disclaimer */}
-      <div className="overview-footer">
+      {/* <div className="overview-footer">
         <div className="footer-disclaimer">
           <div className="disclaimer-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -2713,7 +2713,7 @@ const Overview = () => {
             </p>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   </div>
   );
