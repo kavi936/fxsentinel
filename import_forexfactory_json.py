@@ -31,11 +31,19 @@ def parse_forexfactory_json(json_file_path):
             continue
         
         try:
-            # Parse datetime (EDT timezone -04:00)
+            # Parse datetime with timezone
             dt = datetime.fromisoformat(date_str)
             
-            # Convert to UTC (EDT is UTC-4, so add 4 hours)
-            dt_utc = dt.replace(tzinfo=None) + timedelta(hours=4)
+            # Extract timezone offset (e.g., -05:00 means UTC-5, so add 5 hours to get UTC)
+            if dt.tzinfo:
+                offset_hours = dt.utcoffset().total_seconds() / 3600
+                hours_to_add = -offset_hours  # Negative because we're converting FROM offset TO UTC
+            else:
+                # Default to EST (-5) if no timezone info
+                hours_to_add = 5
+            
+            # Convert to UTC
+            dt_utc = dt.replace(tzinfo=None) + timedelta(hours=hours_to_add)
             
             # Format for display
             formatted_date = dt.strftime('%a, %b %d')
