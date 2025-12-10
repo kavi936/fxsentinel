@@ -77,9 +77,9 @@ class HybridEconomicCalendar:
     def _get_curated_events(self) -> List[Dict]:
         """
         Curated economic calendar with REAL upcoming events from ForexFactory
-        Last Updated: October 11, 2025
-        Source: ForexFactory Calendar
-        Coverage: October 5-16, 2025 (36 events)
+        Last Updated: December 7, 2025
+        Source: ForexFactory Calendar JSON Export
+        Coverage: October 5 - December 12, 2025
         """
         events = [
             # SUNDAY, OCTOBER 5
@@ -950,6 +950,316 @@ class HybridEconomicCalendar:
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
+            },
+
+            # MONDAY, DECEMBER 08 (From ForexFactory JSON Export)
+            {
+                'title': 'Cash Rate',
+                'date': 'Mon, Dec 08',
+                'time': '03:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.60%',
+                'previous': '3.60%'
+            },
+            {
+                'title': 'RBA Rate Statement',
+                'date': 'Mon, Dec 08',
+                'time': '03:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'RBA Press Conference',
+                'date': 'Mon, Dec 08',
+                'time': '04:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # TUESDAY, DECEMBER 09 (From ForexFactory JSON Export)
+            {
+                'title': 'BOJ Gov Ueda Speaks',
+                'date': 'Tue, Dec 09',
+                'time': '09:00 UTC',
+                'currency': 'JPY',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'ADP Weekly Employment Change',
+                'date': 'Tue, Dec 09',
+                'time': '13:15 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-13.5K'
+            },
+            {
+                'title': 'Monetary Policy Report Hearings',
+                'date': 'Tue, Dec 09',
+                'time': '14:15 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'JOLTS Job Openings',
+                'date': 'Tue, Dec 09',
+                'time': '14:59 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '7.23M'
+            },
+            {
+                'title': 'JOLTS Job Openings',
+                'date': 'Tue, Dec 09',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '7.14M',
+                'previous': '7.66M'
+            },
+            {
+                'title': 'RBNZ Gov Breman Speaks',
+                'date': 'Tue, Dec 09',
+                'time': '20:45 UTC',
+                'currency': 'NZD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'President Trump Speaks',
+                'date': 'Tue, Dec 09',
+                'time': '23:10 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Tue, Dec 09',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.7%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'PPI y/y',
+                'date': 'Tue, Dec 09',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-2.0%',
+                'previous': '-2.1%'
+            },
+
+            # WEDNESDAY, DECEMBER 10 (From ForexFactory JSON Export)
+            {
+                'title': 'ECB President Lagarde Speaks',
+                'date': 'Wed, Dec 10',
+                'time': '10:55 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Employment Cost Index q/q',
+                'date': 'Wed, Dec 10',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.9%',
+                'previous': '0.9%'
+            },
+            {
+                'title': 'BOC Rate Statement',
+                'date': 'Wed, Dec 10',
+                'time': '14:45 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Overnight Rate',
+                'date': 'Wed, Dec 10',
+                'time': '14:45 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '2.25%',
+                'previous': '2.25%'
+            },
+            {
+                'title': 'BOC Press Conference',
+                'date': 'Wed, Dec 10',
+                'time': '15:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Federal Funds Rate',
+                'date': 'Wed, Dec 10',
+                'time': '19:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.75%',
+                'previous': '4.00%'
+            },
+            {
+                'title': 'FOMC Economic Projections',
+                'date': 'Wed, Dec 10',
+                'time': '19:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Statement',
+                'date': 'Wed, Dec 10',
+                'time': '19:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Press Conference',
+                'date': 'Wed, Dec 10',
+                'time': '19:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Employment Change',
+                'date': 'Wed, Dec 10',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '20.0K',
+                'previous': '42.2K'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Wed, Dec 10',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '4.4%',
+                'previous': '4.3%'
+            },
+
+            # THURSDAY, DECEMBER 11 (From ForexFactory JSON Export)
+            {
+                'title': 'SNB Monetary Policy Assessment',
+                'date': 'Thu, Dec 11',
+                'time': '08:30 UTC',
+                'currency': 'CHF',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'SNB Policy Rate',
+                'date': 'Thu, Dec 11',
+                'time': '08:30 UTC',
+                'currency': 'CHF',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.00%',
+                'previous': '0.00%'
+            },
+            {
+                'title': 'SNB Press Conference',
+                'date': 'Thu, Dec 11',
+                'time': '09:00 UTC',
+                'currency': 'CHF',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'BOE Gov Bailey Speaks',
+                'date': 'Thu, Dec 11',
+                'time': '09:50 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'BOE Gov Bailey Speaks',
+                'date': 'Thu, Dec 11',
+                'time': '10:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Thu, Dec 11',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '220K',
+                'previous': '191K'
+            },
+
+            # FRIDAY, DECEMBER 12 (From ForexFactory JSON Export)
+            {
+                'title': 'GDP m/m',
+                'date': 'Fri, Dec 12',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '-0.1%'
             }
         ]
         
