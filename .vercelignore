@@ -14,7 +14,7 @@ RAILWAY_DEPLOYMENT_FIX.md
 deploy.sh
 frontend/
 bot/
-data/
+/data/
 stripe/
 
 # Python cache
