@@ -517,20 +517,161 @@
   outline-offset: 2px;
 }
 
-.indicator-card.expanded {
-  grid-column: span 2;
-  min-height: 520px;
-  max-height: 660px;
-  border-color: rgba(255, 255, 255, 0.16);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
-  background: rgba(32, 32, 32, 0.55);
-  transform: translateY(-6px) scale(1.02);
+/* Modal Overlay */
+.indicator-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.indicator-modal-content {
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  max-width: 1200px;
+  max-height: 90vh;
+  width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  position: relative;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: slideUp 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
   scrollbar-width: thin;
   scrollbar-color: rgba(218, 0, 18, 0.45) rgba(255, 255, 255, 0.05);
-  /* Smooth expansion animation */
-  animation: cardExpand 0.75s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.indicator-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.indicator-modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.indicator-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(218, 0, 18, 0.45);
+  border-radius: 6px;
+}
+
+.indicator-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(218, 0, 18, 0.15);
+  border: 1.5px solid rgba(218, 0, 18, 0.4);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  max-width: 32px;
+  max-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 600;
+  color: #da0012;
+  z-index: 10;
+  line-height: 1;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.indicator-modal-close:hover {
+  background: rgba(218, 0, 18, 0.25);
+  border-color: rgba(218, 0, 18, 0.6);
+}
+
+.indicator-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-right: 50px;
+}
+
+.indicator-modal-title {
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.indicator-modal-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(218, 0, 18, 0.2);
+  border: 1px solid rgba(218, 0, 18, 0.4);
+  border-radius: 10px;
+  padding: 12px 24px;
+}
+
+.indicator-modal-description {
+  color: #b0b0b0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.indicator-modal-chart {
+  margin-bottom: 32px;
+}
+
+.indicator-modal-chart .mini-chart {
+  height: 400px;
+}
+
+.indicator-modal-chart .chart-path {
+  stroke-width: 2;
+}
+
+.indicator-modal-chart .chart-path-glow {
+  stroke-width: 3.5;
+}
+
+.indicator-modal-chart .mini-chart.chart-hover .chart-path {
+  stroke-width: 2.25;
+}
+
+.indicator-modal-chart .mini-chart.chart-hover .chart-path-glow {
+  stroke-width: 4.5;
 }
 
 @keyframes cardExpand {
@@ -642,13 +783,31 @@
   stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(218, 0, 18, 0.3));
   transition: stroke-width 0.2s ease, filter 0.3s ease;
+  z-index: 2;
+  position: relative;
+}
+
+.chart-path-glow {
+  fill: none;
+  stroke: #da0012;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.25;
+  filter: blur(3px);
+  z-index: 1;
+  position: relative;
 }
 
 .mini-chart.chart-hover .chart-path {
   stroke-width: 3;
-  filter: drop-shadow(0 0 8px rgba(218, 0, 18, 0.6)) drop-shadow(0 0 12px rgba(218, 0, 18, 0.4));
+}
+
+.mini-chart.chart-hover .chart-path-glow {
+  stroke-width: 5.5;
+  opacity: 0.35;
+  filter: blur(4px);
 }
 
 .chart-area {
@@ -660,6 +819,51 @@
   stroke: rgba(255, 255, 255, 0.04);
   stroke-width: 0.3;
   stroke-linecap: round;
+}
+
+.chart-zero-line {
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 3, 3;
+  opacity: 0.6;
+}
+
+.chart-target-line {
+  stroke: #da0012;
+  stroke-width: 1;
+  stroke-dasharray: none;
+  opacity: 0.7;
+}
+
+.chart-crosshair-line {
+  stroke: rgba(255, 255, 255, 0.2);
+  stroke-width: 0.5;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.chart-crosshair-vertical {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.chart-crosshair-horizontal {
+  stroke: rgba(255, 255, 255, 0.2);
+}
+
+.chart-target-label {
+  position: absolute;
+  transform: translateY(-100%);
+  margin-bottom: 4px;
+  background: rgba(218, 0, 18, 0.15);
+  border: 1px solid rgba(218, 0, 18, 0.4);
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #da0012;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  z-index: 5;
 }
 
 .chart-dots {
@@ -1111,6 +1315,10 @@
 
   .indicator-chart.expanded .mini-chart {
     height: 200px;
+  }
+
+  .indicator-modal-chart .mini-chart {
+    height: 300px;
   }
 }
 

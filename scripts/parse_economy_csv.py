@@ -9,11 +9,38 @@ from datetime import datetime
 from pathlib import Path
 
 def parse_date(date_str):
-    """Convert date from 'December 10, 2025' format to ISO '2025-12-10'"""
+    """Convert date from 'December 10, 2025', 'September, 2025', or 'Q2, 2025' format to ISO '2025-12-10'"""
     try:
         date_str = date_str.strip('"').strip()
-        dt = datetime.strptime(date_str, '%B %d, %Y')
-        return dt.strftime('%Y-%m-%d')
+        # Try full date format first (e.g., "December 10, 2025")
+        try:
+            dt = datetime.strptime(date_str, '%B %d, %Y')
+            return dt.strftime('%Y-%m-%d')
+        except ValueError:
+            # Try month-year only format (e.g., "September, 2025") - use first day of month
+            try:
+                dt = datetime.strptime(date_str, '%B, %Y')
+                return dt.strftime('%Y-%m-01')
+            except ValueError:
+                # Try quarter format (e.g., "Q2, 2025") - use middle of quarter
+                try:
+                    import re
+                    match = re.match(r'Q(\d), (\d{4})', date_str)
+                    if match:
+                        quarter = int(match.group(1))
+                        year = int(match.group(2))
+                        # Map quarter to month (middle of quarter)
+                        quarter_months = {1: 2, 2: 5, 3: 8, 4: 11}  # Feb, May, Aug, Nov
+                        month = quarter_months[quarter]
+                        return f'{year}-{month:02d}-15'
+                except (ValueError, AttributeError):
+                    pass
+                # Try alternative format
+                try:
+                    dt = datetime.strptime(date_str, '%B %Y')
+                    return dt.strftime('%Y-%m-01')
+                except ValueError:
+                    pass
     except Exception as e:
         print(f"Warning: Could not parse date '{date_str}': {e}", file=sys.stderr)
         return date_str
@@ -92,15 +119,39 @@ def parse_economy_csv(csv_path):
     latest_value = history[-1]['value'] if history else float(value_to_use) if value_to_use else 0
     latest_date = history[-1]['date'] if history else parse_date(as_of)
     
+    # Format current value based on unit
+    if unit and 'K' in unit.upper():
+        # For thousands (like NFP), format as "119K" instead of percentage
+        current_value_str = f"{latest_value:.0f}K" if latest_value >= 0 else f"{latest_value:.0f}K"
+    else:
+        # Default to percentage format
+        current_value_str = f"{latest_value}%"
+    
     # Determine indicator ID from filename or name
-    indicator_id = 'interest-rate'  # Default, can be extracted from filename
+    csv_filename = Path(csv_path).stem.lower()
+    indicator_name_lower = indicator_name.lower()
+    
+    if 'core inflation' in csv_filename or 'core inflation' in indicator_name_lower:
+        indicator_id = 'core-inflation-YoY'
+    elif 'inflation' in csv_filename or 'inflation' in indicator_name_lower:
+        indicator_id = 'inflation-YoY'
+    elif 'unemployment' in csv_filename or 'unemployment' in indicator_name_lower:
+        indicator_id = 'unemployment'
+    elif 'non farm' in csv_filename or 'non farm' in indicator_name_lower or 'nonfarm' in indicator_name_lower or 'payroll' in indicator_name_lower:
+        indicator_id = 'nonfarm-payrolls'
+    elif 'gdp' in csv_filename or 'gdp' in indicator_name_lower:
+        indicator_id = 'gdp-growth'
+    elif 'interest' in csv_filename or 'interest' in indicator_name_lower or ('rate' in indicator_name_lower and 'gdp' not in indicator_name_lower and 'unemployment' not in indicator_name_lower):
+        indicator_id = 'interest-rate'
+    else:
+        indicator_id = 'interest-rate'  # Default
     
     # Create result structure
     result = {
         country: {
             'indicators': {
                 indicator_id: {
-                    'currentValue': f"{latest_value}%",
+                    'currentValue': current_value_str,
                     'asOf': latest_date,
                     'chartData': [item['value'] for item in chart_data],
                     'chartDates': [item['date'] for item in chart_data],

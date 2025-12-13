@@ -38,45 +38,197 @@ const indicatorDetails = {
       '[[Carry & yield trades]]: Changing rate expectations alter carry trade viability and relative currency strengths.\n\n' +
       '[[Cross-asset reactions]]: Fed moves often ripple into equities, commodities, and fixed income via shifts in risk sentiment.',
   },
-  inflation: {
+  'inflation-YoY': {
     overview:
-      'Inflation tracks the change in consumer prices and acts as a proxy for purchasing power erosion. Stable, moderate inflation informs whether monetary policy is appropriately calibrated to growth dynamics.',
+      'The [[Consumer Price Index (CPI) Year-over-Year]] measures the annual percentage change in the price level of a basket of consumer goods and services. It is the [[primary inflation gauge]] used by the Federal Reserve and financial markets to assess price stability and purchasing power erosion.\n\n' +
+      'For financial markets, inflation data is a [[critical input]] for monetary policy expectations, real yield calculations, and currency valuation models.\n\n' +
+      'Why traders care:\n\n' +
+      '• Directly influences [[Fed policy expectations]] and interest rate forecasts.\n\n' +
+      '• Affects [[real yields]] (nominal rates minus inflation), which drive currency flows.\n\n' +
+      '• Signals [[economic overheating]] or [[deflation risks]], impacting risk sentiment across asset classes.',
     measurement:
-      'Derived from consumer price indices that aggregate a basket of goods and services. Headline figures include volatile components (food, energy) while core measures strip them out to highlight underlying trends.',
+      'The [[Bureau of Labor Statistics (BLS)]] calculates CPI by tracking price changes for a representative basket of goods and services across urban consumers. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Two key variants are monitored:\n\n' +
+      '• [[Headline CPI]]: Includes all items, including volatile food and energy components.\n\n' +
+      '• [[Core CPI]]: Excludes food and energy to reveal underlying inflation trends.\n\n' +
+      'Data is released monthly, typically around the [[10th-15th of each month]] for the previous month, with revisions possible in subsequent releases.',
     impact:
-      'Elevated inflation can undermine a currency by eroding real returns, but if it pushes a central bank towards tighter policy, the currency may strengthen. Soft inflation often relieves pressure on policy makers, which can weigh on rate expectations and the currency.',
+      'Inflation readings have [[profound implications]] for currency markets through multiple channels:\n\n' +
+      '[[Elevated Inflation]]\n\n' +
+      '• Can [[undermine currency]] by eroding real returns on dollar-denominated assets.\n\n' +
+      '• If it prompts [[hawkish Fed response]] (rate hikes), the USD may strengthen despite initial weakness.\n\n' +
+      '• Increases [[inflation expectations]], potentially steepening yield curves and supporting USD.\n\n' +
+      '[[Moderate/Declining Inflation]]\n\n' +
+      '• Relieves pressure on policymakers, potentially [[weakening USD]] if it leads to dovish policy.\n\n' +
+      '• Supports [[real yield calculations]], making dollar assets more attractive if nominal rates hold.\n\n' +
+      '• Can encourage [[risk-taking]] in carry trades if inflation remains contained.\n\n' +
+      '[[Forward-looking dynamics]]: Markets react not just to current inflation but to [[trends and expectations]]. Persistent inflation above the Fed\'s 2% target can trigger policy responses that strengthen the USD, while disinflationary trends may support risk assets but pressure the dollar.',
+    context:
+      'U.S. inflation has shown [[gradual moderation]] from peak levels, with the latest reading at 3.0% YoY (September 2025). The path has been uneven, reflecting [[sticky services inflation]] alongside moderating goods prices.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[Fed\'s 2% target]]: Core inflation remains above target, keeping policy makers cautious about premature easing.\n\n' +
+      '• [[Services vs. goods]]: Services inflation has proven more persistent, driven by wage growth and housing costs.\n\n' +
+      '• [[Policy implications]]: Current inflation levels allow for measured rate cuts but limit aggressive easing.\n\n' +
+      '• [[Market sensitivity]]: Each CPI release triggers significant volatility as traders reassess Fed policy expectations.',
+    traderImplications:
+      '[[FX volatility]]: CPI releases are among the [[highest-impact economic events]], often causing sharp USD moves, especially in USD/JPY and EUR/USD pairs.\n\n' +
+      '[[Real yield calculations]]: Inflation data directly affects real yield spreads, which drive [[carry trade flows]] and relative currency strength.\n\n' +
+      '[[Cross-asset reactions]]: Inflation surprises can trigger simultaneous moves in [[bonds, equities, and commodities]] as markets reassess growth and policy outlooks.',
   },
   'gdp-growth': {
     overview:
-      'GDP growth summarises the expansion or contraction in overall economic output. It signals whether activity is accelerating, decelerating, or plateauing across consumption, investment, government spending, and net trade.',
+      '[[Gross Domestic Product (GDP) Growth Rate]] measures the quarterly percentage change in real GDP (adjusted for inflation), representing the [[overall economic expansion or contraction]]. It aggregates activity across consumption, investment, government spending, and net trade.\n\n' +
+      'For financial markets, GDP growth is a [[fundamental driver]] of currency strength, monetary policy expectations, and risk sentiment.\n\n' +
+      'Why traders care:\n\n' +
+      '• Signals [[economic health]] and growth momentum, directly influencing currency valuations.\n\n' +
+      '• Affects [[monetary policy expectations]]: strong growth supports rate hikes, weak growth suggests easing.\n\n' +
+      '• Drives [[capital flows]]: higher growth attracts foreign investment, strengthening the currency.',
     measurement:
-      'Calculated by national statistical agencies as the percentage change in real GDP (adjusted for inflation) from one quarter to the next, typically annualised for comparability. Revisions are common as more comprehensive data arrives.',
+      'The [[Bureau of Economic Analysis (BEA)]] calculates GDP growth as the percentage change in real GDP from one quarter to the previous quarter, [[annualized for comparability]]. The calculation uses chained dollars to adjust for inflation.\n\n' +
+      'GDP is measured through three approaches:\n\n' +
+      '• [[Expenditure approach]]: Sum of consumption, investment, government spending, and net exports.\n\n' +
+      '• [[Income approach]]: Sum of all income earned in production.\n\n' +
+      '• [[Production approach]]: Value added at each stage of production.\n\n' +
+      'Data is released quarterly, typically around the [[end of the month]] following the quarter end, with [[multiple revisions]] as more comprehensive data becomes available.',
     impact:
-      'Stronger growth usually boosts currency demand by attracting capital inflows and raising expectations for tighter policy. Weak or negative growth does the opposite, increasing the odds of easing and discouraging foreign investment.',
+      'GDP growth has [[profound implications]] for currency markets through multiple transmission channels:\n\n' +
+      '[[Strong Growth]]\n\n' +
+      '• [[Attracts foreign capital]] as investors seek exposure to expanding economies.\n\n' +
+      '• Raises [[inflation expectations]], prompting central banks to consider tighter policy.\n\n' +
+      '• Strengthens the currency through [[higher rate expectations]] and capital inflows.\n\n' +
+      '[[Weak or Negative Growth]]\n\n' +
+      '• Signals [[economic weakness]], potentially weakening the currency.\n\n' +
+      '• Increases odds of [[monetary easing]], reducing yield attractiveness.\n\n' +
+      '• Discourages [[foreign investment]], reducing demand for the currency.\n\n' +
+      '[[Market dynamics]]: GDP releases are [[high-impact events]], often causing significant currency volatility. Markets react not just to the headline number but to [[components and revisions]], with consumption and investment data particularly scrutinized for forward-looking signals.',
+    context:
+      'U.S. GDP growth has shown [[resilience]] despite global headwinds, with Q2 2025 registering 3.8% growth following a contraction in Q1 2025 (-0.6%). The economy has demonstrated [[structural strength]] in consumption and services, offsetting weakness in some sectors.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[Growth sustainability]]: Markets assess whether current growth rates are sustainable or driven by temporary factors.\n\n' +
+      '• [[Component analysis]]: Consumption strength vs. investment weakness provides insights into economic drivers.\n\n' +
+      '• [[Policy implications]]: Growth data influences Fed policy decisions, balancing growth support with inflation control.\n\n' +
+      '• [[Global context]]: U.S. growth relative to other major economies affects [[currency differentials]] and capital flows.',
+    traderImplications:
+      '[[FX volatility]]: GDP releases are among the [[most market-moving economic events]], causing sharp moves in USD pairs, especially EUR/USD and GBP/USD.\n\n' +
+      '[[Growth differentials]]: Relative GDP growth between economies drives [[currency strength]], with stronger growth typically supporting currency appreciation.\n\n' +
+      '[[Cross-asset reactions]]: GDP data triggers simultaneous moves in [[equities, bonds, and commodities]] as markets reassess growth and policy outlooks.',
   },
   unemployment: {
     overview:
-      'The unemployment rate reflects slack in the labour market and the ability of the economy to absorb workers. Persistent cushions or shortages shape wage dynamics and ultimately influence inflation.',
+      'The [[Unemployment Rate]] measures the percentage of the labor force that is jobless but actively seeking work. It reflects [[labor market slack]] and the economy\'s ability to absorb workers, serving as a [[key indicator]] of economic health.\n\n' +
+      'For financial markets, unemployment data is a [[critical input]] for monetary policy expectations, wage inflation forecasts, and currency valuation models.\n\n' +
+      'Why traders care:\n\n' +
+      '• Directly influences [[Fed policy decisions]] through the dual mandate (employment and inflation).\n\n' +
+      '• Signals [[labor market tightness]], which affects wage growth and inflation expectations.\n\n' +
+      '• Impacts [[currency strength]] through policy expectations and economic health assessments.',
     measurement:
-      'Reported as the percentage of the labour force that is jobless but actively seeking work, based on monthly household surveys and administrative records. Some regions also track broader underemployment indicators.',
+      'The [[Bureau of Labor Statistics (BLS)]] calculates the unemployment rate from the [[Current Population Survey (CPS)]], a monthly survey of approximately 60,000 households. The rate represents the percentage of the [[civilian labor force]] (employed + unemployed) that is unemployed.\n\n' +
+      'Key definitions:\n\n' +
+      '• [[Unemployed]]: People without jobs who have actively looked for work in the past 4 weeks.\n\n' +
+      '• [[Labor force]]: Employed + unemployed (excludes those not seeking work).\n\n' +
+      '• [[U-6 rate]]: Broader measure including discouraged workers and part-time workers seeking full-time employment.\n\n' +
+      'Data is released monthly, typically on the [[first Friday]] of each month for the previous month, with revisions possible in subsequent releases.',
     impact:
-      'Falling unemployment often signals a tightening labour market that can push wages and inflation higher, encouraging rate hikes and supporting the currency. Rising unemployment can depress wage growth, weaken inflation pressure, and fuel expectations for monetary easing.',
+      'Unemployment readings have [[significant implications]] for currency markets through policy and economic health channels:\n\n' +
+      '[[Falling Unemployment]]\n\n' +
+      '• Signals [[tightening labor market]], potentially pushing wages and inflation higher.\n\n' +
+      '• Encourages [[hawkish Fed policy]] (rate hikes), supporting USD strength.\n\n' +
+      '• Indicates [[economic strength]], attracting foreign capital and strengthening the currency.\n\n' +
+      '[[Rising Unemployment]]\n\n' +
+      '• Suggests [[economic weakness]], potentially weakening the currency.\n\n' +
+      '• Increases odds of [[monetary easing]], reducing yield attractiveness.\n\n' +
+      '• Depresses [[wage growth]] and inflation pressure, supporting dovish policy expectations.\n\n' +
+      '[[Policy dynamics]]: The Fed\'s [[dual mandate]] makes unemployment a key policy input. The [[natural rate of unemployment]] (NAIRU) concept suggests that unemployment below a certain level can trigger inflation, influencing policy decisions and currency markets.',
+    context:
+      'U.S. unemployment has [[gradually increased]] from historic lows, reaching 4.4% in September 2025, up from 3.7% in January 2024. The labor market remains [[relatively tight]] by historical standards, but the upward trend signals potential [[cooling]] in the economy.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[Labor market normalization]]: Markets assess whether the increase represents a return to pre-pandemic levels or signals economic weakness.\n\n' +
+      '• [[Wage pressure]]: Despite rising unemployment, wage growth remains a focus for inflation concerns.\n\n' +
+      '• [[Policy implications]]: Unemployment trends influence Fed decisions on the balance between employment and inflation goals.\n\n' +
+      '• [[Economic resilience]]: Current levels remain low historically, suggesting underlying economic strength.',
+    traderImplications:
+      '[[FX volatility]]: Unemployment releases (first Friday of each month) are [[high-impact events]], causing significant USD moves, especially in EUR/USD and GBP/USD pairs.\n\n' +
+      '[[Policy expectations]]: Unemployment data directly affects [[Fed policy forecasts]], influencing yield curves and currency strength.\n\n' +
+      '[[Cross-asset reactions]]: Unemployment surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess growth and policy outlooks.',
   },
-  'consumer-confidence': {
+  'nonfarm-payrolls': {
     overview:
-      'Consumer confidence gauges household sentiment about the current and future economic environment. It offers a forward-looking read on consumption, which dominates GDP in most developed markets.',
+      '[[Non-Farm Payrolls (NFP)]] measures the monthly change in employment, excluding farm workers, government employees, and non-profit organization employees. It represents the [[net number of jobs added or lost]] in the U.S. economy and is one of the [[most closely watched economic indicators]] by traders and policymakers.\n\n' +
+      'For financial markets, NFP is a [[critical high-impact release]] that directly influences monetary policy expectations, currency valuations, and risk sentiment.\n\n' +
+      'Why traders care:\n\n' +
+      '• [[Highest-impact economic release]]: NFP releases (first Friday of each month) cause significant market volatility.\n\n' +
+      '• Directly affects [[Fed policy expectations]] through the employment component of the dual mandate.\n\n' +
+      '• Signals [[economic strength or weakness]], influencing currency flows and risk sentiment across asset classes.',
     measurement:
-      'Compiled from survey responses that ask households about personal finances, business conditions, employment prospects, and intentions to make large purchases. Scores are indexed against historic baselines.',
+      'The [[Bureau of Labor Statistics (BLS)]] calculates NFP from the [[Establishment Survey]], which covers approximately 145,000 businesses and government agencies representing about 697,000 worksites. The survey measures [[non-farm employment]] across all major industry sectors.\n\n' +
+      'Key components:\n\n' +
+      '• [[Total non-farm employment]]: The headline number reported in thousands (K).\n\n' +
+      '• [[Private sector employment]]: Excludes government workers.\n\n' +
+      '• [[Average hourly earnings]]: Wage growth component, also closely watched.\n\n' +
+      '• [[Average workweek]]: Hours worked, indicating labor demand.\n\n' +
+      'Data is released monthly on the [[first Friday]] of each month at 8:30 AM ET for the previous month, with [[revisions]] common in subsequent months as more complete data arrives.',
     impact:
-      'Improving confidence can bolster consumption and growth prospects, supporting the currency through higher rate expectations. Deteriorating confidence foreshadows weaker spending, which may prompt looser policy and dampen the currency.',
+      'NFP releases have [[profound market-moving effects]] through multiple transmission channels:\n\n' +
+      '[[Strong NFP (High Job Gains)]]\n\n' +
+      '• Signals [[robust economic growth]] and labor market strength.\n\n' +
+      '• Supports [[hawkish Fed policy]] expectations (rate hikes), strengthening USD.\n\n' +
+      '• Attracts [[foreign capital]] as investors seek exposure to strong economies.\n\n' +
+      '• Can trigger [[risk-on sentiment]] if growth is seen as sustainable.\n\n' +
+      '[[Weak NFP (Low/Negative Job Gains)]]\n\n' +
+      '• Suggests [[economic weakness]], potentially weakening the currency.\n\n' +
+      '• Increases odds of [[monetary easing]], reducing yield attractiveness.\n\n' +
+      '• Triggers [[risk-off sentiment]] as markets reassess growth outlooks.\n\n' +
+      '[[Market dynamics]]: NFP is known as the [["king of economic indicators"]] due to its market impact. The release often causes [[immediate and significant volatility]] in USD pairs, with EUR/USD and GBP/USD particularly sensitive. Markets react not just to the headline number but to [[revisions, wage data, and unemployment rate]] released simultaneously.',
+    context:
+      'U.S. Non-Farm Payrolls have shown [[volatile patterns]] in recent months, with September 2025 registering 119K jobs added, following a contraction of -4K in August 2025. The labor market has demonstrated [[resilience]] despite some monthly volatility, with strong gains in services sectors offsetting weakness in some industries.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[Job growth sustainability]]: Markets assess whether current job gains are sustainable or driven by temporary factors.\n\n' +
+      '• [[Wage pressure]]: Average hourly earnings data influences inflation expectations and Fed policy.\n\n' +
+      '• [[Sector composition]]: Strength in services vs. goods sectors provides insights into economic drivers.\n\n' +
+      '• [[Policy implications]]: NFP data directly influences Fed decisions on the balance between employment and inflation goals.',
+    traderImplications:
+      '[[FX volatility]]: NFP releases are the [[most market-moving economic events]], causing immediate and significant USD moves, especially in EUR/USD, GBP/USD, and USD/JPY pairs.\n\n' +
+      '[[Trading opportunities]]: The first Friday NFP release creates [[high-volatility trading opportunities]], with markets often gapping and trending strongly post-release.\n\n' +
+      '[[Cross-asset reactions]]: NFP data triggers simultaneous moves in [[equities, bonds, commodities, and currencies]] as markets reassess growth, policy, and risk outlooks.',
   },
-  'trade-balance': {
+  'core-inflation-YoY': {
     overview:
-      'The trade balance captures the net flow of goods and services across borders—whether an economy exports more than it imports. It shapes FX flows by indicating demand for domestic versus foreign currency.',
+      '[[Core Inflation Year-over-Year]] measures the annual change in consumer prices excluding [[volatile food and energy components]]. It is the [[Federal Reserve\'s preferred inflation gauge]] for monetary policy decisions, providing a clearer view of [[underlying inflation trends]] without short-term commodity price fluctuations.\n\n' +
+      'For financial markets, Core Inflation is a [[critical policy input]] that directly influences Fed rate decisions and currency valuations.\n\n' +
+      'Why traders care:\n\n' +
+      '• [[Primary Fed policy input]]: The Fed focuses on core inflation for rate decisions, making it more important than headline inflation.\n\n' +
+      '• [[Underlying trend indicator]]: Removes noise from volatile food/energy prices, showing true inflation momentum.\n\n' +
+      '• [[Currency impact]]: Core inflation readings directly affect Fed policy expectations and USD strength.',
     measurement:
-      'Compiled from customs and payments data as exports minus imports over a given period, typically reported in nominal currency terms. Analysts monitor both monthly prints and rolling averages to smooth volatility.',
+      'The [[Bureau of Labor Statistics (BLS)]] calculates Core CPI by taking the Consumer Price Index and [[excluding food and energy components]]. The year-over-year change is calculated by comparing the current month\'s Core CPI to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Core CPI]]: All items except food and energy, representing approximately 78% of the CPI basket.\n\n' +
+      '• [[Food excluded]]: Fresh fruits, vegetables, meat, dairy, and processed foods.\n\n' +
+      '• [[Energy excluded]]: Gasoline, electricity, natural gas, and fuel oil.\n\n' +
+      '• [[Included items]]: Housing, medical care, transportation services, apparel, education, and other services.\n\n' +
+      'Data is released monthly, typically around the [[10th-15th of each month]] for the previous month, alongside headline CPI.',
     impact:
-      'A surplus signals net foreign demand for local goods and currency, often supporting exchange rates, while persistent deficits can weigh on a currency unless offset by capital inflows or higher yields.',
+      'Core Inflation has [[significant implications]] for currency markets through Fed policy channels:\n\n' +
+      '[[Elevated Core Inflation]]\n\n' +
+      '• Signals [[persistent price pressures]], increasing likelihood of [[hawkish Fed policy]] (rate hikes).\n\n' +
+      '• Strengthens [[USD]] as markets price in tighter monetary policy.\n\n' +
+      '• Indicates [[underlying inflation momentum]], which is harder to control than headline inflation.\n\n' +
+      '[[Moderate/Declining Core Inflation]]\n\n' +
+      '• Suggests [[inflation is under control]], potentially allowing [[dovish policy]] (rate cuts).\n\n' +
+      '• Can [[weaken USD]] if it leads to expectations of monetary easing.\n\n' +
+      '• Supports [[risk assets]] as lower inflation reduces pressure on central banks.\n\n' +
+      '[[Policy dynamics]]: The Fed\'s [[dual mandate]] makes core inflation a key policy input. The Fed targets [[2% core inflation]] over the long term, and deviations from this target directly influence rate decisions and currency markets.',
+    context:
+      'U.S. Core Inflation has [[moderated significantly]] from 3.9% in January 2024 to 3.0% in September 2025, showing progress toward the Fed\'s 2% target. However, core inflation remains [[above the Fed\'s objective]], indicating persistent underlying price pressures.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[Sticky inflation]]: Core inflation has been more persistent than headline inflation, driven by services and housing costs.\n\n' +
+      '• [[Fed policy focus]]: The Fed closely monitors core inflation for rate decisions, making it more market-moving than headline inflation.\n\n' +
+      '• [[Services vs. goods]]: Services inflation remains elevated while goods inflation has moderated.\n\n' +
+      '• [[Policy implications]]: Current core inflation levels suggest the Fed may maintain restrictive policy until inflation moves closer to 2%.',
+    traderImplications:
+      '[[FX volatility]]: Core Inflation releases are [[high-impact events]], causing significant USD moves, especially in EUR/USD and GBP/USD pairs.\n\n' +
+      '[[Policy expectations]]: Core inflation data directly affects [[Fed policy forecasts]], influencing yield curves and currency strength.\n\n' +
+      '[[Cross-asset reactions]]: Core inflation surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess inflation and policy outlooks.',
   },
 };
 
@@ -311,18 +463,26 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
             chartLabel: 'Federal Funds Rate (Upper Bound)'
         },
         {
-          id: 'inflation',
-          title: 'Inflation (CPI)',
+          id: 'inflation-YoY',
+          title: 'Inflation YoY (CPI)',
           currentValue: '3.2%',
-          description: 'Consumer Price Index - Core inflation measure',
+          description: 'Consumer Price Index Year-over-Year - Measures the annual percentage change in prices for a basket of consumer goods and services. The primary inflation gauge used by the Federal Reserve to assess price stability and guide monetary policy decisions.',
           chartData: [45, 52, 48, 41, 38, 42, 39, 35],
+          chartLabel: 'YoY trend'
+        },
+        {
+          id: 'core-inflation-YoY',
+          title: 'Core Inflation YoY',
+          currentValue: '3.0%',
+          description: 'Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components. The Federal Reserve\'s preferred inflation gauge for monetary policy decisions, providing a clearer view of underlying inflation trends.',
+          chartData: [60, 65, 58, 62, 68, 64, 67, 70],
           chartLabel: 'YoY trend'
         },
         {
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+2.1%',
-          description: 'Quarterly GDP growth rate (annualized)',
+          description: 'Gross Domestic Product Growth Rate - Measures the quarterly percentage change in real GDP (adjusted for inflation), indicating economic expansion or contraction. A key indicator of overall economic health and growth momentum.',
           chartData: [60, 65, 58, 62, 68, 64, 67, 70],
           chartLabel: 'Q/Q growth'
         },
@@ -330,25 +490,17 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '3.8%',
-          description: 'Unemployment rate - Labor market health',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work. A key indicator of labor market health and economic slack, closely watched by the Federal Reserve for monetary policy decisions.',
           chartData: [25, 28, 26, 24, 22, 23, 21, 20],
           chartLabel: 'Rate trend'
         },
         {
-          id: 'consumer-confidence',
-          title: 'Consumer Confidence',
-          currentValue: '102.3',
-          description: 'Consumer sentiment index - Spending outlook',
+          id: 'nonfarm-payrolls',
+          title: 'Non-Farm Payrolls',
+          currentValue: '119K',
+          description: 'Non-Farm Payrolls (NFP) - Measures the monthly change in employment, excluding farm workers, government employees, and non-profit organization employees. One of the most closely watched economic indicators, released on the first Friday of each month.',
           chartData: [70, 75, 72, 78, 82, 79, 85, 88],
-          chartLabel: 'Index trend'
-        },
-        {
-          id: 'trade-balance',
-          title: 'Trade Balance',
-          currentValue: '-$67.4B',
-          description: 'Trade deficit - Export/import balance',
-          chartData: [15, 18, 22, 25, 28, 26, 24, 20],
-          chartLabel: 'Monthly deficit'
+          chartLabel: 'Monthly change'
         }
       ],
     },
@@ -544,19 +696,24 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
     const isCurrentlyExpanded = expandedIndicatorId === indicatorId;
     
     if (!isCurrentlyExpanded) {
-      // Starting expansion - show loading
+      // Opening modal - show loading
       setLoadingIndicatorId(indicatorId);
       setExpandedIndicatorId(indicatorId);
       
-      // Clear loading after expansion animation completes
+      // Clear loading after modal opens
       setTimeout(() => {
         setLoadingIndicatorId(null);
-      }, 800); // Show spinner for 800ms to ensure visibility
+      }, 600);
     } else {
-      // Collapsing - no loading needed
+      // Closing modal
       setExpandedIndicatorId(null);
       setLoadingIndicatorId(null);
     }
+  };
+
+  const closeExpandedCard = () => {
+    setExpandedIndicatorId(null);
+    setLoadingIndicatorId(null);
   };
 
   const handleIndicatorKeyDown = (event, indicatorId) => {
@@ -578,6 +735,56 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
         'Markets now price a limited number of further cuts, with traders focusing intently on incoming inflation and labor data to gauge the next move.',
         'Rate expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
         'Upcoming releases will link this indicator with the broader macro backdrop in Holistic Scan.',
+      ];
+    }
+
+    // Special handling for inflation-YoY with professional content
+    if (indicator.id === 'inflation-YoY') {
+      return [
+        'U.S. inflation (CPI YoY) has moderated to 3.0% as of September 2025, down from peak levels but still above the Federal Reserve\'s 2% target.',
+        'The disinflationary trend has been gradual, with services inflation remaining sticky while goods prices have eased more substantially.',
+        'Markets closely monitor each monthly release to assess whether inflation is on a sustainable path toward the Fed\'s target, which influences policy expectations and currency flows.',
+        'Inflation expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+      ];
+    }
+
+    // Special handling for gdp-growth with professional content
+    if (indicator.id === 'gdp-growth') {
+      return [
+        'U.S. GDP growth registered 3.8% in Q2 2025, rebounding from a contraction of -0.6% in Q1 2025, demonstrating economic resilience amid global headwinds.',
+        'The economy has shown structural strength in consumption and services sectors, with growth driven by robust consumer spending despite some weakness in investment components.',
+        'Markets closely watch GDP releases for signals on economic momentum, as strong growth supports currency strength through capital inflows and higher rate expectations.',
+        'GDP growth expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+      ];
+    }
+
+    // Special handling for unemployment with professional content
+    if (indicator.id === 'unemployment') {
+      return [
+        'U.S. unemployment has gradually increased to 4.4% in September 2025, up from 3.7% in January 2024, signaling potential cooling in the labor market while remaining relatively tight by historical standards.',
+        'The labor market continues to show resilience, with unemployment levels remaining low historically despite the upward trend, suggesting underlying economic strength.',
+        'Markets closely monitor unemployment data for signals on labor market tightness, wage pressure, and Fed policy implications, as it directly affects monetary policy expectations and currency flows.',
+        'Unemployment expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+      ];
+    }
+
+    // Special handling for nonfarm-payrolls with professional content
+    if (indicator.id === 'nonfarm-payrolls') {
+      return [
+        'U.S. Non-Farm Payrolls registered 119K jobs added in September 2025, following a contraction of -4K in August 2025, demonstrating the volatile nature of monthly employment data.',
+        'The labor market has shown resilience with strong gains in services sectors, though monthly readings can vary significantly due to seasonal adjustments and economic fluctuations.',
+        'Markets closely watch NFP releases (first Friday of each month) as they are among the highest-impact economic events, directly influencing Fed policy expectations and causing significant currency volatility.',
+        'NFP expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+      ];
+    }
+
+    // Special handling for core-inflation-YoY with professional content
+    if (indicator.id === 'core-inflation-YoY') {
+      return [
+        'U.S. Core Inflation has moderated to 3.0% in September 2025, down from 3.9% in January 2024, showing progress toward the Fed\'s 2% target while remaining above the objective.',
+        'Core inflation, which excludes volatile food and energy components, is the Federal Reserve\'s preferred inflation gauge for monetary policy decisions, making it more market-moving than headline inflation.',
+        'The persistent elevation of core inflation, driven by services and housing costs, suggests the Fed may maintain restrictive policy until inflation moves closer to the 2% target.',
+        'Core inflation expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
       ];
     }
 
@@ -716,8 +923,8 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
     setChartHover(null);
   };
 
-  // Generate SVG path for line chart
-  // Generate smooth bezier curve path for better visual appeal
+  // Generate SVG path using Monotone Cubic Interpolation (Method 2)
+  // This creates smooth, professional curves that preserve monotonicity
   const generateLinePath = (data) => {
     if (data.length === 0) return '';
     if (data.length === 1) {
@@ -732,20 +939,53 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
       return { x, y };
     });
     
-    // Create smooth bezier curve path
+    // Monotone cubic interpolation
+    // Calculate slopes (tangents) for each segment
+    const slopes = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      const dx = points[i + 1].x - points[i].x;
+      const dy = points[i + 1].y - points[i].y;
+      slopes.push(dx !== 0 ? dy / dx : 0);
+    }
+    
+    // Calculate monotone tangents at each point
+    const tangents = [];
+    for (let i = 0; i < points.length; i++) {
+      if (i === 0) {
+        tangents.push(slopes[0]);
+      } else if (i === points.length - 1) {
+        tangents.push(slopes[slopes.length - 1]);
+      } else {
+        // Average of adjacent slopes, ensuring monotonicity
+        const s1 = slopes[i - 1];
+        const s2 = slopes[i];
+        if (s1 * s2 <= 0) {
+          tangents.push(0); // Preserve monotonicity
+        } else {
+          tangents.push((s1 + s2) / 2);
+        }
+      }
+    }
+    
+    // Generate cubic bezier path with monotone interpolation
     let path = `M ${points[0].x},${points[0].y}`;
     
     for (let i = 0; i < points.length - 1; i++) {
-      const current = points[i];
-      const next = points[i + 1];
+      const p0 = points[i];
+      const p1 = points[i + 1];
+      const m0 = tangents[i];
+      const m1 = tangents[i + 1];
       
-      // Calculate control points for smooth curve
-      const cp1x = current.x + (next.x - current.x) / 3;
-      const cp1y = current.y;
-      const cp2x = current.x + (next.x - current.x) * 2 / 3;
-      const cp2y = next.y;
+      const dx = p1.x - p0.x;
+      const delta = dx / 3; // One-third of the distance
       
-      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${next.x},${next.y}`;
+      // Control points for cubic bezier
+      const cp1x = p0.x + delta;
+      const cp1y = p0.y + m0 * delta;
+      const cp2x = p1.x - delta;
+      const cp2y = p1.y - m1 * delta;
+      
+      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p1.x},${p1.y}`;
     }
     
     return path;
@@ -803,37 +1043,26 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
     <div className="economy-details">
       <div className="economic-indicators-grid">
         {data.indicators.map((indicator) => {
-          const isExpanded = expandedIndicatorId === indicator.id;
-          const insightItems = getIndicatorInsights(indicator);
-          const { overview, measurement, impact, context, traderImplications } = getIndicatorDetails(indicator);
-
           return (
             <div
               key={indicator.id}
-              className={`indicator-card ${isExpanded ? 'expanded' : ''}`}
+              className="indicator-card"
               role="button"
               tabIndex={0}
               onClick={() => toggleIndicatorCard(indicator.id)}
               onKeyDown={(event) => handleIndicatorKeyDown(event, indicator.id)}
-              aria-expanded={isExpanded}
             >
             <div className="indicator-header">
               <div className="indicator-title">{indicator.title}</div>
               <div className="indicator-value">{indicator.currentValue}</div>
             </div>
             <div className="indicator-description">{indicator.description}</div>
-              <div className={`indicator-chart ${isExpanded ? 'expanded' : ''}`}>
+            <div className="indicator-chart">
                 {(() => {
-                  // Select appropriate dataset based on expansion state
-                  const chartDataToUse = isExpanded && indicator.chartDataExpanded 
-                    ? indicator.chartDataExpanded 
-                    : indicator.chartData;
-                  const originalDataToUse = isExpanded && indicator.chartDataOriginalAll 
-                    ? indicator.chartDataOriginalAll 
-                    : indicator.chartDataOriginal;
-                  const datesToUse = isExpanded && indicator.chartDatesAll 
-                    ? indicator.chartDatesAll 
-                    : indicator.chartDates;
+                  // Always use collapsed data in default card view
+                  const chartDataToUse = indicator.chartData;
+                  const originalDataToUse = indicator.chartDataOriginal;
+                  const datesToUse = indicator.chartDates;
                   
                   // Generate x-axis labels showing years
                   const generateXAxisLabels = () => {
@@ -885,7 +1114,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                     const rawMax = Math.max(...originalDataToUse);
                     const rawRange = rawMax - rawMin;
                     
-                    // Round min down and max up to nice numbers
+                    // Round min down and max up to nice numbers for display labels
                     // Determine rounding step based on range
                     let roundingStep;
                     if (rawRange <= 1) {
@@ -896,18 +1125,20 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                       roundingStep = 1; // Round to whole numbers for larger ranges
                     }
                     
-                    // Round min down and max up
-                    const min = Math.floor(rawMin / roundingStep) * roundingStep;
-                    const max = Math.ceil(rawMax / roundingStep) * roundingStep;
-                    const range = max - min;
+                    // Round min down and max up for clean label values
+                    const displayMin = Math.floor(rawMin / roundingStep) * roundingStep;
+                    const displayMax = Math.ceil(rawMax / roundingStep) * roundingStep;
+                    const displayRange = displayMax - displayMin;
                     
-                    // Calculate 5 evenly spaced values
-                    const step = range / 4; // 4 steps between 5 labels
+                    // Calculate 5 evenly spaced values for labels
+                    const step = displayRange / 4; // 4 steps between 5 labels
                     const labels = [];
                     
+                    // IMPORTANT: Data normalization uses rawMin/rawMax, not displayMin/displayMax
+                    // Formula: ((val - rawMin) / rawRange) * 80 + 10
+                    // So Y-axis label positions must use rawMin/rawRange to match data points
                     for (let i = 0; i < 5; i++) {
-                      const position = (i / 4) * 100; // 0%, 25%, 50%, 75%, 100%
-                      const value = max - (step * i);
+                      const value = displayMax - (step * i);
                       
                       // Round to clean number
                       let cleanValue;
@@ -919,20 +1150,60 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                         cleanValue = Math.round(value * 10) / 10;
                       }
                       
-                      // Format based on rounding step
+                      // Calculate position using rawMin/rawRange to match data normalization
+                      // Formula: position = 10 + ((cleanValue - rawMin) / rawRange) * 80
+                      // But SVG Y-axis is inverted (0 at top, 100 at bottom), so: 100 - position
+                      const normalizedPosition = rawRange === 0 ? 50 : 10 + ((cleanValue - rawMin) / rawRange) * 80;
+                      const position = 100 - normalizedPosition; // Invert for SVG coordinates
+                      
+                      // Format based on rounding step and indicator type
                       let formattedLabel;
-                      if (roundingStep >= 1) {
-                        formattedLabel = cleanValue.toFixed(0) + '%';
-                      } else if (roundingStep === 0.5) {
-                        formattedLabel = cleanValue.toFixed(1) + '%';
+                      const isNFP = indicator.id === 'nonfarm-payrolls';
+                      
+                      if (isNFP) {
+                        // Format as thousands (K) for NFP
+                        formattedLabel = cleanValue.toFixed(0) + 'K';
                       } else {
-                        formattedLabel = cleanValue.toFixed(1) + '%';
+                        // Format as percentage for other indicators
+                        if (roundingStep >= 1) {
+                          formattedLabel = cleanValue.toFixed(0) + '%';
+                        } else if (roundingStep === 0.5) {
+                          formattedLabel = cleanValue.toFixed(1) + '%';
+                        } else {
+                          formattedLabel = cleanValue.toFixed(1) + '%';
+                        }
                       }
                       
                       labels.push({
                         position: position,
-                        label: formattedLabel
+                        label: formattedLabel,
+                        value: cleanValue
                       });
+                    }
+                    
+                    // Add zero label if data crosses zero and zero is not already in the labels
+                    if (rawMin < 0 && rawMax > 0) {
+                      // Calculate zero position using rawMin/rawRange to match data normalization
+                      const zeroNormalizedPosition = rawRange === 0 ? 50 : 10 + ((0 - rawMin) / rawRange) * 80;
+                      const zeroPosition = 100 - zeroNormalizedPosition; // Invert for SVG
+                      
+                      // Check if zero is already close to one of the existing labels (within 2% position)
+                      const hasZeroLabel = labels.some(label => Math.abs(label.position - zeroPosition) < 2);
+                      
+                      if (!hasZeroLabel) {
+                        // Format zero label
+                        const isNFP = indicator.id === 'nonfarm-payrolls';
+                        const zeroLabel = isNFP ? '0K' : '0%';
+                        
+                        labels.push({
+                          position: zeroPosition,
+                          label: zeroLabel,
+                          value: 0
+                        });
+                        
+                        // Sort labels by position to maintain order
+                        labels.sort((a, b) => a.position - b.position);
+                      }
                     }
                     
                     return labels;
@@ -940,6 +1211,46 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                   
                   const xAxisLabels = generateXAxisLabels();
                   const yAxisLabels = generateYAxisLabels();
+                  
+                  // Calculate 2% reference line position for inflation (not shown in default card view)
+                  const getTargetLinePosition = () => {
+                    return null; // Not shown in default card view
+                  };
+
+                  const getZeroLinePosition = () => {
+                    if (!originalDataToUse || originalDataToUse.length === 0) {
+                      return null;
+                    }
+                    
+                    const rawMin = Math.min(...originalDataToUse);
+                    const rawMax = Math.max(...originalDataToUse);
+                    
+                    // Only show zero line if data crosses zero (has both positive and negative values)
+                    // or if zero is within a reasonable range of the data
+                    if (rawMin > 0 && rawMax > 0) {
+                      return null; // All values are positive, zero is below the chart
+                    }
+                    if (rawMin < 0 && rawMax < 0) {
+                      return null; // All values are negative, zero is above the chart
+                    }
+                    
+                    // Calculate Y position for 0 using rawMin/rawRange to match data normalization
+                    // Data normalization uses: ((val - rawMin) / rawRange) * 80 + 10
+                    const rawRange = rawMax - rawMin;
+                    const zeroValue = 0;
+                    
+                    if (zeroValue < rawMin || zeroValue > rawMax) {
+                      return null; // 0 is outside the visible range
+                    }
+                    
+                    // Calculate normalized position in 10-90 range using rawMin/rawRange, then invert for SVG coordinates
+                    const zeroNormalizedPosition = rawRange === 0 ? 50 : 10 + ((zeroValue - rawMin) / rawRange) * 80;
+                    const yPosition = 100 - zeroNormalizedPosition; // Invert for SVG (0 at top, 100 at bottom)
+                    return yPosition;
+                  };
+                  
+                  const targetLineY = getTargetLinePosition();
+                  const zeroLineY = getZeroLinePosition();
                   
                   return (
                     <div
@@ -954,12 +1265,18 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                       <stop offset="100%" stopColor="rgba(255, 59, 48, 0)" />
                     </linearGradient>
                   </defs>
-                  {/* Grid lines */}
-                  <line x1="0" y1="0" x2="100" y2="0" className="chart-grid-line" />
-                  <line x1="0" y1="25" x2="100" y2="25" className="chart-grid-line" />
-                  <line x1="0" y1="50" x2="100" y2="50" className="chart-grid-line" />
-                  <line x1="0" y1="75" x2="100" y2="75" className="chart-grid-line" />
-                  <line x1="0" y1="100" x2="100" y2="100" className="chart-grid-line" />
+                  {/* Grid lines - horizontal lines aligned with Y-axis labels */}
+                  {yAxisLabels.map((label, idx) => (
+                    <line 
+                      key={`grid-h-${idx}`}
+                      x1="0" 
+                      y1={label.position} 
+                      x2="100" 
+                      y2={label.position} 
+                      className="chart-grid-line"
+                    />
+                  ))}
+                  {/* Grid lines - vertical lines (fixed positions for X-axis) */}
                   <line x1="0" y1="0" x2="0" y2="100" className="chart-grid-line" />
                   <line x1="25" y1="0" x2="25" y2="100" className="chart-grid-line" />
                   <line x1="50" y1="0" x2="50" y2="100" className="chart-grid-line" />
@@ -971,7 +1288,32 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                     d={generateAreaPath(chartDataToUse)}
                     fill={`url(#chart-gradient-${indicator.id})`}
                   />
-                  {/* Line path */}
+                  {/* Zero Line (all charts, when data crosses zero) */}
+                  {zeroLineY !== null && (
+                    <line 
+                      x1="0" 
+                      y1={zeroLineY} 
+                      x2="100" 
+                      y2={zeroLineY} 
+                      className="chart-zero-line"
+                    />
+                  )}
+                  {/* 2% Fed Target Line (inflation only, expanded only) */}
+                  {targetLineY !== null && (
+                    <line 
+                      x1="0" 
+                      y1={targetLineY} 
+                      x2="100" 
+                      y2={targetLineY} 
+                      className="chart-target-line"
+                    />
+                  )}
+                  {/* Multi-layer rendering: Glow/shadow layer (Method 5) */}
+                  <path 
+                    className="chart-path-glow"
+                    d={generateLinePath(chartDataToUse)}
+                  />
+                  {/* Main line path */}
                   <path 
                     className="chart-path"
                     d={generateLinePath(chartDataToUse)}
@@ -1007,7 +1349,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                             style={{ left: `${label.position}%` }}
                           >
                             {label.label}
-                          </div>
+                </div>
                         ))}
                         {yAxisLabels.map((label, idx) => (
                           <div 
@@ -1016,9 +1358,21 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                             style={{ top: `${label.position}%` }}
                           >
                             {label.label}
-                          </div>
+              </div>
                         ))}
                       </div>
+                      {/* 2% Fed Target Label (inflation only, expanded only) */}
+                      {targetLineY !== null && (
+                        <div 
+                          className="chart-target-label"
+                          style={{
+                            top: `${targetLineY}%`,
+                            right: '12px'
+                          }}
+                        >
+                          Fed 2% Target
+                        </div>
+                      )}
                       {chartHover && chartHover.indicatorId === indicator.id && (
                         <div
                           className={`chart-tooltip chart-tooltip-${chartHover.position || 'top'}`}
@@ -1029,7 +1383,9 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                         >
                           <div className="chart-tooltip-value">
                             {typeof chartHover.value === 'number'
-                              ? chartHover.value.toFixed(2) + '%'
+                              ? (indicator.id === 'nonfarm-payrolls' 
+                                  ? chartHover.value.toFixed(0) + 'K'
+                                  : chartHover.value.toFixed(2) + '%')
                               : chartHover.value}
                             {chartHover.trend && (
                               <span className={`chart-tooltip-trend chart-tooltip-trend-${chartHover.trend}`}>
@@ -1058,118 +1414,525 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                 </div>
                   );
                 })()}
-                <div className="chart-label">{indicator.chartLabel}</div>
-              </div>
-
-              {isExpanded && (
-                <div className="indicator-expanded">
-                  {isLoading && (
-                    <div className="indicator-loading">
-                      <div className="loading-spinner"></div>
-                    </div>
-                  )}
-                  <div className={`indicator-expanded-content ${isLoading ? 'loading' : ''}`}>
-                    <div className="indicator-expanded-section">
-                      <div className="indicator-section-title">Key Insights</div>
-                      <ul className="indicator-insights-list">
-                        {insightItems.map((insight, index) => (
-                          <li key={index} className="indicator-insight-item">
-                            {insight}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="indicator-expanded-section">
-                      <div className="indicator-section-title">Indicator Overview</div>
-                      <div className="indicator-section-text">
-                        {renderParagraphs(overview)}
-                      </div>
-                    </div>
-
-                    <div className="indicator-expanded-section">
-                      <div className="indicator-section-title">How It's Measured</div>
-                      <div className="indicator-section-text">
-                        {renderParagraphs(measurement)}
-                      </div>
-                    </div>
-
-                    <div className="indicator-expanded-section">
-                      <div className="indicator-section-title">Currency & Market Impact</div>
-                      <div className="indicator-section-text">
-                        {renderParagraphs(impact)}
-                      </div>
-                    </div>
-
-                    {context && (
-                      <div className="indicator-expanded-section">
-                        <div className="indicator-section-title">Current Policy Context – December 2025</div>
-                        <div className="indicator-section-text">
-                          {renderParagraphs(context)}
-                        </div>
-                      </div>
-                    )}
-
-                    {traderImplications && (
-                      <div className="indicator-expanded-section">
-                        <div className="indicator-section-title">What This Means for Traders</div>
-                        <div className="indicator-section-text">
-                          {renderParagraphs(traderImplications)}
-                        </div>
-                      </div>
-                    )}
-
-                    {(indicator.source || indicator.asOf || indicator.frequency) && (
-                      <div className="indicator-expanded-section">
-                        <div className="indicator-section-title">Data source</div>
-                        <div className="indicator-metadata">
-                          {indicator.source && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Source:</span>
-                              <span className="metadata-value">
-                                {indicator.sourceUrl ? (
-                                  <a 
-                                    href={indicator.sourceUrl} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="source-link"
-                                  >
-                                    {indicator.source}
-                                  </a>
-                                ) : (
-                                  indicator.source
-                                )}
-                              </span>
-                            </div>
-                          )}
-                          {indicator.asOf && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Last updated:</span>
-                              <span className="metadata-value">{indicator.asOf}</span>
-                            </div>
-                          )}
-                          {indicator.frequency && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Release frequency:</span>
-                              <span className="metadata-value">{indicator.frequency}</span>
-                            </div>
-                          )}
-                          {indicator.notes && (
-                            <div className="metadata-item">
-                              <span className="metadata-label">Notes:</span>
-                              <span className="metadata-value">{indicator.notes}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
+              <div className="chart-label">{indicator.chartLabel}</div>
             </div>
+          </div>
           );
         })}
       </div>
+
+      {/* Modal Overlay for Expanded Card */}
+      {expandedIndicatorId && (() => {
+        const expandedIndicator = data.indicators.find(ind => ind.id === expandedIndicatorId);
+        if (!expandedIndicator) return null;
+        
+        const isLoading = loadingIndicatorId === expandedIndicatorId;
+        const insightItems = getIndicatorInsights(expandedIndicator);
+        const { overview, measurement, impact, context, traderImplications } = getIndicatorDetails(expandedIndicator);
+        
+        return (
+          <div 
+            className="indicator-modal-overlay"
+            onClick={closeExpandedCard}
+          >
+            <div 
+              className="indicator-modal-content"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button 
+                className="indicator-modal-close"
+                onClick={closeExpandedCard}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              
+              <div className="indicator-modal-header">
+                <div className="indicator-modal-title">{expandedIndicator.title}</div>
+                <div className="indicator-modal-value">{expandedIndicator.currentValue}</div>
+              </div>
+              
+              <div className="indicator-modal-description">{expandedIndicator.description}</div>
+              
+              <div className="indicator-modal-chart">
+                {(() => {
+                  const chartDataToUse = expandedIndicator.chartDataExpanded || expandedIndicator.chartData;
+                  const originalDataToUse = expandedIndicator.chartDataOriginalAll || expandedIndicator.chartDataOriginal;
+                  const datesToUse = expandedIndicator.chartDatesAll || expandedIndicator.chartDates;
+                  
+                  // Generate x-axis labels showing more dates in expanded modal
+                  const generateXAxisLabels = () => {
+                    if (!datesToUse || datesToUse.length === 0) {
+                      const numPoints = chartDataToUse.length;
+                      return [
+                        { position: 50, label: Math.floor(numPoints / 2).toString() },
+                        { position: 100, label: (numPoints - 1).toString() }
+                      ];
+                    }
+                    
+                    const labels = [];
+                    const totalPoints = datesToUse.length;
+                    
+                    // Show more labels in expanded state - every 3-4 data points or key dates
+                    // First, get all unique year-month combinations
+                    const dateMap = new Map();
+                    datesToUse.forEach((dateStr, index) => {
+                      const date = new Date(dateStr);
+                      const year = date.getFullYear();
+                      const month = date.getMonth();
+                      const key = `${year}-${month}`;
+                      
+                      if (!dateMap.has(key)) {
+                        dateMap.set(key, { index, year, month, date });
+                      }
+                    });
+                    
+                    // Determine interval based on data length
+                    let interval;
+                    if (totalPoints <= 12) {
+                      interval = 2; // Show every 2nd point for small datasets
+                    } else if (totalPoints <= 24) {
+                      interval = 3; // Show every 3rd point
+                    } else {
+                      interval = 4; // Show every 4th point for larger datasets
+                    }
+                    
+                    // Add labels at regular intervals
+                    for (let i = 0; i < totalPoints; i += interval) {
+                      if (i < totalPoints) {
+                        const date = new Date(datesToUse[i]);
+                        const year = date.getFullYear();
+                        const month = date.getMonth();
+                        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+                        
+                        // Format: "Jan 2024" or just year if it's the first occurrence of that year
+                        const isFirstOfYear = i === 0 || new Date(datesToUse[i - 1]).getFullYear() !== year;
+                        const label = isFirstOfYear ? `${monthName} ${year}` : monthName;
+                        
+                        const position = (i / (totalPoints - 1)) * 100;
+                        labels.push({ position, label });
+                      }
+                    }
+                    
+                    // Always include the last data point
+                    if (totalPoints > 0) {
+                      const lastIndex = totalPoints - 1;
+                      const lastDate = new Date(datesToUse[lastIndex]);
+                      const lastYear = lastDate.getFullYear();
+                      const lastMonth = lastDate.toLocaleDateString('en-US', { month: 'short' });
+                      
+                      // Check if last point is already included
+                      const lastIncluded = labels.some(l => Math.abs(l.position - 100) < 1);
+                      if (!lastIncluded) {
+                        labels.push({ position: 100, label: `${lastMonth} ${lastYear}` });
+                      }
+                    }
+                    
+                    return labels;
+                  };
+                  
+                  // Generate y-axis labels with 5 clean intervals
+                  const generateYAxisLabels = () => {
+                    if (!originalDataToUse || originalDataToUse.length === 0) {
+                      return [
+                        { position: 0, label: '100' },
+                        { position: 25, label: '75' },
+                        { position: 50, label: '50' },
+                        { position: 75, label: '25' },
+                        { position: 100, label: '0' }
+                      ];
+                    }
+                    
+                    const rawMin = Math.min(...originalDataToUse);
+                    const rawMax = Math.max(...originalDataToUse);
+                    const rawRange = rawMax - rawMin;
+                    
+                    let roundingStep;
+                    if (rawRange <= 1) {
+                      roundingStep = 0.1;
+                    } else if (rawRange <= 5) {
+                      roundingStep = 0.5;
+                    } else {
+                      roundingStep = 1;
+                    }
+                    
+                    // Round min down and max up for clean label values
+                    const displayMin = Math.floor(rawMin / roundingStep) * roundingStep;
+                    const displayMax = Math.ceil(rawMax / roundingStep) * roundingStep;
+                    const displayRange = displayMax - displayMin;
+                    const step = displayRange / 4;
+                    const labels = [];
+                    
+                    // IMPORTANT: Data normalization uses rawMin/rawMax, not displayMin/displayMax
+                    // Formula: ((val - rawMin) / rawRange) * 80 + 10
+                    // So Y-axis label positions must use rawMin/rawRange to match data points
+                    for (let i = 0; i < 5; i++) {
+                      const value = displayMax - (step * i);
+                      
+                      let cleanValue;
+                      if (roundingStep >= 1) {
+                        cleanValue = Math.round(value);
+                      } else if (roundingStep === 0.5) {
+                        cleanValue = Math.round(value * 2) / 2;
+                      } else {
+                        cleanValue = Math.round(value * 10) / 10;
+                      }
+                      
+                      // Calculate position using rawMin/rawRange to match data normalization
+                      // Formula: position = 10 + ((cleanValue - rawMin) / rawRange) * 80
+                      // But SVG Y-axis is inverted (0 at top, 100 at bottom), so: 100 - position
+                      const normalizedPosition = rawRange === 0 ? 50 : 10 + ((cleanValue - rawMin) / rawRange) * 80;
+                      const position = 100 - normalizedPosition; // Invert for SVG coordinates
+                      
+                      let formattedLabel;
+                      const isNFP = expandedIndicator.id === 'nonfarm-payrolls';
+                      
+                      if (isNFP) {
+                        formattedLabel = cleanValue.toFixed(0) + 'K';
+                      } else {
+                        if (roundingStep >= 1) {
+                          formattedLabel = cleanValue.toFixed(0) + '%';
+                        } else if (roundingStep === 0.5) {
+                          formattedLabel = cleanValue.toFixed(1) + '%';
+                        } else {
+                          formattedLabel = cleanValue.toFixed(1) + '%';
+                        }
+                      }
+                      
+                      labels.push({ position, label: formattedLabel, value: cleanValue });
+                    }
+                    
+                    // Add zero label if data crosses zero
+                    if (rawMin < 0 && rawMax > 0) {
+                      // Calculate zero position using rawMin/rawRange to match data normalization
+                      const zeroNormalizedPosition = rawRange === 0 ? 50 : 10 + ((0 - rawMin) / rawRange) * 80;
+                      const zeroPosition = 100 - zeroNormalizedPosition; // Invert for SVG
+                      const hasZeroLabel = labels.some(label => Math.abs(label.position - zeroPosition) < 2);
+                      
+                      if (!hasZeroLabel) {
+                        const isNFP = expandedIndicator.id === 'nonfarm-payrolls';
+                        const zeroLabel = isNFP ? '0K' : '0%';
+                        labels.push({ position: zeroPosition, label: zeroLabel, value: 0 });
+                        labels.sort((a, b) => a.position - b.position);
+                      }
+                    }
+                    
+                    return labels;
+                  };
+                  
+                  const getTargetLinePosition = () => {
+                    if (expandedIndicator.id !== 'inflation-YoY' || !originalDataToUse || originalDataToUse.length === 0) {
+                      return null;
+                    }
+                    
+                    // Include 2% in the range calculation to ensure it's always visible
+                    // This follows the user's suggestion to make it part of the dataset for positioning
+                    const rawMin = Math.min(...originalDataToUse);
+                    const rawMax = Math.max(...originalDataToUse);
+                    const targetValue = 2.0;
+                    
+                    // Create extended range that includes 2% target for proper positioning
+                    const extendedMin = Math.min(rawMin, targetValue);
+                    const extendedMax = Math.max(rawMax, targetValue);
+                    const extendedRange = extendedMax - extendedMin;
+                    
+                    // Calculate normalized position using extended range
+                    // This ensures 2% is always positioned correctly relative to the data
+                    // Data normalization uses: ((val - min) / range) * 80 + 10
+                    // But we use extended range here to include 2% in the calculation
+                    const targetNormalizedPosition = extendedRange === 0 ? 50 : 10 + ((targetValue - extendedMin) / extendedRange) * 80;
+                    
+                    // Clamp to visible area (10-90% range) to ensure line is always visible
+                    const clampedPosition = Math.max(10, Math.min(90, targetNormalizedPosition));
+                    
+                    return 100 - clampedPosition; // Invert for SVG (0 at top, 100 at bottom)
+                  };
+
+                  const getZeroLinePosition = () => {
+                    if (!originalDataToUse || originalDataToUse.length === 0) {
+                      return null;
+                    }
+                    
+                    const rawMin = Math.min(...originalDataToUse);
+                    const rawMax = Math.max(...originalDataToUse);
+                    const rawRange = rawMax - rawMin;
+                    
+                    if (rawMin > 0 && rawMax > 0) return null;
+                    if (rawMin < 0 && rawMax < 0) return null;
+                    
+                    const zeroValue = 0;
+                    
+                    if (zeroValue < rawMin || zeroValue > rawMax) {
+                      return null;
+                    }
+                    
+                    // Calculate normalized position using rawMin/rawRange to match data normalization
+                    // Data normalization uses: ((val - rawMin) / rawRange) * 80 + 10
+                    const zeroNormalizedPosition = rawRange === 0 ? 50 : 10 + ((zeroValue - rawMin) / rawRange) * 80;
+                    return 100 - zeroNormalizedPosition; // Invert for SVG (0 at top, 100 at bottom)
+                  };
+                  
+                  const xAxisLabels = generateXAxisLabels();
+                  const yAxisLabels = generateYAxisLabels();
+                  const targetLineY = getTargetLinePosition();
+                  const zeroLineY = getZeroLinePosition();
+                  
+                  return (
+                    <div
+                      className={`mini-chart expanded${chartHover && chartHover.indicatorId === expandedIndicator.id ? ' chart-hover' : ''}`}
+                      onMouseMove={(event) => handleChartHover(expandedIndicator.id, event, chartDataToUse, originalDataToUse)}
+                      onMouseLeave={clearChartHover}
+                    >
+                      <svg className="chart-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id={`chart-gradient-modal-${expandedIndicator.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(255, 59, 48, 0.4)" />
+                            <stop offset="100%" stopColor="rgba(255, 59, 48, 0)" />
+                          </linearGradient>
+                        </defs>
+                        {/* Grid lines - horizontal lines aligned with Y-axis labels */}
+                        {yAxisLabels.map((label, idx) => (
+                          <line 
+                            key={`grid-h-${idx}`}
+                            x1="0" 
+                            y1={label.position} 
+                            x2="100" 
+                            y2={label.position} 
+                            className="chart-grid-line"
+                          />
+                        ))}
+                        {/* Grid lines - vertical lines (fixed positions for X-axis) */}
+                        <line x1="0" y1="0" x2="0" y2="100" className="chart-grid-line" />
+                        <line x1="25" y1="0" x2="25" y2="100" className="chart-grid-line" />
+                        <line x1="50" y1="0" x2="50" y2="100" className="chart-grid-line" />
+                        <line x1="75" y1="0" x2="75" y2="100" className="chart-grid-line" />
+                        <line x1="100" y1="0" x2="100" y2="100" className="chart-grid-line" />
+                        {/* Area fill */}
+                        <path 
+                          className="chart-area"
+                          d={generateAreaPath(chartDataToUse)}
+                          fill={`url(#chart-gradient-modal-${expandedIndicator.id})`}
+                        />
+                        {/* Zero Line */}
+                        {zeroLineY !== null && (
+                          <line x1="0" y1={zeroLineY} x2="100" y2={zeroLineY} className="chart-zero-line" />
+                        )}
+                        {/* 2% Fed Target Line */}
+                        {targetLineY !== null && (
+                          <line x1="0" y1={targetLineY} x2="100" y2={targetLineY} className="chart-target-line" />
+                        )}
+                        {/* Multi-layer rendering */}
+                        <path className="chart-path-glow" d={generateLinePath(chartDataToUse)} />
+                        <path className="chart-path" d={generateLinePath(chartDataToUse)} />
+                        {/* Crosshair lines - only in expanded modal */}
+                        {chartHover && chartHover.indicatorId === expandedIndicator.id && (() => {
+                          // Calculate exact dot position for vertical line alignment
+                          const lastIndex = chartDataToUse.length - 1;
+                          const exactXPercent = lastIndex === 0 ? 0 : (chartHover.index / lastIndex) * 100;
+                          const exactYPercent = 100 - chartDataToUse[chartHover.index];
+                          
+                          return (
+                            <>
+                              {/* Vertical crosshair line - aligned with exact dot position */}
+                              <line 
+                                x1={exactXPercent} 
+                                y1="0" 
+                                x2={exactXPercent} 
+                                y2="100" 
+                                className="chart-crosshair-line chart-crosshair-vertical"
+                              />
+                              {/* Horizontal crosshair line - aligned with exact dot position */}
+                              <line 
+                                x1="0" 
+                                y1={exactYPercent} 
+                                x2="100" 
+                                y2={exactYPercent} 
+                                className="chart-crosshair-line chart-crosshair-horizontal"
+                              />
+                            </>
+                          );
+                        })()}
+                      </svg>
+                      <div className="chart-dots">
+                        {generateDotPositions(chartDataToUse).map((position, index) => (
+                          <div 
+                            key={index}
+                            className={`chart-dot${
+                              chartHover &&
+                              chartHover.indicatorId === expandedIndicator.id &&
+                              chartHover.index === index ? ' active' : ''
+                            }`}
+                            style={{ left: `${position.x}%`, top: `${position.y}%` }}
+                          />
+                        ))}
+                      </div>
+                      <div className="chart-axes">
+                        <div className="chart-axis chart-axis-x"></div>
+                        <div className="chart-axis chart-axis-y"></div>
+                      </div>
+                      <div className="chart-labels">
+                        {xAxisLabels.map((label, idx) => (
+                          <div key={idx} className="chart-label-x" style={{ left: `${label.position}%` }}>
+                            {label.label}
+                          </div>
+                        ))}
+                        {yAxisLabels.map((label, idx) => (
+                          <div key={`y-${idx}`} className="chart-label-y" style={{ top: `${label.position}%` }}>
+                            {label.label}
+                          </div>
+                        ))}
+                      </div>
+                      {/* 2% Fed Target Label */}
+                      {targetLineY !== null && (
+                        <div className="chart-target-label" style={{ top: `${targetLineY}%`, right: '12px' }}>
+                          Fed 2% Target
+                        </div>
+                      )}
+                      {chartHover && chartHover.indicatorId === expandedIndicator.id && (
+                        <div
+                          className={`chart-tooltip chart-tooltip-${chartHover.position || 'top'}`}
+                          style={{ left: `${chartHover.xPercent}%`, top: `${chartHover.yPercent}%` }}
+                        >
+                          <div className="chart-tooltip-value">
+                            {typeof chartHover.value === 'number'
+                              ? (expandedIndicator.id === 'nonfarm-payrolls' 
+                                  ? chartHover.value.toFixed(0) + 'K'
+                                  : chartHover.value.toFixed(2) + '%')
+                              : chartHover.value}
+                            {chartHover.trend && (
+                              <span className={`chart-tooltip-trend chart-tooltip-trend-${chartHover.trend}`}>
+                                {chartHover.trend === 'up' ? '↑' : chartHover.trend === 'down' ? '↓' : '→'}
+                              </span>
+                            )}
+                          </div>
+                          {chartHover.changePercent && chartHover.trend && (
+                            <div className="chart-tooltip-change">
+                              {chartHover.trend === 'up' ? '+' : ''}{chartHover.changePercent}%
+                            </div>
+                          )}
+                          {datesToUse && datesToUse[chartHover.index] ? (
+                            <div className="chart-tooltip-date">
+                              {new Date(datesToUse[chartHover.index]).toLocaleDateString('en-US', { 
+                                month: 'short', day: 'numeric', year: 'numeric' 
+                              })}
+                            </div>
+                          ) : (
+                            <div className="chart-tooltip-index">Point {chartHover.index + 1}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+                <div className="chart-label">{expandedIndicator.chartLabel}</div>
+              </div>
+              
+              {isLoading && (
+                <div className="indicator-loading">
+                  <div className="loading-spinner"></div>
+                </div>
+              )}
+              
+              <div className={`indicator-expanded-content ${isLoading ? 'loading' : ''}`}>
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">Key Insights</div>
+                  <ul className="indicator-insights-list">
+                    {insightItems.map((insight, index) => (
+                      <li key={index} className="indicator-insight-item">
+                        {insight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">Indicator Overview</div>
+                  <div className="indicator-section-text">
+                    {renderParagraphs(overview)}
+                  </div>
+                </div>
+
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">How It's Measured</div>
+                  <div className="indicator-section-text">
+                    {renderParagraphs(measurement)}
+                  </div>
+                </div>
+
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">Currency & Market Impact</div>
+                  <div className="indicator-section-text">
+                    {renderParagraphs(impact)}
+                  </div>
+                </div>
+
+                {context && (
+                  <div className="indicator-expanded-section">
+                    <div className="indicator-section-title">Current Policy Context – December 2025</div>
+                    <div className="indicator-section-text">
+                      {renderParagraphs(context)}
+                    </div>
+                  </div>
+                )}
+
+                {traderImplications && (
+                  <div className="indicator-expanded-section">
+                    <div className="indicator-section-title">What This Means for Traders</div>
+                    <div className="indicator-section-text">
+                      {renderParagraphs(traderImplications)}
+                    </div>
+                  </div>
+                )}
+
+                {(expandedIndicator.source || expandedIndicator.asOf || expandedIndicator.frequency) && (
+                  <div className="indicator-expanded-section">
+                    <div className="indicator-section-title">Data source</div>
+                    <div className="indicator-metadata">
+                      {expandedIndicator.source && (
+                        <div className="metadata-item">
+                          <span className="metadata-label">Source:</span>
+                          <span className="metadata-value">
+                            {expandedIndicator.sourceUrl ? (
+                              <a 
+                                href={expandedIndicator.sourceUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="source-link"
+                              >
+                                {expandedIndicator.source}
+                              </a>
+                            ) : (
+                              expandedIndicator.source
+                            )}
+                          </span>
+                        </div>
+                      )}
+                      {expandedIndicator.asOf && (
+                        <div className="metadata-item">
+                          <span className="metadata-label">Last updated:</span>
+                          <span className="metadata-value">{expandedIndicator.asOf}</span>
+                        </div>
+                      )}
+                      {expandedIndicator.frequency && (
+                        <div className="metadata-item">
+                          <span className="metadata-label">Release frequency:</span>
+                          <span className="metadata-value">{expandedIndicator.frequency}</span>
+                        </div>
+                      )}
+                      {expandedIndicator.notes && (
+                        <div className="metadata-item">
+                          <span className="metadata-label">Notes:</span>
+                          <span className="metadata-value">{expandedIndicator.notes}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="economy-description">
         {data.description}
