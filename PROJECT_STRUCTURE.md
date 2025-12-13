@@ -18,12 +18,13 @@ The root directory contains essential project files and deployment entry points:
 ### Deployment Files (Must Remain in Root)
 
 These files are required in the root directory for deployment platforms:
-- `main.py` - Main Flask application entry point (referenced by Dockerfile and Procfile)
-- `Dockerfile` - Docker container definition (required by deployment platforms)
+- `main.py` - Main Flask application entry point (referenced by Dockerfile, Procfile, and railway.json)
+- `Dockerfile` - Docker container definition (required by Railway and other Docker-based platforms)
 - `Procfile` - Process definition for Railway/Heroku deployments
-- `vercel.json` - Vercel deployment configuration (in `/config` but may need to be in root)
+- `railway.json` - Railway deployment configuration (specifies Dockerfile path and start command)
+- `vercel.json` - Vercel deployment configuration (for Vercel deployments)
 
-**Note**: While we organize files into folders, these deployment entry points must remain in the root directory for deployment platforms to find them.
+**Note**: While we organize files into folders, these deployment entry points must remain in the root directory for deployment platforms to find them. The `railway.json` file specifically references `Dockerfile` and `main.py` in the root, so moving them would break Railway deployments.
 
 ## Folder Structure
 
