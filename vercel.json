@@ -11,11 +11,6 @@
   ],
   "routes": [
     {
-      "src": "/api/stripe-webhook",
-      "dest": "/api/success.json",
-      "status": 200
-    },
-    {
       "src": "/fxsentinel_logo_nobg.(png|webp)",
       "dest": "/fxsentinel_logo_nobg.$1"
     },
