@@ -4,15 +4,26 @@ This document explains the organization of the FXSentinel project folder structu
 
 ## Root Directory
 
-The root directory contains only essential project files:
+The root directory contains essential project files and deployment entry points:
 - `package.json` - Node.js dependencies and scripts
 - `requirements.txt` - Python dependencies
 - `vite.config.js` - Vite build configuration
 - `eslint.config.js` - ESLint configuration
 - `pyproject.toml` - Python project configuration
 - `runtime.txt` - Python runtime version
+- `index.html` - Frontend entry point (required by Vite)
 - `.env` - Environment variables (not committed to git)
 - Configuration files (`.gitignore`, `.dockerignore`, etc.)
+
+### Deployment Files (Must Remain in Root)
+
+These files are required in the root directory for deployment platforms:
+- `main.py` - Main Flask application entry point (referenced by Dockerfile and Procfile)
+- `Dockerfile` - Docker container definition (required by deployment platforms)
+- `Procfile` - Process definition for Railway/Heroku deployments
+- `vercel.json` - Vercel deployment configuration (in `/config` but may need to be in root)
+
+**Note**: While we organize files into folders, these deployment entry points must remain in the root directory for deployment platforms to find them.
 
 ## Folder Structure
 
