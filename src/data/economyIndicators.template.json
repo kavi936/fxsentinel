@@ -1,0 +1,303 @@
+{
+  "US": {
+    "metadata": {
+      "currency": "USD",
+      "lastUpdated": "",
+      "notes": "Populate each indicator with the latest values plus 6-8 historical points."
+    },
+    "indicators": {
+      "interest-rate": {
+        "name": "Federal Funds Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "inflation": {
+        "name": "Consumer Price Index (YoY)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "gdp-growth": {
+        "name": "Real GDP Growth (QoQ, annualised)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "unemployment": {
+        "name": "Unemployment Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "consumer-confidence": {
+        "name": "Consumer Confidence Index",
+        "unit": "index",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "trade-balance": {
+        "name": "Trade Balance",
+        "unit": "billions",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      }
+    }
+  },
+  "EUR": {
+    "metadata": {
+      "currency": "EUR",
+      "lastUpdated": "",
+      "notes": ""
+    },
+    "indicators": {
+      "interest-rate": {
+        "name": "ECB Main Refinancing Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "inflation": {
+        "name": "HICP (YoY)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "gdp-growth": {
+        "name": "Euro Area Real GDP (QoQ)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "unemployment": {
+        "name": "Euro Area Unemployment Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "consumer-confidence": {
+        "name": "Euro Area Consumer Confidence",
+        "unit": "index",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "trade-balance": {
+        "name": "Euro Area Trade Balance",
+        "unit": "billions",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      }
+    }
+  },
+  "GBP": {
+    "metadata": {
+      "currency": "GBP",
+      "lastUpdated": "",
+      "notes": ""
+    },
+    "indicators": {
+      "interest-rate": {
+        "name": "Bank Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "inflation": {
+        "name": "CPI (YoY)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "gdp-growth": {
+        "name": "Real GDP (QoQ)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "unemployment": {
+        "name": "Unemployment Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "consumer-confidence": {
+        "name": "GfK Consumer Confidence",
+        "unit": "index",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "trade-balance": {
+        "name": "Trade Balance",
+        "unit": "billions",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      }
+    }
+  },
+  "JPY": {
+    "metadata": {
+      "currency": "JPY",
+      "lastUpdated": "",
+      "notes": ""
+    },
+    "indicators": {
+      "interest-rate": {
+        "name": "BoJ Policy Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "inflation": {
+        "name": "CPI (YoY)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "gdp-growth": {
+        "name": "Real GDP (QoQ)",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "unemployment": {
+        "name": "Unemployment Rate",
+        "unit": "percent",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "consumer-confidence": {
+        "name": "Consumer Confidence Index",
+        "unit": "index",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      },
+      "trade-balance": {
+        "name": "Trade Balance",
+        "unit": "billions",
+        "currentValue": "",
+        "asOf": "",
+        "chartData": [
+          { "date": "", "value": null }
+        ],
+        "source": "",
+        "notes": ""
+      }
+    }
+  }
+}
+

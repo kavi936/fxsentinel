@@ -58,6 +58,8 @@ test_session.session*
 !vite.config.js
 !vercel.json
 !eslint.config.js
+!src/data/economyIndicators.json
+!src/data/economyIndicators.template.json
 analysis_history.json
 news_cache.json
 news_history.json
