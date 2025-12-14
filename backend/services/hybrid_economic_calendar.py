@@ -77,9 +77,9 @@ class HybridEconomicCalendar:
     def _get_curated_events(self) -> List[Dict]:
         """
         Curated economic calendar with REAL upcoming events from ForexFactory
-        Last Updated: December 7, 2025
+        Last Updated: December 14, 2025
         Source: ForexFactory Calendar JSON Export
-        Coverage: October 5 - December 12, 2025
+        Coverage: October 5 - December 19, 2025
         """
         events = [
             # SUNDAY, OCTOBER 5
@@ -1260,6 +1260,476 @@ class HybridEconomicCalendar:
                 'actual': 'TBD',
                 'forecast': '0.1%',
                 'previous': '-0.1%'
+            },
+
+            # MONDAY, DECEMBER 15 (From ForexFactory JSON Export)
+            {
+                'title': 'CPI m/m',
+                'date': 'Mon, Dec 15',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Median CPI y/y',
+                'date': 'Mon, Dec 15',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '2.9%',
+                'previous': '2.9%'
+            },
+            {
+                'title': 'Trimmed CPI y/y',
+                'date': 'Mon, Dec 15',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '2.9%',
+                'previous': '3.0%'
+            },
+            {
+                'title': 'Common CPI y/y',
+                'date': 'Mon, Dec 15',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '2.8%',
+                'previous': '2.7%'
+            },
+            {
+                'title': 'Empire State Manufacturing Index',
+                'date': 'Mon, Dec 15',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '9.8',
+                'previous': '18.7'
+            },
+
+            # TUESDAY, DECEMBER 16 (From ForexFactory JSON Export)
+            {
+                'title': 'Claimant Count Change',
+                'date': 'Tue, Dec 16',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '22.3K',
+                'previous': '29.0K'
+            },
+            {
+                'title': 'Average Earnings Index 3m/y',
+                'date': 'Tue, Dec 16',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '4.4%',
+                'previous': '4.8%'
+            },
+            {
+                'title': 'French Flash Manufacturing PMI',
+                'date': 'Tue, Dec 16',
+                'time': '08:15 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '48.0',
+                'previous': '47.8'
+            },
+            {
+                'title': 'French Flash Services PMI',
+                'date': 'Tue, Dec 16',
+                'time': '08:15 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '51.1',
+                'previous': '50.8'
+            },
+            {
+                'title': 'German Flash Manufacturing PMI',
+                'date': 'Tue, Dec 16',
+                'time': '08:30 UTC',
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '48.6',
+                'previous': '48.4'
+            },
+            {
+                'title': 'German Flash Services PMI',
+                'date': 'Tue, Dec 16',
+                'time': '08:30 UTC',
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '53.0',
+                'previous': '52.7'
+            },
+            {
+                'title': 'Flash Manufacturing PMI',
+                'date': 'Tue, Dec 16',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '50.3',
+                'previous': '50.2'
+            },
+            {
+                'title': 'Flash Services PMI',
+                'date': 'Tue, Dec 16',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '51.7',
+                'previous': '50.5'
+            },
+            {
+                'title': 'ADP Weekly Employment Change',
+                'date': 'Tue, Dec 16',
+                'time': '13:20 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '4.8K'
+            },
+            {
+                'title': 'Average Hourly Earnings m/m',
+                'date': 'Tue, Dec 16',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Core Retail Sales m/m',
+                'date': 'Tue, Dec 16',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'Non-Farm Employment Change',
+                'date': 'Tue, Dec 16',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '50K',
+                'previous': '119K'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Tue, Dec 16',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Tue, Dec 16',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '4.5%',
+                'previous': '4.4%'
+            },
+            {
+                'title': 'Flash Manufacturing PMI',
+                'date': 'Tue, Dec 16',
+                'time': '14:45 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '52.3',
+                'previous': '51.9'
+            },
+            {
+                'title': 'Flash Services PMI',
+                'date': 'Tue, Dec 16',
+                'time': '14:45 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '54.0',
+                'previous': '55.0'
+            },
+            {
+                'title': 'BOC Gov Macklem Speaks',
+                'date': 'Tue, Dec 16',
+                'time': '17:45 UTC',
+                'currency': 'CAD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # WEDNESDAY, DECEMBER 17 (From ForexFactory JSON Export)
+            {
+                'title': 'CPI y/y',
+                'date': 'Wed, Dec 17',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.5%',
+                'previous': '3.6%'
+            },
+            {
+                'title': 'German ifo Business Climate',
+                'date': 'Wed, Dec 17',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '88.1',
+                'previous': '88.1'
+            },
+            {
+                'title': 'FOMC Member Waller Speaks',
+                'date': 'Wed, Dec 17',
+                'time': '13:15 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'GDP q/q',
+                'date': 'Wed, Dec 17',
+                'time': '21:45 UTC',
+                'currency': 'NZD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.8%',
+                'previous': '-0.9%'
+            },
+
+            # THURSDAY, DECEMBER 18 (From ForexFactory JSON Export)
+            {
+                'title': 'BOJ Policy Rate',
+                'date': 'Thu, Dec 18',
+                'time': '03:30 UTC',
+                'currency': 'JPY',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '<0.75%',
+                'previous': '<0.50%'
+            },
+            {
+                'title': 'Monetary Policy Statement',
+                'date': 'Thu, Dec 18',
+                'time': '03:30 UTC',
+                'currency': 'JPY',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Monetary Policy Summary',
+                'date': 'Thu, Dec 18',
+                'time': '12:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'MPC Official Bank Rate Votes',
+                'date': 'Thu, Dec 18',
+                'time': '12:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0-5-4',
+                'previous': '0-4-5'
+            },
+            {
+                'title': 'Official Bank Rate',
+                'date': 'Thu, Dec 18',
+                'time': '12:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.75%',
+                'previous': '4.00%'
+            },
+            {
+                'title': 'BOE Gov Bailey Speaks',
+                'date': 'Thu, Dec 18',
+                'time': '12:30 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Main Refinancing Rate',
+                'date': 'Thu, Dec 18',
+                'time': '13:15 UTC',
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '2.15%',
+                'previous': '2.15%'
+            },
+            {
+                'title': 'Monetary Policy Statement',
+                'date': 'Thu, Dec 18',
+                'time': '13:15 UTC',
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Thu, Dec 18',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '3.0%'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Thu, Dec 18',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '224K',
+                'previous': '236K'
+            },
+            {
+                'title': 'Philly Fed Manufacturing Index',
+                'date': 'Thu, Dec 18',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '3.2',
+                'previous': '-1.7'
+            },
+            {
+                'title': 'Core CPI m/m',
+                'date': 'Thu, Dec 18',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Thu, Dec 18',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'ECB Press Conference',
+                'date': 'Thu, Dec 18',
+                'time': '13:45 UTC',
+                'currency': 'EUR',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # FRIDAY, DECEMBER 19 (From ForexFactory JSON Export)
+            {
+                'title': 'BOJ Press Conference',
+                'date': 'Fri, Dec 19',
+                'time': '06:30 UTC',
+                'currency': 'JPY',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Fri, Dec 19',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.4%',
+                'previous': '-1.1%'
+            },
+            {
+                'title': 'Core Retail Sales m/m',
+                'date': 'Fri, Dec 19',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Fri, Dec 19',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '-0.7%'
+            },
+            {
+                'title': 'Existing Home Sales',
+                'date': 'Fri, Dec 19',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '4.15M',
+                'previous': '4.10M'
+            },
+            {
+                'title': 'Revised UoM Consumer Sentiment',
+                'date': 'Fri, Dec 19',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '53.3',
+                'previous': '53.3'
             }
         ]
         
