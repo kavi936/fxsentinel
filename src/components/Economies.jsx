@@ -639,6 +639,14 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           chartLabel: 'YoY trend'
         },
         {
+          id: 'core-inflation-YoY',
+          title: 'Core Inflation YoY',
+          currentValue: '3.0%',
+          description: 'Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components in Japan. The Bank of Japan (BoJ) monitors core inflation closely as it provides a clearer view of underlying inflation trends.',
+          chartData: [50, 55, 52, 48, 52, 54, 56, 58, 52, 50, 56, 62, 60, 62, 66, 66, 70, 64, 62, 56, 60, 62],
+          chartLabel: 'YoY trend'
+        },
+        {
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+1.2%',
@@ -655,20 +663,12 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           chartLabel: 'Rate trend'
         },
         {
-          id: 'consumer-confidence',
-          title: 'Consumer Confidence',
-          currentValue: '36.2',
-          description: 'Consumer confidence index',
-          chartData: [25, 28, 24, 20, 18, 20, 22, 24],
-          chartLabel: 'Index trend'
-        },
-        {
           id: 'trade-balance',
-          title: 'Trade Balance',
+          title: 'Current Account',
           currentValue: '+¥1.2T',
-          description: 'Trade surplus - Export strength',
+          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers.',
           chartData: [60, 62, 65, 68, 72, 70, 75, 78],
-          chartLabel: 'Monthly surplus'
+          chartLabel: 'Monthly balance'
         }
       ],
     },
@@ -1361,7 +1361,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
               </div>
                         ))}
                       </div>
-                      {/* 2% Fed Target Label (inflation only, expanded only) */}
+                      {/* 2% Target Label (Fed for US, BoJ for Japan) */}
                       {targetLineY !== null && (
                         <div 
                           className="chart-target-label"
@@ -1370,7 +1370,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                             right: '12px'
                           }}
                         >
-                          Fed 2% Target
+                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : '2% Target'}
                         </div>
                       )}
                       {chartHover && chartHover.indicatorId === indicator.id && (
@@ -1621,7 +1621,12 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                   };
                   
                   const getTargetLinePosition = () => {
-                    if (expandedIndicator.id !== 'inflation-YoY' || !originalDataToUse || originalDataToUse.length === 0) {
+                    // Show 2% target line for inflation indicators (both US Fed and Japan BoJ target 2%)
+                    // US uses 'inflation-YoY' and 'core-inflation-YoY', Japan uses 'inflation' and 'core-inflation-YoY'
+                    const isInflationIndicator = expandedIndicator.id === 'inflation-YoY' || 
+                                                  expandedIndicator.id === 'inflation' || 
+                                                  expandedIndicator.id === 'core-inflation-YoY';
+                    if (!isInflationIndicator || !originalDataToUse || originalDataToUse.length === 0) {
                       return null;
                     }
                     
@@ -1782,10 +1787,10 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                           </div>
                         ))}
                       </div>
-                      {/* 2% Fed Target Label */}
+                      {/* 2% Target Label (Fed for US, BoJ for Japan) */}
                       {targetLineY !== null && (
                         <div className="chart-target-label" style={{ top: `${targetLineY}%`, right: '12px' }}>
-                          Fed 2% Target
+                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : '2% Target'}
                         </div>
                       )}
                       {chartHover && chartHover.indicatorId === expandedIndicator.id && (
