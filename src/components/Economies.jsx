@@ -512,7 +512,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
       indicators: [
         {
           id: 'interest-rate',
-          title: 'Interest Rate',
+          title: 'Main Refinancing Rate',
           currentValue: '2.15%',
           description: 'Main Refinancing Rate - ECB policy tool',
           chartData: [45, 48, 52, 55, 58, 56, 54, 52],
@@ -525,6 +525,14 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           description: 'Harmonized Index - Euro area inflation',
           chartData: [65, 68, 72, 75, 78, 76, 74, 72],
           chartLabel: 'YoY trend'
+        },
+        {
+          id: 'core-inflation-YoY',
+          title: 'Core Inflation YoY',
+          currentValue: '2.4%',
+          description: 'Core HICP Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. The ECB\'s preferred inflation gauge for monetary policy decisions.',
+          chartData: [70, 72, 75, 78, 82, 80, 85, 88],
+          chartLabel: 'Core YoY trend'
         },
         {
           id: 'gdp-growth',
@@ -1361,7 +1369,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
               </div>
                         ))}
                       </div>
-                      {/* 2% Target Label (Fed for US, BoJ for Japan) */}
+                      {/* 2% Target Label (Fed for US, BoJ for Japan, ECB for EUR) */}
                       {targetLineY !== null && (
                         <div 
                           className="chart-target-label"
@@ -1370,7 +1378,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                             right: '12px'
                           }}
                         >
-                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : '2% Target'}
+                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : selectedEconomy === 'EUR' ? 'ECB 2% Target' : '2% Target'}
                         </div>
                       )}
                       {chartHover && chartHover.indicatorId === indicator.id && (
@@ -1790,7 +1798,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                       {/* 2% Target Label (Fed for US, BoJ for Japan) */}
                       {targetLineY !== null && (
                         <div className="chart-target-label" style={{ top: `${targetLineY}%`, right: '12px' }}>
-                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : '2% Target'}
+                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : selectedEconomy === 'EUR' ? 'ECB 2% Target' : '2% Target'}
                         </div>
                       )}
                       {chartHover && chartHover.indicatorId === expandedIndicator.id && (
