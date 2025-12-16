@@ -551,20 +551,12 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           chartLabel: 'Rate trend'
         },
         {
-          id: 'consumer-confidence',
-          title: 'Consumer Confidence',
-          currentValue: '95.2',
-          description: 'Economic sentiment indicator',
-          chartData: [60, 62, 58, 55, 52, 54, 56, 58],
-          chartLabel: 'Index trend'
-        },
-        {
-          id: 'trade-balance',
-          title: 'Trade Balance',
+          id: 'current-account',
+          title: 'Current Account',
           currentValue: '+€12.8B',
-          description: 'Trade surplus - Export strength',
+          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers.',
           chartData: [70, 72, 75, 78, 82, 80, 85, 88],
-          chartLabel: 'Monthly surplus'
+          chartLabel: 'Monthly balance'
         }
       ],
     },
@@ -576,7 +568,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
       indicators: [
         {
           id: 'interest-rate',
-          title: 'Interest Rate',
+          title: 'Bank Rate',
           currentValue: '4.00%',
           description: 'Bank Rate - BoE policy rate',
           chartData: [75, 78, 82, 85, 88, 86, 84, 82],
@@ -1378,7 +1370,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                             right: '12px'
                           }}
                         >
-                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : selectedEconomy === 'EUR' ? 'ECB 2% Target' : '2% Target'}
+                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : selectedEconomy === 'EUR' ? 'ECB 2% Target' : selectedEconomy === 'GBP' ? 'BoE 2% Target' : '2% Target'}
                         </div>
                       )}
                       {chartHover && chartHover.indicatorId === indicator.id && (
@@ -1798,7 +1790,7 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
                       {/* 2% Target Label (Fed for US, BoJ for Japan) */}
                       {targetLineY !== null && (
                         <div className="chart-target-label" style={{ top: `${targetLineY}%`, right: '12px' }}>
-                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : selectedEconomy === 'EUR' ? 'ECB 2% Target' : '2% Target'}
+                          {selectedEconomy === 'US' ? 'Fed 2% Target' : selectedEconomy === 'JPY' ? 'BoJ 2% Target' : selectedEconomy === 'EUR' ? 'ECB 2% Target' : selectedEconomy === 'GBP' ? 'BoE 2% Target' : '2% Target'}
                         </div>
                       )}
                       {chartHover && chartHover.indicatorId === expandedIndicator.id && (
