@@ -583,6 +583,14 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           chartLabel: 'YoY trend'
         },
         {
+          id: 'core-inflation-YoY',
+          title: 'Core Inflation YoY',
+          currentValue: '3.4%',
+          description: 'Core CPI Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. The Bank of England\'s preferred inflation gauge for monetary policy decisions.',
+          chartData: [70, 72, 75, 78, 82, 80, 85, 88],
+          chartLabel: 'Core YoY trend'
+        },
+        {
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+1.5%',
@@ -599,20 +607,12 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
           chartLabel: 'Rate trend'
         },
         {
-          id: 'consumer-confidence',
-          title: 'Consumer Confidence',
-          currentValue: '89.7',
-          description: 'GfK consumer confidence index',
-          chartData: [45, 48, 42, 38, 35, 37, 39, 41],
-          chartLabel: 'Index trend'
-        },
-        {
-          id: 'trade-balance',
-          title: 'Trade Balance',
-          currentValue: '-£8.2B',
-          description: 'Trade deficit - Import/export balance',
-          chartData: [25, 28, 32, 35, 38, 36, 34, 32],
-          chartLabel: 'Monthly deficit'
+          id: 'wage-growth',
+          title: 'Wage Growth',
+          currentValue: '4.7%',
+          description: 'Average Weekly Earnings - Year-over-year wage growth, key indicator for BoE monetary policy decisions',
+          chartData: [60, 62, 65, 68, 72, 70, 75, 78],
+          chartLabel: 'YoY growth'
         }
       ],
     },
