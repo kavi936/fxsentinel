@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import './Economies.css';
 import economyIndicatorsData from '../data/economyIndicators.json';
+import { config } from '../config';
 
 const indicatorDetails = {
   'interest-rate': {
@@ -234,7 +235,104 @@ const indicatorDetails = {
 
 function Economies() {
   const [selectedEconomy, setSelectedEconomy] = useState('US');
+  const [apiIndicatorsData, setApiIndicatorsData] = useState({});
+  const [apiDataLoading, setApiDataLoading] = useState(false);
+  const [useApiData, setUseApiData] = useState({}); // Track which countries successfully loaded from API
+  const [error, setError] = useState(null);
   const analysisRef = React.useRef(null);
+  const fetchedCountriesRef = React.useRef(new Set()); // Track which countries we've already attempted to fetch
+
+  // Error boundary for component
+  React.useEffect(() => {
+    const errorHandler = (event) => {
+      console.error('Economies component error:', event.error);
+      setError(event.error?.message || 'An error occurred');
+    };
+    window.addEventListener('error', errorHandler);
+    return () => window.removeEventListener('error', errorHandler);
+  }, []);
+
+  // Fetch indicators from Google Sheets API when economy changes
+  useEffect(() => {
+    const fetchIndicators = async () => {
+      try {
+        // Skip if we already fetched this economy (to avoid duplicate requests)
+        if (fetchedCountriesRef.current.has(selectedEconomy)) {
+          return;
+        }
+
+        // Mark as fetched immediately to prevent duplicate requests
+        fetchedCountriesRef.current.add(selectedEconomy);
+
+        // Check if config is available
+        if (!config || !config.endpoints || !config.endpoints.economyIndicators) {
+          console.warn('⚠️ Config not available, using fallback JSON');
+          setUseApiData(prev => ({
+            ...prev,
+            [selectedEconomy]: false
+          }));
+          return;
+        }
+
+        setApiDataLoading(true);
+        
+        // Create abort controller for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const apiUrl = config.endpoints.economyIndicators(selectedEconomy);
+        const response = await fetch(apiUrl, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.status === 'success' && data.indicators) {
+            // Store API data for this country
+            setApiIndicatorsData(prev => ({
+              ...prev,
+              [selectedEconomy]: { indicators: data.indicators }
+            }));
+            setUseApiData(prev => ({
+              ...prev,
+              [selectedEconomy]: true
+            }));
+            console.log(`✅ Loaded ${selectedEconomy} indicators from Google Sheets (${Object.keys(data.indicators).length} indicators)`);
+          } else {
+            // API returned error, use fallback
+            setUseApiData(prev => ({
+              ...prev,
+              [selectedEconomy]: false
+            }));
+            console.log(`⚠️ API returned error for ${selectedEconomy}, using fallback JSON`);
+          }
+        } else {
+          // API request failed, use fallback
+          setUseApiData(prev => ({
+            ...prev,
+            [selectedEconomy]: false
+          }));
+          console.log(`⚠️ API request failed for ${selectedEconomy} (${response.status}), using fallback JSON`);
+        }
+      } catch (error) {
+        // Network error or timeout, use fallback
+        setUseApiData(prev => ({
+          ...prev,
+          [selectedEconomy]: false
+        }));
+        if (error.name !== 'AbortError') {
+          console.log(`⚠️ Failed to fetch ${selectedEconomy} indicators from API, using fallback JSON:`, error.message);
+        }
+      } finally {
+        setApiDataLoading(false);
+      }
+    };
+
+    fetchIndicators();
+  }, [selectedEconomy]); // Only depend on selectedEconomy
+
   // Central bank rates data (will move to backend later)
   const centralBankRates = [
     {
@@ -327,10 +425,10 @@ function Economies() {
             <div className="card-header-main">
             <span className="card-header-text">Choose Economy:</span>
             <select className="economy-selector" value={selectedEconomy} onChange={(e) => setSelectedEconomy(e.target.value)}>
-              <option value="US"><b>🇺🇸 United States</b></option>
-              <option value="EUR"><b>🇪🇺 European Union</b></option>
-              <option value="GBP"><b>🇬🇧 United Kingdom</b></option>
-              <option value="JPY"><b>🇯🇵 Japan</b></option>
+              <option value="US">🇺🇸 United States</option>
+              <option value="EUR">🇪🇺 European Union</option>
+              <option value="GBP">🇬🇧 United Kingdom</option>
+              <option value="JPY">🇯🇵 Japan</option>
             </select>
             </div>
             <button type="button" className="holistic-scan-button" onClick={handleScrollToAnalysis}>
@@ -338,10 +436,15 @@ function Economies() {
             </button>
           </div>
           
-          {/* Card Body */}
-          <div className="card-body">
-            <EconomyDetails selectedEconomy={selectedEconomy} analysisRef={analysisRef} />
-          </div>
+            {/* Card Body */}
+            <div className="card-body">
+              <EconomyDetails 
+                selectedEconomy={selectedEconomy} 
+                analysisRef={analysisRef}
+                apiIndicatorsData={apiIndicatorsData}
+                useApiData={useApiData}
+              />
+            </div>
         </div>
       </div>
     </div>
@@ -351,11 +454,17 @@ function Economies() {
 export default Economies;
 
 
-function EconomyDetails({ selectedEconomy, analysisRef }) {
+function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useApiData }) {
   const [isLoading, setIsLoading] = useState(false);
   const [expandedIndicatorId, setExpandedIndicatorId] = useState(null);
   const [loadingIndicatorId, setLoadingIndicatorId] = useState(null);
   const [chartHover, setChartHover] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Log for debugging
+  React.useEffect(() => {
+    console.log('EconomyDetails rendered with selectedEconomy:', selectedEconomy);
+  }, [selectedEconomy]);
 
   // Normalize chart data from actual values to 0-100 range for SVG display
   const normalizeChartData = (values) => {
@@ -674,12 +783,24 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
     },
     };
 
-    // Merge real data from JSON file with placeholder data
+    // Merge real data from API (Google Sheets) or JSON file (fallback) with placeholder data
     const mergedData = { ...baseData };
     
-    Object.keys(economyIndicatorsData).forEach((countryCode) => {
-      if (mergedData[countryCode] && economyIndicatorsData[countryCode]?.indicators) {
-        const realIndicators = economyIndicatorsData[countryCode].indicators;
+    // Determine which data source to use for each country
+    const indicatorsSource = {};
+    Object.keys(baseData).forEach((countryCode) => {
+      // Use API data if available and successful, otherwise use JSON fallback
+      if (useApiData[countryCode] && apiIndicatorsData[countryCode]?.indicators) {
+        indicatorsSource[countryCode] = apiIndicatorsData[countryCode];
+      } else if (economyIndicatorsData[countryCode]?.indicators) {
+        indicatorsSource[countryCode] = economyIndicatorsData[countryCode];
+      }
+    });
+    
+    // Merge indicators from the selected source (API or JSON)
+    Object.keys(indicatorsSource).forEach((countryCode) => {
+      if (mergedData[countryCode] && indicatorsSource[countryCode]?.indicators) {
+        const realIndicators = indicatorsSource[countryCode].indicators;
         
         mergedData[countryCode].indicators = mergedData[countryCode].indicators.map((indicator) => {
           const realData = realIndicators[indicator.id];
@@ -689,9 +810,39 @@ function EconomyDetails({ selectedEconomy, analysisRef }) {
     });
 
     return mergedData;
-  }, []);
+  }, [apiIndicatorsData, useApiData]);
 
-  const data = economyData[selectedEconomy] || economyData.US;
+  // Log economyData for debugging
+  React.useEffect(() => {
+    console.log('EconomyDetails - economyData keys:', Object.keys(economyData));
+    console.log('EconomyDetails - selectedEconomy:', selectedEconomy);
+    console.log('EconomyDetails - economyData[selectedEconomy]:', economyData[selectedEconomy]);
+  }, [economyData, selectedEconomy]);
+
+  // Safely get data with fallback
+  let data;
+  try {
+    data = economyData[selectedEconomy] || economyData.US || economyData['US'];
+    if (!data) {
+      console.error('No data found for economy:', selectedEconomy);
+      return (
+        <div style={{ padding: '20px', color: 'red' }}>
+          <h3>Error: No data available for {selectedEconomy}</h3>
+          <p>Available economies: {Object.keys(economyData).join(', ')}</p>
+        </div>
+      );
+    }
+    console.log('EconomyDetails - data loaded successfully:', data.name);
+  } catch (err) {
+    console.error('Error accessing economyData:', err);
+    return (
+      <div style={{ padding: '20px', color: 'red' }}>
+        <h3>Error loading economy data</h3>
+        <p>{err.message}</p>
+      </div>
+    );
+  }
+
   const toggleIndicatorCard = (indicatorId) => {
     const isCurrentlyExpanded = expandedIndicatorId === indicatorId;
     

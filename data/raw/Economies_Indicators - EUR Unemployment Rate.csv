@@ -1,4 +1,4 @@
-indicator_country,indicator_name,unit,current value,date_of_release,release_value
+use @indicator_country,indicator_name,unit,current value,date_of_release,release_value
 EUR,Unemployment Rate,%,6.4,"October, 2025",6.4
 ,,,,"September, 2025",6.4
 ,,,,"August, 2025",6.4

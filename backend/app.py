@@ -17,6 +17,7 @@ import stripe
 from firebase_admin import credentials, firestore, initialize_app
 from services.stripe_service import StripeService
 from services.coupon_service import CouponService
+from services.google_sheets_service import GoogleSheetsService
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -74,6 +75,17 @@ limiter = Limiter(
     storage_uri="memory://",
     enabled=False  # Temporarily disable rate limiting for testing
 )
+
+# Initialize Google Sheets Service
+try:
+    google_sheets_service = GoogleSheetsService()
+    if google_sheets_service.is_available():
+        print("✅ Google Sheets service initialized")
+    else:
+        print("⚠️ Google Sheets service not available (missing credentials)")
+except Exception as e:
+    print(f"⚠️ Google Sheets service initialization failed: {e}")
+    google_sheets_service = None
 
 # Configure CORS to allow requests from all origins (including file:// and null origins)
 CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False)
@@ -625,6 +637,62 @@ from services.hybrid_economic_calendar import hybrid_economic_calendar
 # NOTE: Only using hybrid_economic_calendar now - no fallbacks to prevent bugs
 # Import the Finnhub historical service
 from services.finnhub_historical import finnhub_historical
+
+@app.route('/api/economy-indicators/<country_code>', methods=['GET'])
+def get_economy_indicators(country_code):
+    """
+    Get economic indicators for a country from Google Sheets
+    
+    Args:
+        country_code: Country code (US, EUR, GBP, JPY)
+    
+    Returns:
+        JSON response with indicators data or error message
+    """
+    try:
+        # Normalize country code to uppercase
+        country_code = country_code.upper()
+        
+        # Check if service is available
+        if not google_sheets_service or not google_sheets_service.is_available():
+            return jsonify({
+                "status": "error",
+                "message": "Google Sheets service not available",
+                "fallback": "Use static JSON file"
+            }), 503
+        
+        # Fetch indicators from Google Sheets
+        indicators = google_sheets_service.get_economy_indicators(country_code)
+        
+        if indicators:
+            # Check if data is cached
+            cache_key = f"indicators_{country_code}"
+            is_cached = google_sheets_service._is_cache_valid(cache_key)
+            
+            return jsonify({
+                "status": "success",
+                "country": country_code,
+                "indicators": indicators,
+                "source": "google_sheets",
+                "cached": is_cached,
+                "timestamp": datetime.now().isoformat()
+            }), 200
+        else:
+            # No data found in Google Sheets
+            return jsonify({
+                "status": "error",
+                "message": f"No indicators found for {country_code}",
+                "country": country_code,
+                "fallback": "Use static JSON file"
+            }), 404
+            
+    except Exception as e:
+        logger.error(f"Error in economy-indicators API endpoint: {e}")
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+            "country": country_code
+        }), 500
 
 @app.route('/api/economic-calendar')
 def get_economic_calendar():
