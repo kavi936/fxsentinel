@@ -38,6 +38,8 @@ export const config = {
     marketSentiment: `${API_BASE_URL}/api/market-sentiment`,
     sentimentRefresh: `${API_BASE_URL}/api/sentiment/refresh`,
     // Refund request endpoint
-    requestRefund: `${API_BASE_URL}/api/request-refund`
+    requestRefund: `${API_BASE_URL}/api/request-refund`,
+    // Economy indicators endpoint (Google Sheets integration)
+    economyIndicators: (countryCode) => `${API_BASE_URL}/api/economy-indicators/${countryCode}`
   }
 }; 

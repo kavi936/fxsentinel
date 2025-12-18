@@ -1,4 +1,4 @@
-indicator_country,indicator_name,unit,current value,date_of_release,release_value
+use indicator_country,indicator_name,unit,current value,date_of_release,release_value
 UK,Wage Growth,%,4.7,"October, 2025",4.7
 ,,,,"September, 2025",4.9
 ,,,,"August, 2025",5
