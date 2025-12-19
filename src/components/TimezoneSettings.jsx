@@ -131,7 +131,7 @@ const TimezoneSettings = ({ isOpen, onClose, onTimezoneChange }) => {
     <div className="timezone-settings-overlay" onClick={onClose}>
       <div className="timezone-settings-modal" onClick={(e) => e.stopPropagation()}>
         <div className="timezone-settings-header">
-          <h3>Timezone Settings</h3>
+          <h2>Timezone Settings</h2>
           <button className="close-btn" onClick={onClose}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>

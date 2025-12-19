@@ -1733,7 +1733,8 @@ const Overview = () => {
                         <span className="label">Actual:</span>
                         <span className="value">{event.actual}</span>
                       </div>
-                      <div className="graph-icon" onClick={(e) => {
+                      {/* Chart button commented out - opens chart popup for historical data points */}
+                      {/* <div className="graph-icon" onClick={(e) => {
                         e.stopPropagation();
                         handleChartClick(event);
                       }}>
@@ -1743,7 +1744,7 @@ const Overview = () => {
                           <path d="M13 17V5"></path>
                           <path d="M8 17v-3"></path>
                         </svg>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 ))
@@ -1799,26 +1800,27 @@ const Overview = () => {
                   </div>
                 )}
               </div>
-              <div className="ai-controls">
+              {/* AI Refresh button - commented out as it's not needed */}
+              {/* <div className="ai-controls">
                 <button className="ai-refresh-btn" onClick={handleRefreshAI}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                   </svg>
                 </button>
-              </div>
+              </div> */}
             </div>
             <div className="ai-content">
               {aiAnalysisState === 'loading' && (
                 <div className="ai-loading-state">
                   <div className="loading-spinner"></div>
                   <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
-                  <div className="loading-subtext">AI is processing market data and generating insights, est 15 - 60 seconds. Good things take time.</div>
+                  <div className="loading-subtext">Processing live market data, economic release forecast, and generating insights. EST: 15-60s. Good things take time.</div>
                 </div>
               )}
 
               {aiAnalysisState === 'error' && (
                 <div className="ai-error-state">
-                  <div className="error-icon">⚠️</div>
+                  <div className="error-icon"></div>
                   <div className="error-text">Analysis failed</div>
                   <div className="error-subtext">Unable to generate AI analysis. Please try again.</div>
                   <button className="retry-btn" onClick={handleRefreshAI}>Retry Analysis</button>
@@ -1830,8 +1832,7 @@ const Overview = () => {
                   {/* NEW: Quick-Scan Headline */}
                   <div className="quick-scan-headline">
                     <div className="headline-main">
-                      <span className="headline-emoji">{aiAnalysis.headline?.split(' ')[0] || '📊'}</span>
-                      <span className="headline-text">{aiAnalysis.headline?.substring(aiAnalysis.headline.indexOf(' ') + 1) || 'Economic Event Analysis'}</span>
+                      <h3 className="headline-text">{aiAnalysis.headline || 'Economic Event Analysis'}</h3>
                     </div>
                     <div className="key-takeaway">
                       {aiAnalysis.key_takeaway || 'Analysis based on current market conditions and positioning data.'}
@@ -1841,7 +1842,7 @@ const Overview = () => {
                   {/* AI Overview - Enhanced with positioning data */}
                   <div className="ai-overview">
                     <div className="ai-indicator">
-                      <div className="ai-label">Market Confidence</div>
+                      <div className="ai-label">Analysis Confidence</div>
                       <div className={`ai-value ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
                         {aiAnalysis.confidence_score ? `${aiAnalysis.confidence_score}%` : '85%'}
                       </div>
@@ -1881,7 +1882,7 @@ const Overview = () => {
 
                   {/* NEW: Forward Scenarios */}
                   <div className="forward-scenarios-section">
-                    <h3 className="section-header">🎯 Forward Scenarios</h3>
+                    <h3 className="section-header">Forward Scenarios</h3>
                     {/* DEBUG: Log the actual aiAnalysis state */}
                     {console.log('🦘🦘🦘 FRONTEND DISPLAY DEBUG - aiAnalysis state 🦘🦘🦘', aiAnalysis)}
                     {console.log('🦘 Forward Scenarios:', aiAnalysis?.forward_scenarios)}
@@ -1910,7 +1911,7 @@ const Overview = () => {
 
                   {/* NEW: Positioning Context */}
                   <div className="positioning-context-section">
-                    <h3 className="section-header">📊 Market Positioning</h3>
+                    <h3 className="section-header">Market Positioning</h3>
                     <div className="positioning-grid">
                       <div className="positioning-item">
                         <h4>Retail Sentiment</h4>
@@ -1936,7 +1937,7 @@ const Overview = () => {
                     {/* Event Summary - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon">📋</span>
+                        <span className="summary-icon"></span>
                         <span className="summary-title">Event Summary</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
@@ -1964,7 +1965,7 @@ const Overview = () => {
                     {/* Market Reaction - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon">⚡</span>
+                        <span className="summary-icon"></span>
                         <span className="summary-title">Market Reaction</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
@@ -1984,7 +1985,7 @@ const Overview = () => {
                     {/* Implications & Takeaways - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon">🔍</span>
+                        <span className="summary-icon"></span>
                         <span className="summary-title">Implications & Takeaways</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
@@ -2006,7 +2007,7 @@ const Overview = () => {
                     {/* Trading Plan - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon">🎯</span>
+                        <span className="summary-icon"></span>
                         <span className="summary-title">Trading Plan</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
@@ -2031,7 +2032,7 @@ const Overview = () => {
                     {/* Big Picture - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon">🌍</span>
+                        <span className="summary-icon"></span>
                         <span className="summary-title">Big Picture</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
@@ -2051,7 +2052,7 @@ const Overview = () => {
                     {/* Next Catalysts - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon">📅</span>
+                        <span className="summary-icon"></span>
                         <span className="summary-title">Next Catalysts</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
@@ -2059,12 +2060,12 @@ const Overview = () => {
                         <div className="catalysts-list">
                           {aiAnalysis.next_catalysts?.map((catalyst, index) => (
                             <div key={index} className="catalyst-item">
-                              <span className="catalyst-icon">📅</span>
+                              <span className="catalyst-icon"></span>
                               <span className="catalyst-text">{catalyst}</span>
                             </div>
                           )) || (
                             <div className="catalyst-item">
-                              <span className="catalyst-icon">📅</span>
+                              <span className="catalyst-icon"></span>
                               <span className="catalyst-text">Central bank meetings and CPI releases</span>
                             </div>
                           )}
@@ -2077,9 +2078,9 @@ const Overview = () => {
 
               {aiAnalysisState === 'default' && (
                 <div className="ai-default-message">
-                  <div className="default-icon">🎯</div>
+                  <div className="default-icon"></div>
                   <div className="default-text">Click on any economic event to get AI analysis</div>
-                  <div className="default-subtext">Get personalized insights and trading opportunities</div>
+                  <div className="default-subtext">Get specific insights and trading opportunities</div>
                 </div>
               )}
             </div>

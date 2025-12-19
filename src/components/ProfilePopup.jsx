@@ -467,7 +467,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                   </div>
 
                   <div className="developer-note">
-                    <p>🔧 This is a developer account with full access for testing purposes. No payment required.</p>
+                    <p>This is a developer account with full access for testing purposes. No payment required.</p>
                   </div>
                 </div>
               ) : subscriptionStatus ? (
@@ -556,7 +556,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                       )}
                       
                       <div className="premium-perks">
-                        <p>✨ Thank you for being a Premium member!</p>
+                        <p>Thank you for being a Premium member!</p>
                       </div>
                     </div>
                   )}
@@ -664,7 +664,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
               
               <div className="support-grid">
                 <div className="support-card">
-                  <div className="support-icon">📧</div>
+                  <div className="support-icon"></div>
                   <h4>Contact Support</h4>
                   <p>Get help with billing, technical issues, or general questions</p>
                   <button 
@@ -676,7 +676,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="support-card">
-                  <div className="support-icon">❓</div>
+                  <div className="support-icon"></div>
                   <h4>FAQ</h4>
                   <p>Find answers to common questions about FXSentinel</p>
                   <button 
@@ -688,7 +688,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="support-card">
-                  <div className="support-icon">💰</div>
+                  <div className="support-icon"></div>
                   <h4>Refund Policy</h4>
                   <p>Learn about our refund and cancellation policies</p>
                   <button 
@@ -700,7 +700,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 </div>
 
                 <div className="support-card">
-                  <div className="support-icon">📋</div>
+                  <div className="support-icon"></div>
                   <h4>Request Refund</h4>
                   <p>Submit a refund request for your subscription</p>
                   <button 
