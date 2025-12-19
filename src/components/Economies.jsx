@@ -256,13 +256,19 @@ function Economies() {
   useEffect(() => {
     const fetchIndicators = async () => {
       try {
-        // Skip if we already fetched this economy (to avoid duplicate requests)
-        if (fetchedCountriesRef.current.has(selectedEconomy)) {
+        // Check if we should force refresh (add ?refresh=true to URL or use Shift+Click)
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceRefresh = urlParams.get('refresh') === 'true';
+        
+        // Skip if we already fetched this economy (unless forcing refresh)
+        if (!forceRefresh && fetchedCountriesRef.current.has(selectedEconomy)) {
           return;
         }
 
-        // Mark as fetched immediately to prevent duplicate requests
-        fetchedCountriesRef.current.add(selectedEconomy);
+        // Mark as fetched immediately to prevent duplicate requests (unless forcing refresh)
+        if (!forceRefresh) {
+          fetchedCountriesRef.current.add(selectedEconomy);
+        }
 
         // Check if config is available
         if (!config || !config.endpoints || !config.endpoints.economyIndicators) {
@@ -280,7 +286,12 @@ function Economies() {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const apiUrl = config.endpoints.economyIndicators(selectedEconomy);
+        // Add cache-busting parameter if forcing refresh
+        let apiUrl = config.endpoints.economyIndicators(selectedEconomy);
+        if (forceRefresh) {
+          apiUrl += `?refresh=true&_t=${Date.now()}`;
+        }
+        
         const response = await fetch(apiUrl, {
           signal: controller.signal
         });
@@ -341,15 +352,15 @@ function Economies() {
       rate: 3.75,
       bankName: 'Fed',
       trend: 'down',
-      nextMeeting: 'Dec 18, 2024'
+      nextMeeting: 'null'
     },
     {
       flag: '🇬🇧',
       country: 'UK',
-      rate: 4.00,
+      rate: 3.75,
       bankName: 'BOE',
       trend: 'stable',
-      nextMeeting: 'Dec 19, 2024'
+      nextMeeting: 'null'
     },
     {
       flag: '🇪🇺',
@@ -357,15 +368,15 @@ function Economies() {
       rate: 2.15,
       bankName: 'ECB',
       trend: 'stable',
-      nextMeeting: 'Dec 19, 2024'
+      nextMeeting: 'null'
     },
     {
       flag: '🇯🇵',
       country: 'Japan',
-      rate: 0.50,
+      rate: 0.75,
       bankName: 'BOJ',
       trend: 'stable',
-      nextMeeting: 'Dec 19, 2024'
+      nextMeeting: 'null'
     }
   ];
 
@@ -436,15 +447,15 @@ function Economies() {
             </button>
           </div>
           
-            {/* Card Body */}
-            <div className="card-body">
+          {/* Card Body */}
+          <div className="card-body">
               <EconomyDetails 
                 selectedEconomy={selectedEconomy} 
                 analysisRef={analysisRef}
                 apiIndicatorsData={apiIndicatorsData}
                 useApiData={useApiData}
               />
-            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -538,7 +549,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     return {
       ...placeholderIndicator,
       currentValue: realData.currentValue || placeholderIndicator.currentValue,
-      description: realData.description || placeholderIndicator.description,
+      // Prioritize realData description if it exists and is meaningful (from JSON file)
+      // Otherwise use placeholder description (for Google Sheets data without descriptions)
+      description: (realData.description && realData.description.length > 50) 
+        ? realData.description 
+        : placeholderIndicator.description,
       chartData: normalizedCollapsed, // Default to collapsed (8 points)
       chartDataExpanded: normalizedAll, // All points for expanded view
       chartDataOriginal: collapsedData, // Original values for collapsed tooltips
@@ -623,7 +638,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'interest-rate',
           title: 'Main Refinancing Rate',
           currentValue: '2.15%',
-          description: 'Main Refinancing Rate - ECB policy tool',
+          description: 'Main Refinancing Rate - The primary monetary policy tool set by the European Central Bank (ECB). Represents the interest rate at which banks can borrow from the ECB for one week. This rate influences borrowing costs across the eurozone and is a key driver of EUR strength.',
           chartData: [45, 48, 52, 55, 58, 56, 54, 52],
           chartLabel: 'Last 8 months'
         },
@@ -631,7 +646,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'inflation',
           title: 'Inflation (HICP)',
           currentValue: '2.4%',
-          description: 'Harmonized Index - Euro area inflation',
+          description: 'Harmonized Index of Consumer Prices (HICP) - The official measure of inflation for the eurozone, calculated by Eurostat. HICP provides a comparable measure of inflation across all EU member states and is the primary inflation target for the European Central Bank (ECB).',
           chartData: [65, 68, 72, 75, 78, 76, 74, 72],
           chartLabel: 'YoY trend'
         },
@@ -639,7 +654,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'core-inflation-YoY',
           title: 'Core Inflation YoY',
           currentValue: '2.4%',
-          description: 'Core HICP Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. The ECB\'s preferred inflation gauge for monetary policy decisions.',
+          description: 'Core HICP (Harmonized Index of Consumer Prices) Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. This is the European Central Bank\'s preferred inflation gauge for monetary policy decisions, providing a clearer view of underlying inflation trends without short-term commodity price fluctuations.',
           chartData: [70, 72, 75, 78, 82, 80, 85, 88],
           chartLabel: 'Core YoY trend'
         },
@@ -647,7 +662,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+0.8%',
-          description: 'Quarterly GDP growth rate',
+          description: 'GDP Annual Growth Rate - Measures the year-over-year percentage change in Gross Domestic Product for the eurozone. GDP growth reflects the overall health and expansion of the economy, influencing ECB monetary policy decisions and EUR strength.',
           chartData: [40, 42, 38, 35, 32, 34, 36, 38],
           chartLabel: 'Q/Q growth'
         },
@@ -655,7 +670,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '6.4%',
-          description: 'Unemployment rate - Labor market',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in the eurozone. A key indicator of labor market health and economic slack, closely monitored by the European Central Bank for monetary policy decisions. Lower unemployment typically supports EUR strength through improved economic outlook.',
           chartData: [55, 58, 56, 54, 52, 53, 51, 50],
           chartLabel: 'Rate trend'
         },
@@ -663,7 +678,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'current-account',
           title: 'Current Account',
           currentValue: '+€12.8B',
-          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers.',
+          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers. A positive current account indicates the eurozone is a net lender to the rest of the world, supporting EUR strength through capital flows.',
           chartData: [70, 72, 75, 78, 82, 80, 85, 88],
           chartLabel: 'Monthly balance'
         }
@@ -679,7 +694,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'interest-rate',
           title: 'Bank Rate',
           currentValue: '4.00%',
-          description: 'Bank Rate - BoE policy rate',
+          description: 'Bank Rate - The primary monetary policy tool set by the Bank of England (BoE). Represents the interest rate at which the BoE lends to commercial banks. This rate influences borrowing costs across the UK and is a key driver of GBP strength.',
           chartData: [75, 78, 82, 85, 88, 86, 84, 82],
           chartLabel: 'Last 8 months'
         },
@@ -687,7 +702,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'inflation',
           title: 'Inflation (CPI)',
           currentValue: '4.6%',
-          description: 'Consumer Price Index - UK inflation',
+          description: 'Consumer Price Index (CPI) Year-over-Year - The official measure of inflation for the United Kingdom, calculated by the Office for National Statistics (ONS). CPI provides the primary inflation target for the Bank of England (BoE), which targets 2% inflation.',
           chartData: [80, 85, 88, 92, 95, 93, 90, 88],
           chartLabel: 'YoY trend'
         },
@@ -695,7 +710,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'core-inflation-YoY',
           title: 'Core Inflation YoY',
           currentValue: '3.4%',
-          description: 'Core CPI Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. The Bank of England\'s preferred inflation gauge for monetary policy decisions.',
+          description: 'Core CPI (Consumer Price Index) Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. This is the Bank of England\'s preferred inflation gauge for monetary policy decisions, providing a clearer view of underlying inflation trends without short-term commodity price fluctuations.',
           chartData: [70, 72, 75, 78, 82, 80, 85, 88],
           chartLabel: 'Core YoY trend'
         },
@@ -703,7 +718,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+1.5%',
-          description: 'Quarterly GDP growth rate',
+          description: 'GDP Annual Growth Rate - Measures the year-over-year percentage change in Gross Domestic Product for the United Kingdom. GDP growth reflects the overall health and expansion of the economy, influencing Bank of England monetary policy decisions and GBP strength.',
           chartData: [50, 52, 48, 45, 42, 44, 46, 48],
           chartLabel: 'Q/Q growth'
         },
@@ -711,7 +726,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '4.2%',
-          description: 'Unemployment rate - Labor market',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in the United Kingdom. A key indicator of labor market health and economic slack, closely monitored by the Bank of England for monetary policy decisions. Lower unemployment typically supports GBP strength through improved economic outlook.',
           chartData: [35, 38, 36, 34, 32, 33, 31, 30],
           chartLabel: 'Rate trend'
         },
@@ -719,7 +734,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'wage-growth',
           title: 'Wage Growth',
           currentValue: '4.7%',
-          description: 'Average Weekly Earnings - Year-over-year wage growth, key indicator for BoE monetary policy decisions',
+          description: 'Wage Growth (Average Weekly Earnings) - Measures the year-over-year percentage change in average weekly earnings for employees in the UK. Wage growth is a key indicator for the Bank of England as it influences inflation expectations and monetary policy decisions. Strong wage growth can signal inflationary pressures and may lead to tighter monetary policy, affecting GBP strength.',
           chartData: [60, 62, 65, 68, 72, 70, 75, 78],
           chartLabel: 'YoY growth'
         }
@@ -735,7 +750,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'interest-rate',
           title: 'Interest Rate',
           currentValue: '0.50%',
-          description: 'Policy Rate - BoJ overnight rate',
+          description: 'Bank of Japan Policy Rate - The overnight interest rate set by the Bank of Japan (BoJ) as its primary monetary policy tool. Represents the target for short-term interest rates in Japan.',
           chartData: [15, 18, 22, 25, 28, 26, 24, 22],
           chartLabel: 'Last 8 months'
         },
@@ -743,7 +758,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'inflation',
           title: 'Inflation (CPI)',
           currentValue: '2.8%',
-          description: 'Consumer Price Index - Japan inflation',
+          description: 'Consumer Price Index Year-over-Year - Measures the annual percentage change in prices for a basket of consumer goods and services in Japan. The Bank of Japan (BoJ) targets 2% inflation as part of its monetary policy framework.',
           chartData: [35, 38, 42, 45, 48, 46, 44, 42],
           chartLabel: 'YoY trend'
         },
@@ -751,7 +766,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'core-inflation-YoY',
           title: 'Core Inflation YoY',
           currentValue: '3.0%',
-          description: 'Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components in Japan. The Bank of Japan (BoJ) monitors core inflation closely as it provides a clearer view of underlying inflation trends.',
+          description: 'Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components in Japan. The Bank of Japan (BoJ) monitors core inflation closely as it provides a clearer view of underlying inflation trends and is less affected by temporary price shocks.',
           chartData: [50, 55, 52, 48, 52, 54, 56, 58, 52, 50, 56, 62, 60, 62, 66, 66, 70, 64, 62, 56, 60, 62],
           chartLabel: 'YoY trend'
         },
@@ -759,7 +774,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+1.2%',
-          description: 'Quarterly GDP growth rate',
+          description: 'Gross Domestic Product Growth Rate - Measures the quarterly percentage change in real GDP (adjusted for inflation) in Japan. A key indicator of overall economic health and growth momentum, closely monitored by the Bank of Japan for monetary policy decisions.',
           chartData: [30, 32, 28, 25, 22, 24, 26, 28],
           chartLabel: 'Q/Q growth'
         },
@@ -767,7 +782,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '2.6%',
-          description: 'Unemployment rate - Labor market',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in Japan. A key indicator of labor market health and economic slack, closely monitored by the Bank of Japan for monetary policy decisions. Japan typically maintains very low unemployment rates compared to other developed economies.',
           chartData: [20, 22, 20, 18, 16, 17, 15, 14],
           chartLabel: 'Rate trend'
         },
@@ -775,7 +790,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'trade-balance',
           title: 'Current Account',
           currentValue: '+¥1.2T',
-          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers.',
+          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers. A positive current account indicates Japan is a net lender to the rest of the world, supporting JPY strength through capital flows.',
           chartData: [60, 62, 65, 68, 72, 70, 75, 78],
           chartLabel: 'Monthly balance'
         }
