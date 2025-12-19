@@ -1673,9 +1673,9 @@ const Overview = () => {
               </div>
               <div className="events-list">
                 {getFilteredEvents().length > 0 ? (
-                  getFilteredEvents().map((event) => (
+                  getFilteredEvents().map((event, index) => (
                     <div 
-                      key={`${event.id}-${currentTimezone}`}
+                      key={`${event.id}-${currentTimezone}-${index}`}
                       className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
                       onClick={() => handleEventClick(event)}
                     >

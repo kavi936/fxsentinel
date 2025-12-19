@@ -646,6 +646,9 @@ def get_economy_indicators(country_code):
     Args:
         country_code: Country code (US, EUR, GBP, JPY)
     
+    Query Parameters:
+        refresh: If 'true', bypasses cache and fetches fresh data
+    
     Returns:
         JSON response with indicators data or error message
     """
@@ -661,7 +664,19 @@ def get_economy_indicators(country_code):
                 "fallback": "Use static JSON file"
             }), 503
         
-        # Fetch indicators from Google Sheets
+        # Check if refresh is requested
+        force_refresh = request.args.get('refresh', 'false').lower() == 'true'
+        
+        # Fetch indicators from Google Sheets (with optional cache bypass)
+        if force_refresh:
+            # Clear cache for this country to force fresh fetch
+            cache_key = f"indicators_{country_code}"
+            if cache_key in google_sheets_service.cache:
+                del google_sheets_service.cache[cache_key]
+            if cache_key in google_sheets_service.cache_timestamps:
+                del google_sheets_service.cache_timestamps[cache_key]
+            logger.info(f"🔄 Cache cleared for {country_code}, forcing fresh fetch")
+        
         indicators = google_sheets_service.get_economy_indicators(country_code)
         
         if indicators:
