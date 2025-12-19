@@ -43,11 +43,12 @@ ID: 1a2b3c4d5e6f7g8h9i0j
 
 **What it is:** How long to cache data before refreshing (in seconds).
 
-**Default:** 300 (5 minutes)
+**Default:** 30 (30 seconds)
 
 **Recommended values:**
-- Development: 60 (1 minute) - faster updates for testing
-- Production: 300 (5 minutes) - balances freshness with API limits
+- Development: 30 (30 seconds) - very frequent updates for testing
+- Production: 60-120 (1-2 minutes) - balances freshness with API limits
+- For very active data: 30 (30 seconds) - maximum freshness
 
 ## Setting Up Environment Variables
 
@@ -62,7 +63,7 @@ Create or edit `.env` file in the `backend/` directory:
 GOOGLE_SHEETS_CREDENTIALS_JSON='{"type":"service_account","project_id":"your-project","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"...","client_id":"...","auth_uri":"...","token_uri":"...","auth_provider_x509_cert_url":"...","client_x509_cert_url":"..."}'
 
 GOOGLE_SHEETS_SPREADSHEET_ID=1a2b3c4d5e6f7g8h9i0j
-GOOGLE_SHEETS_CACHE_TTL=300
+GOOGLE_SHEETS_CACHE_TTL=30
 ```
 
 **Example of what the actual JSON looks like:**
@@ -111,7 +112,7 @@ GOOGLE_SHEETS_CREDENTIALS_PATH=./credentials.json
 
 **Variable 3 (Optional):**
 - Name: `GOOGLE_SHEETS_CACHE_TTL`
-- Value: `300`
+- Value: `30` (or `60` for production)
 - Click "Add"
 
 ### For Vercel (Production)
@@ -134,7 +135,7 @@ GOOGLE_SHEETS_CREDENTIALS_PATH=./credentials.json
 
 **Variable 3 (Optional):**
 - Key: `GOOGLE_SHEETS_CACHE_TTL`
-- Value: `300`
+- Value: `30` (or `60` for production)
 - Environment: Production, Preview, Development (select all)
 - Click "Save"
 

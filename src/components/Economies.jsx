@@ -260,14 +260,20 @@ function Economies() {
         const urlParams = new URLSearchParams(window.location.search);
         const forceRefresh = urlParams.get('refresh') === 'true';
         
-        // Skip if we already fetched this economy (unless forcing refresh)
-        if (!forceRefresh && fetchedCountriesRef.current.has(selectedEconomy)) {
+        // Check if we recently fetched this economy (within last 30 seconds)
+        const lastFetchTime = fetchedCountriesRef.current.get(selectedEconomy);
+        const now = Date.now();
+        const timeSinceLastFetch = lastFetchTime ? now - lastFetchTime : Infinity;
+        const REFETCH_INTERVAL = 30000; // 30 seconds - allow refetch after this time
+        
+        // Skip if we recently fetched this economy (unless forcing refresh)
+        if (!forceRefresh && lastFetchTime && timeSinceLastFetch < REFETCH_INTERVAL) {
           return;
         }
 
-        // Mark as fetched immediately to prevent duplicate requests (unless forcing refresh)
+        // Mark as fetched with timestamp (unless forcing refresh)
         if (!forceRefresh) {
-          fetchedCountriesRef.current.add(selectedEconomy);
+          fetchedCountriesRef.current.set(selectedEconomy, now);
         }
 
         // Check if config is available
@@ -549,11 +555,9 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     return {
       ...placeholderIndicator,
       currentValue: realData.currentValue || placeholderIndicator.currentValue,
-      // Prioritize realData description if it exists and is meaningful (from JSON file)
-      // Otherwise use placeholder description (for Google Sheets data without descriptions)
-      description: (realData.description && realData.description.length > 50) 
-        ? realData.description 
-        : placeholderIndicator.description,
+      // Always use placeholder description for card display (professional briefs)
+      // Real data descriptions are kept for reference but not displayed in cards
+      description: placeholderIndicator.description,
       chartData: normalizedCollapsed, // Default to collapsed (8 points)
       chartDataExpanded: normalizedAll, // All points for expanded view
       chartDataOriginal: collapsedData, // Original values for collapsed tooltips
@@ -1222,7 +1226,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               <div className="indicator-title">{indicator.title}</div>
               <div className="indicator-value">{indicator.currentValue}</div>
             </div>
-            <div className="indicator-description">{indicator.description}</div>
+            <div className="indicator-description">{indicator.description || 'Description not available'}</div>
             <div className="indicator-chart">
                 {(() => {
                   // Always use collapsed data in default card view
@@ -1618,7 +1622,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className="indicator-modal-value">{expandedIndicator.currentValue}</div>
               </div>
               
-              <div className="indicator-modal-description">{expandedIndicator.description}</div>
+              <div className="indicator-modal-description">{expandedIndicator.description || 'Description not available'}</div>
               
               <div className="indicator-modal-chart">
                 {(() => {
