@@ -14,6 +14,52 @@ const Overview = () => {
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
+  // Improved parsing helper functions for AI analysis metrics
+  const parseRiskLevel = (riskLevel) => {
+    if (!riskLevel) return { value: 'Moderate', class: 'neutral' };
+    const lower = riskLevel.toLowerCase();
+    // Check for high/elevated risk indicators
+    if (/\b(high|elevated|significant|substantial|extreme|severe)\b/.test(lower)) {
+      return { value: 'Strong', class: 'bearish' };
+    }
+    // Check for low/minimal risk indicators
+    if (/\b(low|minimal|minor|slight|negligible)\b/.test(lower)) {
+      return { value: 'Weak', class: 'bullish' };
+    }
+    // Default to moderate/medium
+    return { value: 'Moderate', class: 'neutral' };
+  };
+
+  const parseVolatility = (volatility) => {
+    if (!volatility) return { value: 'Medium', class: 'neutral' };
+    const lower = volatility.toLowerCase();
+    // Check for high volatility indicators
+    if (/\b(high|elevated|significant|spike|surge|extreme|volatile)\b/.test(lower)) {
+      return { value: 'High', class: 'bearish' };
+    }
+    // Check for low volatility indicators
+    if (/\b(low|minimal|calm|stable|quiet|subdued)\b/.test(lower)) {
+      return { value: 'Low', class: 'bullish' };
+    }
+    // Default to medium/moderate
+    return { value: 'Medium', class: 'neutral' };
+  };
+
+  const parseMarketBias = (marketBias) => {
+    if (!marketBias) return { value: 'Neutral', class: 'neutral' };
+    const lower = marketBias.toLowerCase();
+    // Check for bullish indicators
+    if (/\b(bullish|positive|upward|rising|strengthening|optimistic|favorable)\b/.test(lower)) {
+      return { value: 'Bullish', class: 'bullish' };
+    }
+    // Check for bearish indicators
+    if (/\b(bearish|negative|downward|falling|weakening|pessimistic|unfavorable)\b/.test(lower)) {
+      return { value: 'Bearish', class: 'bearish' };
+    }
+    // Default to neutral
+    return { value: 'Neutral', class: 'neutral' };
+  };
+
   // Helper function to clean up old cache entries
   const cleanupOldCache = () => {
     try {
@@ -1105,7 +1151,6 @@ const Overview = () => {
         positioning_context: analysis.positioning_context || {
           retail_sentiment: 'Retail positioning analysis based on current market conditions',
           institutional_flow: 'Institutional money flow analysis',
-          futures_positioning: 'Futures market positioning',
           market_bias: 'Overall market bias based on positioning'
         },
         next_catalysts: analysis.next_catalysts || [
@@ -1832,7 +1877,14 @@ const Overview = () => {
                   {/* NEW: Quick-Scan Headline */}
                   <div className="quick-scan-headline">
                     <div className="headline-main">
-                      <h3 className="headline-text">{aiAnalysis.headline || 'Economic Event Analysis'}</h3>
+                      <div className="headline-header-row">
+                        <h3 className="headline-text">{aiAnalysis.headline || 'Economic Event Analysis'}</h3>
+                        {selectedEvent?.currency && (
+                          <div className="currency-bubble">
+                            {selectedEvent.currency}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="key-takeaway">
                       {aiAnalysis.key_takeaway || 'Analysis based on current market conditions and positioning data.'}
@@ -1853,30 +1905,41 @@ const Overview = () => {
                     </div>
                     
                     <div className="ai-breakdown">
-                      <div className="ai-item">
-                        <span className="analysis-pair">{aiAnalysis.eventSummary?.release?.split(' ')[0] || 'Event'} Impact</span>
-                        <span className={`analysis-score ${aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'bearish' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'bullish' : 'neutral'}`}>
-                          {aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'Strong' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'Weak' : 'Moderate'}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Volatility</span>
-                        <span className={`analysis-score ${aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('high') ? 'bearish' : aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('low') ? 'bullish' : 'neutral'}`}>
-                          {aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('high') ? 'High' : aiAnalysis.market_reaction?.volatility?.toLowerCase().includes('low') ? 'Low' : 'Medium'}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Risk Level</span>
-                        <span className={`analysis-score ${aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'bearish' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'bullish' : 'neutral'}`}>
-                          {aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('high') ? 'Elevated' : aiAnalysis.implications_takeaways?.risk_level?.toLowerCase().includes('low') ? 'Low' : 'Normal'}
-                        </span>
-                      </div>
-                      <div className="ai-item">
-                        <span className="analysis-pair">Market Sentiment</span>
-                        <span className={`analysis-score ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
-                          {aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'Positive' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'Negative' : 'Neutral'}
-                        </span>
-                      </div>
+                      {(() => {
+                        const eventImpact = parseRiskLevel(aiAnalysis.implications_takeaways?.risk_level);
+                        const volatility = parseVolatility(aiAnalysis.market_reaction?.volatility);
+                        const riskLevel = parseRiskLevel(aiAnalysis.implications_takeaways?.risk_level);
+                        const marketSentiment = parseMarketBias(aiAnalysis.implications_takeaways?.market_bias);
+                        
+                        return (
+                          <>
+                            <div className="ai-item">
+                              <span className="analysis-pair">{aiAnalysis.eventSummary?.release?.split(' ')[0] || 'Event'} Impact</span>
+                              <span className={`analysis-score ${eventImpact.class}`}>
+                                {eventImpact.value}
+                              </span>
+                            </div>
+                            <div className="ai-item">
+                              <span className="analysis-pair">Volatility</span>
+                              <span className={`analysis-score ${volatility.class}`}>
+                                {volatility.value}
+                              </span>
+                            </div>
+                            <div className="ai-item">
+                              <span className="analysis-pair">Risk Level</span>
+                              <span className={`analysis-score ${riskLevel.class}`}>
+                                {riskLevel.class === 'bearish' ? 'Elevated' : riskLevel.class === 'bullish' ? 'Low' : 'Normal'}
+                              </span>
+                            </div>
+                            <div className="ai-item">
+                              <span className="analysis-pair">Market Sentiment</span>
+                              <span className={`analysis-score ${marketSentiment.class}`}>
+                                {marketSentiment.value}
+                              </span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 
@@ -1922,10 +1985,6 @@ const Overview = () => {
                         <p>{aiAnalysis.positioning_context?.institutional_flow || 'Institutional money flow analysis'}</p>
                       </div>
                       <div className="positioning-item">
-                        <h4>Futures Positioning</h4>
-                        <p>{aiAnalysis.positioning_context?.futures_positioning || 'Futures market positioning'}</p>
-                      </div>
-                      <div className="positioning-item">
                         <h4>Market Bias</h4>
                         <p>{aiAnalysis.positioning_context?.market_bias || 'Overall market bias based on positioning'}</p>
                       </div>
@@ -1937,27 +1996,37 @@ const Overview = () => {
                     {/* Event Summary - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon"></span>
+                        {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Event Summary</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
                       <div className="details-content">
-                        <div className="flowing-paragraph">
-                          <strong>Event:</strong> {aiAnalysis.eventSummary?.release || 'Economic event analysis'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Outcome:</strong> {aiAnalysis.eventSummary?.outcome || 'Analysis based on expected vs previous data'}
-                        </div>
-                        <div className="key-metrics">
-                          <span className={`metric-item ${(aiAnalysis.eventSummary?.previous || 'N/A').length > 100 ? 'long-content' : ''}`}>
-                            <strong>Previous:</strong> {aiAnalysis.eventSummary?.previous || 'N/A'}
-                          </span>
-                          <span className={`metric-item ${(aiAnalysis.eventSummary?.expected || 'N/A').length > 100 ? 'long-content' : ''}`}>
-                            <strong>Expected:</strong> {aiAnalysis.eventSummary?.expected || 'N/A'}
-                          </span>
-                          <span className={`metric-item ${(aiAnalysis.eventSummary?.actual || 'N/A').length > 100 ? 'long-content' : ''}`}>
-                            <strong>Actual:</strong> {aiAnalysis.eventSummary?.actual || 'N/A'}
-                          </span>
+                        <div className="event-summary-content">
+                          <div className="event-summary-header">
+                            <div className="event-summary-label">Event</div>
+                            <div className="event-summary-value">{aiAnalysis.eventSummary?.release || 'Economic event analysis'}</div>
+                          </div>
+                          {aiAnalysis.eventSummary?.outcome && 
+                           aiAnalysis.eventSummary.outcome !== 'Analysis based on expected vs previous data' && (
+                            <div className="event-summary-header">
+                              <div className="event-summary-label">Outcome</div>
+                              <div className="event-summary-value">{aiAnalysis.eventSummary.outcome}</div>
+                            </div>
+                          )}
+                          <div className="event-metrics-grid">
+                            <div className="event-metric">
+                              <div className="event-metric-label">Previous</div>
+                              <div className="event-metric-value">{aiAnalysis.eventSummary?.previous || 'N/A'}</div>
+                            </div>
+                            <div className="event-metric">
+                              <div className="event-metric-label">Expected</div>
+                              <div className="event-metric-value">{aiAnalysis.eventSummary?.expected || 'N/A'}</div>
+                            </div>
+                            <div className="event-metric">
+                              <div className="event-metric-label">Actual</div>
+                              <div className="event-metric-value">{aiAnalysis.eventSummary?.actual || 'N/A'}</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </details>
@@ -1965,19 +2034,30 @@ const Overview = () => {
                     {/* Market Reaction - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon"></span>
+                        {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Market Reaction</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
                       <div className="details-content">
-                        <div className="flowing-paragraph">
-                          <strong>Price Action:</strong> {aiAnalysis.market_reaction?.price_action || 'Expected price movements will depend on the actual data versus expectations.'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Volatility:</strong> {aiAnalysis.market_reaction?.volatility || 'Medium volatility expected around the release. Expected 10-15 pip movement range for GBP pairs, with brief spikes to 20-25 pips on data surprises'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Reason:</strong> {aiAnalysis.market_reaction?.reason || 'Market reaction will be driven by the comparison between actual and expected data.'}
+                        <div className="market-reaction-content">
+                          {aiAnalysis.market_reaction?.price_action && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Price Action</div>
+                              <div className="market-reaction-value">{aiAnalysis.market_reaction.price_action}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.market_reaction?.volatility && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Volatility</div>
+                              <div className="market-reaction-value">{aiAnalysis.market_reaction.volatility}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.market_reaction?.reason && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Reason</div>
+                              <div className="market-reaction-value">{aiAnalysis.market_reaction.reason}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </details>
@@ -1985,21 +2065,30 @@ const Overview = () => {
                     {/* Implications & Takeaways - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon"></span>
+                        {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Implications & Takeaways</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
                       <div className="details-content">
-                        <div className="flowing-paragraph">
-                          <strong>Economic Context:</strong> {aiAnalysis.implications_takeaways?.economic_context || 'Economic context analysis based on the indicator type and current conditions.'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Market Bias:</strong> {aiAnalysis.implications_takeaways?.event_bias || 'Market remains neutral, awaiting new data. GBP likely to trade within established range until new data arrives. Tactical approach: Buy near support levels, sell near resistance, with tight stops for quick exits'}
-                        </div>
-                        <div className="key-metrics">
-                          <span className={`metric-item ${(aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases').length > 100 ? 'long-content' : ''}`}>
-                            <strong>Risk Level:</strong> {aiAnalysis.implications_takeaways?.risk_level || 'Medium - typical volatility around economic releases'}
-                          </span>
+                        <div className="market-reaction-content">
+                          {aiAnalysis.implications_takeaways?.economic_context && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Economic Context</div>
+                              <div className="market-reaction-value">{aiAnalysis.implications_takeaways.economic_context}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.implications_takeaways?.event_bias && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Market Bias</div>
+                              <div className="market-reaction-value">{aiAnalysis.implications_takeaways.event_bias}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.implications_takeaways?.risk_level && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Risk Level</div>
+                              <div className="market-reaction-value">{aiAnalysis.implications_takeaways.risk_level}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </details>
@@ -2007,24 +2096,36 @@ const Overview = () => {
                     {/* Trading Plan - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon"></span>
+                        {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Trading Plan</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
                       <div className="details-content">
-                        <div className="flowing-paragraph">
-                          <strong>Strategy:</strong> {aiAnalysis.trading_plan?.best_approach || 'Range trading with breakout potential based on surprise factor. Practical approach: Buy near support levels, sell near resistance, with breakout trades on significant data surprises'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Risk Management:</strong> {aiAnalysis.trading_plan?.avoid_strategies || 'Avoid aggressive positioning before data release'}
-                        </div>
-                        <div className="key-metrics">
-                          <span className={`metric-item ${(aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis').length > 100 ? 'long-content' : ''}`}>
-                            <strong>Key Levels:</strong> {aiAnalysis.trading_plan?.key_levels || 'Monitor support and resistance around current price with broader context levels. Include primary and secondary zones for comprehensive analysis'}
-                          </span>
-                          <span className={`metric-item ${(aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility').length > 100 ? 'long-content' : ''}`}>
-                            <strong>Position Sizing:</strong> {aiAnalysis.trading_plan?.position_sizing_risk || 'Conservative. Suggest 0.5-1% of account per trade for low volatility, 1-2% for moderate volatility'}
-                          </span>
+                        <div className="market-reaction-content">
+                          {aiAnalysis.trading_plan?.best_approach && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Strategy</div>
+                              <div className="market-reaction-value">{aiAnalysis.trading_plan.best_approach}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.trading_plan?.avoid_strategies && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Risk Management</div>
+                              <div className="market-reaction-value">{aiAnalysis.trading_plan.avoid_strategies}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.trading_plan?.key_levels && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Key Levels</div>
+                              <div className="market-reaction-value">{aiAnalysis.trading_plan.key_levels}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.trading_plan?.position_sizing_risk && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Position Sizing</div>
+                              <div className="market-reaction-value">{aiAnalysis.trading_plan.position_sizing_risk}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </details>
@@ -2032,19 +2133,30 @@ const Overview = () => {
                     {/* Big Picture - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon"></span>
+                        {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Big Picture</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
                       <div className="details-content">
-                        <div className="flowing-paragraph">
-                          <strong>Economic Outlook:</strong> {aiAnalysis.big_picture?.economic_outlook || 'The data will provide insights into economic health and growth prospects'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Medium-term Direction:</strong> {aiAnalysis.big_picture?.medium_term_direction || 'Range-bound outlook unless new catalysts emerge. GBP likely to maintain current range with potential for gradual shifts based on upcoming data. GBP/USD and EUR/GBP pairs expected to remain range-bound with 10-15 pip movements, with breakout potential on significant data surprises'}
-                        </div>
-                        <div className="flowing-paragraph">
-                          <strong>Forward Focus:</strong> {aiAnalysis.big_picture?.forward_focus || 'Monitor for follow-up data releases and central bank communications'}
+                        <div className="market-reaction-content">
+                          {aiAnalysis.big_picture?.economic_outlook && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Economic Outlook</div>
+                              <div className="market-reaction-value">{aiAnalysis.big_picture.economic_outlook}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.big_picture?.medium_term_direction && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Medium-term Direction</div>
+                              <div className="market-reaction-value">{aiAnalysis.big_picture.medium_term_direction}</div>
+                            </div>
+                          )}
+                          {aiAnalysis.big_picture?.forward_focus && (
+                            <div className="market-reaction-item">
+                              <div className="market-reaction-label">Forward Focus</div>
+                              <div className="market-reaction-value">{aiAnalysis.big_picture.forward_focus}</div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </details>
@@ -2052,7 +2164,7 @@ const Overview = () => {
                     {/* Next Catalysts - Expandable */}
                     <details className="analysis-details">
                       <summary className="details-summary">
-                        <span className="summary-icon"></span>
+                        {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Next Catalysts</span>
                         <span className="summary-arrow">▼</span>
                       </summary>

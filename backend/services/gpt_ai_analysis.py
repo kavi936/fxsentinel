@@ -1214,14 +1214,18 @@ MARKET CONTEXT:
 - Bond Yields: {market_context.bond_yields}
 - Equity Indices: {market_context.equity_indices}
 
+IMPORTANT: For forward_scenarios, provide specific probability percentages for each scenario (bullish, bearish, neutral). 
+The probabilities should sum to approximately 100% and reflect the likelihood of each outcome based on the event data, 
+market context, and historical patterns. Include key price levels and reasoning for each scenario.
+
 Please provide analysis in the following JSON format:
 {{
     "headline": "Compelling headline summarizing the key takeaway",
     "key_takeaway": "Main insight in 1-2 sentences",
     "forward_scenarios": {{
-        "bullish": "Bullish scenario description",
-        "bearish": "Bearish scenario description", 
-        "neutral": "Neutral scenario description"
+        "bullish": "Bullish scenario description with specific probability percentage (e.g., '60% probability: Above key resistance at [level], target [level]. Reason: [driver]')",
+        "bearish": "Bearish scenario description with specific probability percentage (e.g., '30% probability: Below key support at [level], target [level]. Reason: [driver]')", 
+        "neutral": "Neutral scenario description with specific probability percentage (e.g., '10% probability: Range trading between [level] and [level] if no breakout')"
     }},
     "event_summary": {{
         "release": "Event description",
@@ -1257,7 +1261,6 @@ Please provide analysis in the following JSON format:
     "positioning_context": {{
         "retail_sentiment": "Retail trader sentiment",
         "institutional_flow": "Institutional flow analysis",
-        "futures_positioning": "Futures market positioning",
         "market_bias": "Overall market bias"
     }},
     "next_catalysts": [
