@@ -34,90 +34,42 @@
 /* Tooltip Styles */
 .info-tooltip {
   position: fixed !important;
-  z-index: 2147483647 !important;
+  z-index: 999999 !important;
   max-width: 380px;
   min-width: 320px;
   background: rgba(0, 0, 0, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
   border-radius: 8px;
   padding: 16px 20px;
   font-size: 13px;
   line-height: 1.6;
   color: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 68, 68, 0.2);
   animation: tooltipFadeIn 0.2s ease-out;
   white-space: normal;
   word-wrap: break-word;
   pointer-events: none;
+  isolation: isolate;
 }
 
-/* Ensure tooltips appear above everything - using maximum z-index */
-.news-calendar .info-tooltip,
-.market-sentiment-card .info-tooltip,
-.ai-analysis-card .info-tooltip,
-.live-news-analysis-card .info-tooltip,
-.news-calendar * .info-tooltip,
-.market-sentiment-card * .info-tooltip,
-.ai-analysis-card * .info-tooltip,
-.live-news-analysis-card * .info-tooltip,
-.calendar-content .info-tooltip,
-.sentiment-content .info-tooltip,
-.ai-content .info-tooltip,
-.news-content .info-tooltip,
-.info-tooltip {
-  z-index: 2147483647 !important;
-  position: fixed !important;
-}
+/* Tooltips are now rendered via portal at document.body level, so they always overlay */
 
-/* Specific overrides for problematic sections */
-.market-closed-state .info-tooltip,
-.market-closed-state + .info-tooltip,
-.news-content .info-tooltip,
-.news-content + .info-tooltip,
-.sentiment-content .info-tooltip,
-.sentiment-content + .info-tooltip {
-  z-index: 2147483647 !important;
-  position: fixed !important;
-}
-
-/* Force tooltips to appear above all card content */
-.market-sentiment-card .info-tooltip,
-.live-news-analysis-card .info-tooltip {
-  z-index: 2147483647 !important;
-  position: fixed !important;
-  transform: translateX(-50%) !important;
-}
-
-/* Ensure tooltips are rendered at the document body level */
-.info-tooltip {
-  z-index: 2147483647 !important;
-  position: fixed !important;
-  transform: translateX(-50%) !important;
-}
-
+/* Position classes are now handled inline via JavaScript for better viewport positioning */
 .info-tooltip-top {
-  bottom: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  /* Position handled inline */
 }
 
 .info-tooltip-bottom {
-  top: calc(100% + 8px);
-  left: 50%;
-  transform: translateX(-50%);
+  /* Position handled inline */
 }
 
 .info-tooltip-left {
-  right: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
+  /* Position handled inline */
 }
 
 .info-tooltip-right {
-  left: calc(100% + 8px);
-  top: 50%;
-  transform: translateY(-50%);
+  /* Position handled inline */
 }
 
 .tooltip-content {

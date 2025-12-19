@@ -842,7 +842,8 @@ function Dashboard() {
                 <path d="M23 4v6h-6M1 20v-6h6M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
               </svg>
             </button>
-            <button 
+            {/* Notifications button - commented out as it doesn't do anything */}
+            {/* <button 
               className="notification-btn" 
               title="Notifications"
               onClick={() => setNotificationsOpen(true)}
@@ -854,7 +855,7 @@ function Dashboard() {
               {unreadCount > 0 && (
                 <span className="notification-badge">{unreadCount}</span>
               )}
-            </button>
+            </button> */}
             <button 
               className="profile-btn" 
               title="User Profile"
@@ -952,7 +953,8 @@ function Dashboard() {
                 </svg>
                 Refresh Data
               </button>
-              <button 
+              {/* Notifications button - commented out as it doesn't do anything */}
+              {/* <button 
                 className="mobile-action-btn"
                 onClick={() => { setNotificationsOpen(true); setMobileMenuOpen(false); }}
               >
@@ -961,7 +963,7 @@ function Dashboard() {
                   <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                 </svg>
                 Notifications (3)
-              </button>
+              </button> */}
               <button 
                 className="mobile-action-btn"
                 onClick={() => { setProfileOpen(true); setMobileMenuOpen(false); }}

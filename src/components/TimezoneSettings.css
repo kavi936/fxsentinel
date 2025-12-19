@@ -4,35 +4,52 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.85);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 10000;
-  padding: 20px;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
 }
 
 .timezone-settings-modal {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a0a0a 25%, #1e0505 50%, #1a0a0a 75%, #0f0f0f 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
   border-radius: 16px;
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-  animation: modalSlideIn 0.3s ease-out;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 68, 68, 0.2),
+    0 0 40px rgba(255, 68, 68, 0.1);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 700px;
+  overflow: hidden;
+  animation: popupSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
-@keyframes modalSlideIn {
+.timezone-settings-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, rgba(255, 68, 68, 0.05) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(255, 68, 68, 0.03) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes popupSlideIn {
   from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: scale(0.9) translateY(30px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1) translateY(0);
   }
 }
 
@@ -40,42 +57,75 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 24px 16px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px 24px;
+  border-bottom: 1px solid rgba(255, 68, 68, 0.3);
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
+  color: white;
+  position: relative;
+  z-index: 2;
+  backdrop-filter: blur(10px);
 }
 
-.timezone-settings-header h3 {
-  color: #ffffff;
+.timezone-settings-header h2 {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.5px;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+  font-size: 20px;
   cursor: pointer;
   padding: 8px;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
 }
 
 .close-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 68, 68, 0.2);
+  border-color: rgba(255, 68, 68, 0.5);
   color: #ffffff;
+  transform: translateY(-1px);
 }
 
 .timezone-settings-content {
+  max-height: 600px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 2;
   padding: 24px;
 }
 
+.timezone-settings-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.timezone-settings-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.timezone-settings-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 68, 68, 0.3);
+  border-radius: 3px;
+}
+
+.timezone-settings-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 68, 68, 0.5);
+}
+
 .current-time-display {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 68, 68, 0.2);
   border-radius: 12px;
   padding: 20px;
   margin-bottom: 24px;
@@ -83,7 +133,7 @@
 }
 
 .current-time-display h4 {
-  color: #22c55e;
+  color: #ffffff;
   margin: 0 0 12px 0;
   font-size: 1.1rem;
   font-weight: 600;
@@ -98,8 +148,12 @@
 }
 
 .timezone-info {
-  color: rgba(255, 255, 255, 0.7);
+  color: #cccccc;
   font-size: 0.9rem;
+}
+
+.timezone-info strong {
+  color: #ff4444;
 }
 
 .timezone-selection {
@@ -118,31 +172,36 @@
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 68, 68, 0.2);
 }
 
 .detect-btn {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  color: white;
-  border: none;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
   padding: 8px 16px;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .detect-btn:hover {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: rgba(255, 68, 68, 0.5);
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
 }
 
 .timezone-list {
   max-height: 300px;
   overflow-y: auto;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .timezone-option {
@@ -151,7 +210,7 @@
   padding: 12px 16px;
   cursor: pointer;
   transition: background-color 0.2s ease;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.1);
 }
 
 .timezone-option:last-child {
@@ -159,12 +218,12 @@
 }
 
 .timezone-option:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .timezone-option input[type="radio"] {
   margin-right: 12px;
-  accent-color: #22c55e;
+  accent-color: #ff4444;
   transform: scale(1.1);
 }
 
@@ -175,13 +234,13 @@
 }
 
 .timezone-option input[type="radio"]:checked + .timezone-label {
-  color: #22c55e;
+  color: #ff4444;
   font-weight: 600;
 }
 
 .timezone-info-section {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 68, 68, 0.2);
   border-radius: 12px;
   padding: 20px;
 }
@@ -191,46 +250,58 @@
   margin: 0 0 12px 0;
   font-size: 1.1rem;
   font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 68, 68, 0.2);
 }
 
 .timezone-info-section p {
-  color: rgba(255, 255, 255, 0.8);
+  color: #cccccc;
   margin: 0 0 16px 0;
   line-height: 1.5;
   font-size: 0.9rem;
 }
 
 .example {
-  background: rgba(34, 197, 94, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
   border-radius: 8px;
   padding: 12px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #cccccc;
   font-size: 0.85rem;
   line-height: 1.4;
 }
 
+.example strong {
+  color: #ffffff;
+}
+
 .timezone-settings-footer {
   padding: 20px 24px 24px 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 68, 68, 0.3);
   text-align: right;
+  position: relative;
+  z-index: 2;
+  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 50%, #1a0a0a 100%);
 }
 
 .save-btn {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-  color: white;
-  border: none;
+  background: rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .save-btn:hover {
+  background: rgba(255, 68, 68, 0.2);
+  border-color: rgba(255, 68, 68, 0.5);
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
 }
 
 /* Scrollbar styling */
@@ -239,17 +310,17 @@
 }
 
 .timezone-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 3px;
 }
 
 .timezone-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 68, 68, 0.3);
   border-radius: 3px;
 }
 
 .timezone-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 68, 68, 0.5);
 }
 
 /* Mobile responsiveness */

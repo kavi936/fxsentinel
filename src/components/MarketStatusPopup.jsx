@@ -284,7 +284,7 @@ const MarketStatusPopup = ({ isOpen, onClose, marketStatus }) => {
 
           {/* Market Status Note */}
           <div className="market-note">
-            <div className="note-icon">ℹ️</div>
+            <div className="note-icon"></div>
             <div className="note-content">
               <p><strong>Note:</strong> Forex markets are closed on weekends and major holidays. 
               During active sessions, you can trade 24/5 with high liquidity and tight spreads.</p>
