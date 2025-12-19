@@ -24,7 +24,7 @@ class GoogleSheetsService:
         # Get credentials from environment variable (JSON string)
         creds_json = os.getenv('GOOGLE_SHEETS_CREDENTIALS_JSON')
         self.spreadsheet_id = os.getenv('GOOGLE_SHEETS_SPREADSHEET_ID')
-        self.cache_ttl = int(os.getenv('GOOGLE_SHEETS_CACHE_TTL', '300'))  # 5 minutes default
+        self.cache_ttl = int(os.getenv('GOOGLE_SHEETS_CACHE_TTL', '30'))  # 30 seconds default (was 5 minutes)
         self.cache = {}
         self.cache_timestamps = {}
         self.client = None
