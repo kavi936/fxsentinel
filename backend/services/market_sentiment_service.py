@@ -67,6 +67,8 @@ class MarketSentimentService:
         self.cache_file = "market_sentiment_cache.json"
         self.last_reset_date = None
         self.current_sentiment = None
+        self.sentiment_timestamp = None  # Track when sentiment was last calculated
+        self.cache_expiration_minutes = 15  # Recalculate every 15 minutes
         
         # Initialize sentiment cache
         self._load_cache()
@@ -79,18 +81,25 @@ class MarketSentimentService:
                 data = json.load(f)
                 self.last_reset_date = data.get('last_reset_date')
                 self.current_sentiment = data.get('current_sentiment')
+                sentiment_timestamp_str = data.get('sentiment_timestamp')
+                if sentiment_timestamp_str:
+                    self.sentiment_timestamp = datetime.fromisoformat(sentiment_timestamp_str.replace('Z', '+00:00'))
+                else:
+                    self.sentiment_timestamp = None
                 logger.info(f"Loaded sentiment cache from {self.last_reset_date}")
         except (FileNotFoundError, json.JSONDecodeError):
             logger.info("No sentiment cache found, starting fresh")
             self.last_reset_date = None
             self.current_sentiment = None
+            self.sentiment_timestamp = None
     
     def _save_cache(self):
         """Save sentiment data to cache"""
         try:
             data = {
                 'last_reset_date': self.last_reset_date,
-                'current_sentiment': asdict(self.current_sentiment) if self.current_sentiment else None
+                'current_sentiment': asdict(self.current_sentiment) if self.current_sentiment else None,
+                'sentiment_timestamp': self.sentiment_timestamp.isoformat() if self.sentiment_timestamp else None
             }
             with open(self.cache_file, 'w') as f:
                 json.dump(data, f, indent=2)
@@ -146,7 +155,24 @@ class MarketSentimentService:
     def _reset_daily_data(self):
         """Reset sentiment data for new trading day"""
         self.current_sentiment = None
+        self.sentiment_timestamp = None
         logger.info("Daily sentiment data reset completed")
+    
+    def _is_cache_expired(self) -> bool:
+        """Check if cached sentiment data has expired"""
+        if not self.current_sentiment or not self.sentiment_timestamp:
+            return True
+        
+        current_time = datetime.now(timezone.utc)
+        time_diff = current_time - self.sentiment_timestamp
+        expiration_minutes = self.cache_expiration_minutes
+        
+        # Check if cache is older than expiration time
+        if time_diff.total_seconds() > (expiration_minutes * 60):
+            logger.info(f"Sentiment cache expired. Last updated: {self.sentiment_timestamp}, Age: {time_diff.total_seconds() / 60:.1f} minutes")
+            return True
+        
+        return False
     
     def get_market_sentiment(self) -> Dict[str, Any]:
         """Get current market sentiment data"""
@@ -162,10 +188,14 @@ class MarketSentimentService:
                 logger.info(f"Markets are {market_status['market_status']}, returning market closed sentiment")
                 return self._get_market_closed_sentiment()
             
-            # Calculate fresh sentiment if needed
-            if not self.current_sentiment:
+            # Check if cache is expired or doesn't exist
+            if not self.current_sentiment or self._is_cache_expired():
+                logger.info("Calculating fresh market sentiment (cache expired or missing)")
                 self.current_sentiment = self._calculate_market_sentiment()
+                self.sentiment_timestamp = datetime.now(timezone.utc)
                 self._save_cache()
+            else:
+                logger.info(f"Using cached sentiment data (age: {(datetime.now(timezone.utc) - self.sentiment_timestamp).total_seconds() / 60:.1f} minutes)")
             
             # Return formatted data for frontend
             return self._format_for_frontend(self.current_sentiment)

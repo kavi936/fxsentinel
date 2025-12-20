@@ -624,7 +624,6 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                     <div className="setup-complete">
                       <div className="success-icon">✓</div>
                       <p>Telegram bot connected successfully!</p>
-                      
                       <div className="test-alert-section">
                         <button 
                           className="test-alert-btn"
