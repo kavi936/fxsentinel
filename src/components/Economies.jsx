@@ -268,8 +268,11 @@ function Economies() {
         
         // Skip if we recently fetched this economy (unless forcing refresh)
         if (!forceRefresh && lastFetchTime && timeSinceLastFetch < REFETCH_INTERVAL) {
+          console.log(`⏭️ Skipping API call for ${selectedEconomy} - fetched ${Math.round(timeSinceLastFetch / 1000)}s ago (cache valid)`);
           return;
         }
+        
+        console.log(`🔄 Fetching ${selectedEconomy} indicators from API...`);
 
         // Mark as fetched with timestamp (unless forcing refresh)
         if (!forceRefresh) {
@@ -286,11 +289,13 @@ function Economies() {
           return;
         }
 
+        // Don't block UI - show cards immediately with placeholder data
+        // API data will update cards when it arrives
         setApiDataLoading(true);
         
-        // Create abort controller for timeout
+        // Reduced timeout for faster fallback (2 seconds instead of 5)
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         
         // Add cache-busting parameter if forcing refresh
         let apiUrl = config.endpoints.economyIndicators(selectedEconomy);
@@ -298,14 +303,23 @@ function Economies() {
           apiUrl += `?refresh=true&_t=${Date.now()}`;
         }
         
+        console.log(`📡 API URL: ${apiUrl}`);
         const response = await fetch(apiUrl, {
           signal: controller.signal
         });
+        console.log(`📥 API Response status: ${response.status}`);
         
         clearTimeout(timeoutId);
         
         if (response.ok) {
           const data = await response.json();
+          console.log(`📦 API Response for ${selectedEconomy}:`, {
+            status: data.status,
+            indicatorCount: data.indicators ? Object.keys(data.indicators).length : 0,
+            cached: data.cached,
+            source: data.source
+          });
+          
           if (data.status === 'success' && data.indicators) {
             // Store API data for this country
             setApiIndicatorsData(prev => ({
@@ -316,7 +330,7 @@ function Economies() {
               ...prev,
               [selectedEconomy]: true
             }));
-            console.log(`✅ Loaded ${selectedEconomy} indicators from Google Sheets (${Object.keys(data.indicators).length} indicators)`);
+            console.log(`✅ Loaded ${selectedEconomy} indicators from Google Sheets (${Object.keys(data.indicators).length} indicators, cached: ${data.cached})`);
           } else {
             // API returned error, use fallback
             setUseApiData(prev => ({
@@ -838,26 +852,30 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     console.log('EconomyDetails - economyData[selectedEconomy]:', economyData[selectedEconomy]);
   }, [economyData, selectedEconomy]);
 
-  // Safely get data with fallback
+  // Safely get data with fallback - always return data immediately (no blocking)
   let data;
   try {
     data = economyData[selectedEconomy] || economyData.US || economyData['US'];
     if (!data) {
       console.error('No data found for economy:', selectedEconomy);
-      return (
-        <div style={{ padding: '20px', color: 'red' }}>
-          <h3>Error: No data available for {selectedEconomy}</h3>
-          <p>Available economies: {Object.keys(economyData).join(', ')}</p>
-        </div>
-      );
+      // Return placeholder data instead of error to keep UI responsive
+      data = economyData.US || Object.values(economyData)[0];
     }
-    console.log('EconomyDetails - data loaded successfully:', data.name);
+    if (data) {
+      console.log('EconomyDetails - data loaded successfully:', data.name);
+    }
   } catch (err) {
     console.error('Error accessing economyData:', err);
+    // Fallback to US data to keep UI working
+    data = economyData.US || Object.values(economyData)[0];
+  }
+  
+  // If still no data, show error
+  if (!data) {
     return (
       <div style={{ padding: '20px', color: 'red' }}>
-        <h3>Error loading economy data</h3>
-        <p>{err.message}</p>
+        <h3>Error: No data available</h3>
+        <p>Please refresh the page.</p>
       </div>
     );
   }
@@ -1186,28 +1204,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     }));
   };
 
-  // Simulate loading when economy changes
-  React.useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 400); // 400ms loading time
-
-    return () => clearTimeout(timer);
-  }, [selectedEconomy]);
-
-  if (isLoading) {
-    return (
-      <div className="economy-loading">
-        <div className="loading-spinner">
-          <div className="spinner-ring"></div>
-          <div className="spinner-ring"></div>
-          <div className="spinner-ring"></div>
-        </div>
-        <div className="loading-text">Loading economic data...</div>
-      </div>
-    );
-  }
+  // Show cards immediately with placeholder data, update when API data arrives
+  // Removed artificial loading delay for better UX
 
   return (
     <div className="economy-details">

@@ -655,9 +655,11 @@ def get_economy_indicators(country_code):
     try:
         # Normalize country code to uppercase
         country_code = country_code.upper()
+        logger.info(f"📊 Economy indicators request for: {country_code}")
         
         # Check if service is available
         if not google_sheets_service or not google_sheets_service.is_available():
+            logger.warning(f"⚠️ Google Sheets service not available for {country_code}")
             return jsonify({
                 "status": "error",
                 "message": "Google Sheets service not available",
@@ -666,17 +668,18 @@ def get_economy_indicators(country_code):
         
         # Check if refresh is requested
         force_refresh = request.args.get('refresh', 'false').lower() == 'true'
-        
-        # Fetch indicators from Google Sheets (with optional cache bypass)
         if force_refresh:
+            logger.info(f"🔄 Force refresh requested for {country_code}")
             # Clear cache for this country to force fresh fetch
             cache_key = f"indicators_{country_code}"
             if cache_key in google_sheets_service.cache:
+                logger.info(f"🗑️ Clearing cache for {country_code}")
                 del google_sheets_service.cache[cache_key]
             if cache_key in google_sheets_service.cache_timestamps:
                 del google_sheets_service.cache_timestamps[cache_key]
-            logger.info(f"🔄 Cache cleared for {country_code}, forcing fresh fetch")
         
+        # Fetch indicators from Google Sheets (with optional cache bypass)
+        logger.info(f"🔍 Fetching indicators for {country_code} (force_refresh={force_refresh})")
         indicators = google_sheets_service.get_economy_indicators(country_code)
         
         if indicators:
