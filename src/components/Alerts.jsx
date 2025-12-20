@@ -624,7 +624,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                     <div className="setup-complete">
                       <div className="success-icon">✓</div>
                       <p>Telegram bot connected successfully!</p>
-                      <p>You'll now receive alerts on Telegram</p>
+                      
                       <div className="test-alert-section">
                         <button 
                           className="test-alert-btn"
@@ -653,10 +653,10 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                 <div className="setup-card email-setup-card">
                   <div className="coming-soon-overlay">
                     <div className="coming-soon-content">
-                      <div className="coming-soon-icon">🚀</div>
-                      <h4>Coming Soon</h4>
+                      <div className="coming-soon-icon"></div>
+                      <h4>Email Alerts</h4>
                       <p>Email alerts will be available in the next update</p>
-                      <div className="coming-soon-badge">MVP: Telegram Only</div>
+                      <div className="coming-soon-badge">Coming Soon</div>
                     </div>
                   </div>
                   
@@ -813,7 +813,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
 
                 {/* Currency Pairs */}
                 <div className="preference-card">
-                  <h3>💱 Currency Pairs</h3>
+                  <h3>Currency Pairs</h3>
                   <p>Select which currency pairs you want alerts for</p>
                   
                   <div className="currency-pairs-section">
@@ -859,7 +859,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
 
                 {/* Quiet Hours */}
                 <div className="preference-card">
-                  <h3>🌙 Quiet Hours</h3>
+                  <h3>Quiet Hours</h3>
                   <p>Set times when you don't want to receive alerts</p>
                   
                   <div className="quiet-hours-section">
@@ -902,7 +902,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           {activeTab === 'history' && (
             <div className="history-content">
               <div className="history-header">
-                <h3>📋 Alert History</h3>
+                <h3>Alert History</h3>
                 <div className="history-filters">
                   <select 
                     className="filter-select"
