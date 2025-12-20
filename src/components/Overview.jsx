@@ -2227,7 +2227,6 @@ const Overview = () => {
             <div className="sentiment-content">
               <React.Fragment>
                 {sentiment.is_market_closed ? (
-                  /* Market Closed State */
                   <div className="market-closed-state">
                     <div className="market-closed-icon">🔒</div>
                     <div className="market-closed-title">Markets Closed</div>
@@ -2242,8 +2241,262 @@ const Overview = () => {
                     </div>
                   </div>
                 ) : (
-                  /* Market Open State */
                   <React.Fragment>
+                    {/* VIX Fear Indicator Section - At the Very Top */}
+                    {(() => {
+                      const volatilityCondition = sentiment.market_conditions.find(c => c.name === 'Volatility Environment');
+                      let vixValue = null;
+                      let vixChange = null;
+                      let vixLevel = 'medium';
+                      
+                      if (volatilityCondition && volatilityCondition.detail) {
+                        const vixMatch = volatilityCondition.detail.match(/VIX:\s*([\d.]+)\s*\(([+-]?[\d.]+)\)/);
+                        if (vixMatch) {
+                          vixValue = parseFloat(vixMatch[1]);
+                          vixChange = parseFloat(vixMatch[2]);
+                          vixLevel = vixValue < 15 ? 'low' : vixValue < 25 ? 'medium' : 'high';
+                        }
+                      }
+                      
+                      return (
+                        <div className="vix-section">
+                          <div className="vix-header">
+                            <h4 className="vix-title">VIX Fear Indicator</h4>
+                            <InfoIcon 
+                              tooltipText="The VIX (Volatility Index) measures market fear and uncertainty. Low VIX (<15) indicates complacency, Medium (15-25) shows normal volatility, High (>25) signals elevated fear. VIX is crucial for currency markets as it reflects risk sentiment that drives safe-haven flows."
+                              position="bottom"
+                            />
+                          </div>
+                          <div className="vix-content">
+                            {vixValue !== null ? (
+                              <>
+                                {/* VIX Gauge */}
+                                <div className="vix-gauge-container">
+                                  {(() => {
+                                    // Map VIX to gauge scale (0-100)
+                                    // VIX 10 = Greed (100), VIX 30 = Fear (0), VIX 20 = Neutral (50)
+                                    const mapVixToGauge = (vix) => {
+                                      // Clamp VIX between 10 and 30 for mapping
+                                      const clampedVix = Math.max(10, Math.min(30, vix));
+                                      // Inverse mapping: lower VIX = higher gauge value (more greed)
+                                      const gaugeValue = 100 - ((clampedVix - 10) / 20) * 100;
+                                      return Math.max(0, Math.min(100, gaugeValue));
+                                    };
+                                    
+                                    const gaugeValue = mapVixToGauge(vixValue);
+                                    const angle = (gaugeValue / 100) * 180 - 90; // -90 to 90 degrees
+                                    const radius = 80;
+                                    const centerX = 100;
+                                    const centerY = 100;
+                                    const needleLength = 70;
+                                    
+                                    // Calculate needle endpoint
+                                    const needleAngleRad = (angle * Math.PI) / 180;
+                                    const needleX = centerX + needleLength * Math.cos(needleAngleRad);
+                                    const needleY = centerY + needleLength * Math.sin(needleAngleRad);
+                                    
+                                    // Determine sentiment label
+                                    let sentimentLabel = 'Neutral';
+                                    let sentimentColor = '#ffa500';
+                                    if (gaugeValue >= 75) {
+                                      sentimentLabel = 'Extreme Greed';
+                                      sentimentColor = '#00ff88';
+                                    } else if (gaugeValue >= 55) {
+                                      sentimentLabel = 'Greed';
+                                      sentimentColor = '#4ade80';
+                                    } else if (gaugeValue >= 45) {
+                                      sentimentLabel = 'Neutral';
+                                      sentimentColor = '#ffa500';
+                                    } else if (gaugeValue >= 25) {
+                                      sentimentLabel = 'Fear';
+                                      sentimentColor = '#ff6b6b';
+                                    } else {
+                                      sentimentLabel = 'Extreme Fear';
+                                      sentimentColor = '#ff4757';
+                                    }
+                                    
+                                    return (
+                                      <div className="vix-gauge-wrapper">
+                                        <svg className="vix-gauge" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
+                                          <defs>
+                                            <linearGradient id="vixGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                              <stop offset="0%" stopColor="#ff4757" />
+                                              <stop offset="25%" stopColor="#ff6b6b" />
+                                              <stop offset="50%" stopColor="#ffa500" />
+                                              <stop offset="75%" stopColor="#4ade80" />
+                                              <stop offset="100%" stopColor="#00ff88" />
+                                            </linearGradient>
+                                          </defs>
+                                          
+                                          {/* Gauge Arc Background */}
+                                          <path
+                                            d="M 20 100 A 80 80 0 0 1 180 100"
+                                            fill="none"
+                                            stroke="rgba(255, 255, 255, 0.1)"
+                                            strokeWidth="12"
+                                            strokeLinecap="round"
+                                          />
+                                          
+                                          {/* Gauge Arc Fill - Animated */}
+                                          <path
+                                            d="M 20 100 A 80 80 0 0 1 180 100"
+                                            fill="none"
+                                            stroke="url(#vixGaugeGradient)"
+                                            strokeWidth="12"
+                                            strokeLinecap="round"
+                                            strokeDasharray={`${(gaugeValue / 100) * 251.2} 251.2`}
+                                            strokeDashoffset="125.6"
+                                            style={{ 
+                                              transform: 'rotate(-90deg)',
+                                              transformOrigin: '100px 100px',
+                                              transition: 'stroke-dasharray 0.5s ease-out'
+                                            }}
+                                          />
+                                          
+                                          {/* Scale Markers */}
+                                          {[0, 25, 50, 75, 100].map((mark) => {
+                                            const markAngle = (mark / 100) * 180 - 90;
+                                            const markAngleRad = (markAngle * Math.PI) / 180;
+                                            const markStartX = centerX + (radius - 5) * Math.cos(markAngleRad);
+                                            const markStartY = centerY + (radius - 5) * Math.sin(markAngleRad);
+                                            const markEndX = centerX + (radius + 5) * Math.cos(markAngleRad);
+                                            const markEndY = centerY + (radius + 5) * Math.sin(markAngleRad);
+                                            const labelX = centerX + (radius + 20) * Math.cos(markAngleRad);
+                                            const labelY = centerY + (radius + 20) * Math.sin(markAngleRad);
+                                            
+                                            return (
+                                              <g key={mark}>
+                                                <line
+                                                  x1={markStartX}
+                                                  y1={markStartY}
+                                                  x2={markEndX}
+                                                  y2={markEndY}
+                                                  stroke="rgba(255, 255, 255, 0.4)"
+                                                  strokeWidth="2"
+                                                />
+                                                <text
+                                                  x={labelX}
+                                                  y={labelY + 4}
+                                                  fill="rgba(255, 255, 255, 0.6)"
+                                                  fontSize="10"
+                                                  textAnchor="middle"
+                                                  fontWeight="600"
+                                                >
+                                                  {mark}
+                                                </text>
+                                              </g>
+                                            );
+                                          })}
+                                          
+                                          {/* Needle */}
+                                          <line
+                                            x1={centerX}
+                                            y1={centerY}
+                                            x2={needleX}
+                                            y2={needleY}
+                                            stroke="#ffffff"
+                                            strokeWidth="3"
+                                            strokeLinecap="round"
+                                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
+                                          />
+                                          
+                                          {/* Center Circle */}
+                                          <circle
+                                            cx={centerX}
+                                            cy={centerY}
+                                            r="8"
+                                            fill="#1a1a1a"
+                                            stroke="#ffffff"
+                                            strokeWidth="2"
+                                          />
+                                          
+                                          {/* Value Badge */}
+                                          <g transform={`translate(${needleX}, ${needleY - 15})`}>
+                                            <circle
+                                              r="18"
+                                              fill={sentimentColor}
+                                              opacity="0.95"
+                                              style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' }}
+                                            />
+                                            <text
+                                              x="0"
+                                              y="5"
+                                              fill="#ffffff"
+                                              fontSize="12"
+                                              fontWeight="800"
+                                              textAnchor="middle"
+                                              fontFamily="'Space Grotesk', monospace"
+                                            >
+                                              {Math.round(gaugeValue)}
+                                            </text>
+                                          </g>
+                                          
+                                          {/* Labels */}
+                                          <text
+                                            x="20"
+                                            y="115"
+                                            fill="#ff4757"
+                                            fontSize="10"
+                                            fontWeight="700"
+                                            textAnchor="middle"
+                                          >
+                                            Extreme Fear
+                                          </text>
+                                          <text
+                                            x="100"
+                                            y="115"
+                                            fill="rgba(255, 255, 255, 0.6)"
+                                            fontSize="9"
+                                            fontWeight="600"
+                                            textAnchor="middle"
+                                          >
+                                            50
+                                          </text>
+                                          <text
+                                            x="180"
+                                            y="115"
+                                            fill="#00ff88"
+                                            fontSize="10"
+                                            fontWeight="700"
+                                            textAnchor="middle"
+                                          >
+                                            Extreme Greed
+                                          </text>
+                                        </svg>
+                                        
+                                        {/* Sentiment Text */}
+                                        <div className="vix-sentiment-label">
+                                          <span className="vix-sentiment-now">Now:</span>
+                                          <span className="vix-sentiment-value" style={{ color: sentimentColor }}>
+                                            {sentimentLabel}
+                                          </span>
+                                        </div>
+                                        
+                                        {/* VIX Value and Change */}
+                                        <div className="vix-value-display">
+                                          <div className="vix-value-main">
+                                            <span className="vix-value-label">VIX:</span>
+                                            <span className={`vix-number ${vixLevel}`}>{vixValue.toFixed(1)}</span>
+                                          </div>
+                                          {vixChange !== null && (
+                                            <div className={`vix-change ${vixChange >= 0 ? 'positive' : 'negative'}`}>
+                                              {vixChange >= 0 ? '+' : ''}{vixChange.toFixed(1)}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                </div>
+                              </>
+                            ) : (
+                              <div className="vix-loading">Calculating VIX data...</div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    
                     <div className="market-conditions-overview">
                       <div className="conditions-header">
                         <h3>Market Conditions</h3>
@@ -2255,7 +2508,15 @@ const Overview = () => {
                 <div className="conditions-grid">
                   {sentiment.market_conditions.map((condition, index) => (
                     <div key={index} className="condition-item">
-                      <div className="condition-label">{condition.name}</div>
+                      <div className="condition-label-row">
+                        <div className="condition-label">{condition.name}</div>
+                        {condition.trend && (
+                          <span className={`trend-indicator trend-${condition.trend}`}>
+                            {condition.trend === 'increasing' ? '↑' : 
+                             condition.trend === 'decreasing' ? '↓' : '→'}
+                          </span>
+                        )}
+                      </div>
                       <div className={`condition-value ${condition.value}`}>
                         {condition.name === 'Volatility Environment' ? `${capitalizeSentiment(condition.value)} Volatility` : 
                          condition.name === 'Risk Appetite' ? capitalizeSentiment(condition.value) : 
@@ -2274,25 +2535,6 @@ const Overview = () => {
                     </div>
                   ))}
                 </div>
-                
-                <div className="sentiment-metrics">
-                  <div className="metric-item">
-                    <span className="metric-label">Market Stress</span>
-                    <span className="metric-value low">Low</span>
-                  </div>
-                  <div className="metric-item">
-                    <span className="metric-label">Liquidity</span>
-                    <span className="metric-value high">High</span>
-                  </div>
-                  <div className="metric-item">
-                    <span className="metric-label">Momentum</span>
-                    <span className="metric-value medium">Mixed</span>
-                  </div>
-                  <div className="metric-item">
-                    <span className="metric-label">Volume</span>
-                    <span className="metric-value high">Above Avg</span>
-                  </div>
-                </div>
               </div>
               
               <div className="sentiment-breakdown">
@@ -2302,9 +2544,12 @@ const Overview = () => {
                     <div key={index} className="pair-sentiment-item">
                       <div className="pair-header">
                         <span className="pair-name">{pair.pair}</span>
-                        <span className={`pair-change ${pair.price_change >= 0 ? 'positive' : 'negative'}`}>
-                          {pair.price_change >= 0 ? '+' : ''}{pair.price_change.toFixed(2)}%
-                        </span>
+                        <div className="pair-price-change-container">
+                          <span className="pair-change-label">Daily Change</span>
+                          <span className={`pair-change ${pair.price_change >= 0 ? 'positive' : 'negative'}`}>
+                            {pair.price_change >= 0 ? '+' : ''}{pair.price_change.toFixed(2)}%
+                          </span>
+                        </div>
                       </div>
                       <div className="sentiment-gauge">
                         <div 
@@ -2330,12 +2575,20 @@ const Overview = () => {
                   {sentiment.market_drivers.map((driver, index) => (
                     <div key={index} className={`driver-item ${driver.sentiment} impact-${driver.impact}`}>
                       <div className="driver-icon">
-                        {driver.sentiment === 'positive' ? '📈' : 
-                         driver.sentiment === 'negative' ? '📉' : '📊'}
+                        {driver.sentiment === 'positive' ? (
+                          <span className="driver-sentiment-indicator bullish">↑</span>
+                        ) : driver.sentiment === 'negative' ? (
+                          <span className="driver-sentiment-indicator bearish">↓</span>
+                        ) : (
+                          <span className="driver-sentiment-indicator neutral">→</span>
+                        )}
                       </div>
                       <div className="driver-content">
                         <div className="driver-title">{driver.title}</div>
                         <div className="driver-description">{driver.description}</div>
+                        {driver.source && (
+                          <div className="driver-source">Source: {driver.source}</div>
+                        )}
                       </div>
                       <div className="driver-impact">{driver.impact.charAt(0).toUpperCase() + driver.impact.slice(1)} Impact</div>
                     </div>
@@ -2343,7 +2596,7 @@ const Overview = () => {
                 </div>
               </div>
               
-              <div className="sentiment-summary">
+              {/* <div className="sentiment-summary">
                 <div className="summary-header">
                   <h3>Market Outlook</h3>
                   <span className="outlook-time">Next 24h</span>
@@ -2355,10 +2608,10 @@ const Overview = () => {
                   <button className="action-btn primary">View Detailed Analysis - Coming Soon</button>
                   <button className="action-btn secondary">Set Alerts</button>
                 </div>
-              </div>
-                    </React.Fragment>
-                  )}
-                </React.Fragment>
+              </div> */}
+                  </React.Fragment>
+                )}
+              </React.Fragment>
               </div>
             </div>
 
