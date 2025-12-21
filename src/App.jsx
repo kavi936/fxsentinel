@@ -9,6 +9,7 @@ import AuthRedirect from './components/AuthRedirect';
 import Blog from './components/Blog';
 import Disclaimer from './components/Disclaimer';
 import Privacy from './components/Privacy';
+import FeedbackForm from './components/FeedbackForm';
 import AIPoweredNewsAnalysis from './components/blog-posts/AIPoweredNewsAnalysis';
 import CentralBankDecisions from './components/blog-posts/CentralBankDecisions';
 import ForexMarketSentiment from './components/blog-posts/ForexMarketSentiment';
@@ -41,6 +42,7 @@ function App() {
               <Route path="/auth-redirect" element={<AuthRedirect />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/feedback" element={<FeedbackForm />} />
               <Route path="/trial-welcome" element={
                 <ProtectedRoute>
                   <TrialWelcomeRoute />
