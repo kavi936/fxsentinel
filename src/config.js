@@ -39,7 +39,11 @@ export const config = {
     sentimentRefresh: `${API_BASE_URL}/api/sentiment/refresh`,
     // Refund request endpoint
     requestRefund: `${API_BASE_URL}/api/request-refund`,
+    // Feedback submission endpoint
+    submitFeedback: `${API_BASE_URL}/api/submit-feedback`,
     // Economy indicators endpoint (Google Sheets integration)
-    economyIndicators: (countryCode) => `${API_BASE_URL}/api/economy-indicators/${countryCode}`
+    economyIndicators: (countryCode) => `${API_BASE_URL}/api/economy-indicators/${countryCode}`,
+    // Base URL for direct API calls
+    baseUrl: API_BASE_URL
   }
 }; 

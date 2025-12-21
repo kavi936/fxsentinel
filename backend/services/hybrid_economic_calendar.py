@@ -77,9 +77,9 @@ class HybridEconomicCalendar:
     def _get_curated_events(self) -> List[Dict]:
         """
         Curated economic calendar with REAL upcoming events from ForexFactory
-        Last Updated: December 14, 2025
+        Last Updated: December 21, 2025
         Source: ForexFactory Calendar JSON Export
-        Coverage: October 5 - December 19, 2025
+        Coverage: October 5 - December 24, 2025
         """
         events = [
             # SUNDAY, OCTOBER 5
@@ -1730,6 +1730,110 @@ class HybridEconomicCalendar:
                 'actual': 'TBD',
                 'forecast': '53.3',
                 'previous': '53.3'
+            },
+
+            # TUESDAY, DECEMBER 23 (From ForexFactory JSON Export)
+            {
+                'title': 'ADP Weekly Employment Change',
+                'date': 'Tue, Dec 23',
+                'time': '13:20 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '16.3K'
+            },
+            {
+                'title': 'GDP m/m',
+                'date': 'Tue, Dec 23',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '-0.3%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Prelim GDP q/q',
+                'date': 'Tue, Dec 23',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.2%',
+                'previous': '3.8%'
+            },
+            {
+                'title': 'Core Durable Goods Orders m/m',
+                'date': 'Tue, Dec 23',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-1.4%',
+                'previous': '0.6%'
+            },
+            {
+                'title': 'Durable Goods Orders m/m',
+                'date': 'Tue, Dec 23',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Prelim GDP Price Index q/q',
+                'date': 'Tue, Dec 23',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '2.6%',
+                'previous': '2.1%'
+            },
+            {
+                'title': 'CB Consumer Confidence',
+                'date': 'Tue, Dec 23',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '91.7',
+                'previous': '88.7'
+            },
+            {
+                'title': 'Richmond Manufacturing Index',
+                'date': 'Tue, Dec 23',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-7',
+                'previous': '-15'
+            },
+
+            # WEDNESDAY, DECEMBER 24 (From ForexFactory JSON Export)
+            {
+                'title': 'BOJ Gov Ueda Speaks',
+                'date': 'Wed, Dec 24',
+                'time': '04:59 UTC',
+                'currency': 'JPY',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Wed, Dec 24',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '220K',
+                'previous': '224K'
             }
         ]
         

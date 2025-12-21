@@ -4968,6 +4968,145 @@ Please review and process this refund request.
             'message': str(e)
         }), 500
 
+@app.route('/api/submit-feedback', methods=['POST', 'OPTIONS'])
+@limiter.limit("10 per hour")  # Limit feedback submissions
+def submit_feedback():
+    """Handle feedback submission and send email to support team"""
+    # CORS preflight requests are handled automatically by Flask-CORS
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        return response
+    
+    try:
+        data = request.get_json()
+        user_name = data.get('name', 'Anonymous')
+        user_email = data.get('email')
+        category = data.get('category', 'general')
+        message = data.get('message')
+        rating = data.get('rating')
+        user_id = data.get('userId')
+        
+        if not user_email or not message:
+            return jsonify({'error': 'Email and message are required'}), 400
+        
+        # Create email content
+        rating_text = f"{rating}/5" if rating else "Not provided"
+        category_labels = {
+            'general': 'General Feedback',
+            'feature': 'Feature Request',
+            'bug': 'Bug Report',
+            'improvement': 'Improvement Suggestion',
+            'ui': 'UI/UX Feedback',
+            'other': 'Other'
+        }
+        category_label = category_labels.get(category, category)
+        
+        subject = f"User Feedback - {category_label} - {user_email}"
+        content = f"""
+New feedback submission received:
+
+User Name: {user_name}
+User Email: {user_email}
+User ID: {user_id or 'Not provided'}
+Rating: {rating_text}
+Category: {category_label}
+
+Message:
+{message}
+
+Submitted at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+Please review this feedback and respond accordingly.
+        """
+        
+        # Send email to support team
+        support_email = "fxsentinelapp@gmail.com"
+        
+        try:
+            # Import smtplib for email sending
+            import smtplib
+            from email.mime.text import MIMEText
+            from email.mime.multipart import MIMEMultipart
+            
+            # Get email credentials from environment
+            smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+            smtp_port = int(os.getenv('SMTP_PORT', '587'))
+            smtp_username = os.getenv('SMTP_USERNAME')
+            smtp_password = os.getenv('SMTP_PASSWORD')
+            
+            if smtp_username and smtp_password:
+                # Create message
+                msg = MIMEMultipart()
+                msg['From'] = smtp_username
+                msg['To'] = support_email
+                msg['Subject'] = subject
+                
+                # Add body
+                msg.attach(MIMEText(content, 'plain'))
+                
+                # Send email
+                server = smtplib.SMTP(smtp_server, smtp_port)
+                server.starttls()
+                server.login(smtp_username, smtp_password)
+                server.send_message(msg)
+                server.quit()
+                
+                print(f"✅ Feedback email sent to {support_email}")
+                
+            else:
+                # Fallback: just log the request
+                print(f"📧 Feedback received (email not configured):")
+                print(f"   From: {user_name} ({user_email})")
+                print(f"   Category: {category_label}")
+                print(f"   Rating: {rating_text}")
+                print(f"   Message: {message[:100]}...")
+                
+        except Exception as email_error:
+            print(f"⚠️ Failed to send email: {email_error}")
+            # Still log the request even if email fails
+            print(f"📧 Feedback received:")
+            print(f"   From: {user_name} ({user_email})")
+            print(f"   Category: {category_label}")
+            print(f"   Rating: {rating_text}")
+            print(f"   Message: {message[:100]}...")
+        
+        # Store feedback in database for tracking
+        if stripe_service.firebase_available and stripe_service.db:
+            try:
+                feedback_doc = {
+                    'user_name': user_name,
+                    'user_email': user_email,
+                    'user_id': user_id,
+                    'category': category,
+                    'message': message,
+                    'rating': rating,
+                    'status': 'new',
+                    'created_at': datetime.now(),
+                    'reviewed_at': None
+                }
+                
+                stripe_service.db.collection('feedback_submissions').add(feedback_doc)
+                print(f"✅ Feedback stored in database")
+                
+            except Exception as db_error:
+                print(f"⚠️ Failed to store feedback in database: {db_error}")
+        
+        # Flask-CORS automatically adds CORS headers, no need to add manually
+        return jsonify({
+            'success': True,
+            'message': 'Feedback submitted successfully. Thank you for helping us improve!'
+        })
+        
+    except Exception as e:
+        print(f"❌ Error processing feedback: {e}")
+        import traceback
+        traceback.print_exc()
+        # Flask-CORS automatically adds CORS headers, no need to add manually
+        return jsonify({
+            'error': 'Failed to submit feedback',
+            'message': str(e)
+        }), 500
+
 @app.route('/api/telegram/test', methods=['GET'])
 def telegram_test():
     """Test route for Telegram webhook"""
