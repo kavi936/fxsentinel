@@ -8,25 +8,28 @@ const ReviewBanner = ({ onClose }) => {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
-    // COMMENTED OUT FOR TESTING - Always show banner
-    setIsVisible(true);
-    
     // Check if user has seen the banner recently
-    // const lastShown = localStorage.getItem('reviewBannerLastShown');
-    // const hasReviewed = localStorage.getItem('userHasReviewed');
-    // const currentTime = Date.now();
+    const lastShown = localStorage.getItem('reviewBannerLastShown');
+    const hasReviewed = localStorage.getItem('userHasReviewed');
+    const reminderTime = localStorage.getItem('reviewBannerReminder');
+    const currentTime = Date.now();
+    
+    // Check if reminder time has passed
+    if (reminderTime && currentTime < parseInt(reminderTime)) {
+      return; // Don't show yet, reminder time hasn't passed
+    }
     
     // Show banner if:
     // 1. User hasn't reviewed yet
-    // 2. It's been more than 7 days since last shown
-    // 3. Random chance (30% probability)
-    // if (!hasReviewed && (!lastShown || currentTime - parseInt(lastShown) > 7 * 24 * 60 * 60 * 1000)) {
-    //   const shouldShow = Math.random() < 0.3; // 30% chance
-    //   if (shouldShow) {
-    //     setIsVisible(true);
-    //     localStorage.setItem('reviewBannerLastShown', currentTime.toString());
-    //   }
-    // }
+    // 2. It's been more than 1 day since last shown (reduced from 7 days for more frequent prompts)
+    // 3. Higher probability (60% chance instead of 30%)
+    if (!hasReviewed && (!lastShown || currentTime - parseInt(lastShown) > 1 * 24 * 60 * 60 * 1000)) {
+      const shouldShow = Math.random() < 0.6; // 60% chance (increased from 30%)
+      if (shouldShow) {
+        setIsVisible(true);
+        localStorage.setItem('reviewBannerLastShown', currentTime.toString());
+      }
+    }
   }, []);
 
   const handleReviewClick = (platform) => {
@@ -66,18 +69,14 @@ const ReviewBanner = ({ onClose }) => {
 
   const handleRemindLater = () => {
     setIsVisible(false);
-    // Set reminder for 3 days later
-    const reminderTime = Date.now() + (3 * 24 * 60 * 60 * 1000);
+    setHasInteracted(true);
+    // Set reminder for 1 day later (reduced from 3 days for more frequent prompts)
+    const reminderTime = Date.now() + (1 * 24 * 60 * 60 * 1000);
     localStorage.setItem('reviewBannerReminder', reminderTime.toString());
+    localStorage.setItem('reviewBannerLastShown', Date.now().toString());
   };
 
-  // COMMENTED OUT FOR TESTING - Always show banner
-  // if (!isVisible || hasInteracted) {
-  //   return null;
-  // }
-  
-  // Force visibility for testing
-  if (!isVisible) {
+  if (!isVisible || hasInteracted) {
     return null;
   }
 
