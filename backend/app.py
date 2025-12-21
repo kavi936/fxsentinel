@@ -5031,8 +5031,21 @@ Please review this feedback and respond accordingly.
             # Get email credentials from environment
             smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
             smtp_port = int(os.getenv('SMTP_PORT', '587'))
-            smtp_username = os.getenv('SMTP_USERNAME')
-            smtp_password = os.getenv('SMTP_PASSWORD')
+            smtp_username = os.getenv('SMTP_USERNAME', '').strip()
+            # Remove all spaces from App Password (Gmail shows it with spaces but it should be 16 chars without spaces)
+            smtp_password = os.getenv('SMTP_PASSWORD', '').strip().replace(' ', '')
+            
+            # Debug: Check if credentials are loaded (don't print password)
+            if smtp_username:
+                print(f"📧 SMTP Username loaded: {smtp_username}")
+                print(f"📧 SMTP Password loaded: {'Yes' if smtp_password else 'No'}")
+                if smtp_password:
+                    print(f"📧 SMTP Password length: {len(smtp_password)} characters")
+                    print(f"📧 SMTP Password preview: {smtp_password[:4]}...{smtp_password[-4:] if len(smtp_password) > 8 else '****'}")
+                print(f"📧 SMTP Server: {smtp_server}:{smtp_port}")
+            else:
+                print("⚠️ SMTP credentials not found in environment variables")
+                print("💡 Make sure .env file exists in backend/ directory with SMTP_USERNAME and SMTP_PASSWORD")
             
             if smtp_username and smtp_password:
                 # Create message
@@ -5045,13 +5058,25 @@ Please review this feedback and respond accordingly.
                 msg.attach(MIMEText(content, 'plain'))
                 
                 # Send email
-                server = smtplib.SMTP(smtp_server, smtp_port)
-                server.starttls()
-                server.login(smtp_username, smtp_password)
-                server.send_message(msg)
-                server.quit()
-                
-                print(f"✅ Feedback email sent to {support_email}")
+                try:
+                    server = smtplib.SMTP(smtp_server, smtp_port)
+                    server.starttls()
+                    print(f"🔐 Attempting to login with username: {smtp_username}")
+                    server.login(smtp_username, smtp_password)
+                    print(f"✅ Login successful!")
+                    server.send_message(msg)
+                    server.quit()
+                    print(f"✅ Feedback email sent to {support_email}")
+                except smtplib.SMTPAuthenticationError as auth_error:
+                    print(f"❌ Authentication failed!")
+                    print(f"   Error code: {auth_error.smtp_code}")
+                    print(f"   Error message: {auth_error.smtp_error}")
+                    print(f"   💡 Common issues:")
+                    print(f"      1. App Password is incorrect or expired")
+                    print(f"      2. 2-Step Verification not enabled on Gmail account")
+                    print(f"      3. App Password was generated for different account")
+                    print(f"      4. Account has 'Less secure app access' restrictions")
+                    raise
                 
             else:
                 # Fallback: just log the request
