@@ -20,12 +20,14 @@ const LiveNewsFeed = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [forceRefreshing, setForceRefreshing] = useState(false);
 
-  // Debug useEffect to monitor state changes
+  // Debug useEffect to monitor state changes (development only)
   useEffect(() => {
-    console.log('🦊 React app - State changed - selectedNews:', selectedNews);
-    console.log('🦊 React app - State changed - aiAnalysis:', aiAnalysis);
-    console.log('🦊 React app - State changed - analyzing:', analyzing);
-    console.log('🦊 React app - State changed - error:', error);
+    if (process.env.NODE_ENV === 'development' && window.location.hostname === 'localhost') {
+      console.log('🦊 React app - State changed - selectedNews:', selectedNews);
+      console.log('🦊 React app - State changed - aiAnalysis:', aiAnalysis);
+      console.log('🦊 React app - State changed - analyzing:', analyzing);
+      console.log('🦊 React app - State changed - error:', error);
+    }
   }, [selectedNews, aiAnalysis, analyzing, error]);
 
   useEffect(() => {
@@ -72,14 +74,10 @@ const LiveNewsFeed = () => {
   const fetchNews = async (forceRefresh = false) => {
     try {
       setLoading(true);
-      setError(null);
-      
-      // Debug logging (only in development)
-      if (window.location.hostname === 'localhost') {
-        console.log('🦊 React app - API_BASE_URL:', config.API_BASE_URL);
-        console.log('🦊 React app - News endpoint:', config.endpoints.news);
-        console.log('🦊 React app - Analysis endpoint:', config.endpoints.analysis('test'));
+      if (forceRefresh) {
+        setForceRefreshing(true);
       }
+      setError(null);
       
       let response;
       if (forceRefresh) {
@@ -99,20 +97,6 @@ const LiveNewsFeed = () => {
         }));
         
         setNews(processedNews);
-        // Debug logging (only in development)
-        if (window.location.hostname === 'localhost') {
-          console.log('🦊 React app - News response status:', response.status);
-          console.log('🦊 React app - News count:', processedNews?.length || 0);
-          console.log('🦊 React app - First 3 news items:', processedNews?.slice(0, 3).map(item => ({
-            id: item.id,
-            title: item.title,
-            source: item.source,
-            idType: typeof item.id,
-            idAsString: String(item.id),
-            idAsNumber: Number(item.id)
-          })));
-          console.log('API response last_updated:', data.last_updated, typeof data.last_updated);
-        }
         // Use current time as fallback if last_updated is not provided or invalid
         const lastUpdatedValue = data.last_updated || new Date().toISOString();
         setLastUpdated(lastUpdatedValue);
@@ -126,12 +110,14 @@ const LiveNewsFeed = () => {
       setError(null);
     } finally {
       setLoading(false);
+      setForceRefreshing(false);
     }
   };
 
   const fetchNewsHistory = async (hours = 24) => {
     try {
       setHistoryLoading(true);
+      setError(null);
       
       const response = await fetch(`${config.API_BASE_URL}/api/news-history?hours=${hours}`);
       const data = await response.json();
@@ -139,17 +125,13 @@ const LiveNewsFeed = () => {
       if (response.ok) {
         setNewsHistory(data.history || []);
         setHistoryStats(data.analysis_stats);
-        console.log('History loaded:', {
-          total_items: data.total_items,
-          analyzed_items: data.analyzed_items,
-          analysis_stats: data.analysis_stats
-        });
       } else {
-        throw new Error('Failed to fetch news history');
+        throw new Error(data.error || 'Failed to fetch news history');
       }
     } catch (err) {
       console.error('Error fetching news history:', err);
       setNewsHistory([]);
+      setError(`Failed to load news history: ${err.message}`);
     } finally {
       setHistoryLoading(false);
     }
@@ -166,36 +148,24 @@ const LiveNewsFeed = () => {
       setAnalyzing(true);
       setError(null);
       
-      console.log('🦊 React app - Getting cached analysis for news item:', {
-        id: newsItem.id,
-        title: newsItem.title,
-        source: newsItem.source
-      });
-      
       // Ensure news ID is treated as string to preserve precision
       const newsId = String(newsItem.id);
       const requestUrl = `${config.API_BASE_URL}/api/get-cached-analysis/${newsId}`;
-      console.log('🦊 React app - Making cached analysis request to:', requestUrl);
       
       // Make API call to get cached analysis
       const response = await fetch(requestUrl);
-      console.log('🦊 React app - Cached analysis response status:', response.status);
       
       if (response.ok) {
         const analysis = await response.json();
-        console.log('🦊 React app - Cached analysis received:', analysis);
-        
         setAiAnalysis(analysis);
         setSelectedNews(newsItem);
-        console.log('🦊 React app - Cached analysis displayed successfully');
       } else {
         const errorData = await response.json();
-        console.error('🦊 React app - Cached analysis request failed:', response.status, errorData);
         throw new Error(errorData.error || `Failed to get cached analysis: ${response.status}`);
       }
       
     } catch (err) {
-      console.error('🦊 React app - Error getting cached analysis:', err);
+      console.error('Error getting cached analysis:', err);
       
       let errorMessage = 'Failed to load cached analysis';
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
@@ -216,54 +186,16 @@ const LiveNewsFeed = () => {
       setAnalyzing(true);
       setError(null);
       
-      console.log('🦊 React app - Starting analysis for news item:', {
-        id: newsItem.id,
-        title: newsItem.title,
-        source: newsItem.source,
-        type: typeof newsItem.id,
-        idAsString: String(newsItem.id),
-        idAsNumber: Number(newsItem.id)
-      });
-      
-      // Debug: Log the request URL
       // Ensure news ID is treated as string to preserve precision
       const newsId = String(newsItem.id);
       const requestUrl = config.endpoints.analysis(newsId) + '?t=' + Date.now();
-      console.log('🦊 React app - Using news ID as string:', newsId);
-      console.log('🦊 React app - Making analysis request to:', requestUrl);
-      console.log('🦊 React app - Using API_BASE_URL:', config.API_BASE_URL);
-      console.log('🦊 React app - News item:', newsItem);
       
       // Make API call to get real GPT analysis
       const response = await fetch(requestUrl);
-      console.log('🦊 React app - Response status:', response.status);
-      console.log('🦊 React app - Response headers:', Object.fromEntries(response.headers.entries()));
-      
       const analysis = await response.json();
-      console.log('🦊 React app - Analysis received:', analysis);
-      console.log('🦊 React app - Analysis type:', analysis.analysis_type);
-      console.log('🦊 React app - News impact:', analysis.news_impact);
-      console.log('🦊 React app - Trading implications:', analysis.trading_implications);
-      console.log('🦊 React app - Analysis structure:', Object.keys(analysis));
-      console.log('🦊 React app - Analysis news_impact type:', typeof analysis.news_impact);
-      console.log('🦊 React app - Analysis trading_implications type:', typeof analysis.trading_implications);
-      console.log('🦊 React app - Analysis immediate_reaction:', analysis.immediate_reaction);
-      console.log('🦊 React app - Analysis confidence:', analysis.confidence);
-      console.log('🦊 React app - Analysis key_pairs:', analysis.key_pairs);
-      console.log('🦊 React app - Analysis volatility:', analysis.volatility);
-      console.log('🦊 React app - Analysis timeframe:', analysis.timeframe);
-      console.log('🦊 React app - Analysis risk_assessment:', analysis.risk_assessment);
-      console.log('🦊 React app - Analysis market_context:', analysis.market_context);
       
       if (response.ok) {
-        console.log('🦊 React app - Setting AI analysis in state:', analysis);
-        console.log('🦊 React app - Analysis type in state:', analysis.analysis_type);
-        console.log('🦊 React app - News impact in state:', analysis.news_impact);
-        console.log('🦊 React app - Trading implications in state:', analysis.trading_implications);
-        console.log('🦊 React app - Full analysis object being set:', JSON.stringify(analysis, null, 2));
-        console.log('🦊 React app - About to call setAiAnalysis with:', analysis);
         setAiAnalysis(analysis);
-        console.log('🦊 React app - About to call setSelectedNews with:', newsItem);
         setSelectedNews(newsItem);
         
         // Refresh history if we're on the history tab to show the new analysis
@@ -271,16 +203,11 @@ const LiveNewsFeed = () => {
           fetchNewsHistory();
         }
       } else {
-        console.error('🦊 React app - Analysis request failed:', response.status, response.statusText);
-        console.error('🦊 React app - Response body:', analysis);
         throw new Error(`Failed to analyze news: ${response.status} ${response.statusText}`);
       }
       
     } catch (err) {
-      console.error('🦊 React app - Error analyzing news:', err);
-      console.error('🦊 React app - Error name:', err.name);
-      console.error('🦊 React app - Error message:', err.message);
-      console.error('🦊 React app - Error stack:', err.stack);
+      console.error('Error analyzing news:', err);
       
       // Provide more specific error messages
       let errorMessage = 'Failed AI analysis try again';
@@ -313,12 +240,8 @@ const LiveNewsFeed = () => {
   };
 
   const getImpactIcon = (impact) => {
-    switch (impact?.toLowerCase()) {
-      case 'high': return '🔥';
-      case 'medium': return '⚡';
-      case 'low': return '📊';
-      default: return '📰';
-    }
+    // Return empty string - no emojis, just use text
+    return '';
   };
 
   const getSentimentColor = (sentiment) => {
@@ -331,12 +254,8 @@ const LiveNewsFeed = () => {
   };
 
   const getSentimentIcon = (sentiment) => {
-    switch (sentiment?.toLowerCase()) {
-      case 'bullish': return '📈';
-      case 'bearish': return '📉';
-      case 'neutral': return '➡️';
-      default: return '📊';
-    }
+    // Return empty string - no emojis, just use text
+    return '';
   };
 
   const formatTime = (timestamp) => {
@@ -363,7 +282,9 @@ const LiveNewsFeed = () => {
     
     // Check if the date is valid
     if (isNaN(date.getTime())) {
-      console.error('Invalid timestamp after conversion:', timestamp, 'converted to:', date);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Invalid timestamp after conversion:', timestamp, 'converted to:', date);
+      }
       return 'Recently';
     }
     
@@ -373,33 +294,249 @@ const LiveNewsFeed = () => {
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    console.log('Time calculation:', { now, date, diff, minutes, hours, days });
-
     if (minutes < 1) return 'Just now';
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
   };
 
+  // Intelligent currency pair detection and cleaning
+  const getIntelligentCurrencyPairs = (newsItem) => {
+    const title = (newsItem.title || '').toLowerCase();
+    const summary = (newsItem.summary || '').toLowerCase();
+    const text = `${title} ${summary}`;
+    
+    // Valid currency pair pattern (e.g., EUR/USD, USDJPY, GBP-USD)
+    const validPairPattern = /^[A-Z]{3}\/?[A-Z]{3}$/i;
+    
+    // Clean and filter existing currency pairs
+    let pairs = (newsItem.currency_pairs || [])
+      .map(pair => {
+        // Convert to string and clean
+        const cleaned = String(pair).trim().toUpperCase();
+        // Remove invalid characters and fix common issues
+        const normalized = cleaned
+          .replace(/[^A-Z\/]/g, '') // Remove non-letter/non-slash characters
+          .replace(/([A-Z]{3})([A-Z]{3})/, '$1/$2'); // Add slash if missing (EURUSD -> EUR/USD)
+        
+        // Validate pattern
+        if (validPairPattern.test(normalized)) {
+          return normalized;
+        }
+        return null;
+      })
+      .filter(pair => pair !== null && pair.length > 0);
+    
+    // Remove duplicates
+    pairs = [...new Set(pairs)];
+    
+    // If we have valid pairs, return them
+    if (pairs.length > 0) {
+      return pairs;
+    }
+    
+    // Intelligent keyword-based detection
+    const keywordMappings = {
+      // USD-related keywords - US Political Figures & Officials
+      usd: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      fed: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'federal reserve': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'jerome powell': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      powell: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'fed chair': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'scott bessent': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      bessent: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'treasury secretary': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us treasury': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      trump: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'donald trump': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      biden: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'joe biden': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us president': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'white house': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us dollar': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      dollar: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us economy': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us inflation': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us gdp': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'non-farm payrolls': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      nfp: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us cpi': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us jobs': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      'us employment': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+      
+      // EUR-related keywords - EU Political Figures & Officials
+      eur: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      euro: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      ecb: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'european central bank': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'christine lagarde': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      lagarde: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'ecb president': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'ursula von der leyen': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'von der leyen': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'european commission': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'emmanuel macron': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      macron: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'french president': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'friedrich merz': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      merz: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'german chancellor': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'giorgia meloni': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      meloni: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'italian prime minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'christian lindner': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      lindner: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'german finance minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'bruno le maire': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'le maire': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'french finance minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'jörg kukies': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      kukies: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'eric lombard': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      lombard: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'eurozone': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'european union': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'eu economy': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'eurozone inflation': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      'eurozone gdp': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+      
+      // GBP-related keywords - UK Political Figures & Officials
+      gbp: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      pound: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'british pound': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      boe: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'bank of england': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'huw pill': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      pill: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'boe governor': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'andrew bailey': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      bailey: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'keir starmer': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      starmer: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'rachel reeves': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      reeves: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'rishi sunak': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      sunak: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'jeremy hunt': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      hunt: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'uk chancellor': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'chancellor of the exchequer': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'uk prime minister': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'uk pm': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'british pm': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      brexit: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'uk economy': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'uk inflation': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      'uk gdp': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+      
+      // JPY-related keywords - Japan Political Figures & Officials
+      jpy: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      yen: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      boj: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'bank of japan': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'ueda kazuo': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      ueda: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'boj governor': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'boj officials': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'sanae takaichi': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      takaichi: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'satsuki katayama': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      katayama: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese finance minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japan finance minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'katsunobu kato': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      kato: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'shigeru ishiba': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      ishiba: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'kishida fumio': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      kishida: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'shunichi suzuki': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      suzuki: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japan pm': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese pm': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japan prime minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese prime minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese economy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japan economy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese inflation': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japan inflation': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese gdp': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japan gdp': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'tokyo': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      'japanese': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+      
+      // AUD-related keywords - Australia Political Figures & Officials
+      aud: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'australian dollar': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      rba: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'reserve bank of australia': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'michele bullock': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      bullock: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'rba governor': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'anthony albanese': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      albanese: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'australia pm': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'australian pm': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'australia prime minister': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'australian economy': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      'australia economy': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+      
+      // CAD-related keywords - Canada Political Figures & Officials
+      cad: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canadian dollar': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      boc: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'bank of canada': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'tiff macklem': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      macklem: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'boc governor': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'justin trudeau': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      trudeau: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'francois-philippe champagne': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      champagne: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canada finance minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canadian finance minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canada pm': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canadian pm': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canada prime minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canadian economy': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      'canada economy': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+      
+      // CHF-related keywords - Switzerland Political Figures & Officials
+      chf: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      franc: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      'swiss franc': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      snb: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      'swiss national bank': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      'thomas jordan': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      jordan: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      'snb governor': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+      'swiss economy': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+    };
+    
+    // Check for keywords in text (case-insensitive)
+    const detectedPairs = new Set();
+    
+    for (const [keyword, pairs] of Object.entries(keywordMappings)) {
+      // Use word boundary to avoid partial matches
+      const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      if (regex.test(text)) {
+        pairs.forEach(pair => detectedPairs.add(pair));
+      }
+    }
+    
+    // Convert to array and limit to 4 most relevant pairs
+    const finalPairs = Array.from(detectedPairs).slice(0, 4);
+    
+    // If still no pairs found, return empty array (don't show section)
+    return finalPairs;
+  };
+
       const getCurrentNewsList = () => {
         const currentList = activeTab === 'live' ? news : newsHistory;
         
-        console.log('🦊 React app - getCurrentNewsList - Original news items:', currentList.slice(0, 3).map(item => ({
-            id: item.id,
-            title: item.title,
-            idType: typeof item.id,
-            is_analyzed: item.is_analyzed
-        })));
-        
         // Remove duplicates based on title similarity
         const uniqueNews = removeDuplicateNews(currentList);
-        
-        console.log('🦊 React app - getCurrentNewsList - After removeDuplicateNews:', uniqueNews.slice(0, 3).map(item => ({
-            id: item.id,
-            title: item.title,
-            idType: typeof item.id,
-            is_analyzed: item.is_analyzed
-        })));
         
         const filteredAndSorted = uniqueNews
             .filter(item => {
@@ -427,13 +564,6 @@ const LiveNewsFeed = () => {
                 const dateB = new Date(b.added_to_feed_at || b.published_at);
                 return dateB - dateA;
             });
-        
-        console.log('🦊 React app - getCurrentNewsList - Final result:', filteredAndSorted.slice(0, 3).map(item => ({
-            id: item.id,
-            title: item.title,
-            idType: typeof item.id,
-            is_analyzed: item.is_analyzed
-        })));
         
         return filteredAndSorted;
     };
@@ -645,25 +775,25 @@ const LiveNewsFeed = () => {
           </div>
           <div className="filter-controls">
             <button 
-              className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
+              className={`news-filter-btn news-filter-all ${filter === 'all' ? 'active' : ''}`}
               onClick={() => setFilter('all')}
             >
               All
             </button>
             <button 
-              className={`filter-btn ${filter === 'high' ? 'active' : ''}`}
+              className={`news-filter-btn news-filter-high ${filter === 'high' ? 'active' : ''}`}
               onClick={() => setFilter('high')}
             >
               H
             </button>
             <button 
-              className={`filter-btn ${filter === 'medium' ? 'active' : ''}`}
+              className={`news-filter-btn news-filter-medium ${filter === 'medium' ? 'active' : ''}`}
               onClick={() => setFilter('medium')}
             >
               M
             </button>
             <button 
-              className={`filter-btn ${filter === 'low' ? 'active' : ''}`}
+              className={`news-filter-btn news-filter-low ${filter === 'low' ? 'active' : ''}`}
               onClick={() => setFilter('low')}
             >
               L
@@ -686,7 +816,13 @@ const LiveNewsFeed = () => {
         ) : getCurrentNewsList().length === 0 ? (
           <div className="empty-state">
             <div className="placeholder-icon">
-              {activeTab === 'live' ? '📰' : '📊'}
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                {activeTab === 'live' ? (
+                  <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+                ) : (
+                  <path d="M3 3v18h18M7 16l4-4 4 4 6-6"/>
+                )}
+              </svg>
             </div>
             <p className="placeholder-text">No {activeTab === 'live' ? 'News' : 'Analyzed News'} Available</p>
             <p className="placeholder-subtext">
@@ -700,9 +836,7 @@ const LiveNewsFeed = () => {
                 <button onClick={() => handleTabChange('live')} className="switch-tab-btn">
                   Switch to Live News
                 </button>
-                <button onClick={() => fetchNewsHistory()} className="news-refresh-btn">
-                  Refresh History
-                </button>
+                
               </div>
             )}
             {activeTab === 'live' && (
@@ -719,7 +853,7 @@ const LiveNewsFeed = () => {
                   className="force-refresh-btn"
                   disabled={forceRefreshing}
                 >
-                  {forceRefreshing ? 'Force Refreshing...' : '🔄 Force Refresh'}
+                  {forceRefreshing ? 'Force Refreshing...' : 'Force Refresh'}
                 </button>
               </div>
             )}
@@ -751,20 +885,28 @@ const LiveNewsFeed = () => {
                   <h3 className="news-title">{newsItem.title}</h3>
                   <p className="news-summary">{newsItem.summary}</p>
                   
-                  {newsItem.currency_pairs && newsItem.currency_pairs.length > 0 && (
-                    <div className="news-currency-pairs">
-                      <span className="news-pairs-label">Affected pairs:</span>
-                      {newsItem.currency_pairs.map((pair, index) => (
-                        <span key={index} className="news-currency-pair">{pair}</span>
-                      ))}
-                    </div>
-                  )}
+                  {(() => {
+                    const intelligentPairs = getIntelligentCurrencyPairs(newsItem);
+                    return intelligentPairs.length > 0 && (
+                      <div className="news-currency-pairs">
+                        <span className="news-pairs-label">Affected pairs:</span>
+                        {intelligentPairs.map((pair, index) => (
+                          <span key={index} className="news-currency-pair">{pair}</span>
+                        ))}
+                      </div>
+                    );
+                  })()}
                   
                   {/* Analysis Status Indicator */}
                   {newsItem.is_analyzed && (
                     <div className="analysis-status-indicator">
                       <div className="analysis-badge">
-                        <span className="analysis-icon">📊</span>
+                        <span className="analysis-icon">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                            <polyline points="22 4 12 14.01 9 11.01"/>
+                          </svg>
+                        </span>
                         <span className="analysis-text">Analyzed</span>
                         {activeTab === 'history' && (
                           <button 
@@ -802,13 +944,6 @@ const LiveNewsFeed = () => {
                     className="analyze-btn"
                     onClick={(e) => {
                       e.stopPropagation();
-                      console.log('🦊 React app - Analyze button clicked for news item:', newsItem);
-                      console.log('🦊 React app - News item ID:', newsItem.id);
-                      console.log('🦊 React app - News item ID type:', typeof newsItem.id);
-                      console.log('🦊 React app - News item title:', newsItem.title);
-                      console.log('🦊 React app - News item ID as string:', String(newsItem.id));
-                      console.log('🦊 React app - News item ID as number:', Number(newsItem.id));
-                      console.log('🦊 React app - Full news item object:', JSON.stringify(newsItem, null, 2));
                       setSelectedNews(newsItem);
                       analyzeNews(newsItem);
                     }}
@@ -835,27 +970,7 @@ const LiveNewsFeed = () => {
                 </div>
 
                 {/* AI Analysis Section - Expandable within the news item */}
-                {(() => {
-                  const shouldShow = selectedNews?.id === newsItem.id && (aiAnalysis || analyzing || error);
-                  console.log('🦊 React app - Analysis section condition:', {
-                    selectedNewsId: selectedNews?.id,
-                    newsItemId: newsItem.id,
-                    hasAiAnalysis: !!aiAnalysis,
-                    isAnalyzing: analyzing,
-                    hasError: !!error,
-                    shouldShow
-                  });
-                  
-                  // Additional debugging for the specific news item
-                  if (selectedNews?.id === newsItem.id) {
-                    console.log('🦊 React app - This news item is selected!');
-                    console.log('🦊 React app - aiAnalysis state:', aiAnalysis);
-                    console.log('🦊 React app - analyzing state:', analyzing);
-                    console.log('🦊 React app - error state:', error);
-                  }
-                  
-                  return shouldShow;
-                })() && (
+                {selectedNews?.id === newsItem.id && (aiAnalysis || analyzing || error) && (
                   <div className="ai-analysis-section" onClick={(e) => e.stopPropagation()}>
                     <div className="analysis-header">
                       <h4>AI Analysis</h4>
@@ -880,11 +995,6 @@ const LiveNewsFeed = () => {
                       </div>
                     ) : aiAnalysis ? (
                       <div className="analysis-content" onClick={(e) => e.stopPropagation()}>
-                        {console.log('🦊 React app - Rendering analysis content with aiAnalysis:', aiAnalysis)}
-                        {console.log('🦊 React app - aiAnalysis.news_impact:', aiAnalysis.news_impact)}
-                        {console.log('🦊 React app - aiAnalysis.trading_implications:', aiAnalysis.trading_implications)}
-                        {console.log('🦊 React app - aiAnalysis.immediate_reaction:', aiAnalysis.immediate_reaction)}
-                        {console.log('🦊 React app - aiAnalysis.confidence:', aiAnalysis.confidence)}
                         {/* Simplified Analysis Header */}
                         <div className="analysis-content-header">
                           <div className="sentiment-badge" style={{ backgroundColor: getSentimentColor(aiAnalysis.immediate_reaction?.replace('_', ' ') || 'neutral') }}>
