@@ -4558,7 +4558,7 @@
   font-weight: 600;
 }
 
-/* VIX Fear Indicator Section */
+/* VIX Section Styles */
 .vix-section {
   background: rgba(255, 68, 68, 0.08);
   border: 1px solid rgba(255, 68, 68, 0.3);
@@ -4567,7 +4567,7 @@
   margin-top: 0;
   margin-bottom: 24px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .sentiment-content > .vix-section:first-child {
@@ -4608,121 +4608,698 @@
   z-index: 1;
 }
 
-/* VIX Gauge Styles */
-.vix-gauge-container {
+/* VIX Display Styles - Simple Bar Design */
+.vix-display {
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 20px;
+}
+
+.vix-main-display {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+  margin-bottom: 10px;
+}
+
+.vix-value-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vix-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vix-number-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vix-number {
+  font-size: 36px;
+  font-weight: 800;
+  font-family: 'Space Grotesk', monospace;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+.vix-change-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.vix-change-arrow {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.vix-change-value {
+  font-size: 16px;
+}
+
+.vix-level-badge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  border: 1px solid;
+  backdrop-filter: blur(10px);
+  display: inline-block;
+  width: fit-content;
+  line-height: 1.2;
+}
+
+/* VIX Bar Container */
+.vix-bar-container {
+  width: 100%;
+}
+
+.vix-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vix-bar-background {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.vix-bar-markers {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.vix-marker {
+  position: absolute;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  font-family: 'Space Grotesk', monospace;
+  transform: translateX(-50%);
+}
+
+.vix-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.vix-bar-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid;
+  background: rgba(26, 26, 26, 0.9);
+  z-index: 2;
+  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.vix-indicator-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.vix-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', monospace;
+  padding: 0 4px;
+}
+
+.vix-range-label {
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.vix-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+}
+
+.vix-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 68, 68, 0.5);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vix-number {
+    font-size: 32px;
+  }
+  
+  .vix-change-indicator {
+    font-size: 14px;
+  }
+  
+  .vix-change-arrow {
+    font-size: 16px;
+  }
+  
+  .vix-bar-background {
+    height: 14px;
+  }
+  
+  .vix-bar-indicator {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* OLD GAUGE STYLES - REMOVED */
+.vix-gauge-container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 0;
 }
 
 .vix-gauge-wrapper {
+  position: relative;
   width: 100%;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.vix-gauge-semicircle {
+  position: relative;
+  width: 300px;
+  height: 150px;
+  margin: 0 auto;
+}
+
+/* Background Arc */
+.vix-gauge-background {
+  position: absolute;
+  width: 300px;
+  height: 150px;
+  border-radius: 300px 300px 0 0;
+  border: 14px solid rgba(255, 255, 255, 0.1);
+  border-bottom: none;
+  box-sizing: border-box;
+}
+
+/* Filled Arc with Gradient */
+.vix-gauge-fill {
+  position: absolute;
+  width: 300px;
+  height: 150px;
+  border-radius: 300px 300px 0 0;
+  border: 14px solid transparent;
+  border-bottom: none;
+  box-sizing: border-box;
+  background: conic-gradient(
+    from 180deg at 50% 100%,
+    #00ff88 0deg,
+    #4ade80 22.5deg,
+    #ffa500 45deg,
+    #ff6b6b 67.5deg,
+    #ff4757 90deg,
+    #ff4757 180deg
+  );
+  mask-image: linear-gradient(to right, 
+    black 0%, 
+    black var(--gauge-percentage), 
+    transparent var(--gauge-percentage), 
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(to right, 
+    black 0%, 
+    black var(--gauge-percentage), 
+    transparent var(--gauge-percentage), 
+    transparent 100%
+  );
+  transition: mask-image 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+              -webkit-mask-image 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scale Markers */
+.vix-gauge-markers {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.vix-gauge-marker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+  transform: translate(-50%, -50%) rotate(var(--mark-rotation));
+}
+
+.vix-gauge-marker-line {
+  width: 2px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.4);
+  margin-left: 130px;
+  border-radius: 1px;
+}
+
+.vix-gauge-marker-label {
+  position: absolute;
+  left: 155px;
+  top: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'Space Grotesk', monospace;
+  transform: rotate(calc(-1 * var(--mark-rotation)));
+  white-space: nowrap;
+}
+
+/* Needle */
+.vix-gauge-needle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0 0;
+  transform: translate(-50%, -50%) rotate(var(--needle-rotation));
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 10;
+  pointer-events: none;
+}
+
+.vix-gauge-needle-line {
+  width: 3px;
+  height: 75px;
+  background: var(--needle-color);
+  margin-left: -1.5px;
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.vix-gauge-needle-tip {
+  position: absolute;
+  left: 50%;
+  top: 65px;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.vix-gauge-needle-tip span {
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  font-family: 'Space Grotesk', monospace;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Center Pivot */
+.vix-gauge-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  z-index: 11;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Labels */
+.vix-gauge-labels {
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+}
+
+.vix-gauge-label-left {
+  color: #00ff88;
+}
+
+.vix-gauge-label-center {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.vix-gauge-label-right {
+  color: #ff4757;
+}
+
+/* VIX Value Display */
+.vix-value-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-}
-
-.vix-gauge {
   width: 100%;
-  max-width: 300px;
-  height: auto;
-  display: block;
 }
 
-.vix-sentiment-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.vix-sentiment-now {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.vix-sentiment-value {
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.vix-value-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.vix-value-main {
+.vix-main-value {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-}
-
-.vix-value-label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 600;
+  gap: 12px;
 }
 
 .vix-number {
-  font-size: 24px;
+  font-size: 32px;
   font-weight: 800;
   font-family: 'Space Grotesk', monospace;
   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  line-height: 1;
 }
 
-.vix-number.low {
-  color: #00ff88;
-  text-shadow: 0 2px 8px rgba(0, 255, 136, 0.3);
-}
-
-.vix-number.medium {
-  color: #ffa500;
-  text-shadow: 0 2px 8px rgba(255, 165, 0, 0.3);
-}
-
-.vix-number.high {
-  color: #ff4757;
-  text-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
-}
-
-.vix-change {
-  font-size: 13px;
+.vix-change-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
   font-weight: 700;
-  padding: 4px 10px;
-  border-radius: 6px;
   font-family: 'Space Grotesk', monospace;
 }
 
-.vix-change.positive {
-  color: #00ff88;
-  background: rgba(0, 255, 136, 0.15);
-  border: 1px solid rgba(0, 255, 136, 0.3);
+.vix-change-arrow {
+  font-size: 16px;
+  font-weight: 800;
 }
 
-.vix-change.negative {
-  color: #ff4757;
-  background: rgba(255, 71, 87, 0.15);
-  border: 1px solid rgba(255, 71, 87, 0.3);
+.vix-change-value {
+  font-size: 14px;
+}
+
+.vix-level-badge {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid;
+  backdrop-filter: blur(10px);
 }
 
 .vix-loading {
-  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
   color: rgba(255, 255, 255, 0.6);
-  font-style: italic;
-  text-align: center;
-  padding: 20px 0;
+  font-size: 14px;
+}
+
+.vix-loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-top-color: rgba(255, 68, 68, 0.5);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vix-gauge-semicircle {
+    width: 260px;
+    height: 130px;
+  }
+  
+  .vix-gauge-background {
+    width: 260px;
+    height: 130px;
+    border-width: 12px;
+  }
+  
+  .vix-gauge-fill {
+    width: 260px;
+    height: 130px;
+    border-width: 12px;
+  }
+  
+  .vix-gauge-needle-line {
+    height: 65px;
+  }
+  
+  .vix-gauge-needle-tip {
+    width: 32px;
+    height: 32px;
+    top: 55px;
+  }
+  
+  .vix-gauge-marker-line {
+    margin-left: 110px;
+  }
+  
+  .vix-gauge-marker-label {
+    left: 130px;
+  }
+  
+  .vix-number {
+    font-size: 28px;
+  }
+}
+
+/* VIX Display Styles - Simple Bar Design */
+.vix-display {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.vix-main-display {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.vix-value-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vix-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vix-number-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vix-number {
+  font-size: 36px;
+  font-weight: 800;
+  font-family: 'Space Grotesk', monospace;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+.vix-change-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.vix-change-arrow {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.vix-change-value {
+  font-size: 16px;
+}
+
+.vix-level-badge {
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2px;
+  border: 1px solid;
+  backdrop-filter: blur(10px);
+  display: inline-block;
+  width: fit-content;
+  line-height: 1.2;
+}
+
+/* VIX Bar Container */
+.vix-bar-container {
+  width: 100%;
+}
+
+.vix-bar-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vix-bar-background {
+  position: relative;
+  width: 100%;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.vix-bar-markers {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.vix-marker {
+  position: absolute;
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 600;
+  font-family: 'Space Grotesk', monospace;
+  transform: translateX(-50%);
+}
+
+.vix-bar-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.vix-bar-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 3px solid;
+  background: rgba(26, 26, 26, 0.9);
+  z-index: 2;
+  transition: left 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.vix-indicator-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.vix-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', monospace;
+  padding: 0 4px;
+}
+
+.vix-range-label {
+  font-size: 10px;
+  font-weight: 700;
 }
 
 /* Market Conditions Overview Styles */

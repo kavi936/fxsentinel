@@ -7,6 +7,7 @@ Resets daily for fresh trading sessions
 
 import json
 import logging
+import requests
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
@@ -70,12 +71,17 @@ class MarketSentimentService:
         self.sentiment_timestamp = None  # Track when sentiment was last calculated
         self.cache_expiration_minutes = 15  # Recalculate every 15 minutes
         
+        # VIX cache
+        self.vix_cache = None
+        self.vix_cache_timestamp = None
+        self.vix_cache_expiration_minutes = 10  # Cache VIX for 10 minutes to avoid rate limits
+        
         # Initialize sentiment cache
         self._load_cache()
         self._check_daily_reset()
     
     def _load_cache(self):
-        """Load cached sentiment data"""
+        """Load cached sentiment data and VIX cache"""
         try:
             with open(self.cache_file, 'r') as f:
                 data = json.load(f)
@@ -86,25 +92,60 @@ class MarketSentimentService:
                     self.sentiment_timestamp = datetime.fromisoformat(sentiment_timestamp_str.replace('Z', '+00:00'))
                 else:
                     self.sentiment_timestamp = None
+                
+                # Load VIX cache
+                vix_cache_data = data.get('vix_cache')
+                if vix_cache_data:
+                    self.vix_cache = vix_cache_data.get('data')
+                    vix_timestamp_str = vix_cache_data.get('timestamp')
+                    if vix_timestamp_str:
+                        self.vix_cache_timestamp = datetime.fromisoformat(vix_timestamp_str.replace('Z', '+00:00'))
+                    else:
+                        self.vix_cache_timestamp = None
+                else:
+                    self.vix_cache = None
+                    self.vix_cache_timestamp = None
+                
                 logger.info(f"Loaded sentiment cache from {self.last_reset_date}")
         except (FileNotFoundError, json.JSONDecodeError):
             logger.info("No sentiment cache found, starting fresh")
             self.last_reset_date = None
             self.current_sentiment = None
             self.sentiment_timestamp = None
+            self.vix_cache = None
+            self.vix_cache_timestamp = None
     
     def _save_cache(self):
-        """Save sentiment data to cache"""
+        """Save sentiment data and VIX cache"""
         try:
             data = {
                 'last_reset_date': self.last_reset_date,
                 'current_sentiment': asdict(self.current_sentiment) if self.current_sentiment else None,
-                'sentiment_timestamp': self.sentiment_timestamp.isoformat() if self.sentiment_timestamp else None
+                'sentiment_timestamp': self.sentiment_timestamp.isoformat() if self.sentiment_timestamp else None,
+                'vix_cache': {
+                    'data': self.vix_cache,
+                    'timestamp': self.vix_cache_timestamp.isoformat() if self.vix_cache_timestamp else None
+                } if self.vix_cache else None
             }
             with open(self.cache_file, 'w') as f:
                 json.dump(data, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to save sentiment cache: {e}")
+    
+    def _is_vix_cache_valid(self) -> bool:
+        """Check if VIX cache is still valid"""
+        if not self.vix_cache or not self.vix_cache_timestamp:
+            return False
+        
+        current_time = datetime.now(timezone.utc)
+        time_diff = current_time - self.vix_cache_timestamp
+        
+        # Check if cache is older than expiration time
+        if time_diff.total_seconds() > (self.vix_cache_expiration_minutes * 60):
+            logger.info(f"VIX cache expired. Last updated: {self.vix_cache_timestamp}, Age: {time_diff.total_seconds() / 60:.1f} minutes")
+            return False
+        
+        return True
     
     def _check_daily_reset(self):
         """Check if we need to reset for a new trading day"""
@@ -286,10 +327,155 @@ class MarketSentimentService:
             logger.error(f"Error calculating market conditions: {e}")
             return self._get_default_market_conditions()
     
-    def _calculate_volatility(self, forex_data: Dict) -> Dict[str, Any]:
-        """Calculate volatility environment from forex data"""
+    def _fetch_real_vix(self) -> Optional[Dict[str, float]]:
+        """Fetch real VIX data from Yahoo Finance using yfinance library with caching"""
+        # Check if we have valid cached VIX data
+        if self._is_vix_cache_valid():
+            logger.info(f"✅ Using cached VIX data: {self.vix_cache['vix']:.2f} ({self.vix_cache['change']:+.2f})")
+            return self.vix_cache
+        
         try:
-            # Calculate average volatility from price changes
+            import yfinance as yf
+            from yfinance.exceptions import YFRateLimitError
+            
+            logger.info("🔄 Fetching fresh VIX data from Yahoo Finance...")
+            print(f"🔍 DEBUG: Attempting to fetch VIX from yfinance...")
+            
+            # Fetch VIX data using yfinance (ticker symbol: ^VIX)
+            vix_ticker = yf.Ticker("^VIX")
+            print(f"🔍 DEBUG: VIX ticker created: {vix_ticker}")
+            
+            # Get recent history for change calculation (2 days to get current and previous)
+            hist = vix_ticker.history(period="2d")
+            print(f"🔍 DEBUG: VIX history fetched - Empty: {hist.empty}, Length: {len(hist)}")
+            
+            if hist.empty or len(hist) < 1:
+                logger.warning("⚠️ No VIX history data available from yfinance")
+                print(f"⚠️ DEBUG: VIX history is empty or has no data")
+                # Try to use cached data even if expired as fallback
+                if self.vix_cache:
+                    logger.info("Using expired VIX cache as fallback")
+                    print(f"🔍 DEBUG: Using expired cache: {self.vix_cache}")
+                    return self.vix_cache
+                print(f"❌ DEBUG: No VIX cache available, returning None")
+                return None
+            
+            # Get current price (most recent close)
+            current_price = float(hist['Close'].iloc[-1])
+            print(f"🔍 DEBUG: Current VIX price: {current_price}")
+            
+            # Calculate change from previous close
+            if len(hist) >= 2:
+                previous_close = float(hist['Close'].iloc[-2])
+                change = current_price - previous_close
+                print(f"🔍 DEBUG: Previous close: {previous_close}, Change: {change}")
+            else:
+                # If only one day of data, try to get previous close from info
+                try:
+                    info = vix_ticker.info
+                    previous_close = info.get('previousClose', current_price)
+                    change = current_price - previous_close
+                    print(f"🔍 DEBUG: Using info previousClose: {previous_close}, Change: {change}")
+                except Exception as e:
+                    # If info fetch fails, assume no change
+                    previous_close = current_price
+                    change = 0.0
+                    print(f"⚠️ DEBUG: Failed to get previousClose from info: {e}, assuming no change")
+            
+            if current_price > 0:
+                vix_data = {
+                    'vix': current_price,
+                    'change': change,
+                    'previous_close': previous_close
+                }
+                
+                # Cache the VIX data
+                self.vix_cache = vix_data
+                self.vix_cache_timestamp = datetime.now(timezone.utc)
+                self._save_cache()
+                
+                logger.info(f"✅ Successfully fetched and cached VIX data: {current_price:.2f} ({change:+.2f})")
+                print(f"✅ DEBUG: VIX data cached successfully: {vix_data}")
+                return vix_data
+            
+            logger.warning("⚠️ Invalid VIX price data from yfinance (price <= 0)")
+            print(f"⚠️ DEBUG: Invalid VIX price: {current_price}")
+            # Try to use cached data even if expired as fallback
+            if self.vix_cache:
+                logger.info("Using expired VIX cache as fallback")
+                return self.vix_cache
+            return None
+            
+        except ImportError:
+            logger.error("❌ yfinance library not installed. Install with: pip install yfinance")
+            print(f"❌ DEBUG: yfinance not installed")
+            # Try to use cached data as fallback
+            if self.vix_cache:
+                logger.info("Using cached VIX data as fallback")
+                return self.vix_cache
+            return None
+        except YFRateLimitError:
+            logger.warning("⚠️ Yahoo Finance rate limit reached. Using cached VIX data if available.")
+            print(f"⚠️ DEBUG: Rate limit error from yfinance")
+            # Use cached data even if expired when rate limited
+            if self.vix_cache:
+                logger.info("Using cached VIX data due to rate limit")
+                return self.vix_cache
+            return None
+        except Exception as e:
+            logger.error(f"❌ Error fetching VIX data from yfinance: {e}")
+            print(f"❌ DEBUG: Exception fetching VIX: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            # Try to use cached data as fallback
+            if self.vix_cache:
+                logger.info("Using cached VIX data due to error")
+                return self.vix_cache
+            return None
+    
+    def _calculate_volatility(self, forex_data: Dict) -> Dict[str, Any]:
+        """Calculate volatility environment from forex data and real VIX"""
+        try:
+            # First, try to fetch real VIX data
+            vix_data = self._fetch_real_vix()
+            print(f"🔍 DEBUG: _calculate_volatility - vix_data received: {vix_data}")
+            
+            if vix_data:
+                # Use real VIX data
+                vix_value = vix_data['vix']
+                vix_change = vix_data['change']
+                print(f"✅ DEBUG: Using real VIX data - Value: {vix_value}, Change: {vix_change}")
+                
+                # Determine volatility level based on real VIX
+                if vix_value >= 25:
+                    level = 'high'
+                    percentage = 75
+                elif vix_value >= 15:
+                    level = 'medium'
+                    percentage = 50
+                else:
+                    level = 'low'
+                    percentage = 25
+                
+                # Determine trend
+                if vix_change > 1.0:
+                    trend = 'increasing'
+                elif vix_change < -1.0:
+                    trend = 'decreasing'
+                else:
+                    trend = 'stable'
+                
+                return {
+                    'level': level,
+                    'percentage': percentage,
+                    'vix': vix_value,
+                    'change': vix_change,
+                    'trend': trend
+                }
+            
+            # Fallback: Calculate from forex volatility if VIX API fails
+            logger.warning("⚠️ Using fallback VIX calculation from forex volatility (yfinance fetch failed)")
+            print(f"⚠️ DEBUG: Falling back to forex-based VIX calculation")
             volatilities = []
             for pair_data in forex_data.values():
                 if 'change' in pair_data:
@@ -585,6 +771,41 @@ class MarketSentimentService:
     
     def _format_for_frontend(self, sentiment: MarketSentiment) -> Dict[str, Any]:
         """Format sentiment data for frontend consumption"""
+        # Extract VIX data from volatility condition for easier frontend access
+        vix_data = None
+        volatility_condition = next(
+            (c for c in sentiment.market_conditions if c.name == 'Volatility Environment'),
+            None
+        )
+        
+        print(f"🔍 DEBUG: _format_for_frontend - volatility_condition: {volatility_condition}")
+        
+        if volatility_condition and volatility_condition.detail:
+            print(f"🔍 DEBUG: Parsing VIX from detail string: '{volatility_condition.detail}'")
+            # Parse VIX from detail string: "VIX: 15.0 (+0.0)"
+            import re
+            vix_match = re.match(r'VIX:\s*([\d.]+)\s*\(([+-]?[\d.]+)\)', volatility_condition.detail)
+            if vix_match:
+                try:
+                    vix_value = float(vix_match.group(1))
+                    vix_change = float(vix_match.group(2))
+                    vix_data = {
+                        'value': vix_value,
+                        'change': vix_change,
+                        'level': 'low' if vix_value < 15 else 'medium' if vix_value < 25 else 'high'
+                    }
+                    print(f"✅ DEBUG: Successfully parsed VIX data: {vix_data}")
+                    logger.info(f"✅ Extracted VIX data for frontend: {vix_value:.2f} ({vix_change:+.2f})")
+                except (ValueError, IndexError) as e:
+                    logger.warning(f"⚠️ Failed to parse VIX data from detail: {volatility_condition.detail}, Error: {e}")
+                    print(f"❌ DEBUG: Failed to parse VIX: {e}")
+            else:
+                print(f"⚠️ DEBUG: VIX regex did not match detail string: '{volatility_condition.detail}'")
+        else:
+            print(f"⚠️ DEBUG: No volatility condition or detail found")
+        
+        print(f"🔍 DEBUG: Final vix_data being sent to frontend: {vix_data}")
+        
         return {
             'timestamp': sentiment.timestamp,
             'trading_day': sentiment.trading_day,
@@ -623,7 +844,8 @@ class MarketSentimentService:
             'confidence_score': sentiment.confidence_score,
             'data_sources': sentiment.data_sources,
             'is_market_closed': sentiment.is_market_closed,
-            'market_status': sentiment.market_status
+            'market_status': sentiment.market_status,
+            'vix': vix_data  # Add VIX as separate field for easier access
         }
     
     def _get_default_market_conditions(self) -> List[MarketCondition]:

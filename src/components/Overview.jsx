@@ -2242,260 +2242,182 @@ const Overview = () => {
                   </div>
                 ) : (
                   <React.Fragment>
-                    {/* VIX Fear Indicator Section - At the Very Top */}
-                    {(() => {
-                      const volatilityCondition = sentiment.market_conditions.find(c => c.name === 'Volatility Environment');
-                      let vixValue = null;
-                      let vixChange = null;
-                      let vixLevel = 'medium';
-                      
-                      if (volatilityCondition && volatilityCondition.detail) {
-                        const vixMatch = volatilityCondition.detail.match(/VIX:\s*([\d.]+)\s*\(([+-]?[\d.]+)\)/);
-                        if (vixMatch) {
-                          vixValue = parseFloat(vixMatch[1]);
-                          vixChange = parseFloat(vixMatch[2]);
-                          vixLevel = vixValue < 15 ? 'low' : vixValue < 25 ? 'medium' : 'high';
-                        }
-                      }
-                      
-                      return (
-                        <div className="vix-section">
-                          <div className="vix-header">
-                            <h4 className="vix-title">VIX Fear Indicator</h4>
-                            <InfoIcon 
-                              tooltipText="The VIX (Volatility Index) measures market fear and uncertainty. Low VIX (<15) indicates complacency, Medium (15-25) shows normal volatility, High (>25) signals elevated fear. VIX is crucial for currency markets as it reflects risk sentiment that drives safe-haven flows."
-                              position="bottom"
-                            />
-                          </div>
-                          <div className="vix-content">
-                            {vixValue !== null ? (
-                              <>
-                                {/* VIX Gauge */}
-                                <div className="vix-gauge-container">
-                                  {(() => {
-                                    // Map VIX to gauge scale (0-100)
-                                    // VIX 10 = Greed (100), VIX 30 = Fear (0), VIX 20 = Neutral (50)
-                                    const mapVixToGauge = (vix) => {
-                                      // Clamp VIX between 10 and 30 for mapping
-                                      const clampedVix = Math.max(10, Math.min(30, vix));
-                                      // Inverse mapping: lower VIX = higher gauge value (more greed)
-                                      const gaugeValue = 100 - ((clampedVix - 10) / 20) * 100;
-                                      return Math.max(0, Math.min(100, gaugeValue));
-                                    };
-                                    
-                                    const gaugeValue = mapVixToGauge(vixValue);
-                                    const angle = (gaugeValue / 100) * 180 - 90; // -90 to 90 degrees
-                                    const radius = 80;
-                                    const centerX = 100;
-                                    const centerY = 100;
-                                    const needleLength = 70;
-                                    
-                                    // Calculate needle endpoint
-                                    const needleAngleRad = (angle * Math.PI) / 180;
-                                    const needleX = centerX + needleLength * Math.cos(needleAngleRad);
-                                    const needleY = centerY + needleLength * Math.sin(needleAngleRad);
-                                    
-                                    // Determine sentiment label
-                                    let sentimentLabel = 'Neutral';
-                                    let sentimentColor = '#ffa500';
-                                    if (gaugeValue >= 75) {
-                                      sentimentLabel = 'Extreme Greed';
-                                      sentimentColor = '#00ff88';
-                                    } else if (gaugeValue >= 55) {
-                                      sentimentLabel = 'Greed';
-                                      sentimentColor = '#4ade80';
-                                    } else if (gaugeValue >= 45) {
-                                      sentimentLabel = 'Neutral';
-                                      sentimentColor = '#ffa500';
-                                    } else if (gaugeValue >= 25) {
-                                      sentimentLabel = 'Fear';
-                                      sentimentColor = '#ff6b6b';
-                                    } else {
-                                      sentimentLabel = 'Extreme Fear';
-                                      sentimentColor = '#ff4757';
-                                    }
-                                    
-                                    return (
-                                      <div className="vix-gauge-wrapper">
-                                        <svg className="vix-gauge" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid meet">
-                                          <defs>
-                                            <linearGradient id="vixGaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                              <stop offset="0%" stopColor="#ff4757" />
-                                              <stop offset="25%" stopColor="#ff6b6b" />
-                                              <stop offset="50%" stopColor="#ffa500" />
-                                              <stop offset="75%" stopColor="#4ade80" />
-                                              <stop offset="100%" stopColor="#00ff88" />
-                                            </linearGradient>
-                                          </defs>
-                                          
-                                          {/* Gauge Arc Background */}
-                                          <path
-                                            d="M 20 100 A 80 80 0 0 1 180 100"
-                                            fill="none"
-                                            stroke="rgba(255, 255, 255, 0.1)"
-                                            strokeWidth="12"
-                                            strokeLinecap="round"
-                                          />
-                                          
-                                          {/* Gauge Arc Fill - Animated */}
-                                          <path
-                                            d="M 20 100 A 80 80 0 0 1 180 100"
-                                            fill="none"
-                                            stroke="url(#vixGaugeGradient)"
-                                            strokeWidth="12"
-                                            strokeLinecap="round"
-                                            strokeDasharray={`${(gaugeValue / 100) * 251.2} 251.2`}
-                                            strokeDashoffset="125.6"
-                                            style={{ 
-                                              transform: 'rotate(-90deg)',
-                                              transformOrigin: '100px 100px',
-                                              transition: 'stroke-dasharray 0.5s ease-out'
-                                            }}
-                                          />
-                                          
-                                          {/* Scale Markers */}
-                                          {[0, 25, 50, 75, 100].map((mark) => {
-                                            const markAngle = (mark / 100) * 180 - 90;
-                                            const markAngleRad = (markAngle * Math.PI) / 180;
-                                            const markStartX = centerX + (radius - 5) * Math.cos(markAngleRad);
-                                            const markStartY = centerY + (radius - 5) * Math.sin(markAngleRad);
-                                            const markEndX = centerX + (radius + 5) * Math.cos(markAngleRad);
-                                            const markEndY = centerY + (radius + 5) * Math.sin(markAngleRad);
-                                            const labelX = centerX + (radius + 20) * Math.cos(markAngleRad);
-                                            const labelY = centerY + (radius + 20) * Math.sin(markAngleRad);
-                                            
-                                            return (
-                                              <g key={mark}>
-                                                <line
-                                                  x1={markStartX}
-                                                  y1={markStartY}
-                                                  x2={markEndX}
-                                                  y2={markEndY}
-                                                  stroke="rgba(255, 255, 255, 0.4)"
-                                                  strokeWidth="2"
-                                                />
-                                                <text
-                                                  x={labelX}
-                                                  y={labelY + 4}
-                                                  fill="rgba(255, 255, 255, 0.6)"
-                                                  fontSize="10"
-                                                  textAnchor="middle"
-                                                  fontWeight="600"
-                                                >
-                                                  {mark}
-                                                </text>
-                                              </g>
-                                            );
-                                          })}
-                                          
-                                          {/* Needle */}
-                                          <line
-                                            x1={centerX}
-                                            y1={centerY}
-                                            x2={needleX}
-                                            y2={needleY}
-                                            stroke="#ffffff"
-                                            strokeWidth="3"
-                                            strokeLinecap="round"
-                                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}
-                                          />
-                                          
-                                          {/* Center Circle */}
-                                          <circle
-                                            cx={centerX}
-                                            cy={centerY}
-                                            r="8"
-                                            fill="#1a1a1a"
-                                            stroke="#ffffff"
-                                            strokeWidth="2"
-                                          />
-                                          
-                                          {/* Value Badge */}
-                                          <g transform={`translate(${needleX}, ${needleY - 15})`}>
-                                            <circle
-                                              r="18"
-                                              fill={sentimentColor}
-                                              opacity="0.95"
-                                              style={{ filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.4))' }}
-                                            />
-                                            <text
-                                              x="0"
-                                              y="5"
-                                              fill="#ffffff"
-                                              fontSize="12"
-                                              fontWeight="800"
-                                              textAnchor="middle"
-                                              fontFamily="'Space Grotesk', monospace"
-                                            >
-                                              {Math.round(gaugeValue)}
-                                            </text>
-                                          </g>
-                                          
-                                          {/* Labels */}
-                                          <text
-                                            x="20"
-                                            y="115"
-                                            fill="#ff4757"
-                                            fontSize="10"
-                                            fontWeight="700"
-                                            textAnchor="middle"
-                                          >
-                                            Extreme Fear
-                                          </text>
-                                          <text
-                                            x="100"
-                                            y="115"
-                                            fill="rgba(255, 255, 255, 0.6)"
-                                            fontSize="9"
-                                            fontWeight="600"
-                                            textAnchor="middle"
-                                          >
-                                            50
-                                          </text>
-                                          <text
-                                            x="180"
-                                            y="115"
-                                            fill="#00ff88"
-                                            fontSize="10"
-                                            fontWeight="700"
-                                            textAnchor="middle"
-                                          >
-                                            Extreme Greed
-                                          </text>
-                                        </svg>
-                                        
-                                        {/* Sentiment Text */}
-                                        <div className="vix-sentiment-label">
-                                          <span className="vix-sentiment-now">Now:</span>
-                                          <span className="vix-sentiment-value" style={{ color: sentimentColor }}>
-                                            {sentimentLabel}
-                                          </span>
-                                        </div>
-                                        
-                                        {/* VIX Value and Change */}
-                                        <div className="vix-value-display">
-                                          <div className="vix-value-main">
-                                            <span className="vix-value-label">VIX:</span>
-                                            <span className={`vix-number ${vixLevel}`}>{vixValue.toFixed(1)}</span>
-                                          </div>
-                                          {vixChange !== null && (
-                                            <div className={`vix-change ${vixChange >= 0 ? 'positive' : 'negative'}`}>
-                                              {vixChange >= 0 ? '+' : ''}{vixChange.toFixed(1)}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })()}
+                    {/* VIX Fear Indicator Section */}
+                    <div className="vix-section">
+                      <div className="vix-header">
+                        <h4 className="vix-title">VIX Fear Indicator</h4>
+                        <InfoIcon 
+                          tooltipText="The VIX (Volatility Index) measures market fear and uncertainty. Low VIX (<15) indicates complacency, Medium (15-25) shows normal volatility, High (>25) signals elevated fear. VIX is crucial for currency markets as it reflects risk sentiment that drives safe-haven flows."
+                          position="bottom"
+                        />
+                      </div>
+                      <div className="vix-content">
+                        {(() => {
+                          // Get VIX data from API
+                          let vixData = sentiment.vix;
+                          
+                          // Development fallback: Try to parse from market conditions if vix field is missing
+                          if (!vixData || vixData.value === null || vixData.value === undefined) {
+                            // Try to parse from Volatility Environment condition detail
+                            const volatilityCondition = sentiment.market_conditions?.find(c => 
+                              c.name === 'Volatility Environment' || 
+                              c.name?.toLowerCase().includes('volatility')
+                            );
+                            
+                            if (volatilityCondition && volatilityCondition.detail) {
+                              const detail = volatilityCondition.detail;
+                              // Parse "VIX: 15.0 (+0.0)" format
+                              const vixMatch = detail.match(/VIX:\s*([\d.]+)\s*\(([+-]?[\d.]+)\)/);
+                              if (vixMatch) {
+                                const parsedValue = parseFloat(vixMatch[1]);
+                                const parsedChange = parseFloat(vixMatch[2]);
+                                if (!isNaN(parsedValue) && parsedValue > 0) {
+                                  vixData = {
+                                    value: parsedValue,
+                                    change: parsedChange,
+                                    level: parsedValue < 15 ? 'low' : parsedValue < 25 ? 'medium' : 'high'
+                                  };
+                                  if (process.env.NODE_ENV === 'development') {
+                                    console.log('✅ Parsed VIX from market condition:', vixData);
+                                  }
+                                }
+                              }
+                            }
+                            
+                            // Development fallback: Use mock data if still no VIX data
+                            if ((!vixData || vixData.value === null || vixData.value === undefined) && 
+                                (process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost')) {
+                              vixData = {
+                                value: 18.5,
+                                change: 2.3,
+                                level: 'medium'
+                              };
+                              console.warn('⚠️ Using development fallback VIX data:', vixData);
+                            }
+                            
+                            // If still no data, show loading
+                            if (!vixData || vixData.value === null || vixData.value === undefined) {
+                              return (
+                                <div className="vix-loading">
+                                  <div className="vix-loading-spinner"></div>
+                                  <span>Loading VIX data...</span>
+                                  {process.env.NODE_ENV === 'development' && (
+                                    <div style={{ marginTop: '8px', fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>
+                                      Debug: sentiment.vix = {JSON.stringify(sentiment.vix)}
+                                    </div>
+                                  )}
                                 </div>
-                              </>
-                            ) : (
-                              <div className="vix-loading">Calculating VIX data...</div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })()}
+                              );
+                            }
+                          }
+                          
+                          const vixValue = vixData.value;
+                          const vixChange = vixData.change || 0;
+                          const vixLevel = vixData.level || (vixValue < 15 ? 'low' : vixValue < 25 ? 'medium' : 'high');
+                          
+                          // Map VIX to bar position (0-50 range)
+                          const maxVix = 50;
+                          const minVix = 0;
+                          const clampedVix = Math.max(minVix, Math.min(maxVix, vixValue));
+                          const barPercentage = ((clampedVix - minVix) / (maxVix - minVix)) * 100;
+                          
+                          // Determine colors based on VIX level
+                          let vixColor = '#ffa500'; // Default orange
+                          let vixLevelLabel = 'Normal';
+                          let barColor = '#ffa500';
+                          
+                          if (vixLevel === 'low' || vixValue < 15) {
+                            vixColor = '#00ff88';
+                            vixLevelLabel = 'Low Fear';
+                            barColor = '#00ff88';
+                          } else if (vixLevel === 'high' || vixValue >= 25) {
+                            vixColor = '#ff4757';
+                            vixLevelLabel = 'High Fear';
+                            barColor = '#ff4757';
+                          }
+                          
+                          // Determine change indicator
+                          const changePositive = vixChange >= 0;
+                          const changeColor = changePositive ? '#ff4757' : '#00ff88'; // Red for increase (more fear), Green for decrease (less fear)
+                          
+                          return (
+                            <div className="vix-display">
+                              {/* Main Value and Change */}
+                              <div className="vix-main-display">
+                                <div className="vix-value-wrapper">
+                                  <span className="vix-label">Current VIX</span>
+                                  <div className="vix-number-row">
+                                    <span className="vix-number" style={{ color: vixColor }}>
+                                      {vixValue.toFixed(1)}
+                                    </span>
+                                    <div className="vix-change-indicator" style={{ color: changeColor }}>
+                                      <span className="vix-change-arrow">
+                                        {changePositive ? '↑' : '↓'}
+                                      </span>
+                                      <span className="vix-change-value">
+                                        {changePositive ? '+' : ''}{vixChange.toFixed(1)}
+                                      </span>
+                                    </div>
+                                    <div className="vix-level-badge" style={{ 
+                                      backgroundColor: `${barColor}20`,
+                                      borderColor: barColor,
+                                      color: barColor
+                                    }}>
+                                      {vixLevelLabel}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Horizontal Bar with Range Markers */}
+                              <div className="vix-bar-container">
+                                <div className="vix-bar-wrapper">
+                                  <div className="vix-bar-background">
+                                    {/* Range Markers */}
+                                    <div className="vix-bar-markers">
+                                      <span className="vix-marker" style={{ left: '0%' }}>0</span>
+                                      <span className="vix-marker" style={{ left: '30%' }}>15</span>
+                                      <span className="vix-marker" style={{ left: '50%' }}>25</span>
+                                      <span className="vix-marker" style={{ left: '70%' }}>35</span>
+                                      <span className="vix-marker" style={{ left: '100%' }}>50</span>
+                                    </div>
+                                    
+                                    {/* Colored Bar Fill */}
+                                    <div 
+                                      className="vix-bar-fill"
+                                      style={{
+                                        width: `${barPercentage}%`,
+                                        background: `linear-gradient(90deg, ${barColor} 0%, ${barColor}80 100%)`,
+                                        boxShadow: `0 0 15px ${barColor}40`
+                                      }}
+                                    ></div>
+                                    
+                                    {/* Current Value Indicator */}
+                                    <div 
+                                      className="vix-bar-indicator"
+                                      style={{
+                                        left: `${barPercentage}%`,
+                                        backgroundColor: vixColor,
+                                        borderColor: vixColor
+                                      }}
+                                    >
+                                      <div className="vix-indicator-dot"></div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Range Labels */}
+                                  <div className="vix-bar-labels">
+                                    <span className="vix-range-label" style={{ color: '#00ff88' }}>Low</span>
+                                    <span className="vix-range-label" style={{ color: '#ffa500' }}>Normal</span>
+                                    <span className="vix-range-label" style={{ color: '#ff4757' }}>High</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
                     
                     <div className="market-conditions-overview">
                       <div className="conditions-header">
