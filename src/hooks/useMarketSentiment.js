@@ -77,29 +77,102 @@ export const useMarketSentiment = () => {
 
   const fetchSentiment = useCallback(async () => {
     try {
+      setLoading(true);
       console.log('🔍 Fetching market sentiment from:', `${config.endpoints.marketSentiment}`);
       
       const response = await fetch(`${config.endpoints.marketSentiment}`);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ HTTP error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
       
       const data = await response.json();
       console.log('📊 Market sentiment data received:', data);
+      console.log('📊 Pairs sentiment:', data.pairs_sentiment);
+      
+      // Check if we received default/fallback values
+      if (data.pairs_sentiment && data.pairs_sentiment.length > 0) {
+        const firstPair = data.pairs_sentiment[0];
+        const isAllDefaults = data.pairs_sentiment.every(p => 
+          p.price_change === 0.0 && 
+          p.rsi === 50.0 && 
+          p.volatility === 10.0
+        );
+        if (isAllDefaults) {
+          console.warn('⚠️ WARNING: All pairs have default values - TradingView API may have failed');
+          console.warn('⚠️ This suggests the backend could not fetch real forex data');
+        }
+      }
       
       if (data.error) {
         throw new Error(data.error);
       }
       
+      // Verify pairs_sentiment exists and has data
+      if (!data.pairs_sentiment || !Array.isArray(data.pairs_sentiment) || data.pairs_sentiment.length === 0) {
+        console.warn('⚠️ No pairs_sentiment data in API response, using fallback');
+        console.warn('⚠️ API response keys:', Object.keys(data));
+        // Don't set error, just log warning - might be valid empty state
+      } else {
+        console.log(`✅ Received ${data.pairs_sentiment.length} pairs sentiment items`);
+        // Log first pair for debugging
+        if (data.pairs_sentiment[0]) {
+          const firstPair = data.pairs_sentiment[0];
+          console.log('📊 First pair sample:', {
+            pair: firstPair.pair,
+            sentiment: firstPair.sentiment,
+            percentage: firstPair.percentage,
+            price_change: firstPair.price_change,
+            rsi: firstPair.rsi,
+            volatility: firstPair.volatility
+          });
+          
+          // Check if it's default values
+          const isDefault = (firstPair.price_change === 0.0 && 
+                           firstPair.rsi === 50.0 && 
+                           firstPair.volatility === 10.0);
+          if (isDefault) {
+            console.warn('⚠️ WARNING: First pair has default values (0.0, 50.0, 10.0) - backend may be returning defaults');
+          } else {
+            console.log('✅ First pair has calculated values (not defaults)');
+          }
+        }
+      }
+      
+      // Verify data structure before setting
+      if (!data || typeof data !== 'object') {
+        throw new Error('Invalid data format received from API');
+      }
+      
+      // Check if pairs_sentiment exists and is valid
+      if (!data.pairs_sentiment || !Array.isArray(data.pairs_sentiment)) {
+        console.warn('⚠️ API response missing pairs_sentiment array, checking structure:', Object.keys(data));
+        // Try to continue with what we have, but log the issue
+      }
+      
       setSentiment(data);
       setLastUpdate(new Date());
       setError(null);
+      setLoading(false);
       
       return data;
     } catch (error) {
-      console.error('Failed to fetch market sentiment:', error.message);
-      setError(error.message);
+      console.error('❌ Failed to fetch market sentiment:', error.message);
+      console.error('❌ Error details:', error);
+      console.error('❌ Error stack:', error.stack);
+      
+      // Check if it's a network error
+      if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        setError('Network error: Could not connect to backend. Please check if the backend server is running.');
+      } else {
+        setError(`Failed to fetch: ${error.message}`);
+      }
+      setLoading(false);
+      
+      // Don't reset to fallback on error - keep existing data
+      // This prevents clearing good data if there's a temporary network issue
       return null;
     }
   }, []);
