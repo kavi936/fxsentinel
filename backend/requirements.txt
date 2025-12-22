@@ -11,6 +11,7 @@ telethon>=1.28.0
 python-telegram-bot>=20.0
 pandas>=2.0.0
 numpy>=1.24.0
+yfinance>=0.2.0
 redis>=4.5.0
 stripe>=7.0.0
 firebase-admin>=6.0.0
