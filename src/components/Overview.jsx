@@ -107,6 +107,7 @@ const Overview = () => {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isVixContextExpanded, setIsVixContextExpanded] = useState(false);
   
   // AI Analysis state
   const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'loading', 'event-analysis', 'error'
@@ -2243,16 +2244,16 @@ const Overview = () => {
                 ) : (
                   <React.Fragment>
                     {/* VIX Fear Indicator Section */}
-                    <div className="vix-section">
-                      <div className="vix-header">
-                        <h4 className="vix-title">VIX Fear Indicator</h4>
-                        <InfoIcon 
-                          tooltipText="The VIX (Volatility Index) measures market fear and uncertainty. Low VIX (<15) indicates complacency, Medium (15-25) shows normal volatility, High (>25) signals elevated fear. VIX is crucial for currency markets as it reflects risk sentiment that drives safe-haven flows."
-                          position="bottom"
-                        />
-                      </div>
-                      <div className="vix-content">
-                        {(() => {
+                        <div className="vix-section">
+                          <div className="vix-header">
+                            <h4 className="vix-title">VIX Fear Indicator</h4>
+                            <InfoIcon 
+                          tooltipText="The VIX measures implied volatility of S&P 500 options, reflecting US equity market fear and demand for downside protection. Use it as a macro confirmation tool for FX and Gold trading."
+                              position="bottom"
+                            />
+                          </div>
+                          <div className="vix-content">
+                                  {(() => {
                           // Get VIX data from API
                           let vixData = sentiment.vix;
                           
@@ -2339,8 +2340,8 @@ const Overview = () => {
                           // Determine change indicator
                           const changePositive = vixChange >= 0;
                           const changeColor = changePositive ? '#ff4757' : '#00ff88'; // Red for increase (more fear), Green for decrease (less fear)
-                          
-                          return (
+                                    
+                                    return (
                             <div className="vix-display">
                               {/* Main Value and Change */}
                               <div className="vix-main-display">
@@ -2385,7 +2386,7 @@ const Overview = () => {
                                     {/* Colored Bar Fill */}
                                     <div 
                                       className="vix-bar-fill"
-                                      style={{
+                                            style={{
                                         width: `${barPercentage}%`,
                                         background: `linear-gradient(90deg, ${barColor} 0%, ${barColor}80 100%)`,
                                         boxShadow: `0 0 15px ${barColor}40`
@@ -2413,11 +2414,180 @@ const Overview = () => {
                                   </div>
                                 </div>
                               </div>
-                            </div>
-                          );
+                                                </div>
+                                              );
                         })()}
-                      </div>
-                    </div>
+                                          </div>
+                                          
+                      {/* Use in Context Expandable Section */}
+                      <div className="vix-context-section">
+                        <button 
+                          className="vix-context-toggle"
+                          onClick={() => setIsVixContextExpanded(!isVixContextExpanded)}
+                          aria-expanded={isVixContextExpanded}
+                        >
+                          <span className="vix-context-title">Use in Context</span>
+                          <svg 
+                            className={`vix-context-arrow ${isVixContextExpanded ? 'expanded' : ''}`}
+                            width="12" 
+                            height="12" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="currentColor" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                          </svg>
+                        </button>
+                        
+                        {isVixContextExpanded && (
+                          <div className="vix-context-content">
+                            {/* What VIX Measures */}
+                            <div className="vix-context-item">
+                              <div className="vix-context-item-header">
+                                <svg 
+                                  width="18" 
+                                  height="18" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                  className="vix-context-icon"
+                                >
+                                  <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                  <path d="M2 17l10 5 10-5"></path>
+                                  <path d="M2 12l10 5 10-5"></path>
+                                </svg>
+                                <h5 className="vix-context-item-title">What VIX Actually Measures</h5>
+                                            </div>
+                              <p className="vix-context-text">
+                                VIX = implied volatility of S&P 500 options
+                              </p>
+                              <p className="vix-context-text">
+                                So it reflects:
+                              </p>
+                              <ul className="vix-context-list">
+                                <li>US equity market fear</li>
+                                <li>Demand for downside protection in stocks</li>
+                                <li>US-centric risk perception</li>
+                              </ul>
+                                          </div>
+                                          
+                            {/* When VIX Matters */}
+                            <div className="vix-context-item">
+                              <div className="vix-context-item-header">
+                                <svg 
+                                  width="18" 
+                                  height="18" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                  className="vix-context-icon"
+                                >
+                                  <circle cx="12" cy="12" r="10"></circle>
+                                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <h5 className="vix-context-item-title">When VIX Matters for FX & Gold</h5>
+                                          </div>
+                              <p className="vix-context-text">
+                                VIX is useful indirectly when:
+                              </p>
+                              <ul className="vix-context-list">
+                                <li>There is global risk-off</li>
+                                <li>US equities drive global flows</li>
+                              </ul>
+                                        </div>
+                                        
+                            {/* Typical Correlations */}
+                            <div className="vix-context-item">
+                              <div className="vix-context-item-header">
+                                <svg 
+                                  width="18" 
+                                  height="18" 
+                                  viewBox="0 0 24 24" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  strokeWidth="2" 
+                                  strokeLinecap="round" 
+                                  strokeLinejoin="round"
+                                  className="vix-context-icon"
+                                >
+                                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                                <h5 className="vix-context-item-title">Typical Correlations</h5>
+                              </div>
+                              <div className="vix-correlations">
+                                <div className="vix-correlation-item">
+                                  <svg 
+                                    width="16" 
+                                    height="16" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    className="vix-correlation-icon up"
+                                  >
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                    <polyline points="17 6 23 6 23 12"></polyline>
+                                  </svg>
+                                  <span className="vix-correlation-text">
+                                    <strong>VIX ↑</strong> → USD ↑ (safe haven), JPY ↑, CHF ↑
+                                          </span>
+                                        </div>
+                                <div className="vix-correlation-item">
+                                  <svg 
+                                    width="16" 
+                                    height="16" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    className="vix-correlation-icon up"
+                                  >
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                    <polyline points="17 6 23 6 23 12"></polyline>
+                                  </svg>
+                                  <span className="vix-correlation-text">
+                                    <strong>VIX ↑</strong> → EM FX ↓
+                                  </span>
+                                          </div>
+                                <div className="vix-correlation-item">
+                                  <svg 
+                                    width="16" 
+                                    height="16" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    className="vix-correlation-icon up"
+                                  >
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                    <polyline points="17 6 23 6 23 12"></polyline>
+                                  </svg>
+                                  <span className="vix-correlation-text">
+                                    <strong>VIX ↑</strong> → Gold ↑ (but not always)
+                                  </span>
+                                            </div>
+                                        </div>
+                                      </div>
+                                </div>
+                            )}
+                          </div>
+                        </div>
                     
                     <div className="market-conditions-overview">
                       <div className="conditions-header">
@@ -2442,7 +2612,7 @@ const Overview = () => {
                       <div className={`condition-value ${condition.value}`}>
                         {condition.name === 'Volatility Environment' ? `${capitalizeSentiment(condition.value)} Volatility` : 
                          condition.name === 'Risk Appetite' ? capitalizeSentiment(condition.value) : 
-                         condition.name === 'Market Correlation' ? capitalizeSentiment(condition.value) : capitalizeSentiment(condition.value)}
+                         capitalizeSentiment(condition.value)}
                       </div>
                       <div className="condition-bar">
                         <div 
@@ -2461,34 +2631,92 @@ const Overview = () => {
               
               <div className="sentiment-breakdown">
                 <h3>Major Pairs Sentiment</h3>
+                {sentimentLoading ? (
+                  <div className="loading-pairs">Loading pairs sentiment...</div>
+                ) : sentimentError ? (
+                  <div className="error-pairs">
+                    Error loading pairs: {sentimentError}
+                    <br />
+                    <button 
+                      onClick={refreshSentiment}
+                      style={{ marginTop: '10px', padding: '5px 10px', cursor: 'pointer' }}
+                    >
+                      Retry
+                    </button>
+                  </div>
+                ) : !sentiment.pairs_sentiment || sentiment.pairs_sentiment.length === 0 ? (
+                  <div className="error-pairs">No pairs sentiment data available</div>
+                ) : (
                 <div className="pairs-sentiment-grid">
-                  {sentiment.pairs_sentiment.map((pair, index) => (
+                  {sentiment.pairs_sentiment.map((pair, index) => {
+                    // Debug logging in development
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log(`🔍 Rendering pair ${pair.pair}:`, {
+                        sentiment: pair.sentiment,
+                        percentage: pair.percentage,
+                        price_change: pair.price_change,
+                        rsi: pair.rsi,
+                        volatility: pair.volatility
+                      });
+                    }
+                    
+                    // Safety checks - ensure all values exist and are valid numbers
+                    const priceChange = (pair.price_change !== undefined && pair.price_change !== null) 
+                      ? Number(pair.price_change) 
+                      : 0;
+                    const rsi = (pair.rsi !== undefined && pair.rsi !== null) 
+                      ? Number(pair.rsi) 
+                      : 50;
+                    const volatility = (pair.volatility !== undefined && pair.volatility !== null) 
+                      ? Number(pair.volatility) 
+                      : 0;
+                    const percentage = (pair.percentage !== undefined && pair.percentage !== null) 
+                      ? Number(pair.percentage) 
+                      : 50;
+                    const sentimentValue = pair.sentiment || 'neutral';
+                    
+                    // Warn if values are missing (only in development)
+                    if (process.env.NODE_ENV === 'development') {
+                      if (pair.price_change === undefined || pair.price_change === null) {
+                        console.warn(`⚠️ ${pair.pair} missing price_change, using default: 0`);
+                      }
+                      if (pair.rsi === undefined || pair.rsi === null) {
+                        console.warn(`⚠️ ${pair.pair} missing rsi, using default: 50`);
+                      }
+                      if (pair.volatility === undefined || pair.volatility === null) {
+                        console.warn(`⚠️ ${pair.pair} missing volatility, using default: 0`);
+                      }
+                    }
+                    
+                    return (
                     <div key={index} className="pair-sentiment-item">
                       <div className="pair-header">
                         <span className="pair-name">{pair.pair}</span>
                         <div className="pair-price-change-container">
                           <span className="pair-change-label">Daily Change</span>
-                          <span className={`pair-change ${pair.price_change >= 0 ? 'positive' : 'negative'}`}>
-                            {pair.price_change >= 0 ? '+' : ''}{pair.price_change.toFixed(2)}%
+                          <span className={`pair-change ${priceChange >= 0 ? 'positive' : 'negative'}`}>
+                            {priceChange >= 0 ? '+' : ''}{priceChange.toFixed(2)}%
                           </span>
                         </div>
                       </div>
                       <div className="sentiment-gauge">
                         <div 
-                          className={`gauge-fill ${pair.sentiment}`} 
+                          className={`gauge-fill ${sentimentValue}`} 
                           style={{
-                            width: `${pair.percentage}%`,
-                            background: `linear-gradient(90deg, ${getSentimentColor(pair.sentiment)} 0%, ${getSentimentColor(pair.sentiment)}80 100%)`
+                            width: `${percentage}%`,
+                            background: `linear-gradient(90deg, ${getSentimentColor(sentimentValue)} 0%, ${getSentimentColor(sentimentValue)}80 100%)`
                           }}
                         ></div>
                       </div>
                       <div className="pair-metrics">
-                        <span className="metric">RSI: {pair.rsi.toFixed(0)}</span>
-                        <span className="metric">Vol: {pair.volatility.toFixed(1)}%</span>
+                        <span className="metric">RSI: {rsi.toFixed(0)}</span>
+                        <span className="metric">Vol: {volatility.toFixed(1)}%</span>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
+                )}
               </div>
               
               <div className="sentiment-factors">

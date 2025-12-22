@@ -123,6 +123,7 @@ unirate_api_usage = {
 
 # Alpha Vantage key rotation system
 alpha_vantage_keys = [
+    'ST66PYRS63MNI1HM',  # User-provided key
     os.getenv('ALPHA_VANTAGE_API_KEY_1'),
     os.getenv('ALPHA_VANTAGE_API_KEY_2'),
     os.getenv('ALPHA_VANTAGE_API_KEY_3'),
@@ -3210,6 +3211,19 @@ def get_market_sentiment():
         print(f"✅ Successfully fetched sentiment data for trading day: {sentiment_data.get('trading_day')}")
         print(f"🔍 Market status: {sentiment_data.get('market_status')}")
         print(f"🔍 Is market closed: {sentiment_data.get('is_market_closed')}")
+        
+        # Log pairs sentiment details
+        if sentiment_data.get('pairs_sentiment'):
+            print(f"🔍 Pairs sentiment count: {len(sentiment_data['pairs_sentiment'])}")
+            for pair in sentiment_data['pairs_sentiment']:
+                print(f"   {pair.get('pair')}: change={pair.get('price_change')}, RSI={pair.get('rsi')}, Vol={pair.get('volatility')}")
+                # Check if values are defaults
+                if (pair.get('price_change') == 0.0 and 
+                    pair.get('rsi') == 50.0 and 
+                    pair.get('volatility') == 10.0):
+                    print(f"   ⚠️ WARNING: {pair.get('pair')} has default values - TradingView API may have failed")
+        else:
+            print("⚠️ No pairs_sentiment data in response")
         
         return jsonify(sentiment_data)
         

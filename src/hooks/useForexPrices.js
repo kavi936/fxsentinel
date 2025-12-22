@@ -58,39 +58,38 @@ export const useForexPrices = () => {
     }
   };
 
-  const fetchAllPrices = async () => {
-    setLoading(true);
+  const fetchAllPrices = async (isInitialLoad = false) => {
+    // Only show loading state on initial load, not on background refreshes
+    if (isInitialLoad) {
+      setLoading(true);
+    }
     setError(null);
     
-    console.log('Starting fetchAllPrices...');
-    
     try {
-      // Check if we should use cached data (API calls are expensive)
+      // Check if we should use cached data (very short cache for live updates)
       const lastFetch = localStorage.getItem('lastForexFetch');
-      const cacheTime = 5 * 60 * 1000; // 5 minutes
-      
-      console.log('Last fetch:', lastFetch);
-      console.log('Cache time check:', lastFetch && (Date.now() - parseInt(lastFetch)) < cacheTime);
+      const cacheTime = 3 * 1000; // 3 seconds - very short cache to allow frequent updates
       
       if (lastFetch && (Date.now() - parseInt(lastFetch)) < cacheTime) {
         const cachedData = localStorage.getItem('forexPrices');
         if (cachedData) {
-          console.log('Using cached data');
+          // Use cached data immediately for instant display
           const parsedData = JSON.parse(cachedData);
           setPrices(parsedData.prices || parsedData);
           setDataSource(parsedData.dataSource || 'API (cached)');
           setDataQuality(parsedData.dataQuality || null);
-          setLoading(false);
-          return;
+          if (isInitialLoad) {
+            setLoading(false);
+          }
+          // Continue to fetch fresh data in background even if cache is valid
         }
       }
       
-      console.log('Fetching fresh data from API...');
-      // Fetch all prices from backend
+      // Fetch fresh data from backend
       const apiData = await fetchForexPrices();
       
       if (apiData) {
-        console.log('API data received:', apiData);
+        // Update prices with fresh data
         setPrices(apiData.prices);
         setDataSource(apiData.dataSource);
         setDataQuality(apiData.dataQuality);
@@ -98,29 +97,41 @@ export const useForexPrices = () => {
         localStorage.setItem('forexPrices', JSON.stringify(apiData));
         localStorage.setItem('lastForexFetch', Date.now().toString());
       } else {
-        console.log('API failed, using fallback data');
-        setPrices(fallbackPrices);
-        setDataSource('fallback');
-        setDataQuality(null);
-        setError('Using fallback data - API unavailable');
+        // Only show error if we don't have cached data
+        const cachedData = localStorage.getItem('forexPrices');
+        if (!cachedData) {
+          setPrices(fallbackPrices);
+          setDataSource('fallback');
+          setDataQuality(null);
+          setError('Using fallback data - API unavailable');
+        }
       }
       
     } catch (error) {
       console.error('Error fetching forex prices:', error);
-      setError('Failed to fetch live data');
-      setDataSource('fallback');
-      setDataQuality(null);
-      setPrices(fallbackPrices);
+      // Only update error state if we don't have cached data
+      const cachedData = localStorage.getItem('forexPrices');
+      if (!cachedData) {
+        setError('Failed to fetch live data');
+        setDataSource('fallback');
+        setDataQuality(null);
+        setPrices(fallbackPrices);
+      }
     } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchAllPrices();
+    // Initial load with loading state
+    fetchAllPrices(true);
     
-    // Refresh prices every 5 minutes
-    const interval = setInterval(fetchAllPrices, 5 * 60 * 1000);
+    // Refresh prices every 5 seconds for live updates
+    const interval = setInterval(() => {
+      fetchAllPrices(false); // Background refresh without loading state
+    }, 5 * 1000); // 5 seconds - frequent updates for live ticker
     
     return () => clearInterval(interval);
   }, []);
