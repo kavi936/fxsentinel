@@ -23,8 +23,8 @@ class NewsAlertTrigger:
     def __init__(self):
         """Initialize the news alert trigger service"""
         self.api_base_url = os.getenv('API_BASE_URL', 'http://localhost:5001')
-        self.last_processed_news = set()  # Track processed news IDs
-        self.news_alert_history = {}  # Track sent alerts per user
+        # Removed in-memory deduplication - now using persistent_alert_deduplication
+        # This ensures deduplication survives restarts and works across instances
         self.high_impact_keywords = [
             'fed', 'federal reserve', 'ecb', 'european central bank', 'boe', 'bank of england',
             'boj', 'bank of japan', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
@@ -353,22 +353,12 @@ class NewsAlertTrigger:
                 logger.error("No user_id provided for alert")
                 return False
             
-            # IMPROVED DEDUPLICATION: Check if this exact news was already sent to this user
-            news_id = str(news_item.get('id', ''))
-            title = news_item.get('title', '')
-            source = news_item.get('source', '')
+            # PERSISTENT DEDUPLICATION: Use Firebase-backed deduplication
+            # This ensures deduplication survives restarts and works across instances
+            from .persistent_alert_deduplication import should_send_news_alert
             
-            # Create a unique key for this news-user combination
-            alert_key = f"{user_id}_{news_id}_{title[:50]}_{source}"
-            
-            if alert_key in self.news_alert_history:
-                logger.debug(f"Duplicate news alert prevented for user {user_id}: {title[:30]}...")
-                return False
-            
-            # Check unified deduplication as backup
-            from .unified_alert_deduplication import should_send_news_alert
             if not should_send_news_alert(news_item, user_id):
-                logger.debug(f"News alert duplicate prevented by unified system for user {user_id}")
+                logger.debug(f"Duplicate news alert prevented for user {user_id}: {news_item.get('title', '')[:30]}...")
                 return False
             
             # Trigger AI analysis first if needed
@@ -397,25 +387,12 @@ class NewsAlertTrigger:
             alert_service = get_alert_service()
             
             # Process alert with subscription validation
-            import asyncio
-            try:
-                # Check if we're already in an event loop
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    # We're in an event loop, create a task
-                    task = loop.create_task(alert_service.process_alert(alert_data, user_settings, user_id))
-                    success = await task
-                else:
-                    # No event loop running, use asyncio.run
-                    success = asyncio.run(alert_service.process_alert(alert_data, user_settings, user_id))
-            except RuntimeError:
-                # Fallback for when asyncio.run can't be used
-                success = await alert_service.process_alert(alert_data, user_settings, user_id)
+            # This function is async, so we can await directly since we're already in an async context
+            success = await alert_service.process_alert(alert_data, user_settings, user_id)
             
             if success:
                 logger.info(f"Alert sent successfully to user {user_id}")
-                # Mark as sent in our history
-                self.news_alert_history[alert_key] = datetime.now()
+                # Alert is already marked as sent by persistent_alert_deduplication.should_send_news_alert()
                 # Save to alert history
                 self._save_alert_history(user_id, news_item, alert_data['content'])
                 return True

@@ -2168,8 +2168,30 @@ def trigger_alert():
                     # Send the alert using async handling
                     try:
                         import asyncio
-                        # Use asyncio.run to properly handle the async function
-                        success = asyncio.run(news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis))
+                        # Properly handle async function without event loop conflicts
+                        try:
+                            # Try to get existing event loop
+                            loop = asyncio.get_event_loop()
+                            if loop.is_running():
+                                # Event loop is running, create a task
+                                import concurrent.futures
+                                with concurrent.futures.ThreadPoolExecutor() as executor:
+                                    future = executor.submit(
+                                        lambda: asyncio.run(
+                                            news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
+                                        )
+                                    )
+                                    success = future.result(timeout=30)
+                            else:
+                                # Event loop exists but not running, use run_until_complete
+                                success = loop.run_until_complete(
+                                    news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
+                                )
+                        except RuntimeError:
+                            # No event loop, create new one
+                            success = asyncio.run(
+                                news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
+                            )
                         
                         if success:
                             alerts_sent += 1
@@ -2177,7 +2199,7 @@ def trigger_alert():
                         else:
                             logger.warning(f"❌ Failed to send alert to user {user_id}")
                     except Exception as e:
-                        logger.error(f"Error sending news alert to user {user_id}: {e}")
+                        logger.error(f"Error sending news alert to user {user_id}: {e}", exc_info=True)
                         continue
                 
                 elif alert_type == 'calendar':

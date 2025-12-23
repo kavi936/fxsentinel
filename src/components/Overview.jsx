@@ -1373,20 +1373,139 @@ const Overview = () => {
     }
   }, []);
 
+  // Helper function to calculate date range for quick select options
+  const calculateDateRangeForOption = (option) => {
+    const today = new Date();
+    let startDate, endDate;
+
+    switch (option) {
+      case 'today':
+        startDate = new Date(today);
+        endDate = new Date(today);
+        break;
+      case 'yesterday':
+        startDate = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        endDate = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case 'tomorrow':
+        startDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        endDate = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+        break;
+      case 'this-week':
+        const dayOfWeek = today.getDay();
+        startDate = new Date(today.getTime() - dayOfWeek * 24 * 60 * 60 * 1000);
+        endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+        break;
+      case 'last-week':
+        const dayOfWeekLast = today.getDay();
+        const lastWeekStart = new Date(today.getTime() - (dayOfWeekLast + 7) * 24 * 60 * 60 * 1000);
+        startDate = lastWeekStart;
+        endDate = new Date(lastWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+        break;
+      case 'next-week':
+        const dayOfWeekNext = today.getDay();
+        const nextWeekStart = new Date(today.getTime() + (7 - dayOfWeekNext) * 24 * 60 * 60 * 1000);
+        startDate = nextWeekStart;
+        endDate = new Date(nextWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+        break;
+      case 'this-month':
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        break;
+      case 'last-month':
+        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+        break;
+      case 'next-month':
+        startDate = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 2, 0);
+        break;
+      default:
+        // Default to this week for unknown options
+        const dayOfWeekDefault = today.getDay();
+        startDate = new Date(today.getTime() - dayOfWeekDefault * 24 * 60 * 60 * 1000);
+        endDate = new Date(startDate.getTime() + 6 * 24 * 60 * 60 * 1000);
+    }
+
+    return { start: startDate, end: endDate };
+  };
+
   // Load calendar preferences from localStorage on component mount
   useEffect(() => {
     try {
       const savedCalendarPrefs = localStorage.getItem('fxSentinel_calendarPreferences');
       if (savedCalendarPrefs) {
         const parsed = JSON.parse(savedCalendarPrefs);
-        if (parsed.selectedDate && parsed.selectedDateRange) {
-          setSelectedDate(new Date(parsed.selectedDate));
-          setSelectedDateRange({
-            start: new Date(parsed.selectedDateRange.start),
-            end: new Date(parsed.selectedDateRange.end)
-          });
-          setQuickSelectOption(parsed.quickSelectOption || 'this-month');
-          console.log('✅ Loaded saved calendar preferences:', parsed);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day for comparison
+        
+        let shouldUseSavedPrefs = false;
+        let finalDateRange = null;
+        let finalQuickSelectOption = parsed.quickSelectOption || 'this-month';
+
+        // Check if saved preferences have a quick select option
+        if (parsed.quickSelectOption) {
+          const relativeOptions = ['this-week', 'this-month', 'next-week', 'next-month', 'today', 'tomorrow'];
+          
+          // If it's a relative option, always recalculate based on current date
+          if (relativeOptions.includes(parsed.quickSelectOption)) {
+            console.log(`🔄 Recalculating relative date range for: ${parsed.quickSelectOption}`);
+            finalDateRange = calculateDateRangeForOption(parsed.quickSelectOption);
+            shouldUseSavedPrefs = true;
+            console.log(`✅ Recalculated date range: ${finalDateRange.start.toDateString()} to ${finalDateRange.end.toDateString()}`);
+          } else if (parsed.selectedDateRange) {
+            // For custom ranges or absolute dates, check if they're still relevant
+            const savedStart = new Date(parsed.selectedDateRange.start);
+            const savedEnd = new Date(parsed.selectedDateRange.end);
+            savedStart.setHours(0, 0, 0, 0);
+            savedEnd.setHours(0, 0, 0, 0);
+            
+            // Check if saved range is in the past (end date is before today)
+            if (savedEnd < today) {
+              console.log('⚠️ Saved date range is in the past, resetting to this week');
+              finalQuickSelectOption = 'this-week';
+              finalDateRange = calculateDateRangeForOption('this-week');
+              shouldUseSavedPrefs = true;
+            } else {
+              // Range is still current or future, use it
+              finalDateRange = {
+                start: savedStart,
+                end: savedEnd
+              };
+              shouldUseSavedPrefs = true;
+              console.log('✅ Using saved date range (still current):', savedStart.toDateString(), 'to', savedEnd.toDateString());
+            }
+          }
+        } else if (parsed.selectedDateRange) {
+          // No quick select option but has date range - check if outdated
+          const savedStart = new Date(parsed.selectedDateRange.start);
+          const savedEnd = new Date(parsed.selectedDateRange.end);
+          savedStart.setHours(0, 0, 0, 0);
+          savedEnd.setHours(0, 0, 0, 0);
+          
+          if (savedEnd < today) {
+            console.log('⚠️ Saved date range is in the past, resetting to this week');
+            finalQuickSelectOption = 'this-week';
+            finalDateRange = calculateDateRangeForOption('this-week');
+            shouldUseSavedPrefs = true;
+          } else {
+            finalDateRange = {
+              start: savedStart,
+              end: savedEnd
+            };
+            shouldUseSavedPrefs = true;
+          }
+        }
+
+        if (shouldUseSavedPrefs && finalDateRange) {
+          // Set the calculated/validated date range
+          setSelectedDateRange(finalDateRange);
+          setSelectedDate(finalDateRange.start);
+          setQuickSelectOption(finalQuickSelectOption);
+          console.log('✅ Loaded and validated calendar preferences');
+        } else {
+          // No valid preferences, use defaults
+          console.log('📝 No valid saved calendar preferences found, using defaults');
         }
       } else {
         console.log('📝 No saved calendar preferences found, using defaults');
