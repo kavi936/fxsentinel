@@ -220,16 +220,45 @@ class SessionIsolatedTelegramWrapper:
             elif any(keyword in text_lower for keyword in medium_impact):
                 impact = 'medium'
             
-            # Extract currency pairs
+            # Extract currency pairs - only match valid trading pairs
             currency_pairs = []
-            currency_patterns = [
-                r'\b[A-Z]{3}/[A-Z]{3}\b',  # EUR/USD, GBP/JPY, etc.
-                r'\b[A-Z]{3}\s*[A-Z]{3}\b',  # EUR USD, GBP JPY, etc.
-            ]
             
-            for pattern in currency_patterns:
-                matches = re.findall(pattern, message_text.upper())
-                currency_pairs.extend(matches)
+            # Valid currency pairs that are actually traded
+            valid_pairs = {
+                'EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD',
+                'EUR/GBP', 'EUR/JPY', 'EUR/CHF', 'EUR/AUD', 'EUR/CAD', 'EUR/NZD',
+                'GBP/JPY', 'GBP/CHF', 'GBP/AUD', 'GBP/CAD', 'GBP/NZD',
+                'AUD/JPY', 'AUD/CAD', 'AUD/NZD', 'AUD/CHF',
+                'CAD/JPY', 'CAD/CHF',
+                'NZD/JPY', 'NZD/CHF',
+                'CHF/JPY',
+                'USD/SEK', 'USD/NOK', 'USD/HKD', 'USD/MXN', 'USD/ZAR', 'USD/TRY', 'USD/PLN', 'USD/CZK',
+                'EUR/SEK', 'EUR/NOK', 'EUR/PLN', 'EUR/CZK', 'EUR/TRY',
+                'GBP/SEK', 'GBP/NOK', 'GBP/PLN',
+                'AUD/SEK', 'AUD/NOK',
+                'USD/CNY', 'USD/INR', 'USD/KRW', 'USD/SGD', 'USD/BRL', 'USD/RUB', 'USD/HUF'
+            }
+            
+            # Valid currency pair patterns (with slash)
+            pair_pattern = r'\b([A-Z]{3})/([A-Z]{3})\b'
+            matches = re.findall(pair_pattern, message_text.upper())
+            for base, quote in matches:
+                pair = f"{base}/{quote}"
+                if pair in valid_pairs:
+                    currency_pairs.append(pair)
+            
+            # Valid currency pair patterns (space-separated)
+            pair_pattern_space = r'\b([A-Z]{3})\s+([A-Z]{3})\b'
+            matches = re.findall(pair_pattern_space, message_text.upper())
+            for base, quote in matches:
+                pair = f"{base}/{quote}"
+                if pair in valid_pairs:
+                    currency_pairs.append(pair)
+            
+            # If no pairs found, use keyword-based detection
+            if not currency_pairs:
+                from .enhanced_forex_filter import enhanced_forex_filter
+                currency_pairs = enhanced_forex_filter.extract_currency_pairs(message_text, "")
             
             # Generate unique ID
             article_id = hash(f"telegram_isolated_{channel_name}_{message.id}_{message_date.isoformat()}")
