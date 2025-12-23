@@ -276,18 +276,18 @@ const LandingPage = () => {
         <div className="ticker-line-10"></div>
         
         {/* Floating FX News Headlines */}
-        <div className="news-headline-1">Fed's Powell Signals QT End - Dollar Slides 0.3%</div>
-        <div className="news-headline-2">EUR/USD Breaks Below 1.1700 on Trade Tensions</div>
-        <div className="news-headline-3">USD/JPY: Yen Weakens to Two-Month Low at 150.62</div>
-        <div className="news-headline-4">Gold Eases from Record Highs on Profit-Taking</div>
-        <div className="news-headline-5">Japan Finance Minister Warns on Forex Volatility</div>
-        <div className="news-headline-6">EUR/JPY: Yen Hits Record Low at 176.35 per Euro</div>
-        <div className="news-headline-7">USD/INR: Rupee Plunges to All-Time Low at 88.62</div>
-        <div className="news-headline-8">Swiss National Bank Reaffirms Fair Forex Practices</div>
-        <div className="news-headline-9">USD Strengthens on Safe-Haven Demand Amid Tariffs</div>
-        <div className="news-headline-10">Russia Boosts Daily Forex Sales to Stabilize Rouble</div>
-        <div className="news-headline-11">Reserve Bank of India Intervenes Selling Dollars</div>
-        <div className="news-headline-12">Treasury Yields Decline as Fed Balances Policy Stance</div>
+        <div className="news-headline-1">Japan issues sternest intervention warning as yen weakness persists</div>
+        <div className="news-headline-2">Yen strengthens in thin holiday trade amid intervention threat</div>
+        <div className="news-headline-3">Global markets rise; yen on intervention watch as gold and stocks gain</div>
+        <div className="news-headline-4">IMF data shows global FX reserves stabilizing in Q3 2025</div>
+        <div className="news-headline-5">Japan finance minister warns on excessive forex volatility</div>
+        <div className="news-headline-6">Asia FX firms as dollar dips ahead of key data; yen surges on intervention threat</div>
+        <div className="news-headline-7">USD/JPY extends losses as Japan officials caution on one-sided currency moves</div>
+        <div className="news-headline-8">Japanese yen rises versus weaker US dollar on intervention fears</div>
+        <div className="news-headline-9">EUR/JPY retraces from record highs as yen rebounds on intervention hopes</div>
+        <div className="news-headline-10">EUR/USD advances on US dollar weakness and broad risk sentiment</div>
+        <div className="news-headline-11">Dollar rises amid mixed jobs data and soft inflation prints</div>
+        <div className="news-headline-12">Sterling finds support while yen weakens despite BoJ action, dollar drifts</div>
         
         <div className="hero-inner">
           <div className="hero-content">
@@ -295,7 +295,7 @@ const LandingPage = () => {
             <div className="hero-badge-container">
               <div className="hero-badge">
                 <span className="badge-dot"></span>
-                AI-Powered • Real-Time • Built for Professional Traders
+                AI-Powered • Real-Time • Built for Traders
               </div>
             </div>
             
@@ -455,7 +455,7 @@ const LandingPage = () => {
       {/* Features Section */}
       <section id="features" className="features">
         <div className="features-inner">
-          <h2 className="section-title">Why Professional Traders Choose FXSentinel</h2>
+          <h2 className="section-title">Why Traders Choose FXSentinel</h2>
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">
