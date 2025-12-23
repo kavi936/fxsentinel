@@ -75,6 +75,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
   // Check if user is developer
   const isDeveloper = currentUser?.email === 'kavi.cf412@gmail.com';
 
+  // Check if user is beta tester
+  const isBetaTester = subscriptionStatus?.status === 'beta_tester' || subscriptionStatus?.is_beta_tester === true;
+
   // Fetch subscription status
   const fetchSubscriptionStatus = async () => {
     if (!currentUser) return;
