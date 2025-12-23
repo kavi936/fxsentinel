@@ -164,12 +164,15 @@ class ProductionAlertWorker:
             
             logger.info(f"Found {len(recent_news)} recent news items")
             
-            # Process high-impact news
+            # Use sophisticated filtering like main app (not just impact level)
+            # This ensures consistent filtering between worker and main app
+            from .news_alert_trigger import news_alert_trigger
+            
+            # Process high-impact forex news
             for news_item in recent_news:
                 try:
-                    # Check if high impact
-                    impact = news_item.get('impact', 'low').lower()
-                    if impact not in ['high', 'medium']:
+                    # Use the same filtering logic as main app
+                    if not news_alert_trigger.is_forex_high_impact(news_item):
                         continue
                     
                     # Get news ID
@@ -177,10 +180,9 @@ class ProductionAlertWorker:
                     if not news_id:
                         continue
                     
-                    # Check deduplication
-                    if not self.should_send_news_alert(news_id):
-                        logger.debug(f"News alert already sent: {news_id}")
-                        continue
+                    # Note: Deduplication is handled at the main app level per-user
+                    # The worker just filters and sends to main app
+                    # Main app will handle user-specific deduplication via persistent_alert_deduplication
                     
                     # Send alert via API
                     self._send_news_alert_to_api(news_item)

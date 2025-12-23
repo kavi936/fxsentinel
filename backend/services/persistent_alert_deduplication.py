@@ -1,0 +1,299 @@
+#!/usr/bin/env python3
+"""
+Persistent Alert Deduplication Service
+Single source of truth for alert deduplication using Firebase Realtime Database
+Replaces all in-memory deduplication systems
+"""
+
+import logging
+import hashlib
+import json
+from datetime import datetime, timedelta
+from typing import Dict, Any, Optional
+from .firebase_realtime_storage import FirebaseRealtimeStorage
+
+logger = logging.getLogger(__name__)
+
+class PersistentAlertDeduplication:
+    """
+    Persistent deduplication service that stores state in Firebase Realtime Database
+    This ensures deduplication survives restarts and works across multiple instances
+    """
+    
+    def __init__(self):
+        self.firebase = FirebaseRealtimeStorage()
+        self.alert_ttl_hours = 24  # How long to remember sent alerts
+        self.cleanup_interval = 100  # Cleanup every N operations
+        self.operations_count = 0
+        self.duplicates_prevented = 0
+        
+        logger.info("Persistent Alert Deduplication Service initialized")
+    
+    def _generate_alert_key(self, alert_type: str, content: str, user_id: str) -> str:
+        """Generate unique alert key for deduplication"""
+        # Create a hash based on type, content, and user
+        content_str = f"{alert_type}:{content}:{user_id}"
+        return hashlib.md5(content_str.encode()).hexdigest()
+    
+    def _generate_content_hash(self, content: str) -> str:
+        """Generate hash of alert content for global deduplication"""
+        return hashlib.md5(content.encode()).hexdigest()
+    
+    def _get_alert_path(self, alert_key: str) -> str:
+        """Get Firebase path for alert record"""
+        return f"alert_deduplication/alerts/{alert_key}"
+    
+    def _get_content_hash_path(self, content_hash: str) -> str:
+        """Get Firebase path for content hash"""
+        return f"alert_deduplication/content_hashes/{content_hash}"
+    
+    def should_send_alert(self, alert_type: str, content: str, user_id: str) -> bool:
+        """
+        Check if alert should be sent (not a duplicate)
+        Returns: True if alert should be sent, False if it's a duplicate
+        """
+        try:
+            self.operations_count += 1
+            
+            # Generate keys
+            alert_key = self._generate_alert_key(alert_type, content, user_id)
+            content_hash = self._generate_content_hash(content)
+            
+            # Check if we've already sent this exact alert to this user
+            alert_path = self._get_alert_path(alert_key)
+            existing_alert = self.firebase._make_request('GET', alert_path)
+            
+            # Handle Firebase connection errors gracefully
+            if existing_alert is None:
+                # Firebase connection failed - log warning but allow alert (fail open)
+                logger.warning(f"Firebase connection failed, allowing alert (fail-open mode)")
+                return True
+            
+            if existing_alert and isinstance(existing_alert, dict):
+                # Check if alert hasn't expired
+                expires_at_str = existing_alert.get('expires_at')
+                if expires_at_str:
+                    try:
+                        expires_at = datetime.fromisoformat(expires_at_str)
+                        if datetime.now() < expires_at:
+                            self.duplicates_prevented += 1
+                            logger.debug(f"Duplicate alert prevented for user {user_id}: {alert_type}")
+                            return False
+                    except Exception as e:
+                        logger.warning(f"Error parsing expires_at: {e}")
+                        # If we can't parse, assume it's expired and allow alert
+            
+            # This is a new alert
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error checking alert deduplication: {e}")
+            # On error, allow alert to be sent (fail open)
+            return True
+    
+    def mark_alert_sent(self, alert_type: str, content: str, user_id: str) -> bool:
+        """Mark an alert as sent to prevent duplicates"""
+        try:
+            alert_key = self._generate_alert_key(alert_type, content, user_id)
+            content_hash = self._generate_content_hash(content)
+            
+            # Create alert record
+            now = datetime.now()
+            expires_at = now + timedelta(hours=self.alert_ttl_hours)
+            
+            alert_record = {
+                'alert_type': alert_type,
+                'user_id': user_id,
+                'content_hash': content_hash,
+                'sent_at': now.isoformat(),
+                'expires_at': expires_at.isoformat()
+            }
+            
+            # Store in Firebase
+            alert_path = self._get_alert_path(alert_key)
+            result = self.firebase._make_request('PUT', alert_path, alert_record)
+            
+            if result is not None:
+                logger.debug(f"Marked alert as sent: {alert_type} for user {user_id}")
+                return True
+            else:
+                logger.warning(f"Failed to mark alert as sent in Firebase")
+                return False
+            
+        except Exception as e:
+            logger.error(f"Error marking alert as sent: {e}")
+            return False
+    
+    def should_send_news_alert(self, news_item: Dict[str, Any], user_id: str) -> bool:
+        """Check if news alert should be sent (not a duplicate)"""
+        try:
+            # Create content string from news item
+            title = news_item.get('title', '')
+            source = news_item.get('source', '')
+            url = news_item.get('url', '')
+            news_id = str(news_item.get('id', ''))
+            
+            # Use news_id if available, otherwise use title+source+url
+            if news_id:
+                content = f"news:{news_id}"
+            else:
+                content = f"news:{title}|{source}|{url}"
+            
+            # Check if should send
+            should_send = self.should_send_alert('news', content, user_id)
+            
+            if should_send:
+                # Mark as sent immediately to prevent race conditions
+                self.mark_alert_sent('news', content, user_id)
+            
+            return should_send
+            
+        except Exception as e:
+            logger.error(f"Error checking news alert deduplication: {e}")
+            return True  # Allow alert if check fails
+    
+    def should_send_economic_alert(self, event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
+        """Check if economic alert should be sent (not a duplicate)"""
+        try:
+            # Create content string from event
+            title = event.get('title', '')
+            event_time = event.get('time', '')
+            event_date = event.get('date', '')
+            event_id = event.get('id', '')
+            
+            # Include timing in content to allow multiple alerts for same event at different times
+            if event_id:
+                content = f"economic:{event_id}:{alert_timing}"
+            else:
+                content = f"economic:{title}|{event_time}|{event_date}|{alert_timing}"
+            
+            # Check if should send
+            should_send = self.should_send_alert('economic', content, user_id)
+            
+            if should_send:
+                # Mark as sent immediately
+                self.mark_alert_sent('economic', content, user_id)
+            
+            return should_send
+            
+        except Exception as e:
+            logger.error(f"Error checking economic alert deduplication: {e}")
+            return True  # Allow alert if check fails
+    
+    def cleanup_expired_alerts(self) -> int:
+        """Clean up expired alert records from Firebase"""
+        try:
+            # Get all alerts
+            alerts_path = "alert_deduplication/alerts"
+            all_alerts = self.firebase._make_request('GET', alerts_path)
+            
+            if not all_alerts or not isinstance(all_alerts, dict):
+                return 0
+            
+            now = datetime.now()
+            expired_count = 0
+            
+            # Check each alert and delete expired ones
+            for alert_key, alert_data in list(all_alerts.items()):
+                if isinstance(alert_data, dict):
+                    expires_at_str = alert_data.get('expires_at')
+                    if expires_at_str:
+                        try:
+                            expires_at = datetime.fromisoformat(expires_at_str)
+                            if now >= expires_at:
+                                # Delete expired alert
+                                alert_path = self._get_alert_path(alert_key)
+                                self.firebase._make_request('DELETE', alert_path)
+                                expired_count += 1
+                        except Exception as e:
+                            logger.warning(f"Error parsing expires_at for alert {alert_key}: {e}")
+            
+            if expired_count > 0:
+                logger.info(f"Cleaned up {expired_count} expired alert records")
+            
+            return expired_count
+            
+        except Exception as e:
+            logger.error(f"Error cleaning up expired alerts: {e}")
+            return 0
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get deduplication statistics"""
+        try:
+            alerts_path = "alert_deduplication/alerts"
+            all_alerts = self.firebase._make_request('GET', alerts_path)
+            total_records = len(all_alerts) if isinstance(all_alerts, dict) else 0
+            
+            return {
+                'total_records': total_records,
+                'operations_count': self.operations_count,
+                'duplicates_prevented': self.duplicates_prevented,
+                'alert_ttl_hours': self.alert_ttl_hours
+            }
+        except Exception as e:
+            logger.error(f"Error getting deduplication stats: {e}")
+            return {
+                'total_records': 0,
+                'operations_count': self.operations_count,
+                'duplicates_prevented': self.duplicates_prevented,
+                'alert_ttl_hours': self.alert_ttl_hours
+            }
+    
+    def clear_user_alerts(self, user_id: str) -> int:
+        """Clear all alert records for a specific user"""
+        try:
+            alerts_path = "alert_deduplication/alerts"
+            all_alerts = self.firebase._make_request('GET', alerts_path)
+            
+            if not all_alerts or not isinstance(all_alerts, dict):
+                return 0
+            
+            cleared_count = 0
+            
+            # Find and delete all alerts for this user
+            for alert_key, alert_data in list(all_alerts.items()):
+                if isinstance(alert_data, dict) and alert_data.get('user_id') == user_id:
+                    alert_path = self._get_alert_path(alert_key)
+                    self.firebase._make_request('DELETE', alert_path)
+                    cleared_count += 1
+            
+            if cleared_count > 0:
+                logger.info(f"Cleared {cleared_count} alert records for user {user_id}")
+            
+            return cleared_count
+            
+        except Exception as e:
+            logger.error(f"Error clearing user alerts: {e}")
+            return 0
+
+# Global singleton instance
+_persistent_deduplication = None
+
+def get_persistent_deduplication() -> PersistentAlertDeduplication:
+    """Get the global persistent deduplication instance"""
+    global _persistent_deduplication
+    if _persistent_deduplication is None:
+        _persistent_deduplication = PersistentAlertDeduplication()
+    return _persistent_deduplication
+
+# Convenience functions for backward compatibility
+def should_send_news_alert(news_item: Dict[str, Any], user_id: str) -> bool:
+    """Check if news alert should be sent (not a duplicate)"""
+    dedup = get_persistent_deduplication()
+    return dedup.should_send_news_alert(news_item, user_id)
+
+def should_send_economic_alert(event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
+    """Check if economic alert should be sent (not a duplicate)"""
+    dedup = get_persistent_deduplication()
+    return dedup.should_send_economic_alert(event, user_id, alert_timing)
+
+def get_deduplication_stats() -> Dict[str, Any]:
+    """Get deduplication statistics"""
+    dedup = get_persistent_deduplication()
+    return dedup.get_stats()
+
+def clear_user_deduplication(user_id: str) -> int:
+    """Clear deduplication records for a user"""
+    dedup = get_persistent_deduplication()
+    return dedup.clear_user_alerts(user_id)
+
