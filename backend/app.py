@@ -1431,7 +1431,7 @@ def get_analysis(news_id):
             print(f"🔍 Trying news history for news_id: {news_id}")
             try:
                 from services.persistent_news_cache import get_persistent_news_cache
-            news_cache = get_persistent_news_cache()
+                news_cache = get_persistent_news_cache()
                 history_data = news_cache.get_recent_history(hours=24)
                 news_item = next((item for item in history_data if item.get('id') == news_id), None)
                 if news_item:
@@ -3756,7 +3756,7 @@ def get_dashboard_data():
             try:
                 # Try cached news first for speed
                 from services.persistent_news_cache import get_persistent_news_cache
-            news_cache = get_persistent_news_cache()
+                news_cache = get_persistent_news_cache()
                 cached_news = news_cache.load_news()
                 if cached_news:
                     return {
