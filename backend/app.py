@@ -809,8 +809,9 @@ def get_economic_chart_data(event_name):
 def get_news():
     """Get aggregated news from multiple sources with optimized performance and alert triggering"""
     try:
-        # Import cache system
-        from services.news_cache import news_cache
+        # Import persistent cache system (survives restarts)
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         
         # Check if force refresh is requested
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
@@ -1077,7 +1078,8 @@ def get_news():
         print(f"❌ Error in news endpoint: {e}")
         # Try to load from cache as fallback
         try:
-            from services.news_cache import news_cache
+            from services.persistent_news_cache import get_persistent_news_cache
+            news_cache = get_persistent_news_cache()
             cached_news = news_cache.load_news()
             if cached_news:
                 # Remove duplicates from fallback cached news as well
@@ -1200,7 +1202,8 @@ def clear_all_caches():
     """Clear all server-side caches"""
     try:
         # Clear news cache
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         news_cache.clear_cache()
         
         # Clear any other caches
@@ -1238,7 +1241,8 @@ def force_refresh_news_internal():
         print("🔄 Force refreshing news (internal)...")
         
         # Clear cache to force fresh fetch
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         news_cache.clear_cache()
         
         # Fetch fresh news
@@ -1402,7 +1406,8 @@ def get_analysis(news_id):
         print(f"🦊 BACKEND - Request origin: {request.headers.get('Origin', 'Unknown')}")
         
         # First try to get the news item from cached news data
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         cached_news = news_cache.load_news()
         
         print(f"🦊 BACKEND - Cached news count: {len(cached_news) if cached_news else 0}")
@@ -1425,7 +1430,8 @@ def get_analysis(news_id):
         if not news_item:
             print(f"🔍 Trying news history for news_id: {news_id}")
             try:
-                from services.news_cache import news_cache
+                from services.persistent_news_cache import get_persistent_news_cache
+            news_cache = get_persistent_news_cache()
                 history_data = news_cache.get_recent_history(hours=24)
                 news_item = next((item for item in history_data if item.get('id') == news_id), None)
                 if news_item:
@@ -2313,7 +2319,8 @@ def get_gpt_stats():
 def cache_status():
     """Get cache status information"""
     try:
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         status = news_cache.get_cache_status()
         return jsonify({
             "cache_status": status,
@@ -3748,7 +3755,8 @@ def get_dashboard_data():
         def get_news_data():
             try:
                 # Try cached news first for speed
-                from services.news_cache import news_cache
+                from services.persistent_news_cache import get_persistent_news_cache
+            news_cache = get_persistent_news_cache()
                 cached_news = news_cache.load_news()
                 if cached_news:
                     return {
@@ -4084,7 +4092,8 @@ def get_post_event_analysis(news_id):
 def get_news_history():
     """Get news history for the live news analysis card"""
     try:
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         from services.analysis_history import analysis_history
         
         # Get hours parameter from query string (default 24 hours)
@@ -4146,7 +4155,8 @@ def get_news_history():
 def get_news_by_id(news_id):
     """Get a specific news item by ID from cache or history"""
     try:
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         
         news_item = news_cache.get_news_by_id(news_id)
         
@@ -4184,7 +4194,8 @@ def clear_analysis_history():
     """Clear analysis history and related data"""
     try:
         from services.analysis_history import analysis_history
-        from services.news_cache import news_cache
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
         
         # Get parameters from request
         data = request.get_json() or {}
