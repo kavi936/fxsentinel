@@ -50,6 +50,13 @@ def parse_forexfactory_json(json_file_path):
             formatted_time = dt_utc.strftime('%H:%M UTC')
             date_yyyy_mm_dd = dt.strftime('%Y-%m-%d')
             
+            # Use actual value if present, otherwise 'TBD'
+            actual_value = event.get('actual', '')
+            if actual_value:
+                actual = actual_value
+            else:
+                actual = 'TBD'
+            
             formatted = {
                 'title': event.get('title', ''),
                 'date': formatted_date,
@@ -59,7 +66,7 @@ def parse_forexfactory_json(json_file_path):
                 'impact': event.get('impact', 'Low').lower(),
                 'forecast': event.get('forecast', '') or 'N/A',
                 'previous': event.get('previous', '') or 'N/A',
-                'actual': 'TBD'  # Future events
+                'actual': actual
             }
             
             formatted_events.append(formatted)

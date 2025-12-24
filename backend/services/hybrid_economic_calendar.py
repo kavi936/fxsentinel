@@ -1739,7 +1739,7 @@ class HybridEconomicCalendar:
                 'time': '13:20 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '11.5K',
                 'forecast': 'N/A',
                 'previous': '16.3K'
             },
@@ -1749,7 +1749,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-0.3',
                 'forecast': '-0.3%',
                 'previous': '0.2%'
             },
@@ -1759,7 +1759,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.3',
                 'forecast': '3.2%',
                 'previous': '3.8%'
             },
@@ -1769,7 +1769,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.2',
                 'forecast': '-1.4%',
                 'previous': '0.6%'
             },
@@ -1779,9 +1779,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '0.2%',
-                'previous': '0.5%'
+                'actual': '-2.2',
+                'forecast': '-1.5%',
+                'previous': '0.7%'
             },
             {
                 'title': 'Prelim GDP Price Index q/q',
@@ -1789,8 +1789,8 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '2.6%',
+                'actual': '3.8',
+                'forecast': '2.7%',
                 'previous': '2.1%'
             },
             {
@@ -1799,7 +1799,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '89.1',
                 'forecast': '91.7',
                 'previous': '88.7'
             },
@@ -1809,7 +1809,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-7',
                 'forecast': '-7',
                 'previous': '-15'
             },
@@ -1831,7 +1831,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '214K',
                 'forecast': '220K',
                 'previous': '224K'
             }
