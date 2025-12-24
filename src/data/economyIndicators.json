@@ -179,8 +179,8 @@
         "description": "Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components."
       },
       "gdp-growth": {
-        "currentValue": "3.8%",
-        "asOf": "2025-05-15",
+        "currentValue": "4.3%",
+        "asOf": "2025-08-15",
         "chartData": [
           4.6,
           5.7,
@@ -200,7 +200,8 @@
           3.3,
           1.9,
           -0.6,
-          3.8
+          3.8,
+          4.3
         ],
         "chartDates": [
           "2020-11-15",
@@ -221,7 +222,8 @@
           "2024-08-15",
           "2024-11-15",
           "2025-02-15",
-          "2025-05-15"
+          "2025-05-15",
+          "2025-08-15"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bea.gov/data/gdp/gross-domestic-product",
