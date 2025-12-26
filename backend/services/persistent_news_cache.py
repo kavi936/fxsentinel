@@ -261,8 +261,17 @@ class PersistentNewsCache:
         except Exception as e:
             logger.error(f"Error cleaning up history: {e}")
     
-    def load_news(self) -> Optional[List[Dict[str, Any]]]:
-        """Load news items from cache if they're not too old"""
+    def load_news(self, allow_stale: bool = True) -> Optional[List[Dict[str, Any]]]:
+        """
+        Load news items from cache
+        
+        Args:
+            allow_stale: If True, return cache even if expired (for faster UI loading).
+                        If False, only return cache if not expired (default: True for better UX)
+        
+        Returns:
+            List of news items or None if no cache exists
+        """
         try:
             cache_path = self._get_cache_path()
             cache_data = self.firebase._make_request('GET', cache_path)
@@ -279,18 +288,29 @@ class PersistentNewsCache:
             
             try:
                 cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                age = datetime.now() - cache_timestamp
-                
-                if age > timedelta(hours=self.max_age_hours):
-                    logger.info(f"Cache is too old ({age}), ignoring")
-                    return None
+                age = datetime.now() - cache_timestamp.replace(tzinfo=None) if cache_timestamp.tzinfo else datetime.now() - cache_timestamp
                 
                 news_items = cache_data.get('news', [])
+                
+                if age > timedelta(hours=self.max_age_hours):
+                    if allow_stale:
+                        # Return stale cache for faster UI loading (fresh fetch will happen in background)
+                        logger.info(f"Cache is stale ({age}), but returning it for faster UI loading")
+                        return news_items
+                    else:
+                        logger.info(f"Cache is too old ({age}), ignoring")
+                        return None
+                
                 logger.info(f"Loaded {len(news_items)} news items from Firebase cache (age: {age})")
                 return news_items
                 
             except Exception as e:
                 logger.warning(f"Error parsing cache timestamp: {e}")
+                # If timestamp parsing fails, still return the news (better than nothing)
+                news_items = cache_data.get('news', [])
+                if news_items:
+                    logger.info(f"Loaded {len(news_items)} news items from cache (timestamp parse error, but returning news)")
+                    return news_items
                 return None
             
         except Exception as e:

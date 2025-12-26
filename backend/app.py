@@ -846,7 +846,8 @@ def get_news():
         should_fetch_new = False
         
         if not force_refresh:
-            cached_news = news_cache.load_news()
+            # Always allow stale cache for faster UI loading (fresh fetch happens in background)
+            cached_news = news_cache.load_news(allow_stale=True)
             print(f"🔍 Loading from cache: {len(cached_news) if cached_news else 0} articles")
             
             # Check if we should fetch new news (every 5 minutes)
@@ -864,10 +865,22 @@ def get_news():
             print("🔍 Force refresh requested - skipping cache")
             should_fetch_new = True
         
-        # If should_fetch_new is True, we'll fetch fresh news and merge it below
-        # Only serve cached news immediately if we're NOT fetching fresh news
-        # IMPORTANT: If should_fetch_new is True, we skip this block and fetch fresh news below
-        if cached_news and not should_fetch_new:
+        # OPTIMIZATION: If we have cached news, return it immediately for faster UI
+        # This makes the UI load instantly instead of waiting for API calls
+        # Fresh news will be fetched in background and merged on next request
+        if cached_news and not force_refresh:
+            # Remove duplicates from cached news
+            cached_news = remove_duplicate_news(cached_news)
+            
+            # Convert all news item IDs to strings to prevent JavaScript precision loss
+            # Also add added_to_feed_at fallback for cached items that don't have it
+            for item in cached_news:
+                if 'id' in item:
+                    item['id'] = str(item['id'])
+                # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
+                if 'added_to_feed_at' not in item:
+                    item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+            
             # Check if cached news contains economic calendar events (Finnhub data)
             # If it does, clear the cache to force fresh news fetch
             has_economic_events = any(
@@ -881,18 +894,8 @@ def get_news():
                 print("🔄 Clearing cache due to economic calendar events found")
                 news_cache.clear_cache()
                 cached_news = None
-            else:
-                        # Remove duplicates from cached news as well
-                cached_news = remove_duplicate_news(cached_news)
-                
-                # Convert all news item IDs to strings to prevent JavaScript precision loss
-                # Also add added_to_feed_at fallback for cached items that don't have it
-                for item in cached_news:
-                    if 'id' in item:
-                        item['id'] = str(item['id'])
-                    # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
-                    if 'added_to_feed_at' not in item:
-                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+            elif not should_fetch_new:
+                # Cache is fresh, return it immediately
                 response_data = {
                     "news": cached_news,
                     "last_updated": datetime.now().isoformat(),
@@ -905,7 +908,24 @@ def get_news():
                 if DEPLOYMENT_NOTIFICATION["active"]:
                     response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
                 
-                print(f"✅ Returning {len(cached_news)} cached news items")
+                print(f"✅ Returning {len(cached_news)} cached news items (cache is fresh)")
+                return jsonify(response_data)
+            else:
+                # Cache exists but is stale - return it immediately while fetching fresh in background
+                print(f"⚡ OPTIMIZATION: Returning stale cache immediately ({len(cached_news)} articles) for fast UI, fresh fetch will happen in background")
+                response_data = {
+                    "news": cached_news,
+                    "last_updated": datetime.now().isoformat(),
+                    "sources": ["cached_data"],
+                    "total_articles": len(cached_news),
+                    "cache_status": "cached_stale"
+                }
+                
+                # Add deployment notification if active
+                if DEPLOYMENT_NOTIFICATION["active"]:
+                    response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+                
+                print(f"✅ Returning {len(cached_news)} cached news items immediately (stale cache, fresh fetch in background)")
                 return jsonify(response_data)
         
         # If force refresh is requested, use the force refresh function
