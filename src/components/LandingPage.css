@@ -543,7 +543,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloatReverse 18s linear infinite 3s;
+  animation: newsFloatReverse 18s linear infinite 0.3s;
   z-index: 1;
 }
 
@@ -556,7 +556,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloat 20s linear infinite 6s;
+  animation: newsFloat 20s linear infinite 0.6s;
   z-index: 1;
 }
 
@@ -569,7 +569,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloatReverse 22s linear infinite 9s;
+  animation: newsFloatReverse 22s linear infinite 0.9s;
   z-index: 1;
 }
 
@@ -582,7 +582,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloat 16s linear infinite 12s;
+  animation: newsFloat 16s linear infinite 1.2s;
   z-index: 1;
 }
 
@@ -595,7 +595,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloatReverse 19s linear infinite 15s;
+  animation: newsFloatReverse 19s linear infinite 1.5s;
   z-index: 1;
 }
 
@@ -608,7 +608,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloat 17s linear infinite 18s;
+  animation: newsFloat 17s linear infinite 1.8s;
   z-index: 1;
 }
 
@@ -621,7 +621,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloatReverse 21s linear infinite 21s;
+  animation: newsFloatReverse 21s linear infinite 2.1s;
   z-index: 1;
 }
 
@@ -634,7 +634,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloat 14s linear infinite 24s;
+  animation: newsFloat 14s linear infinite 2.4s;
   z-index: 1;
 }
 
@@ -647,7 +647,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloatReverse 23s linear infinite 27s;
+  animation: newsFloatReverse 23s linear infinite 2.7s;
   z-index: 1;
 }
 
@@ -660,7 +660,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloat 18.5s linear infinite 30s;
+  animation: newsFloat 18.5s linear infinite 3s;
   z-index: 1;
 }
 
@@ -673,7 +673,7 @@ body {
   font-family: 'Space Grotesk', monospace;
   font-weight: 400;
   white-space: nowrap;
-  animation: newsFloatReverse 25s linear infinite 33s;
+  animation: newsFloatReverse 25s linear infinite 3.3s;
   z-index: 1;
 }
 
