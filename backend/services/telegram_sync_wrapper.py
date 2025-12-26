@@ -93,63 +93,86 @@ class SessionIsolatedTelegramWrapper:
                 print("❌ Telegram client not authorized")
                 return []
             
-            # Target channels
-            target_channels = ['WatcherGuru', '@WatcherGuru']
+            # Target channels - use only unique channels (avoid duplicates from @ and non-@ versions)
+            # Try to get the actual channel entity first to avoid duplicates
+            target_channel_names = ['WatcherGuru']
+            channel_entities = {}  # Map of channel ID to channel name to avoid duplicates
             
             all_messages = []
             from datetime import datetime, timedelta
             cutoff_time = datetime.now() - timedelta(hours=hours)
             
-            # Fetch from each channel
-            for channel in target_channels:
+            # First, resolve all channel variants to actual entities
+            for channel_name in target_channel_names:
                 try:
                     # Try different channel name formats
-                    channel_variants = [channel, channel.replace('@', ''), f"@{channel.replace('@', '')}"]
+                    channel_variants = [channel_name, channel_name.replace('@', ''), f"@{channel_name.replace('@', '')}"]
                     
                     channel_entity = None
                     for variant in channel_variants:
                         try:
-                            channel_entity = await client.get_entity(variant)
-                            break
+                            entity = await client.get_entity(variant)
+                            # Use channel ID as key to detect duplicates (same channel with different names)
+                            channel_id = getattr(entity, 'id', None)
+                            if channel_id and channel_id not in channel_entities:
+                                channel_entities[channel_id] = (entity, channel_name)
+                                channel_entity = entity
+                                break
+                            elif channel_id in channel_entities:
+                                # Already have this channel, skip
+                                channel_entity = None
+                                break
                         except:
                             continue
                     
                     if not channel_entity:
-                        print(f"⚠️ Could not find channel: {channel}")
+                        if channel_id in channel_entities:
+                            print(f"⚠️ Channel {channel_name} is duplicate of {channel_entities[channel_id][1]}, skipping")
+                        else:
+                            print(f"⚠️ Could not find channel: {channel_name}")
                         continue
                     
-                    # Get messages
+                    # Get messages from this unique channel
                     messages = []
                     async for message in client.iter_messages(channel_entity, limit=20):
                         if hasattr(message, 'text') and message.text:
-                            # Parse message
-                            parsed = self._parse_message(message, channel)
+                            # Parse message - use the original channel name
+                            parsed = self._parse_message(message, channel_name)
                             if parsed:
                                 messages.append(parsed)
                                 if len(messages) >= 10:  # Limit per channel
                                     break
                     
                     all_messages.extend(messages)
-                    print(f"✅ Fetched {len(messages)} messages from {channel}")
+                    print(f"✅ Fetched {len(messages)} messages from {channel_name}")
                     
                 except Exception as e:
-                    print(f"⚠️ Error fetching from {channel}: {e}")
+                    print(f"⚠️ Error fetching from {channel_name}: {e}")
                     continue
             
             # Filter by time and deduplicate
+            # Use both title AND published_at to catch true duplicates (same message from different channel variants)
             recent_messages = []
-            seen_titles = set()
+            seen_keys = set()
             
             for message in all_messages:
                 try:
                     message_date = datetime.fromisoformat(message['published_at'].replace('Z', '+00:00'))
                     if message_date >= cutoff_time:
-                        title_key = message['title'][:50].lower()
-                        if title_key not in seen_titles:
-                            seen_titles.add(title_key)
+                        # Create a unique key from title and published_at to catch duplicates
+                        title_key = message['title'][:50].lower().strip()
+                        date_key = message['published_at'][:16]  # Date + hour:minute (ignore seconds)
+                        unique_key = f"{title_key}_{date_key}"
+                        
+                        if unique_key not in seen_keys:
+                            seen_keys.add(unique_key)
                             recent_messages.append(message)
-                except:
-                    recent_messages.append(message)
+                except Exception as e:
+                    # If date parsing fails, still include but use title only for dedup
+                    title_key = message.get('title', '')[:50].lower().strip()
+                    if title_key and title_key not in seen_keys:
+                        seen_keys.add(title_key)
+                        recent_messages.append(message)
             
             # Sort by date
             recent_messages.sort(key=lambda x: x['published_at'], reverse=True)
@@ -182,19 +205,29 @@ class SessionIsolatedTelegramWrapper:
             if not message_text:
                 return None
             
-            # Check if forex-related (simple check)
-            forex_keywords = [
-                'forex', 'currency', 'dollar', 'euro', 'yen', 'pound', 'franc',
-                'cpi', 'inflation', 'interest rate', 'fed', 'ecb', 'boj', 'boe',
-                'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad',
-                'non-farm payrolls', 'gdp', 'retail sales', 'manufacturing',
-                'unemployment', 'employment', 'wages', 'trade balance'
-            ]
+            # Check if forex-related - include gold, silver, and commodities as they impact forex
+            # Use enhanced filter for better accuracy, but also include commodity keywords
+            from .enhanced_forex_filter import enhanced_forex_filter
             
             text_lower = message_text.lower()
-            is_forex_related = any(keyword in text_lower for keyword in forex_keywords)
             
-            if not is_forex_related:
+            # Check using enhanced filter (includes gold, silver, commodities)
+            is_forex_related = enhanced_forex_filter.is_forex_related(
+                message_text, '', channel_name
+            )
+            
+            # Also check for commodity keywords that are forex-relevant
+            # Gold and silver are safe-haven assets that impact currency markets
+            commodity_keywords = [
+                'gold', 'silver', 'precious metal', 'precious metals',
+                'commodity', 'commodities', 'oil', 'crude', 'copper', 'natural gas',
+                'safe haven', 'risk-off', 'risk-on'
+            ]
+            
+            has_commodity = any(keyword in text_lower for keyword in commodity_keywords)
+            
+            # Include if forex-related OR if it's a commodity (gold/silver impact forex markets)
+            if not is_forex_related and not has_commodity:
                 return None
             
             # Get message date
@@ -210,9 +243,15 @@ class SessionIsolatedTelegramWrapper:
             title = lines[0][:100] if lines else "Telegram Update"
             summary = '\n'.join(lines[1:])[:200] if len(lines) > 1 else clean_text[:200]
             
-            # Determine impact level
-            high_impact = ['cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'interest rate', 'non-farm payrolls', 'gdp']
-            medium_impact = ['retail sales', 'manufacturing', 'unemployment', 'employment', 'trade balance']
+            # Determine impact level - include gold/silver as high impact (they're safe-haven assets that impact forex)
+            high_impact = [
+                'cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'interest rate', 
+                'non-farm payrolls', 'gdp', 'gold', 'silver', 'precious metal', 'precious metals'
+            ]
+            medium_impact = [
+                'retail sales', 'manufacturing', 'unemployment', 'employment', 
+                'trade balance', 'commodity', 'commodities', 'oil', 'crude'
+            ]
             
             impact = 'low'
             if any(keyword in text_lower for keyword in high_impact):

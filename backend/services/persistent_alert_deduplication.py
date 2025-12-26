@@ -139,18 +139,36 @@ class PersistentAlertDeduplication:
             else:
                 content = f"news:{title}|{source}|{url}"
             
-            # Check if should send
+            # Check if should send (don't mark as sent yet - wait for successful send)
             should_send = self.should_send_alert('news', content, user_id)
-            
-            if should_send:
-                # Mark as sent immediately to prevent race conditions
-                self.mark_alert_sent('news', content, user_id)
             
             return should_send
             
         except Exception as e:
             logger.error(f"Error checking news alert deduplication: {e}")
             return True  # Allow alert if check fails
+    
+    def mark_news_alert_sent(self, news_item: Dict[str, Any], user_id: str) -> bool:
+        """Mark a news alert as sent after successful delivery"""
+        try:
+            # Create content string from news item (same as should_send_news_alert)
+            title = news_item.get('title', '')
+            source = news_item.get('source', '')
+            url = news_item.get('url', '')
+            news_id = str(news_item.get('id', ''))
+            
+            # Use news_id if available, otherwise use title+source+url
+            if news_id:
+                content = f"news:{news_id}"
+            else:
+                content = f"news:{title}|{source}|{url}"
+            
+            # Mark as sent after successful delivery
+            return self.mark_alert_sent('news', content, user_id)
+            
+        except Exception as e:
+            logger.error(f"Error marking news alert as sent: {e}")
+            return False
     
     def should_send_economic_alert(self, event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
         """Check if economic alert should be sent (not a duplicate)"""
@@ -281,6 +299,11 @@ def should_send_news_alert(news_item: Dict[str, Any], user_id: str) -> bool:
     """Check if news alert should be sent (not a duplicate)"""
     dedup = get_persistent_deduplication()
     return dedup.should_send_news_alert(news_item, user_id)
+
+def mark_news_alert_sent(news_item: Dict[str, Any], user_id: str) -> bool:
+    """Mark a news alert as sent after successful delivery"""
+    dedup = get_persistent_deduplication()
+    return dedup.mark_news_alert_sent(news_item, user_id)
 
 def should_send_economic_alert(event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
     """Check if economic alert should be sent (not a duplicate)"""

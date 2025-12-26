@@ -80,38 +80,79 @@ const LiveNewsFeed = () => {
       }
       setError(null);
       
+      const url = forceRefresh 
+        ? `${config.API_BASE_URL}/api/news?force_refresh=true`
+        : config.endpoints.news;
+      
+      console.log(`📡 Fetching news from: ${url}`);
+      
       let response;
-      if (forceRefresh) {
-        // Force refresh endpoint with force_refresh parameter to get fresh data including Telegram
-        response = await fetch(`${config.API_BASE_URL}/api/news?force_refresh=true`);
-      } else {
-        response = await fetch(config.endpoints.news);
+      try {
+        response = await fetch(url);
+        console.log(`📡 Response status: ${response.status}`);
+      } catch (fetchError) {
+        console.error('❌ Fetch error:', fetchError);
+        throw new Error(`Network error: ${fetchError.message}`);
+      }
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ API error ${response.status}:`, errorText);
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('📦 Raw API response:', {
+        hasNews: !!data.news,
+        newsLength: data.news?.length || 0,
+        cacheStatus: data.cache_status,
+        keys: Object.keys(data)
+      });
       
-      if (response.ok) {
-        // Ensure all news item IDs are preserved as strings to prevent precision loss
-        const processedNews = (data.news || []).map(item => ({
-          ...item,
-          id: String(item.id) // Force ID to be string to preserve precision
-        }));
-        
-        setNews(processedNews);
-        // Use current time as fallback if last_updated is not provided or invalid
-        const lastUpdatedValue = data.last_updated || new Date().toISOString();
-        setLastUpdated(lastUpdatedValue);
-      } else {
-        throw new Error('Failed to fetch news');
+      if (!data.news || !Array.isArray(data.news)) {
+        console.error('❌ Invalid response format - news is not an array:', data);
+        throw new Error('Invalid response format from API');
       }
+      
+      // Ensure all news item IDs are preserved as strings to prevent precision loss
+      const processedNews = data.news.map(item => ({
+        ...item,
+        id: String(item.id || item.title || Math.random()) // Force ID to be string
+      }));
+      
+      // Debug logging
+      console.log('📰 News processed:', {
+        total: processedNews.length,
+        telegram: processedNews.filter(item => item.source?.toLowerCase().includes('telegram')).length,
+        sources: [...new Set(processedNews.map(item => item.source))],
+        sample: processedNews.slice(0, 3).map(item => ({ 
+          title: item.title?.substring(0, 50), 
+          source: item.source,
+          hasTitle: !!item.title,
+          hasSummary: !!item.summary
+        }))
+      });
+      
+      setNews(processedNews);
+      console.log(`✅ News state set with ${processedNews.length} items`);
+      
+      // Use current time as fallback if last_updated is not provided or invalid
+      const lastUpdatedValue = data.last_updated || new Date().toISOString();
+      setLastUpdated(lastUpdatedValue);
     } catch (err) {
-      console.error('Error fetching news:', err);
+      console.error('❌ Error fetching news:', err);
+      console.error('❌ Error details:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name
+      });
       // Set empty news array instead of error to show empty state
       setNews([]);
-      setError(null);
+      setError(err.message || 'Failed to fetch news');
     } finally {
       setLoading(false);
       setForceRefreshing(false);
+      console.log('✅ Fetch complete, loading set to false');
     }
   };
 
@@ -536,6 +577,15 @@ const LiveNewsFeed = () => {
       const getCurrentNewsList = () => {
         const currentList = activeTab === 'live' ? news : newsHistory;
         
+        // Debug logging
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 getCurrentNewsList:', {
+            activeTab,
+            rawCount: currentList.length,
+            filter
+          });
+        }
+        
         // Remove duplicates based on title similarity
         const uniqueNews = removeDuplicateNews(currentList);
         
@@ -547,16 +597,30 @@ const LiveNewsFeed = () => {
                 }
                 
                 // Enhanced filtering logic
+                let passes = false;
                 if (filter === 'all') {
                     // For 'all' filter, still apply basic forex relevance check
-                    return isForexRelevant(item);
+                    passes = isForexRelevant(item);
                 } else if (filter === 'high') {
                     // For 'high' filter, apply strict high-impact criteria
-                    return isHighImpactForex(item);
+                    passes = isHighImpactForex(item);
                 } else {
                     // For 'medium' and 'low' filters, check impact level
-                    return item.impact?.toLowerCase() === filter && isForexRelevant(item);
+                    passes = item.impact?.toLowerCase() === filter && isForexRelevant(item);
                 }
+                
+                // Debug logging for filtered items
+                if (process.env.NODE_ENV === 'development' && !passes && item.source?.toLowerCase().includes('telegram')) {
+                  console.log('❌ Telegram item filtered out:', {
+                    title: item.title?.substring(0, 60),
+                    source: item.source,
+                    impact: item.impact,
+                    filter,
+                    isForexRelevant: isForexRelevant(item)
+                  });
+                }
+                
+                return passes;
             })
             .sort((a, b) => {
                 // Sort by added_to_feed_at timestamp in descending order (newest additions first)
@@ -565,6 +629,15 @@ const LiveNewsFeed = () => {
                 const dateB = new Date(b.added_to_feed_at || b.published_at);
                 return dateB - dateA;
             });
+        
+        // Debug logging
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Filtered news list:', {
+            uniqueCount: uniqueNews.length,
+            filteredCount: filteredAndSorted.length,
+            telegramInFiltered: filteredAndSorted.filter(item => item.source?.toLowerCase().includes('telegram')).length
+          });
+        }
         
         return filteredAndSorted;
     };
@@ -800,7 +873,7 @@ const LiveNewsFeed = () => {
               L
             </button>
           </div>
-          <button className="news-refresh-btn" onClick={activeTab === 'live' ? fetchNews : () => fetchNewsHistory()} disabled={loading || historyLoading}>
+          <button className="news-refresh-btn" onClick={activeTab === 'live' ? () => fetchNews(true) : () => fetchNewsHistory()} disabled={loading || historyLoading || forceRefreshing}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
             </svg>
@@ -843,18 +916,11 @@ const LiveNewsFeed = () => {
             {activeTab === 'live' && (
               <div className="refresh-buttons">
                 <button 
-                  onClick={() => fetchNews(false)} 
-                  className="refresh-btn"
-                  disabled={loading}
-                >
-                  {loading ? 'Refreshing...' : 'Refresh'}
-                </button>
-                <button 
                   onClick={() => fetchNews(true)} 
-                  className="force-refresh-btn"
-                  disabled={forceRefreshing}
+                  className="refresh-btn"
+                  disabled={loading || forceRefreshing}
                 >
-                  {forceRefreshing ? 'Force Refreshing...' : 'Force Refresh'}
+                  {loading || forceRefreshing ? 'Refreshing...' : 'Refresh'}
                 </button>
               </div>
             )}

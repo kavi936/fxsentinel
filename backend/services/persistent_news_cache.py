@@ -58,22 +58,46 @@ class PersistentNewsCache:
                 # Merge with existing cache - new items on top
                 existing_news = self.load_news() or []
                 
-                # Create a set of existing news IDs for deduplication
-                existing_ids = {str(item.get('id', '')) for item in existing_news}
-                existing_titles = {item.get('title', '').lower() for item in existing_news}
+                # Create a map of existing items by ID and title to preserve added_to_feed_at
+                existing_by_id = {str(item.get('id', '')): item for item in existing_news if item.get('id')}
+                existing_by_title = {item.get('title', '').lower(): item for item in existing_news if item.get('title')}
+                
+                # Create sets for deduplication
+                existing_ids = set(existing_by_id.keys())
+                existing_titles = set(existing_by_title.keys())
                 
                 # Add new items that don't already exist
                 new_items = []
+                current_time = datetime.now().isoformat()
+                
                 for item in news_items:
                     item_id = str(item.get('id', ''))
                     item_title = item.get('title', '').lower()
                     
                     # Check if item is new (not in existing cache)
                     if item_id and item_id not in existing_ids and item_title not in existing_titles:
+                        # New item - set added_to_feed_at if not already set
+                        if 'added_to_feed_at' not in item:
+                            item['added_to_feed_at'] = current_time
                         new_items.append(item)
                         existing_ids.add(item_id)
                         existing_titles.add(item_title)
+                    elif item_id in existing_ids:
+                        # Item exists in cache - preserve its original added_to_feed_at and skip it
+                        # (it will be included from existing_news)
+                        existing_item = existing_by_id[item_id]
+                        if 'added_to_feed_at' in existing_item:
+                            # Preserve timestamp but don't add to new_items (already in existing_news)
+                            pass
+                    elif item_title in existing_titles:
+                        # Item exists in cache (by title) - preserve its original added_to_feed_at and skip it
+                        # (it will be included from existing_news)
+                        existing_item = existing_by_title[item_title]
+                        if 'added_to_feed_at' in existing_item:
+                            # Preserve timestamp but don't add to new_items (already in existing_news)
+                            pass
                 
+                # Preserve added_to_feed_at for all existing items (they already have it from load_news)
                 # Combine: new items first, then existing items
                 merged_news = new_items + existing_news
                 
@@ -154,9 +178,11 @@ class PersistentNewsCache:
                 
                 if time_since_fetch >= timedelta(minutes=fetch_interval_minutes):
                     logger.info(f"Last fetch was {time_since_fetch}, should fetch new news (interval: {fetch_interval_minutes} min)")
+                    print(f"⏰ should_fetch_new_news: True (last fetch was {time_since_fetch} ago, >= {fetch_interval_minutes} min)")
                     return True
                 else:
                     logger.debug(f"Last fetch was {time_since_fetch}, skipping fetch (interval: {fetch_interval_minutes} min)")
+                    print(f"⏰ should_fetch_new_news: False (last fetch was {time_since_fetch} ago, < {fetch_interval_minutes} min)")
                     return False
             except Exception as e:
                 logger.warning(f"Error parsing last_fetch timestamp: {e}")

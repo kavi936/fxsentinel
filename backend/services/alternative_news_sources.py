@@ -83,7 +83,10 @@ class AlternativeNewsSources:
             feed = feedparser.parse(response.content)
             articles = []
             
-            for entry in feed.entries[:15]:  # Limit to 15 most recent articles
+            # Check MORE entries to catch newer articles that might be further down
+            entries_to_check = min(len(feed.entries), 25)  # Check up to 25 entries (increased from 15)
+            
+            for entry in feed.entries[:entries_to_check]:
                 # Check if article is forex-related using improved filtering
                 if self.is_forex_related(entry.title, entry.summary, source_name):
                     article = self.parse_article(entry, source_name)
