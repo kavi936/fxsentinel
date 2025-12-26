@@ -392,12 +392,15 @@ class NewsAlertTrigger:
             
             if success:
                 logger.info(f"Alert sent successfully to user {user_id}")
-                # Alert is already marked as sent by persistent_alert_deduplication.should_send_news_alert()
+                # Mark alert as sent after successful delivery (not before)
+                from .persistent_alert_deduplication import mark_news_alert_sent
+                mark_news_alert_sent(news_item, user_id)
                 # Save to alert history
                 self._save_alert_history(user_id, news_item, alert_data['content'])
                 return True
             else:
                 logger.warning(f"Alert not sent to user {user_id} (subscription check failed or user preferences)")
+                # Don't mark as sent if delivery failed - allows retry
                 return False
                 
         except Exception as e:

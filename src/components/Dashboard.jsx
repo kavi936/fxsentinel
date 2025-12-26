@@ -268,13 +268,17 @@ function Dashboard() {
     };
   }, [mobileMenuOpen]);
 
-  const fetchNews = async () => {
+  const fetchNews = async (forceRefresh = false) => {
     try {
       // Add timeout to API call
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
       
-      const response = await axios.get(config.endpoints.news, {
+      const url = forceRefresh 
+        ? `${config.API_BASE_URL}/api/news?force_refresh=true`
+        : config.endpoints.news;
+      
+      const response = await axios.get(url, {
         signal: controller.signal,
         timeout: 8000
       });
@@ -462,8 +466,8 @@ function Dashboard() {
     setError(null);
     
     try {
-      // Try the optimized single endpoint first
-      const optimizedResponse = await axios.get(config.endpoints.dashboardData, {
+      // Try the optimized single endpoint first with force refresh for news
+      const optimizedResponse = await axios.get(`${config.endpoints.dashboardData}?force_refresh=true`, {
         timeout: 8000
       });
       
@@ -486,8 +490,8 @@ function Dashboard() {
       console.warn('Optimized endpoint failed, falling back to individual calls:', error);
     }
     
-    // Fallback to individual API calls
-    fetchNews();
+    // Fallback to individual API calls - use force refresh for news
+    fetchNews(true); // Force refresh to get fresh news
     fetchTradingData();
     fetchAlerts();
     fetchAiInsights();

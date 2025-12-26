@@ -580,6 +580,22 @@ def get_mock_analysis(event_title):
 def hello():
     return jsonify({'message': 'Hello from FXSentinel backend!'})
 
+@app.route('/api/news-test')
+def news_test():
+    """Simple test endpoint to verify news API is working"""
+    try:
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
+        cached_news = news_cache.load_news() or []
+        
+        return jsonify({
+            'status': 'ok',
+            'cached_items': len(cached_news),
+            'sample_titles': [item.get('title', 'N/A')[:50] for item in cached_news[:3]] if cached_news else []
+        })
+    except Exception as e:
+        return jsonify({'status': 'error', 'error': str(e)}), 500
+
 @app.route('/api/test-analysis/<int:news_id>')
 def test_analysis(news_id):
     """Test endpoint that directly returns correct fallback structure"""
@@ -815,8 +831,9 @@ def get_news():
         
         # Check if force refresh is requested
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
-        print(f"🔍 Force refresh requested: {force_refresh}")
-        print(f"🔍 Request args: {dict(request.args)}")
+        print(f"📡 /api/news endpoint called - Force refresh: {force_refresh}")
+        print(f"📡 Request origin: {request.headers.get('Origin', 'N/A')}")
+        print(f"📡 Request args: {dict(request.args)}")
         
         # Check for deployment notification that requires cache clearing
         if DEPLOYMENT_NOTIFICATION["active"] and DEPLOYMENT_NOTIFICATION["requires_cache_clear"]:
@@ -835,8 +852,11 @@ def get_news():
             # Check if we should fetch new news (every 5 minutes)
             if cached_news:
                 should_fetch_new = news_cache.should_fetch_new_news(fetch_interval_minutes=5)
+                print(f"🔍 should_fetch_new_news check: {should_fetch_new}")
                 if should_fetch_new:
                     print(f"🔄 Cache exists but last fetch > 5 minutes ago - will fetch new news and append")
+                else:
+                    print(f"⏸️  Last fetch was < 5 minutes ago - serving cached news only")
             else:
                 should_fetch_new = True
                 print("🔍 No cache found - will fetch fresh news")
@@ -844,7 +864,9 @@ def get_news():
             print("🔍 Force refresh requested - skipping cache")
             should_fetch_new = True
         
-        # Serve cached news immediately if available (non-blocking)
+        # If should_fetch_new is True, we'll fetch fresh news and merge it below
+        # Only serve cached news immediately if we're NOT fetching fresh news
+        # IMPORTANT: If should_fetch_new is True, we skip this block and fetch fresh news below
         if cached_news and not should_fetch_new:
             # Check if cached news contains economic calendar events (Finnhub data)
             # If it does, clear the cache to force fresh news fetch
@@ -883,6 +905,7 @@ def get_news():
                 if DEPLOYMENT_NOTIFICATION["active"]:
                     response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
                 
+                print(f"✅ Returning {len(cached_news)} cached news items")
                 return jsonify(response_data)
         
         # If force refresh is requested, use the force refresh function
@@ -901,105 +924,113 @@ def get_news():
                 traceback.print_exc()
                 print("Falling back to regular fetch")
         
-        # If no cache, fetch fresh data with optimized parallel processing
+        # Fetch fresh data with optimized parallel processing (only if should_fetch_new is True)
         # Note: Economic calendar events are excluded from live news feed
         # as they are handled separately in the economic calendar component
-        import concurrent.futures
-        import asyncio
-        
         fresh_news = []
         sources_used = []
         
-        # Function to fetch RSS news with timeout
-        def fetch_rss_news():
-            try:
-                rss_news = news_aggregator.get_recent_news(hours=24)
-                print(f"✅ Fetched {len(rss_news)} RSS news articles")
-                return rss_news
-            except Exception as e:
-                print(f"❌ Error fetching RSS news: {e}")
-                return []
-        
-        # Function to fetch alternative news with timeout
-        def fetch_alternative_news():
-            try:
-                from services.alternative_news_sources import alternative_news_sources
-                alt_news = alternative_news_sources.get_alternative_news(hours=24)
-                print(f"✅ Fetched {len(alt_news)} alternative news articles")
-                return alt_news
-            except Exception as e:
-                print(f"❌ Error fetching alternative news: {e}")
-                return []
-        
-        # Use ThreadPoolExecutor for parallel processing with shorter timeouts
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            # Submit tasks with 10-second timeout each (removed economic calendar)
-            rss_future = executor.submit(fetch_rss_news)
-            alt_future = executor.submit(fetch_alternative_news)
+        # Only fetch if we should fetch new news
+        if should_fetch_new or force_refresh:
+            import concurrent.futures
+            import asyncio
             
-            # Wait for all tasks with timeout
-            try:
-                rss_news = rss_future.result(timeout=10)
-                fresh_news.extend(rss_news)
-                sources_used.append("RSS Feeds")
-            except concurrent.futures.TimeoutError:
-                print("⚠️ RSS news fetch timed out")
-                rss_news = []
-            except Exception as e:
-                print(f"❌ RSS news fetch failed: {e}")
-                rss_news = []
+            # Function to fetch RSS news with timeout
+            def fetch_rss_news():
+                try:
+                    rss_news = news_aggregator.get_recent_news(hours=24)
+                    print(f"✅ Fetched {len(rss_news)} RSS news articles")
+                    return rss_news
+                except Exception as e:
+                    print(f"❌ Error fetching RSS news: {e}")
+                    return []
             
-            try:
-                alt_news = alt_future.result(timeout=10)
-                fresh_news.extend(alt_news)
-                sources_used.append("Alternative Sources")
-            except concurrent.futures.TimeoutError:
-                print("⚠️ Alternative news fetch timed out")
-                alt_news = []
-            except Exception as e:
-                print(f"❌ Alternative news fetch failed: {e}")
-                alt_news = []
-        
-        # Try Telegram news separately using the same approach as force refresh
-        telegram_news = []
-        try:
-            import sys
-            import os
-            # Add current directory to path for imports
-            if os.path.dirname(__file__) not in sys.path:
-                sys.path.insert(0, os.path.dirname(__file__))
+            # Function to fetch alternative news with timeout
+            def fetch_alternative_news():
+                try:
+                    from services.alternative_news_sources import alternative_news_sources
+                    alt_news = alternative_news_sources.get_alternative_news(hours=24)
+                    print(f"✅ Fetched {len(alt_news)} alternative news articles")
+                    return alt_news
+                except Exception as e:
+                    print(f"❌ Error fetching alternative news: {e}")
+                    return []
             
-            print("🔍 Attempting to import telegram_sync in news endpoint...")
-            from services.telegram_sync_wrapper import telegram_sync
-            print("✅ Successfully imported telegram_sync in news endpoint")
+            # Use ThreadPoolExecutor for parallel processing with shorter timeouts
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                # Submit tasks with 10-second timeout each (removed economic calendar)
+                rss_future = executor.submit(fetch_rss_news)
+                alt_future = executor.submit(fetch_alternative_news)
+                
+                # Wait for all tasks with timeout
+                try:
+                    rss_news = rss_future.result(timeout=10)
+                    fresh_news.extend(rss_news)
+                    sources_used.append("RSS Feeds")
+                except concurrent.futures.TimeoutError:
+                    print("⚠️ RSS news fetch timed out")
+                    rss_news = []
+                except Exception as e:
+                    print(f"❌ RSS news fetch failed: {e}")
+                    rss_news = []
+                
+                try:
+                    alt_news = alt_future.result(timeout=10)
+                    fresh_news.extend(alt_news)
+                    sources_used.append("Alternative Sources")
+                except concurrent.futures.TimeoutError:
+                    print("⚠️ Alternative news fetch timed out")
+                    alt_news = []
+                except Exception as e:
+                    print(f"❌ Alternative news fetch failed: {e}")
+                    alt_news = []
             
-            print("🔍 Calling telegram_sync.get_recent_telegram_news in news endpoint...")
-            telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
-            print(f"🔍 Telegram sync returned {len(telegram_news)} articles in news endpoint")
-            
-            # Debug: Show what we got from Telegram
-            if telegram_news:
-                print("📰 Sample Telegram articles from news endpoint:")
-                for i, news in enumerate(telegram_news[:3], 1):
-                    print(f"  {i}. {news.get('title', 'No title')}")
-                    print(f"     Source: {news.get('source', 'No source')}")
-                    print(f"     Impact: {news.get('impact', 'No impact')}")
-                    print()
-            else:
-                print("⚠️ No Telegram news returned from sync wrapper in news endpoint")
-            
-            fresh_news.extend(telegram_news)
-            sources_used.append("Telegram")
-            print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
-            print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
-        except Exception as e:
-            print(f"❌ Error fetching Telegram news in news endpoint: {e}")
-            import traceback
-            traceback.print_exc()
-            print("Continuing with other sources...")
+            # Try Telegram news separately using the same approach as force refresh
             telegram_news = []
+            try:
+                import sys
+                import os
+                # Add current directory to path for imports
+                if os.path.dirname(__file__) not in sys.path:
+                    sys.path.insert(0, os.path.dirname(__file__))
+                
+                print("🔍 Attempting to import telegram_sync in news endpoint...")
+                from services.telegram_sync_wrapper import telegram_sync
+                print("✅ Successfully imported telegram_sync in news endpoint")
+                
+                print("🔍 Calling telegram_sync.get_recent_telegram_news in news endpoint...")
+                telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
+                print(f"🔍 Telegram sync returned {len(telegram_news)} articles in news endpoint")
+                
+                # Debug: Show what we got from Telegram
+                if telegram_news:
+                    print("📰 Sample Telegram articles from news endpoint:")
+                    for i, news in enumerate(telegram_news[:3], 1):
+                        print(f"  {i}. {news.get('title', 'No title')}")
+                        print(f"     Source: {news.get('source', 'No source')}")
+                        print(f"     Impact: {news.get('impact', 'No impact')}")
+                        print()
+                else:
+                    print("⚠️ No Telegram news returned from sync wrapper in news endpoint")
+                
+                fresh_news.extend(telegram_news)
+                sources_used.append("Telegram")
+                print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
+                print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
+            except Exception as e:
+                print(f"❌ Error fetching Telegram news in news endpoint: {e}")
+                import traceback
+                traceback.print_exc()
+                print("Continuing with other sources...")
+                telegram_news = []
+        else:
+            # should_fetch_new is False - we shouldn't be fetching
+            print(f"⏸️  should_fetch_new is False and force_refresh is False - skipping fetch, will use cached news")
         
         # If we got fresh news, save it to cache and return it
+        print(f"📊 Fresh news count after all fetches: {len(fresh_news)}")
+        print(f"📊 Cached news count: {len(cached_news) if cached_news else 0}")
+        print(f"📊 should_fetch_new: {should_fetch_new}, force_refresh: {force_refresh}")
         if fresh_news:
             # If we have cached news, merge it with fresh news (fresh on top)
             if cached_news and should_fetch_new:
@@ -1010,9 +1041,48 @@ def get_news():
                 # No cached news, use only fresh news
                 all_news = fresh_news
             
-            # Ensure all fresh news items have added_to_feed_at set (safeguard)
-            # But preserve original added_to_feed_at from cached items
-            current_time = datetime.now().isoformat()
+            # IMPORTANT: Deduplicate FIRST, then set timestamps
+            # This prevents duplicates from getting new timestamps and appearing at the top
+            def remove_duplicate_news_simple(news_list, cached_items_map):
+                """Remove duplicate news items based on title and source, preserving original added_to_feed_at from cache"""
+                seen = {}
+                unique_news = []
+                current_time = datetime.now().isoformat()
+                
+                for item in news_list:
+                    # Create a unique key based on title and source
+                    key = f"{item.get('title', '')}_{item.get('source', '')}"
+                    
+                    if key not in seen:
+                        # First time seeing this article
+                        # Check if it exists in cache - if so, preserve its added_to_feed_at
+                        if key in cached_items_map:
+                            cached_item = cached_items_map[key]
+                            if 'added_to_feed_at' in cached_item:
+                                item['added_to_feed_at'] = cached_item['added_to_feed_at']
+                            else:
+                                # Cached item doesn't have added_to_feed_at - use published_at or current time
+                                item['added_to_feed_at'] = cached_item.get('published_at', current_time)
+                        elif 'added_to_feed_at' not in item:
+                            # New item not in cache - set to current time
+                            item['added_to_feed_at'] = current_time
+                        
+                        seen[key] = item
+                        unique_news.append(item)
+                    else:
+                        # Duplicate found - always prefer the cached version (it has the original added_to_feed_at)
+                        existing_item = seen[key]
+                        if key in cached_items_map:
+                            # This is a duplicate of a cached item - keep the cached version, skip this one
+                            continue
+                        elif 'added_to_feed_at' in existing_item:
+                            # Keep existing item (already processed), skip duplicate
+                            continue
+                        else:
+                            # Both are new - keep first one
+                            continue
+                
+                return unique_news
             
             # Create a map of cached items by key (title+source) to preserve their added_to_feed_at
             cached_items_map = {}
@@ -1022,46 +1092,14 @@ def get_news():
                     if key not in cached_items_map:
                         cached_items_map[key] = item
             
-            # Set added_to_feed_at for items that don't have it
-            # But if item exists in cache, preserve the cached added_to_feed_at
-            for item in all_news:
-                key = f"{item.get('title', '')}_{item.get('source', '')}"
-                if key in cached_items_map:
-                    # This item exists in cache - preserve its original added_to_feed_at
-                    cached_item = cached_items_map[key]
-                    if 'added_to_feed_at' in cached_item:
-                        item['added_to_feed_at'] = cached_item['added_to_feed_at']
-                elif 'added_to_feed_at' not in item:
-                    # New item that doesn't exist in cache - set to current time
-                    item['added_to_feed_at'] = current_time
+            # Deduplicate FIRST (this will preserve cached added_to_feed_at and set new ones for truly new items)
+            all_news = remove_duplicate_news_simple(all_news, cached_items_map)
             
-            all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
-            
-            # Remove duplicates across all sources using simple logic
-            # Prefer items with existing added_to_feed_at (from cache) over fresh items
-            def remove_duplicate_news_simple(news_list):
-                """Remove duplicate news items based on title and source, preserving original added_to_feed_at"""
-                seen = {}
-                unique_news = []
-                for item in news_list:
-                    # Create a unique key based on title and source
-                    key = f"{item.get('title', '')}_{item.get('source', '')}"
-                    if key not in seen:
-                        seen[key] = item
-                        unique_news.append(item)
-                    else:
-                        # Duplicate found - prefer the one with existing added_to_feed_at (from cache)
-                        existing_item = seen[key]
-                        if 'added_to_feed_at' in existing_item and 'added_to_feed_at' not in item:
-                            # Keep existing (cached) item, skip new one
-                            continue
-                        elif 'added_to_feed_at' in item and 'added_to_feed_at' not in existing_item:
-                            # New item has added_to_feed_at but existing doesn't - replace
-                            seen[key] = item
-                            unique_news = [x for x in unique_news if x != existing_item]
-                            unique_news.append(item)
-                        # If both have added_to_feed_at, keep the first one (already in list)
-                return unique_news
+            # Sort by added_to_feed_at (when news was first added to our system)
+            # This ensures new news appears on top, not sorted by original published_at
+            all_news.sort(key=lambda x: (
+                x.get('added_to_feed_at') or x.get('published_at') or ''
+            ), reverse=True)
             
             print(f"📊 Before deduplication in news endpoint: {len(all_news)} articles")
             
@@ -1089,14 +1127,27 @@ def get_news():
                 print(f"  {source}: {count} articles")
             
             # Save to cache - append mode if cache exists, replace if not
+            save_success = False
             if cached_news and should_fetch_new:
-                # Append new news to existing cache (new items on top)
-                news_cache.save_news(all_news, append=True)
-                print(f"📝 Appended {len(all_news)} items to existing cache")
+                # IMPORTANT: Save the FULL merged list (all_news) to ensure cache has both new and old items
+                # The append mode in save_news will handle deduplication, but we want to ensure
+                # the cache contains the complete merged list for future requests
+                print(f"💾 Saving merged news to cache: {len(all_news)} total items ({len(fresh_news)} fresh + {len(cached_news)} cached)")
+                
+                # Save the complete merged list - this ensures cache has everything
+                # Use append=False to replace with the complete merged list
+                save_success = news_cache.save_news(all_news, append=False)
+                if save_success:
+                    print(f"📝 Saved merged news to cache: {len(all_news)} items (new items on top, old items preserved)")
+                else:
+                    print(f"⚠️  Failed to save merged news to cache (Firebase error - news still returned)")
             else:
                 # Replace cache (first time or force refresh)
-                news_cache.save_news(all_news, append=False)
-                print(f"📝 Replaced cache with {len(all_news)} items")
+                save_success = news_cache.save_news(all_news, append=False)
+                if save_success:
+                    print(f"📝 Replaced cache with {len(all_news)} items")
+                else:
+                    print(f"⚠️  Failed to save {len(all_news)} items to cache (Firebase error - news still returned)")
             
             # Note: Alert processing moved to cost-optimized background monitor
             # This prevents excessive API calls and reduces terminal noise
@@ -1113,24 +1164,53 @@ def get_news():
             if DEPLOYMENT_NOTIFICATION["active"]:
                 response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
             
+            print(f"✅ Returning {len(all_news)} fresh news items")
             return jsonify(response_data)
         else:
-            # No fresh news available, use mock data as fallback
-            print("⚠️ No fresh news available, using mock data")
-            mock_news = get_mock_news()
-            response_data = {
-                "news": mock_news,
-                "last_updated": datetime.now().isoformat(),
-                "sources": ["fallback_data"],
-                "total_articles": len(mock_news),
-                "cache_status": "fallback"
-            }
-            
-            # Add deployment notification if active
-            if DEPLOYMENT_NOTIFICATION["active"]:
-                response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
-            
-            return jsonify(response_data)
+            # No fresh news available - return cached news if available, otherwise mock data
+            if cached_news:
+                print(f"⚠️ No fresh news fetched, but returning {len(cached_news)} cached news items")
+                # Remove duplicates from cached news
+                cached_news = remove_duplicate_news(cached_news)
+                
+                # Convert all news item IDs to strings and add added_to_feed_at fallback
+                for item in cached_news:
+                    if 'id' in item:
+                        item['id'] = str(item['id'])
+                    # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
+                    if 'added_to_feed_at' not in item:
+                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                
+                response_data = {
+                    "news": cached_news,
+                    "last_updated": datetime.now().isoformat(),
+                    "sources": ["cached_data"],
+                    "total_articles": len(cached_news),
+                    "cache_status": "cached_only"
+                }
+                
+                # Add deployment notification if active
+                if DEPLOYMENT_NOTIFICATION["active"]:
+                    response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+                
+                return jsonify(response_data)
+            else:
+                # No cached news either, use mock data as last resort
+                print("⚠️ No fresh news and no cached news available, using mock data")
+                mock_news = get_mock_news()
+                response_data = {
+                    "news": mock_news,
+                    "last_updated": datetime.now().isoformat(),
+                    "sources": ["fallback_data"],
+                    "total_articles": len(mock_news),
+                    "cache_status": "fallback"
+                }
+                
+                # Add deployment notification if active
+                if DEPLOYMENT_NOTIFICATION["active"]:
+                    response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+                
+                return jsonify(response_data)
                 
     except Exception as e:
         print(f"❌ Error in news endpoint: {e}")
@@ -1182,7 +1262,22 @@ def get_news():
         if DEPLOYMENT_NOTIFICATION["active"]:
             response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
         
+        print(f"⚠️ Using fallback mock data: {len(mock_news)} items")
         return jsonify(response_data)
+    
+    except Exception as e:
+        print(f"❌ ERROR in /api/news endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        # Return empty news on error
+        return jsonify({
+            "news": [],
+            "last_updated": datetime.now().isoformat(),
+            "sources": [],
+            "total_articles": 0,
+            "cache_status": "error",
+            "error": str(e)
+        }), 500
 
 # Global deployment notification flag
 DEPLOYMENT_NOTIFICATION = {
@@ -3809,16 +3904,39 @@ def get_dashboard_data():
         import concurrent.futures
         from datetime import datetime
         
+        # Check if force refresh is requested
+        force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
+        
         # Function to get news data
         def get_news_data():
             try:
-                # Try cached news first for speed
                 from services.persistent_news_cache import get_persistent_news_cache
                 news_cache = get_persistent_news_cache()
+                
+                # If force refresh, fetch fresh news
+                if force_refresh:
+                    try:
+                        from services.news_aggregator import news_aggregator
+                        from services.alternative_news_sources import alternative_news_sources
+                        rss_news = news_aggregator.get_recent_news(hours=24)
+                        alt_news = alternative_news_sources.get_alternative_news(hours=24)
+                        fresh_news = rss_news + alt_news
+                        # Save to cache
+                        news_cache.save_news(fresh_news, append=False)
+                        return {
+                            "news": fresh_news[:10],  # Limit to 10 articles
+                            "sources": ["RSS Feeds", "Alternative Sources"],
+                            "cache_status": "fresh"
+                        }
+                    except Exception as e:
+                        print(f"Error fetching fresh news for dashboard: {e}")
+                        # Fall through to cached news
+                
+                # Try cached news first for speed
                 cached_news = news_cache.load_news()
                 if cached_news:
                     return {
-                        "news": cached_news,
+                        "news": cached_news[:10],  # Limit to 10 articles
                         "sources": ["cached_data"],
                         "cache_status": "cached"
                     }

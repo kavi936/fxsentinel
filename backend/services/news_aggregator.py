@@ -80,15 +80,18 @@ class NewsAggregator:
             feed = feedparser.parse(response.content)
             articles = []
             
-            for entry in feed.entries[:10]:  # Increased from 5 to 10 most recent articles
+            # Check MORE entries to catch newer articles that might be further down
+            # Many RSS feeds have 30+ entries, and new articles might not be at the very top
+            entries_to_check = min(len(feed.entries), 20)  # Check up to 20 entries (increased from 10)
+            
+            for entry in feed.entries[:entries_to_check]:
                 # Check if article is forex-related using improved filtering
                 if self.is_forex_related(entry.title, entry.summary, source_name):
                     article = self.parse_article(entry, source_name)
                     if article:
                         articles.append(article)
-                        # Stop after finding 5 forex-related articles per source for better coverage
-                        if len(articles) >= 5:
-                            break
+                        # Don't stop early - check all entries to find the newest forex articles
+                        # The limit of 30 total articles in get_recent_news will handle limiting
             
             logger.info(f"Fetched {len(articles)} forex-related articles from {source_name}")
             return articles
@@ -205,21 +208,24 @@ class NewsAggregator:
         all_articles = self.aggregate_news()
         recent_articles = []
         
+        # Sort by publication date first (newest first) to prioritize recent articles
+        all_articles.sort(key=lambda x: x.get('published_at', ''), reverse=True)
+        
         for article in all_articles:
             try:
                 pub_date = datetime.fromisoformat(article['published_at'].replace('Z', '+00:00'))
                 if pub_date >= cutoff_time:
                     recent_articles.append(article)
-                    # Limit total articles to 30 for better coverage
-                    if len(recent_articles) >= 30:
+                    # Increased limit to 50 to catch more recent articles
+                    if len(recent_articles) >= 50:
                         break
             except:
-                # If date parsing fails, include the article
+                # If date parsing fails, include the article (might be very recent)
                 recent_articles.append(article)
-                if len(recent_articles) >= 30:
+                if len(recent_articles) >= 50:
                     break
         
-        return recent_articles[:30]  # Ensure maximum of 30 articles
+        return recent_articles[:50]  # Increased from 30 to 50 articles
 
 # Global instance
 news_aggregator = NewsAggregator()
