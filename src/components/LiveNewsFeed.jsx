@@ -32,8 +32,9 @@ const LiveNewsFeed = () => {
 
   useEffect(() => {
     fetchNews();
-    // Set up auto-refresh every 2 minutes for more frequent updates
-    const interval = setInterval(fetchNews, 2 * 60 * 1000);
+    // Set up auto-refresh every 5 minutes to check for new news
+    // Backend will fetch new news every 5 minutes and append to persistent cache
+    const interval = setInterval(fetchNews, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

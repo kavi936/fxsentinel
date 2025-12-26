@@ -826,13 +826,26 @@ def get_news():
         
         # First, try to get cached data immediately (unless force refresh)
         cached_news = None
+        should_fetch_new = False
+        
         if not force_refresh:
             cached_news = news_cache.load_news()
             print(f"🔍 Loading from cache: {len(cached_news) if cached_news else 0} articles")
+            
+            # Check if we should fetch new news (every 5 minutes)
+            if cached_news:
+                should_fetch_new = news_cache.should_fetch_new_news(fetch_interval_minutes=5)
+                if should_fetch_new:
+                    print(f"🔄 Cache exists but last fetch > 5 minutes ago - will fetch new news and append")
+            else:
+                should_fetch_new = True
+                print("🔍 No cache found - will fetch fresh news")
         else:
             print("🔍 Force refresh requested - skipping cache")
+            should_fetch_new = True
         
-        if cached_news:
+        # Serve cached news immediately if available (non-blocking)
+        if cached_news and not should_fetch_new:
             # Check if cached news contains economic calendar events (Finnhub data)
             # If it does, clear the cache to force fresh news fetch
             has_economic_events = any(
@@ -988,28 +1001,66 @@ def get_news():
         
         # If we got fresh news, save it to cache and return it
         if fresh_news:
-            # Combine and sort all news by publication date
-            all_news = fresh_news
+            # If we have cached news, merge it with fresh news (fresh on top)
+            if cached_news and should_fetch_new:
+                print(f"🔄 Merging {len(fresh_news)} fresh items with {len(cached_news)} cached items")
+                # Combine: fresh news first, then cached news
+                all_news = fresh_news + cached_news
+            else:
+                # No cached news, use only fresh news
+                all_news = fresh_news
             
             # Ensure all fresh news items have added_to_feed_at set (safeguard)
+            # But preserve original added_to_feed_at from cached items
             current_time = datetime.now().isoformat()
+            
+            # Create a map of cached items by key (title+source) to preserve their added_to_feed_at
+            cached_items_map = {}
+            if cached_news:
+                for item in cached_news:
+                    key = f"{item.get('title', '')}_{item.get('source', '')}"
+                    if key not in cached_items_map:
+                        cached_items_map[key] = item
+            
+            # Set added_to_feed_at for items that don't have it
+            # But if item exists in cache, preserve the cached added_to_feed_at
             for item in all_news:
-                if 'added_to_feed_at' not in item:
+                key = f"{item.get('title', '')}_{item.get('source', '')}"
+                if key in cached_items_map:
+                    # This item exists in cache - preserve its original added_to_feed_at
+                    cached_item = cached_items_map[key]
+                    if 'added_to_feed_at' in cached_item:
+                        item['added_to_feed_at'] = cached_item['added_to_feed_at']
+                elif 'added_to_feed_at' not in item:
+                    # New item that doesn't exist in cache - set to current time
                     item['added_to_feed_at'] = current_time
             
             all_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
             
             # Remove duplicates across all sources using simple logic
+            # Prefer items with existing added_to_feed_at (from cache) over fresh items
             def remove_duplicate_news_simple(news_list):
-                """Remove duplicate news items based on title and source"""
-                seen = set()
+                """Remove duplicate news items based on title and source, preserving original added_to_feed_at"""
+                seen = {}
                 unique_news = []
                 for item in news_list:
                     # Create a unique key based on title and source
                     key = f"{item.get('title', '')}_{item.get('source', '')}"
                     if key not in seen:
-                        seen.add(key)
+                        seen[key] = item
                         unique_news.append(item)
+                    else:
+                        # Duplicate found - prefer the one with existing added_to_feed_at (from cache)
+                        existing_item = seen[key]
+                        if 'added_to_feed_at' in existing_item and 'added_to_feed_at' not in item:
+                            # Keep existing (cached) item, skip new one
+                            continue
+                        elif 'added_to_feed_at' in item and 'added_to_feed_at' not in existing_item:
+                            # New item has added_to_feed_at but existing doesn't - replace
+                            seen[key] = item
+                            unique_news = [x for x in unique_news if x != existing_item]
+                            unique_news.append(item)
+                        # If both have added_to_feed_at, keep the first one (already in list)
                 return unique_news
             
             print(f"📊 Before deduplication in news endpoint: {len(all_news)} articles")
@@ -1037,8 +1088,15 @@ def get_news():
             for source, count in sorted(sources_after.items()):
                 print(f"  {source}: {count} articles")
             
-            # Save to cache for future use
-            news_cache.save_news(all_news)
+            # Save to cache - append mode if cache exists, replace if not
+            if cached_news and should_fetch_new:
+                # Append new news to existing cache (new items on top)
+                news_cache.save_news(all_news, append=True)
+                print(f"📝 Appended {len(all_news)} items to existing cache")
+            else:
+                # Replace cache (first time or force refresh)
+                news_cache.save_news(all_news, append=False)
+                print(f"📝 Replaced cache with {len(all_news)} items")
             
             # Note: Alert processing moved to cost-optimized background monitor
             # This prevents excessive API calls and reduces terminal noise
@@ -1339,9 +1397,9 @@ def force_refresh_news_internal():
             
             fresh_news.sort(key=lambda x: x.get('published_at', ''), reverse=True)
             
-            # Save to cache
-            news_cache.save_news(fresh_news)
-            print(f"💾 Saved {len(fresh_news)} articles to cache")
+            # Save to cache (force refresh always replaces, doesn't append)
+            news_cache.save_news(fresh_news, append=False)
+            print(f"💾 Saved {len(fresh_news)} articles to cache (force refresh - replaced)")
             
             # Trigger alerts immediately
             try:

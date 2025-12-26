@@ -19,18 +19,19 @@ class PersistentNewsCache:
     This ensures news cache survives restarts and works across multiple instances
     """
     
-    def __init__(self, max_age_hours: float = 24.0):
+    def __init__(self, max_age_hours: float = 0.25):
         """
         Initialize persistent news cache
         
         Args:
-            max_age_hours: How long cache is valid (default 24 hours, vs 0.25 for file cache)
+            max_age_hours: How long cache is valid (default 0.25 hours = 15 minutes, same as old file cache)
+                           Cache still persists across restarts (main benefit), but fresh news fetched regularly
         """
         self.firebase = FirebaseRealtimeStorage()
         self.max_age_hours = max_age_hours
         self.max_history_items = 500  # Keep more history than file cache (was 100)
         
-        logger.info(f"Persistent News Cache Service initialized (TTL: {max_age_hours}h)")
+        logger.info(f"Persistent News Cache Service initialized (TTL: {max_age_hours}h = {max_age_hours * 60:.0f} minutes)")
     
     def _get_cache_path(self) -> str:
         """Get Firebase path for current news cache"""
@@ -44,15 +45,54 @@ class PersistentNewsCache:
         """Get Firebase path for specific history item"""
         return f"news_cache/history/{news_id}"
     
-    def save_news(self, news_items: List[Dict[str, Any]]) -> bool:
-        """Save news items to cache and add to history"""
+    def save_news(self, news_items: List[Dict[str, Any]], append: bool = False) -> bool:
+        """
+        Save news items to cache and add to history
+        
+        Args:
+            news_items: List of news items to save
+            append: If True, merge with existing cache (new items on top). If False, replace cache.
+        """
         try:
+            if append:
+                # Merge with existing cache - new items on top
+                existing_news = self.load_news() or []
+                
+                # Create a set of existing news IDs for deduplication
+                existing_ids = {str(item.get('id', '')) for item in existing_news}
+                existing_titles = {item.get('title', '').lower() for item in existing_news}
+                
+                # Add new items that don't already exist
+                new_items = []
+                for item in news_items:
+                    item_id = str(item.get('id', ''))
+                    item_title = item.get('title', '').lower()
+                    
+                    # Check if item is new (not in existing cache)
+                    if item_id and item_id not in existing_ids and item_title not in existing_titles:
+                        new_items.append(item)
+                        existing_ids.add(item_id)
+                        existing_titles.add(item_title)
+                
+                # Combine: new items first, then existing items
+                merged_news = new_items + existing_news
+                
+                # Limit to reasonable size (keep first 200 items - newest first)
+                if len(merged_news) > 200:
+                    original_count = len(merged_news)
+                    merged_news = merged_news[:200]
+                    logger.info(f"Limited merged news to 200 items (was {original_count})")
+                
+                news_items = merged_news
+                logger.info(f"Merged {len(new_items)} new items with {len(existing_news)} existing items = {len(news_items)} total")
+            
             # Prepare cache data
             cache_data = {
                 'timestamp': datetime.now().isoformat(),
                 'news_count': len(news_items),
                 'news': news_items,
-                'max_age_hours': self.max_age_hours
+                'max_age_hours': self.max_age_hours,
+                'last_fetch': datetime.now().isoformat()  # Track when news was last fetched
             }
             
             # Save to Firebase
@@ -66,8 +106,17 @@ class PersistentNewsCache:
                 logger.warning("Failed to save news cache to Firebase (empty or invalid response)")
                 return False
             
-            # Add to history
-            self._add_to_history(news_items)
+            # Add to history (only new items if appending)
+            if append:
+                # Only add truly new items to history
+                existing_history = self.load_history()
+                existing_history_ids = {str(item.get('id', '')) for item in existing_history}
+                new_items_for_history = [item for item in news_items if str(item.get('id', '')) not in existing_history_ids]
+                if new_items_for_history:
+                    self._add_to_history(new_items_for_history)
+            else:
+                # Replace mode - add all items to history
+                self._add_to_history(news_items)
             
             logger.info(f"Cached {len(news_items)} news items to Firebase and updated history")
             return True
@@ -75,6 +124,47 @@ class PersistentNewsCache:
         except Exception as e:
             logger.error(f"Error saving news to persistent cache: {e}")
             return False
+    
+    def should_fetch_new_news(self, fetch_interval_minutes: int = 5) -> bool:
+        """
+        Check if new news should be fetched based on last fetch time
+        
+        Args:
+            fetch_interval_minutes: How often to fetch new news (default 5 minutes)
+        
+        Returns:
+            True if new news should be fetched, False otherwise
+        """
+        try:
+            cache_path = self._get_cache_path()
+            cache_data = self.firebase._make_request('GET', cache_path)
+            
+            if not cache_data or not isinstance(cache_data, dict):
+                # No cache exists, should fetch
+                return True
+            
+            last_fetch_str = cache_data.get('last_fetch')
+            if not last_fetch_str:
+                # No last_fetch timestamp, should fetch
+                return True
+            
+            try:
+                last_fetch = datetime.fromisoformat(last_fetch_str.replace('Z', '+00:00'))
+                time_since_fetch = datetime.now() - last_fetch
+                
+                if time_since_fetch >= timedelta(minutes=fetch_interval_minutes):
+                    logger.info(f"Last fetch was {time_since_fetch}, should fetch new news (interval: {fetch_interval_minutes} min)")
+                    return True
+                else:
+                    logger.debug(f"Last fetch was {time_since_fetch}, skipping fetch (interval: {fetch_interval_minutes} min)")
+                    return False
+            except Exception as e:
+                logger.warning(f"Error parsing last_fetch timestamp: {e}")
+                return True  # On error, fetch to be safe
+            
+        except Exception as e:
+            logger.error(f"Error checking if should fetch new news: {e}")
+            return True  # On error, fetch to be safe
     
     def _add_to_history(self, news_items: List[Dict[str, Any]]):
         """Add news items to history in Firebase"""
