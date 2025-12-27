@@ -1887,16 +1887,16 @@ const Overview = () => {
                     </div>
                     <div className="event-data">
                       <div className="data-point">
-                        <span className="label">Previous:</span>
-                        <span className="value">{event.previous}</span>
+                        <span className="label">Actual:</span>
+                        <span className="value">{event.actual}</span>
                       </div>
                       <div className="data-point">
                         <span className="label">Expected:</span>
                         <span className="value">{event.expected}</span>
                       </div>
                       <div className="data-point">
-                        <span className="label">Actual:</span>
-                        <span className="value">{event.actual}</span>
+                        <span className="label">Previous:</span>
+                        <span className="value">{event.previous}</span>
                       </div>
                       {/* Chart button commented out - opens chart popup for historical data points */}
                       {/* <div className="graph-icon" onClick={(e) => {

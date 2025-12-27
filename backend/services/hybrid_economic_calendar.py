@@ -1946,6 +1946,60 @@ class HybridEconomicCalendar:
         except:
             return str(value)
     
+    def _get_currency_pairs(self, currency: str) -> List[str]:
+        """Generate relevant currency pairs based on the event's currency"""
+        currency = currency.upper()
+        
+        # Forex pair conventions (base/quote order)
+        # USD pairs: EURUSD, GBPUSD, AUDUSD, NZDUSD (USD as quote)
+        # USD pairs: USDJPY, USDCHF, USDCAD (USD as base)
+        # Cross pairs: EURGBP, EURJPY, GBPJPY, etc.
+        
+        pairs = []
+        
+        if currency == 'USD':
+            # For USD events, show major USD pairs
+            pairs = ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF']
+        elif currency == 'EUR':
+            # For EUR events, show EUR pairs
+            pairs = ['EURUSD', 'EURGBP', 'EURJPY', 'EURCHF']
+        elif currency == 'GBP':
+            # For GBP events, show GBP pairs
+            pairs = ['GBPUSD', 'GBPEUR', 'GBPJPY', 'GBPCHF']
+        elif currency == 'JPY':
+            # For JPY events, show JPY pairs
+            pairs = ['USDJPY', 'EURJPY', 'GBPJPY', 'AUDJPY']
+        elif currency == 'AUD':
+            # For AUD events, show AUD pairs
+            pairs = ['AUDUSD', 'AUDJPY', 'AUDNZD', 'AUDCAD']
+        elif currency == 'CAD':
+            # For CAD events, show CAD pairs
+            pairs = ['USDCAD', 'EURCAD', 'GBPCAD', 'AUDCAD']
+        elif currency == 'CHF':
+            # For CHF events, show CHF pairs
+            pairs = ['USDCHF', 'EURCHF', 'GBPCHF', 'AUDCHF']
+        elif currency == 'NZD':
+            # For NZD events, show NZD pairs
+            pairs = ['NZDUSD', 'NZDAUD', 'NZDJPY', 'NZDCAD']
+        elif currency == 'CNY':
+            # For CNY events, show CNY pairs
+            pairs = ['USDCNY', 'EURCNY', 'GBPCNY', 'JPYCNY']
+        else:
+            # Default: create pairs with major currencies
+            major_currencies = ['USD', 'EUR', 'GBP', 'JPY']
+            for other_curr in major_currencies:
+                if len(pairs) >= 4:
+                    break
+                if other_curr == currency:
+                    continue
+                # Follow forex convention: smaller currency code first (alphabetical)
+                if currency < other_curr:
+                    pairs.append(f"{currency}{other_curr}")
+                else:
+                    pairs.append(f"{other_curr}{currency}")
+        
+        return pairs[:4]  # Return max 4 pairs
+    
     def _format_event(self, base_event: Dict, previous: str, forecast: str, actual: str) -> Dict:
         """Format event into standard calendar format"""
         # Parse the date to get YYYY-MM-DD format for frontend
@@ -1964,13 +2018,19 @@ class HybridEconomicCalendar:
             'AUD': 'AU', 'CAD': 'CA', 'CHF': 'CH', 'NZD': 'NZ', 'CNY': 'CN'
         }
         
+        # Get the event currency
+        event_currency = base_event.get('currency', 'USD')
+        
+        # Generate dynamic currency pairs based on the event's currency
+        currency_pairs = self._get_currency_pairs(event_currency)
+        
         return {
             'id': f"hybrid_{hash(base_event['title'])}",
             'title': base_event['title'],
             'date': date_yyyy_mm_dd,  # YYYY-MM-DD format for frontend filtering
             'time': base_event['time'],
-            'country': country_map.get(base_event.get('currency', 'USD'), 'US'),
-            'currency': base_event.get('currency', 'USD'),
+            'country': country_map.get(event_currency, 'US'),
+            'currency': event_currency,
             'impact': base_event.get('impact', 'medium'),
             'previous': previous,
             'expected': forecast,
@@ -1978,7 +2038,7 @@ class HybridEconomicCalendar:
             'source': 'Hybrid Calendar',
             'status': self._get_status(base_event['date']),
             'type': base_event.get('category', 'Economic Indicator'),
-            'currencyPairs': ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF'],
+            'currencyPairs': currency_pairs,
             'description': base_event.get('description', ''),
             'raw_data': {
                 'date': date_yyyy_mm_dd,

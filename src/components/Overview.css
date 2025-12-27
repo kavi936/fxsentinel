@@ -1297,7 +1297,7 @@
   flex-wrap: nowrap;
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  min-height: 36px; /* Maintains height to match removed chart button (10px padding + 16px icon + 10px padding) */
+  min-height: 52px; /* Increased height for better visual spacing */
 }
 
 .data-point {
@@ -1324,6 +1324,16 @@
   font-family: 'Space Grotesk', monospace;
   white-space: nowrap;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Elevated badge/pill style for better scanning */
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 6px;
+  padding: 4px 10px;
+  min-width: 40px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: all 0.2s ease;
 }
 
 .graph-icon {
@@ -2755,6 +2765,12 @@
     gap: 3px;
   }
   
+  .data-point .value {
+    padding: 3px 8px;
+    font-size: 13px;
+    min-width: 35px;
+  }
+  
   .data-label {
     font-size: 11px;
   }
@@ -2813,6 +2829,12 @@
   
   .data-point {
     gap: 2px;
+  }
+  
+  .data-point .value {
+    padding: 3px 7px;
+    font-size: 11px;
+    min-width: 32px;
   }
   
   .data-label {
@@ -2881,7 +2903,7 @@
     flex-wrap: wrap;
     min-width: auto;
     gap: 12px;
-    min-height: 50px; /* Maintains height to match removed chart button */
+    min-height: 58px; /* Increased height for better visual spacing */
   }
   
   .chart-btn {
@@ -2921,6 +2943,12 @@
   .pair-btn {
     padding: 3px 6px;
     font-size: 9px;
+  }
+  
+  .data-point .value {
+    padding: 3px 6px;
+    font-size: 10px;
+    min-width: 30px;
   }
   
   .data-label {
@@ -3013,11 +3041,17 @@
   
   .event-data {
     gap: 8px;
-    min-height: 50px; /* Maintains height to match removed chart button */
+    min-height: 58px; /* Increased height for better visual spacing */
   }
   
   .data-point {
     gap: 1px;
+  }
+  
+  .data-point .value {
+    padding: 2px 5px;
+    font-size: 9px;
+    min-width: 28px;
   }
   
   .data-label {
@@ -3114,7 +3148,13 @@
   
   .event-data {
     gap: 6px;
-    min-height: 50px; /* Maintains height to match removed chart button */
+    min-height: 58px; /* Increased height for better visual spacing */
+  }
+  
+  .data-point .value {
+    padding: 2px 4px;
+    font-size: 8px;
+    min-width: 25px;
   }
   
   .data-label {
