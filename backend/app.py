@@ -862,8 +862,10 @@ def get_news():
                 should_fetch_new = True
                 print("🔍 No cache found - will fetch fresh news")
         else:
-            print("🔍 Force refresh requested - skipping cache")
-            should_fetch_new = True
+            # Force refresh: Skip cache and always fetch fresh news (same logic as regular fetch)
+            print("🔄 Force refresh requested - skipping cache and fetching fresh news")
+            cached_news = None  # Don't load cache
+            should_fetch_new = True  # Always fetch fresh
         
         # OPTIMIZATION: If we have cached news, return it immediately for faster UI
         # This makes the UI load instantly instead of waiting for API calls
@@ -928,21 +930,9 @@ def get_news():
                 print(f"✅ Returning {len(cached_news)} cached news items immediately (stale cache, fresh fetch in background)")
                 return jsonify(response_data)
         
-        # If force refresh is requested, use the force refresh function
-        if force_refresh:
-            print("🔍 Using force refresh function for fresh data")
-            try:
-                force_result = force_refresh_news_internal()
-                print(f"🔍 Force refresh result: {force_result}")
-                if force_result["success"]:
-                    return jsonify(force_result)
-                else:
-                    print("❌ Force refresh failed, falling back to regular fetch")
-            except Exception as e:
-                print(f"❌ Error in force refresh: {e}")
-                import traceback
-                traceback.print_exc()
-                print("Falling back to regular fetch")
+        # Force refresh: Use the same fetch logic as regular 5-minute fetch
+        # By setting cached_news=None and should_fetch_new=True above, we skip cache
+        # and use the same fetch logic below (no special function needed)
         
         # Fetch fresh data with optimized parallel processing (only if should_fetch_new is True)
         # Note: Economic calendar events are excluded from live news feed
@@ -1052,120 +1042,120 @@ def get_news():
         print(f"📊 Cached news count: {len(cached_news) if cached_news else 0}")
         print(f"📊 should_fetch_new: {should_fetch_new}, force_refresh: {force_refresh}")
         if fresh_news:
-            # If we have cached news, merge it with fresh news (fresh on top)
-            if cached_news and should_fetch_new:
-                print(f"🔄 Merging {len(fresh_news)} fresh items with {len(cached_news)} cached items")
-                # Combine: fresh news first, then cached news
-                all_news = fresh_news + cached_news
-            else:
-                # No cached news, use only fresh news
-                all_news = fresh_news
-            
-            # IMPORTANT: Deduplicate FIRST, then set timestamps
-            # This prevents duplicates from getting new timestamps and appearing at the top
-            def remove_duplicate_news_simple(news_list, cached_items_map):
-                """Remove duplicate news items based on title and source, preserving original added_to_feed_at from cache"""
+            # IMPORTANT: Deduplicate fresh news FIRST before merging with cache
+            # This prevents duplicates within fresh news itself
+            def remove_duplicate_news_simple(news_list):
+                """Remove duplicate news items based on title and source"""
                 seen = {}
                 unique_news = []
-                current_time = datetime.now().isoformat()
-                
                 for item in news_list:
-                    # Create a unique key based on title and source
                     key = f"{item.get('title', '')}_{item.get('source', '')}"
-                    
                     if key not in seen:
-                        # First time seeing this article
-                        # Check if it exists in cache - if so, preserve its added_to_feed_at
-                        if key in cached_items_map:
-                            cached_item = cached_items_map[key]
-                            if 'added_to_feed_at' in cached_item:
-                                item['added_to_feed_at'] = cached_item['added_to_feed_at']
-                            else:
-                                # Cached item doesn't have added_to_feed_at - use published_at or current time
-                                item['added_to_feed_at'] = cached_item.get('published_at', current_time)
-                        elif 'added_to_feed_at' not in item:
-                            # New item not in cache - set to current time
-                            item['added_to_feed_at'] = current_time
-                        
                         seen[key] = item
                         unique_news.append(item)
-                    else:
-                        # Duplicate found - always prefer the cached version (it has the original added_to_feed_at)
-                        existing_item = seen[key]
-                        if key in cached_items_map:
-                            # This is a duplicate of a cached item - keep the cached version, skip this one
-                            continue
-                        elif 'added_to_feed_at' in existing_item:
-                            # Keep existing item (already processed), skip duplicate
-                            continue
-                        else:
-                            # Both are new - keep first one
-                            continue
-                
                 return unique_news
             
-            # Create a map of cached items by key (title+source) to preserve their added_to_feed_at
-            cached_items_map = {}
-            if cached_news:
+            # Deduplicate fresh news
+            fresh_news = remove_duplicate_news_simple(fresh_news)
+            print(f"📊 After deduplication of fresh news: {len(fresh_news)} articles")
+            
+            # For force refresh, load cached news for merging (to preserve added_to_feed_at)
+            # For regular fetch, cached_news is already loaded above
+            if force_refresh and not cached_news:
+                cached_news = news_cache.load_news(allow_stale=True)
+                print(f"🔄 Force refresh: Loaded cached news for merging: {len(cached_news) if cached_news else 0} articles")
+            
+            # If we have cached news, merge it with fresh news for display (fresh on top)
+            # This preserves added_to_feed_at from cached items
+            if cached_news and (should_fetch_new or force_refresh):
+                print(f"🔄 Merging {len(fresh_news)} fresh items with {len(cached_news)} cached items for display")
+                
+                # Create a map of cached items by key (title+source) to preserve their added_to_feed_at
+                cached_items_map = {}
                 for item in cached_news:
                     key = f"{item.get('title', '')}_{item.get('source', '')}"
                     if key not in cached_items_map:
                         cached_items_map[key] = item
-            
-            # Deduplicate FIRST (this will preserve cached added_to_feed_at and set new ones for truly new items)
-            all_news = remove_duplicate_news_simple(all_news, cached_items_map)
+                
+                # Merge and preserve added_to_feed_at from cached items
+                all_news = []
+                current_time = datetime.now().isoformat()
+                
+                # Add fresh news first, preserving added_to_feed_at from cache if it exists
+                for item in fresh_news:
+                    key = f"{item.get('title', '')}_{item.get('source', '')}"
+                    if key in cached_items_map:
+                        # Item exists in cache - preserve its added_to_feed_at
+                        cached_item = cached_items_map[key]
+                        if 'added_to_feed_at' in cached_item:
+                            item['added_to_feed_at'] = cached_item['added_to_feed_at']
+                        else:
+                            item['added_to_feed_at'] = cached_item.get('published_at', current_time)
+                    elif 'added_to_feed_at' not in item:
+                        # New item - set added_to_feed_at to current time
+                        item['added_to_feed_at'] = current_time
+                    all_news.append(item)
+                
+                # Add cached items that aren't in fresh news
+                fresh_keys = {f"{item.get('title', '')}_{item.get('source', '')}" for item in fresh_news}
+                for item in cached_news:
+                    key = f"{item.get('title', '')}_{item.get('source', '')}"
+                    if key not in fresh_keys:
+                        all_news.append(item)
+            else:
+                # No cached news, use only fresh news
+                all_news = fresh_news
+                current_time = datetime.now().isoformat()
+                for item in all_news:
+                    if 'added_to_feed_at' not in item:
+                        item['added_to_feed_at'] = current_time
             
             # Sort by added_to_feed_at (when news was first added to our system)
-            # This ensures new news appears on top, not sorted by original published_at
             all_news.sort(key=lambda x: (
                 x.get('added_to_feed_at') or x.get('published_at') or ''
             ), reverse=True)
             
-            print(f"📊 Before deduplication in news endpoint: {len(all_news)} articles")
+            print(f"📊 Final merged news count: {len(all_news)} articles")
             
-            # Debug: Show breakdown by source before deduplication
-            sources_before = {}
-            for item in all_news:
-                source = item.get('source', 'Unknown')
-                sources_before[source] = sources_before.get(source, 0) + 1
-            
-            print("📊 Source breakdown before deduplication:")
-            for source, count in sorted(sources_before.items()):
-                print(f"  {source}: {count} articles")
-            
-            all_news = remove_duplicate_news_simple(all_news)
-            print(f"📊 After deduplication in news endpoint: {len(all_news)} articles")
-            
-            # Debug: Show breakdown by source after deduplication
+            # Debug: Show breakdown by source
             sources_after = {}
             for item in all_news:
                 source = item.get('source', 'Unknown')
                 sources_after[source] = sources_after.get(source, 0) + 1
             
-            print("📊 Source breakdown after deduplication:")
+            print("📊 Source breakdown:")
             for source, count in sorted(sources_after.items()):
                 print(f"  {source}: {count} articles")
             
-            # Save to cache - append mode if cache exists, replace if not
+            # Save to cache - IMPORTANT: Pass ONLY fresh_news to save_news with append=True
+            # The save_news function will handle merging with existing cache and preserving added_to_feed_at
             save_success = False
-            if cached_news and should_fetch_new:
-                # IMPORTANT: Save the FULL merged list (all_news) to ensure cache has both new and old items
-                # The append mode in save_news will handle deduplication, but we want to ensure
-                # the cache contains the complete merged list for future requests
-                print(f"💾 Saving merged news to cache: {len(all_news)} total items ({len(fresh_news)} fresh + {len(cached_news)} cached)")
+            if cached_news and (should_fetch_new or force_refresh):
+                # IMPORTANT: Pass only fresh_news to save_news, not all_news
+                # save_news with append=True will:
+                # 1. Load existing cache
+                # 2. Compare fresh_news against existing cache
+                # 3. Add only truly new items (preserving added_to_feed_at from existing items)
+                # 4. Merge: new items on top, existing items below
+                print(f"💾 Saving {len(fresh_news)} fresh items to cache with append=True")
+                print(f"   (save_news will merge with existing cache and preserve added_to_feed_at)")
                 
-                # Save the complete merged list - this ensures cache has everything
-                # Use append=False to replace with the complete merged list
-                save_success = news_cache.save_news(all_news, append=False)
+                # Pass only fresh_news - save_news will handle merging with cache
+                save_success = news_cache.save_news(fresh_news, append=True)
                 if save_success:
-                    print(f"📝 Saved merged news to cache: {len(all_news)} items (new items on top, old items preserved)")
+                    print(f"📝 Saved fresh news to cache (merged with existing, preserved added_to_feed_at)")
                 else:
-                    print(f"⚠️  Failed to save merged news to cache (Firebase error - news still returned)")
+                    print(f"⚠️  Failed to save fresh news to cache (Firebase error - news still returned)")
             else:
-                # Replace cache (first time or force refresh)
+                # First time saving or no cached news - use append=False to replace cache
+                # Ensure all items have added_to_feed_at set
+                for item in all_news:
+                    if 'added_to_feed_at' not in item:
+                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                
                 save_success = news_cache.save_news(all_news, append=False)
                 if save_success:
-                    print(f"📝 Replaced cache with {len(all_news)} items")
+                    print(f"📝 Replaced cache with {len(all_news)} items (all have added_to_feed_at set)")
                 else:
                     print(f"⚠️  Failed to save {len(all_news)} items to cache (Firebase error - news still returned)")
             
@@ -1526,8 +1516,10 @@ def force_refresh_news_internal():
             
             return {
                 "success": True,
+                "news": fresh_news,  # Include the actual news array
                 "message": f"Force refreshed {len(fresh_news)} news articles",
                 "articles_count": len(fresh_news),
+                "sources": ["RSS", "Alternative", "Telegram"],
                 "alert_results": results if 'results' in locals() else None
             }
         else:

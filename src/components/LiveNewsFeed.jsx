@@ -88,10 +88,19 @@ const LiveNewsFeed = () => {
       
       let response;
       try {
-        response = await fetch(url);
+        // Add timeout to prevent hanging requests (30 seconds for force refresh, 15 for normal)
+        const timeout = forceRefresh ? 30000 : 15000;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+        
+        response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
         console.log(`📡 Response status: ${response.status}`);
       } catch (fetchError) {
         console.error('❌ Fetch error:', fetchError);
+        if (fetchError.name === 'AbortError') {
+          throw new Error(`Request timeout: News fetch took too long. Please try again.`);
+        }
         throw new Error(`Network error: ${fetchError.message}`);
       }
       
