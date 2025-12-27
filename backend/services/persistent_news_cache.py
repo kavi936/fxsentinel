@@ -56,15 +56,17 @@ class PersistentNewsCache:
         try:
             if append:
                 # Merge with existing cache - new items on top
-                existing_news = self.load_news() or []
+                # IMPORTANT: Load with allow_stale=True to get all cached items, even if expired
+                existing_news = self.load_news(allow_stale=True) or []
                 
-                # Create a map of existing items by ID and title to preserve added_to_feed_at
+                # Create a map of existing items by ID and title+source to preserve added_to_feed_at
                 existing_by_id = {str(item.get('id', '')): item for item in existing_news if item.get('id')}
-                existing_by_title = {item.get('title', '').lower(): item for item in existing_news if item.get('title')}
+                existing_by_key = {f"{item.get('title', '').lower()}_{item.get('source', '').lower()}": item 
+                                   for item in existing_news if item.get('title')}
                 
                 # Create sets for deduplication
                 existing_ids = set(existing_by_id.keys())
-                existing_titles = set(existing_by_title.keys())
+                existing_keys = set(existing_by_key.keys())
                 
                 # Add new items that don't already exist
                 new_items = []
@@ -72,33 +74,41 @@ class PersistentNewsCache:
                 
                 for item in news_items:
                     item_id = str(item.get('id', ''))
-                    item_title = item.get('title', '').lower()
+                    item_key = f"{item.get('title', '').lower()}_{item.get('source', '').lower()}"
                     
                     # Check if item is new (not in existing cache)
-                    if item_id and item_id not in existing_ids and item_title not in existing_titles:
+                    if item_id and item_id in existing_ids:
+                        # Item exists in cache by ID - preserve its original added_to_feed_at
+                        existing_item = existing_by_id[item_id]
+                        if 'added_to_feed_at' in existing_item:
+                            # Preserve the original timestamp - don't add to new_items (already in existing_news)
+                            logger.debug(f"Preserving added_to_feed_at for existing item: {item.get('title', '')[:50]} (ID: {item_id})")
+                            pass
+                        else:
+                            # Existing item doesn't have added_to_feed_at - add it from existing_news
+                            pass
+                    elif item_key in existing_keys:
+                        # Item exists in cache by title+source - preserve its original added_to_feed_at
+                        existing_item = existing_by_key[item_key]
+                        if 'added_to_feed_at' in existing_item:
+                            # Preserve the original timestamp - don't add to new_items (already in existing_news)
+                            logger.debug(f"Preserving added_to_feed_at for existing item: {item.get('title', '')[:50]} (Key: {item_key})")
+                            pass
+                        else:
+                            # Existing item doesn't have added_to_feed_at - add it from existing_news
+                            pass
+                    else:
                         # New item - set added_to_feed_at if not already set
                         if 'added_to_feed_at' not in item:
                             item['added_to_feed_at'] = current_time
+                            logger.debug(f"Setting new added_to_feed_at for new item: {item.get('title', '')[:50]}")
                         new_items.append(item)
-                        existing_ids.add(item_id)
-                        existing_titles.add(item_title)
-                    elif item_id in existing_ids:
-                        # Item exists in cache - preserve its original added_to_feed_at and skip it
-                        # (it will be included from existing_news)
-                        existing_item = existing_by_id[item_id]
-                        if 'added_to_feed_at' in existing_item:
-                            # Preserve timestamp but don't add to new_items (already in existing_news)
-                            pass
-                    elif item_title in existing_titles:
-                        # Item exists in cache (by title) - preserve its original added_to_feed_at and skip it
-                        # (it will be included from existing_news)
-                        existing_item = existing_by_title[item_title]
-                        if 'added_to_feed_at' in existing_item:
-                            # Preserve timestamp but don't add to new_items (already in existing_news)
-                            pass
+                        if item_id:
+                            existing_ids.add(item_id)
+                        existing_keys.add(item_key)
                 
                 # Preserve added_to_feed_at for all existing items (they already have it from load_news)
-                # Combine: new items first, then existing items
+                # Combine: new items first, then existing items (preserving their original added_to_feed_at)
                 merged_news = new_items + existing_news
                 
                 # Limit to reasonable size (keep first 200 items - newest first)
@@ -288,7 +298,12 @@ class PersistentNewsCache:
             
             try:
                 cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                age = datetime.now() - cache_timestamp.replace(tzinfo=None) if cache_timestamp.tzinfo else datetime.now() - cache_timestamp
+                # Handle timezone-aware vs naive datetimes
+                now = datetime.now()
+                if cache_timestamp.tzinfo:
+                    # Convert to naive datetime for comparison
+                    cache_timestamp = cache_timestamp.replace(tzinfo=None)
+                age = now - cache_timestamp
                 
                 news_items = cache_data.get('news', [])
                 
