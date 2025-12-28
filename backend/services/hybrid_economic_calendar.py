@@ -77,9 +77,9 @@ class HybridEconomicCalendar:
     def _get_curated_events(self) -> List[Dict]:
         """
         Curated economic calendar with REAL upcoming events from ForexFactory
-        Last Updated: December 21, 2025
+        Last Updated: December 28, 2025
         Source: ForexFactory Calendar JSON Export
-        Coverage: October 5 - December 24, 2025
+        Coverage: October 5 - January 3, 2026
         """
         events = [
             # SUNDAY, OCTOBER 5
@@ -1834,6 +1834,318 @@ class HybridEconomicCalendar:
                 'actual': '214K',
                 'forecast': '220K',
                 'previous': '224K'
+            },
+
+            # SUNDAY, DECEMBER 28 (From ForexFactory JSON Export - New Year's Week)
+            {
+                'title': 'BOJ Summary of Opinions',
+                'date': 'Sun, Dec 28',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # MONDAY, DECEMBER 29 (From ForexFactory JSON Export - New Year's Week)
+            {
+                'title': 'Pending Home Sales m/m',
+                'date': 'Mon, Dec 29',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.9%',
+                'previous': '1.9%'
+            },
+            {
+                'title': 'Crude Oil Inventories',
+                'date': 'Mon, Dec 29',
+                'time': '15:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-2.0M',
+                'previous': '-1.3M'
+            },
+            {
+                'title': 'Natural Gas Storage',
+                'date': 'Mon, Dec 29',
+                'time': '17:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-169B',
+                'previous': '-167B'
+            },
+
+            # TUESDAY, DECEMBER 30 (From ForexFactory JSON Export - New Year's Week)
+            {
+                'title': 'Manufacturing PMI',
+                'date': 'Tue, Dec 30',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '49.4',
+                'previous': '49.2'
+            },
+            {
+                'title': 'Non-Manufacturing PMI',
+                'date': 'Tue, Dec 30',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '49.8',
+                'previous': '49.5'
+            },
+            {
+                'title': 'RatingDog Manufacturing PMI',
+                'date': 'Tue, Dec 30',
+                'time': '01:45 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '49.7',
+                'previous': '49.9'
+            },
+            {
+                'title': 'KOF Economic Barometer',
+                'date': 'Tue, Dec 30',
+                'time': '08:00 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '101.5',
+                'previous': '101.7'
+            },
+            {
+                'title': 'Spanish Flash CPI y/y',
+                'date': 'Tue, Dec 30',
+                'time': '08:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.9%',
+                'previous': '3.0%'
+            },
+            {
+                'title': 'HPI m/m',
+                'date': 'Tue, Dec 30',
+                'time': '14:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'S&P/CS Composite-20 HPI y/y',
+                'date': 'Tue, Dec 30',
+                'time': '14:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.1%',
+                'previous': '1.4%'
+            },
+            {
+                'title': 'Chicago PMI',
+                'date': 'Tue, Dec 30',
+                'time': '14:45 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '39.6',
+                'previous': '36.3'
+            },
+            {
+                'title': 'FOMC Meeting Minutes',
+                'date': 'Tue, Dec 30',
+                'time': '19:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'API Weekly Statistical Bulletin',
+                'date': 'Tue, Dec 30',
+                'time': '21:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # WEDNESDAY, DECEMBER 31 (From ForexFactory JSON Export - New Year's Week)
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Wed, Dec 31',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '215K',
+                'previous': '214K'
+            },
+            {
+                'title': 'Crude Oil Inventories',
+                'date': 'Wed, Dec 31',
+                'time': '15:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Natural Gas Storage',
+                'date': 'Wed, Dec 31',
+                'time': '17:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # FRIDAY, JANUARY 02 (From ForexFactory JSON Export - New Year's Week)
+            {
+                'title': 'Nationwide HPI m/m',
+                'date': 'Fri, Jan 02',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'Spanish Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '08:15 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '51.2',
+                'previous': '51.5'
+            },
+            {
+                'title': 'Italian Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '08:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '50.1',
+                'previous': '50.6'
+            },
+            {
+                'title': 'French Final Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '08:50 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '50.6',
+                'previous': '50.6'
+            },
+            {
+                'title': 'German Final Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '08:55 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '47.7',
+                'previous': '47.7'
+            },
+            {
+                'title': 'Final Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '49.2',
+                'previous': '49.2'
+            },
+            {
+                'title': 'M3 Money Supply y/y',
+                'date': 'Fri, Jan 02',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.7%',
+                'previous': '2.8%'
+            },
+            {
+                'title': 'Private Loans y/y',
+                'date': 'Fri, Jan 02',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.8%',
+                'previous': '2.8%'
+            },
+            {
+                'title': 'Final Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '51.2',
+                'previous': '51.2'
+            },
+            {
+                'title': 'Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '14:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '48.4'
+            },
+            {
+                'title': 'Final Manufacturing PMI',
+                'date': 'Fri, Jan 02',
+                'time': '14:45 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '51.8',
+                'previous': '51.8'
+            },
+
+            # SATURDAY, JANUARY 03 (From ForexFactory JSON Export - New Year's Week)
+            {
+                'title': 'FOMC Member Paulson Speaks',
+                'date': 'Sat, Jan 03',
+                'time': '15:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Paulson Speaks',
+                'date': 'Sat, Jan 03',
+                'time': '19:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
             }
         ]
         

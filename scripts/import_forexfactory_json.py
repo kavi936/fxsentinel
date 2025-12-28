@@ -16,10 +16,12 @@ def parse_forexfactory_json(json_file_path):
     
     print(f'📊 Parsing {len(ff_data)} events from ForexFactory export...')
     
-    # Filter for HIGH and MEDIUM impact only (skip LOW and holidays)
-    filtered_events = [e for e in ff_data if e.get('impact') in ['High', 'Medium']]
+    # Filter for all non-holiday events (include HIGH, MEDIUM, and LOW)
+    filtered_events = [e for e in ff_data if e.get('impact') != 'Holiday']
     
-    print(f'✅ Found {len(filtered_events)} HIGH/MEDIUM impact events')
+    high_medium = [e for e in filtered_events if e.get('impact') in ['High', 'Medium']]
+    print(f'✅ Found {len(high_medium)} HIGH/MEDIUM impact events')
+    print(f'✅ Found {len(filtered_events)} total non-holiday events (including LOW impact)')
     
     # Convert to our format
     formatted_events = []
