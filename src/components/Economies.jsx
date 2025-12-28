@@ -6,38 +6,96 @@ import { config } from '../config';
 const indicatorDetails = {
   'interest-rate': {
     overview:
-      'The [[Federal Funds Rate]] is the overnight interest rate at which U.S. banks lend reserve balances to one another. It is established by the [[Federal Open Market Committee (FOMC)]] and serves as the benchmark for short-term interest rates across the U.S. financial system.\n\n' +
-      'For financial markets, the rate is a [[cornerstone driver]]: it influences borrowing costs, risk pricing, asset valuations, and capital flows both domestically and globally.\n\n' +
-      'Why traders care:\n\n' +
-      '• Sets the tone for [[USD strength/weakness]] across FX markets.\n\n' +
-      '• Impacts equity valuations by adjusting cost of capital and discount rates.\n\n' +
-      '• Drives yield shifts across the fixed income curve, affecting carry trades and volatility.',
+      'The [[Federal Funds Rate (FFR)]] is the primary monetary policy tool of the U.S. Federal Reserve. It represents the [[target range]] for the overnight interest rate at which U.S. banks lend reserve balances to one another and acts as the [[benchmark for short-term interest rates]] globally.\n\n' +
+      'For traders, the FFR is a [[core macro driver]] that influences USD valuation, yield differentials, risk sentiment, and cross-asset capital flows.\n\n' +
+      '[[Why It Matters to Markets]]\n\n' +
+      'The Federal Funds Rate anchors the entire U.S. yield curve and directly impacts:\n\n' +
+      '• [[FX markets]]: USD strength or weakness via yield differentials\n\n' +
+      '• [[Equities]]: Cost of capital and valuation multiples\n\n' +
+      '• [[Fixed income]]: Short-term yields, curve shape, and volatility\n\n' +
+      '• [[Commodities]]: Particularly gold, via real yields and risk appetite\n\n' +
+      'Markets trade [[expectations of future rate changes]], often well ahead of actual FOMC decisions.',
     measurement:
-      'The FOMC announces a [[target range]] for the Federal Funds Rate at scheduled policy meetings (typically [[8 per year]]).\n\n' +
-      'The [[effective federal funds rate (EFFR)]] is the actual rate banks trade overnight and typically stays within the target range due to Fed market operations.\n\n' +
-      'Data is published daily by the Federal Reserve and available historically via [[FRED (Federal Reserve Economic Data)]].',
+      'The [[Federal Open Market Committee (FOMC)]] meets [[eight times per year]] to set a target range for the Federal Funds Rate.\n\n' +
+      '[[Key policy signals]] traders monitor:\n\n' +
+      '• [[Rate decision]] (hold / cut / hike)\n\n' +
+      '• [[Statement language changes]]\n\n' +
+      '• [[Dot Plot]] (rate path projections)\n\n' +
+      '• [[Chair Powell\'s press conference]]\n\n' +
+      'The [[Effective Federal Funds Rate (EFFR)]] reflects actual overnight trading and typically remains within the target range via Fed liquidity operations.',
     impact:
-      'Interest rate changes and forward guidance are [[primary drivers]] of currency movements:\n\n' +
-      '[[Rate / Hawkish Signals]]\n\n' +
-      '• Bolster the USD as [[higher yields]] attract foreign capital.\n\n' +
-      '• Tend to widen yield differentials vs. other economies, lifting dollar pairs.\n\n' +
-      '• Can tighten financial conditions, potentially pressuring equities.\n\n' +
-      '[[Rate / Dovish Signals]]\n\n' +
-      '• Compress yield advantages of dollar assets, potentially [[weakening the USD]].\n\n' +
-      '• Encourage risk-taking in carry trades targeting higher-yield currencies.\n\n' +
-      '• Often support equities in the near term through lower financing costs.\n\n' +
-      '[[Forward expectations matter]]: Markets can price in future rate changes well before actual announcements, meaning FX and rates markets are highly sensitive to inflation data, employment releases, and Fed "dot plot" projections.',
+      '[[Market Transmission Mechanism]]\n\n' +
+      '[[Rates → FX]]\n\n' +
+      '• Higher relative U.S. rates attract capital → [[USD support]]\n\n' +
+      '• Falling rate expectations compress yield advantage → [[USD pressure]]\n\n' +
+      '[[Rates → Risk Assets]]\n\n' +
+      '• Higher rates tighten financial conditions\n\n' +
+      '• Lower rates generally support equities and credit\n\n' +
+      '[[Rates → Commodities]]\n\n' +
+      '• Gold reacts inversely to real yields\n\n' +
+      '• Energy responds indirectly via growth expectations\n\n' +
+      '[[Hawkish vs Dovish Signals]]\n\n' +
+      '[[Hawkish Bias]]\n\n' +
+      '• Delayed or fewer cuts\n\n' +
+      '• Persistent inflation pressures\n\n' +
+      '• Strong labor market data\n\n' +
+      '• Emphasis on inflation risks\n\n' +
+      'Typical reaction: [[USD strength]], higher yields, pressure on equities and gold\n\n' +
+      '[[Dovish Bias]]\n\n' +
+      '• Rate cuts or easing guidance\n\n' +
+      '• Cooling inflation momentum\n\n' +
+      '• Labor market softening\n\n' +
+      '• Focus on growth risks\n\n' +
+      'Typical reaction: [[USD weakness]], yield compression, support for risk assets and carry trades\n\n' +
+      '[[Expectations vs Reality]]\n\n' +
+      'FX and rates markets are [[forward-looking]]. Price action is often driven by:\n\n' +
+      '• Inflation releases (CPI, PCE)\n\n' +
+      '• Employment data (NFP, unemployment)\n\n' +
+      '• Wage growth trends\n\n' +
+      '• Fed communication tone\n\n' +
+      'This makes the FFR less useful as a standalone signal and more powerful when aligned with [[data momentum and expectations]].',
     context:
-      'The U.S. Federal Reserve has shifted away from prolonged tightening and is now [[methodically easing policy]] in response to softer employment trends and sticky—but gradually moderating—inflation. Most recently, the Fed cut rates by 25 bps, marking continued policy accommodation.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[Data-dependence]]: Future rate moves hinge on inflation readings and labor market resilience.\n\n' +
-      '• [[Market expectations]]: Traders are pricing in additional cuts, but the pace and magnitude remain uncertain.\n\n' +
-      '• [[Inflation dynamics]]: Core inflation has eased but remains above the Fed\'s 2% objective, tempering expectations for aggressive easing.\n\n' +
-      '• [[Risk environment]]: Geopolitical and fiscal factors (e.g., government shutdowns and tariff pressures) add uncertainty to the monetary outlook.',
+      '[[Current Policy Context (Late 2025)]]\n\n' +
+      'The Federal Reserve has shifted from restrictive policy toward [[cautious easing]], cutting rates to 3.50%–3.75% amid:\n\n' +
+      '• Moderating (but still elevated) inflation\n\n' +
+      '• Signs of labor market softening\n\n' +
+      '• Slower economic momentum\n\n' +
+      'Key characteristics of the current regime:\n\n' +
+      '• [[Strong emphasis on data-dependence]]\n\n' +
+      '• [[Gradual easing]], not aggressive stimulus\n\n' +
+      '• [[Elevated sensitivity]] to inflation surprises\n\n' +
+      '• Ongoing geopolitical and fiscal uncertainty\n\n' +
+      'This environment favors [[expectation-driven and event-driven trading]].\n\n' +
+      '[[Institutional & Bank Outlook]]\n\n' +
+      'Major global banks broadly expect [[further rate cuts into 2026]], but emphasize a measured and data-dependent pace rather than aggressive easing.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• Policy is easing, but not returning to ultra-loose levels\n\n' +
+      '• Inflation remains above target, limiting downside\n\n' +
+      '• Labor data will be decisive for the next phase of cuts\n\n' +
+      'Markets currently price [[1–3 additional 25bp cuts]], with timing sensitive to incoming data.\n\n' +
+      '[[Political Overlay – Trump & Fed Independence]]\n\n' +
+      'President Donald Trump has publicly called for significantly lower interest rates, arguing that easier policy would support growth and reduce government financing costs. He has openly pressured the Federal Reserve to cut faster and deeper.\n\n' +
+      'Trump has also stated that future Fed leadership should align with his preference for lower rates, raising questions around [[central bank independence]].\n\n' +
+      'Trader implication: While the Fed remains operationally independent, [[political pressure adds headline-driven volatility]] and can influence market narratives, particularly around leadership transitions and policy credibility.',
     traderImplications:
-      '[[FX volatility]]: Rate decisions and forward guidance can trigger rapid USD moves, especially in USD/JPY, EUR/USD, and GBP/USD.\n\n' +
-      '[[Carry & yield trades]]: Changing rate expectations alter carry trade viability and relative currency strengths.\n\n' +
-      '[[Cross-asset reactions]]: Fed moves often ripple into equities, commodities, and fixed income via shifts in risk sentiment.',
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for rate repricing:\n\n' +
+      '• [[Core inflation trends]]\n\n' +
+      '• [[Labor market deterioration or resilience]]\n\n' +
+      '• [[Changes in Fed communication tone]]\n\n' +
+      '• [[Fed Funds Futures & OIS pricing]]\n\n' +
+      '• [[Yield curve dynamics]] (2Y vs 10Y, real yields)\n\n' +
+      'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the Federal Funds Rate functions best as:\n\n' +
+      '• A [[macro regime filter]] (tightening vs easing)\n\n' +
+      '• A [[USD directional bias tool]]\n\n' +
+      '• A [[cross-asset sentiment anchor]]\n\n' +
+      'Future enhancements may include:\n\n' +
+      '• Market-implied rate path vs Fed guidance\n\n' +
+      '• Bank forecast aggregation\n\n' +
+      '• Political risk overlays\n\n' +
+      '• Event-driven volatility flags',
   },
   'inflation-YoY': {
     overview:
@@ -919,10 +977,10 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     // Special handling for interest-rate with professional content
     if (indicator.id === 'interest-rate') {
       return [
-        'The Federal Funds Rate — the U.S. central bank\'s key policy tool — has entered a cautious easing cycle after a series of rate cuts in 2025, most recently bringing the target range to 3.50%–3.75%.',
-        'Markets now price a limited number of further cuts, with traders focusing intently on incoming inflation and labor data to gauge the next move.',
-        'Rate expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
-        'Upcoming releases will link this indicator with the broader macro backdrop in Holistic Scan.',
+        'The Federal Funds Rate has shifted from restrictive policy toward cautious easing, cutting rates to 3.50%–3.75% amid moderating inflation and signs of labor market softening.',
+        'Major global banks broadly expect further rate cuts into 2026, but emphasize a measured and data-dependent pace. Markets currently price 1–3 additional 25bp cuts, with timing sensitive to incoming data.',
+        'The highest-conviction trades emerge when data, expectations, and policy guidance align. Monitor core inflation trends, labor market data, Fed communication tone, and yield curve dynamics for rate repricing signals.',
+        'Political pressure from President Trump for lower rates adds headline-driven volatility and can influence market narratives around Fed independence and policy credibility.',
       ];
     }
 
@@ -1009,9 +1067,23 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const renderParagraphs = (text) => {
     if (!text) return null;
     const paragraphs = text.split('\n\n').filter(p => p.trim());
-    return paragraphs.map((para, index) => (
-      <p key={index}>{renderHighlightedText(para.trim())}</p>
-    ));
+    return paragraphs.map((para, index) => {
+      const trimmedPara = para.trim();
+      // Check if paragraph is a subheading (starts and ends with [[highlight]])
+      const isSubheading = trimmedPara.startsWith('[[') && trimmedPara.endsWith(']]') && 
+                          trimmedPara.split(' ').length <= 8; // Likely a subheading if short
+      
+      if (isSubheading) {
+        return (
+          <p key={index} className="indicator-subheading">
+            {renderHighlightedText(trimmedPara)}
+          </p>
+        );
+      }
+      return (
+        <p key={index}>{renderHighlightedText(trimmedPara)}</p>
+      );
+    });
   };
 
   const getIndicatorDetails = (indicator) => {
@@ -1598,6 +1670,86 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         const insightItems = getIndicatorInsights(expandedIndicator);
         const { overview, measurement, impact, context, traderImplications } = getIndicatorDetails(expandedIndicator);
         
+        // Get accurate quick reference data based on indicator
+        const getQuickReferenceData = (indicator) => {
+          const baseData = {
+            currentValue: indicator.currentValue,
+            indicator: indicator.title,
+            lastUpdated: indicator.asOf || null,
+            frequency: indicator.frequency || null,
+            unit: indicator.unit || null,
+          };
+          
+          // Add indicator-specific data
+          if (indicator.id === 'interest-rate') {
+            return {
+              ...baseData,
+              // Use actual currentValue from indicator data, not hardcoded
+              lastChange: '25 bps cut',
+              policyStance: 'Cautious easing',
+              meetingFrequency: '8 times per year',
+              nextAction: 'Markets price 1–3 additional cuts',
+              keyDate: 'FOMC meetings',
+            };
+          }
+          
+          if (indicator.id === 'inflation-YoY') {
+            return {
+              ...baseData,
+              target: 'Fed 2% target',
+              trend: 'Moderating',
+              lastReading: '3.0% (Sept 2025)',
+              releaseDate: '10th-15th of each month',
+            };
+          }
+          
+          if (indicator.id === 'core-inflation-YoY') {
+            return {
+              ...baseData,
+              target: 'Fed 2% target',
+              trend: 'Moderating',
+              lastReading: '3.0% (Sept 2025)',
+              releaseDate: '10th-15th of each month',
+              note: 'Fed\'s preferred gauge',
+            };
+          }
+          
+          if (indicator.id === 'gdp-growth') {
+            return {
+              ...baseData,
+              lastReading: '3.8% (Q2 2025)',
+              previousReading: '-0.6% (Q1 2025)',
+              trend: 'Rebounding',
+              releaseDate: 'End of month (quarterly)',
+            };
+          }
+          
+          if (indicator.id === 'unemployment') {
+            return {
+              ...baseData,
+              lastReading: '4.4% (Sept 2025)',
+              trend: 'Gradually increasing',
+              releaseDate: 'First Friday of month',
+              keyDate: 'NFP release day',
+            };
+          }
+          
+          if (indicator.id === 'nonfarm-payrolls') {
+            return {
+              ...baseData,
+              lastReading: '119K (Sept 2025)',
+              previousReading: '-4K (Aug 2025)',
+              releaseDate: 'First Friday of month',
+              releaseTime: '8:30 AM ET',
+              impact: 'Highest-impact release',
+            };
+          }
+          
+          return baseData;
+        };
+        
+        const quickRefData = getQuickReferenceData(expandedIndicator);
+        
         return (
           <div 
             className="indicator-modal-overlay"
@@ -1624,9 +1776,40 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               
               <div className="indicator-modal-chart">
                 {(() => {
-                  const chartDataToUse = expandedIndicator.chartDataExpanded || expandedIndicator.chartData;
                   const originalDataToUse = expandedIndicator.chartDataOriginalAll || expandedIndicator.chartDataOriginal;
                   const datesToUse = expandedIndicator.chartDatesAll || expandedIndicator.chartDates;
+                  
+                  // Check if we need to show 2% target line and if 2% is outside data range
+                  const isInflationIndicator = expandedIndicator.id === 'inflation-YoY' || 
+                                              expandedIndicator.id === 'inflation' || 
+                                              expandedIndicator.id === 'core-inflation-YoY';
+                  const needsTargetLine = isInflationIndicator && originalDataToUse && originalDataToUse.length > 0;
+                  
+                  // Re-normalize data to include 2% in range if target line is needed and 2% is outside range
+                  let chartDataToUse;
+                  if (needsTargetLine && originalDataToUse) {
+                    const rawMin = Math.min(...originalDataToUse);
+                    const rawMax = Math.max(...originalDataToUse);
+                    const targetValue = 2.0;
+                    
+                    // If 2% is outside the data range, extend the normalization range to include it
+                    if (targetValue < rawMin || targetValue > rawMax) {
+                      const extendedMin = Math.min(rawMin, targetValue);
+                      const extendedMax = Math.max(rawMax, targetValue);
+                      const extendedRange = extendedMax - extendedMin;
+                      
+                      // Re-normalize using extended range
+                      chartDataToUse = originalDataToUse.map((val) => 
+                        extendedRange === 0 ? 50 : ((val - extendedMin) / extendedRange) * 80 + 10
+                      );
+                    } else {
+                      // Use already normalized data
+                      chartDataToUse = expandedIndicator.chartDataExpanded || expandedIndicator.chartData;
+                    }
+                  } else {
+                    // Use already normalized data
+                    chartDataToUse = expandedIndicator.chartDataExpanded || expandedIndicator.chartData;
+                  }
                   
                   // Generate x-axis labels showing more dates in expanded modal
                   const generateXAxisLabels = () => {
@@ -1798,27 +1981,30 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                       return null;
                     }
                     
-                    // Include 2% in the range calculation to ensure it's always visible
-                    // This follows the user's suggestion to make it part of the dataset for positioning
+                    // Use the SAME normalization as the actual data points
+                    // Data normalization uses: ((val - rawMin) / rawRange) * 80 + 10
                     const rawMin = Math.min(...originalDataToUse);
                     const rawMax = Math.max(...originalDataToUse);
+                    const rawRange = rawMax - rawMin;
                     const targetValue = 2.0;
                     
-                    // Create extended range that includes 2% target for proper positioning
-                    const extendedMin = Math.min(rawMin, targetValue);
-                    const extendedMax = Math.max(rawMax, targetValue);
-                    const extendedRange = extendedMax - extendedMin;
+                    // If 2% is outside the data range, we need to extend the range for accurate positioning
+                    // But we must use the same formula as data normalization
+                    if (targetValue < rawMin || targetValue > rawMax) {
+                      // Extend range to include 2% for positioning calculation
+                      const extendedMin = Math.min(rawMin, targetValue);
+                      const extendedMax = Math.max(rawMax, targetValue);
+                      const extendedRange = extendedMax - extendedMin;
+                      
+                      // Calculate position using extended range, matching the normalization formula
+                      const targetNormalizedPosition = extendedRange === 0 ? 50 : 10 + ((targetValue - extendedMin) / extendedRange) * 80;
+                      return 100 - targetNormalizedPosition; // Invert for SVG (0 at top, 100 at bottom)
+                    }
                     
-                    // Calculate normalized position using extended range
-                    // This ensures 2% is always positioned correctly relative to the data
-                    // Data normalization uses: ((val - min) / range) * 80 + 10
-                    // But we use extended range here to include 2% in the calculation
-                    const targetNormalizedPosition = extendedRange === 0 ? 50 : 10 + ((targetValue - extendedMin) / extendedRange) * 80;
+                    // If 2% is within the data range, use the same rawMin/rawRange as data normalization
+                    const targetNormalizedPosition = rawRange === 0 ? 50 : 10 + ((targetValue - rawMin) / rawRange) * 80;
                     
-                    // Clamp to visible area (10-90% range) to ensure line is always visible
-                    const clampedPosition = Math.max(10, Math.min(90, targetNormalizedPosition));
-                    
-                    return 100 - clampedPosition; // Invert for SVG (0 at top, 100 at bottom)
+                    return 100 - targetNormalizedPosition; // Invert for SVG (0 at top, 100 at bottom)
                   };
 
                   const getZeroLinePosition = () => {
@@ -2007,64 +2193,152 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               )}
               
               <div className={`indicator-expanded-content ${isLoading ? 'loading' : ''}`}>
-                <div className="indicator-expanded-section">
-                  <div className="indicator-section-title">Key Insights</div>
-                  <ul className="indicator-insights-list">
-                    {insightItems.map((insight, index) => (
-                      <li key={index} className="indicator-insight-item">
-                        {insight}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="indicator-expanded-section">
-                  <div className="indicator-section-title">Indicator Overview</div>
-                  <div className="indicator-section-text">
-                    {renderParagraphs(overview)}
-                  </div>
-                </div>
-
-                <div className="indicator-expanded-section">
-                  <div className="indicator-section-title">How It's Measured</div>
-                  <div className="indicator-section-text">
-                    {renderParagraphs(measurement)}
-                  </div>
-                </div>
-
-                <div className="indicator-expanded-section">
-                  <div className="indicator-section-title">Currency & Market Impact</div>
-                  <div className="indicator-section-text">
-                    {renderParagraphs(impact)}
-                  </div>
-                </div>
-
-                {context && (
+                <div className="indicator-expanded-main">
                   <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">Current Policy Context – December 2025</div>
+                    <div className="indicator-section-title">Key Insights</div>
+                    <ul className="indicator-insights-list">
+                      {insightItems.map((insight, index) => (
+                        <li key={index} className="indicator-insight-item">
+                          {insight}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="indicator-expanded-section">
+                    <div className="indicator-section-title">Indicator Overview</div>
                     <div className="indicator-section-text">
-                      {renderParagraphs(context)}
+                      {renderParagraphs(overview)}
                     </div>
                   </div>
-                )}
 
-                {traderImplications && (
                   <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">What This Means for Traders</div>
+                    <div className="indicator-section-title">How It's Measured</div>
                     <div className="indicator-section-text">
-                      {renderParagraphs(traderImplications)}
+                      {renderParagraphs(measurement)}
                     </div>
                   </div>
-                )}
 
-                {(expandedIndicator.source || expandedIndicator.asOf || expandedIndicator.frequency) && (
                   <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">Data source</div>
-                    <div className="indicator-metadata">
+                    <div className="indicator-section-title">Currency & Market Impact</div>
+                    <div className="indicator-section-text">
+                      {renderParagraphs(impact)}
+                    </div>
+                  </div>
+
+                  {context && (
+                    <div className="indicator-expanded-section">
+                      <div className="indicator-section-title">Current Policy Context – December 2025</div>
+                      <div className="indicator-section-text">
+                        {renderParagraphs(context)}
+                      </div>
+                    </div>
+                  )}
+
+                  {traderImplications && (
+                    <div className="indicator-expanded-section">
+                      <div className="indicator-section-title">What This Means for Traders</div>
+                      <div className="indicator-section-text">
+                        {renderParagraphs(traderImplications)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="indicator-expanded-sidebar">
+                  <div className="indicator-sidebar-section">
+                    <div className="indicator-sidebar-title">Quick Reference</div>
+                    <div className="indicator-sidebar-item">
+                      <span className="indicator-sidebar-label">Current Value</span>
+                      <span className="indicator-sidebar-value highlight">{quickRefData.currentValue}</span>
+                    </div>
+                    {quickRefData.lastChange && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Last Change</span>
+                        <span className="indicator-sidebar-value">{quickRefData.lastChange}</span>
+                      </div>
+                    )}
+                    {quickRefData.policyStance && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Policy Stance</span>
+                        <span className="indicator-sidebar-value">{quickRefData.policyStance}</span>
+                      </div>
+                    )}
+                    {quickRefData.trend && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Trend</span>
+                        <span className="indicator-sidebar-value">{quickRefData.trend}</span>
+                      </div>
+                    )}
+                    {quickRefData.lastReading && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Last Reading</span>
+                        <span className="indicator-sidebar-value">{quickRefData.lastReading}</span>
+                      </div>
+                    )}
+                    {quickRefData.previousReading && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Previous</span>
+                        <span className="indicator-sidebar-value">{quickRefData.previousReading}</span>
+                      </div>
+                    )}
+                    {quickRefData.target && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Target</span>
+                        <span className="indicator-sidebar-value">{quickRefData.target}</span>
+                      </div>
+                    )}
+                    {quickRefData.meetingFrequency && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Meeting Frequency</span>
+                        <span className="indicator-sidebar-value">{quickRefData.meetingFrequency}</span>
+                      </div>
+                    )}
+                    {quickRefData.releaseDate && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Release Date</span>
+                        <span className="indicator-sidebar-value">{quickRefData.releaseDate}</span>
+                      </div>
+                    )}
+                    {quickRefData.releaseTime && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Release Time</span>
+                        <span className="indicator-sidebar-value">{quickRefData.releaseTime}</span>
+                      </div>
+                    )}
+                    {quickRefData.nextAction && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Market Expectation</span>
+                        <span className="indicator-sidebar-value">{quickRefData.nextAction}</span>
+                      </div>
+                    )}
+                    {quickRefData.impact && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Market Impact</span>
+                        <span className="indicator-sidebar-value">{quickRefData.impact}</span>
+                      </div>
+                    )}
+                    {quickRefData.note && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Note</span>
+                        <span className="indicator-sidebar-value">{quickRefData.note}</span>
+                      </div>
+                    )}
+                    {quickRefData.lastUpdated && (
+                      <div className="indicator-sidebar-item">
+                        <span className="indicator-sidebar-label">Last Updated</span>
+                        <span className="indicator-sidebar-value">{quickRefData.lastUpdated}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {(expandedIndicator.source || expandedIndicator.sourceUrl) && (
+                    <div className="indicator-sidebar-section">
+                      <div className="indicator-sidebar-title">Data Source</div>
                       {expandedIndicator.source && (
-                        <div className="metadata-item">
-                          <span className="metadata-label">Source:</span>
-                          <span className="metadata-value">
+                        <div className="indicator-sidebar-item">
+                          <span className="indicator-sidebar-label">Source</span>
+                          <span className="indicator-sidebar-value">
                             {expandedIndicator.sourceUrl ? (
                               <a 
                                 href={expandedIndicator.sourceUrl} 
@@ -2080,27 +2354,15 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                           </span>
                         </div>
                       )}
-                      {expandedIndicator.asOf && (
-                        <div className="metadata-item">
-                          <span className="metadata-label">Last updated:</span>
-                          <span className="metadata-value">{expandedIndicator.asOf}</span>
-                        </div>
-                      )}
-                      {expandedIndicator.frequency && (
-                        <div className="metadata-item">
-                          <span className="metadata-label">Release frequency:</span>
-                          <span className="metadata-value">{expandedIndicator.frequency}</span>
-                        </div>
-                      )}
                       {expandedIndicator.notes && (
-                        <div className="metadata-item">
-                          <span className="metadata-label">Notes:</span>
-                          <span className="metadata-value">{expandedIndicator.notes}</span>
+                        <div className="indicator-sidebar-item">
+                          <span className="indicator-sidebar-label">Notes</span>
+                          <span className="indicator-sidebar-value">{expandedIndicator.notes}</span>
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
