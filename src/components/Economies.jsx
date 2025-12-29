@@ -88,176 +88,324 @@ const indicatorDetails = {
       'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
       '[[FXSentinel Usage]]\n\n' +
       'Within FXSentinel, the Federal Funds Rate functions best as:\n\n' +
-      '• A [[macro regime filter]] (tightening vs easing)\n\n' +
-      '• A [[USD directional bias tool]]\n\n' +
-      '• A [[cross-asset sentiment anchor]]\n\n' +
-      'Future enhancements may include:\n\n' +
-      '• Market-implied rate path vs Fed guidance\n\n' +
-      '• Bank forecast aggregation\n\n' +
-      '• Political risk overlays\n\n' +
-      '• Event-driven volatility flags',
+      '• [[Macro regime filter]] (tightening vs easing)\n\n' +
+      '• [[USD directional bias tool]]\n\n' +
+      '• [[Cross-asset sentiment anchor]]',
   },
   'inflation-YoY': {
     overview:
-      'The [[Consumer Price Index (CPI) Year-over-Year]] measures the annual percentage change in the price level of a basket of consumer goods and services. It is the [[primary inflation gauge]] used by the Federal Reserve and financial markets to assess price stability and purchasing power erosion.\n\n' +
-      'For financial markets, inflation data is a [[critical input]] for monetary policy expectations, real yield calculations, and currency valuation models.\n\n' +
-      'Why traders care:\n\n' +
-      '• Directly influences [[Fed policy expectations]] and interest rate forecasts.\n\n' +
-      '• Affects [[real yields]] (nominal rates minus inflation), which drive currency flows.\n\n' +
-      '• Signals [[economic overheating]] or [[deflation risks]], impacting risk sentiment across asset classes.',
+      'U.S. Inflation (Year-Over-Year) measures the annual change in consumer prices, most commonly tracked through the [[Consumer Price Index (CPI)]]. It is one of the [[most influential macro indicators globally]], directly shaping Federal Reserve policy expectations, USD valuation, and cross-asset risk sentiment.\n\n' +
+      'Inflation is a [[leading driver of interest rate decisions]], making it a critical input for FX, rates, and commodities traders.\n\n' +
+      'Why Inflation Matters to Traders:\n\n' +
+      '• [[Interest rate expectations]] and Fed policy paths\n\n' +
+      '• [[Real yields]], a key driver of USD and gold\n\n' +
+      '• [[Risk sentiment]], affecting equities and carry trades\n\n' +
+      'Markets react less to the absolute level of inflation and more to [[surprises versus expectations and trend momentum]].',
     measurement:
-      'The [[Bureau of Labor Statistics (BLS)]] calculates CPI by tracking price changes for a representative basket of goods and services across urban consumers. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
-      'Two key variants are monitored:\n\n' +
+      'The [[U.S. Bureau of Labor Statistics (BLS)]] calculates CPI by tracking price changes for a representative basket of goods and services across urban consumers. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
       '• [[Headline CPI]]: Includes all items, including volatile food and energy components.\n\n' +
       '• [[Core CPI]]: Excludes food and energy to reveal underlying inflation trends.\n\n' +
-      'Data is released monthly, typically around the [[10th-15th of each month]] for the previous month, with revisions possible in subsequent releases.',
+      '• [[Shelter and services]]: Major components that have remained sticky, slowing the pace of overall disinflation.\n\n' +
+      '• [[Goods inflation]]: Has eased but remains sensitive to supply chain and tariff effects.\n\n' +
+      'Data is released monthly, typically around the [[10th-15th of each month]] for the previous month, with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
     impact:
       'Inflation readings have [[profound implications]] for currency markets through multiple channels:\n\n' +
-      '[[Elevated Inflation]]\n\n' +
-      '• Can [[undermine currency]] by eroding real returns on dollar-denominated assets.\n\n' +
-      '• If it prompts [[hawkish Fed response]] (rate hikes), the USD may strengthen despite initial weakness.\n\n' +
-      '• Increases [[inflation expectations]], potentially steepening yield curves and supporting USD.\n\n' +
-      '[[Moderate/Declining Inflation]]\n\n' +
-      '• Relieves pressure on policymakers, potentially [[weakening USD]] if it leads to dovish policy.\n\n' +
-      '• Supports [[real yield calculations]], making dollar assets more attractive if nominal rates hold.\n\n' +
-      '• Can encourage [[risk-taking]] in carry trades if inflation remains contained.\n\n' +
-      '[[Forward-looking dynamics]]: Markets react not just to current inflation but to [[trends and expectations]]. Persistent inflation above the Fed\'s 2% target can trigger policy responses that strengthen the USD, while disinflationary trends may support risk assets but pressure the dollar.',
+      '[[Above-Expectation Inflation]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports USD via higher real yields\n\n' +
+      '• [[Pressures equities and gold]] as markets price in tighter policy\n\n' +
+      '• Increases [[inflation expectations]], potentially steepening yield curves and supporting USD\n\n' +
+      '[[Below-Expectation Inflation]]\n\n' +
+      '• [[Strengthens easing expectations]] and weakens USD\n\n' +
+      '• [[Supports risk assets and carry trades]] as policy pressure eases\n\n' +
+      '• Relieves pressure on policymakers, potentially [[weakening USD]] if it leads to dovish policy\n\n' +
+      '[[Market dynamics]]: Inflation remains the [[primary constraint on Fed easing]]. Cooling inflation supports additional rate cuts, while sticky core components cap the pace and depth of easing. Inflation surprises quickly [[reprice Fed Funds Futures and short-dated yields]]. For markets, inflation prints act as [[confirmation or invalidation events]] for existing rate expectations.',
     context:
-      'U.S. inflation has shown [[gradual moderation]] from peak levels, with the latest reading at 3.0% YoY (September 2025). The path has been uneven, reflecting [[sticky services inflation]] alongside moderating goods prices.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[Fed\'s 2% target]]: Core inflation remains above target, keeping policy makers cautious about premature easing.\n\n' +
-      '• [[Services vs. goods]]: Services inflation has proven more persistent, driven by wage growth and housing costs.\n\n' +
-      '• [[Policy implications]]: Current inflation levels allow for measured rate cuts but limit aggressive easing.\n\n' +
-      '• [[Market sensitivity]]: Each CPI release triggers significant volatility as traders reassess Fed policy expectations.',
+      '[[Current Inflation Trend (Late 2025)]]\n\n' +
+      'Headline U.S. CPI is running at approximately [[2.7% YoY]], down from earlier 2025 highs near 3.0%. This moderation reflects [[easing shelter inflation, base effects, and slower goods price growth]].\n\n' +
+      'Core inflation (excluding food and energy) has also cooled, but remains [[above the Federal Reserve\'s 2% target]], reinforcing a cautious policy stance rather than aggressive easing.\n\n' +
+      'Key takeaway: Inflation is easing, but not fully neutralized — keeping policy expectations finely balanced.\n\n' +
+      '[[Key Drivers Behind Current Inflation]]\n\n' +
+      'Consumer Prices & Shelter:\n\n' +
+      '• [[Shelter and services inflation remain sticky]], slowing the pace of overall disinflation\n\n' +
+      '• [[Goods inflation has eased]], but remains sensitive to supply chain and tariff effects\n\n' +
+      'Tariffs & Policy Effects:\n\n' +
+      '• [[Ongoing tariff policies]] have contributed to persistent goods price pressures, particularly through gradual pass-through to consumers\n\n' +
+      '• These effects have [[limited how quickly inflation can fall back to target]]\n\n' +
+      'Inflation Expectations:\n\n' +
+      '• [[Consumer inflation expectations remain elevated]] around 3.0–3.2%, reinforcing wage and pricing stickiness\n\n' +
+      '• [[Anchored but elevated expectations]] increase the Fed\'s caution around rapid easing\n\n' +
+      '[[What Banks & Institutions Are Saying]]\n\n' +
+      'Major financial institutions broadly agree that inflation is cooling, but warn against declaring victory. Consensus themes:\n\n' +
+      '• [[Inflation may remain slightly above target]] into early 2026\n\n' +
+      '• [[Tariff-driven pressures]] could delay full normalization\n\n' +
+      '• [[Recent CPI prints may be distorted]] by reporting disruptions and base effects\n\n' +
+      'Several banks describe current inflation as a [["low-grade persistence" environment]] rather than a clean disinflation cycle.\n\n' +
+      '[[Political & Structural Context]]\n\n' +
+      'Trade and tariff policy continues to act as an [[upward structural force on prices]].\n\n' +
+      'Data quality concerns emerged during 2025 due to [[government shutdown-related disruptions]], adding short-term noise to CPI readings.\n\n' +
+      'Political pressure for easier monetary policy contrasts with inflation still running above target.\n\n' +
+      'Trader implication: Inflation data may generate [[outsized volatility as markets debate signal vs noise]].',
     traderImplications:
-      '[[FX volatility]]: CPI releases are among the [[highest-impact economic events]], often causing sharp USD moves, especially in USD/JPY and EUR/USD pairs.\n\n' +
-      '[[Real yield calculations]]: Inflation data directly affects real yield spreads, which drive [[carry trade flows]] and relative currency strength.\n\n' +
-      '[[Cross-asset reactions]]: Inflation surprises can trigger simultaneous moves in [[bonds, equities, and commodities]] as markets reassess growth and policy outlooks.',
+      '[[Market & Fed Implications]]\n\n' +
+      'Inflation remains the [[primary constraint on Fed easing]]. Cooling inflation supports additional rate cuts, while sticky core components cap the pace and depth of easing. Inflation surprises quickly [[reprice Fed Funds Futures and short-dated yields]]. For markets, inflation prints act as [[confirmation or invalidation events]] for existing rate expectations.\n\n' +
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact inflation signals include:\n\n' +
+      '• [[Monthly CPI & Core CPI prints]]\n\n' +
+      '• [[PCE inflation]] (Fed-preferred measure)\n\n' +
+      '• [[Wage growth and services inflation]]\n\n' +
+      '• [[Inflation expectations surveys]]\n\n' +
+      '• [[Tariff-related price pass-through indicators]]\n\n' +
+      'Alignment between inflation trend, expectations, and Fed guidance creates the [[highest-conviction macro trades]].\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, U.S. Inflation (YoY) functions best as:\n\n' +
+      '• [[Rate-expectation driver]]\n\n' +
+      '• [[USD bias validator]]\n\n' +
+      '• [[Real-yield and gold signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
   },
   'gdp-growth': {
     overview:
-      '[[Gross Domestic Product (GDP) Growth Rate]] measures the quarterly percentage change in real GDP (adjusted for inflation), representing the [[overall economic expansion or contraction]]. It aggregates activity across consumption, investment, government spending, and net trade.\n\n' +
-      'For financial markets, GDP growth is a [[fundamental driver]] of currency strength, monetary policy expectations, and risk sentiment.\n\n' +
-      'Why traders care:\n\n' +
-      '• Signals [[economic health]] and growth momentum, directly influencing currency valuations.\n\n' +
-      '• Affects [[monetary policy expectations]]: strong growth supports rate hikes, weak growth suggests easing.\n\n' +
-      '• Drives [[capital flows]]: higher growth attracts foreign investment, strengthening the currency.',
+      '[[Gross Domestic Product (GDP)]] measures the total value of goods and services produced within the United States. [[Real GDP growth]] (adjusted for inflation) is the primary gauge of economic momentum and a core input into monetary policy, risk sentiment, and cross-asset pricing.\n\n' +
+      'For traders, GDP growth provides context on [[demand strength, recession risk, and policy durability]], influencing FX flows, yields, and equity valuations.\n\n' +
+      'Why GDP Matters for Markets:\n\n' +
+      '• [[FX]]: Strong growth supports USD via real yield support and capital inflows\n\n' +
+      '• [[Rates]]: Faster growth can delay or limit rate cuts\n\n' +
+      '• [[Equities]]: Supports earnings outlook but may cap valuation upside if rates stay elevated\n\n' +
+      '• [[Risk Sentiment]]: Sustained expansion favors risk-on positioning',
     measurement:
-      'The [[Bureau of Economic Analysis (BEA)]] calculates GDP growth as the percentage change in real GDP from one quarter to the previous quarter, [[annualized for comparability]]. The calculation uses chained dollars to adjust for inflation.\n\n' +
+      'The [[U.S. Bureau of Economic Analysis (BEA)]] calculates GDP growth as the percentage change in real GDP from one quarter to the previous quarter, [[annualized for comparability]]. The calculation uses chained dollars to adjust for inflation.\n\n' +
       'GDP is measured through three approaches:\n\n' +
       '• [[Expenditure approach]]: Sum of consumption, investment, government spending, and net exports.\n\n' +
       '• [[Income approach]]: Sum of all income earned in production.\n\n' +
       '• [[Production approach]]: Value added at each stage of production.\n\n' +
-      'Data is released quarterly, typically around the [[end of the month]] following the quarter end, with [[multiple revisions]] as more comprehensive data becomes available.',
+      'Data is released quarterly, typically around the [[end of the month]] following the quarter end, with [[multiple revisions]] as more comprehensive data becomes available. Release Frequency: Quarterly. Unit: Percent (%).',
     impact:
       'GDP growth has [[profound implications]] for currency markets through multiple transmission channels:\n\n' +
-      '[[Strong Growth]]\n\n' +
-      '• [[Attracts foreign capital]] as investors seek exposure to expanding economies.\n\n' +
-      '• Raises [[inflation expectations]], prompting central banks to consider tighter policy.\n\n' +
-      '• Strengthens the currency through [[higher rate expectations]] and capital inflows.\n\n' +
-      '[[Weak or Negative Growth]]\n\n' +
-      '• Signals [[economic weakness]], potentially weakening the currency.\n\n' +
-      '• Increases odds of [[monetary easing]], reducing yield attractiveness.\n\n' +
-      '• Discourages [[foreign investment]], reducing demand for the currency.\n\n' +
-      '[[Market dynamics]]: GDP releases are [[high-impact events]], often causing significant currency volatility. Markets react not just to the headline number but to [[components and revisions]], with consumption and investment data particularly scrutinized for forward-looking signals.',
+      '[[Stronger GDP]]\n\n' +
+      '• [[Supports USD and real yields]]\n\n' +
+      '• [[Reduces rate-cut urgency]]\n\n' +
+      '• [[Favors cyclical assets]]\n\n' +
+      '[[Weaker GDP]]\n\n' +
+      '• [[Reopens recession risk pricing]]\n\n' +
+      '• [[Increases rate-cut probability]]\n\n' +
+      '• [[Supports defensive FX and bonds]]\n\n' +
+      '[[Market dynamics]]: GDP surprises tend to [[reprice rate expectations first]], with FX and equity volatility following. Markets react not just to the headline number but to [[components and revisions]], with consumption and investment data particularly scrutinized for forward-looking signals.',
     context:
-      'U.S. GDP growth has shown [[resilience]] despite global headwinds, with Q2 2025 registering 3.8% growth following a contraction in Q1 2025 (-0.6%). The economy has demonstrated [[structural strength]] in consumption and services, offsetting weakness in some sectors.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[Growth sustainability]]: Markets assess whether current growth rates are sustainable or driven by temporary factors.\n\n' +
-      '• [[Component analysis]]: Consumption strength vs. investment weakness provides insights into economic drivers.\n\n' +
-      '• [[Policy implications]]: Growth data influences Fed policy decisions, balancing growth support with inflation control.\n\n' +
-      '• [[Global context]]: U.S. growth relative to other major economies affects [[currency differentials]] and capital flows.',
+      '[[Latest Growth Snapshot]]\n\n' +
+      'Q3 2025 Real GDP: [[+4.3% (annualized)]]\n\n' +
+      '[[Strongest quarterly expansion in over two years]]\n\n' +
+      'Growth exceeded consensus expectations\n\n' +
+      'Key contributors:\n\n' +
+      '• [[Resilient consumer spending]]\n\n' +
+      '• [[Rebound in exports]]\n\n' +
+      '• [[Continued government and fiscal support]]\n\n' +
+      'Earlier in 2025, GDP briefly contracted before rebounding sharply in Q2 and accelerating further in Q3, highlighting [[uneven but resilient economic momentum]].\n\n' +
+      '[[Forward Outlook]]\n\n' +
+      'Q4 2025 GDP (GDPNow estimate): [[~3.0%]]\n\n' +
+      'Growth expected to [[moderate but remain expansionary]]\n\n' +
+      'Full-year 2025 growth projected near [[~1.8–2.0% on an annual basis]]\n\n' +
+      'Markets interpret recent strength as [[reducing near-term recession risk]], while acknowledging downside risks from tighter financial conditions and slowing labor trends.\n\n' +
+      '[[Policy & Fed Implications]]\n\n' +
+      'Stronger-than-expected GDP [[complicates the Federal Reserve\'s easing path]]:\n\n' +
+      '• [[Robust growth reduces urgency]] for aggressive rate cuts\n\n' +
+      '• [[Persistent expansion alongside sticky inflation]] increases data-dependence\n\n' +
+      '• Markets [[recalibrate expectations]] based on growth-inflation balance\n\n' +
+      'The Fed remains focused on [[preventing re-acceleration while avoiding overtightening]] into late-cycle growth.\n\n' +
+      '[[Institutional & Bank Views]]\n\n' +
+      'Economists note Q3 growth was [[broad-based, not purely statistical]]\n\n' +
+      'Consensus expects [[slower but positive growth into 2026]]\n\n' +
+      'Risks cited include:\n\n' +
+      '• [[Cooling consumer demand]]\n\n' +
+      '• [[Softer job creation]]\n\n' +
+      '• [[Fiscal uncertainty and geopolitical spillovers]]\n\n' +
+      'Banks emphasize that quarterly strength does not eliminate late-cycle risks, but [[materially lowers near-term recession probabilities]].',
     traderImplications:
-      '[[FX volatility]]: GDP releases are among the [[most market-moving economic events]], causing sharp moves in USD pairs, especially EUR/USD and GBP/USD.\n\n' +
-      '[[Growth differentials]]: Relative GDP growth between economies drives [[currency strength]], with stronger growth typically supporting currency appreciation.\n\n' +
-      '[[Cross-asset reactions]]: GDP data triggers simultaneous moves in [[equities, bonds, and commodities]] as markets reassess growth and policy outlooks.',
+      '[[What Traders Should Watch]]\n\n' +
+      'Key data linked to GDP momentum:\n\n' +
+      '• [[Retail sales & consumer spending]]\n\n' +
+      '• [[Business investment and capex]]\n\n' +
+      '• [[Trade balance and exports]]\n\n' +
+      '• [[Labor market resilience]]\n\n' +
+      '• [[Inflation persistence vs growth strength]]\n\n' +
+      'GDP surprises tend to [[reprice rate expectations first]], with FX and equity volatility following.\n\n' +
+      '[[Market Impact Summary]]\n\n' +
+      'Stronger GDP:\n\n' +
+      '• [[Supports USD and real yields]]\n\n' +
+      '• [[Reduces rate-cut urgency]]\n\n' +
+      '• [[Favors cyclical assets]]\n\n' +
+      'Weaker GDP:\n\n' +
+      '• [[Reopens recession risk pricing]]\n\n' +
+      '• [[Increases rate-cut probability]]\n\n' +
+      '• [[Supports defensive FX and bonds]]',
   },
   unemployment: {
     overview:
-      'The [[Unemployment Rate]] measures the percentage of the labor force that is jobless but actively seeking work. It reflects [[labor market slack]] and the economy\'s ability to absorb workers, serving as a [[key indicator]] of economic health.\n\n' +
-      'For financial markets, unemployment data is a [[critical input]] for monetary policy expectations, wage inflation forecasts, and currency valuation models.\n\n' +
-      'Why traders care:\n\n' +
-      '• Directly influences [[Fed policy decisions]] through the dual mandate (employment and inflation).\n\n' +
-      '• Signals [[labor market tightness]], which affects wage growth and inflation expectations.\n\n' +
-      '• Impacts [[currency strength]] through policy expectations and economic health assessments.',
+      'The [[U.S. Unemployment Rate (U-3)]] measures the percentage of the civilian labor force that is unemployed but actively seeking work. It is one of the [[most closely watched indicators of economic health, consumer resilience, and monetary policy direction]].\n\n' +
+      'For traders, unemployment trends are critical because they influence [[Federal Reserve policy expectations, wage inflation, consumer spending, and cross-asset risk sentiment]].\n\n' +
+      'Why Unemployment Matters for Markets:\n\n' +
+      '• [[Monetary Policy]]: Rising unemployment increases pressure on the Fed to ease policy\n\n' +
+      '• [[Inflation]]: Labor slack reduces wage-driven inflation risks\n\n' +
+      '• [[Consumer Demand]]: Higher unemployment weakens household spending\n\n' +
+      '• [[Risk Sentiment]]: Labor deterioration can shift markets toward defensive positioning\n\n' +
+      'Labor data often [[leads policy shifts]], making it a high-signal indicator for traders.',
     measurement:
-      'The [[Bureau of Labor Statistics (BLS)]] calculates the unemployment rate from the [[Current Population Survey (CPS)]], a monthly survey of approximately 60,000 households. The rate represents the percentage of the [[civilian labor force]] (employed + unemployed) that is unemployed.\n\n' +
+      'The [[U.S. Bureau of Labor Statistics (BLS)]] calculates the unemployment rate from the [[Current Population Survey (CPS)]], a monthly survey of approximately 60,000 households. The rate represents the percentage of the [[civilian labor force]] (employed + unemployed) that is unemployed.\n\n' +
       'Key definitions:\n\n' +
       '• [[Unemployed]]: People without jobs who have actively looked for work in the past 4 weeks.\n\n' +
       '• [[Labor force]]: Employed + unemployed (excludes those not seeking work).\n\n' +
       '• [[U-6 rate]]: Broader measure including discouraged workers and part-time workers seeking full-time employment.\n\n' +
-      'Data is released monthly, typically on the [[first Friday]] of each month for the previous month, with revisions possible in subsequent releases.',
+      'Data is released monthly, typically on the [[first Friday]] of each month for the previous month, with revisions possible in subsequent releases. Release Frequency: Monthly. Unit: Percent (%).',
     impact:
       'Unemployment readings have [[significant implications]] for currency markets through policy and economic health channels:\n\n' +
-      '[[Falling Unemployment]]\n\n' +
-      '• Signals [[tightening labor market]], potentially pushing wages and inflation higher.\n\n' +
-      '• Encourages [[hawkish Fed policy]] (rate hikes), supporting USD strength.\n\n' +
-      '• Indicates [[economic strength]], attracting foreign capital and strengthening the currency.\n\n' +
-      '[[Rising Unemployment]]\n\n' +
-      '• Suggests [[economic weakness]], potentially weakening the currency.\n\n' +
-      '• Increases odds of [[monetary easing]], reducing yield attractiveness.\n\n' +
-      '• Depresses [[wage growth]] and inflation pressure, supporting dovish policy expectations.\n\n' +
-      '[[Policy dynamics]]: The Fed\'s [[dual mandate]] makes unemployment a key policy input. The [[natural rate of unemployment]] (NAIRU) concept suggests that unemployment below a certain level can trigger inflation, influencing policy decisions and currency markets.',
+      '[[Dovish Signals]]\n\n' +
+      '• [[Unemployment rising faster than expected]]\n\n' +
+      '• [[Weak payroll growth]]\n\n' +
+      '• [[Cooling wage pressures]]\n\n' +
+      '→ Markets price [[earlier or deeper rate cuts]]\n\n' +
+      '[[Hawkish Signals]]\n\n' +
+      '• [[Unemployment stabilizing or falling]]\n\n' +
+      '• [[Strong job creation]]\n\n' +
+      '• [[Accelerating wages]]\n\n' +
+      '→ [[Rate cut expectations are delayed or reduced]]\n\n' +
+      '[[Market Impact Summary]]\n\n' +
+      'FX Markets:\n\n' +
+      '• [[Rising unemployment tends to weigh on USD]] via lower rate expectations\n\n' +
+      '• [[High sensitivity in USD/JPY, EUR/USD, and GBP/USD]] around jobs data\n\n' +
+      'Rates:\n\n' +
+      '• [[Short-dated Treasury yields respond first]]\n\n' +
+      '• [[Softer labor data steepens the yield curve]] via front-end repricing\n\n' +
+      'Equities:\n\n' +
+      '• [[Mild labor cooling can support equities]] via rate cuts\n\n' +
+      '• [[Sharp labor deterioration increases recession risk]] and volatility',
     context:
-      'U.S. unemployment has [[gradually increased]] from historic lows, reaching 4.4% in September 2025, up from 3.7% in January 2024. The labor market remains [[relatively tight]] by historical standards, but the upward trend signals potential [[cooling]] in the economy.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[Labor market normalization]]: Markets assess whether the increase represents a return to pre-pandemic levels or signals economic weakness.\n\n' +
-      '• [[Wage pressure]]: Despite rising unemployment, wage growth remains a focus for inflation concerns.\n\n' +
-      '• [[Policy implications]]: Unemployment trends influence Fed decisions on the balance between employment and inflation goals.\n\n' +
-      '• [[Economic resilience]]: Current levels remain low historically, suggesting underlying economic strength.',
+      '[[Latest Labor Market Snapshot]]\n\n' +
+      'Unemployment Rate: [[~4.6%]]\n\n' +
+      'Trend: [[Gradually rising through late 2025]]\n\n' +
+      'Context: [[Highest level since 2021]], signaling a cooling labor market\n\n' +
+      'Recent employment gains have been concentrated in:\n\n' +
+      '• [[Healthcare]]\n\n' +
+      '• [[Construction]]\n\n' +
+      '• [[Social assistance]]\n\n' +
+      'Meanwhile, [[federal workforce reductions and slower hiring across cyclical sectors]] have weighed on overall labor conditions.\n\n' +
+      '[[Labor Market Trend Assessment]]\n\n' +
+      'The labor market has shifted from tight to [[balanced-to-soft]], marked by:\n\n' +
+      '• [[Slowing monthly payroll growth]]\n\n' +
+      '• [[Reduced labor mobility]] (lower quit rates)\n\n' +
+      '• [[Fewer job openings]] relative to prior years\n\n' +
+      '• [[Stable but flattening labor force participation]]\n\n' +
+      'While unemployment remains historically moderate, the [[direction of travel suggests increasing economic slack]], particularly if hiring continues to decelerate.\n\n' +
+      '[[Federal Reserve Policy Implications]]\n\n' +
+      'The recent rise in unemployment [[strengthens the case for continued, cautious rate cuts]], especially if paired with easing inflation.\n\n' +
+      'Key policy dynamics:\n\n' +
+      '• The Fed [[balances labor market cooling against inflation persistence]]\n\n' +
+      '• [[Rising unemployment reduces urgency]] to maintain restrictive rates\n\n' +
+      '• [[Policy decisions remain highly data-dependent]] rather than pre-committed\n\n' +
+      'Labor weakness without a sharp collapse supports [[gradual easing, not emergency stimulus]].',
     traderImplications:
-      '[[FX volatility]]: Unemployment releases (first Friday of each month) are [[high-impact events]], causing significant USD moves, especially in EUR/USD and GBP/USD pairs.\n\n' +
-      '[[Policy expectations]]: Unemployment data directly affects [[Fed policy forecasts]], influencing yield curves and currency strength.\n\n' +
-      '[[Cross-asset reactions]]: Unemployment surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess growth and policy outlooks.',
+      '[[What Traders Should Monitor]]\n\n' +
+      'High-impact labor indicators linked to unemployment:\n\n' +
+      '• [[Monthly Non-Farm Payrolls (NFP)]]\n\n' +
+      '• [[Initial & Continuing Jobless Claims]]\n\n' +
+      '• [[JOLTS Job Openings]]\n\n' +
+      '• [[Wage growth]] (Average Hourly Earnings)\n\n' +
+      '• [[Labor force participation rate]]\n\n' +
+      'Alignment between unemployment, inflation, and GDP often signals [[macro inflection points]].\n\n' +
+      '[[Market Impact Summary]]\n\n' +
+      'FX Markets:\n\n' +
+      '• [[Rising unemployment tends to weigh on USD]] via lower rate expectations\n\n' +
+      '• [[High sensitivity in USD/JPY, EUR/USD, and GBP/USD]] around jobs data\n\n' +
+      'Rates:\n\n' +
+      '• [[Short-dated Treasury yields respond first]]\n\n' +
+      '• [[Softer labor data steepens the yield curve]] via front-end repricing\n\n' +
+      'Equities:\n\n' +
+      '• [[Mild labor cooling can support equities]] via rate cuts\n\n' +
+      '• [[Sharp labor deterioration increases recession risk]] and volatility',
   },
   'nonfarm-payrolls': {
     overview:
-      '[[Non-Farm Payrolls (NFP)]] measures the monthly change in employment, excluding farm workers, government employees, and non-profit organization employees. It represents the [[net number of jobs added or lost]] in the U.S. economy and is one of the [[most closely watched economic indicators]] by traders and policymakers.\n\n' +
-      'For financial markets, NFP is a [[critical high-impact release]] that directly influences monetary policy expectations, currency valuations, and risk sentiment.\n\n' +
-      'Why traders care:\n\n' +
-      '• [[Highest-impact economic release]]: NFP releases (first Friday of each month) cause significant market volatility.\n\n' +
-      '• Directly affects [[Fed policy expectations]] through the employment component of the dual mandate.\n\n' +
-      '• Signals [[economic strength or weakness]], influencing currency flows and risk sentiment across asset classes.',
+      '[[Non-Farm Payrolls (NFP)]] measure the monthly change in employment across the U.S. economy, excluding farm workers, private household workers, and nonprofit organizations. It is derived from the [[Bureau of Labor Statistics (BLS) Establishment Survey]] and is one of the [[foremost indicators of labor market strength and economic momentum]].\n\n' +
+      'NFP is a [[high-impact release for financial markets]] because it directly influences consumer spending expectations, inflation dynamics, monetary policy outlooks, and USD valuation.\n\n' +
+      'Why NFP Matters for Markets:\n\n' +
+      '• [[Labor market momentum]]: Direct read on hiring or layoffs\n\n' +
+      '• [[Wage pressure]]: Drives inflation and real wage expectations\n\n' +
+      '• [[Consumer demand]]: Jobs growth supports consumption — ~70% of GDP\n\n' +
+      '• [[Fed policy expectations]]: Strong NFP data can delay rate cuts; weak data can accelerate them\n\n' +
+      'NFP surprises often [[trigger USD volatility]], especially in pairs like USD/JPY, EUR/USD, AUD/USD, and can ripple into rates, equities, and commodities.',
     measurement:
-      'The [[Bureau of Labor Statistics (BLS)]] calculates NFP from the [[Establishment Survey]], which covers approximately 145,000 businesses and government agencies representing about 697,000 worksites. The survey measures [[non-farm employment]] across all major industry sectors.\n\n' +
+      'The [[U.S. Bureau of Labor Statistics (BLS)]] calculates NFP from the [[Establishment Survey]], which covers approximately 145,000 businesses and government agencies representing about 697,000 worksites. The survey measures [[non-farm employment]] across all major industry sectors.\n\n' +
       'Key components:\n\n' +
-      '• [[Total non-farm employment]]: The headline number reported in thousands (K).\n\n' +
-      '• [[Private sector employment]]: Excludes government workers.\n\n' +
-      '• [[Average hourly earnings]]: Wage growth component, also closely watched.\n\n' +
-      '• [[Average workweek]]: Hours worked, indicating labor demand.\n\n' +
-      'Data is released monthly on the [[first Friday]] of each month at 8:30 AM ET for the previous month, with [[revisions]] common in subsequent months as more complete data arrives.',
+      '• [[Total non-farm employment]]: The headline number reported in thousands (K), seasonally adjusted.\n\n' +
+      '• [[Private sector employment]]: Excludes government workers, providing a cleaner read on private labor demand.\n\n' +
+      '• [[Average hourly earnings]]: Wage growth component, critical for inflation expectations.\n\n' +
+      '• [[Average workweek]]: Hours worked, indicating labor demand intensity.\n\n' +
+      'Data is released monthly on the [[first Friday]] of each month at 8:30 AM ET for the previous month, with [[revisions]] common in subsequent months as more complete data arrives. Frequency: Monthly. Unit: Jobs Added / Lost (Seasonally Adjusted).',
     impact:
       'NFP releases have [[profound market-moving effects]] through multiple transmission channels:\n\n' +
-      '[[Strong NFP (High Job Gains)]]\n\n' +
-      '• Signals [[robust economic growth]] and labor market strength.\n\n' +
-      '• Supports [[hawkish Fed policy]] expectations (rate hikes), strengthening USD.\n\n' +
-      '• Attracts [[foreign capital]] as investors seek exposure to strong economies.\n\n' +
-      '• Can trigger [[risk-on sentiment]] if growth is seen as sustainable.\n\n' +
-      '[[Weak NFP (Low/Negative Job Gains)]]\n\n' +
-      '• Suggests [[economic weakness]], potentially weakening the currency.\n\n' +
-      '• Increases odds of [[monetary easing]], reducing yield attractiveness.\n\n' +
-      '• Triggers [[risk-off sentiment]] as markets reassess growth outlooks.\n\n' +
-      '[[Market dynamics]]: NFP is known as the [["king of economic indicators"]] due to its market impact. The release often causes [[immediate and significant volatility]] in USD pairs, with EUR/USD and GBP/USD particularly sensitive. Markets react not just to the headline number but to [[revisions, wage data, and unemployment rate]] released simultaneously.',
+      '[[Bullish USD / Hawkish Implications]]\n\n' +
+      '• [[Job growth significantly above expectations]]\n\n' +
+      '• [[Upward revisions to prior months]]\n\n' +
+      '• [[Wage acceleration stronger than expected]]\n\n' +
+      '→ [[USD supports, rate-cut expectations tempered, yield curve steepening]]\n\n' +
+      '[[Dovish USD / Easing Implications]]\n\n' +
+      '• [[Weak or declining payrolls]]\n\n' +
+      '• [[Lower private sector job creation]]\n\n' +
+      '• [[Unemployment rising alongside low job gains]]\n\n' +
+      '→ [[USD pressure, markets price earlier rate cuts, lower yields]]\n\n' +
+      '[[Market dynamics]]: NFP is known as the [["king of economic indicators"]] due to its market impact. The release often causes [[immediate and significant volatility]] in USD pairs, with EUR/USD, GBP/USD, and USD/JPY particularly sensitive. Markets react not just to the headline number but to [[revisions, wage data, and unemployment rate]] released simultaneously.',
     context:
-      'U.S. Non-Farm Payrolls have shown [[volatile patterns]] in recent months, with September 2025 registering 119K jobs added, following a contraction of -4K in August 2025. The labor market has demonstrated [[resilience]] despite some monthly volatility, with strong gains in services sectors offsetting weakness in some industries.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[Job growth sustainability]]: Markets assess whether current job gains are sustainable or driven by temporary factors.\n\n' +
-      '• [[Wage pressure]]: Average hourly earnings data influences inflation expectations and Fed policy.\n\n' +
-      '• [[Sector composition]]: Strength in services vs. goods sectors provides insights into economic drivers.\n\n' +
-      '• [[Policy implications]]: NFP data directly influences Fed decisions on the balance between employment and inflation goals.',
+      '[[Latest NFP Data (Nov 2025)]]\n\n' +
+      'Non-farm Payrolls (Nov 2025): [[+64,000 jobs added]]\n\n' +
+      'Forecast consensus: [[~51,000 jobs]]\n\n' +
+      'Prior (Oct 2025): [[–105,000 jobs]] (sharp decline due to federal workforce reductions and shutdown effects)\n\n' +
+      'The November report showed [[continued modest job growth]] following October\'s significant contraction, with gains concentrated in:\n\n' +
+      '• [[Healthcare]]\n\n' +
+      '• [[Construction]]\n\n' +
+      '• [[Social assistance]]\n\n' +
+      'Total nonfarm employment has shown [[very little net change since April 2025]], suggesting labor market activity has broadly flattened.\n\n' +
+      'Important context: Due to the October federal government shutdown, October household survey data were not published, and payroll data were delayed and consolidated with the November release — an [[unusual deviation from the typical jobs report cycle]].\n\n' +
+      '[[Labor Market Trend Signals]]\n\n' +
+      'Slowing Job Growth:\n\n' +
+      'November\'s modest gain comes after October\'s contraction, underlining a [[broad cooling in labor demand]]. Despite headline job creation, employment has shown [[limited trend strength since mid-2025]].\n\n' +
+      'Private Sector Weakness:\n\n' +
+      'ADP data — an independent private payroll measure — reported a [[decline in private jobs in November]], highlighting underlying weakness outside public sector support.\n\n' +
+      'Residual Data Noise:\n\n' +
+      'Ongoing disruptions from the government shutdown have [[complicated interpretation]]. Analysts caution that [[seasonal adjustments and reporting gaps]] may introduce noise into short-term comparisons.\n\n' +
+      '[[Monetary Policy & Market Implications]]\n\n' +
+      'Current Context:\n\n' +
+      'Even with small gains in November, the overall trend suggests [[sluggish labor demand and a softening job market]] — which supports a dovish tilt in monetary policy pricing. Combined with rising unemployment and slowing wage pressures, this environment keeps markets [[sensitive to labor data surprises]].',
     traderImplications:
-      '[[FX volatility]]: NFP releases are the [[most market-moving economic events]], causing immediate and significant USD moves, especially in EUR/USD, GBP/USD, and USD/JPY pairs.\n\n' +
-      '[[Trading opportunities]]: The first Friday NFP release creates [[high-volatility trading opportunities]], with markets often gapping and trending strongly post-release.\n\n' +
-      '[[Cross-asset reactions]]: NFP data triggers simultaneous moves in [[equities, bonds, commodities, and currencies]] as markets reassess growth, policy, and risk outlooks.',
+      '[[Market & Policy Signals to Watch]]\n\n' +
+      'Leading indicators around NFP:\n\n' +
+      '• [[Average Hourly Earnings]]: Critical for inflation expectations\n\n' +
+      '• [[Labor Force Participation]]: Tracks labor supply trends\n\n' +
+      '• [[Initial and Continuing Claims]]: Early signals of layoffs\n\n' +
+      '• [[Private vs Public Payroll Divergence]]: Shows structural labor strength/weakness\n\n' +
+      'Risk events tied to NFP:\n\n' +
+      '• [[Revisions to prior months\' payroll totals]]\n\n' +
+      '• [[Fed commentary in reaction to labor trends]]\n\n' +
+      '• [[Correlation shifts between jobs, inflation, and core prices]]\n\n' +
+      '[[Market Impact Summary]]\n\n' +
+      'FX Markets:\n\n' +
+      '• NFP releases are the [[most market-moving economic events]], causing immediate and significant USD moves\n\n' +
+      '• [[High sensitivity in USD/JPY, EUR/USD, AUD/USD]] around jobs data\n\n' +
+      'Rates:\n\n' +
+      '• [[Short-dated Treasury yields respond first]] to NFP surprises\n\n' +
+      '• [[Strong data steepens yield curve]] via front-end repricing\n\n' +
+      'Equities & Commodities:\n\n' +
+      '• NFP data triggers [[simultaneous moves across asset classes]] as markets reassess growth, policy, and risk outlooks\n\n' +
+      '• [[Weak labor data supports rate-cut expectations]], potentially supporting equities via lower yields',
   },
   'core-inflation-YoY': {
     overview:
-      '[[Core Inflation Year-over-Year]] measures the annual change in consumer prices excluding [[volatile food and energy components]]. It is the [[Federal Reserve\'s preferred inflation gauge]] for monetary policy decisions, providing a clearer view of [[underlying inflation trends]] without short-term commodity price fluctuations.\n\n' +
-      'For financial markets, Core Inflation is a [[critical policy input]] that directly influences Fed rate decisions and currency valuations.\n\n' +
-      'Why traders care:\n\n' +
-      '• [[Primary Fed policy input]]: The Fed focuses on core inflation for rate decisions, making it more important than headline inflation.\n\n' +
-      '• [[Underlying trend indicator]]: Removes noise from volatile food/energy prices, showing true inflation momentum.\n\n' +
-      '• [[Currency impact]]: Core inflation readings directly affect Fed policy expectations and USD strength.',
+      'U.S. Core Inflation measures the underlying trend in consumer prices, excluding [[volatile food and energy components]]. It is one of the [[most closely watched inflation gauges by the Federal Reserve]] and plays a central role in monetary policy decisions, interest rate expectations, and USD pricing.\n\n' +
+      'For traders, core inflation is a [[cleaner signal of persistent price pressure]] than headline inflation.\n\n' +
+      'Why Core Inflation Matters to Traders:\n\n' +
+      '• [[Federal Reserve policy decisions]]\n\n' +
+      '• [[Interest rate and yield expectations]]\n\n' +
+      '• [[Real yields]], impacting USD and gold\n\n' +
+      '• [[Market confidence in sustained disinflation]]\n\n' +
+      'Markets often react more strongly to [[core inflation surprises than headline CPI]], especially during late-cycle or easing environments.',
     measurement:
       'The [[Bureau of Labor Statistics (BLS)]] calculates Core CPI by taking the Consumer Price Index and [[excluding food and energy components]]. The year-over-year change is calculated by comparing the current month\'s Core CPI to the same month in the previous year.\n\n' +
       'Key components:\n\n' +
@@ -265,29 +413,68 @@ const indicatorDetails = {
       '• [[Food excluded]]: Fresh fruits, vegetables, meat, dairy, and processed foods.\n\n' +
       '• [[Energy excluded]]: Gasoline, electricity, natural gas, and fuel oil.\n\n' +
       '• [[Included items]]: Housing, medical care, transportation services, apparel, education, and other services.\n\n' +
+      '[[Core CPI vs Core PCE]]\n\n' +
+      'While Core CPI is widely traded, the Federal Reserve places greater emphasis on [[Core PCE inflation]].\n\n' +
+      '• [[Core PCE]]: Running closer to 2.8–2.9% YoY\n\n' +
+      '• [[Broader coverage and adaptive weighting]] make PCE a more stable policy gauge\n\n' +
+      '• [[Persistent elevation in core PCE]] reinforces the Fed\'s data-dependent and cautious stance\n\n' +
       'Data is released monthly, typically around the [[10th-15th of each month]] for the previous month, alongside headline CPI.',
     impact:
       'Core Inflation has [[significant implications]] for currency markets through Fed policy channels:\n\n' +
-      '[[Elevated Core Inflation]]\n\n' +
-      '• Signals [[persistent price pressures]], increasing likelihood of [[hawkish Fed policy]] (rate hikes).\n\n' +
-      '• Strengthens [[USD]] as markets price in tighter monetary policy.\n\n' +
-      '• Indicates [[underlying inflation momentum]], which is harder to control than headline inflation.\n\n' +
-      '[[Moderate/Declining Core Inflation]]\n\n' +
-      '• Suggests [[inflation is under control]], potentially allowing [[dovish policy]] (rate cuts).\n\n' +
-      '• Can [[weaken USD]] if it leads to expectations of monetary easing.\n\n' +
-      '• Supports [[risk assets]] as lower inflation reduces pressure on central banks.\n\n' +
-      '[[Policy dynamics]]: The Fed\'s [[dual mandate]] makes core inflation a key policy input. The Fed targets [[2% core inflation]] over the long term, and deviations from this target directly influence rate decisions and currency markets.',
+      '[[Hawkish Core Inflation]]\n\n' +
+      '• [[Core CPI/PCE remains elevated]]\n\n' +
+      '• [[Services inflation stays firm]]\n\n' +
+      '• [[Wage growth remains strong]]\n\n' +
+      '→ [[USD support, higher real yields, pressure on risk assets]]\n\n' +
+      '[[Dovish Core Inflation]]\n\n' +
+      '• [[Sustained downward trend]]\n\n' +
+      '• [[Broad-based easing across services]]\n\n' +
+      '• [[Wage pressures cool]]\n\n' +
+      '→ [[USD weakness, yield compression, support for equities and gold]]\n\n' +
+      '[[Market dynamics]]: Core inflation remains the [[key constraint on aggressive Fed easing]]. Sustained declines strengthen the case for rate cuts, while sticky core readings delay or reduce expected easing. Short-dated yields and USD pricing [[react rapidly to core surprises]]. Core inflation acts as a [[confirmation indicator for broader disinflation trends]].',
     context:
-      'U.S. Core Inflation has [[moderated significantly]] from 3.9% in January 2024 to 3.0% in September 2025, showing progress toward the Fed\'s 2% target. However, core inflation remains [[above the Fed\'s objective]], indicating persistent underlying price pressures.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[Sticky inflation]]: Core inflation has been more persistent than headline inflation, driven by services and housing costs.\n\n' +
-      '• [[Fed policy focus]]: The Fed closely monitors core inflation for rate decisions, making it more market-moving than headline inflation.\n\n' +
-      '• [[Services vs. goods]]: Services inflation remains elevated while goods inflation has moderated.\n\n' +
-      '• [[Policy implications]]: Current core inflation levels suggest the Fed may maintain restrictive policy until inflation moves closer to 2%.',
+      '[[Current Core Inflation Trend (Late 2025)]]\n\n' +
+      'Core CPI is running at approximately [[2.6% YoY]], down from levels near 3.0% earlier in 2025. This marks the [[slowest pace of core inflation since early 2021]], suggesting a gradual easing in underlying price pressures.\n\n' +
+      'However, core inflation remains [[above the Fed\'s 2% target]], reinforcing a cautious approach to rate cuts rather than aggressive easing.\n\n' +
+      'Key takeaway: Disinflation is progressing, but persistence in core components keeps policy restrictive.\n\n' +
+      '[[Key Drivers of Core Inflation]]\n\n' +
+      'Services & Shelter:\n\n' +
+      '• [[Shelter and services inflation remain the stickiest components]], slowing the pace of overall disinflation\n\n' +
+      '• These categories are [[heavily influenced by wage growth and labor market conditions]]\n\n' +
+      'Wages & Labor Costs:\n\n' +
+      '• [[Elevated wage growth has sustained service-sector inflation]]\n\n' +
+      '• A [[cooling labor market is required]] for a durable decline in core prices\n\n' +
+      'Structural & Policy Factors:\n\n' +
+      '• [[Tariffs and supply-side frictions]] continue to apply upward pressure to core goods prices\n\n' +
+      '• These effects [[limit how quickly core inflation can revert to target]]\n\n' +
+      '[[Institutional & Bank Perspective]]\n\n' +
+      'Major institutions broadly agree on three themes:\n\n' +
+      '• [[Core inflation is cooling, but remains structurally sticky]]\n\n' +
+      '• [[Services inflation is the primary obstacle]] to reaching 2%\n\n' +
+      '• [[Full normalization may extend into 2026]], not 2025\n\n' +
+      'Several banks describe the environment as [["disinflation with persistence"]], rather than a clean return to target.\n\n' +
+      '[[Political & Structural Context]]\n\n' +
+      'Trade and tariff policies continue to contribute to [[upward core price pressure]].\n\n' +
+      'Data collection disruptions during 2025 introduced [[short-term noise into CPI readings]].\n\n' +
+      'Political pressure for easier policy contrasts with core inflation still running above target.\n\n' +
+      'Trader implication: Core inflation data may trigger [[outsized repricing as markets debate signal vs distortion]].',
     traderImplications:
-      '[[FX volatility]]: Core Inflation releases are [[high-impact events]], causing significant USD moves, especially in EUR/USD and GBP/USD pairs.\n\n' +
-      '[[Policy expectations]]: Core inflation data directly affects [[Fed policy forecasts]], influencing yield curves and currency strength.\n\n' +
-      '[[Cross-asset reactions]]: Core inflation surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess inflation and policy outlooks.',
+      '[[Market & Fed Implications]]\n\n' +
+      'Core inflation remains the [[key constraint on aggressive Fed easing]]. Sustained declines strengthen the case for rate cuts, while sticky core readings delay or reduce expected easing. Short-dated yields and USD pricing [[react rapidly to core surprises]]. Core inflation acts as a [[confirmation indicator for broader disinflation trends]].\n\n' +
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact core inflation signals include:\n\n' +
+      '• [[Monthly Core CPI momentum]]\n\n' +
+      '• [[Core PCE releases]] (Fed-preferred)\n\n' +
+      '• [[Services & shelter inflation breakdowns]]\n\n' +
+      '• [[Wage growth and labor cost indicators]]\n\n' +
+      '• [[Inflation expectations surveys]]\n\n' +
+      'The [[strongest macro trades]] emerge when core inflation trends align with Fed guidance and market expectations.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Core Inflation functions best as:\n\n' +
+      '• [[Policy constraint indicator]]\n\n' +
+      '• [[Rate-cut timing signal]]\n\n' +
+      '• [[Real-yield and USD bias filter]]\n\n' +
+      '• [[Volatility catalyst around CPI & PCE releases]]',
   },
 };
 
@@ -987,50 +1174,50 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     // Special handling for inflation-YoY with professional content
     if (indicator.id === 'inflation-YoY') {
       return [
-        'U.S. inflation (CPI YoY) has moderated to 3.0% as of September 2025, down from peak levels but still above the Federal Reserve\'s 2% target.',
-        'The disinflationary trend has been gradual, with services inflation remaining sticky while goods prices have eased more substantially.',
-        'Markets closely monitor each monthly release to assess whether inflation is on a sustainable path toward the Fed\'s target, which influences policy expectations and currency flows.',
-        'Inflation expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+        'Headline U.S. CPI is running at approximately 2.7% YoY, down from earlier 2025 highs near 3.0%. This moderation reflects easing shelter inflation, base effects, and slower goods price growth.',
+        'Core inflation has also cooled but remains above the Federal Reserve\'s 2% target, reinforcing a cautious policy stance rather than aggressive easing. Inflation is easing, but not fully neutralized — keeping policy expectations finely balanced.',
+        'Major financial institutions broadly agree that inflation is cooling but warn against declaring victory. Several banks describe current inflation as a "low-grade persistence" environment rather than a clean disinflation cycle.',
+        'Inflation remains the primary constraint on Fed easing. Inflation surprises quickly reprice Fed Funds Futures and short-dated yields. For markets, inflation prints act as confirmation or invalidation events for existing rate expectations.',
       ];
     }
 
     // Special handling for gdp-growth with professional content
     if (indicator.id === 'gdp-growth') {
       return [
-        'U.S. GDP growth registered 3.8% in Q2 2025, rebounding from a contraction of -0.6% in Q1 2025, demonstrating economic resilience amid global headwinds.',
-        'The economy has shown structural strength in consumption and services sectors, with growth driven by robust consumer spending despite some weakness in investment components.',
-        'Markets closely watch GDP releases for signals on economic momentum, as strong growth supports currency strength through capital inflows and higher rate expectations.',
-        'GDP growth expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+        'Q3 2025 Real GDP registered +4.3% (annualized), the strongest quarterly expansion in over two years. Growth exceeded consensus expectations, driven by resilient consumer spending, a rebound in exports, and continued government and fiscal support.',
+        'Earlier in 2025, GDP briefly contracted before rebounding sharply in Q2 and accelerating further in Q3, highlighting uneven but resilient economic momentum. Q4 2025 GDP (GDPNow estimate) is projected at ~3.0%, with full-year 2025 growth near ~1.8–2.0% on an annual basis.',
+        'Stronger-than-expected GDP complicates the Federal Reserve\'s easing path. Robust growth reduces urgency for aggressive rate cuts, while persistent expansion alongside sticky inflation increases data-dependence.',
+        'Economists note Q3 growth was broad-based, not purely statistical. Consensus expects slower but positive growth into 2026, with risks including cooling consumer demand, softer job creation, and fiscal uncertainty.',
       ];
     }
 
     // Special handling for unemployment with professional content
     if (indicator.id === 'unemployment') {
       return [
-        'U.S. unemployment has gradually increased to 4.4% in September 2025, up from 3.7% in January 2024, signaling potential cooling in the labor market while remaining relatively tight by historical standards.',
-        'The labor market continues to show resilience, with unemployment levels remaining low historically despite the upward trend, suggesting underlying economic strength.',
-        'Markets closely monitor unemployment data for signals on labor market tightness, wage pressure, and Fed policy implications, as it directly affects monetary policy expectations and currency flows.',
-        'Unemployment expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+        'Unemployment Rate is at ~4.6%, gradually rising through late 2025, marking the highest level since 2021 and signaling a cooling labor market. Recent employment gains have been concentrated in healthcare, construction, and social assistance, while federal workforce reductions and slower hiring across cyclical sectors have weighed on overall labor conditions.',
+        'The labor market has shifted from tight to balanced-to-soft, marked by slowing monthly payroll growth, reduced labor mobility, fewer job openings, and stable but flattening labor force participation. While unemployment remains historically moderate, the direction of travel suggests increasing economic slack.',
+        'The recent rise in unemployment strengthens the case for continued, cautious rate cuts, especially if paired with easing inflation. The Fed balances labor market cooling against inflation persistence, with rising unemployment reducing urgency to maintain restrictive rates.',
+        'Labor data often leads policy shifts, making it a high-signal indicator for traders. Markets react strongly to unemployment trends, with rising unemployment tending to weigh on USD via lower rate expectations, particularly in USD/JPY, EUR/USD, and GBP/USD pairs.',
       ];
     }
 
     // Special handling for nonfarm-payrolls with professional content
     if (indicator.id === 'nonfarm-payrolls') {
       return [
-        'U.S. Non-Farm Payrolls registered 119K jobs added in September 2025, following a contraction of -4K in August 2025, demonstrating the volatile nature of monthly employment data.',
-        'The labor market has shown resilience with strong gains in services sectors, though monthly readings can vary significantly due to seasonal adjustments and economic fluctuations.',
-        'Markets closely watch NFP releases (first Friday of each month) as they are among the highest-impact economic events, directly influencing Fed policy expectations and causing significant currency volatility.',
-        'NFP expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+        'Non-farm Payrolls registered +64,000 jobs added in November 2025, slightly above the consensus forecast of ~51,000, following October\'s sharp contraction of -105,000 jobs due to federal workforce reductions and shutdown effects.',
+        'Total nonfarm employment has shown very little net change since April 2025, suggesting labor market activity has broadly flattened. November\'s gains were concentrated in healthcare, construction, and social assistance, while ADP data reported a decline in private jobs, highlighting underlying weakness outside public sector support.',
+        'Even with small gains in November, the overall trend suggests sluggish labor demand and a softening job market, which supports a dovish tilt in monetary policy pricing. Combined with rising unemployment and slowing wage pressures, this environment keeps markets sensitive to labor data surprises.',
+        'NFP is known as the "king of economic indicators" due to its market impact. The release often causes immediate and significant volatility in USD pairs, with markets reacting not just to the headline number but to revisions, wage data, and unemployment rate released simultaneously.',
       ];
     }
 
     // Special handling for core-inflation-YoY with professional content
     if (indicator.id === 'core-inflation-YoY') {
       return [
-        'U.S. Core Inflation has moderated to 3.0% in September 2025, down from 3.9% in January 2024, showing progress toward the Fed\'s 2% target while remaining above the objective.',
-        'Core inflation, which excludes volatile food and energy components, is the Federal Reserve\'s preferred inflation gauge for monetary policy decisions, making it more market-moving than headline inflation.',
-        'The persistent elevation of core inflation, driven by services and housing costs, suggests the Fed may maintain restrictive policy until inflation moves closer to the 2% target.',
-        'Core inflation expectations, momentum, and consensus forecasts will appear here once live data is integrated.',
+        'Core CPI is running at approximately 2.6% YoY, down from levels near 3.0% earlier in 2025. This marks the slowest pace of core inflation since early 2021, suggesting a gradual easing in underlying price pressures.',
+        'However, core inflation remains above the Fed\'s 2% target, reinforcing a cautious approach to rate cuts rather than aggressive easing. Disinflation is progressing, but persistence in core components keeps policy restrictive.',
+        'Major institutions broadly agree that core inflation is cooling but remains structurally sticky. Services inflation is the primary obstacle to reaching 2%, and full normalization may extend into 2026.',
+        'Core inflation remains the key constraint on aggressive Fed easing. Markets often react more strongly to core inflation surprises than headline CPI, especially during late-cycle or easing environments.',
       ];
     }
 
