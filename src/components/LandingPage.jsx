@@ -77,6 +77,44 @@ const LandingPage = () => {
     };
   }, []);
 
+  // Scroll-triggered animations for sections
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.15,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-in');
+          
+          // Stagger animations for child elements
+          const children = entry.target.querySelectorAll('.animate-on-scroll');
+          children.forEach((child, index) => {
+            setTimeout(() => {
+              child.classList.add('animate-in');
+            }, index * 100);
+          });
+          
+          observer.unobserve(entry.target);
+        }
+      });
+    }, observerOptions);
+
+    // Observe all sections
+    const sections = document.querySelectorAll('section[id], .data-powered, .alerts-showcase');
+    sections.forEach(section => {
+      observer.observe(section);
+    });
+
+    return () => {
+      sections.forEach(section => {
+        observer.unobserve(section);
+      });
+    };
+  }, []);
+
   useEffect(() => {
     const counters = document.querySelectorAll('.counter');
     
@@ -150,7 +188,14 @@ const LandingPage = () => {
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const offset = 80; // Account for navbar height
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
     closeMobileMenu();
   };
@@ -330,7 +375,7 @@ const LandingPage = () => {
       {/* Data Powered By Section */}
       <section className="data-powered">
         <div className="data-powered-inner">
-          <h2 className="data-powered-title">DATA DRIVEN BY</h2>
+          <h2 className="data-powered-title animate-on-scroll">DATA DRIVEN BY</h2>
           <div className="data-powered-logos">
             <div className="logo-scroll">
               <div className="logo-item">
@@ -455,9 +500,9 @@ const LandingPage = () => {
       {/* Features Section */}
       <section id="features" className="features">
         <div className="features-inner">
-          <h2 className="section-title">Why Traders Choose FXSentinel</h2>
+          <h2 className="section-title animate-on-scroll">Why Traders Choose FXSentinel</h2>
           <div className="features-grid">
-            <div className="feature-card">
+            <div className="feature-card animate-on-scroll">
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -470,7 +515,7 @@ const LandingPage = () => {
               <h3>Never Miss Market-Moving Events</h3>
               <p>Stop losing money because you missed the news. We monitor 100+ sources including premium financial data providers and global news feeds to catch every economic release that moves your trades - from major central bank decisions to key economic indicators.</p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card animate-on-scroll">
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 11H15M9 15H15M9 7H15M5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -482,7 +527,7 @@ const LandingPage = () => {
               <h3>Understand the "Why" Behind Every Move</h3>
               <p>Don't just see the numbers - understand what they mean. Our AI analysis instantly explains how each economic event will impact EUR/USD, USD/JPY, and Gold, giving you the context to make smarter trading decisions.</p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card animate-on-scroll">
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -491,7 +536,7 @@ const LandingPage = () => {
               <h3>Get Alerts Before the Market Reacts</h3>
               <p>While others are still reading the news, you're already positioned. Receive instant Telegram notifications with AI-powered analysis and specific pair reactions within seconds of economic releases.</p>
             </div>
-            <div className="feature-card">
+            <div className="feature-card animate-on-scroll">
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
@@ -514,14 +559,14 @@ const LandingPage = () => {
       <section className="alerts-showcase">
         <div className="alerts-showcase-inner">
           <div className="alerts-content">
-            <div className="phone-mockup">
+            <div className="phone-mockup animate-on-scroll">
               <img 
                 src={phoneImage} 
                 alt="FXSentinel Alerts on iPhone" 
                 className="phone-image"
               />
             </div>
-            <div className="alerts-text">
+            <div className="alerts-text animate-on-scroll">
               <h2 className="alerts-title">Never Miss The 'Why'.</h2>
               <p className="alerts-description">
                 While other traders are still processing the news, you could be positioned for profit. 
@@ -544,8 +589,8 @@ const LandingPage = () => {
         <div className="about-inner">
           <div className="about-content">
             <div className="about-text">
-              <h2 className="about-title">Built By Traders Who Know What You Need</h2>
-              <div className="about-text-background">
+              <h2 className="about-title animate-on-scroll">Built By Traders Who Know What You Need</h2>
+              <div className="about-text-background animate-on-scroll">
                 <p>
                   We are forex traders who've spent years in the markets, and it is arrogant for anyone to say 
                   they know exactly what moves the market, but it is undeniable that news plays a major role in 
@@ -580,10 +625,10 @@ const LandingPage = () => {
       {/* Pricing Section */}
       <section id="pricing" className="pricing">
         <div className="pricing-inner">
-          <h2 className="section-title">Start Trading Smarter Today</h2>
-          <p className="pricing-description">Choose the plan that fits your trading style. Start free, upgrade anytime.</p>
+          <h2 className="section-title animate-on-scroll">Start Trading Smarter Today</h2>
+          <p className="pricing-description animate-on-scroll">Choose the plan that fits your trading style. Start free, upgrade anytime.</p>
           <div className="pricing-grid">
-            <div className="pricing-card">
+            <div className="pricing-card animate-on-scroll">
               <h3>Free</h3>
               <div className="price">$0<span>/month</span></div>
               <p className="pricing-subtitle">Perfect for getting started</p>
@@ -598,7 +643,7 @@ const LandingPage = () => {
               </ul>
               <Link to="/signup" className="pricing-button">Get Started Free</Link>
             </div>
-            <div className="pricing-card featured">
+            <div className="pricing-card featured animate-on-scroll">
               <div className="popular-badge">Most Popular</div>
               <h3>Premium</h3>
               <div className="price">$14.99<span>/month</span></div>
@@ -622,29 +667,29 @@ const LandingPage = () => {
       {/* FAQ Section */}
       <section id="faq" className="faq">
         <div className="faq-inner">
-          <h2 className="section-title">Frequently Asked Questions</h2>
+          <h2 className="section-title animate-on-scroll">Frequently Asked Questions</h2>
           <div className="faq-grid">
-            <div className="faq-item">
+            <div className="faq-item animate-on-scroll">
               <h3>How accurate is the AI analysis?</h3>
               <p>Our advanced AI analysis system analyzes historical patterns, market correlations, and economic relationships to provide insights into market movements. While no analysis is 100% certain, our AI identifies market-moving events and their potential impact based on historical data.</p>
             </div>
-            <div className="faq-item">
+            <div className="faq-item animate-on-scroll">
               <h3>What data sources do you use?</h3>
               <p>We aggregate data from premium financial data providers, economic calendars, and global news sources. All sources are verified and trusted by professional traders worldwide.</p>
             </div>
-            <div className="faq-item">
+            <div className="faq-item animate-on-scroll">
               <h3>How fast are the alerts delivered?</h3>
               <p>Our system delivers alerts within seconds of economic releases. Telegram notifications are instant, and our AI analysis is typically available within 30-60 seconds of the data release.</p>
             </div>
-            <div className="faq-item">
+            <div className="faq-item animate-on-scroll">
               <h3>Can I customize which events I receive alerts for?</h3>
               <p>Yes! Professional subscribers can customize their alert preferences by currency pair, impact level, and specific economic indicators. You'll only receive alerts for events that matter to your trading strategy.</p>
             </div>
-            <div className="faq-item">
+            <div className="faq-item animate-on-scroll">
               <h3>Is my trading data secure?</h3>
               <p>Absolutely. We use bank-level encryption and never store your trading positions or account information. We only process market data and economic events to provide analysis.</p>
             </div>
-            <div className="faq-item">
+            <div className="faq-item animate-on-scroll">
               <h3>Can I cancel my subscription anytime?</h3>
               <p>Yes, you can cancel your subscription at any time with no questions asked. Your access will continue until the end of your current billing period.</p>
             </div>
@@ -655,11 +700,11 @@ const LandingPage = () => {
       {/* Contact Section */}
       <section id="contact" className="contact">
         <div className="contact-inner">
-          <h2 className="section-title">Get in Touch</h2>
-          <p className="section-subtitle">
+          <h2 className="section-title animate-on-scroll">Get in Touch</h2>
+          <p className="section-subtitle animate-on-scroll">
             Have questions? We're here to help you.
           </p>
-          <div className="contact-single">
+          <div className="contact-single animate-on-scroll">
             <div className="contact-header">
               <svg className="email-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
