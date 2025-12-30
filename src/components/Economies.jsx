@@ -396,6 +396,370 @@ const indicatorDetails = {
       '• NFP data triggers [[simultaneous moves across asset classes]] as markets reassess growth, policy, and risk outlooks\n\n' +
       '• [[Weak labor data supports rate-cut expectations]], potentially supporting equities via lower yields',
   },
+  // EUR Interest Rate
+  'interest-rate-EUR': {
+    overview:
+      'The [[European Central Bank (ECB)]] has paused its easing cycle after delivering substantial rate cuts through 2024–2025. Policy rates are now held at levels deemed [[broadly neutral]], reflecting inflation that has converged toward target and a euro area economy showing [[modest but improving resilience]].\n\n' +
+      '[[Current Policy Stance]]\n\n' +
+      'Main Refinancing Rate: [[2.15%]]\n\n' +
+      'Deposit Facility Rate: [[2.00%]]\n\n' +
+      'Marginal Lending Facility: [[2.40%]]\n\n' +
+      'The ECB has emphasized that [[future decisions will be strictly data-dependent]], with no pre-committed rate path.\n\n' +
+      '[[Policy Objective & Inflation Backdrop]]\n\n' +
+      'The ECB\'s primary mandate is [[price stability]], defined as inflation close to 2% over the medium term.\n\n' +
+      '• [[Headline inflation has cooled significantly]] from post-pandemic peaks\n\n' +
+      '• [[Core inflation remains sticky]] but is trending lower\n\n' +
+      '• [[ECB staff projections]] place inflation near target through 2025–2026\n\n' +
+      'This environment has [[reduced urgency for further easing]] while limiting justification for renewed tightening.',
+    measurement:
+      '[[Governance & Key Decision-Makers]]\n\n' +
+      'ECB President: [[Christine Lagarde]]\n\n' +
+      'Decision Body: [[ECB Governing Council]] (Executive Board + national central bank governors)\n\n' +
+      'Policy decisions reflect a [[balance between divergent national economic conditions]], with a strong emphasis on institutional independence and credibility.\n\n' +
+      'Lagarde\'s leadership has focused on:\n\n' +
+      '• [[Maintaining inflation-fighting credibility]]\n\n' +
+      '• [[Avoiding premature policy commitments]]\n\n' +
+      '• [[Anchoring medium-term expectations]] rather than short-term market reactions\n\n' +
+      'The ECB Governing Council meets [[approximately eight times per year]] to set policy rates. Update Frequency: Policy meetings (≈8 per year).',
+    impact:
+      '[[FX & Macro Implications]]\n\n' +
+      '• A [[steady ECB while other central banks ease]] may support the euro\n\n' +
+      '• [[Weak growth differentials versus the U.S.]] remain a structural EUR headwind\n\n' +
+      '• [[EUR crosses remain sensitive]] to inflation surprises and ECB communication tone\n\n' +
+      '[[Scenario Framework]]\n\n' +
+      '[[Hawkish Risk]]\n\n' +
+      '• [[Inflation re-accelerates]] due to wages or energy\n\n' +
+      '• [[Growth outperforms expectations]]\n\n' +
+      '→ [[Rates remain restrictive for longer]]\n\n' +
+      '[[Base Case]]\n\n' +
+      '• [[Inflation stabilizes near 2%]]\n\n' +
+      '• [[Growth remains modest]]\n\n' +
+      '→ [[Policy rates unchanged]]\n\n' +
+      '[[Dovish Risk]]\n\n' +
+      '• [[Sharp growth slowdown]]\n\n' +
+      '• [[Core inflation undershoots target]]\n\n' +
+      '→ [[Potential return to easing]]',
+    context:
+      '[[Economic Growth Context]]\n\n' +
+      'Eurozone growth remains [[subdued but positive]], supported by:\n\n' +
+      '• [[Gradual recovery in consumer demand]]\n\n' +
+      '• [[Stabilizing energy prices]]\n\n' +
+      '• [[Easing financial conditions]] following prior rate cuts\n\n' +
+      'However, growth remains [[uneven across member states]], complicating policy transmission and reinforcing the ECB\'s cautious approach.\n\n' +
+      '[[Political & Institutional Considerations]]\n\n' +
+      'While the ECB operates independently, monetary policy exists within a broader political and fiscal landscape:\n\n' +
+      '• Some euro area governments favor [[looser policy to support growth]]\n\n' +
+      '• [[Fiscal policy divergence]] across member states affects inflation outcomes\n\n' +
+      '• Ongoing debate exists around the eurozone\'s [["neutral rate" level]]\n\n' +
+      'Despite these pressures, the ECB has consistently [[reinforced its independence]], prioritizing inflation dynamics over political preferences.\n\n' +
+      '[[Market Expectations & Forward Outlook]]\n\n' +
+      'Markets currently price:\n\n' +
+      '• [[High probability of rate stability]] through 2026\n\n' +
+      '• [[Low probability of near-term cuts or hikes]], absent a macro shock\n\n' +
+      'Future rate direction will depend primarily on:\n\n' +
+      '• [[Core inflation persistence]]\n\n' +
+      '• [[Wage growth dynamics]]\n\n' +
+      '• [[Eurozone growth momentum]]\n\n' +
+      '• [[External shocks]] (energy prices, geopolitics, global trade)',
+    traderImplications:
+      '[[Key Indicators to Monitor]]\n\n' +
+      'High-impact drivers for rate repricing:\n\n' +
+      '• [[Eurozone CPI]] (headline & core)\n\n' +
+      '• [[Wage growth and labor market data]]\n\n' +
+      '• [[ECB meeting statements and press conferences]]\n\n' +
+      '• [[Financial conditions and credit transmission metrics]]\n\n' +
+      'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, ECB monetary policy functions best as:\n\n' +
+      '• [[Macro regime filter]] (tightening vs easing)\n\n' +
+      '• [[EUR directional bias tool]]\n\n' +
+      '• [[Cross-asset sentiment anchor]]',
+  },
+  // GBP Interest Rate
+  'interest-rate-GBP': {
+    overview:
+      'The [[Bank Rate]] is the primary monetary policy tool of the Bank of England (BoE). It represents the interest rate at which the BoE lends to commercial banks and acts as the [[benchmark for short-term interest rates]] in the United Kingdom.\n\n' +
+      'For traders, the Bank Rate is a [[core macro driver]] that influences GBP valuation, yield differentials, risk sentiment, and cross-asset capital flows.\n\n' +
+      '[[Why It Matters to Markets]]\n\n' +
+      'The Bank Rate anchors the UK yield curve and directly impacts:\n\n' +
+      '• [[FX markets]]: GBP strength or weakness via yield differentials\n\n' +
+      '• [[Equities]]: Cost of capital and valuation multiples\n\n' +
+      '• [[Fixed income]]: Short-term yields, curve shape, and volatility\n\n' +
+      '• [[Commodities]]: Particularly gold, via real yields and risk appetite\n\n' +
+      'Markets trade [[expectations of future rate changes]], often well ahead of actual MPC decisions.',
+    measurement:
+      'The [[Monetary Policy Committee (MPC)]] meets [[eight times per year]] to set the Bank Rate.\n\n' +
+      '[[Key policy signals]] traders monitor:\n\n' +
+      '• [[Rate decision]] (hold / cut / hike)\n\n' +
+      '• [[Statement language changes]]\n\n' +
+      '• [[MPC minutes]] (detailed policy discussion)\n\n' +
+      '• [[Inflation Report]] (quarterly projections)\n\n' +
+      'The Bank Rate influences [[commercial bank lending rates]] and the broader UK financial system.',
+    impact:
+      '[[Market Transmission Mechanism]]\n\n' +
+      '[[Rates → FX]]\n\n' +
+      '• Higher relative UK rates attract capital → [[GBP support]]\n\n' +
+      '• Falling rate expectations compress yield advantage → [[GBP pressure]]\n\n' +
+      '[[Rates → Risk Assets]]\n\n' +
+      '• Higher rates tighten financial conditions\n\n' +
+      '• Lower rates generally support equities and credit\n\n' +
+      '[[Rates → Commodities]]\n\n' +
+      '• Gold reacts inversely to real yields\n\n' +
+      '• Energy responds indirectly via growth expectations\n\n' +
+      '[[Hawkish vs Dovish Signals]]\n\n' +
+      '[[Hawkish Bias]]\n\n' +
+      '• Delayed or fewer cuts\n\n' +
+      '• Persistent inflation pressures\n\n' +
+      '• Strong wage growth\n\n' +
+      '• Emphasis on inflation risks\n\n' +
+      'Typical reaction: [[GBP strength]], higher yields, pressure on equities and gold\n\n' +
+      '[[Dovish Bias]]\n\n' +
+      '• Rate cuts or easing guidance\n\n' +
+      '• Cooling inflation momentum\n\n' +
+      '• Economic weakness\n\n' +
+      '• Focus on growth risks\n\n' +
+      'Typical reaction: [[GBP weakness]], yield compression, support for risk assets',
+    context:
+      '[[Current Policy Context (Late 2025)]]\n\n' +
+      'The Bank of England has been [[adjusting policy]] in response to evolving inflation and growth dynamics in the UK economy.\n\n' +
+      'Key characteristics of the current regime:\n\n' +
+      '• [[Data-dependent approach]] to policy decisions\n\n' +
+      '• [[Focus on wage growth]] and services inflation\n\n' +
+      '• [[Balancing growth and inflation]] objectives\n\n' +
+      '• [[Post-Brexit economic adjustments]]\n\n' +
+      'This environment favors [[expectation-driven and event-driven trading]].',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for rate repricing:\n\n' +
+      '• [[CPI inflation trends]]\n\n' +
+      '• [[Wage growth data]]\n\n' +
+      '• [[BoE communication tone]]\n\n' +
+      '• [[Yield curve dynamics]] (2Y vs 10Y, real yields)\n\n' +
+      'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the Bank Rate functions best as:\n\n' +
+      '• [[Macro regime filter]] (tightening vs easing)\n\n' +
+      '• [[GBP directional bias tool]]\n\n' +
+      '• [[Cross-asset sentiment anchor]]',
+  },
+  // JPY Interest Rate
+  'interest-rate-JPY': {
+    overview:
+      'The [[Bank of Japan Policy Rate]] is the primary monetary policy tool of the Bank of Japan (BoJ). It represents the target for short-term interest rates in Japan and operates within the BoJ\'s [[yield curve control framework]].\n\n' +
+      'For traders, the BoJ Policy Rate is a [[core macro driver]] that influences JPY valuation, carry trade dynamics, risk sentiment, and cross-asset capital flows.\n\n' +
+      '[[Why It Matters to Markets]]\n\n' +
+      'The BoJ Policy Rate anchors the Japanese yield curve and directly impacts:\n\n' +
+      '• [[FX markets]]: JPY strength or weakness via yield differentials and carry trades\n\n' +
+      '• [[Equities]]: Cost of capital and valuation multiples\n\n' +
+      '• [[Fixed income]]: Short-term yields, curve shape, and volatility\n\n' +
+      '• [[Commodities]]: Particularly gold, via real yields and risk appetite\n\n' +
+      'Markets trade [[expectations of future rate changes]], particularly around BoJ policy normalization.',
+    measurement:
+      'The [[Bank of Japan Policy Board]] meets [[eight times per year]] to set the Policy Rate and other monetary policy tools.\n\n' +
+      '[[Key policy signals]] traders monitor:\n\n' +
+      '• [[Rate decision]] (hold / cut / hike)\n\n' +
+      '• [[Yield curve control adjustments]]\n\n' +
+      '• [[BoJ Governor press conference]]\n\n' +
+      '• [[Outlook Report]] (quarterly projections)\n\n' +
+      'The BoJ also uses [[quantitative easing]] and yield curve control to influence longer-term rates.',
+    impact:
+      '[[Market Transmission Mechanism]]\n\n' +
+      '[[Rates → FX]]\n\n' +
+      '• Higher relative Japanese rates reduce carry trade appeal → [[JPY support]]\n\n' +
+      '• Lower rate expectations support carry trades → [[JPY pressure]]\n\n' +
+      '[[Rates → Risk Assets]]\n\n' +
+      '• Higher rates tighten financial conditions\n\n' +
+      '• Lower rates generally support equities and credit\n\n' +
+      '[[Rates → Commodities]]\n\n' +
+      '• Gold reacts inversely to real yields\n\n' +
+      '• Energy responds indirectly via growth expectations\n\n' +
+      '[[Hawkish vs Dovish Signals]]\n\n' +
+      '[[Hawkish Bias]]\n\n' +
+      '• Rate hikes or normalization\n\n' +
+      '• Persistent inflation pressures\n\n' +
+      '• Strong economic data\n\n' +
+      '• Emphasis on inflation risks\n\n' +
+      'Typical reaction: [[JPY strength]], higher yields, pressure on carry trades\n\n' +
+      '[[Dovish Bias]]\n\n' +
+      '• Rate cuts or easing guidance\n\n' +
+      '• Cooling inflation momentum\n\n' +
+      '• Economic weakness\n\n' +
+      '• Focus on growth risks\n\n' +
+      'Typical reaction: [[JPY weakness]], yield compression, support for carry trades',
+    context:
+      '[[Current Policy Context (Late 2025)]]\n\n' +
+      'The Bank of Japan has been [[gradually normalizing policy]] after years of ultra-loose monetary policy, responding to inflation dynamics and economic conditions.\n\n' +
+      'Key characteristics of the current regime:\n\n' +
+      '• [[Data-dependent approach]] to policy decisions\n\n' +
+      '• [[Focus on sustainable inflation]] toward 2% target\n\n' +
+      '• [[Gradual policy normalization]]\n\n' +
+      '• [[Yield curve control adjustments]]\n\n' +
+      'This environment favors [[expectation-driven and event-driven trading]].',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for rate repricing:\n\n' +
+      '• [[CPI inflation trends]]\n\n' +
+      '• [[Wage growth data]]\n\n' +
+      '• [[BoJ communication tone]]\n\n' +
+      '• [[Yield curve dynamics]] (2Y vs 10Y, real yields)\n\n' +
+      'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the BoJ Policy Rate functions best as:\n\n' +
+      '• [[Macro regime filter]] (tightening vs easing)\n\n' +
+      '• [[JPY directional bias tool]]\n\n' +
+      '• [[Cross-asset sentiment anchor]]',
+  },
+  // EUR Inflation
+  'inflation-EUR': {
+    overview:
+      'The [[Harmonised Index of Consumer Prices (HICP)]] is the official inflation measure for the Eurozone, calculated by Eurostat using a standardized methodology across all euro area member states. It provides a [[comparable and consistent measure of consumer price inflation]] and serves as the primary inflation gauge for ECB monetary policy decisions.\n\n' +
+      'HICP tracks the [[year-over-year change in prices paid by households]] for a representative basket of goods and services, ensuring uniform treatment of consumption patterns across countries.\n\n' +
+      'Why HICP Matters to Markets:\n\n' +
+      '• It is the [[ECB\'s primary inflation target]], guiding interest rate policy\n\n' +
+      '• It shapes [[rate expectations, bond yields, and EUR valuation]]\n\n' +
+      '• [[Deviations from target]] influence forward guidance and market volatility\n\n' +
+      'Because of its harmonized structure, HICP is [[more relevant for cross-border investors]] than national CPI figures.',
+    measurement:
+      '[[Eurostat]] calculates HICP by tracking price changes for a representative basket of goods and services across all eurozone member states using a [[standardized methodology]]. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Headline HICP]]: Includes all items, including volatile food and energy components\n\n' +
+      '• [[Core HICP]]: Excludes food, energy, alcohol, and tobacco to reveal underlying inflation trends\n\n' +
+      'HICP is composed of several major categories:\n\n' +
+      '• [[Services inflation]]: Remains the most persistent component, reflecting wage growth and domestic demand\n\n' +
+      '• [[Food, alcohol & tobacco]]: Moderating but still sensitive to global supply conditions\n\n' +
+      '• [[Non-energy industrial goods]]: Generally subdued, reflecting weak demand and easing input costs\n\n' +
+      '• [[Energy]]: Volatile but currently exerting limited upward pressure on headline inflation\n\n' +
+      'Data is released monthly, typically around the [[middle of each month]] for the previous month, with revisions possible in subsequent releases. Source: Eurostat. Used by: European Central Bank. Release Frequency: Monthly. Unit: Percent (%).',
+    impact:
+      'HICP readings have [[profound implications]] for currency markets through ECB policy channels:\n\n' +
+      '[[FX Markets]]\n\n' +
+      '• [[Inflation above expectations tends to support EUR]], particularly against lower-yielding peers\n\n' +
+      '• [[Soft inflation surprises often weaken EUR]] via lower rate expectations\n\n' +
+      '[[Rates & Bonds]]\n\n' +
+      '• [[HICP outcomes directly affect rate futures]] and yield curve pricing\n\n' +
+      '• [[Stable inflation near target]] typically compresses volatility in front-end rates\n\n' +
+      '[[Cross-Asset Effects]]\n\n' +
+      '• [[Inflation stability supports equity valuation certainty]]\n\n' +
+      '• [[Sudden HICP deviations can trigger broad risk repricing]]\n\n' +
+      '[[Market dynamics]]: Markets react most strongly to [[surprises versus consensus]], not absolute inflation levels. HICP remains a [[primary constraint on ECB easing]]. Cooling inflation supports additional rate cuts, while sticky core components cap the pace and depth of easing.',
+    context:
+      '[[Current Inflation Context]]\n\n' +
+      'Eurozone HICP inflation stands at approximately [[2.1% year-over-year]], placing it very close to the ECB\'s 2% medium-term target. Inflation has [[stabilized after declining sharply]] from post-pandemic and energy-shock peaks.\n\n' +
+      'Key characteristics of the current inflation backdrop:\n\n' +
+      '• [[Headline inflation is largely anchored near target]]\n\n' +
+      '• [[Price pressures have normalized]] following easing energy and supply-chain costs\n\n' +
+      '• [[Inflation persistence is increasingly driven by domestic components]] rather than external shocks\n\n' +
+      'This environment supports a [[more balanced ECB policy stance]], rather than aggressive tightening or easing.\n\n' +
+      '[[Inflation Composition & Underlying Trends]]\n\n' +
+      'Markets closely monitor [[services inflation as a proxy for underlying price momentum]] and wage pass-through effects.\n\n' +
+      '[[ECB Policy Framework]]\n\n' +
+      'The ECB operates under a [[symmetric 2% inflation target over the medium term]], meaning it treats deviations above and below target with equal concern.\n\n' +
+      'Policy implications:\n\n' +
+      '• [[Inflation near target allows the ECB]] to avoid restrictive bias\n\n' +
+      '• [[Sustained inflation above target]] would reintroduce tightening risk\n\n' +
+      '• [[Persistent undershooting]] could revive easing expectations\n\n' +
+      '[[Short-term volatility in HICP]] is less influential than trend persistence, particularly in core and services components.\n\n' +
+      '[[Macro & Political Considerations]]\n\n' +
+      'Inflation dynamics in the euro area are influenced by:\n\n' +
+      '• [[Wage negotiations]] across major economies (Germany, France, Italy)\n\n' +
+      '• [[Fiscal policy and government support measures]]\n\n' +
+      '• [[Energy price volatility and geopolitical developments]]\n\n' +
+      '• [[External demand conditions and EUR exchange-rate movements]]\n\n' +
+      'While political pressures exist at the national level, ECB policy remains [[inflation-driven, with HICP as the central reference point]].',
+    traderImplications:
+      '[[What Traders Should Monitor]]\n\n' +
+      'High-impact drivers for rate repricing:\n\n' +
+      '• [[Monthly HICP releases vs expectations]]\n\n' +
+      '• [[Core and services inflation trends]]\n\n' +
+      '• [[ECB Governing Council commentary]]\n\n' +
+      '• [[Wage growth and labor cost indicators]]\n\n' +
+      '• [[Energy price shocks and geopolitical risks]]\n\n' +
+      '[[Persistent divergence between headline HICP and underlying components]] often precedes shifts in ECB communication.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Eurozone HICP functions best as:\n\n' +
+      '• [[ECB policy constraint indicator]]\n\n' +
+      '• [[EUR directional bias tool]]\n\n' +
+      '• [[Rate-expectation driver]]\n\n' +
+      '• [[Volatility catalyst around HICP releases]]',
+  },
+  // GBP Inflation
+  'inflation-GBP': {
+    overview:
+      '[[Consumer Price Index (CPI) Year-over-Year]] measures the annual percentage change in the price level of a basket of consumer goods and services in the United Kingdom, calculated by the Office for National Statistics (ONS). It is the [[primary inflation gauge]] used by the Bank of England and financial markets.\n\n' +
+      'For traders, UK CPI is a [[critical policy input]] that directly influences BoE rate decisions, GBP valuation, and cross-asset risk sentiment.\n\n' +
+      'Why UK CPI Matters to Traders:\n\n' +
+      '• [[BoE policy decisions]] and interest rate expectations\n\n' +
+      '• [[Real yields]], impacting GBP and gold\n\n' +
+      '• [[Risk sentiment]], affecting equities and carry trades\n\n' +
+      'Markets react to [[surprises versus expectations and trend momentum]].',
+    measurement:
+      'The [[Office for National Statistics (ONS)]] calculates CPI by tracking price changes for a representative basket of goods and services across the UK. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Headline CPI]]: Includes all items, including volatile food and energy components.\n\n' +
+      '• [[Core CPI]]: Excludes food, energy, alcohol, and tobacco to reveal underlying inflation trends.\n\n' +
+      'The Bank of England targets [[2% inflation]] as part of its monetary policy framework.\n\n' +
+      'Data is released monthly, typically around the [[middle of each month]] for the previous month, with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
+    impact:
+      'UK CPI readings have [[profound implications]] for currency markets through BoE policy channels:\n\n' +
+      '[[Above-Expectation CPI]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports GBP via higher real yields\n\n' +
+      '• [[Pressures equities and gold]] as markets price in tighter policy\n\n' +
+      '[[Below-Expectation CPI]]\n\n' +
+      '• [[Strengthens easing expectations]] and weakens GBP\n\n' +
+      '• [[Supports risk assets and carry trades]] as policy pressure eases\n\n' +
+      '[[Market dynamics]]: UK CPI remains a [[primary constraint on BoE easing]]. Cooling inflation supports additional rate cuts, while sticky core components, particularly services inflation, cap the pace and depth of easing.',
+    context:
+      '[[Current Inflation Trend (Late 2025)]]\n\n' +
+      'UK CPI has been [[moderating]] as the Bank of England continues to monitor inflation convergence toward the 2% target.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[BoE\'s 2% target]]: Inflation convergence remains a key policy focus\n\n' +
+      '• [[Wage growth]]: Strong wage growth has been a key driver of services inflation\n\n' +
+      '• [[Services vs. goods]]: Services inflation remains more persistent than goods inflation\n\n' +
+      '• [[Post-Brexit adjustments]]: Economic adjustments affecting inflation dynamics',
+    traderImplications:
+      '[[FX volatility]]: UK CPI releases are [[high-impact events]], causing significant GBP moves, especially in GBP/USD and EUR/GBP pairs.\n\n' +
+      '[[Policy expectations]]: UK CPI data directly affects [[BoE policy forecasts]], influencing yield curves and currency strength.\n\n' +
+      '[[Cross-asset reactions]]: UK CPI surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess inflation and policy outlooks.',
+  },
+  // JPY Inflation
+  'inflation-JPY': {
+    overview:
+      '[[Consumer Price Index (CPI) Year-over-Year]] measures the annual percentage change in prices for a basket of consumer goods and services in Japan, calculated by the Statistics Bureau of Japan. The Bank of Japan (BoJ) targets [[2% inflation]] as part of its monetary policy framework.\n\n' +
+      'For traders, Japanese CPI is a [[critical policy input]] that directly influences BoJ rate decisions, JPY valuation, and cross-asset risk sentiment.\n\n' +
+      'Why Japanese CPI Matters to Traders:\n\n' +
+      '• [[BoJ policy decisions]] and interest rate expectations\n\n' +
+      '• [[Real yields]], impacting JPY and gold\n\n' +
+      '• [[Risk sentiment]], affecting equities and carry trades\n\n' +
+      'Markets react to [[surprises versus expectations and trend momentum]], particularly around BoJ policy normalization.',
+    measurement:
+      'The [[Statistics Bureau of Japan]] calculates CPI by tracking price changes for a representative basket of goods and services across Japan. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Headline CPI]]: Includes all items, including volatile food and energy components.\n\n' +
+      '• [[Core CPI]]: Excludes fresh food to reveal underlying inflation trends.\n\n' +
+      'The Bank of Japan targets [[2% inflation]] as part of its monetary policy framework.\n\n' +
+      'Data is released monthly, typically around the [[end of each month]] for the previous month, with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
+    impact:
+      'Japanese CPI readings have [[profound implications]] for currency markets through BoJ policy channels:\n\n' +
+      '[[Above-Expectation CPI]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports JPY via higher real yields\n\n' +
+      '• [[Pressures carry trades]] as markets price in tighter policy\n\n' +
+      '[[Below-Expectation CPI]]\n\n' +
+      '• [[Strengthens easing expectations]] and weakens JPY\n\n' +
+      '• [[Supports carry trades]] as policy remains accommodative\n\n' +
+      '[[Market dynamics]]: Japanese CPI remains a [[key factor in BoJ policy normalization]]. Sustained inflation above 2% supports policy normalization, while weak inflation maintains accommodative policy.',
+    context:
+      '[[Current Inflation Trend (Late 2025)]]\n\n' +
+      'Japanese CPI has been [[moderating]] as the Bank of Japan continues to monitor inflation dynamics and policy normalization.\n\n' +
+      'Key themes shaping markets:\n\n' +
+      '• [[BoJ\'s 2% target]]: Inflation convergence remains a key policy focus\n\n' +
+      '• [[Wage growth]]: Wage growth has been a key factor in inflation dynamics\n\n' +
+      '• [[Policy normalization]]: BoJ gradually normalizing after years of ultra-loose policy\n\n' +
+      '• [[Energy import costs]]: Affecting headline inflation dynamics',
+    traderImplications:
+      '[[FX volatility]]: Japanese CPI releases are [[high-impact events]], causing significant JPY moves, especially in USD/JPY and EUR/JPY pairs.\n\n' +
+      '[[Policy expectations]]: Japanese CPI data directly affects [[BoJ policy forecasts]], influencing yield curves and currency strength.\n\n' +
+      '[[Cross-asset reactions]]: Japanese CPI surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess inflation and policy outlooks.',
+  },
   'core-inflation-YoY': {
     overview:
       'U.S. Core Inflation measures the underlying trend in consumer prices, excluding [[volatile food and energy components]]. It is one of the [[most closely watched inflation gauges by the Federal Reserve]] and plays a central role in monetary policy decisions, interest rate expectations, and USD pricing.\n\n' +
@@ -1156,13 +1520,24 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     }
   };
 
-  const getIndicatorInsights = (indicator) => {
+  const getIndicatorInsights = (indicator, selectedEconomy) => {
     if (Array.isArray(indicator.insights) && indicator.insights.length > 0) {
       return indicator.insights;
     }
 
-    // Special handling for interest-rate with professional content
+    // Special handling for interest-rate with country-specific professional content
     if (indicator.id === 'interest-rate') {
+      // EUR Interest Rate
+      if (selectedEconomy === 'EUR') {
+      return [
+          'The European Central Bank has paused its easing cycle after delivering substantial rate cuts through 2024–2025. Policy rates are now held at broadly neutral levels (Main Refinancing Rate: 2.15%), reflecting inflation that has converged toward target and a euro area economy showing modest but improving resilience.',
+          'The ECB has emphasized that future decisions will be strictly data-dependent, with no pre-committed rate path. Markets currently price high probability of rate stability through 2026, with low probability of near-term cuts or hikes absent a macro shock.',
+          'A steady ECB while other central banks ease may support the euro, though weak growth differentials versus the U.S. remain a structural EUR headwind. EUR crosses remain sensitive to inflation surprises and ECB communication tone.',
+          'Future rate direction will depend primarily on core inflation persistence, wage growth dynamics, eurozone growth momentum, and external shocks (energy prices, geopolitics, global trade).',
+        ];
+      }
+      
+      // US Interest Rate (default)
       return [
         'The Federal Funds Rate has shifted from restrictive policy toward cautious easing, cutting rates to 3.50%–3.75% amid moderating inflation and signs of labor market softening.',
         'Major global banks broadly expect further rate cuts into 2026, but emphasize a measured and data-dependent pace. Markets currently price 1–3 additional 25bp cuts, with timing sensitive to incoming data.',
@@ -1171,8 +1546,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
-    // Special handling for inflation-YoY with professional content
-    if (indicator.id === 'inflation-YoY') {
+    // Special handling for inflation-YoY with professional content (US only)
+    if (indicator.id === 'inflation-YoY' && selectedEconomy === 'US') {
       return [
         'Headline U.S. CPI is running at approximately 2.7% YoY, down from earlier 2025 highs near 3.0%. This moderation reflects easing shelter inflation, base effects, and slower goods price growth.',
         'Core inflation has also cooled but remains above the Federal Reserve\'s 2% target, reinforcing a cautious policy stance rather than aggressive easing. Inflation is easing, but not fully neutralized — keeping policy expectations finely balanced.',
@@ -1181,8 +1556,12 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
-    // Special handling for gdp-growth with professional content
-    if (indicator.id === 'gdp-growth') {
+    // Special handling for inflation (EUR, GBP, JPY use 'inflation' not 'inflation-YoY')
+    // For now, return generic content - will be replaced with country-specific content later
+    // This ensures we always return an array, not null
+
+    // Special handling for gdp-growth with professional content (US only)
+    if (indicator.id === 'gdp-growth' && selectedEconomy === 'US') {
       return [
         'Q3 2025 Real GDP registered +4.3% (annualized), the strongest quarterly expansion in over two years. Growth exceeded consensus expectations, driven by resilient consumer spending, a rebound in exports, and continued government and fiscal support.',
         'Earlier in 2025, GDP briefly contracted before rebounding sharply in Q2 and accelerating further in Q3, highlighting uneven but resilient economic momentum. Q4 2025 GDP (GDPNow estimate) is projected at ~3.0%, with full-year 2025 growth near ~1.8–2.0% on an annual basis.',
@@ -1191,8 +1570,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
-    // Special handling for unemployment with professional content
-    if (indicator.id === 'unemployment') {
+    // Special handling for unemployment with professional content (US only)
+    if (indicator.id === 'unemployment' && selectedEconomy === 'US') {
       return [
         'Unemployment Rate is at ~4.6%, gradually rising through late 2025, marking the highest level since 2021 and signaling a cooling labor market. Recent employment gains have been concentrated in healthcare, construction, and social assistance, while federal workforce reductions and slower hiring across cyclical sectors have weighed on overall labor conditions.',
         'The labor market has shifted from tight to balanced-to-soft, marked by slowing monthly payroll growth, reduced labor mobility, fewer job openings, and stable but flattening labor force participation. While unemployment remains historically moderate, the direction of travel suggests increasing economic slack.',
@@ -1201,8 +1580,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
-    // Special handling for nonfarm-payrolls with professional content
-    if (indicator.id === 'nonfarm-payrolls') {
+    // Special handling for nonfarm-payrolls with professional content (US only)
+    if (indicator.id === 'nonfarm-payrolls' && selectedEconomy === 'US') {
       return [
         'Non-farm Payrolls registered +64,000 jobs added in November 2025, slightly above the consensus forecast of ~51,000, following October\'s sharp contraction of -105,000 jobs due to federal workforce reductions and shutdown effects.',
         'Total nonfarm employment has shown very little net change since April 2025, suggesting labor market activity has broadly flattened. November\'s gains were concentrated in healthcare, construction, and social assistance, while ADP data reported a decline in private jobs, highlighting underlying weakness outside public sector support.',
@@ -1211,8 +1590,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
-    // Special handling for core-inflation-YoY with professional content
-    if (indicator.id === 'core-inflation-YoY') {
+    // Special handling for core-inflation-YoY with professional content (US only)
+    if (indicator.id === 'core-inflation-YoY' && selectedEconomy === 'US') {
       return [
         'Core CPI is running at approximately 2.6% YoY, down from levels near 3.0% earlier in 2025. This marks the slowest pace of core inflation since early 2021, suggesting a gradual easing in underlying price pressures.',
         'However, core inflation remains above the Fed\'s 2% target, reinforcing a cautious approach to rate cuts rather than aggressive easing. Disinflation is progressing, but persistence in core components keeps policy restrictive.',
@@ -1273,8 +1652,17 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     });
   };
 
-  const getIndicatorDetails = (indicator) => {
-    const defaults = indicatorDetails[indicator.id] || {};
+  const getIndicatorDetails = (indicator, selectedEconomy) => {
+    // First try country-specific key (e.g., 'interest-rate-EUR', 'inflation-GBP')
+    const countrySpecificKey = `${indicator.id}-${selectedEconomy}`;
+    const countryDefaults = indicatorDetails[countrySpecificKey] || {};
+    
+    // Fall back to generic key (e.g., 'interest-rate', 'inflation-YoY')
+    const genericDefaults = indicatorDetails[indicator.id] || {};
+    
+    // Use country-specific if available, otherwise use generic
+    const defaults = Object.keys(countryDefaults).length > 0 ? countryDefaults : genericDefaults;
+    
     return {
       overview: defaults.overview || indicator.description,
       measurement:
@@ -1854,8 +2242,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         if (!expandedIndicator) return null;
         
         const isLoading = loadingIndicatorId === expandedIndicatorId;
-        const insightItems = getIndicatorInsights(expandedIndicator);
-        const { overview, measurement, impact, context, traderImplications } = getIndicatorDetails(expandedIndicator);
+        const insightItems = getIndicatorInsights(expandedIndicator, selectedEconomy) || [];
+        const { overview, measurement, impact, context, traderImplications } = getIndicatorDetails(expandedIndicator, selectedEconomy);
         
         // Get accurate quick reference data based on indicator
         const getQuickReferenceData = (indicator) => {
@@ -1867,7 +2255,12 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
             unit: indicator.unit || null,
           };
           
-          // Add indicator-specific data
+          // Only add US-specific quick reference data for US economy
+          if (selectedEconomy !== 'US') {
+            return baseData; // Return only base data for non-US countries
+          }
+          
+          // Add indicator-specific data (US only)
           if (indicator.id === 'interest-rate') {
             return {
               ...baseData,
@@ -2179,12 +2572,12 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     // But we must use the same formula as data normalization
                     if (targetValue < rawMin || targetValue > rawMax) {
                       // Extend range to include 2% for positioning calculation
-                      const extendedMin = Math.min(rawMin, targetValue);
-                      const extendedMax = Math.max(rawMax, targetValue);
-                      const extendedRange = extendedMax - extendedMin;
-                      
+                    const extendedMin = Math.min(rawMin, targetValue);
+                    const extendedMax = Math.max(rawMax, targetValue);
+                    const extendedRange = extendedMax - extendedMin;
+                    
                       // Calculate position using extended range, matching the normalization formula
-                      const targetNormalizedPosition = extendedRange === 0 ? 50 : 10 + ((targetValue - extendedMin) / extendedRange) * 80;
+                    const targetNormalizedPosition = extendedRange === 0 ? 50 : 10 + ((targetValue - extendedMin) / extendedRange) * 80;
                       return 100 - targetNormalizedPosition; // Invert for SVG (0 at top, 100 at bottom)
                     }
                     
@@ -2381,55 +2774,55 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               
               <div className={`indicator-expanded-content ${isLoading ? 'loading' : ''}`}>
                 <div className="indicator-expanded-main">
-                  <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">Key Insights</div>
-                    <ul className="indicator-insights-list">
-                      {insightItems.map((insight, index) => (
-                        <li key={index} className="indicator-insight-item">
-                          {insight}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">Key Insights</div>
+                  <ul className="indicator-insights-list">
+                    {insightItems.map((insight, index) => (
+                      <li key={index} className="indicator-insight-item">
+                        {insight}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">Indicator Overview</div>
+                  <div className="indicator-section-text">
+                    {renderParagraphs(overview)}
+                  </div>
+                </div>
+
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">How It's Measured</div>
+                  <div className="indicator-section-text">
+                    {renderParagraphs(measurement)}
+                  </div>
+                </div>
+
+                <div className="indicator-expanded-section">
+                  <div className="indicator-section-title">Currency & Market Impact</div>
+                  <div className="indicator-section-text">
+                    {renderParagraphs(impact)}
+                  </div>
+                </div>
+
+                {context && (
                   <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">Indicator Overview</div>
+                    <div className="indicator-section-title">Current Policy Context – December 2025</div>
                     <div className="indicator-section-text">
-                      {renderParagraphs(overview)}
+                      {renderParagraphs(context)}
                     </div>
                   </div>
+                )}
 
+                {traderImplications && (
                   <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">How It's Measured</div>
+                    <div className="indicator-section-title">What This Means for Traders</div>
                     <div className="indicator-section-text">
-                      {renderParagraphs(measurement)}
+                      {renderParagraphs(traderImplications)}
                     </div>
                   </div>
-
-                  <div className="indicator-expanded-section">
-                    <div className="indicator-section-title">Currency & Market Impact</div>
-                    <div className="indicator-section-text">
-                      {renderParagraphs(impact)}
-                    </div>
-                  </div>
-
-                  {context && (
-                    <div className="indicator-expanded-section">
-                      <div className="indicator-section-title">Current Policy Context – December 2025</div>
-                      <div className="indicator-section-text">
-                        {renderParagraphs(context)}
-                      </div>
-                    </div>
-                  )}
-
-                  {traderImplications && (
-                    <div className="indicator-expanded-section">
-                      <div className="indicator-section-title">What This Means for Traders</div>
-                      <div className="indicator-section-text">
-                        {renderParagraphs(traderImplications)}
-                      </div>
-                    </div>
-                  )}
+                )}
                 </div>
 
                 <div className="indicator-expanded-sidebar">
@@ -2547,8 +2940,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                           <span className="indicator-sidebar-value">{expandedIndicator.notes}</span>
                         </div>
                       )}
-                    </div>
-                  )}
+                  </div>
+                )}
                 </div>
               </div>
             </div>
