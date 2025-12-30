@@ -478,69 +478,78 @@ const indicatorDetails = {
   // GBP Interest Rate
   'interest-rate-GBP': {
     overview:
-      'The [[Bank Rate]] is the primary monetary policy tool of the Bank of England (BoE). It represents the interest rate at which the BoE lends to commercial banks and acts as the [[benchmark for short-term interest rates]] in the United Kingdom.\n\n' +
-      'For traders, the Bank Rate is a [[core macro driver]] that influences GBP valuation, yield differentials, risk sentiment, and cross-asset capital flows.\n\n' +
-      '[[Why It Matters to Markets]]\n\n' +
-      'The Bank Rate anchors the UK yield curve and directly impacts:\n\n' +
-      '• [[FX markets]]: GBP strength or weakness via yield differentials\n\n' +
-      '• [[Equities]]: Cost of capital and valuation multiples\n\n' +
-      '• [[Fixed income]]: Short-term yields, curve shape, and volatility\n\n' +
-      '• [[Commodities]]: Particularly gold, via real yields and risk appetite\n\n' +
-      'Markets trade [[expectations of future rate changes]], often well ahead of actual MPC decisions.',
+      'The [[Bank of England\'s Bank Rate]] (also known as the base rate) is the interest rate at which the BoE lends to commercial banks overnight. It is the [[primary monetary policy tool]] of the Bank of England, set by the [[Monetary Policy Committee (MPC)]] to achieve the 2% CPI inflation target while supporting economic growth and employment.\n\n' +
+      'The Bank Rate anchors the [[entire UK yield curve]], influencing borrowing costs for households, businesses, and the government. Changes in the Bank Rate transmit through bank lending rates, mortgage costs, corporate borrowing, and currency markets, affecting economic activity and asset prices.\n\n' +
+      'For traders, the Bank Rate is a [[core macro driver]] that influences GBP valuation via yield differentials, signals BoE policy stance, affects UK asset pricing, and influences risk sentiment. Markets trade [[expectations of future rate changes]], often well ahead of actual MPC decisions.\n\n' +
+      'The Bank Rate is set at [[MPC meetings held approximately every six weeks]], with decisions announced immediately and detailed minutes published subsequently. The rate is not subject to revisions, but accompanying economic forecasts and statements provide forward guidance on policy direction.',
     measurement:
-      'The [[Monetary Policy Committee (MPC)]] meets [[eight times per year]] to set the Bank Rate.\n\n' +
-      '[[Key policy signals]] traders monitor:\n\n' +
+      'The [[Monetary Policy Committee (MPC)]] consists of nine members: the Governor, three Deputy Governors, the Chief Economist, and four external members appointed by the Chancellor. The MPC meets [[approximately every six weeks]] to set the Bank Rate based on economic data, inflation forecasts, and growth projections.\n\n' +
+      'Key policy signals traders monitor:\n\n' +
       '• [[Rate decision]] (hold / cut / hike)\n\n' +
-      '• [[Statement language changes]]\n\n' +
-      '• [[MPC minutes]] (detailed policy discussion)\n\n' +
-      '• [[Inflation Report]] (quarterly projections)\n\n' +
-      'The Bank Rate influences [[commercial bank lending rates]] and the broader UK financial system.',
+      '• [[Voting split]] (reveals internal divisions and policy bias)\n\n' +
+      '• [[Monetary Policy Summary]] (forward guidance and policy tone)\n\n' +
+      '• [[Inflation Report]] (quarterly economic forecasts and projections)\n\n' +
+      '• [[Governor Bailey\'s press conference]] (policy communication and Q&A)\n\n' +
+      'The Bank Rate influences the [[Effective Bank Rate]], which reflects actual overnight interbank lending and typically remains close to the Bank Rate through BoE liquidity operations. The rate affects [[mortgage rates, corporate borrowing costs, and savings rates]] across the UK economy.',
     impact:
-      '[[Market Transmission Mechanism]]\n\n' +
-      '[[Rates → FX]]\n\n' +
-      '• Higher relative UK rates attract capital → [[GBP support]]\n\n' +
-      '• Falling rate expectations compress yield advantage → [[GBP pressure]]\n\n' +
-      '[[Rates → Risk Assets]]\n\n' +
-      '• Higher rates tighten financial conditions\n\n' +
-      '• Lower rates generally support equities and credit\n\n' +
-      '[[Rates → Commodities]]\n\n' +
-      '• Gold reacts inversely to real yields\n\n' +
-      '• Energy responds indirectly via growth expectations\n\n' +
-      '[[Hawkish vs Dovish Signals]]\n\n' +
-      '[[Hawkish Bias]]\n\n' +
-      '• Delayed or fewer cuts\n\n' +
-      '• Persistent inflation pressures\n\n' +
-      '• Strong wage growth\n\n' +
-      '• Emphasis on inflation risks\n\n' +
-      'Typical reaction: [[GBP strength]], higher yields, pressure on equities and gold\n\n' +
-      '[[Dovish Bias]]\n\n' +
-      '• Rate cuts or easing guidance\n\n' +
-      '• Cooling inflation momentum\n\n' +
-      '• Economic weakness\n\n' +
-      '• Focus on growth risks\n\n' +
-      'Typical reaction: [[GBP weakness]], yield compression, support for risk assets',
+      'Bank Rate decisions have [[profound implications]] for GBP markets through multiple transmission channels:\n\n' +
+      '[[Rate Cuts]]\n\n' +
+      '• [[Reduce GBP support]] via lower yield differentials\n\n' +
+      '• [[Support bond prices]] and compress yields\n\n' +
+      '• [[Boost equities]] via lower borrowing costs\n\n' +
+      '• [[Stimulate growth]] but may fuel inflation if too aggressive\n\n' +
+      '[[Rate Hikes]]\n\n' +
+      '• [[Support GBP strength]] via higher yield differentials\n\n' +
+      '• [[Pressure bond prices]] and raise yields\n\n' +
+      '• [[Weigh on equities]] via higher borrowing costs\n\n' +
+      '• [[Cool inflation]] but may slow growth\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'GBP crosses remain sensitive to Bank Rate expectations and decisions, with [[above-expectation cuts tending to weaken GBP]] via dovish repricing, while [[below-expectation cuts or pauses support GBP]] through reduced easing pressure. The interplay between Bank Rate, inflation, wage growth, and growth data is crucial for BoE policy anticipation. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
     context:
       '[[Current Policy Context (Late 2025)]]\n\n' +
-      'The Bank of England has been [[adjusting policy]] in response to evolving inflation and growth dynamics in the UK economy.\n\n' +
-      'Key characteristics of the current regime:\n\n' +
-      '• [[Data-dependent approach]] to policy decisions\n\n' +
-      '• [[Focus on wage growth]] and services inflation\n\n' +
-      '• [[Balancing growth and inflation]] objectives\n\n' +
-      '• [[Post-Brexit economic adjustments]]\n\n' +
-      'This environment favors [[expectation-driven and event-driven trading]].',
+      'As of December 18, 2025, the Bank Rate stands at [[3.75%]], following a 25 basis point cut from 4.00%. This marks the [[lowest level since February 2023]] and reflects a shift from restrictive policy toward easing, driven by moderating inflation, weak growth, and a softening labor market.\n\n' +
+      'Recent trend: The BoE has cut rates multiple times since August 2024, with the most recent cuts including [[December 18, 2025 (3.75%), August 7, 2025 (4.00%), May 8, 2025 (4.25%)]]. The [[5-4 voting split]] in recent decisions indicates internal division on the pace of easing, with some members favoring faster cuts and others cautioning on inflation risks.\n\n' +
+      '[[Economic Backdrop]]\n\n' +
+      'Inflation: CPI inflation stood at [[3.2% in November 2025]], down from 3.6% in October, but still above the 2% target. The decline provided room for rate cuts, but persistent inflation concerns limit aggressive easing.\n\n' +
+      'Growth: The UK economy has shown [[minimal growth]], with GDP expanding by only 0.1% in Q2 2025, down from 0.7% in Q1. The BoE reduced its UK economic growth forecast for 2025 from 1.5% to 0.75%, indicating heightened concerns about the economic outlook.\n\n' +
+      'Labor Market: Unemployment has risen to [[5.1%]], the highest since January 2021, indicating potential challenges in the labor market. Wage growth remains a concern for inflation persistence.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions interpret the recent rate cuts as appropriate given easing inflation and weak growth, but note risks from persistent inflation and wage pressures. The 5-4 voting split reflects uncertainty about the pace of easing.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Further cuts are likely]], but the pace depends on incoming data\n\n' +
+      '• [[Inflation remains above target]], limiting aggressive easing\n\n' +
+      '• [[Weak growth and rising unemployment]] support continued cuts\n\n' +
+      '• [[Wage growth remains a concern]] for inflation persistence\n\n' +
+      'Markets price [[additional cuts into 2026]], with timing sensitive to inflation, wage growth, and labor market data.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The BoE\'s MPC sets the Bank Rate to achieve the [[2% CPI inflation target]] while supporting economic growth and employment. The reaction function weighs inflation persistence, wage growth, growth momentum, and labor market conditions.\n\n' +
+      'Current context: The Bank Rate at 3.75% reflects a shift toward easing, balancing [[moderating inflation against weak growth and a softening labor market]]. The 5-4 voting split indicates internal division, with some members favoring faster cuts and others cautioning on inflation risks.\n\n' +
+      'Governor Andrew Bailey noted that the UK has [["passed the recent peak in inflation and it has continued to fall"]], allowing for rate reductions. However, the BoE emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'The BoE operates with [[operational independence]], but political pressure and fiscal policy affect the economic environment. Government spending and tax policy influence growth and inflation, affecting monetary policy trade-offs.\n\n' +
+      'Brexit and trade: Trade relationships and supply chain shifts affect inflation and growth. [[Trade tensions and tariffs]] can affect import costs and competitiveness, while trade deals can support growth but may affect inflation.\n\n' +
+      'Structural factors: The UK\'s [[services-heavy economy]] (especially financial services) affects rate transmission, while [[housing market sensitivity]] to rates affects consumption and growth. [[Productivity challenges]] affect growth potential and inflation dynamics.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize growth support and inflation control, but [[actual policy is constrained by the inflation target and economic conditions]]. The BoE maintains operational independence, but political pressure can affect communication and expectations.',
     traderImplications:
       '[[What Traders Should Monitor Next]]\n\n' +
-      'High-impact drivers for rate repricing:\n\n' +
-      '• [[CPI inflation trends]]\n\n' +
-      '• [[Wage growth data]]\n\n' +
-      '• [[BoE communication tone]]\n\n' +
-      '• [[Yield curve dynamics]] (2Y vs 10Y, real yields)\n\n' +
-      'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
+      'High-impact drivers for Bank Rate repricing:\n\n' +
+      '• [[MPC meetings]] (approximately every six weeks)\n\n' +
+      '• [[CPI inflation releases]] (primary target, especially services and core components)\n\n' +
+      '• [[Wage growth data]] (affects inflation persistence and policy trade-offs)\n\n' +
+      '• [[Unemployment and labor market data]] (affects growth and inflation dynamics)\n\n' +
+      '• [[GDP growth figures]] (affects policy trade-offs and rate decisions)\n\n' +
+      '• [[Housing market indicators]] (affects consumption and growth)\n\n' +
+      '• [[MPC minutes and communications]] (forward guidance and policy tone)\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move below [[3.50%]] would signal more aggressive easing and likely pressure GBP. A pause or move above [[4.00%]] would signal a more cautious stance and support GBP. The 3.75% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in inflation, especially if driven by wage growth or services inflation, could alter Bank Rate expectations. Changes in labor market conditions, especially unemployment and wage growth, could affect policy trade-offs. Growth surprises, especially if driven by consumption or investment, could influence rate decisions. Changes in BoE communication tone, especially around forward guidance, could shift market expectations.\n\n' +
       '[[FXSentinel Usage]]\n\n' +
-      'Within FXSentinel, the Bank Rate functions best as:\n\n' +
-      '• [[Macro regime filter]] (tightening vs easing)\n\n' +
-      '• [[GBP directional bias tool]]\n\n' +
-      '• [[Cross-asset sentiment anchor]]',
+      'Within FXSentinel, the Bank of England Bank Rate functions best as:\n\n' +
+      '• [[GBP directional bias tool]] (via yield differentials)\n\n' +
+      '• [[BoE policy expectation driver]]\n\n' +
+      '• [[Cross-asset sentiment anchor]]\n\n' +
+      '• [[Volatility trigger around MPC meetings]]',
   },
   // JPY Interest Rate
   'interest-rate-JPY': {
@@ -681,6 +690,301 @@ const indicatorDetails = {
       '• [[EUR directional bias tool]]\n\n' +
       '• [[Rate-expectation driver]]\n\n' +
       '• [[Volatility catalyst around HICP releases]]',
+  },
+  // EUR Core Inflation
+  'core-inflation-YoY-EUR': {
+    overview:
+      'Eurozone Core Inflation measures the [[year-over-year change in the Harmonised Index of Consumer Prices (HICP) excluding food and energy]]. By removing the most volatile components, core inflation provides a [[clearer view of underlying, domestically driven price pressures]], particularly in services and non-energy goods.\n\n' +
+      'This measure is [[closely monitored by the ECB]] as it better reflects persistent inflation dynamics linked to wages, demand conditions, and pricing power, making it a [[critical input in monetary policy decisions]].\n\n' +
+      '[[Why Core Inflation Matters]]\n\n' +
+      'Core inflation is often [[more influential than headline inflation]] for markets because:\n\n' +
+      '• It captures [[persistent price trends rather than temporary shocks]]\n\n' +
+      '• It is [[strongly linked to wage growth and services inflation]]\n\n' +
+      '• It shapes [[ECB rate expectations and forward guidance]]\n\n' +
+      '• It influences [[EUR valuation via real yield expectations]]\n\n' +
+      'Sustained core inflation above target typically [[constrains the ECB\'s ability to ease policy aggressively]].',
+    measurement:
+      '[[Eurostat]] calculates Core HICP by taking the Harmonised Index of Consumer Prices and [[excluding food, energy, alcohol, and tobacco components]]. The year-over-year change compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Core HICP]]: All items except food, energy, alcohol, and tobacco, representing the underlying inflation trend\n\n' +
+      '• [[Services inflation]]: Remains the most persistent component, reflecting wage growth and domestic demand\n\n' +
+      '• [[Non-energy industrial goods]]: Generally subdued, reflecting weak demand and easing input costs\n\n' +
+      '• [[Excluded items]]: Food, energy, alcohol, and tobacco—the most volatile components\n\n' +
+      'Core HICP is the [[ECB\'s preferred inflation gauge]] for assessing persistent price pressures and making monetary policy decisions.\n\n' +
+      'Data is released monthly, typically around the [[middle of each month]] for the previous month, with revisions possible in subsequent releases. Source: Eurostat. Used by: European Central Bank. Release Frequency: Monthly. Unit: Percent (%).',
+    impact:
+      'Core inflation has [[profound implications]] for currency markets through ECB policy channels:\n\n' +
+      '[[FX Markets (EUR)]]\n\n' +
+      '• [[Core inflation above expectations tends to support EUR]], reinforcing higher real rate assumptions\n\n' +
+      '• [[Downside surprises often weaken EUR]] through dovish repricing of ECB expectations\n\n' +
+      '[[Rates & Bonds]]\n\n' +
+      '• [[Sticky core inflation limits front-end yield declines]]\n\n' +
+      '• [[Sustained moderation would steepen the curve]] via easing expectations\n\n' +
+      '[[Risk Assets]]\n\n' +
+      '• [[Persistent core inflation can cap equity upside]] by delaying monetary easing\n\n' +
+      '• [[Stability, rather than acceleration, generally reduces volatility]]\n\n' +
+      '[[Market dynamics]]: Markets react most strongly to [[deviations from consensus]], not absolute levels. Core inflation remains a [[primary constraint on ECB easing]]. A decisive downward break in core inflation would materially alter ECB policy pricing.',
+    context:
+      '[[Current Core Inflation Context]]\n\n' +
+      'Eurozone core inflation is running at approximately [[2.4% year-over-year]], remaining above headline HICP (~2.1%) and slightly above the ECB\'s 2% medium-term target.\n\n' +
+      'Key observations:\n\n' +
+      '• [[Core inflation has stabilized, rather than fallen sharply]], in recent months\n\n' +
+      '• [[Disinflation has been slower than headline measures]], reflecting sticky domestic price pressures\n\n' +
+      '• [[Services inflation continues to be the dominant contributor]]\n\n' +
+      'This persistence suggests that while inflation is no longer accelerating, it is [[not yet fully neutralized from a policy perspective]].\n\n' +
+      '[[Trend & Inflation Dynamics]]\n\n' +
+      'Core inflation has hovered around the [[2.3%–2.5% range]], indicating resilience despite easing energy and goods prices.\n\n' +
+      'Monthly momentum remains positive, implying that [[inflationary pressure is cooling gradually rather than collapsing]].\n\n' +
+      'The [[gap between headline and core inflation]] underscores the role of wages, rents, and services costs.\n\n' +
+      'For policymakers, this reinforces [[caution against premature policy easing]].\n\n' +
+      '[[ECB Policy Interpretation]]\n\n' +
+      'The ECB\'s inflation framework emphasizes a [[symmetric 2% target over the medium term]], with core inflation playing a central role in assessing persistence.\n\n' +
+      'Policy implications of current core inflation levels:\n\n' +
+      '• [[Supports a measured and data-dependent approach]] to rate cuts\n\n' +
+      '• [[Reduces urgency for aggressive easing]] despite headline inflation nearing target\n\n' +
+      '• [[Keeps focus on labor market data and wage growth indicators]]\n\n' +
+      'ECB officials frequently cite [[services and core inflation as key constraints]] on faster normalization of policy.\n\n' +
+      '[[Macro & Political Overlay]]\n\n' +
+      '[[Wage negotiations across major euro area economies]] (notably Germany and France) remain a key driver of services inflation.\n\n' +
+      '[[Fiscal policy and labor market tightness]] influence cost pass-through.\n\n' +
+      'While political pressures vary by country, ECB independence remains intact, with policy decisions [[anchored in inflation persistence rather than political signaling]].\n\n' +
+      'Core inflation therefore remains a [[structural macro variable, not a politically driven one]].',
+    traderImplications:
+      '[[What Traders Should Monitor]]\n\n' +
+      'High-impact drivers for rate repricing:\n\n' +
+      '• [[Monthly core HICP releases vs expectations]]\n\n' +
+      '• [[Services inflation and wage growth trends]]\n\n' +
+      '• [[ECB commentary referencing "persistence" or "second-round effects"]]\n\n' +
+      '• [[Labor market tightness indicators]]\n\n' +
+      '• [[Divergence between headline and core inflation paths]]\n\n' +
+      'A [[decisive downward break in core inflation]] would materially alter ECB policy pricing.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Eurozone Core Inflation functions best as:\n\n' +
+      '• [[ECB policy constraint indicator]]\n\n' +
+      '• [[EUR directional bias tool]]\n\n' +
+      '• [[Rate-expectation driver]]\n\n' +
+      '• [[Volatility catalyst around core HICP releases]]',
+  },
+  // EUR GDP Growth
+  'gdp-growth-EUR': {
+    overview:
+      '[[Gross Domestic Product (GDP)]] measures the total economic output of the euro area — a key indicator of [[economic momentum, private demand, investment, and external trade]]. Eurozone GDP growth is a [[core macro driver]] influencing:\n\n' +
+      '• [[Monetary policy expectations]] (ECB rate bias)\n\n' +
+      '• [[Currency valuation]] (EUR relative to other majors)\n\n' +
+      '• [[Risk sentiment]] across equities and bonds\n\n' +
+      '• [[Cross-asset pricing dynamics]]\n\n' +
+      'Eurozone GDP is reported quarterly and published by [[Eurostat]].',
+    measurement:
+      '[[Eurostat]] calculates Eurozone GDP growth as the percentage change in real GDP from one quarter to the previous quarter, with [[year-over-year (YoY)]] measures also reported for annual comparisons. The calculation uses [[chained volumes]] to adjust for inflation and price changes.\n\n' +
+      'GDP is measured through three approaches:\n\n' +
+      '• [[Expenditure approach]]: Sum of consumption, investment, government spending, and net exports\n\n' +
+      '• [[Income approach]]: Sum of all income earned in production\n\n' +
+      '• [[Production approach]]: Value added at each stage of production\n\n' +
+      'Key components tracked:\n\n' +
+      '• [[Household consumption]]: Consumer spending across euro area member states\n\n' +
+      '• [[Government expenditure]]: Fiscal spending and public investment\n\n' +
+      '• [[Investment]]: Business investment and capital formation\n\n' +
+      '• [[Net exports]]: Trade balance contribution to GDP\n\n' +
+      'Data is released quarterly, typically around the [[end of the month]] following the quarter end, with [[multiple revisions]] as more comprehensive data becomes available. Source: Eurostat / ECB Staff Projections. Release Frequency: Quarterly. Unit: Percent (%).',
+    impact:
+      'Eurozone GDP growth has [[profound implications]] for currency markets through multiple transmission channels:\n\n' +
+      '[[FX (EUR)]]\n\n' +
+      '• [[Stronger-than-expected GDP prints tend to support EUR]], especially if accompanied by resilient inflation\n\n' +
+      '• [[Growth moderation or downside surprises can pressure EUR]] via dovish repricing of ECB expectations\n\n' +
+      '[[Rates & Yield Curves]]\n\n' +
+      '• [[Durable growth can flatten or steepen curves]] depending on inflation signals\n\n' +
+      '• [[Weak growth tends to lower front-end yields]] via easing expectations\n\n' +
+      '[[Equities & Credit]]\n\n' +
+      '• [[Positive GDP data typically bolster European equities]]\n\n' +
+      '• [[Credit spreads may tighten on stable growth]], but widen if growth falters\n\n' +
+      '[[Market dynamics]]: Markets pay particular attention to [[growth surprises vs consensus]], which often drive near-term repricing.\n\n' +
+      '[[Hawkish vs Dovish Growth Signals]]\n\n' +
+      '[[Hawkish Growth Scenario]]\n\n' +
+      '• [[GDP surprises to the upside]]\n\n' +
+      '• [[Broad-based strength]] across consumption, investment, exports\n\n' +
+      '• [[Labor markets accelerating]]\n\n' +
+      '→ [[Reduces likelihood of rate cuts; supports EUR appreciation]]\n\n' +
+      '[[Dovish Growth Scenario]]\n\n' +
+      '• [[GDP undershoots consensus]]\n\n' +
+      '• [[Manufacturing contraction persists]]\n\n' +
+      '• [[Slowing consumption momentum]]\n\n' +
+      '→ [[Increases odds of easing; weighs on EUR and yields]]',
+    context:
+      '[[Latest Data – Q3 2025]]\n\n' +
+      'Quarter-on-Quarter (QoQ): [[+0.3%]]\n\n' +
+      'Year-on-Year (YoY): [[~1.4%]]\n\n' +
+      'The euro area economy remains in [[positive but moderate expansion]], with growth driven by consumption, government spending, and export activity. Investment has stabilized after prior weakness, while trade conditions remain mixed.\n\n' +
+      'ECB projections for the full year place real GDP growth near [[~1.3%–1.4% for 2025]], with a modest slowdown in 2026 before moderate recovery thereafter.\n\n' +
+      '[[Trend & Economic Drivers]]\n\n' +
+      'Growth in the euro area reflects a [[balanced but subdued expansion]], characterized by:\n\n' +
+      '• [[Household Consumption]]: Continues to contribute positively as labor markets remain reasonably tight and wages grow modestly\n\n' +
+      '• [[Government Expenditure]]: Fiscal support in key member states helps sustain demand\n\n' +
+      '• [[Investment]]: Recovering from earlier declines but not yet robust\n\n' +
+      '• [[Net Exports]]: Positive contributor, though global trade headwinds persist\n\n' +
+      'Overall expansion is [[uneven across member states]], with Spain and France outpacing core economies like Germany, which has exhibited softer growth.\n\n' +
+      '[[Monetary Policy & ECB Implications]]\n\n' +
+      'Eurozone growth at current levels [[supports the European Central Bank\'s strategy of holding interest rates steady]]:\n\n' +
+      '• [[Growth is positive and non-recessionary]], reducing pressure for aggressive easing\n\n' +
+      '• However, it is [[not strong enough to justify tightening]] in the absence of persistent inflation overshoot\n\n' +
+      '• [[Growth data reinforce the ECB\'s data-dependent framework]], where policy adjustments are contingent on incoming economic momentum alongside inflation dynamics\n\n' +
+      'ECB staff projections align with this [[cautious stance]], forecasting moderate growth through 2026.\n\n' +
+      '[[Political & Structural Context]]\n\n' +
+      'Eurozone GDP growth is influenced by:\n\n' +
+      '• [[Heterogeneous national conditions]]: Core economies (e.g., Germany) lag peripheral countries in growth momentum\n\n' +
+      '• [[Structural constraints]]: Demographic headwinds and productivity challenges limit long-term potential\n\n' +
+      '• [[Fiscal policy variation]]: National fiscal responses and EU recovery funds influence domestic spending\n\n' +
+      '• [[External geopolitical factors]]: Trade disruptions, energy price volatility, and global supply chain risks impart uncertainty\n\n' +
+      'While political debate exists over fiscal stimulus and structural reforms, ECB policy remains [[anchored to inflation and growth fundamentals]], not political cycles.',
+    traderImplications:
+      '[[What Traders Should Monitor]]\n\n' +
+      'Key data and indicators that provide forward signals for euro area growth:\n\n' +
+      '• [[Quarterly GDP revisions and detailed component breakdowns]]\n\n' +
+      '• [[Business sentiment]] (PMI surveys)\n\n' +
+      '• [[Labor market indicators]] (employment, unemployment, job openings)\n\n' +
+      '• [[Investment and capex reports]]\n\n' +
+      '• [[Euro area trade data and global demand indicators]]\n\n' +
+      'The [[interplay between growth and inflation data]] (HICP and core inflation) is crucial for ECB policy anticipation.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Eurozone GDP Growth functions best as:\n\n' +
+      '• [[ECB policy context indicator]]\n\n' +
+      '• [[EUR directional bias tool]]\n\n' +
+      '• [[Growth-inflation balance gauge]]\n\n' +
+      '• [[Volatility catalyst around GDP releases]]',
+  },
+  // EUR Unemployment Rate
+  'unemployment-EUR': {
+    overview:
+      'The [[Euro Area Unemployment Rate]] measures the percentage of the labor force that is unemployed and actively seeking work within the eurozone. Published monthly by [[Eurostat]], the statistical office of the European Union, this seasonally adjusted indicator covers all 20 eurozone countries and serves as a [[critical gauge of labor market health]] and economic performance.\n\n' +
+      'The indicator is structurally important because it reflects [[labor market tightness]], influences [[wage dynamics]], and signals the [[output gap]]—the difference between actual and potential economic output. It feeds directly into the [[European Central Bank\'s reaction function]], influencing expectations for interest rates, asset purchases, and forward guidance. In a currency union, unemployment data also highlights [[cross-country divergences]] that can complicate policy trade-offs.\n\n' +
+      'For traders, the Euro Area Unemployment Rate is a [[leading indicator of ECB policy shifts]] and EUR strength. Low unemployment supports wage growth and inflation persistence, potentially constraining ECB easing, while rising unemployment increases pressure for accommodative policy, typically weighing on EUR.\n\n' +
+      'Markets react less to absolute unemployment levels and more to [[surprises versus expectations, trend momentum, and the interplay with wage growth and inflation data]].',
+    measurement:
+      '[[Eurostat]] calculates the Euro Area Unemployment Rate using the [[International Labour Organization (ILO) definition]]: unemployed persons are those aged 15-74 who are without work, available to start work within two weeks, and have actively sought employment in the previous four weeks.\n\n' +
+      'Key methodological points:\n\n' +
+      '• [[Seasonally adjusted]]: Removes seasonal patterns to reveal underlying trends\n\n' +
+      '• [[Harmonized methodology]]: Ensures comparability across all EU member states\n\n' +
+      '• [[Labor force participation]]: Only includes those actively seeking work, excluding discouraged workers\n\n' +
+      '• [[Country-level breakdowns]]: Available for individual member states, revealing structural divergences\n\n' +
+      'Data is published approximately [[one month after the reference period]], typically around the 2nd of each month, with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percentage (%).',
+    impact:
+      'Unemployment readings have [[profound implications]] for EUR markets through multiple transmission channels:\n\n' +
+      '[[Low and Falling Unemployment]]\n\n' +
+      '• [[Tightens labor market conditions]], supporting wage growth and inflation persistence\n\n' +
+      '• [[Constrains ECB easing]], potentially supporting EUR via higher real rate expectations\n\n' +
+      '• [[Signals economic resilience]], supporting risk-on positioning in EUR crosses\n\n' +
+      '• [[Reduces output gap]], limiting scope for accommodative policy\n\n' +
+      '[[Rising Unemployment]]\n\n' +
+      '• [[Increases economic slack]], reducing wage pressures and inflation risks\n\n' +
+      '• [[Strengthens case for ECB easing]], potentially weighing on EUR\n\n' +
+      '• [[Signals economic deterioration]], increasing recession risk pricing\n\n' +
+      '• [[Opens policy space]] for accommodative measures, supporting bond markets\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'EUR crosses remain sensitive to unemployment surprises, with [[above-expectation readings tending to weaken EUR]] via dovish repricing of ECB expectations, while [[below-expectation readings support EUR]] through reduced easing pressure. The interplay between unemployment, wage growth, and inflation is crucial for ECB policy anticipation. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
+    context:
+      '[[Current Reading & Trend (Late 2025)]]\n\n' +
+      'As of October 2025, the euro area unemployment rate stood at [[6.4%]], stable compared to September 2025 but up from 6.3% in October 2024. The broader EU unemployment rate was 6.0% in October 2025, also stable month-on-month but up from 5.8% a year earlier.\n\n' +
+      'The trend shows [[near-term stability but a slight year-on-year increase]], suggesting the labor market is holding up despite sluggish economic growth. The rate remains low by historical standards, but the uptick from 2024 levels indicates some softening. The stability in recent months points to a resilient labor market, though underlying growth concerns remain.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions interpret the current unemployment level as [[resilient given weak growth]], but note risks from trade tensions, energy costs, and structural headwinds in major economies like Germany. The European Commission revised its 2025 euro area growth forecast down to [[0.9% (from 1.3%)]], citing trade tensions, a stronger euro, and declining energy prices.\n\n' +
+      'Analysts highlight that while the unemployment rate remains low, [[the slight year-on-year increase serves as a warning sign]], with divergence between low unemployment and weak GDP growth creating uncertainty. Consensus suggests cautious optimism, with some divergence regarding the sustainability of low unemployment amid these challenges.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The ECB monitors unemployment as a key input for [[price stability and economic growth]]. It feeds into wage dynamics, inflation expectations, and the output gap. The ECB\'s reaction function links labor market tightness to wage pressures and, in turn, inflation persistence.\n\n' +
+      'Current context: Unemployment near 6.4% with low inflation suggests [[limited wage-driven inflation pressure]], allowing the ECB to focus on growth support. However, the slight year-on-year increase and weak growth create a trade-off between supporting activity and maintaining price stability. The ECB balances these considerations, with internal views varying on the urgency of easing versus maintaining a cautious stance.\n\n' +
+      'The ECB\'s forward guidance and rate decisions depend on the [[unemployment-inflation-wage nexus]]. If unemployment rises while inflation remains low, the case for easing strengthens. If unemployment stays low but wage growth accelerates, the focus shifts to inflation risks. The current environment—stable unemployment, low inflation, weak growth—supports a [[cautious, data-dependent approach]].\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Political leaders acknowledge the importance of maintaining low unemployment, but [[fiscal constraints and cross-country differences limit coordinated action]]. Trade tensions, particularly with the United States, add uncertainty and affect business confidence and investment. Structural issues in major economies (e.g., Germany\'s energy costs and export competitiveness) contribute to the slowdown.\n\n' +
+      'Fiscal policy debates center on stimulus versus consolidation, with high-debt countries facing constraints. Structural reforms to improve labor market flexibility and competitiveness are discussed but face implementation challenges. The distinction between political narrative and policy reality is important: public statements emphasize employment support, but actual fiscal and structural responses are [[limited by institutional and economic constraints]].',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for unemployment and policy repricing:\n\n' +
+      '• [[Monthly Eurostat unemployment releases]] (typically around the 2nd of each month)\n\n' +
+      '• [[Country-level divergences]] (especially Germany, France, Italy, Spain)\n\n' +
+      '• [[Wage growth trends]] (unemployment-wage nexus is critical for ECB policy)\n\n' +
+      '• [[Job vacancy rates and labor force participation]] (early signals of labor market shifts)\n\n' +
+      '• [[ECB communications on labor market conditions]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move above [[6.6%]] would signal deterioration and likely increase easing expectations. A move below [[6.2%]] would suggest tightening and could support a less dovish ECB stance. The 6.4% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in unemployment, especially if accompanied by changes in wage growth, inflation, or GDP, could alter ECB policy expectations. Country-level divergences (e.g., rising unemployment in Germany while it falls in France) could affect policy trade-offs. Changes in job vacancy rates, labor force participation, and sector-specific employment trends provide [[early signals of labor market shifts]].\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the Euro Area Unemployment Rate functions best as:\n\n' +
+      '• [[ECB policy expectation driver]]\n\n' +
+      '• [[EUR bias validator]] (via wage-inflation-policy nexus)\n\n' +
+      '• [[Growth momentum signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
+  // EUR Current Account
+  'current-account-EUR': {
+    overview:
+      'The [[Euro Area Current Account Balance]] measures the net flow of goods, services, primary income (investment income, compensation of employees), and secondary income (transfers, remittances) between the eurozone and the rest of the world over a given period. Published monthly by the [[European Central Bank (ECB)]] and compiled from national central bank data, it reflects the eurozone\'s external economic position and competitiveness.\n\n' +
+      'A surplus indicates the eurozone is a [[net lender to the rest of the world]], while a deficit suggests it is a [[net borrower]]. The current account is part of the balance of payments and reflects trade competitiveness, savings-investment dynamics, and capital flow drivers.\n\n' +
+      'For traders, the current account influences EUR valuation through [[capital flows]], reflects [[export competitiveness]], signals [[structural imbalances]], and affects [[ECB policy considerations]]. A sustained surplus supports EUR via capital inflows, while a narrowing surplus or deficit can pressure EUR and signal economic challenges.\n\n' +
+      'Markets focus less on absolute current account levels and more on [[trend direction, component breakdowns, and the interplay with growth, inflation, and monetary policy expectations]].',
+    measurement:
+      'The [[European Central Bank (ECB)]] compiles current account data from [[national central banks]] within the eurozone using standardized balance of payments methodology aligned with [[International Monetary Fund (IMF) guidelines]].\n\n' +
+      'The current account consists of four main components:\n\n' +
+      '• [[Goods balance]]: Exports minus imports of physical goods\n\n' +
+      '• [[Services balance]]: Exports minus imports of services (tourism, financial services, transportation)\n\n' +
+      '• [[Primary income]]: Investment income (dividends, interest) and compensation of employees from cross-border activities\n\n' +
+      '• [[Secondary income]]: Current transfers, remittances, and other unilateral transfers\n\n' +
+      'Data is published monthly, typically with a [[lag of approximately six weeks]] after the reference month. Quarterly data provides more detailed breakdowns, including geographic patterns and component analysis. Frequency: Monthly (with quarterly detailed breakdowns). Unit: Billions of euros (€), also expressed as percentage of GDP.',
+    impact:
+      'Current account readings have [[profound implications]] for EUR markets through multiple transmission channels:\n\n' +
+      '[[Sustained Surplus]]\n\n' +
+      '• [[Supports EUR strength]] via capital inflows and demand for eurozone assets\n\n' +
+      '• [[Reflects export competitiveness]] and structural economic strength\n\n' +
+      '• [[Signals net lending position]], supporting currency valuation\n\n' +
+      '• [[Reduces external vulnerability]], supporting risk sentiment\n\n' +
+      '[[Narrowing Surplus or Deficit]]\n\n' +
+      '• [[Reduces EUR support]] via weaker capital flows\n\n' +
+      '• [[Signals competitiveness challenges]] or structural shifts\n\n' +
+      '• [[Increases external vulnerability]], potentially weighing on EUR\n\n' +
+      '• [[May affect ECB policy considerations]] if combined with growth concerns\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'EUR crosses remain sensitive to current account trends, with [[sustained surpluses supporting EUR]] through capital flow dynamics, while [[narrowing surpluses or deficits can pressure EUR]] via reduced capital inflows. Markets focus on [[trend direction and component breakdowns]], with shifts in goods, services, or primary income providing signals about competitiveness and structural position. The interplay between current account, growth, inflation, and ECB policy is crucial for EUR valuation.',
+    context:
+      '[[Current Reading & Trend (Late 2025)]]\n\n' +
+      'As of October 2025, the euro area recorded a current account surplus of [[€26 billion]], up from €24 billion in September 2025. Over the 12 months ending October 2025, the cumulative surplus amounted to [[€313 billion (2.0% of GDP)]], down from €419 billion (2.8% of GDP) in the preceding 12-month period.\n\n' +
+      'The October 2025 surplus was driven by [[goods (€31 billion) and services (€13 billion)]], partially offset by deficits in [[secondary income (€16 billion) and primary income (€3 billion)]].\n\n' +
+      'The trend shows a [[narrowing surplus]], declining from 2.8% of GDP in 2024 to 2.0% of GDP in the 12 months to October 2025. This reflects a [[shift from surplus to deficit in primary income]] and a larger secondary income deficit, despite continued goods and services surpluses.\n\n' +
+      'In 2024, the euro area recorded a full-year surplus of [[€426 billion (2.8% of GDP)]], up from €243 billion (1.7% of GDP) in 2023, driven by larger surpluses in goods (€372 billion, up from €264 billion), services (€169 billion, up from €127 billion), and primary income (€54 billion, up from €20 billion).\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions interpret the narrowing surplus as a sign of [[structural shifts in the eurozone\'s external position]]. The decline from 2.8% to 2.0% of GDP reflects weaker primary income flows and larger secondary income outflows, even as goods and services remain in surplus.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[The surplus remains structurally positive]] but is moderating\n\n' +
+      '• [[Primary income turning negative]] suggests weaker investment returns or higher outbound income payments\n\n' +
+      '• [[The goods surplus remains robust]], indicating export competitiveness\n\n' +
+      '• [[The services surplus supports]] the overall position\n\n' +
+      'Geographic patterns show the euro area maintains [[significant bilateral surpluses with the United Kingdom (€198 billion) and Switzerland (€73 billion)]], while recording the [[largest deficit with China (€134 billion)]], reflecting import dependency and trade structure.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The ECB monitors the current account as part of its [[assessment of external stability and competitiveness]]. While not a direct policy target, it informs policy considerations through its relationship with growth, inflation, and financial stability.\n\n' +
+      'Current context: The surplus remains positive but narrowing, consistent with [[moderate growth and external competitiveness]]. The shift in primary income suggests changing investment return dynamics. The ECB balances external position with domestic growth and inflation objectives.\n\n' +
+      'The ECB\'s reaction function considers the current account alongside inflation, growth, and financial conditions. A narrowing surplus alone is unlikely to drive policy, but [[combined with weak growth or inflation concerns]], it can influence the policy stance.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Trade tensions, particularly with the United States and China, affect the current account through [[tariffs, supply chain shifts, and export competitiveness]]. The large deficit with China reflects import dependency and trade structure.\n\n' +
+      'Energy dynamics: Energy import costs affect the goods balance, though recent normalization has reduced pressure. [[Energy security and diversification efforts]] may reshape trade patterns over time.\n\n' +
+      'Structural factors: Germany\'s export-oriented model drives the goods surplus, while services competitiveness supports the services surplus. [[Demographic trends and savings patterns]] influence the overall position.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize trade competitiveness and external strength, but [[actual policy responses are constrained by fiscal rules, trade agreements, and structural factors]]. The narrowing surplus reflects underlying economic shifts rather than policy choices.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for current account and EUR repricing:\n\n' +
+      '• [[Monthly ECB balance of payments releases]] (typically around six weeks after reference month)\n\n' +
+      '• [[Quarterly detailed breakdowns]] with component and geographic analysis\n\n' +
+      '• [[Goods balance trends]] (export competitiveness and import dynamics)\n\n' +
+      '• [[Services balance trends]] (services trade competitiveness)\n\n' +
+      '• [[Primary income shifts]] (investment returns and compensation flows)\n\n' +
+      '• [[Geographic patterns]] (especially with UK, China, and US)\n\n' +
+      '• [[Energy price volatility]] affecting goods balance\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move toward [[deficit (negative current account)]] would signal deterioration and likely pressure EUR. A return to [[above 2.5% of GDP]] would signal improvement and support EUR. The 2.0% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in the goods or services balance, especially if driven by trade tensions or competitiveness changes, could alter EUR dynamics. Continued deterioration in primary income, suggesting structural shifts in investment returns, would signal changing capital flow patterns. Changes in geographic patterns, especially with major partners like the UK, China, or the US, could affect trade flows and EUR positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the Euro Area Current Account Balance functions best as:\n\n' +
+      '• [[EUR structural support indicator]] (via capital flows)\n\n' +
+      '• [[Competitiveness gauge]] (goods and services balances)\n\n' +
+      '• [[External vulnerability signal]]\n\n' +
+      '• [[Component analysis tool]] for understanding underlying dynamics',
   },
   // GBP Inflation
   'inflation-GBP': {
@@ -1297,7 +1601,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '6.4%',
-          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in the eurozone. A key indicator of labor market health and economic slack, closely monitored by the European Central Bank for monetary policy decisions. Lower unemployment typically supports EUR strength through improved economic outlook.',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in the eurozone. Published monthly by Eurostat, this seasonally adjusted indicator is a key gauge of labor market health and economic slack, closely monitored by the European Central Bank for monetary policy decisions. The unemployment rate influences wage dynamics, inflation expectations, and ECB policy expectations, making it critical for EUR valuation and cross-asset positioning.',
           chartData: [55, 58, 56, 54, 52, 53, 51, 50],
           chartLabel: 'Rate trend'
         },
@@ -1305,7 +1609,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'current-account',
           title: 'Current Account',
           currentValue: '+€12.8B',
-          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers. A positive current account indicates the eurozone is a net lender to the rest of the world, supporting EUR strength through capital flows.',
+          description: 'Current Account Balance - Measures the net flow of goods, services, primary income, and secondary income between the eurozone and the rest of the world. Published monthly by the European Central Bank, a positive current account indicates the eurozone is a net lender, supporting EUR strength through capital inflows. The current account reflects export competitiveness, savings-investment dynamics, and structural economic position, making it critical for EUR valuation and cross-asset positioning.',
           chartData: [70, 72, 75, 78, 82, 80, 85, 88],
           chartLabel: 'Monthly balance'
         }
@@ -1320,8 +1624,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         {
           id: 'interest-rate',
           title: 'Bank Rate',
-          currentValue: '4.00%',
-          description: 'Bank Rate - The primary monetary policy tool set by the Bank of England (BoE). Represents the interest rate at which the BoE lends to commercial banks. This rate influences borrowing costs across the UK and is a key driver of GBP strength.',
+          currentValue: '3.75%',
+          description: 'Bank Rate - The primary monetary policy tool set by the Bank of England\'s Monetary Policy Committee (MPC). Represents the interest rate at which the BoE lends to commercial banks overnight, anchoring the UK yield curve and influencing borrowing costs across the economy. The Bank Rate is set to meet the 2% CPI inflation target while supporting growth and employment. Changes in the Bank Rate directly impact GBP valuation, UK asset pricing, and cross-asset capital flows, making it critical for FX, rates, and equity traders.',
           chartData: [75, 78, 82, 85, 88, 86, 84, 82],
           chartLabel: 'Last 8 months'
         },
@@ -1537,6 +1841,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         ];
       }
       
+      // GBP Bank Rate
+      if (selectedEconomy === 'GBP') {
+        return [
+          'Bank of England Bank Rate stands at 3.75% as of December 18, 2025, following a 25 basis point cut from 4.00%. This marks the lowest level since February 2023 and reflects a shift from restrictive policy toward easing, driven by moderating inflation, weak growth, and a softening labor market.',
+          'The BoE has cut rates multiple times since August 2024, with the most recent cuts including December 18, 2025 (3.75%), August 7, 2025 (4.00%), and May 8, 2025 (4.25%). The 5-4 voting split in recent decisions indicates internal division on the pace of easing, with some members favoring faster cuts and others cautioning on inflation risks.',
+          'CPI inflation stood at 3.2% in November 2025, down from 3.6% in October, but still above the 2% target. The UK economy has shown minimal growth, with GDP expanding by only 0.1% in Q2 2025, while unemployment has risen to 5.1%, the highest since January 2021. Governor Andrew Bailey noted that the UK has "passed the recent peak in inflation and it has continued to fall," allowing for rate reductions.',
+          'GBP crosses remain sensitive to Bank Rate expectations and decisions, with above-expectation cuts tending to weaken GBP via dovish repricing, while below-expectation cuts or pauses support GBP through reduced easing pressure. Markets price additional cuts into 2026, with timing sensitive to inflation, wage growth, and labor market data.',
+        ];
+      }
+      
       // US Interest Rate (default)
       return [
         'The Federal Funds Rate has shifted from restrictive policy toward cautious easing, cutting rates to 3.50%–3.75% amid moderating inflation and signs of labor market softening.',
@@ -1557,10 +1871,28 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     }
 
     // Special handling for inflation (EUR, GBP, JPY use 'inflation' not 'inflation-YoY')
-    // For now, return generic content - will be replaced with country-specific content later
-    // This ensures we always return an array, not null
+    // EUR HICP Inflation
+    if (indicator.id === 'inflation' && selectedEconomy === 'EUR') {
+      return [
+        'Eurozone HICP inflation stands at approximately 2.1% year-over-year, placing it very close to the ECB\'s 2% medium-term target. Inflation has stabilized after declining sharply from post-pandemic and energy-shock peaks, reflecting normalized price pressures following easing energy and supply-chain costs.',
+        'The ECB operates under a symmetric 2% inflation target over the medium term, and current inflation levels support a more balanced policy stance rather than aggressive tightening or easing. Headline inflation is largely anchored near target, with inflation persistence increasingly driven by domestic components rather than external shocks.',
+        'Markets react most strongly to surprises versus consensus expectations, not absolute inflation levels. HICP remains a primary constraint on ECB easing—cooling inflation supports additional rate cuts, while sticky core components, particularly services inflation, cap the pace and depth of easing.',
+        'EUR crosses remain sensitive to HICP surprises and ECB communication tone. Key drivers to monitor include core and services inflation trends, wage growth dynamics, energy price volatility, and persistent divergence between headline HICP and underlying components, which often precedes shifts in ECB communication.',
+      ];
+    }
 
-    // Special handling for gdp-growth with professional content (US only)
+    // Special handling for core-inflation-YoY with professional content
+    // EUR Core Inflation
+    if (indicator.id === 'core-inflation-YoY' && selectedEconomy === 'EUR') {
+      return [
+        'Eurozone core inflation is running at approximately 2.4% year-over-year, remaining above headline HICP (~2.1%) and slightly above the ECB\'s 2% medium-term target. Core inflation has stabilized rather than fallen sharply in recent months, reflecting sticky domestic price pressures with services inflation continuing to be the dominant contributor.',
+        'Core inflation has hovered around the 2.3%–2.5% range, indicating resilience despite easing energy and goods prices. Monthly momentum remains positive, implying that inflationary pressure is cooling gradually rather than collapsing. The gap between headline and core inflation underscores the role of wages, rents, and services costs.',
+        'The ECB\'s symmetric 2% target framework places core inflation at the center of persistence assessment. Current levels support a measured and data-dependent approach to rate cuts, reducing urgency for aggressive easing despite headline inflation nearing target. ECB officials frequently cite services and core inflation as key constraints on faster policy normalization.',
+        'EUR crosses remain sensitive to core inflation surprises, with above-expectation readings tending to support EUR via higher real rate assumptions, while downside surprises often weaken EUR through dovish repricing of ECB expectations. A decisive downward break in core inflation would materially alter ECB policy pricing and EUR dynamics.',
+      ];
+    }
+
+    // Special handling for gdp-growth with professional content
     if (indicator.id === 'gdp-growth' && selectedEconomy === 'US') {
       return [
         'Q3 2025 Real GDP registered +4.3% (annualized), the strongest quarterly expansion in over two years. Growth exceeded consensus expectations, driven by resilient consumer spending, a rebound in exports, and continued government and fiscal support.',
@@ -1570,13 +1902,43 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
-    // Special handling for unemployment with professional content (US only)
+    // EUR GDP Growth
+    if (indicator.id === 'gdp-growth' && selectedEconomy === 'EUR') {
+      return [
+        'Q3 2025 Eurozone GDP registered +0.3% quarter-on-quarter and ~1.4% year-over-year, reflecting positive but moderate expansion. Growth is driven by consumption, government spending, and export activity, with investment stabilizing after prior weakness.',
+        'The euro area economy remains in positive but non-recessionary territory, supporting the ECB\'s strategy of holding interest rates steady. Growth is not strong enough to justify tightening, but positive enough to reduce pressure for aggressive easing.',
+        'Growth expansion is uneven across member states, with Spain and France outpacing core economies like Germany, which has exhibited softer growth. ECB projections place full-year 2025 growth near ~1.3%–1.4%, with a modest slowdown expected in 2026 before moderate recovery.',
+        'EUR crosses remain sensitive to GDP surprises, with stronger-than-expected prints tending to support EUR (especially if accompanied by resilient inflation), while growth moderation or downside surprises can pressure EUR via dovish repricing of ECB expectations. The interplay between growth and inflation data is crucial for ECB policy anticipation.',
+      ];
+    }
+
+    // Special handling for unemployment with professional content
     if (indicator.id === 'unemployment' && selectedEconomy === 'US') {
       return [
         'Unemployment Rate is at ~4.6%, gradually rising through late 2025, marking the highest level since 2021 and signaling a cooling labor market. Recent employment gains have been concentrated in healthcare, construction, and social assistance, while federal workforce reductions and slower hiring across cyclical sectors have weighed on overall labor conditions.',
         'The labor market has shifted from tight to balanced-to-soft, marked by slowing monthly payroll growth, reduced labor mobility, fewer job openings, and stable but flattening labor force participation. While unemployment remains historically moderate, the direction of travel suggests increasing economic slack.',
         'The recent rise in unemployment strengthens the case for continued, cautious rate cuts, especially if paired with easing inflation. The Fed balances labor market cooling against inflation persistence, with rising unemployment reducing urgency to maintain restrictive rates.',
         'Labor data often leads policy shifts, making it a high-signal indicator for traders. Markets react strongly to unemployment trends, with rising unemployment tending to weigh on USD via lower rate expectations, particularly in USD/JPY, EUR/USD, and GBP/USD pairs.',
+      ];
+    }
+
+    // EUR Unemployment Rate
+    if (indicator.id === 'unemployment' && selectedEconomy === 'EUR') {
+      return [
+        'Euro Area Unemployment Rate stands at 6.4% as of October 2025, stable month-on-month but up from 6.3% a year earlier. The trend shows near-term stability but a slight year-on-year increase, suggesting the labor market is holding up despite sluggish economic growth.',
+        'The European Commission revised its 2025 euro area growth forecast down to 0.9% (from 1.3%), citing trade tensions, a stronger euro, and declining energy prices. Analysts highlight that while unemployment remains low, the slight year-on-year increase serves as a warning sign, with divergence between low unemployment and weak GDP growth creating uncertainty.',
+        'The ECB monitors unemployment as a key input for price stability and economic growth. Current context: Unemployment near 6.4% with low inflation suggests limited wage-driven inflation pressure, allowing the ECB to focus on growth support. However, the slight year-on-year increase and weak growth create a trade-off between supporting activity and maintaining price stability.',
+        'EUR crosses remain sensitive to unemployment surprises, with above-expectation readings tending to weaken EUR via dovish repricing of ECB expectations, while below-expectation readings support EUR through reduced easing pressure. The interplay between unemployment, wage growth, and inflation is crucial for ECB policy anticipation.',
+      ];
+    }
+
+    // EUR Current Account
+    if (indicator.id === 'current-account' && selectedEconomy === 'EUR') {
+      return [
+        'Euro Area Current Account recorded a surplus of €26 billion in October 2025, with the 12-month cumulative surplus at €313 billion (2.0% of GDP), down from €419 billion (2.8% of GDP) in the preceding period. The narrowing reflects a shift from surplus to deficit in primary income and a larger secondary income deficit, despite continued goods and services surpluses.',
+        'The October 2025 surplus was driven by goods (€31 billion) and services (€13 billion), partially offset by deficits in secondary income (€16 billion) and primary income (€3 billion). The goods surplus remains robust, indicating export competitiveness, while the primary income shift suggests changing investment return dynamics.',
+        'Major financial institutions interpret the narrowing surplus as a sign of structural shifts in the eurozone\'s external position. The euro area maintains significant bilateral surpluses with the United Kingdom (€198 billion) and Switzerland (€73 billion), while recording the largest deficit with China (€134 billion), reflecting import dependency and trade structure.',
+        'EUR crosses remain sensitive to current account trends, with sustained surpluses supporting EUR through capital flow dynamics, while narrowing surpluses can pressure EUR via reduced capital inflows. Markets focus on trend direction and component breakdowns, with shifts in goods, services, or primary income providing signals about competitiveness and structural position.',
       ];
     }
 
@@ -2255,76 +2617,121 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
             unit: indicator.unit || null,
           };
           
-          // Only add US-specific quick reference data for US economy
-          if (selectedEconomy !== 'US') {
-            return baseData; // Return only base data for non-US countries
+          // Add indicator-specific data for US economy
+          if (selectedEconomy === 'US') {
+            if (indicator.id === 'interest-rate') {
+              return {
+                ...baseData,
+                // Use actual currentValue from indicator data, not hardcoded
+                lastChange: '25 bps cut',
+                policyStance: 'Cautious easing',
+                meetingFrequency: '8 times per year',
+                nextAction: 'Markets price 1–3 additional cuts',
+                keyDate: 'FOMC meetings',
+              };
+            }
+            
+            if (indicator.id === 'inflation-YoY') {
+              return {
+                ...baseData,
+                target: 'Fed 2% target',
+                trend: 'Moderating',
+                lastReading: '3.0% (Sept 2025)',
+                releaseDate: '10th-15th of each month',
+              };
+            }
+            
+            if (indicator.id === 'core-inflation-YoY') {
+              return {
+                ...baseData,
+                target: 'Fed 2% target',
+                trend: 'Moderating',
+                lastReading: '3.0% (Sept 2025)',
+                releaseDate: '10th-15th of each month',
+                note: 'Fed\'s preferred gauge',
+              };
+            }
+            
+            if (indicator.id === 'gdp-growth') {
+              return {
+                ...baseData,
+                lastReading: '3.8% (Q2 2025)',
+                previousReading: '-0.6% (Q1 2025)',
+                trend: 'Rebounding',
+                releaseDate: 'End of month (quarterly)',
+              };
+            }
+            
+            if (indicator.id === 'unemployment') {
+              return {
+                ...baseData,
+                lastReading: '4.4% (Sept 2025)',
+                trend: 'Gradually increasing',
+                releaseDate: 'First Friday of month',
+                keyDate: 'NFP release day',
+              };
+            }
+            
+            if (indicator.id === 'nonfarm-payrolls') {
+              return {
+                ...baseData,
+                lastReading: '119K (Sept 2025)',
+                previousReading: '-4K (Aug 2025)',
+                releaseDate: 'First Friday of month',
+                releaseTime: '8:30 AM ET',
+                impact: 'Highest-impact release',
+              };
+            }
           }
           
-          // Add indicator-specific data (US only)
-          if (indicator.id === 'interest-rate') {
-            return {
-              ...baseData,
-              // Use actual currentValue from indicator data, not hardcoded
-              lastChange: '25 bps cut',
-              policyStance: 'Cautious easing',
-              meetingFrequency: '8 times per year',
-              nextAction: 'Markets price 1–3 additional cuts',
-              keyDate: 'FOMC meetings',
-            };
+          // Add indicator-specific data for EUR economy
+          if (selectedEconomy === 'EUR') {
+            if (indicator.id === 'core-inflation-YoY') {
+              return {
+                ...baseData,
+                target: 'ECB 2% target',
+                trend: 'Stabilized',
+                lastReading: '2.4% (Nov 2025)',
+                releaseDate: 'Middle of each month',
+                note: 'ECB\'s preferred gauge',
+              };
+            }
+            
+            if (indicator.id === 'gdp-growth') {
+              return {
+                ...baseData,
+                lastReading: '+0.3% QoQ, ~1.4% YoY (Q3 2025)',
+                previousReading: 'Q2 2025',
+                trend: 'Moderate expansion',
+                releaseDate: 'End of month (quarterly)',
+                note: 'Eurostat / ECB projections',
+              };
+            }
+            
+            if (indicator.id === 'unemployment') {
+              return {
+                ...baseData,
+                lastReading: '6.4% (Oct 2025)',
+                previousReading: '6.4% (Sept 2025)',
+                trend: 'Stable, slight YoY increase',
+                releaseDate: 'Around 2nd of each month',
+                note: 'Eurostat, seasonally adjusted',
+              };
+            }
+            
+            if (indicator.id === 'current-account') {
+              return {
+                ...baseData,
+                lastReading: '€26B (Oct 2025)',
+                previousReading: '€24B (Sept 2025)',
+                trend: 'Narrowing surplus',
+                releaseDate: '~6 weeks after reference month',
+                note: '12-month: €313B (2.0% of GDP)',
+              };
+            }
           }
           
-          if (indicator.id === 'inflation-YoY') {
-            return {
-              ...baseData,
-              target: 'Fed 2% target',
-              trend: 'Moderating',
-              lastReading: '3.0% (Sept 2025)',
-              releaseDate: '10th-15th of each month',
-            };
-          }
-          
-          if (indicator.id === 'core-inflation-YoY') {
-            return {
-              ...baseData,
-              target: 'Fed 2% target',
-              trend: 'Moderating',
-              lastReading: '3.0% (Sept 2025)',
-              releaseDate: '10th-15th of each month',
-              note: 'Fed\'s preferred gauge',
-            };
-          }
-          
-          if (indicator.id === 'gdp-growth') {
-            return {
-              ...baseData,
-              lastReading: '3.8% (Q2 2025)',
-              previousReading: '-0.6% (Q1 2025)',
-              trend: 'Rebounding',
-              releaseDate: 'End of month (quarterly)',
-            };
-          }
-          
-          if (indicator.id === 'unemployment') {
-            return {
-              ...baseData,
-              lastReading: '4.4% (Sept 2025)',
-              trend: 'Gradually increasing',
-              releaseDate: 'First Friday of month',
-              keyDate: 'NFP release day',
-            };
-          }
-          
-          if (indicator.id === 'nonfarm-payrolls') {
-            return {
-              ...baseData,
-              lastReading: '119K (Sept 2025)',
-              previousReading: '-4K (Aug 2025)',
-              releaseDate: 'First Friday of month',
-              releaseTime: '8:30 AM ET',
-              impact: 'Highest-impact release',
-            };
-          }
-          
+          // Return base data for all other cases
           return baseData;
         };
         
