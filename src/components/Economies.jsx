@@ -554,69 +554,76 @@ const indicatorDetails = {
   // JPY Interest Rate
   'interest-rate-JPY': {
     overview:
-      'The [[Bank of Japan Policy Rate]] is the primary monetary policy tool of the Bank of Japan (BoJ). It represents the target for short-term interest rates in Japan and operates within the BoJ\'s [[yield curve control framework]].\n\n' +
-      'For traders, the BoJ Policy Rate is a [[core macro driver]] that influences JPY valuation, carry trade dynamics, risk sentiment, and cross-asset capital flows.\n\n' +
-      '[[Why It Matters to Markets]]\n\n' +
-      'The BoJ Policy Rate anchors the Japanese yield curve and directly impacts:\n\n' +
-      '• [[FX markets]]: JPY strength or weakness via yield differentials and carry trades\n\n' +
-      '• [[Equities]]: Cost of capital and valuation multiples\n\n' +
-      '• [[Fixed income]]: Short-term yields, curve shape, and volatility\n\n' +
-      '• [[Commodities]]: Particularly gold, via real yields and risk appetite\n\n' +
-      'Markets trade [[expectations of future rate changes]], particularly around BoJ policy normalization.',
+      'The [[Bank of Japan\'s Policy Rate]] is the interest rate at which the BoJ lends to financial institutions overnight. It is the [[primary monetary policy tool]] of the Bank of Japan, set by the [[Policy Board]] to achieve the 2% inflation target while supporting economic growth.\n\n' +
+      'The Policy Rate anchors the [[entire Japanese yield curve]], influencing borrowing costs for households, businesses, and the government. Changes in the Policy Rate transmit through bank lending rates, corporate borrowing, and currency markets, affecting economic activity and asset prices.\n\n' +
+      'For traders, the Policy Rate is a [[core macro driver]] that influences JPY valuation via yield differentials, signals BoJ policy stance, affects Japanese asset pricing, and influences risk sentiment. Markets trade [[expectations of future rate changes]], often well ahead of actual Policy Board decisions.\n\n' +
+      'The Policy Rate is set at [[Policy Board meetings held approximately every six weeks]], with decisions announced immediately and detailed statements published subsequently. The rate is not subject to revisions, but accompanying economic forecasts and statements provide forward guidance on policy direction.',
     measurement:
-      'The [[Bank of Japan Policy Board]] meets [[eight times per year]] to set the Policy Rate and other monetary policy tools.\n\n' +
-      '[[Key policy signals]] traders monitor:\n\n' +
-      '• [[Rate decision]] (hold / cut / hike)\n\n' +
-      '• [[Yield curve control adjustments]]\n\n' +
-      '• [[BoJ Governor press conference]]\n\n' +
-      '• [[Outlook Report]] (quarterly projections)\n\n' +
-      'The BoJ also uses [[quantitative easing]] and yield curve control to influence longer-term rates.',
+      'The [[Policy Board]] consists of nine members: the Governor, two Deputy Governors, and six other members. The Policy Board meets [[approximately every six weeks]] to set the Policy Rate based on economic data, inflation forecasts, and growth projections.\n\n' +
+      'Key policy signals traders monitor:\n\n' +
+      '• [[Rate decision]] (hold / hike / cut)\n\n' +
+      '• [[Policy statement]] (forward guidance and policy tone)\n\n' +
+      '• [[Outlook Report]] (quarterly economic forecasts and projections)\n\n' +
+      '• [[Governor Ueda\'s press conference]] (policy communication and Q&A)\n\n' +
+      '• [[Yield Curve Control (YCC)]] adjustments (affects long-term yields)\n\n' +
+      'The Policy Rate influences the [[Effective Policy Rate]], which reflects actual overnight interbank lending and typically remains close to the Policy Rate through BoJ liquidity operations. The rate affects [[mortgage rates, corporate borrowing costs, and savings rates]] across the Japanese economy.',
     impact:
-      '[[Market Transmission Mechanism]]\n\n' +
-      '[[Rates → FX]]\n\n' +
-      '• Higher relative Japanese rates reduce carry trade appeal → [[JPY support]]\n\n' +
-      '• Lower rate expectations support carry trades → [[JPY pressure]]\n\n' +
-      '[[Rates → Risk Assets]]\n\n' +
-      '• Higher rates tighten financial conditions\n\n' +
-      '• Lower rates generally support equities and credit\n\n' +
-      '[[Rates → Commodities]]\n\n' +
-      '• Gold reacts inversely to real yields\n\n' +
-      '• Energy responds indirectly via growth expectations\n\n' +
-      '[[Hawkish vs Dovish Signals]]\n\n' +
-      '[[Hawkish Bias]]\n\n' +
-      '• Rate hikes or normalization\n\n' +
-      '• Persistent inflation pressures\n\n' +
-      '• Strong economic data\n\n' +
-      '• Emphasis on inflation risks\n\n' +
-      'Typical reaction: [[JPY strength]], higher yields, pressure on carry trades\n\n' +
-      '[[Dovish Bias]]\n\n' +
-      '• Rate cuts or easing guidance\n\n' +
-      '• Cooling inflation momentum\n\n' +
-      '• Economic weakness\n\n' +
-      '• Focus on growth risks\n\n' +
-      'Typical reaction: [[JPY weakness]], yield compression, support for carry trades',
+      'Policy Rate decisions have [[profound implications]] for JPY markets through multiple transmission channels:\n\n' +
+      '[[Rate Hikes]]\n\n' +
+      '• [[Support JPY strength]] via higher yield differentials\n\n' +
+      '• [[Pressure bond prices]] and raise yields\n\n' +
+      '• [[May weigh on equities]] via higher borrowing costs\n\n' +
+      '• [[Cool inflation]] but may slow growth if too aggressive\n\n' +
+      '[[Rate Cuts]]\n\n' +
+      '• [[Reduce JPY support]] via lower yield differentials\n\n' +
+      '• [[Support bond prices]] and compress yields\n\n' +
+      '• [[Boost equities]] via lower borrowing costs\n\n' +
+      '• [[Stimulate growth]] but may fuel inflation if too aggressive\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'JPY crosses remain sensitive to Policy Rate expectations and decisions, with [[above-expectation hikes tending to support JPY]] via hawkish repricing, while [[below-expectation hikes or pauses weaken JPY]] through reduced normalization pressure. The interplay between Policy Rate, inflation, wage growth, and growth data is crucial for BoJ policy anticipation. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
     context:
       '[[Current Policy Context (Late 2025)]]\n\n' +
-      'The Bank of Japan has been [[gradually normalizing policy]] after years of ultra-loose monetary policy, responding to inflation dynamics and economic conditions.\n\n' +
-      'Key characteristics of the current regime:\n\n' +
-      '• [[Data-dependent approach]] to policy decisions\n\n' +
-      '• [[Focus on sustainable inflation]] toward 2% target\n\n' +
-      '• [[Gradual policy normalization]]\n\n' +
-      '• [[Yield curve control adjustments]]\n\n' +
-      'This environment favors [[expectation-driven and event-driven trading]].',
+      'As of December 19, 2025, the Policy Rate stands at [[0.75%]], following a 25 basis point hike from 0.50%. This marks the [[highest level since September 1995]] and reflects a shift from ultra-loose policy toward normalization, driven by sustained inflation above the 2% target, stronger wage growth, and confidence in achieving stable inflation.\n\n' +
+      'Recent trend: The BoJ has raised rates multiple times since ending negative rates, with the most recent hikes including [[December 19, 2025 (0.75%), January 24, 2025 (0.50%), and March 19, 2024 (0% to 0.1%)]]. The December 2025 hike to 0.75% aims to [[curb inflation, which stood at 3% in November]], exceeding the BoJ\'s 2% target.\n\n' +
+      '[[Economic Backdrop]]\n\n' +
+      'Inflation: CPI inflation stood at [[3% in November 2025]], above the 2% target. The sustained inflation above target supports continued normalization, but the pace depends on inflation persistence and wage growth.\n\n' +
+      'Wage Growth: [[Wage growth has strengthened]], supporting sustainable inflation and confidence in achieving the 2% target. The interplay between wage growth and inflation is crucial for policy decisions.\n\n' +
+      'Growth: The Japanese economy has shown [[modest growth]], with the BoJ balancing normalization with growth support. The export-oriented economy remains sensitive to global conditions.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions interpret the normalization as appropriate given sustained inflation and wage growth, but note risks from global uncertainties and the need for a gradual approach. The shift from negative rates to 0.75% reflects confidence in achieving stable inflation, but the pace of normalization remains cautious.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Further normalization is likely]], but the pace will be gradual and data-dependent\n\n' +
+      '• [[Inflation remains above target]], supporting continued normalization\n\n' +
+      '• [[Wage growth has strengthened]], supporting sustainable inflation\n\n' +
+      '• [[The BoJ will balance normalization]] with economic growth support\n\n' +
+      'Markets price [[additional normalization into 2026]], with timing sensitive to inflation, wage growth, and economic growth data.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The BoJ\'s Policy Board sets the Policy Rate to achieve the [[2% inflation target]] while supporting economic growth. The reaction function weighs inflation persistence, wage growth, growth momentum, and financial stability.\n\n' +
+      'Current context: The Policy Rate at 0.75% reflects a shift toward normalization, balancing [[persistent inflation (3% in November 2025, above the 2% target) against global uncertainties and growth concerns]]. The December 2025 hike to 0.75% aims to curb inflation while supporting economic growth.\n\n' +
+      'Governor Ueda has emphasized [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information. The BoJ\'s forward guidance focuses on achieving the 2% inflation target sustainably, with policy adjustments based on economic and price developments.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'The BoJ operates with [[operational independence]], but political pressure and fiscal policy affect the economic environment. Government spending and tax policy influence growth and inflation, affecting monetary policy trade-offs.\n\n' +
+      'Structural factors: Japan\'s [[aging population]] affects growth potential and inflation dynamics, while the [[export-oriented economy]] affects rate transmission and currency dynamics. [[Productivity challenges]] affect growth potential and inflation dynamics. [[Financial sector profitability concerns]] affect policy trade-offs.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize inflation control and growth support, but [[actual policy is constrained by the inflation target and economic conditions]]. The BoJ maintains operational independence, but political pressure can affect communication and expectations.',
     traderImplications:
       '[[What Traders Should Monitor Next]]\n\n' +
-      'High-impact drivers for rate repricing:\n\n' +
-      '• [[CPI inflation trends]]\n\n' +
-      '• [[Wage growth data]]\n\n' +
-      '• [[BoJ communication tone]]\n\n' +
-      '• [[Yield curve dynamics]] (2Y vs 10Y, real yields)\n\n' +
-      'The [[highest-conviction trades]] emerge when data, expectations, and policy guidance align.\n\n' +
+      'High-impact drivers for Policy Rate repricing:\n\n' +
+      '• [[Policy Board meetings]] (approximately every six weeks)\n\n' +
+      '• [[CPI inflation releases]] (primary target, especially services and core components)\n\n' +
+      '• [[Wage growth data]] (affects inflation persistence and policy trade-offs)\n\n' +
+      '• [[Economic growth figures]] (affects policy trade-offs and rate decisions)\n\n' +
+      '• [[Yield Curve Control (YCC) adjustments]] (affects long-term yields and policy stance)\n\n' +
+      '• [[Policy Board statements and communications]] (forward guidance and policy tone)\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move above [[1.0%]] would signal more aggressive normalization and likely support JPY. A pause or move below [[0.50%]] would signal a more cautious stance and weigh on JPY. The 0.75% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in inflation, especially if driven by wage growth or services inflation, could alter Policy Rate expectations. Changes in wage growth, affecting inflation persistence and policy trade-offs, could influence rate decisions. Changes in economic growth, affecting policy trade-offs, could shift market expectations. Changes in BoJ communication tone, especially around forward guidance, could affect market positioning.\n\n' +
       '[[FXSentinel Usage]]\n\n' +
-      'Within FXSentinel, the BoJ Policy Rate functions best as:\n\n' +
-      '• [[Macro regime filter]] (tightening vs easing)\n\n' +
-      '• [[JPY directional bias tool]]\n\n' +
-      '• [[Cross-asset sentiment anchor]]',
+      'Within FXSentinel, the Bank of Japan Policy Rate functions best as:\n\n' +
+      '• [[JPY directional bias tool]] (via yield differentials)\n\n' +
+      '• [[BoJ policy expectation driver]]\n\n' +
+      '• [[Cross-asset sentiment anchor]]\n\n' +
+      '• [[Volatility trigger around Policy Board meetings]]',
   },
   // EUR Inflation
   'inflation-EUR': {
@@ -851,6 +858,178 @@ const indicatorDetails = {
       '• [[Growth-inflation balance gauge]]\n\n' +
       '• [[Volatility catalyst around GDP releases]]',
   },
+  // GBP GDP Growth
+  'gdp-growth-GBP': {
+    overview:
+      '[[Gross Domestic Product (GDP)]] measures the total value of goods and services produced within the United Kingdom. [[Real GDP growth]] (adjusted for inflation) is the primary gauge of economic momentum and a core input into monetary policy, risk sentiment, and cross-asset pricing.\n\n' +
+      'For traders, GDP growth provides context on [[demand strength, recession risk, and policy durability]], influencing FX flows, yields, and equity valuations. Strong growth supports GBP via real yield support and capital inflows, while weak growth increases rate-cut probability and supports defensive FX and bonds.\n\n' +
+      'Why GDP Matters for Markets:\n\n' +
+      '• [[FX]]: Strong growth supports GBP via real yield support and capital inflows\n\n' +
+      '• [[Rates]]: Faster growth can delay or limit rate cuts\n\n' +
+      '• [[Equities]]: Supports earnings outlook but may cap valuation upside if rates stay elevated\n\n' +
+      '• [[Risk Sentiment]]: Sustained expansion favors risk-on positioning\n\n' +
+      'GDP growth is published quarterly, typically around the [[end of the month following the quarter end]], with revisions possible as more comprehensive data becomes available.',
+    measurement:
+      'The [[Office for National Statistics (ONS)]] calculates GDP growth as the percentage change in real GDP from one quarter to the previous quarter, [[annualized for comparability]]. The calculation uses chained dollars to adjust for inflation.\n\n' +
+      'GDP is measured through three approaches:\n\n' +
+      '• [[Expenditure approach]]: Sum of consumption, investment, government spending, and net exports\n\n' +
+      '• [[Income approach]]: Sum of all income earned in production\n\n' +
+      '• [[Production approach]]: Value added at each stage of production\n\n' +
+      'Key components:\n\n' +
+      '• [[Services sector]]: Primary driver of growth (currently strong)\n\n' +
+      '• [[Production sector]]: More volatile but can drive growth trends (currently mixed)\n\n' +
+      '• [[Construction sector]]: Affects growth and employment (currently flat)\n\n' +
+      'Data is released quarterly, typically around the [[end of the month following the quarter end]], with [[multiple revisions]] as more comprehensive data becomes available. Release Frequency: Quarterly. Unit: Percent (%).',
+    impact:
+      'GDP growth has [[profound implications]] for GBP markets through multiple transmission channels:\n\n' +
+      '[[Stronger GDP]]\n\n' +
+      '• [[Supports GBP and real yields]]\n\n' +
+      '• [[Reduces rate-cut urgency]]\n\n' +
+      '• [[Favors cyclical assets]]\n\n' +
+      '[[Weaker GDP]]\n\n' +
+      '• [[Reopens recession risk pricing]]\n\n' +
+      '• [[Increases rate-cut probability]]\n\n' +
+      '• [[Supports defensive FX and bonds]]\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'GDP surprises tend to [[reprice rate expectations first]], with FX and equity volatility following. Markets react not just to the headline number but to [[components and revisions]], with consumption and investment data particularly scrutinized for forward-looking signals. GBP crosses remain sensitive to GDP surprises, with [[above-expectation growth supporting GBP]] via reduced easing pressure, while [[below-expectation growth pressuring GBP]] via increased easing expectations.',
+    context:
+      '[[Latest Growth Snapshot]]\n\n' +
+      'Q1 2025 Real GDP: [[+0.7% quarter-on-quarter]]\n\n' +
+      '[[Fastest growth in a year]], surpassing expectations of 0.6%\n\n' +
+      'Q2 2025 Real GDP: [[+0.3% quarter-on-quarter]], moderating from Q1 but still above forecasts of 0.1%\n\n' +
+      'Annual Growth: [[2024 GDP grew by 1.1%]], revised up from initial estimate of 0.9%, and an improvement from 0.4% growth in 2023\n\n' +
+      'Key contributors:\n\n' +
+      '• [[Services sector]]: Primary driver, with 0.7% increase in Q1 2025, driven by retail, wholesale, and computer programming\n\n' +
+      '• [[Production sector]]: Rose 1.1% in Q1 2025 but declined 0.7% in March 2025\n\n' +
+      '• [[Construction sector]]: Showed no growth in Q1 2025, following a 0.3% increase in Q4 2024\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the Q1 2025 strength as positive but expect moderation due to global uncertainties, inflation pressures, and domestic challenges.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Growth is positive but modest]] relative to historical standards\n\n' +
+      '• [[Services sector remains the primary driver]] of growth\n\n' +
+      '• [[Business investment remains subdued]] due to weak demand, high costs, and uncertainties\n\n' +
+      '• [[Consumer spending is modest]] due to slower real income growth\n\n' +
+      'Forecasts vary:\n\n' +
+      '• [[Bank of England]]: Revised 2025 growth down to 0.75% from 1.5%, citing global uncertainties and domestic challenges\n\n' +
+      '• [[International Monetary Fund]]: Projects 1.3% growth for 2025, positioning the UK as the second-fastest-growing major economy after the U.S.\n\n' +
+      '• [[Confederation of British Industry]]: Projects 1.4% growth for 2025 (upgraded from earlier forecasts) and 1.3% for 2026\n\n' +
+      '• [[EY ITEM Club]]: Upgraded 2025 forecast to 1.5%, citing stronger-than-expected momentum\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of England monitors GDP growth as part of its [[assessment of economic momentum and policy trade-offs]]. The MPC sets the Bank Rate based on growth, inflation, wage growth, and labor market conditions.\n\n' +
+      'Current context: Q1 2025 growth of 0.7% supports the BoE\'s shift toward easing, but the Bank revised its 2025 growth forecast down to [[0.75% from 1.5%]], reflecting concerns about global uncertainties and domestic challenges. The BoE cut the Bank Rate to 4.50% in early 2025, reflecting concerns over growth and inflation.\n\n' +
+      'The BoE\'s reaction function weighs [[growth momentum, inflation persistence, wage growth, and labor market conditions]]. Current levels support continued easing, but the pace depends on incoming data, especially growth and inflation dynamics. The BoE emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect growth through demand and supply channels. The [[Labour government has introduced measures]] aimed at stimulating long-term growth, including infrastructure investments and efforts to improve post-Brexit EU relations.\n\n' +
+      'Brexit and trade: Trade relationships and supply chain shifts affect growth and competitiveness. [[Global trade tensions, particularly with the U.S.]], have introduced uncertainties affecting export performance and overall economic stability.\n\n' +
+      'Structural factors: The UK\'s [[services-heavy economy]] affects growth dynamics and rate transmission, while [[housing market sensitivity]] to rates affects consumption and growth. [[Productivity challenges]] affect growth potential and inflation dynamics. [[Business investment remains subdued]] due to weak demand, high costs, and uncertainties.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize growth support and competitiveness, but [[actual policy is constrained by fiscal rules, trade agreements, and structural factors]]. The BoE maintains operational independence, but political pressure can affect communication and expectations.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact growth signals include:\n\n' +
+      '• [[Quarterly GDP releases]] (typically around the end of the month following the quarter end)\n\n' +
+      '• [[Monthly GDP estimates]] (provide early signals of quarterly trends)\n\n' +
+      '• [[Component breakdowns]] (consumption, investment, government spending, net exports)\n\n' +
+      '• [[Sectoral performance]] (services, production, construction)\n\n' +
+      '• [[Revisions to previous quarters]] (can affect market expectations and policy assessments)\n\n' +
+      '• [[BoE communications on growth]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move above [[0.8% quarter-on-quarter]] would signal stronger momentum and likely support GBP via reduced easing pressure. A move below [[0.0% (contraction)]] would signal recession risk and likely pressure GBP via increased easing expectations. The 0.3-0.7% range appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in growth, especially if driven by consumption or investment, could alter Bank Rate expectations. Changes in services sector performance, affecting overall growth, could influence rate decisions. Changes in business investment, affecting growth potential, could shift market expectations. Changes in BoE communication tone, especially around forward guidance, could affect market positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, UK GDP Growth functions best as:\n\n' +
+      '• [[GBP directional bias tool]] (via growth momentum signals)\n\n' +
+      '• [[BoE policy expectation driver]]\n\n' +
+      '• [[Recession risk indicator]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
+  // JPY GDP Growth
+  'gdp-growth-JPY': {
+    overview:
+      '[[Gross Domestic Product (GDP)]] measures the total value of goods and services produced within Japan. [[Real GDP growth]] (adjusted for inflation) is the primary gauge of economic momentum and a core input into monetary policy, risk sentiment, and cross-asset pricing.\n\n' +
+      'For traders, GDP growth provides context on [[demand strength, recession risk, and policy durability]], influencing FX flows, yields, and equity valuations. Strong growth supports JPY via real yield support and capital inflows, while weak growth increases rate-cut probability and supports defensive FX and bonds.\n\n' +
+      'Why GDP Matters for Markets:\n\n' +
+      '• [[FX]]: Strong growth supports JPY via real yield support and capital inflows\n\n' +
+      '• [[Rates]]: Faster growth can support rate hikes\n\n' +
+      '• [[Equities]]: Supports earnings outlook but may cap valuation upside if rates stay elevated\n\n' +
+      '• [[Risk Sentiment]]: Sustained expansion favors risk-on positioning\n\n' +
+      'GDP growth is published quarterly, typically around the [[end of the month following the quarter end]], with revisions possible as more comprehensive data becomes available.',
+    measurement:
+      'The [[Cabinet Office, Government of Japan]] calculates GDP growth as the percentage change in real GDP from one quarter to the previous quarter, [[annualized for comparability]]. The calculation uses chained dollars to adjust for inflation.\n\n' +
+      'GDP is measured through three approaches:\n\n' +
+      '• [[Expenditure approach]]: Sum of consumption, investment, government spending, and net exports\n\n' +
+      '• [[Income approach]]: Sum of all income earned in production\n\n' +
+      '• [[Production approach]]: Value added at each stage of production\n\n' +
+      'Key components:\n\n' +
+      '• [[Consumption]]: Affects growth momentum and policy trade-offs\n\n' +
+      '• [[Investment]]: Affects growth potential and competitiveness\n\n' +
+      '• [[Exports]]: Affects growth and currency dynamics\n\n' +
+      '• [[Government spending]]: Affects growth and fiscal policy trade-offs\n\n' +
+      'Data is released quarterly, typically around the [[end of the month following the quarter end]], with [[multiple revisions]] as more comprehensive data becomes available. Release Frequency: Quarterly. Unit: Percent (%).',
+    impact:
+      'GDP growth has [[profound implications]] for JPY markets through multiple transmission channels:\n\n' +
+      '[[Stronger GDP]]\n\n' +
+      '• [[Supports JPY and real yields]]\n\n' +
+      '• [[Supports rate hike expectations]]\n\n' +
+      '• [[Favors cyclical assets]]\n\n' +
+      '[[Weaker GDP]]\n\n' +
+      '• [[Reopens recession risk pricing]]\n\n' +
+      '• [[Reduces rate hike urgency]]\n\n' +
+      '• [[Supports defensive FX and bonds]]\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'GDP surprises tend to [[reprice rate expectations first]], with FX and equity volatility following. Markets react not just to the headline number but to [[components and revisions]], with consumption and investment data particularly scrutinized for forward-looking signals. JPY crosses remain sensitive to GDP surprises, with [[above-expectation growth supporting JPY]] via increased normalization expectations, while [[below-expectation growth pressuring JPY]] via reduced normalization expectations.',
+    context:
+      '[[Latest Growth Snapshot]]\n\n' +
+      'Q3 2025 Real GDP: [[-2.3% annualized]]\n\n' +
+      '[[First contraction in six quarters]], steepest in two years\n\n' +
+      'Q2 2025 Real GDP: [[+2.2% annualized]], driven by resilient exports and business investment\n\n' +
+      'Q1 2025 Real GDP: [[-0.2% quarter-on-quarter]], first negative growth in four quarters\n\n' +
+      'Annual Growth: [[2024 GDP grew by 0.1%]], reflecting challenges such as weak domestic demand and external uncertainties\n\n' +
+      'Key contributors:\n\n' +
+      '• [[Exports]]: Declined 1.2% in Q3 2025, partly due to U.S. tariffs impacting the auto industry\n\n' +
+      '• [[Capital expenditure]]: Reduced, contributing to Q3 2025 contraction\n\n' +
+      '• [[Consumption]]: Weaker than expected in Q4 2024, leading to downward revision\n\n' +
+      '• [[Business investment]]: Remains robust due to high corporate profits and government subsidies\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the Q3 2025 contraction as concerning but note underlying resilience, with domestic demand expected to support growth going forward. The volatility reflects the impact of U.S. trade tariffs and external uncertainties, but domestic factors such as wage growth and business investment remain supportive.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Growth is volatile]] but shows underlying resilience\n\n' +
+      '• [[Domestic demand, bolstered by strong wage growth]], is expected to drive growth\n\n' +
+      '• [[External factors, particularly U.S. tariffs]], pose challenges to export-driven growth\n\n' +
+      '• [[Business investment remains robust]] due to high corporate profits and government subsidies\n\n' +
+      'Forecasts vary:\n\n' +
+      '• [[Japanese government]]: Revised FY2026 real GDP growth projection to 1.3%, up from 0.9%, reflecting expectations of eased inflation supporting private consumption and business investment\n\n' +
+      '• [[OECD]]: Projects 0.7% growth in 2025 and 0.4% in 2026, driven primarily by domestic demand\n\n' +
+      '• [[IMF]]: Projects 1.2% growth for 2025 and 0.8% for 2026, with domestic demand expected to be the primary driver\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of Japan monitors GDP growth as part of its [[assessment of economic momentum and policy trade-offs]]. The Policy Board sets the Policy Rate based on growth, inflation, wage growth, and financial stability.\n\n' +
+      'Current context: Q3 2025 contraction of 2.3% annualized reflects external challenges, particularly U.S. tariffs affecting exports, but domestic demand remains supportive. The BoJ raised the Policy Rate to 0.75% in December 2025, citing persistent inflation above target, but the contraction may affect the pace of normalization.\n\n' +
+      'The BoJ\'s reaction function weighs [[growth momentum, inflation persistence, wage growth, and financial stability]]. Current levels support continued normalization, but the pace depends on incoming data, especially growth and inflation dynamics. The BoJ emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect growth through demand and supply channels. The [[Japanese government approved a 21.3 trillion yen ($135.4 billion) stimulus package]] in November 2025, aimed at revitalizing the economy through subsidies, tax cuts, and consumer aid. The government has implemented fiscal stimulus packages aimed at supporting medium-term investments in areas like artificial intelligence and semiconductors, as well as enhancing defense capabilities.\n\n' +
+      'Trade relations: Trade relationships and supply chain shifts affect growth and competitiveness. The [[imposition of U.S. tariffs has introduced uncertainties]], particularly affecting the automotive sector. While some sectors have shown resilience, ongoing trade tensions pose risks to export-driven growth.\n\n' +
+      'Structural factors: Japan\'s [[aging population]] affects growth potential and inflation dynamics, while the [[export-oriented economy]] affects rate transmission and currency dynamics. [[Productivity challenges]] affect growth potential and inflation dynamics. [[Labor market dynamics]]: Efforts are needed to increase labor market participation, especially among seniors and women, and to enhance labor mobility to address shortages.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize growth support and competitiveness, but [[actual policy is constrained by fiscal rules, trade agreements, and structural factors]]. The BoJ maintains operational independence, but political pressure can affect communication and expectations.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact growth signals include:\n\n' +
+      '• [[Quarterly GDP releases]] (typically around the end of the month following the quarter end)\n\n' +
+      '• [[Component breakdowns]] (consumption, investment, government spending, net exports)\n\n' +
+      '• [[Export performance]] (affects overall growth and currency dynamics)\n\n' +
+      '• [[Business investment trends]] (affects growth potential and competitiveness)\n\n' +
+      '• [[Revisions to previous quarters]] (can affect market expectations and policy assessments)\n\n' +
+      '• [[BoJ communications on growth]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move above [[1.0% quarter-on-quarter]] would signal stronger momentum and likely support JPY via increased normalization expectations. A move below [[-0.5% (contraction)]] would signal recession risk and likely pressure JPY via reduced normalization expectations. The current volatility suggests no clear equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in growth, especially if driven by consumption or investment, could alter Policy Rate expectations. Changes in export performance, affecting overall growth, could influence rate decisions. Changes in business investment, affecting growth potential, could shift market expectations. Changes in BoJ communication tone, especially around forward guidance, could affect market positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Japan GDP Growth functions best as:\n\n' +
+      '• [[JPY directional bias tool]] (via growth momentum signals)\n\n' +
+      '• [[BoJ policy expectation driver]]\n\n' +
+      '• [[Recession risk indicator]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
   // EUR Unemployment Rate
   'unemployment-EUR': {
     overview:
@@ -986,83 +1165,574 @@ const indicatorDetails = {
       '• [[External vulnerability signal]]\n\n' +
       '• [[Component analysis tool]] for understanding underlying dynamics',
   },
+  // GBP Unemployment Rate
+  'unemployment-GBP': {
+    overview:
+      'The [[United Kingdom Unemployment Rate]] measures the percentage of the labor force that is unemployed and actively seeking work. Published monthly by the [[Office for National Statistics (ONS)]], it is a key indicator of labor market health and economic slack, closely monitored by the Bank of England for monetary policy decisions.\n\n' +
+      'The unemployment rate reflects [[labor market tightness]], influences [[wage dynamics]], and signals the [[output gap]]—the difference between actual and potential economic output. It feeds directly into the [[Bank of England\'s reaction function]], influencing expectations for interest rates, forward guidance, and policy stance.\n\n' +
+      'For traders, the UK Unemployment Rate is a [[leading indicator of BoE policy shifts]] and GBP strength. Low unemployment supports wage growth and inflation persistence, potentially constraining BoE easing, while rising unemployment increases pressure for accommodative policy, typically weighing on GBP.\n\n' +
+      'Markets react less to absolute unemployment levels and more to [[surprises versus expectations, trend momentum, and the interplay with wage growth and inflation data]].',
+    measurement:
+      'The [[Office for National Statistics (ONS)]] calculates the UK Unemployment Rate using the [[International Labour Organization (ILO) definition]]: unemployed persons are those aged 16 and over who are without work, available to start work within two weeks, and have actively sought employment in the previous four weeks.\n\n' +
+      'Key methodological points:\n\n' +
+      '• [[Three-month rolling average]]: Provides a smoother view of trends, reducing monthly volatility\n\n' +
+      '• [[Harmonized methodology]]: Ensures comparability with international standards\n\n' +
+      '• [[Labor force participation]]: Only includes those actively seeking work, excluding discouraged workers\n\n' +
+      '• [[Age and regional breakdowns]]: Available for different age groups and regions, revealing structural divergences\n\n' +
+      'Data is published monthly, typically around the [[middle of the following month]], with revisions possible in subsequent releases. Frequency: Monthly (three-month rolling average). Unit: Percentage (%).',
+    impact:
+      'Unemployment readings have [[profound implications]] for GBP markets through multiple transmission channels:\n\n' +
+      '[[Low and Falling Unemployment]]\n\n' +
+      '• [[Tightens labor market conditions]], supporting wage growth and inflation persistence\n\n' +
+      '• [[Constrains BoE easing]], potentially supporting GBP via higher real rate expectations\n\n' +
+      '• [[Signals economic resilience]], supporting risk-on positioning in GBP crosses\n\n' +
+      '• [[Reduces output gap]], limiting scope for accommodative policy\n\n' +
+      '[[Rising Unemployment]]\n\n' +
+      '• [[Increases economic slack]], reducing wage pressures and inflation risks\n\n' +
+      '• [[Strengthens case for BoE easing]], potentially weighing on GBP\n\n' +
+      '• [[Signals economic deterioration]], increasing recession risk pricing\n\n' +
+      '• [[Opens policy space]] for accommodative measures, supporting bond markets\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'GBP crosses remain sensitive to unemployment surprises, with [[above-expectation readings tending to weaken GBP]] via dovish repricing of BoE expectations, while [[below-expectation readings support GBP]] through reduced easing pressure. The interplay between unemployment, wage growth, and inflation is crucial for BoE policy anticipation. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
+    context:
+      '[[Current Reading & Trend (Late 2025)]]\n\n' +
+      'As of the three months to October 2025, the UK unemployment rate stood at [[5.1%]], the highest since January 2021. This is up from 4.4% in the same period in 2024, indicating a [[cooling labor market]].\n\n' +
+      'Recent trend: The unemployment rate has been rising from lower levels, with the three months to October 2025 at 5.1% (up from 4.4% a year earlier). The [[employment rate declined to 74.9%]] for individuals aged 16 to 64, a slight decrease from the previous quarter. The [[economic inactivity rate is 21.0%]] for those aged 16 to 64, showing a marginal decline over the year.\n\n' +
+      'The trend shows a [[cooling labor market]], with rising unemployment, declining employment, and increased redundancies (156,000 in the three months to October 2025). [[Youth unemployment has risen to 16.0%]], with 735,000 individuals aged 16 to 24 unemployed, an increase of 113,000 from the previous quarter.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions interpret the rise to 5.1% as a sign of [[labor market cooling]], reflecting economic slowdown and reduced hiring. The increase from 4.4% a year earlier indicates a shift from tight to balanced-to-soft conditions.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[The labor market is cooling]] but remains relatively tight by historical standards\n\n' +
+      '• [[Youth unemployment is a particular concern]], rising to 16.0%\n\n' +
+      '• [[Wage growth remains robust]] but is decelerating, especially in the private sector\n\n' +
+      '• [[The rise in unemployment supports]] the case for continued rate cuts\n\n' +
+      'Analysts expect unemployment to [[remain elevated but moderate]] relative to historical peaks, with the pace of increase depending on economic growth and business investment.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of England monitors unemployment as a key input for [[price stability and economic growth]]. It feeds into wage dynamics, inflation expectations, and the output gap. The BoE\'s reaction function links labor market tightness to wage pressures and, in turn, inflation persistence.\n\n' +
+      'Current context: Unemployment at 5.1%, the highest since January 2021, with easing inflation suggests [[increased economic slack]], allowing the BoE to focus on growth support. The rise in unemployment and weak growth create a case for accommodative policy. The BoE cut the Bank Rate to 3.75% in December 2025, citing [[labor market cooling and easing inflation]].\n\n' +
+      'The BoE\'s forward guidance and rate decisions depend on the [[unemployment-inflation-wage nexus]]. If unemployment rises while inflation remains low, the case for easing strengthens. If unemployment stays low but wage growth accelerates, the focus shifts to inflation risks. The current environment—rising unemployment, easing inflation, weak growth—supports continued easing.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Political leaders acknowledge the importance of maintaining low unemployment, but [[fiscal constraints and economic challenges limit coordinated action]]. The rise in unemployment, particularly youth unemployment, has raised concerns about social and economic stability.\n\n' +
+      'Fiscal policy: Government spending and tax policy affect labor market conditions through demand channels. [[Fiscal support can reduce unemployment]] but is constrained by fiscal rules. The Labour government has introduced measures aimed at stimulating long-term growth.\n\n' +
+      'Structural factors: The UK\'s [[services-heavy economy]] affects labor market dynamics and rate transmission, while [[youth unemployment is a particular concern]], reflecting structural challenges. [[Regional divergences]] in unemployment can affect policy trade-offs. [[Economic inactivity remains elevated]], affecting labor supply.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize employment support and growth, but [[actual policy responses are constrained by fiscal rules, trade agreements, and structural factors]]. The rise in unemployment reflects underlying economic shifts rather than policy choices.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for unemployment and policy repricing:\n\n' +
+      '• [[Monthly ONS unemployment releases]] (typically around the middle of the following month)\n\n' +
+      '• [[Youth unemployment trends]] (particular concern, currently at 16.0%)\n\n' +
+      '• [[Employment rate and economic inactivity]] (affects labor supply and economic activity)\n\n' +
+      '• [[Redundancies data]] (early signals of labor market deterioration)\n\n' +
+      '• [[Wage growth trends]] (unemployment-wage nexus is critical for BoE policy)\n\n' +
+      '• [[BoE communications on labor market conditions]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move above [[5.5%]] would signal further deterioration and likely increase easing expectations. A move below [[4.5%]] would suggest stabilization and could support a less dovish BoE stance. The 5.1% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in unemployment, especially if accompanied by changes in wage growth, inflation, or GDP, could alter BoE policy expectations. Changes in youth unemployment, affecting social and economic stability, could influence policy trade-offs. Changes in employment rate and economic inactivity, affecting labor supply and potential growth, could provide early signals of labor market shifts.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the UK Unemployment Rate functions best as:\n\n' +
+      '• [[BoE policy expectation driver]]\n\n' +
+      '• [[GBP bias validator]] (via wage-inflation-policy nexus)\n\n' +
+      '• [[Growth momentum signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
+  // JPY Unemployment Rate
+  'unemployment-JPY': {
+    overview:
+      'The [[Japan Unemployment Rate]] measures the percentage of the labor force that is unemployed and actively seeking work. Published monthly by the [[Statistics Bureau of Japan]], it is a key indicator of labor market health and economic slack, closely monitored by the Bank of Japan for monetary policy decisions.\n\n' +
+      'The unemployment rate reflects [[labor market tightness]], influences [[wage dynamics]], and signals the [[output gap]]—the difference between actual and potential economic output. It feeds directly into the [[Bank of Japan\'s reaction function]], influencing expectations for interest rates, forward guidance, and policy stance.\n\n' +
+      'For traders, the Japan Unemployment Rate is a [[leading indicator of BoJ policy shifts]] and JPY strength. Low unemployment supports wage growth and inflation persistence, potentially constraining BoJ easing, while rising unemployment increases pressure for accommodative policy, typically weighing on JPY.\n\n' +
+      'Markets react less to absolute unemployment levels and more to [[surprises versus expectations, trend momentum, and the interplay with wage growth and inflation data]].',
+    measurement:
+      'The [[Statistics Bureau of Japan]] calculates the Japan Unemployment Rate using the [[International Labour Organization (ILO) definition]]: unemployed persons are those aged 15 and over who are without work, available to start work within one week, and have actively sought employment in the previous four weeks.\n\n' +
+      'Key methodological points:\n\n' +
+      '• [[Harmonized methodology]]: Ensures comparability with international standards\n\n' +
+      '• [[Labor force participation]]: Only includes those actively seeking work, excluding discouraged workers\n\n' +
+      '• [[Age and gender breakdowns]]: Available for different age groups and genders, revealing structural patterns\n\n' +
+      '• [[Jobs-to-applicants ratio]]: Provides additional context on labor market tightness\n\n' +
+      'Data is published monthly, typically around the [[end of the following month]], with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percentage (%).',
+    impact:
+      'Unemployment readings have [[profound implications]] for JPY markets through multiple transmission channels:\n\n' +
+      '[[Low and Falling Unemployment]]\n\n' +
+      '• [[Tightens labor market conditions]], supporting wage growth and inflation persistence\n\n' +
+      '• [[Constrains BoJ easing]], potentially supporting JPY via higher real rate expectations\n\n' +
+      '• [[Signals economic resilience]], supporting risk-on positioning in JPY crosses\n\n' +
+      '• [[Reduces output gap]], limiting scope for accommodative policy\n\n' +
+      '[[Rising Unemployment]]\n\n' +
+      '• [[Increases economic slack]], reducing wage pressures and inflation risks\n\n' +
+      '• [[Strengthens case for BoJ easing]], potentially weighing on JPY\n\n' +
+      '• [[Signals economic deterioration]], increasing recession risk pricing\n\n' +
+      '• [[Opens policy space]] for accommodative measures, supporting bond markets\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'JPY crosses remain sensitive to unemployment surprises, with [[above-expectation readings tending to weaken JPY]] via dovish repricing of BoJ expectations, while [[below-expectation readings support JPY]] through reduced easing pressure. The interplay between unemployment, wage growth, and inflation is crucial for BoJ policy anticipation. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
+    context:
+      '[[Current Reading & Trend (Late 2025)]]\n\n' +
+      'As of November 2025, Japan\'s unemployment rate stood at [[2.6%]], unchanged from the previous three months and aligning with market expectations. This rate represents the [[highest level since July 2024]].\n\n' +
+      'Recent trend: The unemployment rate has been stable at 2.6% for three consecutive months, with November 2025 at 2.6% (unchanged from previous three months), October 2025 at 2.6% (unchanged from same month previous year, highest in 15 months), and September 2025 at 2.6%.\n\n' +
+      'The [[number of unemployed individuals decreased by 40,000 to 1.81 million]] in November 2025, while [[employment increased by 500,000 to a record high of 68.51 million]]. The labor force saw a modest rise of 20,000, reaching 70.32 million. The [[labor force participation rate was 64.1%]], slightly down from 64.2% in October but up from 63.5% a year earlier.\n\n' +
+      'The [[jobs-to-applicants ratio remained steady at 1.18]], the lowest since January 2022, indicating 118 job openings for every 100 job seekers. The trend shows a [[stable labor market with record-high employment]], but the slight increase in unemployment from lower levels suggests some labor market softening.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the 2.6% rate as [[low by international standards]], reflecting a resilient labor market despite economic challenges. The stability at 2.6% for three consecutive months, combined with record-high employment, suggests underlying labor market strength, but the slight increase from lower levels indicates some softening.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Unemployment remains low by international standards]], among the lowest in the OECD\n\n' +
+      '• [[Employment has reached record highs]], reflecting labor market resilience\n\n' +
+      '• [[Labor force participation has increased]], particularly among women and seniors\n\n' +
+      '• [[The jobs-to-applicants ratio remains above 1.0]], indicating labor market tightness\n\n' +
+      'The unemployment rate is projected to [[remain around 2.6% in 2026]], according to econometric models, with the pace of change depending on economic growth and labor market dynamics.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of Japan monitors unemployment as a key input for [[price stability and economic growth]]. It feeds into wage dynamics, inflation expectations, and the output gap. The BoJ\'s reaction function links labor market tightness to wage pressures and, in turn, inflation persistence.\n\n' +
+      'Current context: Unemployment at 2.6%, low by international standards, with persistent inflation suggests a [[tight labor market]], supporting wage growth and inflation persistence. The BoJ raised the Policy Rate to 0.75% in December 2025, citing persistent inflation above target, with low unemployment supporting the case for normalization.\n\n' +
+      'The BoJ\'s forward guidance and rate decisions depend on the [[unemployment-inflation-wage nexus]]. If unemployment stays low while inflation remains above target, the case for normalization strengthens. If unemployment rises while inflation moderates, the focus shifts to growth support. The current environment—low unemployment, persistent inflation, modest growth—supports continued normalization.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Political leaders acknowledge the importance of maintaining low unemployment, but [[demographic challenges and economic uncertainties limit policy options]]. The record-high employment, particularly among women and seniors, reflects structural shifts in labor supply.\n\n' +
+      'Fiscal policy: Government spending and tax policy affect labor market conditions through demand channels. [[Fiscal support can reduce unemployment]] but is constrained by fiscal rules. The government has implemented measures aimed at supporting labor market participation.\n\n' +
+      'Structural factors: Japan\'s [[aging population]] affects labor supply and demand dynamics, while [[increasing labor force participation among women and seniors]] affects labor supply. [[Sectoral shifts in employment]] (e.g., information and communications up, manufacturing down) affect labor market dynamics. [[Productivity challenges]] affect growth potential and labor market dynamics.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize employment support and growth, but [[actual policy responses are constrained by fiscal rules, demographic challenges, and structural factors]]. The stability in unemployment reflects underlying economic shifts rather than policy choices.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for unemployment and policy repricing:\n\n' +
+      '• [[Monthly Statistics Bureau unemployment releases]] (typically around the end of the following month)\n\n' +
+      '• [[Employment trends]] (affects labor supply and economic activity)\n\n' +
+      '• [[Labor force participation]] (affects labor supply and potential growth)\n\n' +
+      '• [[Jobs-to-applicants ratio]] (affects labor market tightness and wage pressures)\n\n' +
+      '• [[Wage growth trends]] (unemployment-wage nexus is critical for BoJ policy)\n\n' +
+      '• [[BoJ communications on labor market conditions]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move above [[3.0%]] would signal deterioration and likely increase easing expectations. A move below [[2.0%]] would suggest further tightening and could support more aggressive normalization. The 2.6% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in unemployment, especially if accompanied by changes in wage growth, inflation, or GDP, could alter BoJ policy expectations. Changes in employment trends, affecting labor supply and demand, could influence policy trade-offs. Changes in labor force participation, affecting labor supply and potential growth, could provide early signals of labor market shifts.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the Japan Unemployment Rate functions best as:\n\n' +
+      '• [[BoJ policy expectation driver]]\n\n' +
+      '• [[JPY bias validator]] (via wage-inflation-policy nexus)\n\n' +
+      '• [[Growth momentum signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
+  // JPY Current Account
+  'trade-balance-JPY': {
+    overview:
+      'The [[Japan Current Account Balance]] measures the net flow of goods, services, primary income (investment income, compensation of employees), and secondary income (transfers, remittances) between Japan and the rest of the world over a given period. Published monthly by the [[Ministry of Finance]] and compiled by the Bank of Japan, it reflects Japan\'s external economic position and competitiveness.\n\n' +
+      'A surplus indicates Japan is a [[net lender to the rest of the world]], while a deficit suggests it is a [[net borrower]]. The current account is part of the balance of payments and reflects trade competitiveness, savings-investment dynamics, and capital flow drivers.\n\n' +
+      'For traders, the current account influences JPY valuation through [[capital flows]], reflects [[export competitiveness]], signals [[structural imbalances]], and affects [[BoJ policy considerations]]. A sustained surplus supports JPY via capital inflows, while a narrowing surplus or deficit can pressure JPY and signal economic challenges.\n\n' +
+      'Markets focus less on absolute current account levels and more on [[trend direction, component breakdowns, and the interplay with growth, inflation, and monetary policy expectations]].',
+    measurement:
+      'The [[Ministry of Finance]] compiles current account data using standardized balance of payments methodology aligned with [[International Monetary Fund (IMF) guidelines]].\n\n' +
+      'The current account consists of four main components:\n\n' +
+      '• [[Goods balance]]: Exports minus imports of physical goods\n\n' +
+      '• [[Services balance]]: Exports minus imports of services (tourism, financial services, transportation)\n\n' +
+      '• [[Primary income]]: Investment income (dividends, interest) and compensation of employees from cross-border activities\n\n' +
+      '• [[Secondary income]]: Current transfers, remittances, and other unilateral transfers\n\n' +
+      'Data is published monthly, typically with a [[lag of approximately six weeks]] after the reference month. Quarterly data provides more detailed breakdowns, including geographic patterns and component analysis. Frequency: Monthly (with quarterly detailed breakdowns). Unit: Billions of yen (¥), also expressed as percentage of GDP.',
+    impact:
+      'Current account readings have [[profound implications]] for JPY markets through multiple transmission channels:\n\n' +
+      '[[Sustained Surplus]]\n\n' +
+      '• [[Supports JPY strength]] via capital inflows and demand for Japanese assets\n\n' +
+      '• [[Reflects export competitiveness]] and structural economic strength\n\n' +
+      '• [[Signals net lending position]], supporting currency valuation\n\n' +
+      '• [[Reduces external vulnerability]], supporting risk sentiment\n\n' +
+      '[[Narrowing Surplus or Deficit]]\n\n' +
+      '• [[Reduces JPY support]] via weaker capital flows\n\n' +
+      '• [[Signals competitiveness challenges]] or structural shifts\n\n' +
+      '• [[Increases external vulnerability]], potentially weighing on JPY\n\n' +
+      '• [[May affect BoJ policy considerations]] if combined with growth concerns\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'JPY crosses remain sensitive to current account trends, with [[sustained surpluses supporting JPY]] through capital flow dynamics, while [[narrowing surpluses or deficits can pressure JPY]] via reduced capital inflows. Markets focus on [[trend direction and component breakdowns]], with shifts in goods, services, or primary income providing signals about competitiveness and structural position. The interplay between current account, growth, inflation, and BoJ policy is crucial for JPY valuation.',
+    context:
+      '[[Current Reading & Trend (Late 2025)]]\n\n' +
+      'As of the latest available data, Japan recorded a current account surplus of [[¥4.06 trillion in February 2025]], a 48.4% increase from the previous year and the highest for a single month since 1985. This was largely due to a [[shift in the trade balance to a surplus]], with exports rising by 10.4% and imports decreasing by 1.9%.\n\n' +
+      'Recent trend: The current account has shown volatility, with February 2025 at ¥4.06 trillion surplus (48.4% increase year-on-year, highest monthly surplus since 1985), January 2025 at ¥257.6 billion deficit (first deficit in two years, driven by weak yen and increased imports), and September 2025 at ¥4,483.3 billion surplus (record high, up from ¥1,537.4 billion a year earlier).\n\n' +
+      'Fiscal Year 2024: Japan achieved a [[record-high current account surplus of ¥30.4 trillion]], the largest since comparable data became available in 1985. This was primarily driven by a substantial rise in [[primary income, which reached a surplus of ¥41.7 trillion]], an 11.7% increase from the previous year.\n\n' +
+      'The trend shows a [[strong surplus driven by primary income]], but with volatility in monthly data reflecting trade balance fluctuations and currency dynamics.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the record-high surplus as reflecting Japan\'s [[strong position in international investment income]], but note challenges in the goods and services balance. The primary income surplus of ¥41.7 trillion in fiscal 2024, driven by overseas investments and a weaker yen, underscores Japan\'s role as a net creditor nation.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[The current account surplus remains structurally positive]], driven by primary income\n\n' +
+      '• [[The goods trade balance has been in deficit]] for multiple consecutive years\n\n' +
+      '• [[The services balance shows mixed performance]], with travel surplus offsetting digital sector deficits\n\n' +
+      '• [[The weaker yen has amplified returns]] from foreign investments\n\n' +
+      'Projections indicate Japan\'s current account surplus will [[continue to grow, reaching approximately $7.643 trillion by 2030]], though the current account surplus as a percentage of GDP is expected to decrease from 4.7% in 2024 to around 3.3% by 2027.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of Japan monitors the current account as part of its [[assessment of external stability and competitiveness]]. While not a direct policy target, it informs policy considerations through its relationship with growth, inflation, and financial stability.\n\n' +
+      'Current context: The record-high surplus of ¥30.4 trillion in fiscal 2024 reflects Japan\'s [[strong position in international investment income]], supporting JPY via capital flows. However, the persistent goods trade deficit and services balance challenges indicate structural shifts in Japan\'s external position.\n\n' +
+      'The BoJ\'s reaction function considers the current account alongside inflation, growth, and financial conditions. A strong surplus alone is unlikely to drive policy, but [[combined with other factors]], it can influence the policy stance.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Trade tensions, particularly with the United States, affect the current account through [[tariffs, supply chain shifts, and export competitiveness]]. The goods trade deficit reflects import dependency and trade structure, while the services balance shows mixed performance.\n\n' +
+      'Energy dynamics: Energy import costs affect the goods balance, though recent normalization has reduced pressure. [[Energy security and diversification efforts]] may reshape trade patterns over time.\n\n' +
+      'Structural factors: Japan\'s [[export-oriented model]] drives goods exports, but imports have also increased. [[Primary income from overseas investments]] drives the overall surplus. [[Services competitiveness shows mixed performance]], with travel surplus offsetting digital deficits.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize trade competitiveness and external strength, but [[actual policy responses are constrained by fiscal rules, trade agreements, and structural factors]]. The record-high surplus reflects underlying economic shifts rather than policy choices.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact drivers for current account and JPY repricing:\n\n' +
+      '• [[Monthly Ministry of Finance balance of payments releases]] (typically around six weeks after reference month)\n\n' +
+      '• [[Quarterly detailed breakdowns]] with component and geographic analysis\n\n' +
+      '• [[Primary income trends]] (investment returns and compensation flows)\n\n' +
+      '• [[Goods balance trends]] (export competitiveness and import dynamics)\n\n' +
+      '• [[Services balance trends]] (services trade competitiveness, especially travel)\n\n' +
+      '• [[Currency dynamics]] (especially yen strength or weakness affecting returns)\n\n' +
+      '• [[Energy price volatility]] affecting goods balance\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move toward [[deficit (negative current account)]] would signal deterioration and likely pressure JPY. A return to [[above ¥5 trillion monthly surplus]] would signal improvement and support JPY. The current level appears to be volatile, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in the goods or services balance, especially if driven by trade tensions or competitiveness changes, could alter JPY dynamics. Continued strength in primary income, suggesting structural shifts in investment returns, would signal changing capital flow patterns. Changes in currency dynamics, especially yen strength or weakness affecting returns, could affect current account trends. Changes in BoJ communication tone, especially around external stability, could affect market positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, the Japan Current Account Balance functions best as:\n\n' +
+      '• [[JPY structural support indicator]] (via capital flows)\n\n' +
+      '• [[Competitiveness gauge]] (goods and services balances)\n\n' +
+      '• [[External vulnerability signal]]\n\n' +
+      '• [[Component analysis tool]] for understanding underlying dynamics',
+  },
+  // GBP Wage Growth
+  'wage-growth-GBP': {
+    overview:
+      '[[United Kingdom Wage Growth]] measures the annual percentage change in average weekly earnings for employees. Published monthly by the [[Office for National Statistics (ONS)]], it reflects labor market tightness, inflation persistence, and purchasing power. The Bank of England monitors wage growth closely as a [[key indicator of inflationary pressures]] and a critical input for monetary policy decisions.\n\n' +
+      'Wage growth reflects the [[balance between labor supply and demand]], affects [[inflation persistence]] (especially in services), and signals the [[output gap]]. It feeds directly into the [[Bank of England\'s reaction function]], influencing expectations for interest rates, forward guidance, and policy stance. In a services-heavy economy, wage growth is particularly important for understanding inflation dynamics.\n\n' +
+      'For traders, UK Wage Growth is a [[leading indicator of BoE policy shifts]] and GBP strength. Strong wage growth supports inflation persistence, potentially constraining BoE easing, while moderating wage growth supports disinflation and accommodative policy, typically weighing on GBP.\n\n' +
+      'Markets react less to absolute wage growth levels and more to [[surprises versus expectations, trend momentum, and the interplay with inflation and unemployment data]].',
+    measurement:
+      'The [[Office for National Statistics (ONS)]] calculates wage growth by tracking changes in average weekly earnings for employees across the UK economy. The [[year-over-year (YoY)]] measure compares current earnings to the same period in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Regular pay (excluding bonuses)]]: Primary indicator of underlying wage growth\n\n' +
+      '• [[Total pay (including bonuses)]]: More volatile but can drive overall trends\n\n' +
+      '• [[Public sector vs. private sector]]: Reveals policy-driven vs. market-driven dynamics\n\n' +
+      '• [[Real wage growth]]: Affects purchasing power and consumer spending\n\n' +
+      '• [[Sectoral breakdowns]]: Reveals underlying inflation dynamics\n\n' +
+      'Data is published monthly, typically around the [[middle of the following month]], with revisions possible in subsequent releases. Frequency: Monthly (three-month rolling average). Unit: Percent (%).',
+    impact:
+      'Wage growth readings have [[profound implications]] for GBP markets through multiple transmission channels:\n\n' +
+      '[[Strong Wage Growth]]\n\n' +
+      '• [[Supports inflation persistence]], constraining BoE easing\n\n' +
+      '• [[Supports GBP strength]] via higher real rate expectations\n\n' +
+      '• [[Pressures equities]] as markets price in tighter policy\n\n' +
+      '• [[Increases cost pressures]], affecting profit margins\n\n' +
+      '[[Moderating Wage Growth]]\n\n' +
+      '• [[Supports disinflation]], allowing for more accommodative policy\n\n' +
+      '• [[May weaken GBP]] via increased easing expectations\n\n' +
+      '• [[Supports risk assets and bonds]] as policy pressure eases\n\n' +
+      '• [[Reduces cost pressures]], supporting profit margins\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'GBP crosses remain sensitive to wage growth surprises, with [[above-expectation readings tending to support GBP]] via higher rate expectations, while [[below-expectation readings weaken GBP]] through dovish repricing. The interplay between wage growth, inflation, and unemployment is crucial for BoE policy anticipation. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
+    context:
+      '[[Current Wage Growth Trend (Late 2025)]]\n\n' +
+      'As of the three months to October 2025, regular pay (excluding bonuses) increased by [[4.6% year-over-year]], down from 4.7% in the previous quarter. This marks the [[lowest growth rate in over three years]] and represents a continued deceleration from higher levels.\n\n' +
+      'Recent trend: Wage growth has been moderating, with the three months to October 2025 at 4.6% (down from 4.7% in the previous quarter), the three months to March 2025 at 5.6% (down from 5.9% in December 2024), and December 2024 at 5.9% (driven by robust private sector performance).\n\n' +
+      'Sectoral variations: [[Public sector wages grew by 7.6%]] in the three months to October 2025, while [[private sector wages grew by 3.9%]]. Manufacturing wages rose by 6% in the three months to October 2025, contributing to overall private sector wage growth of 5.4%.\n\n' +
+      'Real wage growth: When adjusted for inflation, [[real regular pay increased by approximately 0.5%]] in the three months to October 2025, indicating that wage increases are slightly outpacing inflation. In April 2025, median weekly earnings for full-time employees increased by 1.1% in real terms compared to the previous year.\n\n' +
+      'The trend shows [[moderating wage growth]], reflecting a cooling labor market and reduced hiring pressure, but wage growth remains above historical averages, supporting inflation persistence.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the moderation to 4.6% as a sign of [[labor market cooling]], but note that wage growth remains elevated relative to historical standards and inflation targets. The deceleration from 5.9% in December 2024 to 4.6% in October 2025 reflects reduced hiring pressure and economic slowdown.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Wage growth is moderating]] but remains elevated relative to historical standards\n\n' +
+      '• [[Public sector wage growth is outpacing]] private sector growth\n\n' +
+      '• [[Real wage growth is positive but modest]], with purchasing power improving slowly\n\n' +
+      '• [[The moderation in wage growth supports]] the case for continued rate cuts\n\n' +
+      'International comparison: The UK\'s [[real salary growth in 2025 has lagged behind many European counterparts]]. The ECA International\'s Salary Trends Report indicates a real salary increase of just 0.4% in the UK, placing it 21st out of 25 European countries.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of England monitors wage growth as a [[key indicator of inflationary pressures]] and a critical input for monetary policy decisions. The MPC sets the Bank Rate based on wage growth, inflation, growth momentum, and labor market conditions.\n\n' +
+      'Current context: Wage growth at 4.6% in the three months to October 2025, down from 4.7% in the previous quarter, supports the BoE\'s shift toward easing, but wage growth remains [[elevated relative to the 2% inflation target]], limiting aggressive easing. The BoE cut the Bank Rate to 3.75% in December 2025, citing labor market cooling and easing inflation, but [[persistent wage growth remains a concern]] for inflation persistence.\n\n' +
+      'The BoE\'s reaction function weighs [[wage growth persistence, inflation dynamics, growth momentum, and labor market conditions]]. Current levels support continued easing, but the pace depends on incoming data, especially wage growth and services inflation. The BoE emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect wage growth through demand channels and labor market conditions. The [[introduction of a £25 billion increase in employers\' national insurance contributions]] and a 6.7% rise in the minimum wage in April 2025 have influenced wage dynamics, with concerns about potential job cuts and increased unemployment rates.\n\n' +
+      'Brexit and trade: Trade relationships and supply chain shifts affect labor market conditions and wage growth. [[Trade tensions and uncertainties]] can affect business investment and hiring, influencing wage dynamics.\n\n' +
+      'Structural factors: The UK\'s [[services-heavy economy]] affects wage growth dynamics and rate transmission, while [[public sector wage growth is outpacing private sector growth]], reflecting policy-driven adjustments. [[Regional divergences]] in wage growth can affect policy trade-offs. [[Productivity challenges]] affect wage growth potential and inflation dynamics.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize wage growth support and purchasing power, but [[actual policy responses are constrained by fiscal rules, trade agreements, and structural factors]]. The moderation in wage growth reflects underlying economic shifts rather than policy choices.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact wage growth signals include:\n\n' +
+      '• [[Monthly ONS wage growth releases]] (typically around the middle of the following month)\n\n' +
+      '• [[Public sector vs. private sector wage growth]] (reveals policy-driven vs. market-driven dynamics)\n\n' +
+      '• [[Real wage growth trends]] (affects purchasing power and consumer spending)\n\n' +
+      '• [[Sectoral wage growth breakdowns]] (reveals underlying inflation dynamics)\n\n' +
+      '• [[Regular pay vs. total pay]] (underlying vs. volatile components)\n\n' +
+      '• [[BoE communications on wage growth]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move below [[4.0%]] would signal faster moderation and likely support GBP via reduced inflation expectations. A move above [[5.0%]] would signal persistent wage growth and likely pressure GBP via increased easing expectations. The 4.6% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in wage growth, especially if driven by services or public sector, could alter Bank Rate expectations. Changes in public sector vs. private sector wage growth, affecting overall dynamics, could influence rate decisions. Changes in real wage growth, affecting purchasing power and consumer spending, could shift market expectations. Changes in BoE communication tone, especially around forward guidance, could affect market positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, UK Wage Growth functions best as:\n\n' +
+      '• [[BoE policy expectation driver]] (via inflation persistence signals)\n\n' +
+      '• [[GBP bias validator]] (via policy constraint assessment)\n\n' +
+      '• [[Real-yield and bond signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
   // GBP Inflation
   'inflation-GBP': {
     overview:
-      '[[Consumer Price Index (CPI) Year-over-Year]] measures the annual percentage change in the price level of a basket of consumer goods and services in the United Kingdom, calculated by the Office for National Statistics (ONS). It is the [[primary inflation gauge]] used by the Bank of England and financial markets.\n\n' +
-      'For traders, UK CPI is a [[critical policy input]] that directly influences BoE rate decisions, GBP valuation, and cross-asset risk sentiment.\n\n' +
-      'Why UK CPI Matters to Traders:\n\n' +
-      '• [[BoE policy decisions]] and interest rate expectations\n\n' +
-      '• [[Real yields]], impacting GBP and gold\n\n' +
-      '• [[Risk sentiment]], affecting equities and carry trades\n\n' +
-      'Markets react to [[surprises versus expectations and trend momentum]].',
+      'The [[United Kingdom Consumer Price Index (CPI)]] measures the annual percentage change in prices for a basket of goods and services purchased by consumers. Published monthly by the [[Office for National Statistics (ONS)]], it is the [[Bank of England\'s primary inflation target]] (2%) and directly shapes monetary policy expectations, GBP valuation, and cross-asset risk sentiment.\n\n' +
+      'The CPI reflects the [[cost of living and purchasing power]] of the pound, with components including food, energy, housing, and services. The Bank of England uses CPI to assess price stability and guide monetary policy decisions, making it a critical input for interest rate expectations.\n\n' +
+      'For traders, CPI is a [[leading driver of BoE policy expectations]], GBP valuation, and cross-asset risk sentiment. Markets react less to absolute inflation levels and more to [[surprises versus expectations and trend momentum]], making CPI a high-signal indicator for policy repricing.\n\n' +
+      'The CPI is published monthly, typically around the [[middle of the following month]], with detailed breakdowns by component and category. The data is subject to revisions, and traders should monitor both initial releases and revisions for policy signals.',
     measurement:
-      'The [[Office for National Statistics (ONS)]] calculates CPI by tracking price changes for a representative basket of goods and services across the UK. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'The [[Office for National Statistics (ONS)]] calculates CPI by tracking price changes for a representative basket of goods and services across UK consumers. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
       'Key components:\n\n' +
-      '• [[Headline CPI]]: Includes all items, including volatile food and energy components.\n\n' +
-      '• [[Core CPI]]: Excludes food, energy, alcohol, and tobacco to reveal underlying inflation trends.\n\n' +
-      'The Bank of England targets [[2% inflation]] as part of its monetary policy framework.\n\n' +
-      'Data is released monthly, typically around the [[middle of each month]] for the previous month, with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
+      '• [[Headline CPI]]: Includes all items, including volatile food and energy components\n\n' +
+      '• [[Core CPI]]: Excludes food, energy, alcohol, and tobacco to reveal underlying inflation trends\n\n' +
+      '• [[Services inflation]]: Often sticky and affects core inflation persistence\n\n' +
+      '• [[Goods inflation]]: More volatile but can drive headline inflation\n\n' +
+      '• [[Energy and food prices]]: Affect headline inflation directly and indirectly\n\n' +
+      'Data is released monthly, typically around the [[middle of the following month]], with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
     impact:
-      'UK CPI readings have [[profound implications]] for currency markets through BoE policy channels:\n\n' +
-      '[[Above-Expectation CPI]]\n\n' +
-      '• [[Reinforces hawkish bias]] and supports GBP via higher real yields\n\n' +
-      '• [[Pressures equities and gold]] as markets price in tighter policy\n\n' +
-      '[[Below-Expectation CPI]]\n\n' +
-      '• [[Strengthens easing expectations]] and weakens GBP\n\n' +
-      '• [[Supports risk assets and carry trades]] as policy pressure eases\n\n' +
-      '[[Market dynamics]]: UK CPI remains a [[primary constraint on BoE easing]]. Cooling inflation supports additional rate cuts, while sticky core components, particularly services inflation, cap the pace and depth of easing.',
+      'CPI readings have [[profound implications]] for GBP markets through multiple transmission channels:\n\n' +
+      '[[Above-Expectation Inflation]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports GBP via higher rate expectations\n\n' +
+      '• [[Pressures equities and bonds]] as markets price in tighter policy\n\n' +
+      '• [[Increases inflation expectations]], potentially steepening yield curves\n\n' +
+      '[[Below-Expectation Inflation]]\n\n' +
+      '• [[Strengthens easing expectations]] and may weaken GBP\n\n' +
+      '• [[Supports risk assets and bonds]] as policy pressure eases\n\n' +
+      '• [[Relieves pressure on policymakers]], potentially supporting risk sentiment\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'CPI remains the [[primary constraint on BoE easing]]. Cooling inflation supports additional rate cuts, while sticky core components cap the pace and depth of easing. CPI surprises quickly [[reprice Bank Rate expectations and short-dated yields]]. For markets, CPI prints act as [[confirmation or invalidation events]] for existing rate expectations. The November 2025 decline to 3.2% led to a 0.2% dip in GBP/USD, reflecting dovish repricing.',
     context:
       '[[Current Inflation Trend (Late 2025)]]\n\n' +
-      'UK CPI has been [[moderating]] as the Bank of England continues to monitor inflation convergence toward the 2% target.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[BoE\'s 2% target]]: Inflation convergence remains a key policy focus\n\n' +
-      '• [[Wage growth]]: Strong wage growth has been a key driver of services inflation\n\n' +
-      '• [[Services vs. goods]]: Services inflation remains more persistent than goods inflation\n\n' +
-      '• [[Post-Brexit adjustments]]: Economic adjustments affecting inflation dynamics',
+      'As of November 2025, UK CPI inflation stood at [[3.2% year-over-year]], down from 3.6% in October 2025. This marks the [[second consecutive month of decline]] and the lowest in five months, indicating progress toward the Bank of England\'s 2% target.\n\n' +
+      'The monthly CPI rate for November was [[-0.2%]], indicating a slight month-on-month decrease. The decline was driven by [[lower prices in food and non-alcoholic beverages, clothing and footwear, and alcohol and tobacco]], contributing to the overall disinflationary trend.\n\n' +
+      'Recent trend: Inflation has been declining from higher levels, with October 2025 at 3.6% (down from 3.8% in September) and September 2025 at 3.8%. The trend shows [[disinflationary momentum]], moving toward the BoE\'s 2% target, but inflation remains above target, limiting aggressive policy easing.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the decline as progress but note that the UK remains among the highest-inflation advanced economies. The [[International Monetary Fund (IMF) projects UK average inflation at 3.4% in 2025 and 2.5% in 2026]], the highest among advanced economies.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Inflation is moderating]] but remains above target\n\n' +
+      '• [[The UK faces persistent inflation pressures]] relative to peers\n\n' +
+      '• [[Services and core components remain sticky]], affecting inflation persistence\n\n' +
+      '• [[Wage growth continues to support]] inflation persistence\n\n' +
+      'Forecasts vary, with the [[Office for Budget Responsibility (OBR) forecasting CPI inflation to average 4.3% in 2025 and 3.7% in 2026]], gradually declining to 2.3% by 2030. Markets expect inflation to [[approach the 2% target by late 2026 or early 2027]], aided by disinflationary measures introduced in the Autumn Budget.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of England targets [[2% CPI inflation]] as its primary monetary policy objective. The MPC sets the Bank Rate based on inflation, wage growth, growth momentum, and labor market conditions.\n\n' +
+      'Current context: CPI at 3.2% in November 2025, down from 3.6% in October, supports the BoE\'s shift toward easing. The BoE cut the Bank Rate to 3.75% in December 2025, citing [[established disinflation trends]]. However, inflation above target limits aggressive easing.\n\n' +
+      'The BoE\'s reaction function weighs [[inflation persistence, wage growth, growth momentum, and labor market conditions]]. Current levels support continued easing, but the pace depends on incoming data. The BoE emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect inflation through demand and supply channels. The [[Autumn Budget included disinflationary measures]] expected to help inflation approach the 2% target by late 2026 or early 2027.\n\n' +
+      'Brexit and trade: Trade relationships and supply chain shifts affect import costs and inflation. [[Trade tensions and tariffs]] can affect prices and competitiveness, while trade deals can support growth but may affect inflation.\n\n' +
+      'Structural factors: The UK\'s [[services-heavy economy]] affects inflation dynamics and rate transmission, while [[housing market sensitivity]] to rates affects consumption and growth. [[Productivity challenges]] affect growth potential and inflation dynamics.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize inflation control and growth support, but [[actual policy is constrained by the inflation target and economic conditions]]. The BoE maintains operational independence, but political pressure can affect communication and expectations.',
     traderImplications:
-      '[[FX volatility]]: UK CPI releases are [[high-impact events]], causing significant GBP moves, especially in GBP/USD and EUR/GBP pairs.\n\n' +
-      '[[Policy expectations]]: UK CPI data directly affects [[BoE policy forecasts]], influencing yield curves and currency strength.\n\n' +
-      '[[Cross-asset reactions]]: UK CPI surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess inflation and policy outlooks.',
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact inflation signals include:\n\n' +
+      '• [[Monthly CPI & Core CPI prints]] (typically around the middle of the following month)\n\n' +
+      '• [[Services inflation trends]] (often sticky and affects core inflation persistence)\n\n' +
+      '• [[Wage growth data]] (affects inflation persistence and policy trade-offs)\n\n' +
+      '• [[Component breakdowns]] (food, energy, housing, services)\n\n' +
+      '• [[Inflation expectations surveys]]\n\n' +
+      '• [[BoE communications on inflation]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move below [[3.0%]] would signal faster disinflation and likely support GBP via reduced easing pressure. A move above [[3.5%]] would signal persistent inflation and likely pressure GBP via continued easing expectations. The 3.2% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in inflation, especially if driven by services or core components, could alter Bank Rate expectations. Changes in wage growth, affecting inflation persistence and policy trade-offs, could influence rate decisions. Energy price volatility, affecting headline inflation and consumer sentiment, could drive inflation volatility. Changes in BoE communication tone, especially around forward guidance, could shift market expectations.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, UK CPI (YoY) functions best as:\n\n' +
+      '• [[Rate-expectation driver]]\n\n' +
+      '• [[GBP bias validator]]\n\n' +
+      '• [[Real-yield and bond signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
+  // GBP Core Inflation
+  'core-inflation-YoY-GBP': {
+    overview:
+      'The [[United Kingdom Core Consumer Price Index (CPI)]] measures the annual percentage change in consumer prices excluding volatile items such as energy, food, alcohol, and tobacco. Published monthly by the [[Office for National Statistics (ONS)]], Core CPI provides a [[clearer view of underlying inflation trends]] by filtering out short-term price fluctuations.\n\n' +
+      'Core CPI is the [[Bank of England\'s preferred gauge]] for assessing inflation persistence and policy effectiveness, as it reflects domestic price pressures that monetary policy can influence. The BoE monitors Core CPI closely when setting the Bank Rate, making it a critical input for interest rate expectations.\n\n' +
+      'For traders, Core CPI is a [[leading driver of BoE policy expectations]], GBP valuation, and cross-asset risk sentiment. Markets often react [[more strongly to core inflation surprises than headline CPI]], especially during policy transitions, as core inflation signals underlying inflation persistence.\n\n' +
+      'The Core CPI is published monthly, typically around the [[middle of the following month]], with detailed breakdowns by component (goods, services) and category. The data is subject to revisions, and traders should monitor both initial releases and revisions for policy signals.',
+    measurement:
+      'The [[Office for National Statistics (ONS)]] calculates Core CPI by tracking price changes for a representative basket of goods and services, [[excluding energy, food, alcohol, and tobacco]]. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Services inflation]]: Often sticky and affects core inflation persistence (currently 4.4%)\n\n' +
+      '• [[Goods inflation]]: More volatile but can drive core inflation trends (currently 2.1%)\n\n' +
+      '• [[The gap between services and goods inflation]]: Signals underlying inflation dynamics\n\n' +
+      '• [[Monthly momentum]]: Provides early signals of trend changes\n\n' +
+      'Data is released monthly, typically around the [[middle of the following month]], with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
+    impact:
+      'Core CPI readings have [[profound implications]] for GBP markets through multiple transmission channels:\n\n' +
+      '[[Above-Expectation Core Inflation]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports GBP via higher rate expectations\n\n' +
+      '• [[Pressures equities and bonds]] as markets price in tighter policy\n\n' +
+      '• [[Signals inflation persistence]], potentially limiting policy easing\n\n' +
+      '[[Below-Expectation Core Inflation]]\n\n' +
+      '• [[Strengthens easing expectations]] and may weaken GBP\n\n' +
+      '• [[Supports risk assets and bonds]] as policy pressure eases\n\n' +
+      '• [[Relieves pressure on policymakers]], potentially supporting risk sentiment\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'Core CPI remains a [[key constraint on BoE easing]]. Cooling core inflation supports additional rate cuts, while sticky core components, particularly services inflation, cap the pace and depth of easing. Core inflation surprises often have a [[larger impact than headline CPI surprises]], as they signal underlying inflation persistence. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
+    context:
+      '[[Current Core Inflation Trend (Late 2025)]]\n\n' +
+      'As of November 2025, UK Core CPI inflation stood at [[3.2% year-over-year]], down from 3.4% in October 2025. This marks the [[lowest level since December 2024]] and represents a continued decline from higher levels.\n\n' +
+      'Recent trend: Core inflation has been declining, with October 2025 at 3.4% (down from 3.5% in September) and September 2025 at 3.5%. The November decline was [[broad-based]], with goods inflation decreasing to 2.1% from 2.6% in October, while services inflation edged down to 4.4% from 4.5%.\n\n' +
+      'On a monthly basis, core consumer prices fell by [[-0.2% in November]], reversing October\'s 0.3% rise and posting the first decline since January. The trend shows [[disinflationary momentum]], but core inflation remains above the BoE\'s 2% target, with services inflation particularly sticky, limiting aggressive policy easing.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the decline as progress but note that UK core inflation remains [[among the highest in the G7]]. In November 2025, UK core inflation was 3.2%, compared to 2.4% in Canada, 1.4% in France, 2.6% in Germany, 1.7% in Italy, and 1.5% in Japan.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Core inflation is moderating]] but remains elevated relative to peers\n\n' +
+      '• [[Services inflation remains sticky]], affecting overall persistence\n\n' +
+      '• [[Goods inflation has eased more quickly]] than services\n\n' +
+      '• [[The UK faces persistent core inflation pressures]] relative to other advanced economies\n\n' +
+      'Analysts anticipate the [[disinflationary trend will continue into 2026]], with core inflation expected to approach the BoE\'s 2% target by late 2026 or early 2027. The pace of decline depends on services inflation and wage growth dynamics.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of England monitors Core CPI as the [[primary gauge of underlying inflation persistence]]. The MPC sets the Bank Rate based on core inflation, wage growth, growth momentum, and labor market conditions.\n\n' +
+      'Current context: Core CPI at 3.2% in November 2025, down from 3.4% in October, supports the BoE\'s shift toward easing. The BoE cut the Bank Rate to 3.75% in December 2025, citing [[established disinflation trends]]. However, core inflation above the 2% target, particularly [[sticky services inflation at 4.4%]], limits aggressive easing.\n\n' +
+      'The BoE\'s reaction function weighs [[core inflation persistence, wage growth, growth momentum, and labor market conditions]]. Current levels support continued easing, but the pace depends on incoming data, especially services inflation and wage growth. The BoE emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect core inflation through demand and supply channels. The [[Autumn Budget included disinflationary measures]] expected to help inflation approach the 2% target by late 2026 or early 2027.\n\n' +
+      'Brexit and trade: Trade relationships and supply chain shifts affect import costs and core inflation. [[Trade tensions and tariffs]] can affect prices and competitiveness, while trade deals can support growth but may affect inflation.\n\n' +
+      'Structural factors: The UK\'s [[services-heavy economy]] affects core inflation dynamics and rate transmission, while [[housing market sensitivity]] to rates affects consumption and growth. [[Productivity challenges]] affect growth potential and inflation dynamics.\n\n' +
+      'Wage dynamics: [[Wage growth affects core inflation persistence]], especially in services. Labor market conditions affect wage pressures and inflation dynamics. The [[interplay between wages and core inflation]] is crucial for policy.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize inflation control and growth support, but [[actual policy is constrained by the inflation target and economic conditions]]. The BoE maintains operational independence, but political pressure can affect communication and expectations.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact core inflation signals include:\n\n' +
+      '• [[Monthly Core CPI prints]] (typically around the middle of the following month)\n\n' +
+      '• [[Services inflation trends]] (often sticky and affects core inflation persistence)\n\n' +
+      '• [[Goods inflation trends]] (more volatile but can drive core inflation)\n\n' +
+      '• [[Wage growth data]] (affects core inflation persistence and policy trade-offs)\n\n' +
+      '• [[The gap between services and goods inflation]] (signals underlying dynamics)\n\n' +
+      '• [[BoE communications on core inflation]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move below [[3.0%]] would signal faster disinflation and likely support GBP via reduced easing pressure. A move above [[3.5%]] would signal persistent core inflation and likely pressure GBP via continued easing expectations. The 3.2% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in core inflation, especially if driven by services or wage growth, could alter Bank Rate expectations. Changes in services inflation, affecting overall core inflation persistence, could influence rate decisions. Changes in wage growth, affecting core inflation dynamics and policy trade-offs, could shift market expectations. Changes in BoE communication tone, especially around forward guidance, could affect market positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, UK Core CPI (YoY) functions best as:\n\n' +
+      '• [[Rate-expectation driver]] (via inflation persistence signals)\n\n' +
+      '• [[GBP bias validator]] (via policy constraint assessment)\n\n' +
+      '• [[Real-yield and bond signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
   },
   // JPY Inflation
   'inflation-JPY': {
     overview:
-      '[[Consumer Price Index (CPI) Year-over-Year]] measures the annual percentage change in prices for a basket of consumer goods and services in Japan, calculated by the Statistics Bureau of Japan. The Bank of Japan (BoJ) targets [[2% inflation]] as part of its monetary policy framework.\n\n' +
-      'For traders, Japanese CPI is a [[critical policy input]] that directly influences BoJ rate decisions, JPY valuation, and cross-asset risk sentiment.\n\n' +
-      'Why Japanese CPI Matters to Traders:\n\n' +
-      '• [[BoJ policy decisions]] and interest rate expectations\n\n' +
-      '• [[Real yields]], impacting JPY and gold\n\n' +
-      '• [[Risk sentiment]], affecting equities and carry trades\n\n' +
-      'Markets react to [[surprises versus expectations and trend momentum]], particularly around BoJ policy normalization.',
+      'The [[Japan Consumer Price Index (CPI)]] measures the annual percentage change in prices for a basket of goods and services purchased by consumers. Published monthly by the [[Statistics Bureau of Japan]], it is the [[Bank of Japan\'s primary inflation target]] (2%) and directly shapes monetary policy expectations, JPY valuation, and cross-asset risk sentiment.\n\n' +
+      'The CPI reflects the [[cost of living and purchasing power]] of the yen, with components including food, energy, housing, and services. The Bank of Japan uses CPI to assess price stability and guide monetary policy decisions, making it a critical input for interest rate expectations.\n\n' +
+      'For traders, CPI is a [[leading driver of BoJ policy expectations]], JPY valuation, and cross-asset risk sentiment. Markets react less to absolute inflation levels and more to [[surprises versus expectations and trend momentum]], making CPI a high-signal indicator for policy repricing.\n\n' +
+      'The CPI is published monthly, typically around the [[end of the following month]], with detailed breakdowns by component and category. Tokyo Core CPI serves as a [[leading indicator for nationwide trends]], providing early signals of inflation dynamics.',
     measurement:
-      'The [[Statistics Bureau of Japan]] calculates CPI by tracking price changes for a representative basket of goods and services across Japan. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'The [[Statistics Bureau of Japan]] calculates CPI by tracking price changes for a representative basket of goods and services across Japanese consumers. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
       'Key components:\n\n' +
-      '• [[Headline CPI]]: Includes all items, including volatile food and energy components.\n\n' +
-      '• [[Core CPI]]: Excludes fresh food to reveal underlying inflation trends.\n\n' +
-      'The Bank of Japan targets [[2% inflation]] as part of its monetary policy framework.\n\n' +
-      'Data is released monthly, typically around the [[end of each month]] for the previous month, with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
+      '• [[Headline CPI]]: Includes all items, including volatile food and energy components\n\n' +
+      '• [[Core CPI (excluding fresh food)]]: Primary indicator of underlying inflation trends\n\n' +
+      '• [[Services inflation]]: Often sticky and affects core inflation persistence\n\n' +
+      '• [[Goods inflation]]: More volatile but can drive headline inflation\n\n' +
+      '• [[Energy and food prices]]: Affect headline inflation directly and indirectly\n\n' +
+      '• [[Tokyo Core CPI]]: Leading indicator for nationwide trends\n\n' +
+      'Data is released monthly, typically around the [[end of the following month]], with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
     impact:
-      'Japanese CPI readings have [[profound implications]] for currency markets through BoJ policy channels:\n\n' +
-      '[[Above-Expectation CPI]]\n\n' +
-      '• [[Reinforces hawkish bias]] and supports JPY via higher real yields\n\n' +
-      '• [[Pressures carry trades]] as markets price in tighter policy\n\n' +
-      '[[Below-Expectation CPI]]\n\n' +
-      '• [[Strengthens easing expectations]] and weakens JPY\n\n' +
-      '• [[Supports carry trades]] as policy remains accommodative\n\n' +
-      '[[Market dynamics]]: Japanese CPI remains a [[key factor in BoJ policy normalization]]. Sustained inflation above 2% supports policy normalization, while weak inflation maintains accommodative policy.',
+      'CPI readings have [[profound implications]] for JPY markets through multiple transmission channels:\n\n' +
+      '[[Above-Expectation Inflation]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports JPY via higher rate expectations\n\n' +
+      '• [[Pressures equities and bonds]] as markets price in tighter policy\n\n' +
+      '• [[Increases inflation expectations]], potentially steepening yield curves\n\n' +
+      '[[Below-Expectation Inflation]]\n\n' +
+      '• [[Strengthens easing expectations]] and may weaken JPY\n\n' +
+      '• [[Supports risk assets and bonds]] as policy pressure eases\n\n' +
+      '• [[Relieves pressure on policymakers]], potentially supporting risk sentiment\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'CPI remains a [[key driver of BoJ normalization]]. Higher inflation supports additional rate hikes, while moderating inflation may slow the pace of normalization. CPI surprises quickly [[reprice Policy Rate expectations and short-dated yields]]. For markets, CPI prints act as [[confirmation or invalidation events]] for existing rate expectations. The core CPI at 3.0% in November 2025, above the 2% target, supports the BoJ\'s shift toward normalization.',
     context:
       '[[Current Inflation Trend (Late 2025)]]\n\n' +
-      'Japanese CPI has been [[moderating]] as the Bank of Japan continues to monitor inflation dynamics and policy normalization.\n\n' +
-      'Key themes shaping markets:\n\n' +
-      '• [[BoJ\'s 2% target]]: Inflation convergence remains a key policy focus\n\n' +
-      '• [[Wage growth]]: Wage growth has been a key factor in inflation dynamics\n\n' +
-      '• [[Policy normalization]]: BoJ gradually normalizing after years of ultra-loose policy\n\n' +
-      '• [[Energy import costs]]: Affecting headline inflation dynamics',
+      'As of November 2025, Japan\'s CPI stood at [[113.20 points]], up from 112.80 in October. The [[core CPI (excluding fresh food) increased by 3.0% year-over-year]] in November, maintaining the same rate as in October and aligning with market expectations.\n\n' +
+      'Recent trend: Inflation has been [[above the BoJ\'s 2% target for over two years]], with core CPI consistently exceeding 2%. The moderation in [[Tokyo Core CPI from 2.8% in November to 2.3% in December]] suggests potential easing of inflationary pressures, but nationwide inflation remains elevated.\n\n' +
+      'The trend shows [[sustained inflation above the 2% target]], with core CPI at 3.0% in November 2025, above the 2% target. The moderation in Tokyo Core CPI suggests potential easing, but nationwide inflation remains elevated, supporting continued BoJ normalization.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the sustained inflation above the 2% target as supporting continued BoJ normalization, but note risks from global uncertainties and the need for a gradual approach. The core CPI at 3.0% in November 2025, above the 2% target, supports the BoJ\'s shift toward normalization, but the moderation in Tokyo Core CPI suggests potential easing.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Inflation remains above target]], supporting continued normalization\n\n' +
+      '• [[The moderation in Tokyo Core CPI suggests]] potential easing of inflationary pressures\n\n' +
+      '• [[Energy price fluctuations affect]] headline inflation dynamics\n\n' +
+      '• [[Domestic demand will influence]] the inflation trajectory\n\n' +
+      'The BoJ projects that [[inflation will stabilize around its 2% target by early 2026]], with factors such as energy price fluctuations and domestic demand influencing the inflation trajectory.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of Japan targets [[2% CPI inflation]] as its primary monetary policy objective. The Policy Board sets the Policy Rate based on inflation, wage growth, growth momentum, and financial stability.\n\n' +
+      'Current context: CPI at 3.0% in November 2025, above the 2% target, supports the BoJ\'s shift toward normalization. The BoJ raised the Policy Rate to 0.75% in December 2025, citing [[persistent inflation above target]]. However, the moderation in Tokyo Core CPI suggests potential easing, which may affect the pace of normalization.\n\n' +
+      'The BoJ\'s reaction function weighs [[inflation persistence, wage growth, growth momentum, and financial stability]]. Current levels support continued normalization, but the pace depends on incoming data, especially inflation and wage growth. The BoJ emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect inflation through demand and supply channels. [[Fiscal support can reduce the need]] for monetary accommodation, while fiscal tightening can increase pressure for monetary support.\n\n' +
+      'Structural factors: Japan\'s [[aging population]] affects growth potential and inflation dynamics, while the [[export-oriented economy]] affects rate transmission and currency dynamics. [[Productivity challenges]] affect growth potential and inflation dynamics. [[Energy import dependency]] affects headline inflation and consumer sentiment.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize inflation control and growth support, but [[actual policy is constrained by the inflation target and economic conditions]]. The BoJ maintains operational independence, but political pressure can affect communication and expectations.',
     traderImplications:
-      '[[FX volatility]]: Japanese CPI releases are [[high-impact events]], causing significant JPY moves, especially in USD/JPY and EUR/JPY pairs.\n\n' +
-      '[[Policy expectations]]: Japanese CPI data directly affects [[BoJ policy forecasts]], influencing yield curves and currency strength.\n\n' +
-      '[[Cross-asset reactions]]: Japanese CPI surprises trigger moves in [[equities, bonds, and commodities]] as markets reassess inflation and policy outlooks.',
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact inflation signals include:\n\n' +
+      '• [[Monthly CPI & Core CPI prints]] (typically around the end of the following month)\n\n' +
+      '• [[Tokyo Core CPI]] (leading indicator for nationwide trends)\n\n' +
+      '• [[Services inflation trends]] (often sticky and affects core inflation persistence)\n\n' +
+      '• [[Wage growth data]] (affects inflation persistence and policy trade-offs)\n\n' +
+      '• [[Component breakdowns]] (food, energy, housing, services)\n\n' +
+      '• [[BoJ communications on inflation]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move below [[2.5%]] would signal faster disinflation and likely weigh on JPY via reduced normalization pressure. A move above [[3.5%]] would signal persistent inflation and likely support JPY via increased normalization expectations. The 3.0% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in inflation, especially if driven by services or core components, could alter Policy Rate expectations. Changes in Tokyo Core CPI, affecting nationwide inflation expectations, could influence rate decisions. Energy price volatility, affecting headline inflation and consumer sentiment, could drive inflation volatility. Changes in BoJ communication tone, especially around forward guidance, could shift market expectations.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Japan CPI (YoY) functions best as:\n\n' +
+      '• [[Rate-expectation driver]]\n\n' +
+      '• [[JPY bias validator]]\n\n' +
+      '• [[Real-yield and bond signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
+  },
+  // JPY Core Inflation
+  'core-inflation-YoY-JPY': {
+    overview:
+      'The [[Japan Core Consumer Price Index (CPI)]] measures the annual percentage change in consumer prices excluding volatile fresh food. Published monthly by the [[Statistics Bureau of Japan]], Core CPI provides a [[clearer view of underlying inflation trends]] by filtering out temporary food price shocks.\n\n' +
+      'Core CPI is the [[Bank of Japan\'s preferred gauge]] for assessing inflation persistence and policy effectiveness, as it reflects domestic price pressures that monetary policy can influence. The BoJ monitors Core CPI closely when setting the Policy Rate, making it a critical input for interest rate expectations.\n\n' +
+      'For traders, Core CPI is a [[leading driver of BoJ policy expectations]], JPY valuation, and cross-asset risk sentiment. Markets often react [[more strongly to core inflation surprises than headline CPI]], especially during policy transitions, as core inflation signals underlying inflation persistence.\n\n' +
+      'The Core CPI is published monthly, typically around the [[end of the following month]], with detailed breakdowns by component (goods, services) and category. Tokyo Core CPI serves as a [[leading indicator for nationwide trends]], providing early signals of inflation dynamics.',
+    measurement:
+      'The [[Statistics Bureau of Japan]] calculates Core CPI by tracking price changes for a representative basket of goods and services, [[excluding fresh food prices]]. The [[year-over-year (YoY)]] measure compares current prices to the same month in the previous year.\n\n' +
+      'Key components:\n\n' +
+      '• [[Core-core inflation (excluding fresh food and energy)]]: Reveals underlying inflation trends\n\n' +
+      '• [[Services inflation]]: Often sticky and affects core inflation persistence\n\n' +
+      '• [[Goods inflation]]: More volatile but can drive core inflation trends\n\n' +
+      '• [[The gap between core and core-core inflation]]: Signals energy price effects\n\n' +
+      '• [[Tokyo Core CPI]]: Leading indicator for nationwide trends\n\n' +
+      'Data is released monthly, typically around the [[end of the following month]], with revisions possible in subsequent releases. Frequency: Monthly. Unit: Percent (%).',
+    impact:
+      'Core CPI readings have [[profound implications]] for JPY markets through multiple transmission channels:\n\n' +
+      '[[Above-Expectation Core Inflation]]\n\n' +
+      '• [[Reinforces hawkish bias]] and supports JPY via higher rate expectations\n\n' +
+      '• [[Pressures equities and bonds]] as markets price in tighter policy\n\n' +
+      '• [[Signals inflation persistence]], potentially limiting policy easing\n\n' +
+      '[[Below-Expectation Core Inflation]]\n\n' +
+      '• [[Strengthens easing expectations]] and may weaken JPY\n\n' +
+      '• [[Supports risk assets and bonds]] as policy pressure eases\n\n' +
+      '• [[Relieves pressure on policymakers]], potentially supporting risk sentiment\n\n' +
+      '[[Market Dynamics]]\n\n' +
+      'Core CPI remains a [[key driver of BoJ normalization]]. Higher core inflation supports additional rate hikes, while moderating core inflation may slow the pace of normalization. Core inflation surprises often have a [[larger impact than headline CPI surprises]], as they signal underlying inflation persistence. Markets focus on [[expectations versus outcomes]], with significant deviations from consensus driving immediate volatility.',
+    context:
+      '[[Current Core Inflation Trend (Late 2025)]]\n\n' +
+      'As of November 2025, Japan\'s Core CPI (excluding fresh food) increased by [[3.0% year-over-year]], maintaining the same rate as in October 2025 and aligning with market expectations. The core CPI reached 112.50 points in November, up from 112.10 in October.\n\n' +
+      'Recent trend: Core inflation has been [[above the BoJ\'s 2% target for over two years]], with fluctuations. The trend shows moderation from peaks earlier in 2025 (3.5% in April 2025, highest since January 2023) to current levels (3.0% in November 2025). [[Tokyo Core CPI, a leading indicator, decreased to 2.3% in December 2025]], down from 2.8% in November, marking the lowest figure since February but remaining above the BoJ\'s 2% target.\n\n' +
+      'The trend shows [[sustained inflation above the 2% target]], with recent moderation from peaks earlier in 2025. The decline in Tokyo Core CPI suggests potential easing, but nationwide core inflation remains elevated, supporting continued BoJ normalization.\n\n' +
+      '[[Institutional & Bank Commentary]]\n\n' +
+      'Major financial institutions view the sustained core inflation above the 2% target as supporting continued BoJ normalization, but note the recent moderation suggests potential easing. The core CPI at 3.0% in November 2025, above the 2% target, supports the BoJ\'s shift toward normalization, but the moderation in Tokyo Core CPI suggests potential easing.\n\n' +
+      'Consensus themes among institutions:\n\n' +
+      '• [[Core inflation remains above target]], supporting continued normalization\n\n' +
+      '• [[The moderation in Tokyo Core CPI suggests]] potential easing of inflationary pressures\n\n' +
+      '• [[Services and core-core inflation remain concerns]] for persistence\n\n' +
+      '• [[Energy price fluctuations affect]] headline inflation but are excluded from core\n\n' +
+      'The BoJ projects that [[inflation will stabilize around its 2% target by early 2026]], with factors such as energy price fluctuations and domestic demand influencing the inflation trajectory.\n\n' +
+      '[[Central Bank & Policy Context]]\n\n' +
+      'The Bank of Japan monitors Core CPI as the [[primary gauge of underlying inflation persistence]]. The Policy Board sets the Policy Rate based on core inflation, wage growth, growth momentum, and financial stability.\n\n' +
+      'Current context: Core CPI at 3.0% in November 2025, above the 2% target, supports the BoJ\'s shift toward normalization. The BoJ raised the Policy Rate to 0.75% in December 2025, citing [[persistent inflation above target]]. However, the moderation in Tokyo Core CPI suggests potential easing, which may affect the pace of normalization.\n\n' +
+      'The BoJ\'s reaction function weighs [[core inflation persistence, wage growth, growth momentum, and financial stability]]. Current levels support continued normalization, but the pace depends on incoming data, especially core inflation and wage growth. The BoJ emphasizes [[data dependence]], with no pre-committed rate path, and remains ready to adjust policy based on incoming information.\n\n' +
+      '[[Political & Structural Overlay]]\n\n' +
+      'Fiscal policy: Government spending and tax policy affect core inflation through demand and supply channels. [[Fiscal support can reduce the need]] for monetary accommodation, while fiscal tightening can increase pressure for monetary support.\n\n' +
+      'Structural factors: Japan\'s [[aging population]] affects growth potential and inflation dynamics, while the [[export-oriented economy]] affects rate transmission and currency dynamics. [[Productivity challenges]] affect growth potential and inflation dynamics. [[Energy import dependency]] affects headline inflation but is excluded from core.\n\n' +
+      'The distinction between political narrative and policy reality is important: public statements emphasize inflation control and growth support, but [[actual policy is constrained by the inflation target and economic conditions]]. The BoJ maintains operational independence, but political pressure can affect communication and expectations.',
+    traderImplications:
+      '[[What Traders Should Monitor Next]]\n\n' +
+      'High-impact core inflation signals include:\n\n' +
+      '• [[Monthly Core CPI prints]] (typically around the end of the following month)\n\n' +
+      '• [[Tokyo Core CPI]] (leading indicator for nationwide trends)\n\n' +
+      '• [[Core-core inflation (excluding fresh food and energy)]] (reveals underlying trends)\n\n' +
+      '• [[Services inflation trends]] (often sticky and affects core inflation persistence)\n\n' +
+      '• [[Wage growth data]] (affects core inflation persistence and policy trade-offs)\n\n' +
+      '• [[BoJ communications on core inflation]] and their implications for policy\n\n' +
+      '[[Thresholds & Inflection Points]]\n\n' +
+      'A move below [[2.5%]] would signal faster disinflation and likely weigh on JPY via reduced normalization pressure. A move above [[3.5%]] would signal persistent core inflation and likely support JPY via increased normalization expectations. The 3.0% level appears to be a near-term equilibrium, with significant deviations likely to shift market narratives.\n\n' +
+      '[[Signals That Could Change the Narrative]]\n\n' +
+      'Unexpected shifts in core inflation, especially if driven by services or wage growth, could alter Policy Rate expectations. Changes in Tokyo Core CPI, affecting nationwide inflation expectations, could influence rate decisions. Changes in core-core inflation, affecting underlying dynamics, could shift market expectations. Changes in BoJ communication tone, especially around forward guidance, could affect market positioning.\n\n' +
+      '[[FXSentinel Usage]]\n\n' +
+      'Within FXSentinel, Japan Core CPI (YoY) functions best as:\n\n' +
+      '• [[Rate-expectation driver]] (via inflation persistence signals)\n\n' +
+      '• [[JPY bias validator]] (via policy constraint assessment)\n\n' +
+      '• [[Real-yield and bond signal]]\n\n' +
+      '• [[Volatility trigger around data releases]]',
   },
   'core-inflation-YoY': {
     overview:
@@ -1632,16 +2302,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         {
           id: 'inflation',
           title: 'Inflation (CPI)',
-          currentValue: '4.6%',
-          description: 'Consumer Price Index (CPI) Year-over-Year - The official measure of inflation for the United Kingdom, calculated by the Office for National Statistics (ONS). CPI provides the primary inflation target for the Bank of England (BoE), which targets 2% inflation.',
+          currentValue: '3.2%',
+          description: 'Consumer Price Index (CPI) Year-over-Year - Measures the annual percentage change in prices for a basket of consumer goods and services in the United Kingdom. Published monthly by the Office for National Statistics (ONS), CPI is the Bank of England\'s primary inflation target (2%) and directly shapes monetary policy expectations, GBP valuation, and cross-asset risk sentiment. The CPI reflects the cost of living and purchasing power, with components including food, energy, housing, and services. Markets react to surprises versus expectations and trend momentum, making CPI a critical input for FX, rates, and equity traders.',
           chartData: [80, 85, 88, 92, 95, 93, 90, 88],
           chartLabel: 'YoY trend'
         },
         {
           id: 'core-inflation-YoY',
           title: 'Core Inflation YoY',
-          currentValue: '3.4%',
-          description: 'Core CPI (Consumer Price Index) Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco. This is the Bank of England\'s preferred inflation gauge for monetary policy decisions, providing a clearer view of underlying inflation trends without short-term commodity price fluctuations.',
+          currentValue: '3.2%',
+          description: 'Core CPI (Consumer Price Index) Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco components in the United Kingdom. Published monthly by the Office for National Statistics (ONS), Core CPI provides a clearer view of underlying inflation trends and is the Bank of England\'s preferred gauge for assessing inflation persistence and policy effectiveness. Core CPI reflects domestic price pressures that monetary policy can influence, making it critical for BoE policy expectations, GBP valuation, and cross-asset risk sentiment. Markets often react more strongly to core inflation surprises than headline CPI, especially during policy transitions.',
           chartData: [70, 72, 75, 78, 82, 80, 85, 88],
           chartLabel: 'Core YoY trend'
         },
@@ -1649,7 +2319,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+1.5%',
-          description: 'GDP Annual Growth Rate - Measures the year-over-year percentage change in Gross Domestic Product for the United Kingdom. GDP growth reflects the overall health and expansion of the economy, influencing Bank of England monetary policy decisions and GBP strength.',
+          description: 'GDP Annual Growth Rate - Measures the year-over-year percentage change in Gross Domestic Product for the United Kingdom. GDP growth reflects the overall health and expansion of the economy, influencing Bank of England monetary policy decisions and GBP strength. Strong growth supports GBP via real yield support and capital inflows, while weak growth increases rate-cut probability and supports defensive FX and bonds. GDP growth provides context on demand strength, recession risk, and policy durability, making it critical for FX, rates, and equity traders.',
           chartData: [50, 52, 48, 45, 42, 44, 46, 48],
           chartLabel: 'Q/Q growth'
         },
@@ -1657,7 +2327,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '4.2%',
-          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in the United Kingdom. A key indicator of labor market health and economic slack, closely monitored by the Bank of England for monetary policy decisions. Lower unemployment typically supports GBP strength through improved economic outlook.',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in the United Kingdom. Published monthly by the Office for National Statistics (ONS), this indicator is a key gauge of labor market health and economic slack, closely monitored by the Bank of England for monetary policy decisions. The unemployment rate influences wage dynamics, inflation expectations, and BoE policy expectations, making it critical for GBP valuation and cross-asset positioning. Lower unemployment typically supports GBP strength through improved economic outlook, while rising unemployment increases pressure for accommodative policy, typically weighing on GBP.',
           chartData: [35, 38, 36, 34, 32, 33, 31, 30],
           chartLabel: 'Rate trend'
         },
@@ -1665,7 +2335,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'wage-growth',
           title: 'Wage Growth',
           currentValue: '4.7%',
-          description: 'Wage Growth (Average Weekly Earnings) - Measures the year-over-year percentage change in average weekly earnings for employees in the UK. Wage growth is a key indicator for the Bank of England as it influences inflation expectations and monetary policy decisions. Strong wage growth can signal inflationary pressures and may lead to tighter monetary policy, affecting GBP strength.',
+          description: 'Wage Growth (Average Weekly Earnings) - Measures the year-over-year percentage change in average weekly earnings for employees in the United Kingdom. Published monthly by the Office for National Statistics (ONS), wage growth reflects labor market tightness, inflation persistence, and purchasing power. The Bank of England monitors wage growth closely as a key indicator of inflationary pressures and a critical input for monetary policy decisions. Strong wage growth supports inflation persistence, potentially constraining BoE easing, while moderating wage growth supports disinflation and accommodative policy, making it critical for GBP valuation and cross-asset positioning.',
           chartData: [60, 62, 65, 68, 72, 70, 75, 78],
           chartLabel: 'YoY growth'
         }
@@ -1680,16 +2350,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         {
           id: 'interest-rate',
           title: 'Interest Rate',
-          currentValue: '0.50%',
-          description: 'Bank of Japan Policy Rate - The overnight interest rate set by the Bank of Japan (BoJ) as its primary monetary policy tool. Represents the target for short-term interest rates in Japan.',
+          currentValue: '0.75%',
+          description: 'Bank of Japan Policy Rate - The primary monetary policy tool set by the Bank of Japan\'s Policy Board. Represents the interest rate at which the BoJ lends to financial institutions overnight, anchoring the Japanese yield curve and influencing borrowing costs across the economy. The Policy Rate is set to achieve the 2% inflation target while supporting economic growth. Changes in the Policy Rate directly impact JPY valuation, Japanese asset pricing, and cross-asset capital flows, making it critical for FX, rates, and equity traders.',
           chartData: [15, 18, 22, 25, 28, 26, 24, 22],
           chartLabel: 'Last 8 months'
         },
         {
           id: 'inflation',
           title: 'Inflation (CPI)',
-          currentValue: '2.8%',
-          description: 'Consumer Price Index Year-over-Year - Measures the annual percentage change in prices for a basket of consumer goods and services in Japan. The Bank of Japan (BoJ) targets 2% inflation as part of its monetary policy framework.',
+          currentValue: '3.0%',
+          description: 'Consumer Price Index (CPI) Year-over-Year - Measures the annual percentage change in prices for a basket of consumer goods and services in Japan. Published monthly by the Statistics Bureau of Japan, CPI is the Bank of Japan\'s primary inflation target (2%) and directly shapes monetary policy expectations, JPY valuation, and cross-asset risk sentiment. The CPI reflects the cost of living and purchasing power of the yen, with components including food, energy, housing, and services. Markets react to surprises versus expectations and trend momentum, making CPI a critical input for FX, rates, and equity traders.',
           chartData: [35, 38, 42, 45, 48, 46, 44, 42],
           chartLabel: 'YoY trend'
         },
@@ -1697,7 +2367,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'core-inflation-YoY',
           title: 'Core Inflation YoY',
           currentValue: '3.0%',
-          description: 'Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components in Japan. The Bank of Japan (BoJ) monitors core inflation closely as it provides a clearer view of underlying inflation trends and is less affected by temporary price shocks.',
+          description: 'Core CPI (Consumer Price Index) Year-over-Year - Measures the annual change in consumer prices excluding volatile fresh food components in Japan. Published monthly by the Statistics Bureau of Japan, Core CPI provides a clearer view of underlying inflation trends and is the Bank of Japan\'s preferred gauge for assessing inflation persistence and policy effectiveness. Core CPI reflects domestic price pressures that monetary policy can influence, making it critical for BoJ policy expectations, JPY valuation, and cross-asset risk sentiment. Markets often react more strongly to core inflation surprises than headline CPI, especially during policy transitions.',
           chartData: [50, 55, 52, 48, 52, 54, 56, 58, 52, 50, 56, 62, 60, 62, 66, 66, 70, 64, 62, 56, 60, 62],
           chartLabel: 'YoY trend'
         },
@@ -1705,7 +2375,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'gdp-growth',
           title: 'GDP Growth',
           currentValue: '+1.2%',
-          description: 'Gross Domestic Product Growth Rate - Measures the quarterly percentage change in real GDP (adjusted for inflation) in Japan. A key indicator of overall economic health and growth momentum, closely monitored by the Bank of Japan for monetary policy decisions.',
+          description: 'GDP Annual Growth Rate - Measures the year-over-year percentage change in Gross Domestic Product for Japan. GDP growth reflects the overall health and expansion of the economy, influencing Bank of Japan monetary policy decisions and JPY strength. Strong growth supports JPY via real yield support and capital inflows, while weak growth increases rate-cut probability and supports defensive FX and bonds. GDP growth provides context on demand strength, recession risk, and policy durability, making it critical for FX, rates, and equity traders.',
           chartData: [30, 32, 28, 25, 22, 24, 26, 28],
           chartLabel: 'Q/Q growth'
         },
@@ -1713,7 +2383,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'unemployment',
           title: 'Unemployment',
           currentValue: '2.6%',
-          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in Japan. A key indicator of labor market health and economic slack, closely monitored by the Bank of Japan for monetary policy decisions. Japan typically maintains very low unemployment rates compared to other developed economies.',
+          description: 'Unemployment Rate - Measures the percentage of the labor force that is jobless but actively seeking work in Japan. Published monthly by the Statistics Bureau of Japan, this indicator is a key gauge of labor market health and economic slack, closely monitored by the Bank of Japan for monetary policy decisions. The unemployment rate influences wage dynamics, inflation expectations, and BoJ policy expectations, making it critical for JPY valuation and cross-asset positioning. Lower unemployment typically supports JPY strength through improved economic outlook and reduced easing pressure, while rising unemployment increases pressure for accommodative policy, typically weighing on JPY.',
           chartData: [20, 22, 20, 18, 16, 17, 15, 14],
           chartLabel: 'Rate trend'
         },
@@ -1721,7 +2391,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           id: 'trade-balance',
           title: 'Current Account',
           currentValue: '+¥1.2T',
-          description: 'Current Account Balance - Measures the difference between a country\'s savings and investment, including trade balance, net income from abroad, and net current transfers. A positive current account indicates Japan is a net lender to the rest of the world, supporting JPY strength through capital flows.',
+          description: 'Current Account Balance - Measures the net flow of goods, services, primary income, and secondary income between Japan and the rest of the world. Published monthly by the Ministry of Finance and compiled by the Bank of Japan, a positive current account indicates Japan is a net lender to the rest of the world, supporting JPY strength through capital flows. The current account reflects export competitiveness, savings-investment dynamics, and structural economic position, making it critical for JPY valuation and cross-asset positioning.',
           chartData: [60, 62, 65, 68, 72, 70, 75, 78],
           chartLabel: 'Monthly balance'
         }
@@ -1851,6 +2521,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         ];
       }
       
+      // JPY Interest Rate
+      if (selectedEconomy === 'JPY') {
+        return [
+          'Bank of Japan Policy Rate stands at 0.75% as of December 19, 2025, following a 25 basis point hike from 0.50%. This marks the highest level since September 1995 and reflects a shift from ultra-loose policy toward normalization, driven by sustained inflation above the 2% target, stronger wage growth, and confidence in achieving stable inflation.',
+          'The BoJ has raised rates multiple times since ending negative rates, with the most recent hikes including December 19, 2025 (0.75%), January 24, 2025 (0.50%), and March 19, 2024 (0% to 0.1%). The December 2025 hike to 0.75% aims to curb inflation, which stood at 3% in November, exceeding the BoJ\'s 2% target. This marks the first rate hike cycle in 17 years, signaling a significant shift from ultra-loose monetary policies.',
+          'CPI inflation stood at 3% in November 2025, above the 2% target. Wage growth has strengthened, supporting sustainable inflation and confidence in achieving the 2% target. Major financial institutions interpret the normalization as appropriate given sustained inflation and wage growth, but note risks from global uncertainties and the need for a gradual approach. Markets price additional normalization into 2026, with timing sensitive to inflation, wage growth, and economic growth data.',
+          'JPY crosses remain sensitive to Policy Rate expectations and decisions, with above-expectation hikes tending to support JPY via hawkish repricing, while below-expectation hikes or pauses weaken JPY through reduced normalization pressure. The interplay between Policy Rate, inflation, wage growth, and growth data is crucial for BoJ policy anticipation. Markets focus on expectations versus outcomes, with significant deviations from consensus driving immediate volatility.',
+        ];
+      }
+      
       // US Interest Rate (default)
       return [
         'The Federal Funds Rate has shifted from restrictive policy toward cautious easing, cutting rates to 3.50%–3.75% amid moderating inflation and signs of labor market softening.',
@@ -1881,6 +2561,26 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       ];
     }
 
+    // GBP CPI Inflation
+    if (indicator.id === 'inflation' && selectedEconomy === 'GBP') {
+      return [
+        'UK CPI inflation stood at 3.2% year-over-year in November 2025, down from 3.6% in October, marking the second consecutive month of decline and the lowest in five months. The monthly CPI rate for November was -0.2%, with the decline driven by lower prices in food and non-alcoholic beverages, clothing and footwear, and alcohol and tobacco.',
+        'The International Monetary Fund projects UK average inflation at 3.4% in 2025 and 2.5% in 2026, the highest among advanced economies. The Office for Budget Responsibility forecasts CPI inflation to average 4.3% in 2025 and 3.7% in 2026, gradually declining to 2.3% by 2030. Markets expect inflation to approach the 2% target by late 2026 or early 2027.',
+        'The Bank of England cut the Bank Rate to 3.75% in December 2025, citing established disinflation trends. However, inflation above the 2% target limits aggressive easing. The BoE\'s reaction function weighs inflation persistence, wage growth, growth momentum, and labor market conditions, with current levels supporting continued easing but the pace depending on incoming data.',
+        'GBP crosses remain sensitive to CPI surprises, with above-expectation readings tending to support GBP via higher rate expectations, while below-expectation readings weaken GBP through dovish repricing. The November 2025 decline led to a 0.2% dip in GBP/USD, reflecting dovish repricing. CPI remains the primary constraint on BoE easing, with surprises quickly repricing Bank Rate expectations and short-dated yields.',
+      ];
+    }
+
+    // JPY CPI Inflation
+    if (indicator.id === 'inflation' && selectedEconomy === 'JPY') {
+      return [
+        'Japan\'s CPI stood at 113.20 points in November 2025, up from 112.80 in October. The core CPI (excluding fresh food) increased by 3.0% year-over-year in November, maintaining the same rate as in October and aligning with market expectations. Inflation has been above the BoJ\'s 2% target for over two years, with core CPI consistently exceeding 2%.',
+        'Tokyo Core CPI, a leading indicator for nationwide trends, increased by 2.3% year-over-year in December 2025, down from 2.8% in November, suggesting potential easing of inflationary pressures. The Bank of Japan raised the Policy Rate to 0.75% in December 2025, citing persistent inflation above target. The BoJ projects that inflation will stabilize around its 2% target by early 2026, with factors such as energy price fluctuations and domestic demand influencing the inflation trajectory.',
+        'Major financial institutions view the sustained inflation above the 2% target as supporting continued BoJ normalization, but note risks from global uncertainties and the need for a gradual approach. The core CPI at 3.0% in November 2025, above the 2% target, supports the BoJ\'s shift toward normalization, but the moderation in Tokyo Core CPI suggests potential easing, which may affect the pace of normalization.',
+        'JPY crosses remain sensitive to CPI surprises, with above-expectation readings tending to support JPY via higher rate expectations, while below-expectation readings weaken JPY through dovish repricing. CPI remains a key driver of BoJ normalization, with surprises quickly repricing Policy Rate expectations and short-dated yields. Markets focus on expectations versus outcomes, with significant deviations from consensus driving immediate volatility.',
+      ];
+    }
+
     // Special handling for core-inflation-YoY with professional content
     // EUR Core Inflation
     if (indicator.id === 'core-inflation-YoY' && selectedEconomy === 'EUR') {
@@ -1889,6 +2589,26 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         'Core inflation has hovered around the 2.3%–2.5% range, indicating resilience despite easing energy and goods prices. Monthly momentum remains positive, implying that inflationary pressure is cooling gradually rather than collapsing. The gap between headline and core inflation underscores the role of wages, rents, and services costs.',
         'The ECB\'s symmetric 2% target framework places core inflation at the center of persistence assessment. Current levels support a measured and data-dependent approach to rate cuts, reducing urgency for aggressive easing despite headline inflation nearing target. ECB officials frequently cite services and core inflation as key constraints on faster policy normalization.',
         'EUR crosses remain sensitive to core inflation surprises, with above-expectation readings tending to support EUR via higher real rate assumptions, while downside surprises often weaken EUR through dovish repricing of ECB expectations. A decisive downward break in core inflation would materially alter ECB policy pricing and EUR dynamics.',
+      ];
+    }
+
+    // GBP Core CPI Inflation
+    if (indicator.id === 'core-inflation-YoY' && selectedEconomy === 'GBP') {
+      return [
+        'UK Core CPI inflation stood at 3.2% year-over-year in November 2025, down from 3.4% in October, marking the lowest level since December 2024. The decline was broad-based, with goods inflation decreasing to 2.1% from 2.6% in October, while services inflation edged down to 4.4% from 4.5%. On a monthly basis, core consumer prices fell by 0.2%, reversing October\'s 0.3% rise and posting the first decline since January.',
+        'UK core inflation remains among the highest in the G7, with November 2025 at 3.2% compared to 2.4% in Canada, 1.4% in France, 2.6% in Germany, 1.7% in Italy, and 1.5% in Japan. Analysts anticipate the disinflationary trend will continue into 2026, with core inflation expected to approach the BoE\'s 2% target by late 2026 or early 2027. The pace of decline depends on services inflation and wage growth dynamics.',
+        'The Bank of England cut the Bank Rate to 3.75% in December 2025, citing established disinflation trends. However, core inflation above the 2% target, particularly sticky services inflation at 4.4%, limits aggressive easing. The BoE\'s reaction function weighs core inflation persistence, wage growth, growth momentum, and labor market conditions, with current levels supporting continued easing but the pace depending on incoming data.',
+        'GBP crosses remain sensitive to core inflation surprises, with above-expectation readings tending to support GBP via higher rate expectations, while below-expectation readings weaken GBP through dovish repricing. Markets often react more strongly to core inflation surprises than headline CPI, especially during policy transitions, as core inflation signals underlying inflation persistence. Core CPI remains a key constraint on BoE easing, with surprises quickly repricing Bank Rate expectations.',
+      ];
+    }
+
+    // JPY Core CPI Inflation
+    if (indicator.id === 'core-inflation-YoY' && selectedEconomy === 'JPY') {
+      return [
+        'Japan\'s Core CPI (excluding fresh food) increased by 3.0% year-over-year in November 2025, maintaining the same rate as in October and aligning with market expectations. Core inflation has been above the BoJ\'s 2% target for over two years, with fluctuations from peaks earlier in 2025 (3.5% in April 2025, highest since January 2023) to current levels. Tokyo Core CPI, a leading indicator, decreased to 2.3% in December 2025, down from 2.8% in November, marking the lowest figure since February but remaining above the BoJ\'s 2% target.',
+        'The trend shows sustained inflation above the 2% target, with recent moderation from peaks earlier in 2025. The decline in Tokyo Core CPI suggests potential easing, but nationwide core inflation remains elevated, supporting continued BoJ normalization. Major financial institutions view the sustained core inflation above the 2% target as supporting continued BoJ normalization, but note the recent moderation suggests potential easing. The BoJ projects that inflation will stabilize around its 2% target by early 2026, with factors such as energy price fluctuations and domestic demand influencing the inflation trajectory.',
+        'The Bank of Japan raised the Policy Rate to 0.75% in December 2025, citing persistent inflation above target. However, the moderation in Tokyo Core CPI suggests potential easing, which may affect the pace of normalization. The BoJ\'s reaction function weighs core inflation persistence, wage growth, growth momentum, and financial stability, with current levels supporting continued normalization but the pace depending on incoming data, especially core inflation and wage growth.',
+        'JPY crosses remain sensitive to core inflation surprises, with above-expectation readings tending to support JPY via higher rate expectations, while below-expectation readings weaken JPY through dovish repricing. Core inflation surprises often have a larger impact than headline CPI surprises, as they signal underlying inflation persistence. Markets focus on expectations versus outcomes, with significant deviations from consensus driving immediate volatility. Core CPI remains a key driver of BoJ normalization, with surprises quickly repricing Policy Rate expectations.',
       ];
     }
 
@@ -1909,6 +2629,26 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         'The euro area economy remains in positive but non-recessionary territory, supporting the ECB\'s strategy of holding interest rates steady. Growth is not strong enough to justify tightening, but positive enough to reduce pressure for aggressive easing.',
         'Growth expansion is uneven across member states, with Spain and France outpacing core economies like Germany, which has exhibited softer growth. ECB projections place full-year 2025 growth near ~1.3%–1.4%, with a modest slowdown expected in 2026 before moderate recovery.',
         'EUR crosses remain sensitive to GDP surprises, with stronger-than-expected prints tending to support EUR (especially if accompanied by resilient inflation), while growth moderation or downside surprises can pressure EUR via dovish repricing of ECB expectations. The interplay between growth and inflation data is crucial for ECB policy anticipation.',
+      ];
+    }
+
+    // GBP GDP Growth
+    if (indicator.id === 'gdp-growth' && selectedEconomy === 'GBP') {
+      return [
+        'UK GDP expanded by 0.7% quarter-on-quarter in Q1 2025, the fastest growth in a year and surpassing expectations of 0.6%. Q2 2025 growth moderated to 0.3% quarter-on-quarter, still above forecasts of 0.1%. Annual growth for 2024 was 1.1%, revised up from the initial estimate of 0.9%, and an improvement from 0.4% growth in 2023.',
+        'Q1 2025 growth was primarily driven by the services sector, with a 0.7% increase driven by retail, wholesale, and computer programming. The production sector rose 1.1% in Q1 2025 but declined 0.7% in March 2025, while construction showed no growth in Q1 2025. The Bank of England revised its 2025 growth forecast down to 0.75% from 1.5%, citing global uncertainties and domestic challenges.',
+        'The International Monetary Fund projects 1.3% growth for 2025, positioning the UK as the second-fastest-growing major economy after the U.S. The Confederation of British Industry projects 1.4% growth for 2025 (upgraded from earlier forecasts) and 1.3% for 2026. Business investment remains subdued due to weak demand, high costs, and uncertainties, while consumer spending is modest due to slower real income growth.',
+        'GBP crosses remain sensitive to GDP surprises, with above-expectation growth supporting GBP via reduced easing pressure, while below-expectation growth pressuring GBP via increased easing expectations. GDP surprises tend to reprice rate expectations first, with FX and equity volatility following. Markets react not just to the headline number but to components and revisions, with consumption and investment data particularly scrutinized for forward-looking signals.',
+      ];
+    }
+
+    // JPY GDP Growth
+    if (indicator.id === 'gdp-growth' && selectedEconomy === 'JPY') {
+      return [
+        'Japan\'s GDP contracted by 2.3% on an annualized basis in Q3 2025, marking the first contraction in six quarters and the steepest in two years. This decline was influenced by a 1.2% drop in exports, partly due to U.S. tariffs impacting the auto industry, and reduced capital expenditure. Q2 2025 GDP grew at an annualized rate of 2.2%, driven by resilient exports and business investment, while Q1 2025 contracted by 0.2% quarter-on-quarter, the first negative growth in four quarters.',
+        'The Japanese government revised its FY2026 real GDP growth projection to 1.3%, up from 0.9%, reflecting expectations of eased inflation supporting private consumption and business investment. The OECD projects 0.7% growth in 2025 and 0.4% in 2026, driven primarily by domestic demand, while the IMF projects 1.2% growth for 2025 and 0.8% for 2026. Domestic demand, bolstered by strong wage growth, is expected to drive growth, but external factors, particularly U.S. tariffs, pose challenges to export-driven growth.',
+        'The Bank of Japan raised the Policy Rate to 0.75% in December 2025, citing persistent inflation above target, but the Q3 2025 contraction may affect the pace of normalization. The BoJ\'s reaction function weighs growth momentum, inflation persistence, wage growth, and financial stability, with current levels supporting continued normalization but the pace depending on incoming data, especially growth and inflation dynamics.',
+        'JPY crosses remain sensitive to GDP surprises, with above-expectation growth supporting JPY via increased normalization expectations, while below-expectation growth pressuring JPY via reduced normalization expectations. GDP surprises tend to reprice rate expectations first, with FX and equity volatility following. Markets react not just to the headline number but to components and revisions, with consumption and investment data particularly scrutinized for forward-looking signals.',
       ];
     }
 
@@ -1939,6 +2679,46 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         'The October 2025 surplus was driven by goods (€31 billion) and services (€13 billion), partially offset by deficits in secondary income (€16 billion) and primary income (€3 billion). The goods surplus remains robust, indicating export competitiveness, while the primary income shift suggests changing investment return dynamics.',
         'Major financial institutions interpret the narrowing surplus as a sign of structural shifts in the eurozone\'s external position. The euro area maintains significant bilateral surpluses with the United Kingdom (€198 billion) and Switzerland (€73 billion), while recording the largest deficit with China (€134 billion), reflecting import dependency and trade structure.',
         'EUR crosses remain sensitive to current account trends, with sustained surpluses supporting EUR through capital flow dynamics, while narrowing surpluses can pressure EUR via reduced capital inflows. Markets focus on trend direction and component breakdowns, with shifts in goods, services, or primary income providing signals about competitiveness and structural position.',
+      ];
+    }
+
+    // GBP Unemployment Rate
+    if (indicator.id === 'unemployment' && selectedEconomy === 'GBP') {
+      return [
+        'UK unemployment rate stood at 5.1% for the three months to October 2025, the highest since January 2021, up from 4.4% in the same period in 2024. The trend shows a cooling labor market, with rising unemployment, declining employment (74.9% for individuals aged 16 to 64), and increased redundancies (156,000 in the three months to October 2025).',
+        'Youth unemployment has risen to 16.0%, with 735,000 individuals aged 16 to 24 unemployed, an increase of 113,000 from the previous quarter. Major financial institutions interpret the rise to 5.1% as a sign of labor market cooling, reflecting economic slowdown and reduced hiring. The increase from 4.4% a year earlier indicates a shift from tight to balanced-to-soft conditions.',
+        'The Bank of England monitors unemployment as a key input for price stability and economic growth. Current context: Unemployment at 5.1%, the highest since January 2021, with easing inflation suggests increased economic slack, allowing the BoE to focus on growth support. The BoE cut the Bank Rate to 3.75% in December 2025, citing labor market cooling and easing inflation.',
+        'GBP crosses remain sensitive to unemployment surprises, with above-expectation readings tending to weaken GBP via dovish repricing of BoE expectations, while below-expectation readings support GBP through reduced easing pressure. The interplay between unemployment, wage growth, and inflation is crucial for BoE policy anticipation. Markets focus on expectations versus outcomes, with significant deviations from consensus driving immediate volatility.',
+      ];
+    }
+
+    // JPY Unemployment Rate
+    if (indicator.id === 'unemployment' && selectedEconomy === 'JPY') {
+      return [
+        'Japan\'s unemployment rate stood at 2.6% in November 2025, unchanged from the previous three months and aligning with market expectations. This rate represents the highest level since July 2024. The number of unemployed individuals decreased by 40,000 to 1.81 million, while employment increased by 500,000 to a record high of 68.51 million. The labor force participation rate was 64.1%, slightly down from 64.2% in October but up from 63.5% a year earlier.',
+        'The jobs-to-applicants ratio remained steady at 1.18, the lowest since January 2022, indicating 118 job openings for every 100 job seekers. Major financial institutions view the 2.6% rate as low by international standards, reflecting a resilient labor market despite economic challenges. The stability at 2.6% for three consecutive months, combined with record-high employment, suggests underlying labor market strength, but the slight increase from lower levels indicates some softening.',
+        'The Bank of Japan raised the Policy Rate to 0.75% in December 2025, citing persistent inflation above target, with low unemployment supporting the case for normalization. Unemployment at 2.6%, low by international standards, with persistent inflation suggests a tight labor market, supporting wage growth and inflation persistence. The BoJ\'s forward guidance and rate decisions depend on the unemployment-inflation-wage nexus, with the current environment supporting continued normalization.',
+        'JPY crosses remain sensitive to unemployment surprises, with above-expectation readings tending to weaken JPY via dovish repricing of BoJ expectations, while below-expectation readings support JPY through reduced easing pressure. The interplay between unemployment, wage growth, and inflation is crucial for BoJ policy anticipation. Markets focus on expectations versus outcomes, with significant deviations from consensus driving immediate volatility.',
+      ];
+    }
+
+    // JPY Current Account
+    if (indicator.id === 'trade-balance' && selectedEconomy === 'JPY') {
+      return [
+        'Japan recorded a current account surplus of ¥4.06 trillion in February 2025, a 48.4% increase from the previous year and the highest for a single month since 1985. This was largely due to a shift in the trade balance to a surplus, with exports rising by 10.4% and imports decreasing by 1.9%. However, January 2025 saw a current account deficit of ¥257.6 billion, the first in two years, driven by weak yen and increased imports.',
+        'Fiscal Year 2024: Japan achieved a record-high current account surplus of ¥30.4 trillion, the largest since comparable data became available in 1985. This was primarily driven by a substantial rise in primary income, which reached a surplus of ¥41.7 trillion, an 11.7% increase from the previous year. However, the goods trade balance recorded a deficit of ¥4 trillion, marking the fourth consecutive annual deficit, while the services balance recorded a deficit of ¥2.6 trillion, though the travel industry posted a record surplus of ¥6.7 trillion.',
+        'Major financial institutions view the record-high surplus as reflecting Japan\'s strong position in international investment income, but note challenges in the goods and services balance. The primary income surplus of ¥41.7 trillion in fiscal 2024, driven by overseas investments and a weaker yen, underscores Japan\'s role as a net creditor nation. Projections indicate Japan\'s current account surplus will continue to grow, reaching approximately $7.643 trillion by 2030, though the current account surplus as a percentage of GDP is expected to decrease from 4.7% in 2024 to around 3.3% by 2027.',
+        'JPY crosses remain sensitive to current account trends, with sustained surpluses supporting JPY through capital flow dynamics, while narrowing surpluses or deficits can pressure JPY via reduced capital inflows. Markets focus on trend direction and component breakdowns, with shifts in goods, services, or primary income providing signals about competitiveness and structural position. The interplay between current account, growth, inflation, and BoJ policy is crucial for JPY valuation.',
+      ];
+    }
+
+    // GBP Wage Growth
+    if (indicator.id === 'wage-growth' && selectedEconomy === 'GBP') {
+      return [
+        'UK wage growth stood at 4.6% year-over-year in the three months to October 2025, down from 4.7% in the previous quarter, marking the lowest growth rate in over three years. Public sector wages grew by 7.6% in the three months to October 2025, while private sector wages grew by 3.9%. Manufacturing wages rose by 6% in the three months to October 2025, contributing to overall private sector wage growth of 5.4%.',
+        'When adjusted for inflation, real regular pay increased by approximately 0.5% in the three months to October 2025, indicating that wage increases are slightly outpacing inflation. The UK\'s real salary growth in 2025 has lagged behind many European counterparts, with a real salary increase of just 0.4%, placing it 21st out of 25 European countries. The moderation in wage growth reflects a cooling labor market and reduced hiring pressure, but wage growth remains above historical averages.',
+        'The Bank of England cut the Bank Rate to 3.75% in December 2025, citing labor market cooling and easing inflation. However, wage growth at 4.6% remains elevated relative to the 2% inflation target, limiting aggressive easing. The BoE\'s reaction function weighs wage growth persistence, inflation dynamics, growth momentum, and labor market conditions, with current levels supporting continued easing but the pace depending on incoming data, especially wage growth and services inflation.',
+        'GBP crosses remain sensitive to wage growth surprises, with above-expectation readings tending to support GBP via higher rate expectations, while below-expectation readings weaken GBP through dovish repricing. The interplay between wage growth, inflation, and unemployment is crucial for BoE policy anticipation. Markets focus on expectations versus outcomes, with significant deviations from consensus driving immediate volatility. The introduction of a £25 billion increase in employers\' national insurance contributions and a 6.7% rise in the minimum wage in April 2025 have influenced wage dynamics.',
       ];
     }
 
@@ -2619,73 +3399,97 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           
           // Add indicator-specific data for US economy
           if (selectedEconomy === 'US') {
-            if (indicator.id === 'interest-rate') {
-              return {
-                ...baseData,
-                // Use actual currentValue from indicator data, not hardcoded
-                lastChange: '25 bps cut',
-                policyStance: 'Cautious easing',
-                meetingFrequency: '8 times per year',
-                nextAction: 'Markets price 1–3 additional cuts',
-                keyDate: 'FOMC meetings',
-              };
-            }
-            
-            if (indicator.id === 'inflation-YoY') {
-              return {
-                ...baseData,
-                target: 'Fed 2% target',
-                trend: 'Moderating',
-                lastReading: '3.0% (Sept 2025)',
-                releaseDate: '10th-15th of each month',
-              };
-            }
-            
-            if (indicator.id === 'core-inflation-YoY') {
-              return {
-                ...baseData,
-                target: 'Fed 2% target',
-                trend: 'Moderating',
-                lastReading: '3.0% (Sept 2025)',
-                releaseDate: '10th-15th of each month',
-                note: 'Fed\'s preferred gauge',
-              };
-            }
-            
-            if (indicator.id === 'gdp-growth') {
-              return {
-                ...baseData,
-                lastReading: '3.8% (Q2 2025)',
-                previousReading: '-0.6% (Q1 2025)',
-                trend: 'Rebounding',
-                releaseDate: 'End of month (quarterly)',
-              };
-            }
-            
-            if (indicator.id === 'unemployment') {
-              return {
-                ...baseData,
-                lastReading: '4.4% (Sept 2025)',
-                trend: 'Gradually increasing',
-                releaseDate: 'First Friday of month',
-                keyDate: 'NFP release day',
-              };
-            }
-            
-            if (indicator.id === 'nonfarm-payrolls') {
-              return {
-                ...baseData,
-                lastReading: '119K (Sept 2025)',
-                previousReading: '-4K (Aug 2025)',
-                releaseDate: 'First Friday of month',
-                releaseTime: '8:30 AM ET',
-                impact: 'Highest-impact release',
-              };
+          if (indicator.id === 'interest-rate') {
+            return {
+              ...baseData,
+              // Use actual currentValue from indicator data, not hardcoded
+              lastChange: '25 bps cut',
+              policyStance: 'Cautious easing',
+              meetingFrequency: '8 times per year',
+              nextAction: 'Markets price 1–3 additional cuts',
+              keyDate: 'FOMC meetings',
+            };
+          }
+          
+          if (indicator.id === 'inflation-YoY') {
+            return {
+              ...baseData,
+              target: 'Fed 2% target',
+              trend: 'Moderating',
+              lastReading: '3.0% (Sept 2025)',
+              releaseDate: '10th-15th of each month',
+            };
+          }
+          
+          if (indicator.id === 'core-inflation-YoY') {
+            return {
+              ...baseData,
+              target: 'Fed 2% target',
+              trend: 'Moderating',
+              lastReading: '3.0% (Sept 2025)',
+              releaseDate: '10th-15th of each month',
+              note: 'Fed\'s preferred gauge',
+            };
+          }
+          
+          if (indicator.id === 'gdp-growth') {
+            return {
+              ...baseData,
+              lastReading: '3.8% (Q2 2025)',
+              previousReading: '-0.6% (Q1 2025)',
+              trend: 'Rebounding',
+              releaseDate: 'End of month (quarterly)',
+            };
+          }
+          
+          if (indicator.id === 'unemployment') {
+            return {
+              ...baseData,
+              lastReading: '4.4% (Sept 2025)',
+              trend: 'Gradually increasing',
+              releaseDate: 'First Friday of month',
+              keyDate: 'NFP release day',
+            };
+          }
+          
+          if (indicator.id === 'nonfarm-payrolls') {
+            return {
+              ...baseData,
+              lastReading: '119K (Sept 2025)',
+              previousReading: '-4K (Aug 2025)',
+              releaseDate: 'First Friday of month',
+              releaseTime: '8:30 AM ET',
+              impact: 'Highest-impact release',
+            };
             }
           }
           
           // Add indicator-specific data for EUR economy
           if (selectedEconomy === 'EUR') {
+            if (indicator.id === 'interest-rate') {
+              return {
+                ...baseData,
+                lastChange: 'Paused after cuts',
+                policyStance: 'Broadly neutral',
+                meetingFrequency: '≈8 times per year',
+                nextAction: 'Markets price stability through 2026',
+                keyDate: 'ECB Governing Council meetings',
+                note: 'Main Refinancing Rate: 2.15%',
+              };
+            }
+            
+            if (indicator.id === 'inflation') {
+              return {
+                ...baseData,
+                target: 'ECB 2% target',
+                trend: 'Stabilized near target',
+                lastReading: '2.1% YoY (latest)',
+                previousReading: 'Declining from peaks',
+                releaseDate: 'Middle of each month',
+                note: 'HICP - ECB\'s primary gauge',
+              };
+            }
+            
             if (indicator.id === 'core-inflation-YoY') {
               return {
                 ...baseData,
@@ -2727,6 +3531,150 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 trend: 'Narrowing surplus',
                 releaseDate: '~6 weeks after reference month',
                 note: '12-month: €313B (2.0% of GDP)',
+              };
+            }
+          }
+          
+          // Add indicator-specific data for GBP economy
+          if (selectedEconomy === 'GBP') {
+            if (indicator.id === 'interest-rate') {
+              return {
+                ...baseData,
+                lastChange: '25 bps cut (Dec 18, 2025)',
+                policyStance: 'Shift toward easing',
+                meetingFrequency: '≈Every 6 weeks',
+                nextAction: 'Markets price additional cuts into 2026',
+                keyDate: 'MPC meetings',
+                note: 'Bank Rate - Lowest since Feb 2023',
+              };
+            }
+            
+            if (indicator.id === 'inflation') {
+              return {
+                ...baseData,
+                target: 'BoE 2% target',
+                trend: 'Declining',
+                lastReading: '3.2% (Nov 2025)',
+                previousReading: '3.6% (Oct 2025)',
+                releaseDate: 'Middle of following month',
+                note: 'CPI - BoE\'s primary target',
+              };
+            }
+            
+            if (indicator.id === 'core-inflation-YoY') {
+              return {
+                ...baseData,
+                target: 'BoE 2% target',
+                trend: 'Declining',
+                lastReading: '3.2% (Nov 2025)',
+                previousReading: '3.4% (Oct 2025)',
+                releaseDate: 'Middle of following month',
+                note: 'BoE\'s preferred gauge',
+              };
+            }
+            
+            if (indicator.id === 'gdp-growth') {
+              return {
+                ...baseData,
+                lastReading: '+0.3% QoQ (Q2 2025)',
+                previousReading: '+0.7% QoQ (Q1 2025)',
+                trend: 'Moderating from Q1 strength',
+                releaseDate: 'End of month following quarter',
+                note: '2024: +1.1% (revised up from 0.9%)',
+              };
+            }
+            
+            if (indicator.id === 'unemployment') {
+              return {
+                ...baseData,
+                lastReading: '5.1% (3m to Oct 2025)',
+                previousReading: '4.4% (3m to Oct 2024)',
+                trend: 'Rising, cooling labor market',
+                releaseDate: 'Middle of following month',
+                note: 'Highest since Jan 2021',
+              };
+            }
+            
+            if (indicator.id === 'wage-growth') {
+              return {
+                ...baseData,
+                lastReading: '4.6% (3m to Oct 2025)',
+                previousReading: '4.7% (previous quarter)',
+                trend: 'Moderating, lowest in 3+ years',
+                releaseDate: 'Middle of following month',
+                note: 'Public: 7.6%, Private: 3.9%',
+              };
+            }
+          }
+          
+          // Add indicator-specific data for JPY economy
+          if (selectedEconomy === 'JPY') {
+            if (indicator.id === 'interest-rate') {
+              return {
+                ...baseData,
+                lastChange: '25 bps hike (Dec 19, 2025)',
+                policyStance: 'Normalization',
+                meetingFrequency: '≈Every 6 weeks',
+                nextAction: 'Markets price additional normalization into 2026',
+                keyDate: 'Policy Board meetings',
+                note: 'Highest since Sept 1995',
+              };
+            }
+            
+            if (indicator.id === 'inflation') {
+              return {
+                ...baseData,
+                target: 'BoJ 2% target',
+                trend: 'Above target, sustained',
+                lastReading: '3.0% (Nov 2025)',
+                previousReading: '3.0% (Oct 2025)',
+                releaseDate: 'End of following month',
+                note: 'Tokyo Core: 2.3% (Dec 2025)',
+              };
+            }
+            
+            if (indicator.id === 'core-inflation-YoY') {
+              return {
+                ...baseData,
+                target: 'BoJ 2% target',
+                trend: 'Above target, moderating',
+                lastReading: '3.0% (Nov 2025)',
+                previousReading: '3.0% (Oct 2025)',
+                releaseDate: 'End of following month',
+                note: 'Tokyo Core: 2.3% (Dec 2025)',
+              };
+            }
+            
+            if (indicator.id === 'gdp-growth') {
+              return {
+                ...baseData,
+                lastReading: '-2.3% annualized (Q3 2025)',
+                previousReading: '+2.2% annualized (Q2 2025)',
+                trend: 'Volatile, first contraction in 6 quarters',
+                releaseDate: 'End of month following quarter',
+                note: '2024: +0.1%',
+              };
+            }
+            
+            if (indicator.id === 'unemployment') {
+              return {
+                ...baseData,
+                lastReading: '2.6% (Nov 2025)',
+                previousReading: '2.6% (Oct 2025)',
+                trend: 'Stable, highest since July 2024',
+                releaseDate: 'End of following month',
+                note: 'Jobs-to-applicants: 1.18',
+              };
+            }
+            
+            if (indicator.id === 'trade-balance') {
+              return {
+                ...baseData,
+                lastReading: '¥4.06T (Feb 2025)',
+                previousReading: '¥257.6B deficit (Jan 2025)',
+                trend: 'Volatile, record FY2024 surplus',
+                releaseDate: '~6 weeks after reference month',
+                note: 'FY2024: ¥30.4T (record high)',
               };
             }
           }
