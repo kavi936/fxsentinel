@@ -2310,92 +2310,92 @@ def trigger_alert():
                 continue
             
             logger.info(f"✅ User {user_id} eligible: chat_id={chat_id}, telegram_enabled={telegram_enabled}")
+            
+            # Check if user has liveNews alerts enabled (handle multiple settings structures)
+            live_news_enabled = False
+            
+            # Check direct alert_types structure
+            alert_types = user_settings.get('alert_types', {})
+            if isinstance(alert_types, dict):
+                live_news_enabled = alert_types.get('liveNews', True)  # Default to True
+            elif isinstance(alert_types, list):
+                live_news_enabled = 'liveNews' in alert_types or 'news' in alert_types
+            else:
+                live_news_enabled = True  # Default to True if no alert_types
+            
+            # Also check preferences structure
+            preferences = user_settings.get('preferences', {})
+            if preferences and 'alertTypes' in preferences:
+                pref_alert_types = preferences['alertTypes']
+                if isinstance(pref_alert_types, dict):
+                    live_news_enabled = pref_alert_types.get('liveNews', live_news_enabled)
+            
+            if not live_news_enabled:
+                logger.debug(f"User {user_id} has liveNews alerts disabled")
+                continue
+            
+            # User data is already in the correct format from get_all_users_with_alerts()
+            # Just ensure chat_id is set correctly
+            user_data['chat_id'] = chat_id
+            user_data['telegram_chat_id'] = chat_id  # Also set telegram_chat_id for compatibility
+            
+            # Send alert based on type
+            if alert_type == 'news':
+                # FIXED: Trust the dedicated worker's filtering - don't apply additional forex filtering
+                # The dedicated worker already filtered for high-impact news, so we should process it
+                logger.info(f"Processing news alert from dedicated worker: {alert_data.get('title', '')[:50]}...")
                 
-                # Check if user has liveNews alerts enabled (handle multiple settings structures)
-                live_news_enabled = False
+                # Determine if AI analysis is needed
+                needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(alert_data)
                 
-                # Check direct alert_types structure
-                alert_types = user_settings.get('alert_types', {})
-                if isinstance(alert_types, dict):
-                    live_news_enabled = alert_types.get('liveNews', True)  # Default to True
-                elif isinstance(alert_types, list):
-                    live_news_enabled = 'liveNews' in alert_types or 'news' in alert_types
-                else:
-                    live_news_enabled = True  # Default to True if no alert_types
-                
-                # Also check preferences structure
-                preferences = user_settings.get('preferences', {})
-                if preferences and 'alertTypes' in preferences:
-                    pref_alert_types = preferences['alertTypes']
-                    if isinstance(pref_alert_types, dict):
-                        live_news_enabled = pref_alert_types.get('liveNews', live_news_enabled)
-                
-                if not live_news_enabled:
-                    logger.debug(f"User {user_id} has liveNews alerts disabled")
-                    continue
-                
-                # User data is already in the correct format from get_all_users_with_alerts()
-                # Just ensure chat_id is set correctly
-                user_data['chat_id'] = chat_id
-                user_data['telegram_chat_id'] = chat_id  # Also set telegram_chat_id for compatibility
-                
-                # Send alert based on type
-                if alert_type == 'news':
-                    # FIXED: Trust the dedicated worker's filtering - don't apply additional forex filtering
-                    # The dedicated worker already filtered for high-impact news, so we should process it
-                    logger.info(f"Processing news alert from dedicated worker: {alert_data.get('title', '')[:50]}...")
-                    
-                    # Determine if AI analysis is needed
-                    needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(alert_data)
-                    
-                    # Send the alert using async handling
+                # Send the alert using async handling
+                try:
+                    import asyncio
+                    # Properly handle async function without event loop conflicts
                     try:
-                        import asyncio
-                        # Properly handle async function without event loop conflicts
-                        try:
-                            # Try to get existing event loop
-                            loop = asyncio.get_event_loop()
-                            if loop.is_running():
-                                # Event loop is running, create a task
-                                import concurrent.futures
-                                with concurrent.futures.ThreadPoolExecutor() as executor:
-                                    future = executor.submit(
-                                        lambda: asyncio.run(
-                                            news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
-                                        )
+                        # Try to get existing event loop
+                        loop = asyncio.get_event_loop()
+                        if loop.is_running():
+                            # Event loop is running, create a task
+                            import concurrent.futures
+                            with concurrent.futures.ThreadPoolExecutor() as executor:
+                                future = executor.submit(
+                                    lambda: asyncio.run(
+                                        news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
                                     )
-                                    success = future.result(timeout=30)
-                            else:
-                                # Event loop exists but not running, use run_until_complete
-                                success = loop.run_until_complete(
-                                    news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
                                 )
-                        except RuntimeError:
-                            # No event loop, create new one
-                            success = asyncio.run(
+                                success = future.result(timeout=30)
+                        else:
+                            # Event loop exists but not running, use run_until_complete
+                            success = loop.run_until_complete(
                                 news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
                             )
-                        
-                        if success:
-                            alerts_sent += 1
-                            logger.info(f"✅ Successfully sent alert to user {user_id}")
-                        else:
-                            logger.warning(f"❌ Failed to send alert to user {user_id}")
-                    except Exception as e:
-                        logger.error(f"Error sending news alert to user {user_id}: {e}", exc_info=True)
-                        continue
-                
-                elif alert_type == 'calendar':
-                    # Send calendar alert using the correct method name
-                    try:
-                        # The economic calendar alerts service uses synchronous methods
-                        success = economic_calendar_alerts._send_pre_event_alert(user_data, alert_data)
-                        
-                        if success:
-                            alerts_sent += 1
-                    except Exception as e:
-                        logger.error(f"Error sending calendar alert to user {user_id}: {e}")
-                        continue
+                    except RuntimeError:
+                        # No event loop, create new one
+                        success = asyncio.run(
+                            news_alert_trigger._send_alert_to_user(user_data, alert_data, needs_ai_analysis)
+                        )
+                    
+                    if success:
+                        alerts_sent += 1
+                        logger.info(f"✅ Successfully sent alert to user {user_id}")
+                    else:
+                        logger.warning(f"❌ Failed to send alert to user {user_id}")
+                except Exception as e:
+                    logger.error(f"Error sending news alert to user {user_id}: {e}", exc_info=True)
+                    continue
+            
+            elif alert_type == 'calendar':
+                # Send calendar alert using the correct method name
+                try:
+                    # The economic calendar alerts service uses synchronous methods
+                    success = economic_calendar_alerts._send_pre_event_alert(user_data, alert_data)
+                    
+                    if success:
+                        alerts_sent += 1
+                except Exception as e:
+                    logger.error(f"Error sending calendar alert to user {user_id}: {e}")
+                    continue
         
         logger.info(f"📨 Alert processing complete: {alerts_sent} alerts sent")
         return jsonify({
