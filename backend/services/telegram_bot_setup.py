@@ -94,7 +94,7 @@ class TelegramBotSetup:
                 
                 if not subscription_check['has_access']:
                     await update.message.reply_text(
-                        "❌ Access Denied\n\n"
+                        "Access Denied\n\n"
                         "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
                         "To continue using alerts:\n"
                         "1. Visit https://fxsentinel.io\n"
@@ -110,7 +110,7 @@ class TelegramBotSetup:
                 context.user_data['setup_step'] = 'waiting_confirmation'
                 
                 await update.message.reply_text(
-                    f"🎉 Welcome to FXSentinel Alerts!\n\n"
+                    f"Welcome to FXSentinel Alerts\n\n"
                     f"I'm here to help you set up real-time market alerts.\n\n"
                     f"Your user ID: {user_id}\n"
                     f"Your Telegram: @{user.username or 'Unknown'}\n"
@@ -121,11 +121,11 @@ class TelegramBotSetup:
             else:
                 # Regular start command
                 await update.message.reply_text(
-                    "🎉 Welcome to FXSentinel Alerts!\n\n"
+                    "Welcome to FXSentinel Alerts\n\n"
                     "I'm your personal market alert assistant. I'll send you real-time notifications about:\n"
-                    "• 🔥 Breaking forex news\n"
-                    "• 📊 Economic data releases\n"
-                    "• 🎯 High-impact market events\n\n"
+                    "• Breaking forex news\n"
+                    "• Economic data releases\n"
+                    "• High-impact market events\n\n"
                     "To get started, visit the FXSentinel app and click 'Connect Telegram Bot'.\n\n"
                     "Commands:\n"
                     "/status - Check your alert settings\n"
@@ -146,7 +146,7 @@ class TelegramBotSetup:
             # Check if user provided user_id
             if not context.args:
                 await update.message.reply_text(
-                    "❌ Please provide your user ID.\n\n"
+                    "Please provide your user ID.\n\n"
                     "Usage: /connect YOUR_USER_ID\n\n"
                     "You can find your user ID in the FXSentinel app."
                 )
@@ -163,7 +163,7 @@ class TelegramBotSetup:
             
             if not subscription_check['has_access']:
                 await update.message.reply_text(
-                    "❌ Connection Failed\n\n"
+                    "Connection Failed\n\n"
                     "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
                     "To continue using alerts:\n"
                     "1. Visit https://fxsentinel.io\n"
@@ -186,13 +186,13 @@ class TelegramBotSetup:
                 await self._store_chat_id_mapping(str(chat_id), user_id)
                 
                 await update.message.reply_text(
-                    "✅ Connection successful!\n\n"
+                    "Connection successful\n\n"
                     "Your Telegram account is now connected to FXSentinel Alerts.\n\n"
                     f"Subscription Status: {subscription_check['status'].title()}\n\n"
                     "You'll receive notifications about:\n"
-                    "• 🔥 Breaking forex news\n"
-                    "• 📊 Economic data releases\n"
-                    "• 🎯 High-impact market events\n\n"
+                    "• Breaking forex news\n"
+                    "• Economic data releases\n"
+                    "• High-impact market events\n\n"
                     "To test your setup, send: /test\n\n"
                     "To check your settings, send: /status"
                 )
@@ -203,7 +203,7 @@ class TelegramBotSetup:
                 
             else:
                 await update.message.reply_text(
-                    f"❌ Connection failed: {result.get('error', 'Unknown error')}\n\n"
+                    f"Connection failed: {result.get('error', 'Unknown error')}\n\n"
                     "Please try again or contact support."
                 )
                 
@@ -222,7 +222,7 @@ class TelegramBotSetup:
             
             if not user_id:
                 await update.message.reply_text(
-                    "❌ Your Telegram account is not connected to FXSentinel.\n\n"
+                    "Your Telegram account is not connected to FXSentinel.\n\n"
                     "Please visit the FXSentinel app and click 'Connect Telegram Bot' to get started."
                 )
                 return
@@ -232,7 +232,7 @@ class TelegramBotSetup:
             
             if not subscription_check['has_access']:
                 await update.message.reply_text(
-                    "❌ Access Denied\n\n"
+                    "Access Denied\n\n"
                     "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
                     "To continue using alerts:\n"
                     "1. Visit https://fxsentinel.io\n"
@@ -274,49 +274,49 @@ class TelegramBotSetup:
             
             if not settings:
                 await update.message.reply_text(
-                    "❌ Could not retrieve your alert settings.\n\n"
+                    "Could not retrieve your alert settings.\n\n"
                     "Please visit the FXSentinel app to configure your preferences."
                 )
                 return
             
             # Format status message
-            status_msg = "📊 <b>Your Alert Settings</b>\n\n"
+            status_msg = "<b>Your Alert Settings</b>\n\n"
             
             # Subscription status
-            status_msg += f"💳 <b>Subscription:</b> {subscription_check['status'].title()}\n\n"
+            status_msg += f"<b>Subscription:</b> {subscription_check['status'].title()}\n\n"
             
             # Alert types - check both old and new structure
             preferences = settings.get('preferences', {})
             alert_types = preferences.get('alertTypes', settings.get('alert_types', {}))
             
-            status_msg += "🔔 <b>Alert Types:</b>\n"
+            status_msg += "<b>Alert Types:</b>\n"
             if isinstance(alert_types, dict):
-                status_msg += f"• Live News: {'✅' if alert_types.get('liveNews', True) else '❌'}\n"
-                status_msg += f"• Pre-News: {'✅' if alert_types.get('preNews', True) else '❌'}\n"
-                status_msg += f"• Post-News: {'✅' if alert_types.get('postNews', True) else '❌'}\n"
-                status_msg += f"• Technical Analysis: {'✅' if alert_types.get('technicalAnalysis', False) else '❌'}\n\n"
+                status_msg += f"• Live News: {'Enabled' if alert_types.get('liveNews', True) else 'Disabled'}\n"
+                status_msg += f"• Pre-News: {'Enabled' if alert_types.get('preNews', True) else 'Disabled'}\n"
+                status_msg += f"• Post-News: {'Enabled' if alert_types.get('postNews', True) else 'Disabled'}\n"
+                status_msg += f"• Technical Analysis: {'Enabled' if alert_types.get('technicalAnalysis', False) else 'Disabled'}\n\n"
             else:
                 status_msg += "• All types enabled\n\n"
             
             # Impact levels - check both old and new structure
             impact_levels = preferences.get('impactLevels', settings.get('impact_levels', {}))
-            status_msg += "📈 <b>Impact Levels:</b>\n"
+            status_msg += "<b>Impact Levels:</b>\n"
             if isinstance(impact_levels, dict):
-                status_msg += f"• High: {'✅' if impact_levels.get('high', True) else '❌'}\n"
-                status_msg += f"• Medium: {'✅' if impact_levels.get('medium', True) else '❌'}\n"
-                status_msg += f"• Low: {'❌' if impact_levels.get('low', False) else '✅'}\n\n"
+                status_msg += f"• High: {'Enabled' if impact_levels.get('high', True) else 'Disabled'}\n"
+                status_msg += f"• Medium: {'Enabled' if impact_levels.get('medium', True) else 'Disabled'}\n"
+                status_msg += f"• Low: {'Disabled' if impact_levels.get('low', False) else 'Enabled'}\n\n"
             else:
                 status_msg += "• All levels enabled\n\n"
             
             # Currency pairs - check both old and new structure
             currency_pairs = preferences.get('currencyPairs', settings.get('currency_pairs', []))
             if currency_pairs:
-                status_msg += f"💱 <b>Currency Pairs:</b> {', '.join(currency_pairs[:5])}"
+                status_msg += f"<b>Currency Pairs:</b> {', '.join(currency_pairs[:5])}"
                 if len(currency_pairs) > 5:
                     status_msg += f" (+{len(currency_pairs) - 5} more)"
                 status_msg += "\n"
             else:
-                status_msg += "💱 <b>Currency Pairs:</b> All pairs\n"
+                status_msg += "<b>Currency Pairs:</b> All pairs\n"
             
             status_msg += "\nTo change settings, visit the FXSentinel app."
             
@@ -337,7 +337,7 @@ class TelegramBotSetup:
             
             if not user_id:
                 await update.message.reply_text(
-                    "❌ Your Telegram account is not connected to FXSentinel.\n\n"
+                    "Your Telegram account is not connected to FXSentinel.\n\n"
                     "Please visit the FXSentinel app and click 'Connect Telegram Bot' to get started."
                 )
                 return
@@ -347,7 +347,7 @@ class TelegramBotSetup:
             
             if not subscription_check['has_access']:
                 await update.message.reply_text(
-                    "❌ Access Denied\n\n"
+                    "Access Denied\n\n"
                     "Your subscription has expired or you don't have access to FXSentinel Alerts.\n\n"
                     "To continue using alerts:\n"
                     "1. Visit https://fxsentinel.io\n"
@@ -361,21 +361,21 @@ class TelegramBotSetup:
             # Send test alert
             success = await self.alert_service.send_telegram_alert(
                 str(chat_id),
-                "🧪 <b>Test Alert - FXSentinel</b>\n\n"
+                "<b>Test Alert - FXSentinel</b>\n\n"
                 "This is a test alert to verify your setup is working correctly.\n\n"
-                "If you received this message, your alerts are properly configured!\n\n"
-                "⏰ " + datetime.now().strftime('%H:%M UTC'),
+                "If you received this message, your alerts are properly configured.\n\n"
+                "Time: " + datetime.now().strftime('%H:%M UTC'),
                 parse_mode='HTML'
             )
             
             if success:
                 await update.message.reply_text(
-                    "✅ Test alert sent successfully!\n\n"
+                    "Test alert sent successfully\n\n"
                     "You should have received a test message. If you didn't, please check your Telegram settings."
                 )
             else:
                 await update.message.reply_text(
-                    "❌ Failed to send test alert.\n\n"
+                    "Failed to send test alert\n\n"
                     "Please try again or contact support."
                 )
                 
@@ -386,7 +386,7 @@ class TelegramBotSetup:
     async def help_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Handle /help command"""
         help_text = """
-🤖 <b>FXSentinel Alerts Bot Commands</b>
+<b>FXSentinel Alerts Bot Commands</b>
 
 /start - Welcome message and setup instructions
 /connect USER_ID - Connect your Telegram to FXSentinel
@@ -394,19 +394,19 @@ class TelegramBotSetup:
 /test - Send a test alert to verify setup
 /help - Show this help message
 
-📱 <b>Setup Instructions:</b>
+<b>Setup Instructions:</b>
 1. Visit the FXSentinel app
 2. Go to the Alerts tab
 3. Click "Connect Telegram Bot"
 4. Follow the setup instructions
 5. Send /connect YOUR_USER_ID to complete setup
 
-🔔 <b>Alert Types:</b>
+<b>Alert Types:</b>
 • Live News - Breaking forex news
 • Pre-News - Upcoming economic events
 • Post-News - Analysis after news release
 
-💡 <b>Need Help?</b>
+<b>Need Help?</b>
 Visit the FXSentinel app or contact support.
         """.strip()
         
@@ -432,7 +432,7 @@ Visit the FXSentinel app or contact support.
                     
                     if result.get('success'):
                         await update.message.reply_text(
-                            "✅ Setup completed successfully!\n\n"
+                            "Setup completed successfully\n\n"
                             "Your Telegram account is now connected to FXSentinel Alerts.\n\n"
                             "Send /test to verify everything is working."
                         )
@@ -441,7 +441,7 @@ Visit the FXSentinel app or contact support.
                         context.user_data.clear()
                     else:
                         await update.message.reply_text(
-                            f"❌ Setup failed: {result.get('error', 'Unknown error')}\n\n"
+                            f"Setup failed: {result.get('error', 'Unknown error')}\n\n"
                             "Please try again or contact support."
                         )
                 else:
@@ -536,14 +536,14 @@ Visit the FXSentinel app or contact support.
         """Send welcome alert to new user"""
         try:
             welcome_message = """
-🎉 <b>Welcome to FXSentinel Alerts!</b>
+<b>Welcome to FXSentinel Alerts</b>
 
 Your Telegram account is now connected and ready to receive real-time market alerts.
 
 <b>What you'll receive:</b>
-• 🔥 Breaking forex news from WatcherGuru
-• 📊 AI-powered market analysis
-• 🎯 High-impact economic events
+• Breaking forex news from WatcherGuru
+• AI-powered market analysis
+• High-impact economic events
 
 <b>Next steps:</b>
 1. Visit the FXSentinel app
@@ -556,7 +556,7 @@ Your Telegram account is now connected and ready to receive real-time market ale
 /test - Send a test alert
 /help - Show all commands
 
-Happy trading! 📈
+Happy trading!
             """.strip()
             
             await self.alert_service.send_telegram_alert(str(chat_id), welcome_message, parse_mode='HTML')

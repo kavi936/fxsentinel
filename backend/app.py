@@ -2826,23 +2826,23 @@ def send_test_alert():
             import requests
             
             # Create test alert content with proper HTML formatting
-            test_content = f"""🧪 <b>FXSentinel Test Alert</b>
+            test_content = f"""<b>FXSentinel Test Alert</b>
 
 {message}
 
-📊 <b>Test Details:</b>
+<b>Test Details:</b>
 • Alert Type: {alert_type}
 • User ID: {user_id[:8]}...
 • Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S UTC')}
-• Status: ✅ Connection Verified
+• Status: Connection Verified
 
-🎯 <b>Your alert preferences are working correctly!</b>
+<b>Your alert preferences are working correctly</b>
 You'll receive real alerts for:
 • Breaking news
 • Economic events
 • Market analysis
 
-Stay tuned for real market alerts! 📈"""
+Stay tuned for real market alerts."""
             
             # Send the alert directly using Telegram Bot API HTTP request
             bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
@@ -5426,7 +5426,7 @@ def telegram_webhook():
                 if bot_token and chat_id:
                     welcome_message = {
                         "chat_id": chat_id,
-                        "text": "🎉 Welcome to FXSentinel Alerts!\n\nI'm your personal market alert assistant. I'll send you real-time notifications about:\n• 🔥 Breaking forex news\n• 📊 Economic data releases\n• 🎯 High-impact market events\n\nTo get started, visit the FXSentinel app and click 'Connect Telegram Bot'.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands",
+                        "text": "Welcome to FXSentinel Alerts\n\nI'm your personal market alert assistant. I'll send you real-time notifications about:\n• Breaking forex news\n• Economic data releases\n• High-impact market events\n\nTo get started, visit the FXSentinel app and click 'Connect Telegram Bot'.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands",
                         "parse_mode": "HTML"
                     }
                     
@@ -5444,7 +5444,7 @@ def telegram_webhook():
                         # Send fallback message
                         fallback_message = {
                             "chat_id": chat_id,
-                            "text": "🎉 Welcome to FXSentinel Alerts!\n\nI'm your personal market alert assistant.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands",
+                            "text": "Welcome to FXSentinel Alerts\n\nI'm your personal market alert assistant.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands",
                             "parse_mode": "HTML"
                         }
                         requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=fallback_message, timeout=10)
@@ -5460,7 +5460,7 @@ def telegram_webhook():
                     if bot_token and chat_id:
                         simple_message = {
                             "chat_id": chat_id,
-                            "text": "🎉 Welcome to FXSentinel Alerts!\n\nCommands:\n/status - Check settings\n/test - Test alert\n/help - Help",
+                            "text": "Welcome to FXSentinel Alerts\n\nCommands:\n/status - Check settings\n/test - Test alert\n/help - Help",
                             "parse_mode": "HTML"
                         }
                         requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=simple_message, timeout=5)
@@ -5475,7 +5475,7 @@ def telegram_webhook():
                 if bot_token and chat_id:
                     help_message = {
                         "chat_id": chat_id,
-                        "text": "🤖 FXSentinel Bot Commands:\n\n/start - Welcome message and setup instructions\n/help - Show this help message\n/status - Check your alert settings\n/test - Send a test alert\n\nFor support, visit https://fxsentinel.io",
+                        "text": "FXSentinel Bot Commands:\n\n/start - Welcome message and setup instructions\n/help - Show this help message\n/status - Check your alert settings\n/test - Send a test alert\n\nFor support, visit https://fxsentinel.io",
                         "parse_mode": "HTML"
                     }
                     
@@ -5505,7 +5505,7 @@ def telegram_webhook():
                 if bot_token and chat_id:
                     test_message = {
                         "chat_id": chat_id,
-                        "text": "🧪 Test Alert\n\nThis is a test message from FXSentinel Bot!\n\n✅ Your connection is working properly.\n\nYou'll receive real alerts for:\n• Breaking news\n• Economic events\n• Market analysis\n\nStay tuned for real market alerts! 📈",
+                        "text": "Test Alert\n\nThis is a test message from FXSentinel Bot.\n\nYour connection is working properly.\n\nYou'll receive real alerts for:\n• Breaking news\n• Economic events\n• Market analysis\n\nStay tuned for real market alerts.",
                         "parse_mode": "HTML"
                     }
                     
@@ -5601,25 +5601,25 @@ def telegram_webhook():
                             from services.subscription_cache import get_subscription_status_sync
                             is_valid, error = get_subscription_status_sync(user_id)
                             
-                            status_message = f"📊 <b>FXSentinel Alert Status</b>\n\n"
-                            status_message += f"🆔 <b>User ID:</b> {user_id}\n"
-                            status_message += f"💬 <b>Chat ID:</b> {chat_id}\n"
-                            status_message += f"📱 <b>Telegram:</b> @{username}\n\n"
+                            status_message = f"<b>FXSentinel Alert Status</b>\n\n"
+                            status_message += f"<b>User ID:</b> {user_id}\n"
+                            status_message += f"<b>Chat ID:</b> {chat_id}\n"
+                            status_message += f"<b>Telegram:</b> @{username}\n\n"
                             
                             if is_valid:
-                                status_message += "✅ <b>Subscription:</b> Active\n"
+                                status_message += "<b>Subscription:</b> Active\n"
                             else:
-                                status_message += "❌ <b>Subscription:</b> Expired\n"
+                                status_message += "<b>Subscription:</b> Expired\n"
                             
-                            status_message += f"\n📋 <b>Alert Settings:</b>\n"
+                            status_message += f"\n<b>Alert Settings:</b>\n"
                             # Read from the correct nested structure
                             preferences = user_settings.get('preferences', {})
                             alert_types = preferences.get('alertTypes', {})
-                            status_message += f"• Live News: {'✅' if alert_types.get('liveNews', False) else '❌'}\n"
-                            status_message += f"• Economic Calendar: {'✅' if alert_types.get('postNews', False) else '❌'}\n"
-                            status_message += f"• AI Analysis: {'✅' if alert_types.get('technicalAnalysis', False) else '❌'}\n"
+                            status_message += f"• Live News: {'Enabled' if alert_types.get('liveNews', False) else 'Disabled'}\n"
+                            status_message += f"• Economic Calendar: {'Enabled' if alert_types.get('postNews', False) else 'Disabled'}\n"
+                            status_message += f"• AI Analysis: {'Enabled' if alert_types.get('technicalAnalysis', False) else 'Disabled'}\n"
                             
-                            status_message += f"\n🎯 <b>Currency Pairs:</b>\n"
+                            status_message += f"\n<b>Currency Pairs:</b>\n"
                             currency_pairs = preferences.get('currencyPairs', [])
                             if currency_pairs:
                                 for pair in currency_pairs[:5]:  # Show first 5
@@ -5629,7 +5629,7 @@ def telegram_webhook():
                             else:
                                 status_message += "• No pairs configured\n"
                             
-                            status_message += f"\n📈 <b>Impact Levels:</b>\n"
+                            status_message += f"\n<b>Impact Levels:</b>\n"
                             impact_levels = preferences.get('impactLevels', {})
                             if impact_levels:
                                 for level, enabled in impact_levels.items():
@@ -5639,10 +5639,10 @@ def telegram_webhook():
                                 status_message += "• All levels\n"
                             
                         else:
-                            status_message = f"📊 <b>FXSentinel Alert Status</b>\n\n"
-                            status_message += f"❌ <b>Status:</b> Not Connected\n\n"
-                            status_message += f"💬 <b>Chat ID:</b> {chat_id}\n"
-                            status_message += f"📱 <b>Telegram:</b> @{username}\n\n"
+                            status_message = f"<b>FXSentinel Alert Status</b>\n\n"
+                            status_message += f"<b>Status:</b> Not Connected\n\n"
+                            status_message += f"<b>Chat ID:</b> {chat_id}\n"
+                            status_message += f"<b>Telegram:</b> @{username}\n\n"
                             status_message += f"To connect your account:\n"
                             status_message += f"1. Visit https://fxsentinel.io\n"
                             status_message += f"2. Log in to your account\n"
@@ -5651,10 +5651,10 @@ def telegram_webhook():
                             
                     except Exception as e:
                         print(f"❌ Error getting user status: {e}")
-                        status_message = f"📊 <b>FXSentinel Alert Status</b>\n\n"
-                        status_message += f"❌ <b>Status:</b> Error retrieving settings\n\n"
-                        status_message += f"💬 <b>Chat ID:</b> {chat_id}\n"
-                        status_message += f"📱 <b>Telegram:</b> @{username}\n\n"
+                        status_message = f"<b>FXSentinel Alert Status</b>\n\n"
+                        status_message += f"<b>Status:</b> Error retrieving settings\n\n"
+                        status_message += f"<b>Chat ID:</b> {chat_id}\n"
+                        status_message += f"<b>Telegram:</b> @{username}\n\n"
                         status_message += f"Please try again or contact support."
                     
                     status_response = {

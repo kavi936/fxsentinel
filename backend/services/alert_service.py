@@ -377,11 +377,11 @@ class AlertService:
     def _format_telegram_message(self, alert_data: Dict[str, Any]) -> str:
         """Format alert message for Telegram"""
         return f"""
-🔥 <b>{alert_data.get('title', 'Alert')}</b>
+<b>{alert_data.get('title', 'Alert')}</b>
 
 {alert_data.get('content', 'No content available')}
 
-⏰ {datetime.now().strftime('%H:%M UTC')}
+Time: {datetime.now().strftime('%H:%M UTC')}
         """.strip()
     
     def _format_email_message(self, alert_data: Dict[str, Any]) -> str:
