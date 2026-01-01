@@ -2256,46 +2256,60 @@ def trigger_alert():
         from services.economic_calendar_alerts import economic_calendar_alerts
         from services.firebase_realtime_storage import FirebaseRealtimeStorage
         
-        # Get all connected users
+        # Get all connected users - FIXED: Use get_all_users_with_alerts() instead of telegram_mappings
         firebase = FirebaseRealtimeStorage()
-        mapping_path = "telegram_mappings"
-        all_mappings = firebase._make_request('GET', mapping_path)
+        all_users = firebase.get_all_users_with_alerts()
         
         logger.info(f"🔍 Alert trigger received - Type: {alert_type}")
-        logger.info(f"📊 Found {len(all_mappings) if all_mappings else 0} telegram mappings")
+        logger.info(f"📊 Found {len(all_users) if all_users else 0} users with alert settings")
         
-        if not all_mappings or not isinstance(all_mappings, dict):
-            logger.warning("⚠️  No telegram mappings found")
+        if not all_users:
+            logger.warning("⚠️  No users with alert settings found")
             return jsonify({
                 'success': True,
                 'message': 'No connected users found'
             })
         
-        # Process each mapping
+        # Process each user
         alerts_sent = 0
-        for chat_id, mapping_data in all_mappings.items():
-            if isinstance(mapping_data, dict) and 'user_id' in mapping_data:
-                user_id = mapping_data['user_id']
+        for user_data in all_users:
+            user_id = user_data.get('user_id')
+            user_settings = user_data.get('settings', {})
+            
+            # Get Telegram chat ID from multiple possible locations
+            chat_id = (
+                user_data.get('telegram_chat_id') or  # Top level
+                user_settings.get('channels', {}).get('telegram', {}).get('chatId') or  # New structure
+                user_settings.get('telegram_chat_id')  # Direct in settings
+            )
+            
+            # Skip users without Telegram chat ID
+            if not chat_id:
+                logger.debug(f"User {user_id} has no Telegram chat ID, skipping")
+                continue
+            
+            # Skip test users with invalid chat IDs (only if they're actually test users)
+            if chat_id == '123456789' and user_id.startswith('test_'):
+                logger.debug(f"Skipping test user {user_id} with invalid chat ID")
+                continue
+            
+            # Get user settings (already included in user_data from get_all_users_with_alerts)
+            if not user_settings:
+                logger.debug(f"User {user_id} has no settings, skipping")
+                continue
                 
-                # Skip test users with invalid chat IDs (only if they're actually test users)
-                if chat_id == '123456789' and user_id.startswith('test_'):
-                    continue
-                
-                # Get user settings
-                user_settings = firebase.get_user_alert_settings(user_id)
-                if not user_settings:
-                    continue
-                
-                # Check if user has Telegram enabled (handle multiple settings structures)
-                telegram_enabled = (
-                    user_settings.get('telegram_enabled', False) or  # Old structure
-                    user_settings.get('telegram', False) or  # Direct telegram setting
-                    user_settings.get('channels', {}).get('telegram', {}).get('enabled', False)  # New structure
-                )
-                
-                if not telegram_enabled:
-                    logger.debug(f"User {user_id} has Telegram disabled")
-                    continue
+            # Check if user has Telegram enabled (handle multiple settings structures)
+            telegram_enabled = (
+                user_settings.get('telegram_enabled', False) or  # Old structure
+                user_settings.get('telegram', False) or  # Direct telegram setting
+                user_settings.get('channels', {}).get('telegram', {}).get('enabled', False)  # New structure
+            )
+            
+            if not telegram_enabled:
+                logger.debug(f"User {user_id} has Telegram disabled")
+                continue
+            
+            logger.info(f"✅ User {user_id} eligible: chat_id={chat_id}, telegram_enabled={telegram_enabled}")
                 
                 # Check if user has liveNews alerts enabled (handle multiple settings structures)
                 live_news_enabled = False
@@ -2320,12 +2334,10 @@ def trigger_alert():
                     logger.debug(f"User {user_id} has liveNews alerts disabled")
                     continue
                 
-                # Create user data
-                user_data = {
-                    'user_id': user_id,
-                    'chat_id': chat_id,
-                    'settings': user_settings
-                }
+                # User data is already in the correct format from get_all_users_with_alerts()
+                # Just ensure chat_id is set correctly
+                user_data['chat_id'] = chat_id
+                user_data['telegram_chat_id'] = chat_id  # Also set telegram_chat_id for compatibility
                 
                 # Send alert based on type
                 if alert_type == 'news':
