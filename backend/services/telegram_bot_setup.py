@@ -244,7 +244,33 @@ class TelegramBotSetup:
                 return
             
             # Get user's alert settings
-            settings = await self.alert_service.get_user_alert_settings(user_id)
+            # Note: user_id might be hashed, so we need to handle both cases
+            settings = None
+            
+            # Try getting settings with the user_id as-is (might be hashed)
+            try:
+                # If user_id looks like a hash (32 hex chars), get settings directly
+                import re
+                if re.match(r'^[a-f0-9]{32}$', user_id):
+                    # Already hashed, get settings directly
+                    settings_path = f"alerts/users/{user_id}/settings"
+                    settings_result = self.alert_service.firebase_storage._make_request('GET', settings_path)
+                    if settings_result and isinstance(settings_result, dict):
+                        # Merge with defaults
+                        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                        default_settings = FirebaseRealtimeStorage().default_settings.copy()
+                        default_settings.update(settings_result)
+                        settings = default_settings
+                else:
+                    # Not hashed, use normal method
+                    settings = await self.alert_service.get_user_alert_settings(user_id)
+            except Exception as e:
+                logger.error(f"Error getting settings: {e}")
+                # Fallback: try normal method
+                try:
+                    settings = await self.alert_service.get_user_alert_settings(user_id)
+                except:
+                    pass
             
             if not settings:
                 await update.message.reply_text(
@@ -254,34 +280,47 @@ class TelegramBotSetup:
                 return
             
             # Format status message
-            status_msg = "📊 Your Alert Settings:\n\n"
+            status_msg = "📊 <b>Your Alert Settings</b>\n\n"
             
             # Subscription status
-            status_msg += f"💳 Subscription: {subscription_check['status'].title()}\n\n"
+            status_msg += f"💳 <b>Subscription:</b> {subscription_check['status'].title()}\n\n"
             
-            # Alert types
-            alert_types = settings.get('alert_types', {})
-            status_msg += "🔔 Alert Types:\n"
-            status_msg += f"• Live News: {'✅' if alert_types.get('liveNews') else '❌'}\n"
-            status_msg += f"• Pre-News: {'✅' if alert_types.get('preNews') else '❌'}\n"
-            status_msg += f"• Post-News: {'✅' if alert_types.get('postNews') else '❌'}\n\n"
+            # Alert types - check both old and new structure
+            preferences = settings.get('preferences', {})
+            alert_types = preferences.get('alertTypes', settings.get('alert_types', {}))
             
-            # Impact levels
-            impact_levels = settings.get('impact_levels', {})
-            status_msg += "📈 Impact Levels:\n"
-            status_msg += f"• High: {'✅' if impact_levels.get('high') else '❌'}\n"
-            status_msg += f"• Medium: {'✅' if impact_levels.get('medium') else '❌'}\n"
-            status_msg += f"• Low: {'❌' if impact_levels.get('low') else '✅'}\n\n"
+            status_msg += "🔔 <b>Alert Types:</b>\n"
+            if isinstance(alert_types, dict):
+                status_msg += f"• Live News: {'✅' if alert_types.get('liveNews', True) else '❌'}\n"
+                status_msg += f"• Pre-News: {'✅' if alert_types.get('preNews', True) else '❌'}\n"
+                status_msg += f"• Post-News: {'✅' if alert_types.get('postNews', True) else '❌'}\n"
+                status_msg += f"• Technical Analysis: {'✅' if alert_types.get('technicalAnalysis', False) else '❌'}\n\n"
+            else:
+                status_msg += "• All types enabled\n\n"
             
-            # Currency pairs
-            currency_pairs = settings.get('currency_pairs', [])
-            status_msg += f"💱 Currency Pairs: {', '.join(currency_pairs[:5])}"
-            if len(currency_pairs) > 5:
-                status_msg += f" (+{len(currency_pairs) - 5} more)"
+            # Impact levels - check both old and new structure
+            impact_levels = preferences.get('impactLevels', settings.get('impact_levels', {}))
+            status_msg += "📈 <b>Impact Levels:</b>\n"
+            if isinstance(impact_levels, dict):
+                status_msg += f"• High: {'✅' if impact_levels.get('high', True) else '❌'}\n"
+                status_msg += f"• Medium: {'✅' if impact_levels.get('medium', True) else '❌'}\n"
+                status_msg += f"• Low: {'❌' if impact_levels.get('low', False) else '✅'}\n\n"
+            else:
+                status_msg += "• All levels enabled\n\n"
             
-            status_msg += "\n\nTo change settings, visit the FXSentinel app."
+            # Currency pairs - check both old and new structure
+            currency_pairs = preferences.get('currencyPairs', settings.get('currency_pairs', []))
+            if currency_pairs:
+                status_msg += f"💱 <b>Currency Pairs:</b> {', '.join(currency_pairs[:5])}"
+                if len(currency_pairs) > 5:
+                    status_msg += f" (+{len(currency_pairs) - 5} more)"
+                status_msg += "\n"
+            else:
+                status_msg += "💱 <b>Currency Pairs:</b> All pairs\n"
             
-            await update.message.reply_text(status_msg)
+            status_msg += "\nTo change settings, visit the FXSentinel app."
+            
+            await update.message.reply_text(status_msg, parse_mode='HTML')
             
         except Exception as e:
             logger.error(f"Error in status command: {e}")

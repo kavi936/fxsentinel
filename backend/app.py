@@ -5580,7 +5580,22 @@ def telegram_webhook():
                         
                         if user_id:
                             # Get user settings
-                            user_settings = firebase.get_user_alert_settings(user_id)
+                            # Handle case where user_id might be hashed
+                            import re
+                            if re.match(r'^[a-f0-9]{32}$', user_id):
+                                # Already hashed, get settings directly
+                                settings_path = f"alerts/users/{user_id}/settings"
+                                settings_result = firebase._make_request('GET', settings_path)
+                                if settings_result and isinstance(settings_result, dict):
+                                    # Merge with defaults
+                                    default_settings = firebase.default_settings.copy()
+                                    default_settings.update(settings_result)
+                                    user_settings = default_settings
+                                else:
+                                    user_settings = None
+                            else:
+                                # Not hashed, use normal method
+                                user_settings = firebase.get_user_alert_settings(user_id)
                             
                             # Check subscription status
                             from services.subscription_cache import get_subscription_status_sync
