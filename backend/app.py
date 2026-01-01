@@ -17,7 +17,12 @@ import stripe
 from firebase_admin import credentials, firestore, initialize_app
 from services.stripe_service import StripeService
 from services.coupon_service import CouponService
-from services.google_sheets_service import GoogleSheetsService
+
+# Optional import for Google Sheets service
+try:
+    from services.google_sheets_service import GoogleSheetsService
+except ImportError:
+    GoogleSheetsService = None
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -77,15 +82,19 @@ limiter = Limiter(
 )
 
 # Initialize Google Sheets Service
-try:
-    google_sheets_service = GoogleSheetsService()
-    if google_sheets_service.is_available():
-        print("✅ Google Sheets service initialized")
-    else:
-        print("⚠️ Google Sheets service not available (missing credentials)")
-except Exception as e:
-    print(f"⚠️ Google Sheets service initialization failed: {e}")
-    google_sheets_service = None
+google_sheets_service = None
+if GoogleSheetsService:
+    try:
+        google_sheets_service = GoogleSheetsService()
+        if google_sheets_service.is_available():
+            print("✅ Google Sheets service initialized")
+        else:
+            print("⚠️ Google Sheets service not available (missing credentials)")
+    except Exception as e:
+        print(f"⚠️ Google Sheets service initialization failed: {e}")
+        google_sheets_service = None
+else:
+    print("⚠️ Google Sheets service not available (gspread not installed)")
 
 # Configure CORS to allow requests from all origins (including file:// and null origins)
 CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False)
@@ -685,14 +694,14 @@ def get_economy_indicators(country_code):
         
         # Check if refresh is requested
         force_refresh = request.args.get('refresh', 'false').lower() == 'true'
-        if force_refresh:
+        if force_refresh and google_sheets_service:
             logger.info(f"🔄 Force refresh requested for {country_code}")
             # Clear cache for this country to force fresh fetch
             cache_key = f"indicators_{country_code}"
-            if cache_key in google_sheets_service.cache:
+            if hasattr(google_sheets_service, 'cache') and cache_key in google_sheets_service.cache:
                 logger.info(f"🗑️ Clearing cache for {country_code}")
                 del google_sheets_service.cache[cache_key]
-            if cache_key in google_sheets_service.cache_timestamps:
+            if hasattr(google_sheets_service, 'cache_timestamps') and cache_key in google_sheets_service.cache_timestamps:
                 del google_sheets_service.cache_timestamps[cache_key]
         
         # Fetch indicators from Google Sheets (with optional cache bypass)
