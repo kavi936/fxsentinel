@@ -1210,6 +1210,24 @@ def get_news():
                 else:
                     print(f"⚠️  Failed to save {len(all_news)} items to cache (Firebase error - news still returned)")
             
+            # IMPORTANT: Also trigger alerts for cached news that might not have been sent yet
+            # This ensures alerts are sent even when serving cached news only
+            # Only do this if we didn't already trigger alerts for fresh news
+            if not (save_success and (should_fetch_new or force_refresh)):
+                # We're serving cached news only - check if any high-impact items need alerts
+                try:
+                    from services.unified_alert_processor import get_unified_processor
+                    unified_processor = get_unified_processor()
+                    # Check only the most recent cached news (top 10) for alerts
+                    # This prevents checking all 156 items every time
+                    recent_cached = all_news[:10] if len(all_news) > 10 else all_news
+                    unified_processor.check_news_alerts_async(recent_cached)
+                    print(f"✅ Triggered alert check for {len(recent_cached)} recent cached news items (in case alerts were missed)")
+                except Exception as e:
+                    print(f"⚠️  Error triggering alerts for cached news: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
             response_data = {
                 "news": all_news,
                 "last_updated": datetime.now().isoformat(),
