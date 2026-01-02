@@ -1153,6 +1153,17 @@ def get_news():
                 save_success = news_cache.save_news(fresh_news, append=True)
                 if save_success:
                     print(f"📝 Saved fresh news to cache (merged with existing, preserved added_to_feed_at)")
+                    
+                    # Trigger alerts immediately for new news (event-driven, non-blocking)
+                    try:
+                        from services.unified_alert_processor import get_unified_processor
+                        unified_processor = get_unified_processor()
+                        unified_processor.check_news_alerts_async(fresh_news)
+                        print(f"✅ Triggered alert check for {len(fresh_news)} fresh news items")
+                    except Exception as e:
+                        print(f"⚠️  Error triggering alerts: {e}")
+                        import traceback
+                        traceback.print_exc()
                 else:
                     print(f"⚠️  Failed to save fresh news to cache (Firebase error - news still returned)")
             else:
@@ -1165,11 +1176,19 @@ def get_news():
                 save_success = news_cache.save_news(all_news, append=False)
                 if save_success:
                     print(f"📝 Replaced cache with {len(all_news)} items (all have added_to_feed_at set)")
+                    
+                    # Trigger alerts immediately for new news (event-driven, non-blocking)
+                    try:
+                        from services.unified_alert_processor import get_unified_processor
+                        unified_processor = get_unified_processor()
+                        unified_processor.check_news_alerts_async(all_news)
+                        print(f"✅ Triggered alert check for {len(all_news)} news items")
+                    except Exception as e:
+                        print(f"⚠️  Error triggering alerts: {e}")
+                        import traceback
+                        traceback.print_exc()
                 else:
                     print(f"⚠️  Failed to save {len(all_news)} items to cache (Firebase error - news still returned)")
-            
-            # Note: Alert processing moved to cost-optimized background monitor
-            # This prevents excessive API calls and reduces terminal noise
             
             response_data = {
                 "news": all_news,
@@ -6155,6 +6174,28 @@ def trigger_alerts():
             'error': str(e)
         }), 500
 
+@app.route('/api/health/unified-alert-processor')
+@limiter.exempt
+def unified_alert_processor_health():
+    """Health check for unified alert processor"""
+    try:
+        from services.unified_alert_processor import get_unified_processor
+        processor = get_unified_processor()
+        status = processor.get_status()
+        
+        return jsonify({
+            'status': 'healthy' if status['running'] and status['thread_alive'] else 'unhealthy',
+            'processor': status,
+            'timestamp': datetime.now().isoformat()
+        }), 200
+    except Exception as e:
+        logger.error(f"Error checking unified alert processor health: {e}")
+        return jsonify({
+            'status': 'error',
+            'error': str(e),
+            'timestamp': datetime.now().isoformat()
+        }), 500
+
 @app.route('/api/health/alert-service')
 @limiter.exempt
 def alert_service_health():
@@ -6294,7 +6335,19 @@ if __name__ == '__main__':
     # Force debug mode off for background execution
     debug_mode = False
     
-    # Start robust alert service for production
+    # Start unified alert processor (replaces separate worker)
+    try:
+        from services.unified_alert_processor import get_unified_processor
+        unified_processor = get_unified_processor()
+        unified_processor.start()
+        print("✅ Unified alert processor started in background")
+    except Exception as e:
+        print(f"⚠️ Could not start unified alert processor: {e}")
+        import traceback
+        traceback.print_exc()
+        print("   Alerts will not work!")
+    
+    # Start robust alert service for production (keep for backward compatibility)
     try:
         from services.robust_alert_service import start_robust_alert_service
         import threading
@@ -6316,6 +6369,7 @@ if __name__ == '__main__':
         print(f"⚠️ Could not start cost-optimized monitor: {e}")
     
     print(f"🚀 Starting Flask server on port {port}, debug={debug_mode}")
+    print("📊 Unified alert processor enabled - immediate alerts on news fetch")
     print("📊 Robust alert service enabled - alerts will work for online users")
     print("📊 Cost-optimized monitoring enabled - reduced API calls and logging")
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 

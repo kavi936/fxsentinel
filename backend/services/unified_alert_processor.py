@@ -1,0 +1,569 @@
+#!/usr/bin/env python3
+"""
+Unified Alert Processor
+Processes alerts using direct function calls (no HTTP overhead)
+Designed to run as a background thread in the main app
+"""
+
+import os
+import time
+import logging
+import threading
+import asyncio
+import concurrent.futures
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Optional, Tuple
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class UnifiedAlertProcessor:
+    """
+    Unified alert processor that uses direct function calls instead of HTTP
+    Eliminates network latency and improves performance
+    """
+    
+    def __init__(self):
+        """Initialize the unified alert processor"""
+        self.running = False
+        self.thread = None
+        self.last_check = None
+        
+        # Post-news analysis processing
+        self.post_news_interval = 300  # 5 minutes
+        self.last_post_news_check = None
+        
+        # Economic calendar check interval
+        self.economic_calendar_interval = 300  # 5 minutes
+        self.last_economic_calendar_check = None
+        
+        # Parallel processing settings
+        self.max_workers = 10  # Max concurrent user processing
+        
+        # In-memory cache for user preferences (reduce Firebase reads)
+        # Key: user_id, Value: (user_settings_dict, cached_at)
+        self._user_settings_cache: Dict[str, Tuple[Dict[str, Any], datetime]] = {}
+        self._preferences_cache_ttl_seconds = 300  # Cache for 5 minutes
+        self._cache_lock = threading.Lock()
+        
+        logger.info("UnifiedAlertProcessor initialized with caching")
+    
+    def start(self):
+        """Start the background thread for periodic checks"""
+        if self.running:
+            logger.warning("UnifiedAlertProcessor is already running")
+            return
+        
+        self.running = True
+        self.thread = threading.Thread(target=self._run_periodic_checks, daemon=True)
+        self.thread.start()
+        logger.info("UnifiedAlertProcessor background thread started")
+    
+    def stop(self):
+        """Stop the background thread"""
+        if not self.running:
+            return
+        
+        self.running = False
+        if self.thread:
+            self.thread.join(timeout=5)
+        logger.info("UnifiedAlertProcessor stopped")
+    
+    def get_status(self):
+        """Get the current status of the processor"""
+        return {
+            'running': self.running,
+            'thread_alive': self.thread.is_alive() if self.thread else False,
+            'last_check': self.last_check.isoformat() if self.last_check else None,
+            'post_news_interval': self.post_news_interval,
+            'last_post_news_check': self.last_post_news_check.isoformat() if self.last_post_news_check else None,
+            'economic_calendar_interval': self.economic_calendar_interval,
+            'last_economic_calendar_check': self.last_economic_calendar_check.isoformat() if self.last_economic_calendar_check else None
+        }
+    
+    def _run_periodic_checks(self):
+        """Main background thread loop for periodic checks (economic calendar, post-news analysis)"""
+        logger.info("UnifiedAlertProcessor periodic checks started")
+        
+        while self.running:
+            try:
+                current_time = datetime.now()
+                
+                # Check economic calendar alerts (every 5 minutes)
+                if (not self.last_economic_calendar_check or 
+                    (current_time - self.last_economic_calendar_check).total_seconds() >= self.economic_calendar_interval):
+                    self._check_economic_calendar_alerts()
+                    self.last_economic_calendar_check = current_time
+                
+                # Process post-news analysis (every 5 minutes)
+                if (not self.last_post_news_check or 
+                    (current_time - self.last_post_news_check).total_seconds() >= self.post_news_interval):
+                    self._process_post_news_analysis()
+                    self.last_post_news_check = current_time
+                
+                self.last_check = current_time
+                
+                # Sleep for 60 seconds before next check
+                time.sleep(60)
+                
+            except Exception as e:
+                logger.error(f"Error in periodic checks: {e}")
+                time.sleep(60)  # Wait 1 minute before retrying
+    
+    def check_news_alerts_async(self, news_items: List[Dict[str, Any]]):
+        """
+        Check news alerts asynchronously (non-blocking)
+        Called immediately when news is fetched
+        """
+        if not news_items:
+            return
+        
+        # Run in background thread to avoid blocking
+        threading.Thread(
+            target=self._check_news_alerts,
+            args=(news_items,),
+            daemon=True
+        ).start()
+        logger.info(f"Triggered async alert check for {len(news_items)} news items")
+    
+    def _check_news_alerts(self, news_items: List[Dict[str, Any]]):
+        """
+        Check news alerts (runs in background thread)
+        Uses direct function calls - no HTTP overhead
+        """
+        try:
+            logger.info(f"Checking {len(news_items)} news items for alerts...")
+            
+            # Import services (direct function calls, no HTTP)
+            from services.news_alert_trigger import news_alert_trigger
+            from services.firebase_realtime_storage import FirebaseRealtimeStorage
+            
+            # Filter for high-impact forex news
+            high_impact = []
+            for news_item in news_items:
+                if news_alert_trigger.is_forex_high_impact(news_item):
+                    high_impact.append(news_item)
+            
+            if not high_impact:
+                logger.info("No high-impact forex news found")
+                return
+            
+            logger.info(f"Found {len(high_impact)} high-impact forex news items")
+            
+            # OPTIMIZATION: Check global content hash first (before processing users)
+            # This prevents processing the same news item multiple times
+            # If a news item was already sent globally, we don't need to check per-user
+            from services.persistent_alert_deduplication import get_persistent_deduplication
+            dedup = get_persistent_deduplication()
+            
+            # Filter news items by global content hash (one check per news item)
+            news_items_to_process = []
+            for news_item in high_impact[:3]:  # Max 3 items
+                content_hash = dedup._get_news_content_hash(news_item)
+                if content_hash:
+                    # Check if content is new globally
+                    if dedup._check_global_content_hash(content_hash):
+                        # Content is new globally - add to processing list
+                        news_items_to_process.append(news_item)
+                    else:
+                        # Content already sent globally - skip (no need to check per-user)
+                        logger.debug(f"Skipping news item (already sent globally): {news_item.get('title', '')[:30]}...")
+                else:
+                    # No content hash - process anyway (fallback)
+                    news_items_to_process.append(news_item)
+            
+            if not news_items_to_process:
+                logger.info("No new news items to process (all already sent globally)")
+                return
+            
+            logger.info(f"Processing {len(news_items_to_process)} new news items (after global deduplication)")
+            
+            # Get all users with alerts enabled (direct function call)
+            firebase = FirebaseRealtimeStorage()
+            users = firebase.get_all_users_with_alerts()
+            
+            if not users:
+                logger.warning("No users with alerts enabled")
+                return
+            
+            logger.info(f"Processing alerts for {len(users)} users")
+            
+            # Process users in parallel for each news item
+            with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                futures = []
+                
+                for user_data in users:
+                    for news_item in news_items_to_process:
+                        future = executor.submit(
+                            self._send_alert_to_user,
+                            user_data,
+                            news_item
+                        )
+                        futures.append(future)
+                
+                # Wait for all to complete and collect results
+                alerts_sent = 0
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        success = future.result(timeout=30)
+                        if success:
+                            alerts_sent += 1
+                    except Exception as e:
+                        logger.error(f"Error processing alert future: {e}")
+                
+                logger.info(f"Alert processing completed: {alerts_sent} alerts sent")
+        
+        except Exception as e:
+            logger.error(f"Error checking news alerts: {e}", exc_info=True)
+    
+    def _get_user_settings_cached(self, user_id: str, user_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """
+        Get user settings with caching (optimization)
+        Reduces Firebase reads by caching settings for 5 minutes
+        """
+        try:
+            now = datetime.now()
+            
+            # Check cache first
+            with self._cache_lock:
+                if user_id in self._user_settings_cache:
+                    cached_settings, cached_at = self._user_settings_cache[user_id]
+                    age_seconds = (now - cached_at).total_seconds()
+                    
+                    if age_seconds < self._preferences_cache_ttl_seconds:
+                        # Cache is valid
+                        logger.debug(f"Using cached settings for user {user_id}")
+                        return cached_settings
+                    else:
+                        # Cache expired, remove it
+                        del self._user_settings_cache[user_id]
+            
+            # Get from user_data (already loaded from Firebase)
+            user_settings = user_data.get('settings', {})
+            
+            if user_settings:
+                # Cache it
+                with self._cache_lock:
+                    self._user_settings_cache[user_id] = (user_settings, now)
+                    # Limit cache size (keep last 100 users)
+                    if len(self._user_settings_cache) > 100:
+                        # Remove oldest entry
+                        oldest_user = min(
+                            self._user_settings_cache.items(),
+                            key=lambda x: x[1][1]  # Sort by cached_at
+                        )[0]
+                        del self._user_settings_cache[oldest_user]
+            
+            return user_settings
+            
+        except Exception as e:
+            logger.error(f"Error getting cached user settings: {e}")
+            return user_data.get('settings', {})
+    
+    def _send_alert_to_user(self, user_data: Dict[str, Any], news_item: Dict[str, Any]) -> bool:
+        """
+        Send alert to a single user (thread-safe)
+        Uses direct function calls - no HTTP overhead
+        OPTIMIZED: Uses cached user settings
+        """
+        try:
+            user_id = user_data.get('user_id')
+            
+            if not user_id:
+                return False
+            
+            # OPTIMIZATION: Get user settings from cache
+            user_settings = self._get_user_settings_cached(user_id, user_data)
+            
+            if not user_settings:
+                return False
+            
+            # Get Telegram chat ID
+            chat_id = (
+                user_data.get('telegram_chat_id') or
+                user_settings.get('channels', {}).get('telegram', {}).get('chatId') or
+                user_settings.get('telegram_chat_id')
+            )
+            
+            if not chat_id:
+                logger.debug(f"User {user_id} has no Telegram chat ID, skipping")
+                return False
+            
+            # Check if user has Telegram enabled
+            telegram_enabled = (
+                user_settings.get('telegram_enabled', False) or
+                user_settings.get('telegram', False) or
+                user_settings.get('channels', {}).get('telegram', {}).get('enabled', False)
+            )
+            
+            if not telegram_enabled:
+                logger.debug(f"User {user_id} has Telegram disabled")
+                return False
+            
+            # Check if user wants live news alerts
+            preferences = user_settings.get('preferences', {})
+            alert_types = preferences.get('alertTypes', {})
+            live_news_enabled = alert_types.get('liveNews', True)  # Default to True
+            
+            if not live_news_enabled:
+                logger.debug(f"User {user_id} has liveNews alerts disabled")
+                return False
+            
+            # Check deduplication (direct function call)
+            from services.persistent_alert_deduplication import should_send_news_alert
+            
+            if not should_send_news_alert(news_item, user_id):
+                logger.debug(f"Duplicate alert prevented for user {user_id}: {news_item.get('title', '')[:30]}...")
+                return False
+            
+            # Import services for alert processing
+            from services.news_alert_trigger import news_alert_trigger
+            from services.alert_service import get_alert_service
+            
+            # Determine if AI analysis is needed
+            needs_ai_analysis = news_alert_trigger.should_analyze_with_ai(news_item)
+            
+            # Create alert data
+            alert_data = {
+                'title': news_item.get('title', 'Breaking Forex News'),
+                'content': news_alert_trigger._create_alert_content(news_item, None),
+                'type': 'liveNews',
+                'impact_level': news_item.get('impact', 'medium'),
+                'currency_pairs': news_alert_trigger.get_affected_currency_pairs(news_item),
+                'source': news_item.get('source', 'Unknown'),
+                'url': news_item.get('url', ''),
+                'timestamp': news_item.get('timestamp', ''),
+                'ai_analysis': None
+            }
+            
+            # Trigger AI analysis if needed (async)
+            if needs_ai_analysis:
+                try:
+                    ai_analysis = news_alert_trigger._trigger_ai_analysis(news_item)
+                    if ai_analysis:
+                        alert_data['ai_analysis'] = ai_analysis
+                        alert_data['content'] = news_alert_trigger._create_alert_content(news_item, ai_analysis)
+                except Exception as e:
+                    logger.warning(f"Error triggering AI analysis for user {user_id}: {e}")
+            
+            # Send alert using alert service (direct function call)
+            alert_service = get_alert_service()
+            
+            # Process alert (async function, need to handle event loop)
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                success = loop.run_until_complete(
+                    alert_service.process_alert(alert_data, user_settings, user_id)
+                )
+                loop.close()
+            except RuntimeError:
+                # Event loop already exists, use it
+                success = asyncio.run(
+                    alert_service.process_alert(alert_data, user_settings, user_id)
+                )
+            
+            if success:
+                # Mark alert as sent (direct function call)
+                from services.persistent_alert_deduplication import mark_news_alert_sent
+                mark_news_alert_sent(news_item, user_id)
+                logger.info(f"Alert sent successfully to user {user_id}")
+                return True
+            else:
+                logger.warning(f"Failed to send alert to user {user_id}")
+                return False
+        
+        except Exception as e:
+            logger.error(f"Error sending alert to user {user_data.get('user_id', 'unknown')}: {e}", exc_info=True)
+            return False
+    
+    def _check_economic_calendar_alerts(self):
+        """Check for economic calendar alerts (direct function calls)"""
+        try:
+            logger.info("Checking for economic calendar alerts...")
+            
+            # Get economic calendar events (direct function call)
+            try:
+                from services.finnhub_calendar import finnhub_calendar
+                events = finnhub_calendar.get_economic_calendar()
+            except Exception as e:
+                logger.error(f"Error getting economic calendar: {e}")
+                return
+            
+            if not events:
+                logger.info("No economic events found")
+                return
+            
+            # Process upcoming high-impact events
+            now = datetime.now()
+            alerts_triggered = 0
+            
+            for event in events:
+                # Only process high-impact events that are upcoming
+                if (event.get('impact') == 'high' and 
+                    event.get('status', '').upper() in ['UPCOMING', 'IMMINENT']):
+                    
+                    try:
+                        time_str = event.get('time', '')
+                        date_str = event.get('date', '')
+                        
+                        if time_str and date_str:
+                            # Parse event datetime
+                            datetime_str = f"{date_str} {time_str}"
+                            event_datetime = datetime.strptime(datetime_str, "%a, %b %d %H:%M UTC")
+                            
+                            # Use current year
+                            current_year = datetime.now().year
+                            event_datetime = event_datetime.replace(year=current_year)
+                            
+                            # Adjust year if needed
+                            current_date = datetime.now().date()
+                            event_date = event_datetime.date()
+                            if (current_date - event_date).days > 30:
+                                event_datetime = event_datetime.replace(year=current_year + 1)
+                            
+                            time_until_event = event_datetime - now
+                            minutes_until_event = time_until_event.total_seconds() / 60
+                            
+                            # Only send alerts if within timing windows
+                            if (8 <= minutes_until_event <= 10 or      # 10min before
+                                55 <= minutes_until_event <= 60 or    # 1h before
+                                115 <= minutes_until_event <= 120):   # 2h before
+                                
+                                logger.info(f"Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
+                                self._send_economic_alert(event)
+                                alerts_triggered += 1
+                    
+                    except Exception as e:
+                        logger.error(f"Error checking event timing: {e}")
+                        continue
+            
+            if alerts_triggered > 0:
+                logger.info(f"Triggered {alerts_triggered} economic calendar alerts")
+        
+        except Exception as e:
+            logger.error(f"Error checking economic calendar alerts: {e}")
+    
+    def _send_economic_alert(self, event: Dict[str, Any]):
+        """Send economic calendar alert (direct function calls)"""
+        try:
+            from services.economic_calendar_alerts import economic_calendar_alerts
+            from services.firebase_realtime_storage import FirebaseRealtimeStorage
+            
+            # Get all users
+            firebase = FirebaseRealtimeStorage()
+            users = firebase.get_all_users_with_alerts()
+            
+            if not users:
+                return
+            
+            # Process users in parallel
+            with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                futures = []
+                
+                for user_data in users:
+                    future = executor.submit(
+                        self._send_economic_alert_to_user,
+                        user_data,
+                        event
+                    )
+                    futures.append(future)
+                
+                # Wait for completion
+                for future in concurrent.futures.as_completed(futures):
+                    try:
+                        future.result(timeout=30)
+                    except Exception as e:
+                        logger.error(f"Error processing economic alert: {e}")
+        
+        except Exception as e:
+            logger.error(f"Error sending economic alert: {e}")
+    
+    def _send_economic_alert_to_user(self, user_data: Dict[str, Any], event: Dict[str, Any]) -> bool:
+        """Send economic calendar alert to a single user"""
+        try:
+            user_id = user_data.get('user_id')
+            user_settings = user_data.get('settings', {})
+            
+            if not user_id or not user_settings:
+                return False
+            
+            # Check if user wants pre-news alerts
+            preferences = user_settings.get('preferences', {})
+            alert_types = preferences.get('alertTypes', {})
+            pre_news_enabled = alert_types.get('preNews', True)
+            
+            if not pre_news_enabled:
+                return False
+            
+            # Use economic calendar alerts service (direct function call)
+            from services.economic_calendar_alerts import economic_calendar_alerts
+            
+            # Determine alert timing
+            now = datetime.now()
+            time_str = event.get('time', '')
+            date_str = event.get('date', '')
+            
+            if time_str and date_str:
+                datetime_str = f"{date_str} {time_str}"
+                event_datetime = datetime.strptime(datetime_str, "%a, %b %d %H:%M UTC")
+                event_datetime = event_datetime.replace(year=datetime.now().year)
+                
+                time_until_event = event_datetime - now
+                minutes_until_event = time_until_event.total_seconds() / 60
+                
+                # Determine alert timing
+                if 8 <= minutes_until_event <= 10:
+                    alert_timing = "10min_before"
+                elif 55 <= minutes_until_event <= 60:
+                    alert_timing = "1h_before"
+                elif 115 <= minutes_until_event <= 120:
+                    alert_timing = "2h_before"
+                else:
+                    return False
+                
+                # Send alert (direct function call)
+                success = economic_calendar_alerts.send_pre_event_alert(
+                    user_data,
+                    event,
+                    alert_timing
+                )
+                
+                return success
+        
+        except Exception as e:
+            logger.error(f"Error sending economic alert to user {user_data.get('user_id', 'unknown')}: {e}")
+            return False
+    
+    def _process_post_news_analysis(self):
+        """Process post-news analysis queue (direct function calls)"""
+        try:
+            logger.info("Processing post-news analysis queue...")
+            
+            from services.news_alert_trigger import news_alert_trigger
+            
+            # Process post-news analysis (async)
+            try:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                loop.run_until_complete(news_alert_trigger.process_post_news_analysis())
+                news_alert_trigger.cleanup_old_history()
+                loop.close()
+                logger.info("Post-news analysis processing completed")
+            except Exception as e:
+                logger.error(f"Error in async post-news processing: {e}")
+        
+        except Exception as e:
+            logger.error(f"Error processing post-news analysis: {e}")
+
+# Global instance
+_unified_processor = None
+
+def get_unified_processor() -> UnifiedAlertProcessor:
+    """Get the global unified alert processor instance"""
+    global _unified_processor
+    if _unified_processor is None:
+        _unified_processor = UnifiedAlertProcessor()
+    return _unified_processor
+
