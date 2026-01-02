@@ -8,6 +8,7 @@ Replaces all in-memory deduplication systems
 import logging
 import hashlib
 import json
+import threading
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 from .firebase_realtime_storage import FirebaseRealtimeStorage
@@ -27,7 +28,15 @@ class PersistentAlertDeduplication:
         self.operations_count = 0
         self.duplicates_prevented = 0
         
-        logger.info("Persistent Alert Deduplication Service initialized")
+        # In-memory cache for content hashes (global deduplication)
+        # Key: content_hash, Value: expires_at timestamp
+        self._content_hash_cache: Dict[str, datetime] = {}
+        self._cache_ttl_seconds = 300  # Cache for 5 minutes to reduce Firebase calls
+        
+        # Thread lock for cache operations
+        self._cache_lock = threading.Lock()
+        
+        logger.info("Persistent Alert Deduplication Service initialized with caching")
     
     def _generate_alert_key(self, alert_type: str, content: str, user_id: str) -> str:
         """Generate unique alert key for deduplication"""
@@ -124,10 +133,106 @@ class PersistentAlertDeduplication:
             logger.error(f"Error marking alert as sent: {e}")
             return False
     
-    def should_send_news_alert(self, news_item: Dict[str, Any], user_id: str) -> bool:
-        """Check if news alert should be sent (not a duplicate)"""
+    def _get_news_content_hash(self, news_item: Dict[str, Any]) -> str:
+        """Generate content hash for news item (for global deduplication)"""
         try:
-            # Create content string from news item
+            # Use news_id if available (most reliable)
+            news_id = str(news_item.get('id', ''))
+            if news_id:
+                return hashlib.md5(f"news:{news_id}".encode()).hexdigest()
+            
+            # Fallback to title+source+url
+            title = news_item.get('title', '')
+            source = news_item.get('source', '')
+            url = news_item.get('url', '')
+            content_str = f"news:{title}|{source}|{url}"
+            return hashlib.md5(content_str.encode()).hexdigest()
+        except Exception as e:
+            logger.error(f"Error generating news content hash: {e}")
+            return ""
+    
+    def _check_global_content_hash(self, content_hash: str) -> bool:
+        """
+        Check if content hash has been sent globally (optimization)
+        Returns: True if content is new, False if already sent
+        """
+        try:
+            now = datetime.now()
+            
+            # Check in-memory cache first (thread-safe)
+            with self._cache_lock:
+                if content_hash in self._content_hash_cache:
+                    expires_at = self._content_hash_cache[content_hash]
+                    if now < expires_at:
+                        # Content already sent globally
+                        return False
+                    else:
+                        # Cache expired, remove it
+                        del self._content_hash_cache[content_hash]
+            
+            # Check Firebase for global content hash
+            content_hash_path = self._get_content_hash_path(content_hash)
+            existing_hash = self.firebase._make_request('GET', content_hash_path)
+            
+            if existing_hash and isinstance(existing_hash, dict):
+                expires_at_str = existing_hash.get('expires_at')
+                if expires_at_str:
+                    try:
+                        expires_at = datetime.fromisoformat(expires_at_str)
+                        if now < expires_at:
+                            # Content already sent globally - cache it (thread-safe)
+                            with self._cache_lock:
+                                self._content_hash_cache[content_hash] = expires_at
+                            return False
+                    except Exception as e:
+                        logger.warning(f"Error parsing expires_at for content hash: {e}")
+            
+            # Content is new
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error checking global content hash: {e}")
+            return True  # Allow alert if check fails
+    
+    def _mark_global_content_hash(self, content_hash: str):
+        """Mark content hash as sent globally (optimization)"""
+        try:
+            now = datetime.now()
+            expires_at = now + timedelta(hours=self.alert_ttl_hours)
+            
+            # Cache in memory (thread-safe)
+            with self._cache_lock:
+                self._content_hash_cache[content_hash] = expires_at
+            
+            # Store in Firebase
+            content_hash_path = self._get_content_hash_path(content_hash)
+            hash_record = {
+                'content_hash': content_hash,
+                'sent_at': now.isoformat(),
+                'expires_at': expires_at.isoformat()
+            }
+            self.firebase._make_request('PUT', content_hash_path, hash_record)
+            
+        except Exception as e:
+            logger.error(f"Error marking global content hash: {e}")
+    
+    def should_send_news_alert(self, news_item: Dict[str, Any], user_id: str) -> bool:
+        """
+        Check if news alert should be sent (not a duplicate)
+        OPTIMIZED: First checks global content hash, then per-user
+        """
+        try:
+            # Generate content hash for global deduplication
+            content_hash = self._get_news_content_hash(news_item)
+            
+            if content_hash:
+                # OPTIMIZATION: Check global content hash first (one check for all users)
+                if not self._check_global_content_hash(content_hash):
+                    # Content already sent globally - no need to check per-user
+                    logger.debug(f"Global duplicate prevented: {news_item.get('title', '')[:30]}...")
+                    return False
+            
+            # Create content string from news item for per-user check
             title = news_item.get('title', '')
             source = news_item.get('source', '')
             url = news_item.get('url', '')
@@ -139,7 +244,7 @@ class PersistentAlertDeduplication:
             else:
                 content = f"news:{title}|{source}|{url}"
             
-            # Check if should send (don't mark as sent yet - wait for successful send)
+            # Check per-user deduplication (only if global check passed)
             should_send = self.should_send_alert('news', content, user_id)
             
             return should_send
@@ -149,8 +254,18 @@ class PersistentAlertDeduplication:
             return True  # Allow alert if check fails
     
     def mark_news_alert_sent(self, news_item: Dict[str, Any], user_id: str) -> bool:
-        """Mark a news alert as sent after successful delivery"""
+        """
+        Mark a news alert as sent after successful delivery
+        OPTIMIZED: Marks both global content hash and per-user alert
+        """
         try:
+            # Generate content hash for global deduplication
+            content_hash = self._get_news_content_hash(news_item)
+            
+            if content_hash:
+                # OPTIMIZATION: Mark global content hash (prevents sending to other users)
+                self._mark_global_content_hash(content_hash)
+            
             # Create content string from news item (same as should_send_news_alert)
             title = news_item.get('title', '')
             source = news_item.get('source', '')
@@ -163,7 +278,7 @@ class PersistentAlertDeduplication:
             else:
                 content = f"news:{title}|{source}|{url}"
             
-            # Mark as sent after successful delivery
+            # Mark per-user alert as sent
             return self.mark_alert_sent('news', content, user_id)
             
         except Exception as e:
