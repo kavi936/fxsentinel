@@ -445,20 +445,41 @@ Visit the FXSentinel app or contact support.
             
             # Search through each user's settings to find matching chat_id
             for safe_user_id, user_data in users_result.items():
-                if isinstance(user_data, dict) and 'settings' in user_data:
-                    settings = user_data['settings']
-                    if isinstance(settings, dict) and 'channels' in settings:
-                        channels = settings['channels']
-                        if isinstance(channels, dict) and 'telegram' in channels:
-                            telegram_settings = channels['telegram']
-                            if isinstance(telegram_settings, dict) and telegram_settings.get('chatId') == chat_id:
-                                # Found the user, now we need to get the original user_id
-                                # Since we're using hashed user_ids, we need to store this mapping
-                                logger.info(f"Found user with chat_id {chat_id} in settings")
-                                
-                                # Try to get the original user_id from a reverse mapping
-                                # For now, we'll return the hashed ID and let the calling code handle it
-                                return safe_user_id
+                if isinstance(user_data, dict):
+                    # Check multiple locations for chat_id
+                    found_chat_id = None
+                    
+                    # Location 1: Top-level telegram_chat_id (most common)
+                    if 'telegram_chat_id' in user_data:
+                        if str(user_data['telegram_chat_id']) == str(chat_id):
+                            found_chat_id = user_data['telegram_chat_id']
+                            logger.info(f"Found user with chat_id {chat_id} at user_data.telegram_chat_id")
+                    
+                    # Location 2: settings.channels.telegram.chatId
+                    if not found_chat_id and 'settings' in user_data:
+                        settings = user_data['settings']
+                        if isinstance(settings, dict):
+                            # Check new structure: settings.channels.telegram.chatId
+                            if 'channels' in settings:
+                                channels = settings['channels']
+                                if isinstance(channels, dict) and 'telegram' in channels:
+                                    telegram_settings = channels['telegram']
+                                    if isinstance(telegram_settings, dict):
+                                        tg_chat_id = telegram_settings.get('chatId')
+                                        if tg_chat_id and str(tg_chat_id) == str(chat_id):
+                                            found_chat_id = tg_chat_id
+                                            logger.info(f"Found user with chat_id {chat_id} at settings.channels.telegram.chatId")
+                            
+                            # Check old structure: settings.telegram_chat_id
+                            if not found_chat_id and 'telegram_chat_id' in settings:
+                                if str(settings['telegram_chat_id']) == str(chat_id):
+                                    found_chat_id = settings['telegram_chat_id']
+                                    logger.info(f"Found user with chat_id {chat_id} at settings.telegram_chat_id")
+                    
+                    if found_chat_id:
+                        # Found the user - create mapping for future use
+                        await self._store_chat_id_mapping(str(chat_id), safe_user_id)
+                        return safe_user_id
             
             logger.warning(f"No user found with chat_id {chat_id}")
             return None
