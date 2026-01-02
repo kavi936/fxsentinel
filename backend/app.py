@@ -926,6 +926,21 @@ def get_news():
                 news_cache.clear_cache()
                 cached_news = None
             elif not should_fetch_new:
+                # IMPORTANT: Trigger alerts for cached news (top 10 recent items)
+                # This ensures alerts are sent even when serving cached news only
+                try:
+                    from services.unified_alert_processor import get_unified_processor
+                    unified_processor = get_unified_processor()
+                    # Check only the most recent cached news (top 10) for alerts
+                    # This prevents checking all 156 items every time
+                    recent_cached = cached_news[:10] if len(cached_news) > 10 else cached_news
+                    unified_processor.check_news_alerts_async(recent_cached)
+                    print(f"✅ Triggered alert check for {len(recent_cached)} recent cached news items (serving cached news only)")
+                except Exception as e:
+                    print(f"⚠️  Error triggering alerts for cached news: {e}")
+                    import traceback
+                    traceback.print_exc()
+                
                 # Cache is fresh, return it immediately
                 response_data = {
                     "news": cached_news,
@@ -1256,6 +1271,20 @@ def get_news():
                     # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
                     if 'added_to_feed_at' not in item:
                         item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                
+                # IMPORTANT: Trigger alerts for cached news (top 10 recent items)
+                # This ensures alerts are sent even when no fresh news is fetched
+                try:
+                    from services.unified_alert_processor import get_unified_processor
+                    unified_processor = get_unified_processor()
+                    # Check only the most recent cached news (top 10) for alerts
+                    recent_cached = cached_news[:10] if len(cached_news) > 10 else cached_news
+                    unified_processor.check_news_alerts_async(recent_cached)
+                    print(f"✅ Triggered alert check for {len(recent_cached)} recent cached news items (no fresh news fetched)")
+                except Exception as e:
+                    print(f"⚠️  Error triggering alerts for cached news: {e}")
+                    import traceback
+                    traceback.print_exc()
                 
                 response_data = {
                     "news": cached_news,
