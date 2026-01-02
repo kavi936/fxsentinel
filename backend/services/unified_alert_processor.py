@@ -383,10 +383,13 @@ class UnifiedAlertProcessor:
         try:
             logger.info("Checking for economic calendar alerts...")
             
-            # Get economic calendar events (direct function call)
+            # Get economic calendar events from hybrid calendar (direct function call)
             try:
-                from services.finnhub_calendar import finnhub_calendar
-                events = finnhub_calendar.get_economic_calendar()
+                from services.hybrid_economic_calendar import hybrid_economic_calendar
+                # Get events for next 7 days
+                start_date = datetime.now().strftime('%Y-%m-%d')
+                end_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+                events = hybrid_economic_calendar.get_economic_events(start_date, end_date)
             except Exception as e:
                 logger.error(f"Error getting economic calendar: {e}")
                 return
@@ -395,55 +398,89 @@ class UnifiedAlertProcessor:
                 logger.info("No economic events found")
                 return
             
+            logger.info(f"Found {len(events)} economic calendar events")
+            
             # Process upcoming high-impact events
             now = datetime.now()
             alerts_triggered = 0
             
             for event in events:
                 # Only process high-impact events that are upcoming
-                if (event.get('impact') == 'high' and 
-                    event.get('status', '').upper() in ['UPCOMING', 'IMMINENT']):
-                    
+                impact = event.get('impact', '').lower()
+                status = event.get('status', '').lower()
+                
+                if impact == 'high' and status in ['upcoming', 'today']:
                     try:
                         time_str = event.get('time', '')
                         date_str = event.get('date', '')
                         
                         if time_str and date_str:
-                            # Parse event datetime
-                            datetime_str = f"{date_str} {time_str}"
-                            event_datetime = datetime.strptime(datetime_str, "%a, %b %d %H:%M UTC")
+                            # Parse event datetime - hybrid calendar uses different format
+                            # date_str can be "YYYY-MM-DD" or "Mon, Oct 13"
+                            # time_str is "HH:MM UTC"
                             
-                            # Use current year
-                            current_year = datetime.now().year
-                            event_datetime = event_datetime.replace(year=current_year)
+                            # Try parsing date_str as YYYY-MM-DD first (from hybrid calendar)
+                            try:
+                                if '-' in date_str and len(date_str) == 10:
+                                    # Format: "2026-01-02"
+                                    event_date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                                else:
+                                    # Format: "Mon, Oct 13" or "Fri, Jan 02"
+                                    event_date_obj = datetime.strptime(date_str, '%a, %b %d')
+                                    event_date_obj = event_date_obj.replace(year=datetime.now().year)
+                                    
+                                    # Adjust year if event is in the past (likely next year)
+                                    if event_date_obj.date() < datetime.now().date():
+                                        # Check if it's more than 30 days in the past
+                                        days_diff = (datetime.now().date() - event_date_obj.date()).days
+                                        if days_diff > 30:
+                                            event_date_obj = event_date_obj.replace(year=datetime.now().year + 1)
+                            except ValueError:
+                                logger.warning(f"Could not parse date: {date_str}")
+                                continue
                             
-                            # Adjust year if needed
-                            current_date = datetime.now().date()
-                            event_date = event_datetime.date()
-                            if (current_date - event_date).days > 30:
-                                event_datetime = event_datetime.replace(year=current_year + 1)
+                            # Parse time_str - format is "HH:MM UTC"
+                            try:
+                                time_part = time_str.replace(' UTC', '').strip()
+                                time_obj = datetime.strptime(time_part, '%H:%M').time()
+                            except ValueError:
+                                logger.warning(f"Could not parse time: {time_str}")
+                                continue
                             
+                            # Combine date and time
+                            event_datetime = datetime.combine(event_date_obj.date(), time_obj)
+                            
+                            # Calculate time until event
                             time_until_event = event_datetime - now
                             minutes_until_event = time_until_event.total_seconds() / 60
                             
-                            # Only send alerts if within timing windows
-                            if (8 <= minutes_until_event <= 10 or      # 10min before
-                                55 <= minutes_until_event <= 60 or    # 1h before
-                                115 <= minutes_until_event <= 120):   # 2h before
-                                
-                                logger.info(f"Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
-                                self._send_economic_alert(event)
-                                alerts_triggered += 1
+                            # Only send alerts if within timing windows and event is in the future
+                            if minutes_until_event > 0:
+                                if (8 <= minutes_until_event <= 10 or      # 10min before
+                                    55 <= minutes_until_event <= 60 or    # 1h before
+                                    115 <= minutes_until_event <= 120):   # 2h before
+                                    
+                                    logger.info(f"Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
+                                    self._send_economic_alert(event)
+                                    alerts_triggered += 1
+                            else:
+                                logger.debug(f"Event {event.get('title', 'Unknown')} is in the past ({minutes_until_event:.1f} minutes ago)")
                     
                     except Exception as e:
-                        logger.error(f"Error checking event timing: {e}")
+                        logger.error(f"Error checking event timing for {event.get('title', 'Unknown')}: {e}")
+                        import traceback
+                        logger.debug(traceback.format_exc())
                         continue
             
             if alerts_triggered > 0:
                 logger.info(f"Triggered {alerts_triggered} economic calendar alerts")
+            else:
+                logger.debug("No events within alert timing windows")
         
         except Exception as e:
             logger.error(f"Error checking economic calendar alerts: {e}")
+            import traceback
+            logger.debug(traceback.format_exc())
     
     def _send_economic_alert(self, event: Dict[str, Any]):
         """Send economic calendar alert (direct function calls)"""
@@ -506,21 +543,43 @@ class UnifiedAlertProcessor:
             date_str = event.get('date', '')
             
             if time_str and date_str:
-                datetime_str = f"{date_str} {time_str}"
-                event_datetime = datetime.strptime(datetime_str, "%a, %b %d %H:%M UTC")
-                event_datetime = event_datetime.replace(year=datetime.now().year)
-                
-                time_until_event = event_datetime - now
-                minutes_until_event = time_until_event.total_seconds() / 60
-                
-                # Determine alert timing
-                if 8 <= minutes_until_event <= 10:
-                    alert_timing = "10min_before"
-                elif 55 <= minutes_until_event <= 60:
-                    alert_timing = "1h_before"
-                elif 115 <= minutes_until_event <= 120:
-                    alert_timing = "2h_before"
-                else:
+                # Parse date_str - can be "YYYY-MM-DD" or "Mon, Oct 13"
+                try:
+                    if '-' in date_str and len(date_str) == 10:
+                        # Format: "2026-01-02"
+                        event_date_obj = datetime.strptime(date_str, '%Y-%m-%d')
+                    else:
+                        # Format: "Mon, Oct 13" or "Fri, Jan 02"
+                        event_date_obj = datetime.strptime(date_str, '%a, %b %d')
+                        event_date_obj = event_date_obj.replace(year=datetime.now().year)
+                        
+                        # Adjust year if event is in the past
+                        if event_date_obj.date() < datetime.now().date():
+                            days_diff = (datetime.now().date() - event_date_obj.date()).days
+                            if days_diff > 30:
+                                event_date_obj = event_date_obj.replace(year=datetime.now().year + 1)
+                    
+                    # Parse time_str - format is "HH:MM UTC"
+                    time_part = time_str.replace(' UTC', '').strip()
+                    time_obj = datetime.strptime(time_part, '%H:%M').time()
+                    
+                    # Combine date and time
+                    event_datetime = datetime.combine(event_date_obj.date(), time_obj)
+                    
+                    time_until_event = event_datetime - now
+                    minutes_until_event = time_until_event.total_seconds() / 60
+                    
+                    # Determine alert timing
+                    if 8 <= minutes_until_event <= 10:
+                        alert_timing = "10min_before"
+                    elif 55 <= minutes_until_event <= 60:
+                        alert_timing = "1h_before"
+                    elif 115 <= minutes_until_event <= 120:
+                        alert_timing = "2h_before"
+                    else:
+                        return False
+                except Exception as e:
+                    logger.error(f"Error parsing event datetime: {e}")
                     return False
                 
                 # Send alert (direct function call)
