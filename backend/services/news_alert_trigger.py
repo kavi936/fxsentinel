@@ -663,9 +663,14 @@ class NewsAlertTrigger:
             return "Breaking forex news - check dashboard for details"
     
     def _trigger_ai_analysis(self, news_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Trigger AI analysis for the news item and return the analysis"""
+        """Trigger AI analysis for the news item and return the analysis (non-blocking)"""
         try:
             news_id = str(news_item.get('id', ''))
+            
+            # Skip AI analysis if news_id is missing or empty (non-blocking)
+            if not news_id or news_id == '':
+                logger.debug(f"Skipping AI analysis - news item has no ID: {news_item.get('title', 'Unknown')[:50]}...")
+                return None
             
             # Convert news item to event format for AI analysis
             event_data = {
@@ -689,12 +694,17 @@ class NewsAlertTrigger:
                 analysis_data = response.json()
                 logger.info(f"AI analysis triggered successfully for news {news_id}")
                 return analysis_data
+            elif response.status_code == 404:
+                # News item not found in cache - this is OK, skip AI analysis
+                logger.debug(f"AI analysis skipped - news item {news_id} not found in cache (404)")
+                return None
             else:
-                logger.error(f"Failed to trigger AI analysis: {response.status_code}")
+                logger.warning(f"AI analysis failed with status {response.status_code} for news {news_id}")
                 return None
                 
         except Exception as e:
-            logger.error(f"Error triggering AI analysis: {e}")
+            # Non-blocking: log warning but don't fail the alert
+            logger.warning(f"Error triggering AI analysis (non-blocking): {e}")
             return None
     
     def _save_alert_history(self, user_id: str, news_item: Dict[str, Any], message: str) -> bool:

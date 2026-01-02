@@ -351,17 +351,18 @@ class UnifiedAlertProcessor:
             alert_service = get_alert_service()
             
             # Process alert (async function, need to handle event loop)
+            # Pass user_data so chat_id can be found in user_data.telegram_chat_id
             try:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
                 success = loop.run_until_complete(
-                    alert_service.process_alert(alert_data, user_settings, user_id)
+                    alert_service.process_alert(alert_data, user_settings, user_id, user_data)
                 )
                 loop.close()
             except RuntimeError:
                 # Event loop already exists, use it
                 success = asyncio.run(
-                    alert_service.process_alert(alert_data, user_settings, user_id)
+                    alert_service.process_alert(alert_data, user_settings, user_id, user_data)
                 )
             
             if success:

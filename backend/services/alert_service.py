@@ -201,7 +201,7 @@ class AlertService:
             logger.error(f"Failed to send email alert: {e}")
             return False
     
-    async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any], user_id: str = None) -> bool:
+    async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any], user_id: str = None, user_data: Dict[str, Any] = None) -> bool:
         """Process and send alert to user based on their settings"""
         try:
             # REMOVED: Subscription check - alerts are now available to all users (paid, developer, freemium, etc.)
@@ -222,34 +222,42 @@ class AlertService:
             telegram_enabled = False
             chat_id = None
             
-            # Direct telegram setting: telegram: true
-            if user_settings.get('telegram', False):
+            # FIRST: Check user_data.telegram_chat_id (top level, most reliable)
+            if user_data and user_data.get('telegram_chat_id'):
+                chat_id = str(user_data['telegram_chat_id'])
                 telegram_enabled = True
-                # Get chat_id from mapping since it's not in settings
-                if user_id:
-                    mapping_path = f"telegram_mappings"
-                    all_mappings = self.firebase_storage._make_request('GET', mapping_path)
-                    if all_mappings and isinstance(all_mappings, dict):
-                        for cid, mapping_data in all_mappings.items():
-                            if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
-                                chat_id = cid
-                                break
-            # New structure: channels.telegram.enabled
-            elif user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
-                telegram_enabled = True
-                chat_id = user_settings['channels']['telegram'].get('chatId')
-            # Old structure: telegram_enabled (direct)
-            elif user_settings.get('telegram_enabled', False):
-                telegram_enabled = True
-                # Get chat_id from mapping if not in settings
-                if user_id:
-                    mapping_path = f"telegram_mappings"
-                    all_mappings = self.firebase_storage._make_request('GET', mapping_path)
-                    if all_mappings and isinstance(all_mappings, dict):
-                        for cid, mapping_data in all_mappings.items():
-                            if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
-                                chat_id = cid
-                                break
+                logger.debug(f"Found chat_id in user_data.telegram_chat_id: {chat_id}")
+            
+            # If not found in user_data, check settings structures
+            if not chat_id:
+                # Direct telegram setting: telegram: true
+                if user_settings.get('telegram', False):
+                    telegram_enabled = True
+                    # Get chat_id from mapping since it's not in settings
+                    if user_id:
+                        mapping_path = f"telegram_mappings"
+                        all_mappings = self.firebase_storage._make_request('GET', mapping_path)
+                        if all_mappings and isinstance(all_mappings, dict):
+                            for cid, mapping_data in all_mappings.items():
+                                if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
+                                    chat_id = cid
+                                    break
+                # New structure: channels.telegram.enabled
+                elif user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
+                    telegram_enabled = True
+                    chat_id = user_settings['channels']['telegram'].get('chatId')
+                # Old structure: telegram_enabled (direct)
+                elif user_settings.get('telegram_enabled', False):
+                    telegram_enabled = True
+                    # Get chat_id from mapping if not in settings
+                    if user_id:
+                        mapping_path = f"telegram_mappings"
+                        all_mappings = self.firebase_storage._make_request('GET', mapping_path)
+                        if all_mappings and isinstance(all_mappings, dict):
+                            for cid, mapping_data in all_mappings.items():
+                                if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
+                                    chat_id = cid
+                                    break
             
             if telegram_enabled and chat_id:
                 telegram_success = await self.send_telegram_alert(
