@@ -382,11 +382,11 @@ class NewsAlertTrigger:
             # Get user settings
             user_settings = user_data.get('settings', {})
             
-            # Use alert service to process the alert (includes subscription validation)
+            # Use alert service to process the alert
             from .alert_service import get_alert_service
             alert_service = get_alert_service()
             
-            # Process alert with subscription validation
+            # Process alert (subscription check removed - alerts available to all users)
             # This function is async, so we can await directly since we're already in an async context
             success = await alert_service.process_alert(alert_data, user_settings, user_id)
             
