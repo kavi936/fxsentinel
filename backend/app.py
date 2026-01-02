@@ -99,6 +99,26 @@ else:
 # Configure CORS to allow requests from all origins (including file:// and null origins)
 CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False)
 
+# Initialize unified alert processor on app startup (works in production with WSGI servers)
+def initialize_unified_alert_processor():
+    """Initialize unified alert processor - runs on app startup"""
+    try:
+        from services.unified_alert_processor import get_unified_processor
+        unified_processor = get_unified_processor()
+        if not unified_processor.running:
+            unified_processor.start()
+            print("✅ Unified alert processor started in background (on app startup)")
+        else:
+            print("✅ Unified alert processor already running")
+    except Exception as e:
+        print(f"⚠️ Could not start unified alert processor: {e}")
+        import traceback
+        traceback.print_exc()
+        print("   Alerts will not work!")
+
+# Start unified processor immediately (runs when module is imported)
+initialize_unified_alert_processor()
+
 # Add CORS headers to all responses
 @app.after_request
 def after_request(response):
