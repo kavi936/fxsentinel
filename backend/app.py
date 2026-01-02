@@ -5583,29 +5583,79 @@ def telegram_webhook():
                             
                             if users_result and isinstance(users_result, dict):
                                 for safe_user_id, user_data in users_result.items():
-                                    if isinstance(user_data, dict) and 'settings' in user_data:
-                                        settings = user_data['settings']
-                                        if isinstance(settings, dict) and 'channels' in settings:
-                                            channels = settings['channels']
-                                            if isinstance(channels, dict) and 'telegram' in channels:
-                                                telegram_settings = channels['telegram']
-                                                if isinstance(telegram_settings, dict) and telegram_settings.get('chatId') == str(chat_id):
-                                                    user_id = safe_user_id
-                                                    print(f"Found user with chat_id {chat_id} in settings")
-                                                    
-                                                    # Create mapping for future use
-                                                    mapping_data = {
-                                                        'user_id': safe_user_id,
-                                                        'chat_id': str(chat_id),
-                                                        'username': username,
-                                                        'created_at': datetime.now().isoformat(),
-                                                        'status': 'active'
-                                                    }
-                                                    firebase._make_request('PUT', mapping_path, mapping_data)
-                                                    print(f"Created mapping for chat_id {chat_id}")
-                                                    break
+                                    if isinstance(user_data, dict):
+                                        # Check multiple locations for chat_id
+                                        found_chat_id = None
+                                        
+                                        # Location 1: Top-level telegram_chat_id (most common)
+                                        if 'telegram_chat_id' in user_data:
+                                            if str(user_data['telegram_chat_id']) == str(chat_id):
+                                                found_chat_id = user_data['telegram_chat_id']
+                                                print(f"Found user with chat_id {chat_id} at user_data.telegram_chat_id")
+                                        
+                                        # Location 2: settings.channels.telegram.chatId
+                                        if not found_chat_id and 'settings' in user_data:
+                                            settings = user_data['settings']
+                                            if isinstance(settings, dict):
+                                                # Check new structure: settings.channels.telegram.chatId
+                                                if 'channels' in settings:
+                                                    channels = settings['channels']
+                                                    if isinstance(channels, dict) and 'telegram' in channels:
+                                                        telegram_settings = channels['telegram']
+                                                        if isinstance(telegram_settings, dict):
+                                                            tg_chat_id = telegram_settings.get('chatId')
+                                                            if tg_chat_id and str(tg_chat_id) == str(chat_id):
+                                                                found_chat_id = tg_chat_id
+                                                                print(f"Found user with chat_id {chat_id} at settings.channels.telegram.chatId")
+                                                
+                                                # Check old structure: settings.telegram_chat_id
+                                                if not found_chat_id and 'telegram_chat_id' in settings:
+                                                    if str(settings['telegram_chat_id']) == str(chat_id):
+                                                        found_chat_id = settings['telegram_chat_id']
+                                                        print(f"Found user with chat_id {chat_id} at settings.telegram_chat_id")
+                                        
+                                        if found_chat_id:
+                                            user_id = safe_user_id
+                                            
+                                            # Create mapping for future use
+                                            mapping_data = {
+                                                'user_id': safe_user_id,
+                                                'chat_id': str(chat_id),
+                                                'username': username,
+                                                'created_at': datetime.now().isoformat(),
+                                                'status': 'active'
+                                            }
+                                            firebase._make_request('PUT', mapping_path, mapping_data)
+                                            print(f"Created mapping for chat_id {chat_id}")
+                                            break
+                        
+                        # If still not found, try using TelegramBotSetup's method (which checks all locations)
+                        if not user_id:
+                            try:
+                                from services.telegram_bot_setup import TelegramBotSetup
+                                bot_setup = TelegramBotSetup()
+                                # Use asyncio to call the async method
+                                import asyncio
+                                try:
+                                    loop = asyncio.get_event_loop()
+                                    if loop.is_running():
+                                        # If loop is running, we can't use it - skip this fallback
+                                        pass
+                                    else:
+                                        user_id = loop.run_until_complete(bot_setup._find_user_by_chat_id(str(chat_id)))
+                                        if user_id:
+                                            print(f"Found user via TelegramBotSetup._find_user_by_chat_id: {user_id}")
+                                except RuntimeError:
+                                    # No event loop, create one
+                                    user_id = asyncio.run(bot_setup._find_user_by_chat_id(str(chat_id)))
+                                    if user_id:
+                                        print(f"Found user via TelegramBotSetup._find_user_by_chat_id: {user_id}")
+                            except Exception as e:
+                                print(f"Error using TelegramBotSetup fallback: {e}")
                         
                         if user_id:
+                            print(f"✅ Found user_id: {user_id} for chat_id: {chat_id}")
+                            
                             # Get user settings
                             # Handle case where user_id might be hashed
                             import re
@@ -5618,54 +5668,72 @@ def telegram_webhook():
                                     default_settings = firebase.default_settings.copy()
                                     default_settings.update(settings_result)
                                     user_settings = default_settings
+                                    print(f"✅ Retrieved settings for hashed user_id: {user_id}")
                                 else:
                                     user_settings = None
+                                    print(f"⚠️  No settings found for hashed user_id: {user_id}")
                             else:
                                 # Not hashed, use normal method
                                 user_settings = firebase.get_user_alert_settings(user_id)
+                                if user_settings:
+                                    print(f"✅ Retrieved settings for user_id: {user_id}")
+                                else:
+                                    print(f"⚠️  No settings found for user_id: {user_id}")
                             
-                            # Check subscription status
-                            from services.subscription_cache import get_subscription_status_sync
-                            is_valid, error = get_subscription_status_sync(user_id)
-                            
-                            status_message = f"<b>FXSentinel Alert Status</b>\n\n"
-                            status_message += f"<b>User ID:</b> {user_id}\n"
-                            status_message += f"<b>Chat ID:</b> {chat_id}\n"
-                            status_message += f"<b>Telegram:</b> @{username}\n\n"
-                            
-                            if is_valid:
-                                status_message += "<b>Subscription:</b> Active\n"
+                            if not user_settings:
+                                # Settings not found, show basic status
+                                status_message = f"<b>FXSentinel Alert Status</b>\n\n"
+                                status_message += f"<b>Status:</b> Connected (Settings not found)\n\n"
+                                status_message += f"<b>User ID:</b> {user_id}\n"
+                                status_message += f"<b>Chat ID:</b> {chat_id}\n"
+                                status_message += f"<b>Telegram:</b> @{username}\n\n"
+                                status_message += f"Please visit the FXSentinel app to configure your alert settings."
                             else:
-                                status_message += "<b>Subscription:</b> Expired\n"
-                            
-                            status_message += f"\n<b>Alert Settings:</b>\n"
-                            # Read from the correct nested structure
-                            preferences = user_settings.get('preferences', {})
-                            alert_types = preferences.get('alertTypes', {})
-                            status_message += f"• Live News: {'Enabled' if alert_types.get('liveNews', False) else 'Disabled'}\n"
-                            status_message += f"• Economic Calendar: {'Enabled' if alert_types.get('postNews', False) else 'Disabled'}\n"
-                            status_message += f"• AI Analysis: {'Enabled' if alert_types.get('technicalAnalysis', False) else 'Disabled'}\n"
-                            
-                            status_message += f"\n<b>Currency Pairs:</b>\n"
-                            currency_pairs = preferences.get('currencyPairs', [])
-                            if currency_pairs:
-                                for pair in currency_pairs[:5]:  # Show first 5
-                                    status_message += f"• {pair}\n"
-                                if len(currency_pairs) > 5:
-                                    status_message += f"• ... and {len(currency_pairs) - 5} more\n"
-                            else:
-                                status_message += "• No pairs configured\n"
-                            
-                            status_message += f"\n<b>Impact Levels:</b>\n"
-                            impact_levels = preferences.get('impactLevels', {})
-                            if impact_levels:
-                                for level, enabled in impact_levels.items():
-                                    if enabled:
-                                        status_message += f"• {level.title()}\n"
-                            else:
-                                status_message += "• All levels\n"
+                                # Check subscription status
+                                from services.subscription_cache import get_subscription_status_sync
+                                is_valid, error = get_subscription_status_sync(user_id)
+                                
+                                status_message = f"<b>FXSentinel Alert Status</b>\n\n"
+                                status_message += f"<b>Status:</b> Connected\n\n"
+                                status_message += f"<b>User ID:</b> {user_id}\n"
+                                status_message += f"<b>Chat ID:</b> {chat_id}\n"
+                                status_message += f"<b>Telegram:</b> @{username}\n\n"
+                                
+                                if is_valid:
+                                    status_message += "<b>Subscription:</b> Active\n"
+                                else:
+                                    status_message += "<b>Subscription:</b> Expired\n"
+                                
+                                status_message += f"\n<b>Alert Settings:</b>\n"
+                                # Read from the correct nested structure
+                                preferences = user_settings.get('preferences', {})
+                                alert_types = preferences.get('alertTypes', {})
+                                status_message += f"• Live News: {'Enabled' if alert_types.get('liveNews', True) else 'Disabled'}\n"
+                                status_message += f"• Pre-News: {'Enabled' if alert_types.get('preNews', True) else 'Disabled'}\n"
+                                status_message += f"• Post-News: {'Enabled' if alert_types.get('postNews', True) else 'Disabled'}\n"
+                                status_message += f"• Technical Analysis: {'Enabled' if alert_types.get('technicalAnalysis', False) else 'Disabled'}\n"
+                                
+                                status_message += f"\n<b>Currency Pairs:</b>\n"
+                                currency_pairs = preferences.get('currencyPairs', [])
+                                if currency_pairs:
+                                    for pair in currency_pairs[:5]:  # Show first 5
+                                        status_message += f"• {pair}\n"
+                                    if len(currency_pairs) > 5:
+                                        status_message += f"• ... and {len(currency_pairs) - 5} more\n"
+                                else:
+                                    status_message += "• All pairs\n"
+                                
+                                status_message += f"\n<b>Impact Levels:</b>\n"
+                                impact_levels = preferences.get('impactLevels', {})
+                                if impact_levels:
+                                    for level, enabled in impact_levels.items():
+                                        if enabled:
+                                            status_message += f"• {level.title()}\n"
+                                else:
+                                    status_message += "• All levels\n"
                             
                         else:
+                            print(f"❌ No user_id found for chat_id: {chat_id}")
                             status_message = f"<b>FXSentinel Alert Status</b>\n\n"
                             status_message += f"<b>Status:</b> Not Connected\n\n"
                             status_message += f"<b>Chat ID:</b> {chat_id}\n"
