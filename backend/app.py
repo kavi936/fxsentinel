@@ -2938,14 +2938,8 @@ def setup_telegram_bot():
         if not _verify_user_access(user_id):
             return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
         
-        # Check subscription status
-        subscription_valid = _check_subscription_status(user_id)
-        if not subscription_valid:
-            return jsonify({
-                "success": False, 
-                "error": "Subscription required. Please renew your subscription to use Telegram alerts.",
-                "subscription_required": True
-            }), 403
+        # REMOVED: Subscription check - alerts are now available to all users (paid, developer, freemium, etc.)
+        # All users can set up Telegram alerts regardless of subscription status
         
         # Generate unique, time-limited token for this user
         setup_token = _generate_setup_token(user_id)
@@ -2983,14 +2977,8 @@ def verify_telegram_connection():
         if not _verify_user_access(user_id):
             return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
         
-        # Check subscription status
-        subscription_valid = _check_subscription_status(user_id)
-        if not subscription_valid:
-            return jsonify({
-                "success": False, 
-                "error": "Subscription required. Please renew your subscription to use Telegram alerts.",
-                "subscription_required": True
-            }), 403
+        # REMOVED: Subscription check - alerts are now available to all users (paid, developer, freemium, etc.)
+        # All users can set up Telegram alerts regardless of subscription status
         
         # Check if user has completed bot setup (optional check)
         chat_id = _get_user_chat_id(user_id)

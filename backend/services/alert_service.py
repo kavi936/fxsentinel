@@ -204,12 +204,8 @@ class AlertService:
     async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any], user_id: str = None) -> bool:
         """Process and send alert to user based on their settings"""
         try:
-            # Check subscription status if user_id is provided
-            if user_id:
-                subscription_valid = await self._check_user_subscription(user_id)
-                if not subscription_valid:
-                    logger.warning(f"User {user_id} has invalid subscription, skipping alert")
-                    return False
+            # REMOVED: Subscription check - alerts are now available to all users (paid, developer, freemium, etc.)
+            # All users can receive alerts regardless of subscription status
             
             # Check if user wants this type of alert
             if not self._should_send_alert(alert_data, user_settings):
