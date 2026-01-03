@@ -293,18 +293,18 @@ class UnifiedAlertProcessor:
             if not user_settings:
                 return False
             
-            # Get Telegram chat ID
-            chat_id = (
-                user_data.get('telegram_chat_id') or
-                user_settings.get('channels', {}).get('telegram', {}).get('chatId') or
-                user_settings.get('telegram_chat_id')
-            )
+            # CONSOLIDATED: Get Telegram chat ID from single source of truth
+            # Location: user_data.telegram_chat_id (populated by get_all_users_with_alerts)
+            chat_id = user_data.get('telegram_chat_id')
             
             if not chat_id:
                 logger.debug(f"User {user_id} has no Telegram chat ID, skipping")
                 return False
             
-            # Check if user has Telegram enabled
+            # Convert to string if needed
+            chat_id = str(chat_id)
+            
+            # Check if user has Telegram enabled (check multiple structures for backward compatibility)
             telegram_enabled = (
                 user_settings.get('telegram_enabled', False) or
                 user_settings.get('telegram', False) or
