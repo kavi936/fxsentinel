@@ -117,15 +117,29 @@ class UnifiedAlertProcessor:
         Called immediately when news is fetched
         """
         if not news_items:
+            logger.debug("check_news_alerts_async called with empty news_items list")
             return
         
         # Run in background thread to avoid blocking
-        threading.Thread(
-            target=self._check_news_alerts,
+        # Use non-daemon thread in production to ensure it completes
+        thread = threading.Thread(
+            target=self._check_news_alerts_with_error_handling,
             args=(news_items,),
-            daemon=True
-        ).start()
-        logger.info(f"Triggered async alert check for {len(news_items)} news items")
+            daemon=False  # Changed to False to ensure thread completes in production
+        )
+        thread.start()
+        logger.info(f"Triggered async alert check for {len(news_items)} news items (thread started)")
+    
+    def _check_news_alerts_with_error_handling(self, news_items: List[Dict[str, Any]]):
+        """Wrapper with error handling to ensure logs appear even if thread crashes"""
+        try:
+            logger.info(f"Background thread started for {len(news_items)} news items")
+            self._check_news_alerts(news_items)
+            logger.info(f"Background thread completed for {len(news_items)} news items")
+        except Exception as e:
+            logger.error(f"CRITICAL: Error in alert processing thread: {e}", exc_info=True)
+            # Re-raise to ensure error is visible
+            raise
     
     def _check_news_alerts(self, news_items: List[Dict[str, Any]]):
         """

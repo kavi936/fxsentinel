@@ -23,8 +23,8 @@ class PersistentAlertDeduplication:
     
     def __init__(self):
         self.firebase = FirebaseRealtimeStorage()
-        self.alert_ttl_hours = 24  # How long to remember sent alerts
-        self.cleanup_interval = 100  # Cleanup every N operations
+        self.alert_ttl_hours = 2  # How long to remember sent alerts (reduced from 24h to 2h)
+        self.cleanup_interval = 50  # Cleanup every N operations (increased frequency)
         self.operations_count = 0
         self.duplicates_prevented = 0
         
@@ -63,6 +63,11 @@ class PersistentAlertDeduplication:
         """
         try:
             self.operations_count += 1
+            
+            # Automatic cleanup of expired records (increased frequency)
+            if self.operations_count % self.cleanup_interval == 0:
+                self.cleanup_expired_alerts()
+                self._cleanup_expired_content_hashes()
             
             # Generate keys
             alert_key = self._generate_alert_key(alert_type, content, user_id)
@@ -348,6 +353,46 @@ class PersistentAlertDeduplication:
             
         except Exception as e:
             logger.error(f"Error cleaning up expired alerts: {e}")
+            return 0
+    
+    def _cleanup_expired_content_hashes(self) -> int:
+        """Clean up expired global content hash records from Firebase"""
+        try:
+            # Get all content hashes
+            content_hashes_path = "alert_deduplication/content_hashes"
+            all_hashes = self.firebase._make_request('GET', content_hashes_path)
+            
+            if not all_hashes or not isinstance(all_hashes, dict):
+                return 0
+            
+            now = datetime.now()
+            expired_count = 0
+            
+            # Check each hash and delete expired ones
+            for content_hash, hash_data in list(all_hashes.items()):
+                if isinstance(hash_data, dict):
+                    expires_at_str = hash_data.get('expires_at')
+                    if expires_at_str:
+                        try:
+                            expires_at = datetime.fromisoformat(expires_at_str)
+                            if now >= expires_at:
+                                # Delete expired hash
+                                hash_path = self._get_content_hash_path(content_hash)
+                                self.firebase._make_request('DELETE', hash_path)
+                                # Also remove from in-memory cache
+                                with self._cache_lock:
+                                    self._content_hash_cache.pop(content_hash, None)
+                                expired_count += 1
+                        except Exception as e:
+                            logger.warning(f"Error parsing expires_at for content hash {content_hash}: {e}")
+            
+            if expired_count > 0:
+                logger.info(f"Cleaned up {expired_count} expired content hash records")
+            
+            return expired_count
+            
+        except Exception as e:
+            logger.error(f"Error cleaning up expired content hashes: {e}")
             return 0
     
     def get_stats(self) -> Dict[str, Any]:
