@@ -6312,11 +6312,24 @@ def trigger_alerts():
 @app.route('/api/health/unified-alert-processor')
 @limiter.exempt
 def unified_alert_processor_health():
-    """Health check for unified alert processor"""
+    """Health check endpoint for unified alert processor"""
     try:
         from services.unified_alert_processor import get_unified_processor
         processor = get_unified_processor()
         status = processor.get_status()
+        
+        # Add alert monitoring metrics
+        try:
+            from services.alert_monitoring import get_alert_monitoring
+            monitoring = get_alert_monitoring()
+            metrics = monitoring.get_metrics()
+            status['alert_metrics'] = {
+                'total_sent': metrics['total_sent'],
+                'total_failed': metrics['total_failed'],
+                'success_rate': f"{metrics['success_rate']:.2f}%"
+            }
+        except Exception as e:
+            logger.debug(f"Could not get alert metrics: {e}")
         
         return jsonify({
             'status': 'healthy' if status['running'] and status['thread_alive'] else 'unhealthy',
@@ -6329,6 +6342,21 @@ def unified_alert_processor_health():
             'status': 'error',
             'error': str(e),
             'timestamp': datetime.now().isoformat()
+        }), 500
+
+@app.route('/api/health/alert-monitoring')
+@limiter.exempt
+def alert_monitoring_health():
+    """Get detailed alert monitoring metrics"""
+    try:
+        from services.alert_monitoring import get_alert_monitoring
+        monitoring = get_alert_monitoring()
+        metrics = monitoring.get_metrics()
+        return jsonify(metrics), 200
+    except Exception as e:
+        return jsonify({
+            'error': str(e),
+            'status': 'error'
         }), 500
 
 @app.route('/api/health/alert-service')

@@ -166,10 +166,13 @@ class AlertService:
                 "error": str(e)
             }
     
-    async def send_telegram_alert(self, chat_id: str, message: str, user_id: str = None, parse_mode: str = 'HTML') -> bool:
+    async def send_telegram_alert(self, chat_id: str, message: str, user_id: str = None, parse_mode: str = 'HTML', alert_type: str = 'news') -> bool:
         """Send alert via robust Telegram service"""
         try:
             from .robust_telegram_service import send_telegram_message_async
+            from .alert_monitoring import get_alert_monitoring
+            
+            monitoring = get_alert_monitoring()
             
             success, error = await send_telegram_message_async(
                 chat_id=chat_id,
@@ -180,13 +183,25 @@ class AlertService:
             
             if success:
                 logger.info(f"Telegram alert sent to {chat_id}")
+                # Record success
+                if user_id:
+                    monitoring.record_success(user_id, alert_type)
                 return True
             else:
                 logger.error(f"Failed to send Telegram alert to {chat_id}: {error}")
+                # Record failure
+                if user_id:
+                    alert_title = message.split('\n')[0][:50] if message else None
+                    monitoring.record_failure(user_id, alert_type, error or "Unknown error", alert_title)
                 return False
             
         except Exception as e:
             logger.error(f"Error sending Telegram alert to {chat_id}: {e}")
+            # Record failure
+            if user_id:
+                from .alert_monitoring import get_alert_monitoring
+                monitoring = get_alert_monitoring()
+                monitoring.record_failure(user_id, alert_type, str(e), None)
             return False
     
     def send_email_alert(self, email: str, subject: str, content: str) -> bool:
