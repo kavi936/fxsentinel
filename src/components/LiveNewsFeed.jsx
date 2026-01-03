@@ -1,8 +1,189 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { config } from '../config';
 import { formatNewsTime, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
+import { sanitizeNewsItem, sanitizeAnalysis } from '../utils/sanitize';
 import './LiveNewsFeed.css';
 import InfoIcon from './InfoIcon.jsx';
+
+// Keyword mappings for currency pair detection - created once outside component
+// This prevents recreating the 500+ entry object on every render
+const KEYWORD_MAPPINGS = {
+  // USD-related keywords - US Political Figures & Officials
+  usd: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  fed: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'federal reserve': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'jerome powell': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  powell: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'fed chair': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'scott bessent': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  bessent: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'treasury secretary': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us treasury': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  trump: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'donald trump': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  biden: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'joe biden': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us president': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'white house': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us dollar': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  dollar: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us economy': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us inflation': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us gdp': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'non-farm payrolls': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  nfp: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us cpi': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us jobs': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  'us employment': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
+  
+  // EUR-related keywords - EU Political Figures & Officials
+  eur: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  euro: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  ecb: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'european central bank': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'christine lagarde': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  lagarde: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'ecb president': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'ursula von der leyen': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'von der leyen': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'european commission': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'emmanuel macron': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  macron: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'french president': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'friedrich merz': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  merz: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'german chancellor': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'giorgia meloni': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  meloni: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'italian prime minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'christian lindner': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  lindner: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'german finance minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'bruno le maire': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'le maire': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'french finance minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'jörg kukies': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  kukies: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'eric lombard': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  lombard: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'eurozone': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'european union': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'eu economy': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'eurozone inflation': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  'eurozone gdp': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
+  
+  // GBP-related keywords - UK Political Figures & Officials
+  gbp: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  pound: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'british pound': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  boe: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'bank of england': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'huw pill': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  pill: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'boe governor': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'andrew bailey': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  bailey: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'keir starmer': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  starmer: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'rachel reeves': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  reeves: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'rishi sunak': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  sunak: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'jeremy hunt': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  hunt: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'uk chancellor': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'chancellor of the exchequer': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'uk prime minister': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'uk pm': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'british pm': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  brexit: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'uk economy': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'uk inflation': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  'uk gdp': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
+  
+  // JPY-related keywords - Japan Political Figures & Officials
+  jpy: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  yen: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  boj: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'bank of japan': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'ueda kazuo': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  ueda: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'boj governor': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'boj officials': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'sanae takaichi': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  takaichi: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'satsuki katayama': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  katayama: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese finance minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japan finance minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'katsunobu kato': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  kato: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'shigeru ishiba': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  ishiba: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'kishida fumio': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  kishida: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'shunichi suzuki': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  suzuki: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japan pm': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese pm': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japan prime minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese prime minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese economy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japan economy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese inflation': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japan inflation': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese gdp': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japan gdp': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'tokyo': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  'japanese': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
+  
+  // AUD-related keywords - Australia Political Figures & Officials
+  aud: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'australian dollar': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  rba: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'reserve bank of australia': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'michele bullock': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  bullock: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'rba governor': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'anthony albanese': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  albanese: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'australia pm': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'australian pm': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'australia prime minister': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'australian economy': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  'australia economy': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
+  
+  // CAD-related keywords - Canada Political Figures & Officials
+  cad: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canadian dollar': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  boc: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'bank of canada': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'tiff macklem': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  macklem: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'boc governor': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'justin trudeau': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  trudeau: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'francois-philippe champagne': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  champagne: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canada finance minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canadian finance minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canada pm': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canadian pm': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canada prime minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canadian economy': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  'canada economy': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
+  
+  // CHF-related keywords - Switzerland Political Figures & Officials
+  chf: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  franc: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  'swiss franc': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  snb: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  'swiss national bank': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  'thomas jordan': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  jordan: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  'snb governor': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+  'swiss economy': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
+};
 
 const LiveNewsFeed = () => {
   const [news, setNews] = useState([]);
@@ -38,19 +219,13 @@ const LiveNewsFeed = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Listen for timezone changes
+  // Listen for timezone changes (event-driven, no polling)
   useEffect(() => {
-    const checkTimezone = () => {
-      const newTimezone = getUserTimezone();
-      if (newTimezone !== currentTimezone) {
-        setCurrentTimezone(newTimezone);
-      }
-    };
-
-    // Check timezone every second
-    const timezoneInterval = setInterval(checkTimezone, 1000);
+    // Initial timezone check on mount
+    const initialTimezone = getUserTimezone();
+    setCurrentTimezone(initialTimezone);
     
-    // Also listen for storage events (when timezone is changed in another tab)
+    // Listen for storage events (when timezone is changed in another tab)
     const handleStorageChange = (e) => {
       if (e.key === 'fxSentinel_userTimezone') {
         setCurrentTimezone(e.newValue || 'UTC');
@@ -66,11 +241,10 @@ const LiveNewsFeed = () => {
     window.addEventListener('timezoneChanged', handleTimezoneChange);
     
     return () => {
-      clearInterval(timezoneInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('timezoneChanged', handleTimezoneChange);
     };
-  }, [currentTimezone]);
+  }, []); // Empty dependency array - only run on mount/unmount
 
   const fetchNews = async (forceRefresh = false) => {
     try {
@@ -105,6 +279,11 @@ const LiveNewsFeed = () => {
       }
       
       if (!response.ok) {
+        // Handle rate limit errors specifically
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          throw new Error(`API error: 429 Too many requests. Please wait ${retryAfter || 'a moment'} before trying again.`);
+        }
         const errorText = await response.text();
         console.error(`❌ API error ${response.status}:`, errorText);
         throw new Error(`API error: ${response.status} ${response.statusText}`);
@@ -124,10 +303,19 @@ const LiveNewsFeed = () => {
       }
       
       // Ensure all news item IDs are preserved as strings to prevent precision loss
-      const processedNews = data.news.map(item => ({
-        ...item,
-        id: String(item.id || item.title || Math.random()) // Force ID to be string
-      }));
+      // Also sanitize all content to prevent XSS attacks
+      const processedNews = data.news.map(item => {
+        // First ensure ID is string
+        const itemWithStringId = {
+          ...item,
+          id: String(item.id || item.title || Math.random()) // Force ID to be string
+        };
+        const sanitized = sanitizeNewsItem(itemWithStringId);
+        if (!sanitized.id) {
+          sanitized.id = itemWithStringId.id;
+        }
+        return sanitized;
+      });
       
       // Debug logging
       console.log('📰 News processed:', {
@@ -155,9 +343,9 @@ const LiveNewsFeed = () => {
         stack: err.stack,
         name: err.name
       });
-      // Set empty news array instead of error to show empty state
-      setNews([]);
-      setError(err.message || 'Failed to fetch news');
+      // Don't clear news array - preserve cached news if available
+      // Only set error message so user can see what went wrong
+      setError(getUserFriendlyError(err));
     } finally {
       setLoading(false);
       setForceRefreshing(false);
@@ -174,15 +362,16 @@ const LiveNewsFeed = () => {
       const data = await response.json();
       
       if (response.ok) {
-        setNewsHistory(data.history || []);
+        const sanitizedHistory = (data.history || []).map(item => sanitizeNewsItem(item));
+        setNewsHistory(sanitizedHistory);
         setHistoryStats(data.analysis_stats);
       } else {
         throw new Error(data.error || 'Failed to fetch news history');
       }
     } catch (err) {
       console.error('Error fetching news history:', err);
-      setNewsHistory([]);
-      setError(`Failed to load news history: ${err.message}`);
+      // Don't clear history - preserve existing history if available
+      setError(getUserFriendlyError(err));
     } finally {
       setHistoryLoading(false);
     }
@@ -208,7 +397,8 @@ const LiveNewsFeed = () => {
       
       if (response.ok) {
         const analysis = await response.json();
-        setAiAnalysis(analysis);
+        const sanitizedAnalysis = sanitizeAnalysis(analysis);
+        setAiAnalysis(sanitizedAnalysis);
         setSelectedNews(newsItem);
       } else {
         const errorData = await response.json();
@@ -218,14 +408,8 @@ const LiveNewsFeed = () => {
     } catch (err) {
       console.error('Error getting cached analysis:', err);
       
-      let errorMessage = 'Failed to load cached analysis';
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        errorMessage = 'Network error - check your connection';
-      } else if (err.message.includes('Failed to get cached analysis:')) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+      // Use user-friendly error messages
+      setError(getUserFriendlyError(err));
       setAiAnalysis(null);
     } finally {
       setAnalyzing(false);
@@ -243,10 +427,19 @@ const LiveNewsFeed = () => {
       
       // Make API call to get real GPT analysis
       const response = await fetch(requestUrl);
+      
+      // Handle rate limit errors before parsing JSON
+      if (response.status === 429) {
+        const retryAfter = response.headers.get('Retry-After');
+        throw new Error(`API error: 429 Too many requests. Please wait ${retryAfter || 'a moment'} before trying again.`);
+      }
+      
       const analysis = await response.json();
       
       if (response.ok) {
-        setAiAnalysis(analysis);
+        // Sanitize AI analysis content to prevent XSS
+        const sanitizedAnalysis = sanitizeAnalysis(analysis);
+        setAiAnalysis(sanitizedAnalysis);
         setSelectedNews(newsItem);
         
         // Refresh history if we're on the history tab to show the new analysis
@@ -260,15 +453,8 @@ const LiveNewsFeed = () => {
     } catch (err) {
       console.error('Error analyzing news:', err);
       
-      // Provide more specific error messages
-      let errorMessage = 'Failed AI analysis try again';
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        errorMessage = 'Network error - check your connection';
-      } else if (err.message.includes('Failed to analyze news:')) {
-        errorMessage = err.message;
-      }
-      
-      setError(errorMessage);
+      // Use user-friendly error messages
+      setError(getUserFriendlyError(err));
       setAiAnalysis(null);
     } finally {
       setAnalyzing(false);
@@ -279,6 +465,56 @@ const LiveNewsFeed = () => {
     setSelectedNews(null);
     setAiAnalysis(null);
     setError(null);
+  };
+
+  // Get user-friendly error messages (not technical)
+  const getUserFriendlyError = (error) => {
+    if (!error) return 'Something went wrong. Please try again.';
+    
+    const errorMessage = error.message || String(error);
+    const lowerMessage = errorMessage.toLowerCase();
+    
+    // Network errors
+    if (error.name === 'AbortError' || lowerMessage.includes('timeout') || lowerMessage.includes('took too long')) {
+      return 'Request took too long. Please check your connection and try again.';
+    }
+    
+    if (error.name === 'TypeError' && (lowerMessage.includes('fetch') || lowerMessage.includes('network'))) {
+      return 'Unable to connect. Please check your internet connection.';
+    }
+    
+    // API errors
+    if (lowerMessage.includes('api error: 500') || lowerMessage.includes('500')) {
+      return 'Server error. Please try again in a moment.';
+    }
+    
+    if (lowerMessage.includes('api error: 429') || lowerMessage.includes('429')) {
+      return 'Too many requests. Please wait a moment before trying again.';
+    }
+    
+    if (lowerMessage.includes('api error: 404') || lowerMessage.includes('404')) {
+      return 'Content not found. Please refresh the page.';
+    }
+    
+    if (lowerMessage.includes('invalid response format') || lowerMessage.includes('invalid response')) {
+      return 'Received unexpected data. Please refresh the page.';
+    }
+    
+    // Analysis errors
+    if (lowerMessage.includes('failed ai analysis') || lowerMessage.includes('analyze news')) {
+      return 'Unable to analyze news. Please try again.';
+    }
+    
+    if (lowerMessage.includes('failed to load cached analysis')) {
+      return 'Unable to load saved analysis. Please try again.';
+    }
+    
+    if (lowerMessage.includes('failed to load news history')) {
+      return 'Unable to load news history. Please try again.';
+    }
+    
+    // Generic fallback
+    return 'Something went wrong. Please try again.';
   };
 
   const getImpactColor = (impact) => {
@@ -387,188 +623,12 @@ const LiveNewsFeed = () => {
     }
     
     // Intelligent keyword-based detection
-    const keywordMappings = {
-      // USD-related keywords - US Political Figures & Officials
-      usd: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      fed: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'federal reserve': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'jerome powell': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      powell: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'fed chair': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'scott bessent': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      bessent: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'treasury secretary': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us treasury': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      trump: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'donald trump': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      biden: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'joe biden': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us president': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'white house': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us dollar': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      dollar: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us economy': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us inflation': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us gdp': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'non-farm payrolls': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      nfp: ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us cpi': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us jobs': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      'us employment': ['EUR/USD', 'GBP/USD', 'USD/JPY', 'USD/CHF', 'AUD/USD', 'USD/CAD'],
-      
-      // EUR-related keywords - EU Political Figures & Officials
-      eur: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      euro: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      ecb: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'european central bank': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'christine lagarde': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      lagarde: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'ecb president': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'ursula von der leyen': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'von der leyen': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'european commission': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'emmanuel macron': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      macron: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'french president': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'friedrich merz': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      merz: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'german chancellor': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'giorgia meloni': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      meloni: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'italian prime minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'christian lindner': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      lindner: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'german finance minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'bruno le maire': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'le maire': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'french finance minister': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'jörg kukies': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      kukies: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'eric lombard': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      lombard: ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'eurozone': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'european union': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'eu economy': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'eurozone inflation': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      'eurozone gdp': ['EUR/USD', 'EUR/GBP', 'EUR/JPY', 'EUR/CHF'],
-      
-      // GBP-related keywords - UK Political Figures & Officials
-      gbp: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      pound: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'british pound': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      boe: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'bank of england': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'huw pill': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      pill: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'boe governor': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'andrew bailey': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      bailey: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'keir starmer': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      starmer: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'rachel reeves': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      reeves: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'rishi sunak': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      sunak: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'jeremy hunt': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      hunt: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'uk chancellor': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'chancellor of the exchequer': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'uk prime minister': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'uk pm': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'british pm': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      brexit: ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'uk economy': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'uk inflation': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      'uk gdp': ['GBP/USD', 'EUR/GBP', 'GBP/JPY', 'GBP/CHF'],
-      
-      // JPY-related keywords - Japan Political Figures & Officials
-      jpy: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      yen: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      boj: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'bank of japan': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'ueda kazuo': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      ueda: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'boj governor': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'boj officials': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'sanae takaichi': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      takaichi: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'satsuki katayama': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      katayama: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese finance minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japan finance minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'katsunobu kato': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      kato: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'shigeru ishiba': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      ishiba: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'kishida fumio': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      kishida: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'shunichi suzuki': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      suzuki: ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japan pm': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese pm': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japan prime minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese prime minister': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese economy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japan economy': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese inflation': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japan inflation': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese gdp': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japan gdp': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'tokyo': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      'japanese': ['USD/JPY', 'EUR/JPY', 'GBP/JPY', 'AUD/JPY'],
-      
-      // AUD-related keywords - Australia Political Figures & Officials
-      aud: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'australian dollar': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      rba: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'reserve bank of australia': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'michele bullock': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      bullock: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'rba governor': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'anthony albanese': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      albanese: ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'australia pm': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'australian pm': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'australia prime minister': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'australian economy': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      'australia economy': ['AUD/USD', 'EUR/AUD', 'GBP/AUD', 'AUD/JPY'],
-      
-      // CAD-related keywords - Canada Political Figures & Officials
-      cad: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canadian dollar': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      boc: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'bank of canada': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'tiff macklem': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      macklem: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'boc governor': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'justin trudeau': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      trudeau: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'francois-philippe champagne': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      champagne: ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canada finance minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canadian finance minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canada pm': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canadian pm': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canada prime minister': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canadian economy': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      'canada economy': ['USD/CAD', 'EUR/CAD', 'GBP/CAD', 'AUD/CAD'],
-      
-      // CHF-related keywords - Switzerland Political Figures & Officials
-      chf: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      franc: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      'swiss franc': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      snb: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      'swiss national bank': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      'thomas jordan': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      jordan: ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      'snb governor': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-      'swiss economy': ['USD/CHF', 'EUR/CHF', 'GBP/CHF', 'AUD/CHF'],
-    };
+    // Use KEYWORD_MAPPINGS constant defined outside component (created once, not on every render)
     
     // Check for keywords in text (case-insensitive)
     const detectedPairs = new Set();
     
-    for (const [keyword, pairs] of Object.entries(keywordMappings)) {
+    for (const [keyword, pairs] of Object.entries(KEYWORD_MAPPINGS)) {
       // Use word boundary to avoid partial matches
       const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
       if (regex.test(text)) {
@@ -823,6 +883,13 @@ const LiveNewsFeed = () => {
     }
   };
 
+  // Get current news list for virtual scrolling
+  // Memoized to prevent unnecessary recalculations
+  const currentNewsList = useMemo(() => {
+    return getCurrentNewsList();
+  }, [news, newsHistory, activeTab, filter]);
+
+
   return (
     <div className="live-news-feed">
       <div className="news-header">
@@ -896,7 +963,42 @@ const LiveNewsFeed = () => {
             <div className="loading-spinner"></div>
             <p>Loading {activeTab === 'live' ? 'latest news' : 'news history'}...</p>
           </div>
-        ) : getCurrentNewsList().length === 0 ? (
+        ) : error ? (
+          <div className="error-state">
+            <div className="error-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <p className="error-message">{error}</p>
+            <div className="error-actions">
+              <button 
+                onClick={() => {
+                  setError(null);
+                  if (activeTab === 'live') {
+                    fetchNews(true);
+                  } else {
+                    fetchNewsHistory();
+                  }
+                }}
+                className="retry-btn"
+                disabled={loading || historyLoading || forceRefreshing}
+              >
+                {loading || historyLoading || forceRefreshing ? 'Retrying...' : 'Try Again'}
+              </button>
+              {currentNewsList.length > 0 && (
+                <button 
+                  onClick={() => setError(null)}
+                  className="dismiss-btn"
+                >
+                  Dismiss
+                </button>
+              )}
+            </div>
+          </div>
+        ) : currentNewsList.length === 0 ? (
           <div className="empty-state">
             <div className="placeholder-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -936,9 +1038,9 @@ const LiveNewsFeed = () => {
           </div>
         ) : (
           <div className="news-list">
-            {getCurrentNewsList().map((newsItem) => (
+            {currentNewsList.map((newsItem) => (
               <div 
-                key={newsItem.id} 
+                key={newsItem.id}
                 className={`news-item ${selectedNews?.id === newsItem.id ? 'selected' : ''}`}
                 onClick={() => handleNewsClick(newsItem)}
               >
@@ -966,8 +1068,8 @@ const LiveNewsFeed = () => {
                     return intelligentPairs.length > 0 && (
                       <div className="news-currency-pairs">
                         <span className="news-pairs-label">Affected pairs:</span>
-                        {intelligentPairs.map((pair, index) => (
-                          <span key={index} className="news-currency-pair">{pair}</span>
+                        {intelligentPairs.map((pair, idx) => (
+                          <span key={idx} className="news-currency-pair">{pair}</span>
                         ))}
                       </div>
                     );
@@ -990,7 +1092,6 @@ const LiveNewsFeed = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               handleNewsClick(newsItem);
-                              // Get the cached analysis for this news item
                               getCachedAnalysis(newsItem);
                             }}
                             title="View Analysis"
@@ -1141,12 +1242,6 @@ const LiveNewsFeed = () => {
                             </div>
                           </div>
                         )}
-                        
-
-                        
-
-                        
-
                         
                         <div className="analysis-meta">
                           <span className="analysis-time">Analyzed just now</span>
