@@ -31,10 +31,16 @@ def check_health_endpoint(base_url: str = None):
         print(f"\nStatus Code: {response.status_code}")
         
         if response.status_code == 200:
-            data = response.json()
-            print("\n✅ Health Check Successful")
-            print("\nStatus Details:")
-            print(json.dumps(data, indent=2))
+            try:
+                data = response.json()
+                print("\n✅ Health Check Successful")
+                print("\nStatus Details:")
+                print(json.dumps(data, indent=2))
+            except json.JSONDecodeError:
+                print("\n⚠️  Response is not JSON")
+                print(f"Response text: {response.text[:500]}")
+                print("\nThis might indicate the endpoint doesn't exist or returns HTML")
+                return
             
             # Analyze status
             print("\n" + "=" * 80)
