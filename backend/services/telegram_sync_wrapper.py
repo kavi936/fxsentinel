@@ -95,7 +95,7 @@ class SessionIsolatedTelegramWrapper:
             
             # Target channels - use only unique channels (avoid duplicates from @ and non-@ versions)
             # Try to get the actual channel entity first to avoid duplicates
-            target_channel_names = ['WatcherGuru']
+            target_channel_names = ['WatcherGuru', 'bricsnews']
             channel_entities = {}  # Map of channel ID to channel name to avoid duplicates
             
             all_messages = []

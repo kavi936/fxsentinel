@@ -45,6 +45,8 @@ class EnhancedForexFilter:
             'trump', 'biden', 'president', 'election', 'campaign', 'politics', 'political',
             'congress', 'senate', 'house', 'legislation', 'bill', 'law', 'policy',
             'geopolitical', 'geopolitics', 'diplomatic', 'diplomacy', 'sanctions',
+            'brics', 'venezuela', 'venezuelan', 'brazil', 'russia', 'russian', 'india', 'indian',
+            'south africa', 'south african', 'attack', 'conflict', 'crisis', 'instability',
             
             # Trade and tariffs
             'trade', 'tariff', 'trade war', 'trade deal', 'trade agreement', 'trade deficit',
@@ -126,6 +128,7 @@ class EnhancedForexFilter:
             'rate decision', 'policy meeting', 'speech', 'testimony',
             'trump', 'biden', 'election', 'trade war', 'tariff', 'sanctions', 'geopolitical',
             'brexit', 'china trade', 'us china', 'market volatility', 'market uncertainty',
+            'brics', 'venezuela', 'attack', 'conflict', 'crisis', 'instability',
             # Added forex-specific terms
             'fx option', 'option expiries', 'new york cut', 'london cut', 'asian session',
             'consumer prices', 'bank lending', 'lending rate', 'monetary policy',
@@ -198,7 +201,8 @@ class EnhancedForexFilter:
             'economic', 'economy', 'economic data', 'economic indicator',
             'trade', 'tariff', 'trade war', 'trade deal', 'trade agreement',
             'geopolitical', 'geopolitics', 'diplomatic', 'sanctions',
-            'market sentiment', 'risk-off', 'risk-on', 'safe haven'
+            'market sentiment', 'risk-off', 'risk-on', 'safe haven',
+            'brics', 'venezuela', 'attack', 'conflict', 'crisis', 'instability'
         ]
         
         has_core_forex = any(term in text for term in core_forex_terms)
