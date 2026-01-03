@@ -24,7 +24,7 @@ class PersistentAlertDeduplication:
     def __init__(self):
         self.firebase = FirebaseRealtimeStorage()
         self.alert_ttl_hours = 2  # How long to remember sent alerts (reduced from 24h to 2h)
-        self.cleanup_interval = 50  # Cleanup every N operations (increased frequency)
+        self.cleanup_interval = 20  # Cleanup every N operations (reduced from 50 for more frequent cleanup)
         self.operations_count = 0
         self.duplicates_prevented = 0
         
@@ -36,7 +36,13 @@ class PersistentAlertDeduplication:
         # Thread lock for cache operations
         self._cache_lock = threading.Lock()
         
-        logger.info("Persistent Alert Deduplication Service initialized with caching")
+        # Force send mode (for testing) - bypasses deduplication
+        self.force_send_mode = False
+        
+        # Clear expired hashes on startup to prevent stale cache issues
+        self._clear_expired_cache_on_startup()
+        
+        logger.info("Persistent Alert Deduplication Service initialized with caching and startup cleanup")
     
     def _generate_alert_key(self, alert_type: str, content: str, user_id: str) -> str:
         """Generate unique alert key for deduplication"""
@@ -56,12 +62,40 @@ class PersistentAlertDeduplication:
         """Get Firebase path for content hash"""
         return f"alert_deduplication/content_hashes/{content_hash}"
     
+    def _clear_expired_cache_on_startup(self):
+        """Clear expired entries from in-memory cache on startup"""
+        try:
+            now = datetime.now()
+            expired_keys = []
+            
+            with self._cache_lock:
+                for content_hash, expires_at in self._content_hash_cache.items():
+                    if now >= expires_at:
+                        expired_keys.append(content_hash)
+                
+                for key in expired_keys:
+                    del self._content_hash_cache[key]
+            
+            if expired_keys:
+                logger.info(f"Cleared {len(expired_keys)} expired cache entries on startup")
+            
+            # Also trigger cleanup of expired Firebase records
+            self._cleanup_expired_content_hashes()
+            
+        except Exception as e:
+            logger.warning(f"Error clearing expired cache on startup: {e}")
+    
     def should_send_alert(self, alert_type: str, content: str, user_id: str) -> bool:
         """
         Check if alert should be sent (not a duplicate)
         Returns: True if alert should be sent, False if it's a duplicate
         """
         try:
+            # Force send mode bypasses deduplication (for testing)
+            if self.force_send_mode:
+                logger.debug(f"Force send mode enabled - bypassing deduplication for {alert_type}")
+                return True
+            
             self.operations_count += 1
             
             # Automatic cleanup of expired records (increased frequency)
@@ -162,6 +196,10 @@ class PersistentAlertDeduplication:
         Returns: True if content is new, False if already sent
         """
         try:
+            # Force send mode bypasses global deduplication
+            if self.force_send_mode:
+                return True
+            
             now = datetime.now()
             
             # Check in-memory cache first (thread-safe)
@@ -443,6 +481,19 @@ class PersistentAlertDeduplication:
         except Exception as e:
             logger.error(f"Error clearing user alerts: {e}")
             return 0
+    
+    def set_force_send_mode(self, enabled: bool):
+        """Enable/disable force send mode (bypasses deduplication for testing)"""
+        self.force_send_mode = enabled
+        logger.info(f"Force send mode {'enabled' if enabled else 'disabled'}")
+    
+    def clear_all_expired_hashes(self) -> int:
+        """Manually trigger cleanup of all expired content hashes (for maintenance)"""
+        return self._cleanup_expired_content_hashes()
+    
+    def clear_all_expired_alerts(self) -> int:
+        """Manually trigger cleanup of all expired alerts (for maintenance)"""
+        return self.cleanup_expired_alerts()
 
 # Global singleton instance
 _persistent_deduplication = None

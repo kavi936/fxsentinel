@@ -489,8 +489,27 @@ Visit the FXSentinel app or contact support.
             return None
     
     async def _store_chat_id_mapping(self, chat_id: str, user_id: str) -> bool:
-        """Store mapping of chat_id to user_id in Firebase Realtime Database"""
+        """
+        Store mapping of chat_id to user_id in Firebase Realtime Database
+        CONSOLIDATED: Saves to single source of truth (alerts/users/{user_id}/telegram_chat_id)
+        Also maintains telegram_mappings for backward compatibility
+        """
         try:
+            # Validate chat ID before saving
+            from .chat_id_validator import validate_chat_id
+            is_valid, error = validate_chat_id(chat_id)
+            
+            if not is_valid:
+                logger.error(f"Invalid chat ID rejected: {error}")
+                return False
+            
+            # CONSOLIDATED: Save to single source of truth first
+            success = self.alert_service.firebase_storage.save_telegram_chat_id(user_id, chat_id)
+            
+            if not success:
+                logger.warning(f"Failed to save chat_id to single location for user {user_id}")
+            
+            # Also maintain mapping table for backward compatibility
             mapping_data = {
                 'user_id': user_id,
                 'chat_id': chat_id,
@@ -500,8 +519,12 @@ Visit the FXSentinel app or contact support.
             mapping_path = f"telegram_mappings/{chat_id}"
             result = self.alert_service.firebase_storage._make_request('PUT', mapping_path, mapping_data)
             
-            if result is not None:
-                logger.info(f"Stored chat_id mapping: {chat_id} -> {user_id}")
+            if result is not None and success:
+                logger.info(f"Stored chat_id mapping: {chat_id} -> {user_id} (consolidated)")
+                return True
+            elif success:
+                # Single location saved successfully, mapping table is optional
+                logger.info(f"Stored chat_id to single location: {chat_id} -> {user_id}")
                 return True
             else:
                 logger.error(f"Failed to store chat_id mapping for {chat_id}")

@@ -132,7 +132,10 @@ class AlertService:
             }
     
     async def verify_telegram_connection(self, user_id: str) -> Dict[str, Any]:
-        """Verify user has completed Telegram bot setup"""
+        """
+        Verify user has completed Telegram bot setup
+        CONSOLIDATED: Uses single source of truth for chat_id
+        """
         try:
             self._ensure_telegram_bot()
             if not self.telegram_bot:
@@ -145,13 +148,25 @@ class AlertService:
                     "mock": True
                 }
             
-            # Check if user has a chat ID stored
-            user_settings = self.firebase_storage.get_user_alert_settings(user_id)
-            if user_settings and user_settings.get('telegram_chat_id'):
+            # CONSOLIDATED: Get chat_id from single location
+            chat_id = self.firebase_storage.get_telegram_chat_id(user_id)
+            
+            if chat_id:
+                # Get username from settings if available
+                user_settings = self.firebase_storage.get_user_alert_settings(user_id)
+                username = 'Unknown'
+                if user_settings:
+                    # Check multiple locations for username (backward compatibility)
+                    username = (
+                        user_settings.get('channels', {}).get('telegram', {}).get('username') or
+                        user_settings.get('telegram_username') or
+                        'Unknown'
+                    )
+                
                 return {
                     "connected": True,
-                    "chatId": user_settings['telegram_chat_id'],
-                    "username": user_settings.get('telegram_username', 'Unknown')
+                    "chatId": chat_id,
+                    "username": username
                 }
             else:
                 return {
@@ -166,14 +181,47 @@ class AlertService:
                 "error": str(e)
             }
     
-    async def send_telegram_alert(self, chat_id: str, message: str, user_id: str = None, parse_mode: str = 'HTML', alert_type: str = 'news') -> bool:
-        """Send alert via robust Telegram service"""
+    async def send_telegram_alert(self, chat_id: str, message: str, user_id: str = None, parse_mode: str = 'HTML', alert_type: str = 'news', alert_data: Dict[str, Any] = None) -> bool:
+        """
+        Send alert via robust Telegram service with circuit breaker and dead letter queue
+        
+        Args:
+            chat_id: Telegram chat ID
+            message: Alert message text
+            user_id: User ID (optional)
+            parse_mode: Message parse mode (default: HTML)
+            alert_type: Type of alert (default: news)
+            alert_data: Full alert data for dead letter queue (optional)
+        """
         try:
             from .robust_telegram_service import send_telegram_message_async
             from .alert_monitoring import get_alert_monitoring
+            from .circuit_breaker import get_telegram_circuit_breaker
+            from .dead_letter_queue import get_dead_letter_queue
             
             monitoring = get_alert_monitoring()
+            circuit_breaker = get_telegram_circuit_breaker()
+            dead_letter_queue = get_dead_letter_queue()
             
+            # Check circuit breaker state before attempting send
+            cb_stats = circuit_breaker.get_stats()
+            if cb_stats['state'] == 'open':
+                logger.warning(f"Telegram circuit breaker is OPEN - rejecting request")
+                # Add to dead letter queue immediately
+                if user_id:
+                    dead_letter_queue.add_failed_alert(
+                        user_id=user_id,
+                        chat_id=chat_id,
+                        alert_type=alert_type,
+                        title=alert_data.get('title', 'Alert') if alert_data else message.split('\n')[0][:50] if message else 'Alert',
+                        content=message,
+                        error_message="Circuit breaker is open",
+                        attempts=0,
+                        alert_data=alert_data or {}
+                    )
+                return False
+            
+            # Attempt to send (robust_telegram_service handles retries internally)
             success, error = await send_telegram_message_async(
                 chat_id=chat_id,
                 text=message,
@@ -186,6 +234,8 @@ class AlertService:
                 # Record success
                 if user_id:
                     monitoring.record_success(user_id, alert_type)
+                # Record success in circuit breaker
+                circuit_breaker._record_success()
                 return True
             else:
                 logger.error(f"Failed to send Telegram alert to {chat_id}: {error}")
@@ -193,6 +243,26 @@ class AlertService:
                 if user_id:
                     alert_title = message.split('\n')[0][:50] if message else None
                     monitoring.record_failure(user_id, alert_type, error or "Unknown error", alert_title)
+                
+                # Record failure in circuit breaker
+                circuit_breaker._record_failure()
+                
+                # Check if this was the final attempt (robust_telegram_service handles retries)
+                # For now, we'll add to dead letter queue if error suggests permanent failure
+                permanent_errors = ['invalid chat', 'chat not found', 'forbidden', 'unauthorized']
+                if error and any(perm_err in error.lower() for perm_err in permanent_errors):
+                    # Add to dead letter queue for manual review
+                    dead_letter_queue.add_failed_alert(
+                        user_id=user_id or 'unknown',
+                        chat_id=chat_id,
+                        alert_type=alert_type,
+                        title=alert_data.get('title', 'Alert') if alert_data else message.split('\n')[0][:50] if message else 'Alert',
+                        content=message,
+                        error_message=error or "Unknown error",
+                        attempts=3,  # robust_telegram_service already retried
+                        alert_data=alert_data or {}
+                    )
+                
                 return False
             
         except Exception as e:
@@ -202,6 +272,24 @@ class AlertService:
                 from .alert_monitoring import get_alert_monitoring
                 monitoring = get_alert_monitoring()
                 monitoring.record_failure(user_id, alert_type, str(e), None)
+            
+            # Add to dead letter queue
+            try:
+                from .dead_letter_queue import get_dead_letter_queue
+                dead_letter_queue = get_dead_letter_queue()
+                dead_letter_queue.add_failed_alert(
+                    user_id=user_id or 'unknown',
+                    chat_id=chat_id,
+                    alert_type=alert_type,
+                    title=alert_data.get('title', 'Alert') if alert_data else 'Alert',
+                    content=message,
+                    error_message=str(e),
+                    attempts=0,
+                    alert_data=alert_data or {}
+                )
+            except Exception as dlq_error:
+                logger.error(f"Failed to add to dead letter queue: {dlq_error}")
+            
             return False
     
     def send_email_alert(self, email: str, subject: str, content: str) -> bool:
@@ -233,52 +321,35 @@ class AlertService:
             # Send via configured channels
             success = True
             
-            # Check for Telegram alerts - handle multiple settings structures
+            # Check for Telegram alerts - CONSOLIDATED: Single source of truth for chat_id
             telegram_enabled = False
             chat_id = None
             
-            # FIRST: Check user_data.telegram_chat_id (top level, most reliable)
+            # CONSOLIDATED: Get chat_id from single location (user_data.telegram_chat_id)
+            # This is populated by get_all_users_with_alerts() which reads from:
+            # alerts/users/{user_id}/telegram_chat_id
             if user_data and user_data.get('telegram_chat_id'):
                 chat_id = str(user_data['telegram_chat_id'])
-                telegram_enabled = True
                 logger.debug(f"Found chat_id in user_data.telegram_chat_id: {chat_id}")
+            else:
+                # Record chat ID lookup failure for monitoring
+                from .alert_monitoring import get_alert_monitoring
+                monitoring = get_alert_monitoring()
+                monitoring.record_chat_id_lookup_failure(user_id)
             
-            # If not found in user_data, check settings structures
-            if not chat_id:
-                # Direct telegram setting: telegram: true
-                if user_settings.get('telegram', False):
-                    telegram_enabled = True
-                    # Get chat_id from mapping since it's not in settings
-                    if user_id:
-                        mapping_path = f"telegram_mappings"
-                        all_mappings = self.firebase_storage._make_request('GET', mapping_path)
-                        if all_mappings and isinstance(all_mappings, dict):
-                            for cid, mapping_data in all_mappings.items():
-                                if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
-                                    chat_id = cid
-                                    break
-                # New structure: channels.telegram.enabled
-                elif user_settings.get('channels', {}).get('telegram', {}).get('enabled'):
-                    telegram_enabled = True
-                    chat_id = user_settings['channels']['telegram'].get('chatId')
-                # Old structure: telegram_enabled (direct)
-                elif user_settings.get('telegram_enabled', False):
-                    telegram_enabled = True
-                    # Get chat_id from mapping if not in settings
-                    if user_id:
-                        mapping_path = f"telegram_mappings"
-                        all_mappings = self.firebase_storage._make_request('GET', mapping_path)
-                        if all_mappings and isinstance(all_mappings, dict):
-                            for cid, mapping_data in all_mappings.items():
-                                if isinstance(mapping_data, dict) and mapping_data.get('user_id') == user_id:
-                                    chat_id = cid
-                                    break
+            # Check if Telegram is enabled (check multiple structures for backward compatibility)
+            if user_settings.get('telegram', False) or \
+               user_settings.get('channels', {}).get('telegram', {}).get('enabled', False) or \
+               user_settings.get('telegram_enabled', False):
+                telegram_enabled = True
             
             if telegram_enabled and chat_id:
                 telegram_success = await self.send_telegram_alert(
                     chat_id,
                     self._format_telegram_message(alert_data),
-                    user_id=user_id
+                    user_id=user_id,
+                    alert_type=alert_data.get('type', 'news'),
+                    alert_data=alert_data  # Pass full alert data for dead letter queue
                 )
                 success = success and telegram_success
                 logger.info(f"Telegram alert sent to chat_id {chat_id}")

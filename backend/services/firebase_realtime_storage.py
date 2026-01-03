@@ -175,7 +175,10 @@ class FirebaseRealtimeStorage:
             return []
     
     def get_all_users_with_alerts(self) -> List[Dict[str, Any]]:
-        """Get all users who have alert settings configured"""
+        """
+        Get all users who have alert settings configured
+        CONSOLIDATED: Uses single source of truth for chat_id (telegram_chat_id at top level)
+        """
         try:
             path = "alerts/users"
             result = self._make_request('GET', path)
@@ -184,12 +187,21 @@ class FirebaseRealtimeStorage:
                 return []
             
             users = []
-            for user_id, user_data in result.items():
+            for safe_user_id, user_data in result.items():
                 if isinstance(user_data, dict) and 'settings' in user_data:
+                    # CONSOLIDATED: Get chat_id from single location only
+                    # Location: alerts/users/{safe_user_id}/telegram_chat_id
+                    chat_id_path = f"alerts/users/{safe_user_id}/telegram_chat_id"
+                    chat_id = self._make_request('GET', chat_id_path)
+                    
+                    # Convert to string if found
+                    if chat_id:
+                        chat_id = str(chat_id)
+                    
                     users.append({
-                        'user_id': user_id,
+                        'user_id': safe_user_id,
                         'settings': user_data.get('settings', {}),
-                        'telegram_chat_id': user_data.get('telegram_chat_id')
+                        'telegram_chat_id': chat_id  # Single source of truth
                     })
             
             logger.info(f"Retrieved {len(users)} users with alert settings")

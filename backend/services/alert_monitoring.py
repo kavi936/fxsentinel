@@ -29,7 +29,19 @@ class AlertMonitoring:
             'total_failed': 0,
             'by_user': defaultdict(lambda: {'sent': 0, 'failed': 0}),
             'by_type': defaultdict(lambda: {'sent': 0, 'failed': 0}),
-            'recent_failures': []  # Last 100 failures
+            'recent_failures': [],  # Last 100 failures
+            'chat_id_lookup_failures': 0,  # Track chat ID lookup failures
+            'deduplication_stats': {
+                'cache_size': 0,
+                'duplicates_prevented': 0,
+                'operations_count': 0
+            },
+            'circuit_breaker_stats': {
+                'state': 'closed',
+                'total_rejections': 0,
+                'state_changes': 0
+            },
+            'dead_letter_queue_size': 0
         }
         
         logger.info("Alert Monitoring Service initialized")
@@ -92,9 +104,84 @@ class AlertMonitoring:
         except Exception as e:
             logger.debug(f"Error persisting metrics (non-critical): {e}")
     
+    def record_chat_id_lookup_failure(self, user_id: str):
+        """Record a chat ID lookup failure"""
+        try:
+            with self._lock:
+                self._metrics['chat_id_lookup_failures'] += 1
+                logger.warning(f"Chat ID lookup failed for user {user_id}")
+        except Exception as e:
+            logger.error(f"Error recording chat ID lookup failure: {e}")
+    
+    def update_deduplication_stats(self, cache_size: int, duplicates_prevented: int, operations_count: int):
+        """Update deduplication statistics"""
+        try:
+            with self._lock:
+                self._metrics['deduplication_stats'] = {
+                    'cache_size': cache_size,
+                    'duplicates_prevented': duplicates_prevented,
+                    'operations_count': operations_count,
+                    'last_updated': datetime.now().isoformat()
+                }
+        except Exception as e:
+            logger.error(f"Error updating deduplication stats: {e}")
+    
+    def update_circuit_breaker_stats(self, state: str, total_rejections: int, state_changes: int):
+        """Update circuit breaker statistics"""
+        try:
+            with self._lock:
+                self._metrics['circuit_breaker_stats'] = {
+                    'state': state,
+                    'total_rejections': total_rejections,
+                    'state_changes': state_changes,
+                    'last_updated': datetime.now().isoformat()
+                }
+        except Exception as e:
+            logger.error(f"Error updating circuit breaker stats: {e}")
+    
+    def update_dead_letter_queue_size(self, size: int):
+        """Update dead letter queue size"""
+        try:
+            with self._lock:
+                self._metrics['dead_letter_queue_size'] = size
+        except Exception as e:
+            logger.error(f"Error updating dead letter queue size: {e}")
+    
     def get_metrics(self) -> Dict[str, Any]:
         """Get current alert metrics"""
         with self._lock:
+            # Get deduplication stats
+            try:
+                from .persistent_alert_deduplication import get_deduplication_stats
+                dedup_stats = get_deduplication_stats()
+                self._metrics['deduplication_stats'].update({
+                    'total_records': dedup_stats.get('total_records', 0),
+                    'duplicates_prevented': dedup_stats.get('duplicates_prevented', 0),
+                    'operations_count': dedup_stats.get('operations_count', 0)
+                })
+            except Exception as e:
+                logger.debug(f"Error getting deduplication stats: {e}")
+            
+            # Get circuit breaker stats
+            try:
+                from .circuit_breaker import get_telegram_circuit_breaker
+                cb_stats = get_telegram_circuit_breaker().get_stats()
+                self._metrics['circuit_breaker_stats'].update({
+                    'state': cb_stats.get('state', 'unknown'),
+                    'total_rejections': cb_stats.get('total_rejections', 0),
+                    'state_changes': cb_stats.get('state_changes', 0)
+                })
+            except Exception as e:
+                logger.debug(f"Error getting circuit breaker stats: {e}")
+            
+            # Get dead letter queue size
+            try:
+                from .dead_letter_queue import get_dead_letter_queue
+                dlq_stats = get_dead_letter_queue().get_stats()
+                self._metrics['dead_letter_queue_size'] = dlq_stats.get('total_failed_alerts', 0)
+            except Exception as e:
+                logger.debug(f"Error getting dead letter queue stats: {e}")
+            
             return {
                 'total_sent': self._metrics['total_sent'],
                 'total_failed': self._metrics['total_failed'],
@@ -102,7 +189,11 @@ class AlertMonitoring:
                 'by_user': dict(self._metrics['by_user']),
                 'by_type': dict(self._metrics['by_type']),
                 'recent_failures_count': len(self._metrics['recent_failures']),
-                'recent_failures': self._metrics['recent_failures'][-10:]  # Last 10
+                'recent_failures': self._metrics['recent_failures'][-10:],  # Last 10
+                'chat_id_lookup_failures': self._metrics['chat_id_lookup_failures'],
+                'deduplication_stats': self._metrics['deduplication_stats'],
+                'circuit_breaker_stats': self._metrics['circuit_breaker_stats'],
+                'dead_letter_queue_size': self._metrics['dead_letter_queue_size']
             }
     
     def _get_success_rate(self) -> float:

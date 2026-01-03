@@ -2371,12 +2371,13 @@ def trigger_alert():
             user_id = user_data.get('user_id')
             user_settings = user_data.get('settings', {})
             
-            # Get Telegram chat ID from multiple possible locations
-            chat_id = (
-                user_data.get('telegram_chat_id') or  # Top level
-                user_settings.get('channels', {}).get('telegram', {}).get('chatId') or  # New structure
-                user_settings.get('telegram_chat_id')  # Direct in settings
-            )
+            # CONSOLIDATED: Get Telegram chat ID from single source of truth
+            # Location: user_data.telegram_chat_id (populated by get_all_users_with_alerts)
+            chat_id = user_data.get('telegram_chat_id')
+            
+            # Convert to string if found
+            if chat_id:
+                chat_id = str(chat_id)
             
             # Skip users without Telegram chat ID
             if not chat_id:
@@ -2825,8 +2826,48 @@ def get_alert_settings():
             user_id = request.json.get('userId')
             if not user_id:
                 return jsonify({"success": False, "error": "userId is required in JSON body"}), 400
-            # Mock update success
-            return jsonify({"success": True, "message": "Settings updated (mock mode)"})
+            
+            # Verify user has access (security check)
+            if not _verify_user_access(user_id):
+                return jsonify({"success": False, "error": "Access denied. Please log in to the dashboard first."}), 403
+            
+            # Get settings from request
+            settings = request.json.get('settings')
+            if not settings:
+                return jsonify({"success": False, "error": "settings are required in JSON body"}), 400
+            
+            # Validate and normalize settings
+            try:
+                from services.settings_validator import validate_settings, normalize_settings
+                
+                # Normalize settings (fills in missing fields)
+                normalized = normalize_settings(settings)
+                
+                # Validate normalized settings
+                is_valid, errors = validate_settings(normalized)
+                
+                if not is_valid:
+                    return jsonify({
+                        "success": False,
+                        "error": "Settings validation failed",
+                        "errors": errors
+                    }), 400
+                
+                # Save to Firebase
+                from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                firebase_storage = FirebaseRealtimeStorage()
+                success = firebase_storage.update_user_alert_settings(user_id, normalized)
+                
+                if success:
+                    return jsonify({"success": True, "message": "Settings updated successfully"})
+                else:
+                    return jsonify({"success": False, "error": "Failed to update settings"}), 500
+                    
+            except Exception as e:
+                print(f"Error updating user settings: {e}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({"success": False, "error": str(e)}), 500
         
     except Exception as e:
         print(f"Error managing alert settings: {e}")
@@ -2992,13 +3033,54 @@ Stay tuned for real market alerts."""
 
 @app.route('/api/alerts/stats', methods=['GET'])
 def get_alert_stats():
-    """Get alert statistics"""
+    """Get comprehensive alert statistics and monitoring metrics"""
     try:
-        # Mock alert stats (bypass alert service to avoid connection issues)
+        from services.alert_monitoring import get_alert_monitoring
+        from services.persistent_alert_deduplication import get_deduplication_stats
+        from services.circuit_breaker import get_telegram_circuit_breaker
+        from services.dead_letter_queue import get_dead_letter_queue
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        
+        monitoring = get_alert_monitoring()
+        metrics = monitoring.get_metrics()
+        
+        # Get additional stats
+        dedup_stats = get_deduplication_stats()
+        cb_stats = get_telegram_circuit_breaker().get_stats()
+        dlq_stats = get_dead_letter_queue().get_stats()
+        
+        # Get user count
+        firebase = FirebaseRealtimeStorage()
+        users = firebase.get_all_users_with_alerts()
+        total_users = len(users)
+        active_users = sum(1 for u in users if u.get('telegram_chat_id'))
+        
         stats = {
-            "total_users": 1,  # Mock data
-            "active_alerts": 2,  # Mock data
-            "alerts_sent_today": 1,  # Mock data
+            "total_users": total_users,
+            "active_users": active_users,
+            "alerts_sent": metrics.get('total_sent', 0),
+            "alerts_failed": metrics.get('total_failed', 0),
+            "success_rate": metrics.get('success_rate', 0.0),
+            "by_type": metrics.get('by_type', {}),
+            "by_user": metrics.get('by_user', {}),
+            "recent_failures": metrics.get('recent_failures', []),
+            "chat_id_lookup_failures": metrics.get('chat_id_lookup_failures', 0),
+            "deduplication": {
+                "total_records": dedup_stats.get('total_records', 0),
+                "duplicates_prevented": dedup_stats.get('duplicates_prevented', 0),
+                "operations_count": dedup_stats.get('operations_count', 0),
+                "alert_ttl_hours": dedup_stats.get('alert_ttl_hours', 2)
+            },
+            "circuit_breaker": {
+                "state": cb_stats.get('state', 'unknown'),
+                "total_rejections": cb_stats.get('total_rejections', 0),
+                "state_changes": cb_stats.get('state_changes', 0),
+                "failure_count": cb_stats.get('failure_count', 0)
+            },
+            "dead_letter_queue": {
+                "total_failed_alerts": dlq_stats.get('total_failed_alerts', 0),
+                "by_type": dlq_stats.get('by_type', {})
+            },
             "timestamp": datetime.now().isoformat()
         }
         
@@ -3190,25 +3272,17 @@ def _decode_setup_token(token):
         return None
 
 def _get_user_chat_id(user_id):
-    """Get user's Telegram chat ID from storage"""
+    """
+    Get user's Telegram chat ID from storage
+    CONSOLIDATED: Uses single source of truth (alerts/users/{user_id}/telegram_chat_id)
+    """
     try:
         from services.firebase_realtime_storage import FirebaseRealtimeStorage
         firebase_storage = FirebaseRealtimeStorage()
         
-        # Try to get chat_id directly from the dedicated field first
+        # CONSOLIDATED: Get chat_id from single location only
         chat_id = firebase_storage.get_telegram_chat_id(user_id)
-        if chat_id:
-            return chat_id
-        
-        # Fallback: check user's alert settings which should include chat_id
-        user_settings = firebase_storage.get_user_alert_settings(user_id)
-        
-        if user_settings and 'channels' in user_settings:
-            telegram_settings = user_settings['channels'].get('telegram', {})
-            if telegram_settings.get('enabled') and telegram_settings.get('chatId'):
-                return telegram_settings['chatId']
-        
-        return None
+        return chat_id
         
     except Exception as e:
         print(f"Error getting user chat ID: {e}")
@@ -6058,6 +6132,89 @@ def start_background_worker():
             'error': str(e),
             'status': 'error'
         }), 500
+
+@app.route('/api/alerts/user-status', methods=['GET'])
+def get_user_status():
+    """
+    Get comprehensive user status including validation
+    Checks user's alert configuration, chat ID validity, and connection status
+    """
+    try:
+        user_id = request.args.get('userId')
+        if not user_id:
+            return jsonify({"success": False, "error": "userId is required"}), 400
+        
+        # Verify user has access
+        if not _verify_user_access(user_id):
+            return jsonify({"success": False, "error": "Access denied"}), 403
+        
+        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+        from services.chat_id_validator import validate_chat_id
+        from services.alert_monitoring import get_alert_monitoring
+        
+        firebase = FirebaseRealtimeStorage()
+        monitoring = get_alert_monitoring()
+        
+        # Get user settings
+        user_settings = firebase.get_user_alert_settings(user_id)
+        
+        # Get chat ID
+        chat_id = firebase.get_telegram_chat_id(user_id)
+        
+        # Validate chat ID
+        chat_id_valid = False
+        chat_id_error = None
+        if chat_id:
+            chat_id_valid, chat_id_error = validate_chat_id(chat_id)
+        
+        # Get user metrics
+        user_metrics = monitoring.get_user_metrics(user_id)
+        
+        # Check if Telegram is enabled
+        telegram_enabled = False
+        if user_settings:
+            telegram_enabled = (
+                user_settings.get('channels', {}).get('telegram', {}).get('enabled', False) or
+                user_settings.get('telegram_enabled', False) or
+                user_settings.get('telegram', False)
+            )
+        
+        # Determine overall status
+        status = "not_configured"
+        issues = []
+        
+        if not user_settings:
+            status = "not_configured"
+            issues.append("No alert settings found")
+        elif not telegram_enabled:
+            status = "telegram_disabled"
+            issues.append("Telegram alerts are disabled")
+        elif not chat_id:
+            status = "not_connected"
+            issues.append("Telegram not connected (no chat ID)")
+        elif not chat_id_valid:
+            status = "invalid_chat_id"
+            issues.append(f"Invalid chat ID: {chat_id_error}")
+        else:
+            status = "active"
+        
+        return jsonify({
+            "success": True,
+            "user_id": user_id,
+            "status": status,
+            "telegram_enabled": telegram_enabled,
+            "telegram_connected": bool(chat_id),
+            "chat_id": chat_id if chat_id_valid else None,  # Don't expose invalid chat IDs
+            "chat_id_valid": chat_id_valid,
+            "chat_id_error": chat_id_error if not chat_id_valid else None,
+            "issues": issues,
+            "metrics": user_metrics,
+            "settings_configured": bool(user_settings)
+        })
+        
+    except Exception as e:
+        print(f"Error getting user status: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/bot/stats')
 @limiter.exempt
