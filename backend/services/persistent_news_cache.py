@@ -159,17 +159,39 @@ class PersistentNewsCache:
             logger.error(f"Error saving news to persistent cache: {e}")
             return False
     
-    def should_fetch_new_news(self, fetch_interval_minutes: int = 5) -> bool:
+    def should_fetch_new_news(self, fetch_interval_minutes: int = 5, last_fetch: Optional[str] = None) -> bool:
         """
         Check if new news should be fetched based on last fetch time
         
         Args:
             fetch_interval_minutes: How often to fetch new news (default 5 minutes)
+            last_fetch: Optional timestamp string from cache metadata (avoids extra Firebase call if provided)
         
         Returns:
             True if new news should be fetched, False otherwise
         """
         try:
+            # If last_fetch is provided (from batched load_news call), use it to avoid extra Firebase call
+            if last_fetch:
+                try:
+                    last_fetch_dt = datetime.fromisoformat(last_fetch.replace('Z', '+00:00'))
+                    if last_fetch_dt.tzinfo:
+                        last_fetch_dt = last_fetch_dt.replace(tzinfo=None)
+                    time_since_fetch = datetime.now() - last_fetch_dt
+                    
+                    if time_since_fetch >= timedelta(minutes=fetch_interval_minutes):
+                        logger.info(f"Last fetch was {time_since_fetch}, should fetch new news (interval: {fetch_interval_minutes} min)")
+                        print(f"⏰ should_fetch_new_news: True (last fetch was {time_since_fetch} ago, >= {fetch_interval_minutes} min)")
+                        return True
+                    else:
+                        logger.debug(f"Last fetch was {time_since_fetch}, skipping fetch (interval: {fetch_interval_minutes} min)")
+                        print(f"⏰ should_fetch_new_news: False (last fetch was {time_since_fetch} ago, < {fetch_interval_minutes} min)")
+                        return False
+                except Exception as e:
+                    logger.warning(f"Error parsing last_fetch timestamp: {e}")
+                    return True  # On error, fetch to be safe
+            
+            # Fallback: Fetch from Firebase if last_fetch not provided (backward compatibility)
             cache_path = self._get_cache_path()
             cache_data = self.firebase._make_request('GET', cache_path)
             
@@ -183,8 +205,10 @@ class PersistentNewsCache:
                 return True
             
             try:
-                last_fetch = datetime.fromisoformat(last_fetch_str.replace('Z', '+00:00'))
-                time_since_fetch = datetime.now() - last_fetch
+                last_fetch_dt = datetime.fromisoformat(last_fetch_str.replace('Z', '+00:00'))
+                if last_fetch_dt.tzinfo:
+                    last_fetch_dt = last_fetch_dt.replace(tzinfo=None)
+                time_since_fetch = datetime.now() - last_fetch_dt
                 
                 if time_since_fetch >= timedelta(minutes=fetch_interval_minutes):
                     logger.info(f"Last fetch was {time_since_fetch}, should fetch new news (interval: {fetch_interval_minutes} min)")
@@ -271,16 +295,19 @@ class PersistentNewsCache:
         except Exception as e:
             logger.error(f"Error cleaning up history: {e}")
     
-    def load_news(self, allow_stale: bool = True) -> Optional[List[Dict[str, Any]]]:
+    def load_news(self, allow_stale: bool = True, return_metadata: bool = False) -> Optional[List[Dict[str, Any]]]:
         """
         Load news items from cache
         
         Args:
             allow_stale: If True, return cache even if expired (for faster UI loading).
                         If False, only return cache if not expired (default: True for better UX)
+            return_metadata: If True, return dict with 'news' and 'last_fetch' keys instead of just news list.
+                           This allows batching with should_fetch_new_news() to avoid extra Firebase calls.
         
         Returns:
-            List of news items or None if no cache exists
+            List of news items or None if no cache exists.
+            If return_metadata=True, returns dict with keys: 'news' (list) and 'last_fetch' (str or None)
         """
         try:
             cache_path = self._get_cache_path()
@@ -295,6 +322,9 @@ class PersistentNewsCache:
             if not timestamp_str:
                 logger.info("Cache has no timestamp")
                 return None
+            
+            # Extract metadata for batching
+            last_fetch_str = cache_data.get('last_fetch')
             
             try:
                 cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
@@ -311,12 +341,16 @@ class PersistentNewsCache:
                     if allow_stale:
                         # Return stale cache for faster UI loading (fresh fetch will happen in background)
                         logger.info(f"Cache is stale ({age}), but returning it for faster UI loading")
+                        if return_metadata:
+                            return {'news': news_items, 'last_fetch': last_fetch_str}
                         return news_items
                     else:
                         logger.info(f"Cache is too old ({age}), ignoring")
                         return None
                 
                 logger.info(f"Loaded {len(news_items)} news items from Firebase cache (age: {age})")
+                if return_metadata:
+                    return {'news': news_items, 'last_fetch': last_fetch_str}
                 return news_items
                 
             except Exception as e:
@@ -325,6 +359,8 @@ class PersistentNewsCache:
                 news_items = cache_data.get('news', [])
                 if news_items:
                     logger.info(f"Loaded {len(news_items)} news items from cache (timestamp parse error, but returning news)")
+                    if return_metadata:
+                        return {'news': news_items, 'last_fetch': last_fetch_str}
                     return news_items
                 return None
             

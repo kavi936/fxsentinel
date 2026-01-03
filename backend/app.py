@@ -78,7 +78,7 @@ limiter = Limiter(
     key_func=get_remote_address,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
-    enabled=False  # Temporarily disable rate limiting for testing
+    enabled=True
 )
 
 # Initialize Google Sheets Service
@@ -876,12 +876,23 @@ def get_news():
         
         if not force_refresh:
             # Always allow stale cache for faster UI loading (fresh fetch happens in background)
-            cached_news = news_cache.load_news(allow_stale=True)
+            # OPTIMIZATION: Load news with metadata to batch Firebase operations (1 request instead of 2)
+            cache_result = news_cache.load_news(allow_stale=True, return_metadata=True)
+            
+            # Extract news and metadata from batched result
+            if cache_result and isinstance(cache_result, dict):
+                cached_news = cache_result.get('news')
+                last_fetch = cache_result.get('last_fetch')
+            else:
+                cached_news = cache_result
+                last_fetch = None
+            
             print(f"🔍 Loading from cache: {len(cached_news) if cached_news else 0} articles")
             
             # Check if we should fetch new news (every 5 minutes)
+            # OPTIMIZATION: Pass last_fetch from batched load to avoid extra Firebase call
             if cached_news:
-                should_fetch_new = news_cache.should_fetch_new_news(fetch_interval_minutes=5)
+                should_fetch_new = news_cache.should_fetch_new_news(fetch_interval_minutes=5, last_fetch=last_fetch)
                 print(f"🔍 should_fetch_new_news check: {should_fetch_new}")
                 if should_fetch_new:
                     print(f"🔄 Cache exists but last fetch > 5 minutes ago - will fetch new news and append")
@@ -1369,20 +1380,6 @@ def get_news():
         
         print(f"⚠️ Using fallback mock data: {len(mock_news)} items")
         return jsonify(response_data)
-    
-    except Exception as e:
-        print(f"❌ ERROR in /api/news endpoint: {e}")
-        import traceback
-        traceback.print_exc()
-        # Return empty news on error
-        return jsonify({
-            "news": [],
-            "last_updated": datetime.now().isoformat(),
-            "sources": [],
-            "total_articles": 0,
-            "cache_status": "error",
-            "error": str(e)
-        }), 500
 
 # Global deployment notification flag
 DEPLOYMENT_NOTIFICATION = {
@@ -1649,6 +1646,7 @@ def force_refresh_news():
         }), 500
 
 @app.route('/api/analysis/<news_id>')
+@limiter.limit("5 per minute")
 def get_analysis(news_id):
     """Generate AI analysis for specific news event"""
     try:
