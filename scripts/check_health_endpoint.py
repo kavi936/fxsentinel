@@ -47,20 +47,30 @@ def check_health_endpoint(base_url: str = None):
             print("ANALYSIS")
             print("=" * 80)
             
-            if data.get('status') == 'running':
+            processor_data = data.get('processor', {})
+            
+            if processor_data.get('running'):
                 print("✅ Processor Status: RUNNING")
             else:
-                print(f"⚠️  Processor Status: {data.get('status', 'UNKNOWN')}")
+                print(f"⚠️  Processor Status: NOT RUNNING")
             
-            if data.get('thread_alive'):
+            if processor_data.get('thread_alive'):
                 print("✅ Background Thread: ALIVE")
             else:
                 print("❌ Background Thread: NOT ALIVE (processor may not be working)")
             
-            if data.get('last_check'):
-                print(f"✅ Last Check: {data.get('last_check')}")
+            if processor_data.get('last_check'):
+                print(f"✅ Last Check: {processor_data.get('last_check')}")
             else:
                 print("⚠️  Last Check: NEVER (processor may not be checking)")
+            
+            # Check alert metrics if available
+            alert_metrics = processor_data.get('alert_metrics', {})
+            if alert_metrics:
+                print(f"\n📊 Alert Metrics:")
+                print(f"   Total Sent: {alert_metrics.get('total_sent', 0)}")
+                print(f"   Total Failed: {alert_metrics.get('total_failed', 0)}")
+                print(f"   Success Rate: {alert_metrics.get('success_rate', '0.00%')}")
             
             # Check intervals
             if data.get('economic_calendar_interval'):
