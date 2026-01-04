@@ -79,7 +79,7 @@ class HybridEconomicCalendar:
         Curated economic calendar with REAL upcoming events from ForexFactory
         Last Updated: December 28, 2025
         Source: ForexFactory Calendar JSON Export
-        Coverage: October 5 - January 3, 2026
+        Coverage: October 5 - January 9, 2026
         """
         events = [
             # SUNDAY, OCTOBER 5
@@ -2141,6 +2141,948 @@ class HybridEconomicCalendar:
                 'title': 'FOMC Member Paulson Speaks',
                 'date': 'Sat, Jan 03',
                 'time': '19:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+
+            # SUNDAY, JANUARY 04 (From ForexFactory JSON Export - Week of Jan 4)
+            {
+                'title': 'FOMC Member Kashkari Speaks',
+                'date': 'Sun, Jan 04',
+                'time': '17:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Final Manufacturing PMI',
+                'date': 'Sun, Jan 04',
+                'time': '00:30 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '49.8',
+                'previous': '49.7'
+            },
+            {
+                'title': 'RatingDog Services PMI',
+                'date': 'Sun, Jan 04',
+                'time': '01:45 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '52.0',
+                'previous': '52.1'
+            },
+
+            # MONDAY, JANUARY 05 (From ForexFactory JSON Export - Week of Jan 4)
+            {
+                'title': 'Retail Sales y/y',
+                'date': 'Mon, Jan 05',
+                'time': '07:30 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.5%',
+                'previous': '2.7%'
+            },
+            {
+                'title': 'Spanish Unemployment Change',
+                'date': 'Mon, Jan 05',
+                'time': '08:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '5.7K',
+                'previous': '-18.8K'
+            },
+            {
+                'title': 'Manufacturing PMI',
+                'date': 'Mon, Jan 05',
+                'time': '08:30 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '49.7',
+                'previous': '49.7'
+            },
+            {
+                'title': 'M4 Money Supply m/m',
+                'date': 'Mon, Jan 05',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.1%',
+                'previous': '-0.2%'
+            },
+            {
+                'title': 'Mortgage Approvals',
+                'date': 'Mon, Jan 05',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '64K',
+                'previous': '65K'
+            },
+            {
+                'title': 'Net Lending to Individuals m/m',
+                'date': 'Mon, Jan 05',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '5.2B',
+                'previous': '5.4B'
+            },
+            {
+                'title': 'ISM Manufacturing PMI',
+                'date': 'Mon, Jan 05',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '48.3',
+                'previous': '48.2'
+            },
+            {
+                'title': 'ISM Manufacturing Prices',
+                'date': 'Mon, Jan 05',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '59.0',
+                'previous': '58.5'
+            },
+            {
+                'title': 'Wards Total Vehicle Sales',
+                'date': 'Mon, Jan 05',
+                'time': '15:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '15.7M',
+                'previous': '15.6M'
+            },
+            {
+                'title': 'Monetary Base y/y',
+                'date': 'Mon, Jan 05',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-8.0%',
+                'previous': '-8.5%'
+            },
+            {
+                'title': 'BRC Retail Sales Monitor y/y',
+                'date': 'Mon, Jan 05',
+                'time': '00:01 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '1.2%'
+            },
+            {
+                'title': '10-y Bond Auction',
+                'date': 'Mon, Jan 05',
+                'time': '03:35 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '1.87|3.6'
+            },
+
+            # TUESDAY, JANUARY 06 (From ForexFactory JSON Export - Week of Jan 4)
+            {
+                'title': 'German Prelim CPI m/m',
+                'date': 'Tue, Jan 06',
+                'time': '07:29 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '-0.2%'
+            },
+            {
+                'title': 'French Prelim CPI m/m',
+                'date': 'Tue, Jan 06',
+                'time': '07:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '-0.1%'
+            },
+            {
+                'title': 'Spanish Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '08:15 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '54.7',
+                'previous': '55.6'
+            },
+            {
+                'title': 'Italian Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '08:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '54.1',
+                'previous': '55.0'
+            },
+            {
+                'title': 'French Final Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '08:50 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '50.3',
+                'previous': '50.2'
+            },
+            {
+                'title': 'German Final Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '08:55 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '52.6',
+                'previous': '52.6'
+            },
+            {
+                'title': 'Final Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '52.6',
+                'previous': '52.6'
+            },
+            {
+                'title': 'Final Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '52.1',
+                'previous': '52.1'
+            },
+            {
+                'title': 'FOMC Member Barkin Speaks',
+                'date': 'Tue, Jan 06',
+                'time': '13:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Final Services PMI',
+                'date': 'Tue, Jan 06',
+                'time': '14:45 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '52.9',
+                'previous': '52.9'
+            },
+            {
+                'title': 'GDT Price Index',
+                'date': 'Tue, Jan 06',
+                'time': '15:50 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-4.4%'
+            },
+            {
+                'title': 'API Weekly Statistical Bulletin',
+                'date': 'Tue, Jan 06',
+                'time': '21:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Tue, Jan 06',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Tue, Jan 06',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '3.7%',
+                'previous': '3.8%'
+            },
+            {
+                'title': 'Trimmed Mean CPI m/m',
+                'date': 'Tue, Jan 06',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '1.0%'
+            },
+            {
+                'title': 'Building Approvals m/m',
+                'date': 'Tue, Jan 06',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.3%',
+                'previous': '-6.4%'
+            },
+
+            # WEDNESDAY, JANUARY 07 (From ForexFactory JSON Export - Week of Jan 4)
+            {
+                'title': 'German Retail Sales m/m',
+                'date': 'Wed, Jan 07',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '-0.3%'
+            },
+            {
+                'title': 'Foreign Currency Reserves',
+                'date': 'Wed, Jan 07',
+                'time': '08:00 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '727B'
+            },
+            {
+                'title': 'German Unemployment Change',
+                'date': 'Wed, Jan 07',
+                'time': '08:55 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '3K',
+                'previous': '1K'
+            },
+            {
+                'title': 'Construction PMI',
+                'date': 'Wed, Jan 07',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '42.7',
+                'previous': '39.4'
+            },
+            {
+                'title': 'Housing Equity Withdrawal q/q',
+                'date': 'Wed, Jan 07',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-8.7B',
+                'previous': '-16.1B'
+            },
+            {
+                'title': 'Core CPI Flash Estimate y/y',
+                'date': 'Wed, Jan 07',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '2.4%',
+                'previous': '2.4%'
+            },
+            {
+                'title': 'CPI Flash Estimate y/y',
+                'date': 'Wed, Jan 07',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '2.0%',
+                'previous': '2.2%'
+            },
+            {
+                'title': 'Italian Prelim CPI m/m',
+                'date': 'Wed, Jan 07',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '-0.2%'
+            },
+            {
+                'title': 'German 10-y Bond Auction',
+                'date': 'Wed, Jan 07',
+                'time': '10:42 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '2.67|2.0'
+            },
+            {
+                'title': 'ADP Non-Farm Employment Change',
+                'date': 'Wed, Jan 07',
+                'time': '13:15 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '47K',
+                'previous': '-32K'
+            },
+            {
+                'title': 'Ivey PMI',
+                'date': 'Wed, Jan 07',
+                'time': '15:00 UTC',
+                'currency': 'CAD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '49.5',
+                'previous': '48.4'
+            },
+            {
+                'title': 'ISM Services PMI',
+                'date': 'Wed, Jan 07',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '52.3',
+                'previous': '52.6'
+            },
+            {
+                'title': 'JOLTS Job Openings',
+                'date': 'Wed, Jan 07',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '7.65M',
+                'previous': '7.67M'
+            },
+            {
+                'title': 'Factory Orders m/m',
+                'date': 'Wed, Jan 07',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-1.1%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Crude Oil Inventories',
+                'date': 'Wed, Jan 07',
+                'time': '15:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-1.9M'
+            },
+            {
+                'title': 'FOMC Member Bowman Speaks',
+                'date': 'Wed, Jan 07',
+                'time': '18:10 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Average Cash Earnings y/y',
+                'date': 'Wed, Jan 07',
+                'time': '23:30 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.3%',
+                'previous': '2.6%'
+            },
+            {
+                'title': 'Goods Trade Balance',
+                'date': 'Wed, Jan 07',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '5.55B',
+                'previous': '4.39B'
+            },
+            {
+                'title': '30-y Bond Auction',
+                'date': 'Wed, Jan 07',
+                'time': '03:35 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '3.43|4.0'
+            },
+
+            # THURSDAY, JANUARY 08 (From ForexFactory JSON Export - Week of Jan 4)
+            {
+                'title': 'Consumer Confidence',
+                'date': 'Thu, Jan 08',
+                'time': '05:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '37.8',
+                'previous': '37.5'
+            },
+            {
+                'title': 'German Factory Orders m/m',
+                'date': 'Thu, Jan 08',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.9%',
+                'previous': '1.5%'
+            },
+            {
+                'title': 'Halifax HPI m/m',
+                'date': 'Thu, Jan 08',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Thu, Jan 08',
+                'time': '07:30 UTC',
+                'currency': 'CHF',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '-0.2%'
+            },
+            {
+                'title': 'French Trade Balance',
+                'date': 'Thu, Jan 08',
+                'time': '07:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-4.3B',
+                'previous': '-3.9B'
+            },
+            {
+                'title': 'Summary of Monetary Policy Discussions',
+                'date': 'Thu, Jan 08',
+                'time': '08:30 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Italian Monthly Unemployment Rate',
+                'date': 'Thu, Jan 08',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '6.0%',
+                'previous': '6.0%'
+            },
+            {
+                'title': 'PPI m/m',
+                'date': 'Thu, Jan 08',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.4%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Thu, Jan 08',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '6.4%',
+                'previous': '6.4%'
+            },
+            {
+                'title': 'Spanish 10-y Bond Auction',
+                'date': 'Thu, Jan 08',
+                'time': '10:03 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'French 10-y Bond Auction',
+                'date': 'Thu, Jan 08',
+                'time': '10:18 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Challenger Job Cuts y/y',
+                'date': 'Thu, Jan 08',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '23.5%'
+            },
+            {
+                'title': 'Trade Balance',
+                'date': 'Thu, Jan 08',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-1.5B',
+                'previous': '0.2B'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Thu, Jan 08',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '216K',
+                'previous': '199K'
+            },
+            {
+                'title': 'Prelim Nonfarm Productivity q/q',
+                'date': 'Thu, Jan 08',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '3.7%',
+                'previous': '2.4%'
+            },
+            {
+                'title': 'Prelim Unit Labor Costs q/q',
+                'date': 'Thu, Jan 08',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.5%',
+                'previous': '1.6%'
+            },
+            {
+                'title': 'Trade Balance',
+                'date': 'Thu, Jan 08',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-58.5B',
+                'previous': '-52.8B'
+            },
+            {
+                'title': 'Final Wholesale Inventories m/m',
+                'date': 'Thu, Jan 08',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Natural Gas Storage',
+                'date': 'Thu, Jan 08',
+                'time': '15:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-38B'
+            },
+            {
+                'title': 'Consumer Credit m/m',
+                'date': 'Thu, Jan 08',
+                'time': '20:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '10.3B',
+                'previous': '9.2B'
+            },
+            {
+                'title': 'Household Spending y/y',
+                'date': 'Thu, Jan 08',
+                'time': '23:30 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-1.0%',
+                'previous': '-3.0%'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Thu, Jan 08',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.8%',
+                'previous': '0.7%'
+            },
+            {
+                'title': 'PPI y/y',
+                'date': 'Thu, Jan 08',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-1.5%',
+                'previous': '-2.2%'
+            },
+
+            # FRIDAY, JANUARY 09 (From ForexFactory JSON Export - Week of Jan 4)
+            {
+                'title': 'Leading Indicators',
+                'date': 'Fri, Jan 09',
+                'time': '05:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '110.4%',
+                'previous': '110.0%'
+            },
+            {
+                'title': 'German Industrial Production m/m',
+                'date': 'Fri, Jan 09',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.5%',
+                'previous': '1.8%'
+            },
+            {
+                'title': 'German Trade Balance',
+                'date': 'Fri, Jan 09',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '16.3B',
+                'previous': '16.9B'
+            },
+            {
+                'title': 'French Consumer Spending m/m',
+                'date': 'Fri, Jan 09',
+                'time': '07:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.1%',
+                'previous': '0.4%'
+            },
+            {
+                'title': 'French Industrial Production m/m',
+                'date': 'Fri, Jan 09',
+                'time': '07:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.2%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Fri, Jan 09',
+                'time': '08:00 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '3.0%',
+                'previous': '3.0%'
+            },
+            {
+                'title': 'Italian Retail Sales m/m',
+                'date': 'Fri, Jan 09',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Fri, Jan 09',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'Building Permits',
+                'date': 'Fri, Jan 09',
+                'time': '13:29 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '1.31M'
+            },
+            {
+                'title': 'Housing Starts',
+                'date': 'Fri, Jan 09',
+                'time': '13:29 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '1.31M'
+            },
+            {
+                'title': 'Employment Change',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '-5.4K',
+                'previous': '53.6K'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '6.7%',
+                'previous': '6.5%'
+            },
+            {
+                'title': 'Average Hourly Earnings m/m',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'Non-Farm Employment Change',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '57K',
+                'previous': '64K'
+            },
+            {
+                'title': 'Unemployment Rate',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '4.5%',
+                'previous': '4.6%'
+            },
+            {
+                'title': 'Building Permits',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.35M',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Housing Starts',
+                'date': 'Fri, Jan 09',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.33M',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Prelim UoM Consumer Sentiment',
+                'date': 'Fri, Jan 09',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '53.5',
+                'previous': '53.3'
+            },
+            {
+                'title': 'Prelim UoM Inflation Expectations',
+                'date': 'Fri, Jan 09',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '4.1%'
+            },
+            {
+                'title': 'FOMC Member Barkin Speaks',
+                'date': 'Fri, Jan 09',
+                'time': '18:35 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
