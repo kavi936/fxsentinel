@@ -35,17 +35,25 @@ const TrialWelcomeRoute = () => {
           const data = await response.json();
           console.log('🔍 TrialWelcomeRoute - Subscription data:', data);
           console.log('🔍 TrialWelcomeRoute - User email:', currentUser.email);
-          setSubscriptionStatus(data);
           
-          // Check if user has valid access
-          // Only users with 'active', 'developer', or 'beta_tester' status should bypass trial welcome
-          // Users with 'trial' status should see the trial welcome page
-          const hasValidAccess = data.status === 'active' || 
-                                data.status === 'developer' ||
-                                data.status === 'beta_tester';
-          
-          console.log('🔍 TrialWelcomeRoute - User status:', data.status, 'Has access:', hasValidAccess);
-          setHasAccess(hasValidAccess);
+          // Handle null response gracefully
+          if (data && typeof data === 'object' && data.status) {
+            setSubscriptionStatus(data);
+            
+            // Check if user has valid access
+            // Only users with 'active', 'developer', or 'beta_tester' status should bypass trial welcome
+            // Users with 'trial' status should see the trial welcome page
+            const hasValidAccess = data.status === 'active' || 
+                                  data.status === 'developer' ||
+                                  data.status === 'beta_tester';
+            
+            console.log('🔍 TrialWelcomeRoute - User status:', data.status, 'Has access:', hasValidAccess);
+            setHasAccess(hasValidAccess);
+          } else {
+            // Invalid response - show trial welcome
+            console.warn('⚠️ Invalid subscription status response in TrialWelcomeRoute');
+            setHasAccess(false);
+          }
         } else {
           // No subscription found - show trial welcome
           setHasAccess(false);

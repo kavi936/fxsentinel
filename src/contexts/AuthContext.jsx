@@ -47,9 +47,15 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         console.log('📊 API Response data:', data);
-        const isDev = data.is_developer || false;
-        console.log('🔧 Setting developer status to:', isDev);
-        setIsDeveloper(isDev);
+        // Handle null response gracefully - check if data exists before accessing properties
+        if (data && typeof data === 'object') {
+          const isDev = data.is_developer || false;
+          console.log('🔧 Setting developer status to:', isDev);
+          setIsDeveloper(isDev);
+        } else {
+          console.log('⚠️ Invalid response data, setting developer to false');
+          setIsDeveloper(false);
+        }
       } else {
         console.log('❌ API request failed, setting developer to false');
         setIsDeveloper(false);

@@ -4852,9 +4852,31 @@ def get_subscription_status(user_id):
         email = request.args.get('email')
         
         status = stripe_service.get_subscription_status(user_id, email)
+        # Ensure we never return None - always return a valid response
+        if status is None:
+            # Fallback to free tier if service returns None
+            status = {
+                'status': 'free',
+                'monthly_analysis_count': 0,
+                'daily_analysis_count': 0,
+                'monthly_limit': stripe_service.free_limit,
+                'daily_limit': None,
+                'stripe_customer_id': None,
+                'is_developer': False
+            }
         return jsonify(status)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Return default free status on error instead of error message
+        print(f"Error in get_subscription_status endpoint: {e}")
+        return jsonify({
+            'status': 'free',
+            'monthly_analysis_count': 0,
+            'daily_analysis_count': 0,
+            'monthly_limit': stripe_service.free_limit if hasattr(stripe_service, 'free_limit') else 10,
+            'daily_limit': None,
+            'stripe_customer_id': None,
+            'is_developer': False
+        }), 200  # Return 200 instead of 500 to allow frontend to handle gracefully
 
 
 
