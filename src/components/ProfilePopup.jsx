@@ -87,8 +87,22 @@ const ProfilePopup = ({ isOpen, onClose }) => {
       const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}?email=${encodeURIComponent(currentUser.email)}`);
       if (response.ok) {
         const data = await response.json();
-        setSubscriptionStatus(data);
-        setLastUpdated(new Date());
+        // Handle null response gracefully
+        if (data && typeof data === 'object') {
+          setSubscriptionStatus(data);
+          setLastUpdated(new Date());
+        } else {
+          console.warn('⚠️ Invalid subscription status response in ProfilePopup');
+          // Set default free status
+          setSubscriptionStatus({
+            status: 'free',
+            monthly_analysis_count: 0,
+            daily_analysis_count: 0,
+            monthly_limit: 10,
+            daily_limit: null,
+            is_developer: false
+          });
+        }
       }
     } catch (error) {
       console.error('Error fetching subscription status:', error);

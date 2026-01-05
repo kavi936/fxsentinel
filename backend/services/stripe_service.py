@@ -146,7 +146,8 @@ class StripeService:
                     'daily_analysis_count': 0,
                     'monthly_limit': self.free_limit,
                     'daily_limit': None,
-                    'stripe_customer_id': None
+                    'stripe_customer_id': None,
+                    'is_developer': False
                 }
             
             user_doc = self.db.collection('users').document(user_id).get()
@@ -158,7 +159,8 @@ class StripeService:
                     'daily_analysis_count': 0,
                     'monthly_limit': self.free_limit,
                     'daily_limit': None,
-                    'stripe_customer_id': None
+                    'stripe_customer_id': None,
+                    'is_developer': False
                 }
             
             user_data = user_doc.to_dict()
@@ -170,11 +172,22 @@ class StripeService:
                 'daily_analysis_count': user_data.get('daily_analysis_count', 0),
                 'monthly_limit': self.free_limit if status == 'free' else None,
                 'daily_limit': self.premium_limit if status == 'premium' else None,
-                'stripe_customer_id': user_data.get('stripe_customer_id')
+                'stripe_customer_id': user_data.get('stripe_customer_id'),
+                'is_developer': False
             }
         except Exception as e:
             print(f"Error getting subscription status: {e}")
-            return None
+            # Always return a valid response object, never None
+            # Default to free tier for new users or on errors
+            return {
+                'status': 'free',
+                'monthly_analysis_count': 0,
+                'daily_analysis_count': 0,
+                'monthly_limit': self.free_limit,
+                'daily_limit': None,
+                'stripe_customer_id': None,
+                'is_developer': False
+            }
 
     def get_analysis_limit(self, user_data):
         """Get the analysis limit based on subscription status"""

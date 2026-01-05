@@ -78,17 +78,31 @@ function Dashboard() {
         const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}?email=${encodeURIComponent(currentUser.email)}`);
         if (response.ok) {
           const data = await response.json();
-          setSubscriptionStatus(data);
-          
-          // Additional security check - redirect if no valid subscription
-          const validStatuses = ['free', 'premium', 'developer'];
-          if (!validStatuses.includes(data.status)) {
-            console.warn('⚠️ User does not have valid subscription status');
-            // Don't redirect - let them stay on dashboard but with limited access
-            // navigate('/login');
+          // Handle null response gracefully - check if data exists before accessing properties
+          if (data && typeof data === 'object') {
+            setSubscriptionStatus(data);
+            
+            // Additional security check - redirect if no valid subscription
+            const validStatuses = ['free', 'premium', 'developer'];
+            if (data.status && !validStatuses.includes(data.status)) {
+              console.warn('⚠️ User does not have valid subscription status');
+              // Don't redirect - let them stay on dashboard but with limited access
+              // navigate('/login');
+            }
+            
+            console.log('✅ User subscription status:', data.status || 'unknown');
+          } else {
+            // If data is null or invalid, set default free status
+            console.warn('⚠️ Invalid subscription status response, defaulting to free');
+            setSubscriptionStatus({
+              status: 'free',
+              monthly_analysis_count: 0,
+              daily_analysis_count: 0,
+              monthly_limit: 10,
+              daily_limit: null,
+              is_developer: false
+            });
           }
-          
-          console.log('✅ User subscription status:', data.status);
         }
       } catch (error) {
         console.error('Error checking subscription status:', error);

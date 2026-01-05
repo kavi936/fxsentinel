@@ -32,17 +32,25 @@ const ProtectedRoute = ({ children }) => {
         const response = await fetch(`${config.API_BASE_URL}/api/subscription-status/${currentUser.uid}?email=${encodeURIComponent(currentUser.email)}`);
         if (response.ok) {
           const data = await response.json();
-          setSubscriptionStatus(data);
           
-          // Check if user has valid access (freemium model)
-          const hasValidAccess = data.status === 'free' || 
-                                data.status === 'premium' || 
-                                data.status === 'developer';
-          
-          setHasAccess(hasValidAccess);
-          
-          // Log for debugging
-          console.log('🔍 ProtectedRoute - User:', currentUser.email, 'Status:', data.status, 'Access:', hasValidAccess);
+          // Handle null response gracefully
+          if (data && typeof data === 'object' && data.status) {
+            setSubscriptionStatus(data);
+            
+            // Check if user has valid access (freemium model)
+            const hasValidAccess = data.status === 'free' || 
+                                  data.status === 'premium' || 
+                                  data.status === 'developer';
+            
+            setHasAccess(hasValidAccess);
+            
+            // Log for debugging
+            console.log('🔍 ProtectedRoute - User:', currentUser.email, 'Status:', data.status, 'Access:', hasValidAccess);
+          } else {
+            // Invalid response - default to free tier access
+            console.warn('⚠️ Invalid subscription status response in ProtectedRoute, allowing access');
+            setHasAccess(true);  // Allow access, backend will set to free tier
+          }
         } else {
           // No subscription found - default to free tier access
           setHasAccess(true);  // Allow access, backend will set to free tier
