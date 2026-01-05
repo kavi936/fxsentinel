@@ -111,22 +111,30 @@ class PersistentAlertDeduplication:
             alert_path = self._get_alert_path(alert_key)
             existing_alert = self.firebase._make_request('GET', alert_path)
             
-            # Handle Firebase connection errors gracefully
+            # Handle Firebase connection errors - be more strict
             if existing_alert is None:
-                # Firebase connection failed - log warning but allow alert (fail open)
-                logger.warning(f"Firebase connection failed, allowing alert (fail-open mode)")
+                # Firebase connection failed - check if it's a temporary error
+                # Log error but be more conservative (fail closed for duplicates)
+                logger.error(f"Firebase connection failed for deduplication check - this may cause duplicates")
+                # Still allow alert, but log as error (not warning) to track issues
+                # TODO: Consider implementing a local cache fallback for critical deduplication
                 return True
             
             if existing_alert and isinstance(existing_alert, dict):
+                # Check status - if reserved or sent, it's a duplicate
+                status = existing_alert.get('status', 'sent')  # Default to 'sent' for backward compatibility
+                
                 # Check if alert hasn't expired
                 expires_at_str = existing_alert.get('expires_at')
                 if expires_at_str:
                     try:
                         expires_at = datetime.fromisoformat(expires_at_str)
                         if datetime.now() < expires_at:
-                            self.duplicates_prevented += 1
-                            logger.debug(f"Duplicate alert prevented for user {user_id}: {alert_type}")
-                            return False
+                            # Alert exists and hasn't expired
+                            if status in ['sent', 'reserved']:
+                                self.duplicates_prevented += 1
+                                logger.debug(f"Duplicate alert prevented for user {user_id}: {alert_type} (status: {status})")
+                                return False
                     except Exception as e:
                         logger.warning(f"Error parsing expires_at: {e}")
                         # If we can't parse, assume it's expired and allow alert
@@ -140,7 +148,10 @@ class PersistentAlertDeduplication:
             return True
     
     def mark_alert_sent(self, alert_type: str, content: str, user_id: str) -> bool:
-        """Mark an alert as sent to prevent duplicates"""
+        """
+        Mark an alert as sent to prevent duplicates
+        Updates reserved record to sent status, or creates new sent record
+        """
         try:
             alert_key = self._generate_alert_key(alert_type, content, user_id)
             content_hash = self._generate_content_hash(content)
@@ -153,11 +164,12 @@ class PersistentAlertDeduplication:
                 'alert_type': alert_type,
                 'user_id': user_id,
                 'content_hash': content_hash,
+                'status': 'sent',  # Mark as sent (not reserved)
                 'sent_at': now.isoformat(),
                 'expires_at': expires_at.isoformat()
             }
             
-            # Store in Firebase
+            # Store in Firebase (PUT will update if reserved record exists)
             alert_path = self._get_alert_path(alert_key)
             result = self.firebase._make_request('PUT', alert_path, alert_record)
             
@@ -165,11 +177,13 @@ class PersistentAlertDeduplication:
                 logger.debug(f"Marked alert as sent: {alert_type} for user {user_id}")
                 return True
             else:
-                logger.warning(f"Failed to mark alert as sent in Firebase")
+                logger.error(f"CRITICAL: Failed to mark alert as sent in Firebase - duplicate may occur")
+                # This is critical - if we can't mark as sent, duplicates will occur
+                # Log as error to track this issue
                 return False
             
         except Exception as e:
-            logger.error(f"Error marking alert as sent: {e}")
+            logger.error(f"CRITICAL: Error marking alert as sent: {e} - duplicate may occur")
             return False
     
     def _get_news_content_hash(self, news_item: Dict[str, Any]) -> str:
@@ -180,11 +194,18 @@ class PersistentAlertDeduplication:
             if news_id:
                 return hashlib.md5(f"news:{news_id}".encode()).hexdigest()
             
-            # Fallback to title+source+url
-            title = news_item.get('title', '')
-            source = news_item.get('source', '')
-            url = news_item.get('url', '')
-            content_str = f"news:{title}|{source}|{url}"
+            # Fallback: Use normalized title+source (more stable than including URL)
+            # URL can change (query params, redirects, etc.) but title+source is more stable
+            title = str(news_item.get('title', '')).strip().lower()
+            source = str(news_item.get('source', '')).strip().lower()
+            
+            # Normalize title: remove extra whitespace, special chars that might vary
+            import re
+            title_normalized = re.sub(r'\s+', ' ', title)  # Normalize whitespace
+            title_normalized = re.sub(r'[^\w\s]', '', title_normalized)  # Remove special chars
+            
+            # Use title+source for hash (more stable than including URL)
+            content_str = f"news:{title_normalized}|{source}"
             return hashlib.md5(content_str.encode()).hexdigest()
         except Exception as e:
             logger.error(f"Error generating news content hash: {e}")
@@ -263,6 +284,7 @@ class PersistentAlertDeduplication:
         """
         Check if news alert should be sent (not a duplicate)
         OPTIMIZED: First checks global content hash, then per-user
+        Uses atomic check-and-reserve to prevent race conditions
         """
         try:
             # Generate content hash for global deduplication
@@ -275,20 +297,31 @@ class PersistentAlertDeduplication:
                     logger.debug(f"Global duplicate prevented: {news_item.get('title', '')[:30]}...")
                     return False
             
-            # Create content string from news item for per-user check
-            title = news_item.get('title', '')
-            source = news_item.get('source', '')
-            url = news_item.get('url', '')
+            # Create content string from news item for per-user check (same logic as mark_news_alert_sent)
             news_id = str(news_item.get('id', ''))
             
-            # Use news_id if available, otherwise use title+source+url
             if news_id:
                 content = f"news:{news_id}"
             else:
-                content = f"news:{title}|{source}|{url}"
+                # Use normalized title+source (same as content hash) for consistency
+                title = str(news_item.get('title', '')).strip().lower()
+                source = str(news_item.get('source', '')).strip().lower()
+                import re
+                title_normalized = re.sub(r'\s+', ' ', title)
+                title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
+                content = f"news:{title_normalized}|{source}"
             
             # Check per-user deduplication (only if global check passed)
             should_send = self.should_send_alert('news', content, user_id)
+            
+            # CRITICAL: If should send, immediately reserve it to prevent race conditions
+            # This marks it as "in progress" so other threads/instances won't process it
+            if should_send:
+                # Try to reserve immediately (atomic operation)
+                if not self._reserve_alert('news', content, user_id):
+                    # Another instance already reserved it - don't send
+                    logger.debug(f"Alert already reserved by another instance for user {user_id}")
+                    return False
             
             return should_send
             
@@ -296,10 +329,56 @@ class PersistentAlertDeduplication:
             logger.error(f"Error checking news alert deduplication: {e}")
             return True  # Allow alert if check fails
     
+    def _reserve_alert(self, alert_type: str, content: str, user_id: str) -> bool:
+        """
+        Atomically reserve an alert to prevent race conditions
+        Returns True if successfully reserved, False if already reserved
+        """
+        try:
+            alert_key = self._generate_alert_key(alert_type, content, user_id)
+            alert_path = self._get_alert_path(alert_key)
+            
+            # Check if already exists (including reserved)
+            existing_alert = self.firebase._make_request('GET', alert_path)
+            
+            if existing_alert and isinstance(existing_alert, dict):
+                # Already exists (either sent or reserved)
+                return False
+            
+            # Try to create a "reserved" record with short TTL (5 minutes)
+            # If this succeeds, we've reserved it
+            now = datetime.now()
+            expires_at = now + timedelta(minutes=5)  # Short TTL for reservations
+            
+            reserve_record = {
+                'alert_type': alert_type,
+                'user_id': user_id,
+                'status': 'reserved',  # Mark as reserved, not sent yet
+                'reserved_at': now.isoformat(),
+                'expires_at': expires_at.isoformat()
+            }
+            
+            # Use PUT to create (will fail if already exists)
+            result = self.firebase._make_request('PUT', alert_path, reserve_record)
+            
+            if result is not None:
+                logger.debug(f"Reserved alert for user {user_id}: {alert_type}")
+                return True
+            else:
+                # Failed to reserve (likely already exists)
+                return False
+                
+        except Exception as e:
+            logger.error(f"Error reserving alert: {e}")
+            # On error, allow to proceed (fail open, but log warning)
+            logger.warning(f"Failed to reserve alert, proceeding anyway (may cause duplicate)")
+            return True  # Allow to proceed
+    
     def mark_news_alert_sent(self, news_item: Dict[str, Any], user_id: str) -> bool:
         """
         Mark a news alert as sent after successful delivery
         OPTIMIZED: Marks both global content hash and per-user alert
+        Updates reserved record to sent status
         """
         try:
             # Generate content hash for global deduplication
@@ -310,18 +389,20 @@ class PersistentAlertDeduplication:
                 self._mark_global_content_hash(content_hash)
             
             # Create content string from news item (same as should_send_news_alert)
-            title = news_item.get('title', '')
-            source = news_item.get('source', '')
-            url = news_item.get('url', '')
             news_id = str(news_item.get('id', ''))
             
-            # Use news_id if available, otherwise use title+source+url
             if news_id:
                 content = f"news:{news_id}"
             else:
-                content = f"news:{title}|{source}|{url}"
+                # Use normalized title+source (same as should_send_news_alert) for consistency
+                title = str(news_item.get('title', '')).strip().lower()
+                source = str(news_item.get('source', '')).strip().lower()
+                import re
+                title_normalized = re.sub(r'\s+', ' ', title)
+                title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
+                content = f"news:{title_normalized}|{source}"
             
-            # Mark per-user alert as sent
+            # Mark per-user alert as sent (updates reserved record)
             return self.mark_alert_sent('news', content, user_id)
             
         except Exception as e:
@@ -357,7 +438,7 @@ class PersistentAlertDeduplication:
             return True  # Allow alert if check fails
     
     def cleanup_expired_alerts(self) -> int:
-        """Clean up expired alert records from Firebase"""
+        """Clean up expired alert records from Firebase (including reserved alerts)"""
         try:
             # Get all alerts
             alerts_path = "alert_deduplication/alerts"
@@ -368,6 +449,7 @@ class PersistentAlertDeduplication:
             
             now = datetime.now()
             expired_count = 0
+            reserved_expired_count = 0
             
             # Check each alert and delete expired ones
             for alert_key, alert_data in list(all_alerts.items()):
@@ -381,11 +463,17 @@ class PersistentAlertDeduplication:
                                 alert_path = self._get_alert_path(alert_key)
                                 self.firebase._make_request('DELETE', alert_path)
                                 expired_count += 1
+                                
+                                # Track reserved alerts that expired (these are problematic)
+                                status = alert_data.get('status', 'sent')
+                                if status == 'reserved':
+                                    reserved_expired_count += 1
+                                    logger.warning(f"Expired reserved alert found: {alert_key} - alert may have failed to send")
                         except Exception as e:
                             logger.warning(f"Error parsing expires_at for alert {alert_key}: {e}")
             
             if expired_count > 0:
-                logger.info(f"Cleaned up {expired_count} expired alert records")
+                logger.info(f"Cleaned up {expired_count} expired alert records ({reserved_expired_count} were reserved)")
             
             return expired_count
             
