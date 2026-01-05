@@ -325,11 +325,18 @@ class UnifiedAlertProcessor:
                 return False
             
             # Check deduplication (direct function call)
+            # CRITICAL: This atomically checks AND reserves the alert to prevent race conditions
+            # The reservation happens inside should_send_news_alert with verification
             from services.persistent_alert_deduplication import should_send_news_alert
             
             if not should_send_news_alert(news_item, user_id):
                 logger.debug(f"Duplicate alert prevented for user {user_id}: {news_item.get('title', '')[:30]}...")
                 return False
+            
+            # Additional delay to ensure Firebase reservation is fully propagated across all instances
+            # This helps prevent race conditions in high-concurrency scenarios
+            import time
+            time.sleep(0.3)  # 300ms delay to allow Firebase to propagate reservation globally
             
             # Import services for alert processing
             from services.news_alert_trigger import news_alert_trigger
@@ -383,6 +390,32 @@ class UnifiedAlertProcessor:
                 # Mark alert as sent (direct function call)
                 from services.persistent_alert_deduplication import mark_news_alert_sent
                 mark_news_alert_sent(news_item, user_id)
+                
+                # Log alert to history (so it appears in the Alerts tab)
+                try:
+                    from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                    firebase_storage = FirebaseRealtimeStorage()
+                    
+                    history_data = {
+                        'alert_type': alert_data.get('type', 'liveNews'),
+                        'title': alert_data.get('title', news_item.get('title', 'Breaking Forex News')),
+                        'content': alert_data.get('content', ''),
+                        'timestamp': alert_data.get('timestamp', news_item.get('timestamp', datetime.now().isoformat())),
+                        'sent_via': ['telegram'],  # Currently only Telegram is supported
+                        'status': 'sent',
+                        'sent_at': datetime.now().isoformat(),
+                        'source': alert_data.get('source', news_item.get('source', 'Unknown')),
+                        'url': alert_data.get('url', news_item.get('url', '')),
+                        'currency_pairs': alert_data.get('currency_pairs', []),
+                        'impact_level': alert_data.get('impact_level', news_item.get('impact', 'medium'))
+                    }
+                    
+                    firebase_storage.log_alert_history(user_id, history_data)
+                    logger.debug(f"Logged alert to history for user {user_id}")
+                except Exception as e:
+                    logger.error(f"Error logging alert to history: {e}")
+                    # Don't fail the alert send if history logging fails
+                
                 logger.info(f"Alert sent successfully to user {user_id}")
                 return True
             else:
