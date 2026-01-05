@@ -8,6 +8,13 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     assetsDir: 'assets',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,  // Removes all console.* calls in production builds
+        drop_debugger: true, // Removes debugger statements
+      },
+    },
     rollupOptions: {
       output: {
         assetFileNames: (assetInfo) => {
