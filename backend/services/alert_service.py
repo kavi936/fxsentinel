@@ -352,6 +352,15 @@ class AlertService:
                     alert_data=alert_data  # Pass full alert data for dead letter queue
                 )
                 success = success and telegram_success
+                
+                # Log to history if Telegram alert was sent successfully
+                if telegram_success:
+                    try:
+                        await self._log_alert_history(user_id, alert_data, 'telegram')
+                    except Exception as e:
+                        logger.error(f"Error logging alert history: {e}")
+                        # Don't fail the alert send if history logging fails
+                
                 logger.info(f"Telegram alert sent to chat_id {chat_id}")
             elif telegram_enabled and not chat_id:
                 logger.warning(f"Telegram enabled but no chat_id found for user {user_id}")
@@ -595,15 +604,20 @@ Sent at: {datetime.now().strftime('%H:%M UTC')}
     async def _log_alert_history(self, user_id: str, alert_data: Dict[str, Any], sent_via: str):
         """Log alert in user's history"""
         try:
+            from datetime import datetime
             history_data = {
-                'alert_type': alert_data.get('type', 'unknown'),
+                'alert_type': alert_data.get('type', alert_data.get('alert_type', 'unknown')),
                 'title': alert_data.get('title', ''),
                 'content': alert_data.get('content', ''),
                 'priority': alert_data.get('priority', 'medium'),
                 'currency_pairs': alert_data.get('currency_pairs', []),
                 'sent_via': [sent_via],
                 'status': 'sent',
-                'sent_at': datetime.now().isoformat()
+                'sent_at': datetime.now().isoformat(),
+                'timestamp': alert_data.get('timestamp', datetime.now().isoformat()),  # Add timestamp for frontend
+                'source': alert_data.get('source', ''),
+                'url': alert_data.get('url', ''),
+                'impact_level': alert_data.get('impact_level', alert_data.get('priority', 'medium'))
             }
             
             self.firebase_storage.log_alert_history(user_id, history_data)

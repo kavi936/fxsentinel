@@ -85,6 +85,13 @@ class PersistentAlertDeduplication:
         except Exception as e:
             logger.warning(f"Error clearing expired cache on startup: {e}")
     
+    def _reserve_alert(self, alert_type: str, content: str, user_id: str) -> bool:
+        """
+        DEPRECATED: Use _check_and_reserve_alert instead for atomic operation
+        Kept for backward compatibility
+        """
+        return self._check_and_reserve_alert(alert_type, content, user_id)
+    
     def should_send_alert(self, alert_type: str, content: str, user_id: str) -> bool:
         """
         Check if alert should be sent (not a duplicate)
@@ -285,6 +292,7 @@ class PersistentAlertDeduplication:
         Check if news alert should be sent (not a duplicate)
         OPTIMIZED: First checks global content hash, then per-user
         Uses atomic check-and-reserve to prevent race conditions
+        CRITICAL: This method atomically checks AND reserves in a single operation
         """
         try:
             # Generate content hash for global deduplication
@@ -311,68 +319,128 @@ class PersistentAlertDeduplication:
                 title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
                 content = f"news:{title_normalized}|{source}"
             
-            # Check per-user deduplication (only if global check passed)
-            should_send = self.should_send_alert('news', content, user_id)
-            
-            # CRITICAL: If should send, immediately reserve it to prevent race conditions
-            # This marks it as "in progress" so other threads/instances won't process it
-            if should_send:
-                # Try to reserve immediately (atomic operation)
-                if not self._reserve_alert('news', content, user_id):
-                    # Another instance already reserved it - don't send
-                    logger.debug(f"Alert already reserved by another instance for user {user_id}")
-                    return False
-            
-            return should_send
+            # CRITICAL: Atomic check-and-reserve operation
+            # This prevents race conditions by checking AND reserving in one go
+            return self._check_and_reserve_alert('news', content, user_id)
             
         except Exception as e:
             logger.error(f"Error checking news alert deduplication: {e}")
             return True  # Allow alert if check fails
     
-    def _reserve_alert(self, alert_type: str, content: str, user_id: str) -> bool:
+    def _check_and_reserve_alert(self, alert_type: str, content: str, user_id: str) -> bool:
         """
-        Atomically reserve an alert to prevent race conditions
-        Returns True if successfully reserved, False if already reserved
+        Atomically check if alert should be sent AND reserve it
+        This is a single operation to prevent race conditions
+        Uses optimistic locking with retry to handle Firebase eventual consistency
+        Returns True if should send and successfully reserved, False otherwise
         """
-        try:
-            alert_key = self._generate_alert_key(alert_type, content, user_id)
-            alert_path = self._get_alert_path(alert_key)
-            
-            # Check if already exists (including reserved)
-            existing_alert = self.firebase._make_request('GET', alert_path)
-            
-            if existing_alert and isinstance(existing_alert, dict):
-                # Already exists (either sent or reserved)
-                return False
-            
-            # Try to create a "reserved" record with short TTL (5 minutes)
-            # If this succeeds, we've reserved it
-            now = datetime.now()
-            expires_at = now + timedelta(minutes=5)  # Short TTL for reservations
-            
-            reserve_record = {
-                'alert_type': alert_type,
-                'user_id': user_id,
-                'status': 'reserved',  # Mark as reserved, not sent yet
-                'reserved_at': now.isoformat(),
-                'expires_at': expires_at.isoformat()
-            }
-            
-            # Use PUT to create (will fail if already exists)
-            result = self.firebase._make_request('PUT', alert_path, reserve_record)
-            
-            if result is not None:
-                logger.debug(f"Reserved alert for user {user_id}: {alert_type}")
-                return True
-            else:
-                # Failed to reserve (likely already exists)
-                return False
+        import time
+        max_retries = 3
+        retry_delay = 0.15  # 150ms between retries
+        
+        for attempt in range(max_retries):
+            try:
+                alert_key = self._generate_alert_key(alert_type, content, user_id)
+                alert_path = self._get_alert_path(alert_key)
                 
-        except Exception as e:
-            logger.error(f"Error reserving alert: {e}")
-            # On error, allow to proceed (fail open, but log warning)
-            logger.warning(f"Failed to reserve alert, proceeding anyway (may cause duplicate)")
-            return True  # Allow to proceed
+                # Step 1: Check if already exists (including reserved or sent)
+                existing_alert = self.firebase._make_request('GET', alert_path)
+                
+                if existing_alert and isinstance(existing_alert, dict):
+                    # Check status - if reserved or sent, it's a duplicate
+                    status = existing_alert.get('status', 'sent')  # Default to 'sent' for backward compatibility
+                    
+                    if status in ['reserved', 'sent']:
+                        # Check if expired
+                        expires_at_str = existing_alert.get('expires_at')
+                        if expires_at_str:
+                            try:
+                                expires_at = datetime.fromisoformat(expires_at_str)
+                                if datetime.now() < expires_at:
+                                    # Alert exists and hasn't expired - duplicate
+                                    self.duplicates_prevented += 1
+                                    logger.debug(f"Duplicate alert prevented (status: {status}) for user {user_id}: {alert_type}")
+                                    return False
+                            except Exception as e:
+                                logger.warning(f"Error parsing expires_at: {e}")
+                                # If we can't parse, assume expired and allow alert
+                
+                # Step 2: Alert doesn't exist or is expired - try to reserve it
+                # Use a unique timestamp to identify our reservation
+                now = datetime.now()
+                expires_at = now + timedelta(minutes=5)  # Short TTL for reservations
+                our_reserved_at = now.isoformat()
+                
+                reserve_record = {
+                    'alert_type': alert_type,
+                    'user_id': user_id,
+                    'status': 'reserved',  # Mark as reserved, not sent yet
+                    'reserved_at': our_reserved_at,
+                    'expires_at': expires_at.isoformat()
+                }
+                
+                # Step 3: Try to create reservation (PUT is atomic in Firebase)
+                result = self.firebase._make_request('PUT', alert_path, reserve_record)
+                
+                if result is None:
+                    # Firebase error - retry
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay)
+                        continue
+                    else:
+                        logger.warning(f"Failed to reserve alert in Firebase after {max_retries} attempts")
+                        return True  # Fail open
+                
+                # Step 4: Verify we got the reservation (handle eventual consistency)
+                time.sleep(0.2)  # Wait for Firebase to propagate
+                
+                verify_alert = self.firebase._make_request('GET', alert_path)
+                if verify_alert and isinstance(verify_alert, dict):
+                    verify_status = verify_alert.get('status', '')
+                    verify_reserved_at = verify_alert.get('reserved_at', '')
+                    
+                    # If status is reserved and reserved_at matches ours, we got it
+                    if verify_status == 'reserved' and verify_reserved_at == our_reserved_at:
+                        logger.debug(f"Successfully reserved alert for user {user_id}: {alert_type}")
+                        return True
+                    elif verify_status == 'reserved' and verify_reserved_at != our_reserved_at:
+                        # Someone else reserved it first (different timestamp)
+                        logger.debug(f"Alert already reserved by another instance (their: {verify_reserved_at}, ours: {our_reserved_at})")
+                        return False
+                    elif verify_status == 'sent':
+                        # Already sent
+                        logger.debug(f"Alert already sent for user {user_id}")
+                        return False
+                    else:
+                        # Status doesn't match - retry
+                        if attempt < max_retries - 1:
+                            logger.debug(f"Reservation verification failed (status: {verify_status}), retrying...")
+                            time.sleep(retry_delay)
+                            continue
+                        else:
+                            logger.warning(f"Reservation verification failed after {max_retries} attempts")
+                            return True  # Fail open
+                else:
+                    # No record found - retry
+                    if attempt < max_retries - 1:
+                        logger.debug(f"Reservation not found in verification, retrying...")
+                        time.sleep(retry_delay)
+                        continue
+                    else:
+                        logger.warning(f"Reservation verification failed - no record found")
+                        return True  # Fail open
+                
+            except Exception as e:
+                logger.error(f"Error in check-and-reserve (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    logger.warning(f"Failed to check-and-reserve alert after {max_retries} attempts")
+                    return True  # Fail open
+        
+        # Should not reach here, but fail open if we do
+        return True
     
     def mark_news_alert_sent(self, news_item: Dict[str, Any], user_id: str) -> bool:
         """
