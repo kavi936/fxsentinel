@@ -2425,7 +2425,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI m/m',
-                'date': 'Tue, Jan 06',
+                'date': 'Wed, Jan 07',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -2435,7 +2435,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI y/y',
-                'date': 'Tue, Jan 06',
+                'date': 'Wed, Jan 07',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -2445,7 +2445,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Trimmed Mean CPI m/m',
-                'date': 'Tue, Jan 06',
+                'date': 'Wed, Jan 07',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
