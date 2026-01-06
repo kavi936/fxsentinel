@@ -655,8 +655,22 @@ const LiveNewsFeed = () => {
           });
         }
         
+        // Filter out unwanted news items (e.g., FXStreet gold price spam)
+        // This is a safety filter in case any unwanted items made it through backend filtering
+        const filterPhrase = "Gold rises, according to FXStreet data";
+        const filteredList = currentList.filter(item => {
+          const title = item.title || '';
+          if (filterPhrase in title) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('🚫 Frontend filtered out unwanted news item:', title.substring(0, 80));
+            }
+            return false;
+          }
+          return true;
+        });
+        
         // Remove duplicates based on title similarity
-        const uniqueNews = removeDuplicateNews(currentList);
+        const uniqueNews = removeDuplicateNews(filteredList);
         
         const filteredAndSorted = uniqueNews
             .filter(item => {
