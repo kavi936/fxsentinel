@@ -100,6 +100,16 @@ class AlternativeNewsSources:
             logger.error(f"Error fetching RSS feed from {source_name}: {str(e)}")
             return []
     
+    def should_filter_news_item(self, title: str) -> bool:
+        """Check if news item should be filtered out based on title"""
+        # Filter out FXStreet gold price updates that spam the feed
+        # These items have titles like "India Gold price today: Gold rises, according to FXStreet data"
+        filter_phrase = "Gold rises, according to FXStreet data"
+        if filter_phrase in title:
+            logger.debug(f"Filtering out news item with title: {title[:80]}")
+            return True
+        return False
+    
     def parse_article(self, entry, source_name: str) -> Dict[str, Any]:
         """Parse RSS entry into standardized format"""
         try:
@@ -113,6 +123,10 @@ class AlternativeNewsSources:
             # Clean title and summary
             title = entry.title.strip() if hasattr(entry, 'title') else ''
             summary = entry.summary.strip() if hasattr(entry, 'summary') else ''
+            
+            # Filter out unwanted news items (e.g., FXStreet gold price spam)
+            if self.should_filter_news_item(title):
+                return None
             
             # Remove HTML tags from summary
             summary = re.sub(r'<[^>]+>', '', summary)

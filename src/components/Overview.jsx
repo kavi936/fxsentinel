@@ -110,7 +110,7 @@ const Overview = () => {
   const [isVixContextExpanded, setIsVixContextExpanded] = useState(false);
   
   // AI Analysis state
-  const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'loading', 'event-analysis', 'error'
+  const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'pending', 'loading', 'event-analysis', 'error'
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   
@@ -973,11 +973,19 @@ const Overview = () => {
   const handleEventClick = async (event) => {
     console.log(`🎯 Event clicked: ${event.title}`);
     setSelectedEvent(event);
+    setAiAnalysisState('pending'); // Set to pending instead of immediately loading
+    // Don't call API yet - wait for user confirmation
+  };
+
+  const handleConfirmAnalysis = async () => {
+    if (!selectedEvent) return;
+    
+    console.log(`✅ User confirmed analysis for: ${selectedEvent.title}`);
     setAiAnalysisState('loading');
     
     try {
       // Generate real AI analysis
-      const analysis = await generateEventAnalysis(event);
+      const analysis = await generateEventAnalysis(selectedEvent);
       setAiAnalysis(analysis);
       setAiAnalysisState('event-analysis');
     } catch (error) {
@@ -2313,6 +2321,50 @@ const Overview = () => {
                   <div className="default-icon"></div>
                   <div className="default-text">Click on any economic event to get AI analysis</div>
                   <div className="default-subtext">Get specific insights and trading opportunities</div>
+                </div>
+              )}
+
+              {aiAnalysisState === 'pending' && selectedEvent && (
+                <div className="ai-pending-message">
+                  <div className="default-icon"></div>
+                  <div className="pending-text">
+                    <div className="pending-event-title">{selectedEvent.title}</div>
+                    <div className="pending-event-details">
+                      {selectedEvent.date && selectedEvent.time && (
+                        <div className="pending-detail-item">
+                          <span className="pending-detail-label">Date & Time:</span>
+                          <span className="pending-detail-value">
+                            {(() => {
+                              const formatted = formatCalendarTime(selectedEvent.time, selectedEvent.date);
+                              return formatted.date && formatted.time 
+                                ? `${formatted.date} at ${formatted.time}`
+                                : selectedEvent.date && selectedEvent.time
+                                ? `${selectedEvent.date} ${selectedEvent.time}`
+                                : selectedEvent.date || selectedEvent.time || 'TBD';
+                            })()}
+                          </span>
+                        </div>
+                      )}
+                      {selectedEvent.impact && (
+                        <div className="pending-detail-item">
+                          <span className="pending-detail-label">Impact:</span>
+                          <span className={`pending-detail-value impact-${selectedEvent.impact.toLowerCase()}`}>
+                            {selectedEvent.impact.charAt(0).toUpperCase() + selectedEvent.impact.slice(1)}
+                          </span>
+                        </div>
+                      )}
+                      {selectedEvent.currency && (
+                        <div className="pending-detail-item">
+                          <span className="pending-detail-label">Currency:</span>
+                          <span className="pending-detail-value">{selectedEvent.currency}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="default-subtext">Get specific insights and trading opportunities</div>
+                  <button className="confirm-analysis-btn" onClick={handleConfirmAnalysis}>
+                    Confirm
+                  </button>
                 </div>
               )}
             </div>

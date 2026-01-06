@@ -914,6 +914,13 @@ def get_news():
             # Remove duplicates from cached news
             cached_news = remove_duplicate_news(cached_news)
             
+            # Filter out unwanted news items (e.g., FXStreet gold price spam)
+            filter_phrase = "Gold rises, according to FXStreet data"
+            original_count = len(cached_news)
+            cached_news = [item for item in cached_news if filter_phrase not in item.get('title', '')]
+            if len(cached_news) < original_count:
+                print(f"🚫 Filtered out {original_count - len(cached_news)} unwanted cached news items")
+            
             # Convert all news item IDs to strings to prevent JavaScript precision loss
             # Also add added_to_feed_at fallback for cached items that don't have it
             for item in cached_news:
@@ -1114,6 +1121,22 @@ def get_news():
             fresh_news = remove_duplicate_news_simple(fresh_news)
             print(f"📊 After deduplication of fresh news: {len(fresh_news)} articles")
             
+            # Filter out unwanted news items (e.g., FXStreet gold price spam)
+            def filter_unwanted_news(news_list):
+                """Filter out news items that match unwanted patterns"""
+                filter_phrase = "Gold rises, according to FXStreet data"
+                filtered = []
+                for item in news_list:
+                    title = item.get('title', '')
+                    if filter_phrase not in title:
+                        filtered.append(item)
+                    else:
+                        print(f"🚫 Filtered out unwanted news item: {title[:80]}")
+                return filtered
+            
+            fresh_news = filter_unwanted_news(fresh_news)
+            print(f"📊 After filtering unwanted news: {len(fresh_news)} articles")
+            
             # For force refresh, load cached news for merging (to preserve added_to_feed_at)
             # For regular fetch, cached_news is already loaded above
             if force_refresh and not cached_news:
@@ -1151,9 +1174,13 @@ def get_news():
                         item['added_to_feed_at'] = current_time
                     all_news.append(item)
                 
-                # Add cached items that aren't in fresh news
+                # Add cached items that aren't in fresh news (also filter unwanted items)
                 fresh_keys = {f"{item.get('title', '')}_{item.get('source', '')}" for item in fresh_news}
+                filter_phrase = "Gold rises, according to FXStreet data"
                 for item in cached_news:
+                    # Skip unwanted items
+                    if filter_phrase in item.get('title', ''):
+                        continue
                     key = f"{item.get('title', '')}_{item.get('source', '')}"
                     if key not in fresh_keys:
                         all_news.append(item)
@@ -1164,6 +1191,13 @@ def get_news():
                 for item in all_news:
                     if 'added_to_feed_at' not in item:
                         item['added_to_feed_at'] = current_time
+            
+            # Final filter pass to ensure no unwanted items made it through
+            filter_phrase = "Gold rises, according to FXStreet data"
+            final_count_before = len(all_news)
+            all_news = [item for item in all_news if filter_phrase not in item.get('title', '')]
+            if len(all_news) < final_count_before:
+                print(f"🚫 Final filter pass removed {final_count_before - len(all_news)} unwanted items")
             
             # Sort by added_to_feed_at (when news was first added to our system)
             all_news.sort(key=lambda x: (
@@ -4543,6 +4577,56 @@ def get_cached_analysis(news_id):
     except Exception as e:
         print(f"Error getting cached analysis: {e}")
         return jsonify({"error": "Failed to retrieve cached analysis"}), 500
+
+@app.route('/api/remove-filtered-news', methods=['POST'])
+def remove_filtered_news():
+    """Remove news items from cache and history that match a filter phrase"""
+    try:
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
+        
+        # Get filter phrase from request (default to FXStreet gold price spam)
+        data = request.get_json() or {}
+        filter_phrase = data.get('filter_phrase', 'Gold rises, according to FXStreet data')
+        confirm = data.get('confirm', False)
+        
+        if not confirm:
+            return jsonify({
+                "error": "Confirmation required",
+                "message": "This operation will remove news items from cache and history. Set 'confirm': true to proceed.",
+                "filter_phrase": filter_phrase
+            }), 400
+        
+        # Remove filtered items
+        result = news_cache.remove_filtered_items(filter_phrase)
+        
+        if result.get('success'):
+            return jsonify({
+                "success": True,
+                "message": f"Removed {result['total_removed']} items matching filter phrase",
+                "removed_from_cache": result['removed_from_cache'],
+                "removed_from_history": result['removed_from_history'],
+                "total_removed": result['total_removed'],
+                "filter_phrase": filter_phrase,
+                "timestamp": datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                "success": False,
+                "error": result.get('error', 'Unknown error'),
+                "removed_from_cache": result.get('removed_from_cache', 0),
+                "removed_from_history": result.get('removed_from_history', 0),
+                "total_removed": result.get('total_removed', 0)
+            }), 500
+        
+    except Exception as e:
+        print(f"Error removing filtered news: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/api/clear-analysis-history', methods=['POST'])
 def clear_analysis_history():

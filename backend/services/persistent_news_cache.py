@@ -552,6 +552,80 @@ class PersistentNewsCache:
         except Exception as e:
             logger.error(f"Error clearing history: {e}")
             return False
+    
+    def remove_filtered_items(self, filter_phrase: str) -> Dict[str, Any]:
+        """
+        Remove news items from cache and history that match a filter phrase in their title
+        
+        Args:
+            filter_phrase: Phrase to search for in news item titles (case-sensitive)
+        
+        Returns:
+            Dict with counts of removed items from cache and history
+        """
+        removed_from_cache = 0
+        removed_from_history = 0
+        
+        try:
+            # Remove from cache
+            cache_path = self._get_cache_path()
+            cache_data = self.firebase._make_request('GET', cache_path)
+            
+            if cache_data and isinstance(cache_data, dict):
+                news_items = cache_data.get('news', [])
+                if news_items:
+                    original_count = len(news_items)
+                    # Filter out items matching the phrase
+                    filtered_news = [item for item in news_items if filter_phrase not in item.get('title', '')]
+                    removed_from_cache = original_count - len(filtered_news)
+                    
+                    if removed_from_cache > 0:
+                        # Update cache with filtered items
+                        cache_data['news'] = filtered_news
+                        cache_data['news_count'] = len(filtered_news)
+                        cache_data['timestamp'] = datetime.now().isoformat()
+                        self.firebase._make_request('PUT', cache_path, cache_data)
+                        logger.info(f"Removed {removed_from_cache} items from cache matching filter: {filter_phrase}")
+            
+            # Remove from history
+            history_path = self._get_history_path()
+            history_data = self.firebase._make_request('GET', history_path)
+            
+            if history_data and isinstance(history_data, dict):
+                # Find items to remove
+                items_to_remove = []
+                for news_id, item_data in history_data.items():
+                    if isinstance(item_data, dict):
+                        title = item_data.get('title', '')
+                        if filter_phrase in title:
+                            items_to_remove.append(news_id)
+                
+                # Delete matching items
+                for news_id in items_to_remove:
+                    item_path = self._get_history_item_path(news_id)
+                    self.firebase._make_request('DELETE', item_path)
+                    removed_from_history += 1
+                
+                if removed_from_history > 0:
+                    logger.info(f"Removed {removed_from_history} items from history matching filter: {filter_phrase}")
+            
+            return {
+                'success': True,
+                'removed_from_cache': removed_from_cache,
+                'removed_from_history': removed_from_history,
+                'total_removed': removed_from_cache + removed_from_history,
+                'filter_phrase': filter_phrase
+            }
+            
+        except Exception as e:
+            logger.error(f"Error removing filtered items: {e}")
+            return {
+                'success': False,
+                'error': str(e),
+                'removed_from_cache': removed_from_cache,
+                'removed_from_history': removed_from_history,
+                'total_removed': removed_from_cache + removed_from_history
+            }
 
 # Global singleton instance
 _persistent_news_cache = None
