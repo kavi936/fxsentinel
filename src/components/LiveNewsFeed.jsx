@@ -262,8 +262,9 @@ const LiveNewsFeed = () => {
       
       let response;
       try {
-        // Add timeout to prevent hanging requests (30 seconds for force refresh, 15 for normal)
-        const timeout = forceRefresh ? 30000 : 15000;
+        // Add timeout to prevent hanging requests (45 seconds for force refresh, 15 for normal)
+        // Increased force refresh timeout to accommodate parallel fetching and cache operations
+        const timeout = forceRefresh ? 45000 : 15000;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
         
