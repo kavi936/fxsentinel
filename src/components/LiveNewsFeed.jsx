@@ -660,7 +660,7 @@ const LiveNewsFeed = () => {
         const filterPhrase = "Gold rises, according to FXStreet data";
         const filteredList = currentList.filter(item => {
           const title = item.title || '';
-          if (filterPhrase in title) {
+          if (title.includes(filterPhrase)) {
             if (process.env.NODE_ENV === 'development') {
               console.log('🚫 Frontend filtered out unwanted news item:', title.substring(0, 80));
             }
