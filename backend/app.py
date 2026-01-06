@@ -902,9 +902,11 @@ def get_news():
                 should_fetch_new = True
                 print("🔍 No cache found - will fetch fresh news")
         else:
-            # Force refresh: Skip cache and always fetch fresh news (same logic as regular fetch)
-            print("🔄 Force refresh requested - skipping cache and fetching fresh news")
-            cached_news = None  # Don't load cache
+            # Force refresh: Return cached news immediately for fast UI, then fetch fresh in background
+            # This provides instant feedback while fresh news is being fetched
+            print("🔄 Force refresh requested - loading cached news for immediate return, fetching fresh in background")
+            cached_news_for_response = news_cache.load_news(allow_stale=True)
+            cached_news = None  # Don't use cached_news for merging (we'll return it separately)
             should_fetch_new = True  # Always fetch fresh
         
         # OPTIMIZATION: If we have cached news, return it immediately for faster UI
@@ -1028,13 +1030,32 @@ def get_news():
                     print(f"❌ Error fetching alternative news: {e}")
                     return []
             
-            # Use ThreadPoolExecutor for parallel processing with shorter timeouts
-            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-                # Submit tasks with 10-second timeout each (removed economic calendar)
+            # Function to fetch Telegram news with timeout
+            def fetch_telegram_news():
+                try:
+                    import sys
+                    import os
+                    # Add current directory to path for imports
+                    if os.path.dirname(__file__) not in sys.path:
+                        sys.path.insert(0, os.path.dirname(__file__))
+                    
+                    from services.telegram_sync_wrapper import telegram_sync
+                    telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
+                    print(f"✅ Fetched {len(telegram_news)} Telegram news articles")
+                    return telegram_news
+                except Exception as e:
+                    print(f"❌ Error fetching Telegram news: {e}")
+                    return []
+            
+            # Use ThreadPoolExecutor for parallel processing - all sources fetch concurrently
+            # This significantly reduces total fetch time (from sequential to parallel)
+            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+                # Submit all tasks in parallel
                 rss_future = executor.submit(fetch_rss_news)
                 alt_future = executor.submit(fetch_alternative_news)
+                telegram_future = executor.submit(fetch_telegram_news)
                 
-                # Wait for all tasks with timeout
+                # Wait for RSS news with timeout
                 try:
                     rss_news = rss_future.result(timeout=10)
                     fresh_news.extend(rss_news)
@@ -1046,6 +1067,7 @@ def get_news():
                     print(f"❌ RSS news fetch failed: {e}")
                     rss_news = []
                 
+                # Wait for alternative news with timeout
                 try:
                     alt_news = alt_future.result(timeout=10)
                     fresh_news.extend(alt_news)
@@ -1056,45 +1078,20 @@ def get_news():
                 except Exception as e:
                     print(f"❌ Alternative news fetch failed: {e}")
                     alt_news = []
-            
-            # Try Telegram news separately using the same approach as force refresh
-            telegram_news = []
-            try:
-                import sys
-                import os
-                # Add current directory to path for imports
-                if os.path.dirname(__file__) not in sys.path:
-                    sys.path.insert(0, os.path.dirname(__file__))
                 
-                print("🔍 Attempting to import telegram_sync in news endpoint...")
-                from services.telegram_sync_wrapper import telegram_sync
-                print("✅ Successfully imported telegram_sync in news endpoint")
-                
-                print("🔍 Calling telegram_sync.get_recent_telegram_news in news endpoint...")
-                telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
-                print(f"🔍 Telegram sync returned {len(telegram_news)} articles in news endpoint")
-                
-                # Debug: Show what we got from Telegram
-                if telegram_news:
-                    print("📰 Sample Telegram articles from news endpoint:")
-                    for i, news in enumerate(telegram_news[:3], 1):
-                        print(f"  {i}. {news.get('title', 'No title')}")
-                        print(f"     Source: {news.get('source', 'No source')}")
-                        print(f"     Impact: {news.get('impact', 'No impact')}")
-                        print()
-                else:
-                    print("⚠️ No Telegram news returned from sync wrapper in news endpoint")
-                
-                fresh_news.extend(telegram_news)
-                sources_used.append("Telegram")
-                print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
-                print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
-            except Exception as e:
-                print(f"❌ Error fetching Telegram news in news endpoint: {e}")
-                import traceback
-                traceback.print_exc()
-                print("Continuing with other sources...")
-                telegram_news = []
+                # Wait for Telegram news with timeout (slightly longer as it can be slower)
+                try:
+                    telegram_news = telegram_future.result(timeout=15)
+                    fresh_news.extend(telegram_news)
+                    sources_used.append("Telegram")
+                    if telegram_news:
+                        print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
+                except concurrent.futures.TimeoutError:
+                    print("⚠️ Telegram news fetch timed out")
+                    telegram_news = []
+                except Exception as e:
+                    print(f"❌ Telegram news fetch failed: {e}")
+                    telegram_news = []
         else:
             # should_fetch_new is False - we shouldn't be fetching
             print(f"⏸️  should_fetch_new is False and force_refresh is False - skipping fetch, will use cached news")
@@ -1220,17 +1217,23 @@ def get_news():
             # The save_news function will handle merging with existing cache and preserving added_to_feed_at
             save_success = False
             if cached_news and (should_fetch_new or force_refresh):
+                # OPTIMIZATION: Limit fresh_news to top 200 items to reduce Firebase write time
+                # This prevents saving hundreds of items which can be slow
+                fresh_news_to_save = fresh_news[:200] if len(fresh_news) > 200 else fresh_news
+                if len(fresh_news) > 200:
+                    print(f"📊 Limited fresh news to 200 items for faster cache save (was {len(fresh_news)})")
+                
                 # IMPORTANT: Pass only fresh_news to save_news, not all_news
                 # save_news with append=True will:
                 # 1. Load existing cache
                 # 2. Compare fresh_news against existing cache
                 # 3. Add only truly new items (preserving added_to_feed_at from existing items)
                 # 4. Merge: new items on top, existing items below
-                print(f"💾 Saving {len(fresh_news)} fresh items to cache with append=True")
+                print(f"💾 Saving {len(fresh_news_to_save)} fresh items to cache with append=True")
                 print(f"   (save_news will merge with existing cache and preserve added_to_feed_at)")
                 
                 # Pass only fresh_news - save_news will handle merging with cache
-                save_success = news_cache.save_news(fresh_news, append=True)
+                save_success = news_cache.save_news(fresh_news_to_save, append=True)
                 if save_success:
                     print(f"📝 Saved fresh news to cache (merged with existing, preserved added_to_feed_at)")
                     
@@ -1248,21 +1251,26 @@ def get_news():
                     print(f"⚠️  Failed to save fresh news to cache (Firebase error - news still returned)")
             else:
                 # First time saving or no cached news - use append=False to replace cache
+                # OPTIMIZATION: Limit to top 200 items to reduce Firebase write time
+                all_news_to_save = all_news[:200] if len(all_news) > 200 else all_news
+                if len(all_news) > 200:
+                    print(f"📊 Limited all_news to 200 items for faster cache save (was {len(all_news)})")
+                
                 # Ensure all items have added_to_feed_at set
-                for item in all_news:
+                for item in all_news_to_save:
                     if 'added_to_feed_at' not in item:
                         item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
                 
-                save_success = news_cache.save_news(all_news, append=False)
+                save_success = news_cache.save_news(all_news_to_save, append=False)
                 if save_success:
-                    print(f"📝 Replaced cache with {len(all_news)} items (all have added_to_feed_at set)")
+                    print(f"📝 Replaced cache with {len(all_news_to_save)} items (all have added_to_feed_at set)")
                     
                     # Trigger alerts immediately for new news (event-driven, non-blocking)
                     try:
                         from services.unified_alert_processor import get_unified_processor
                         unified_processor = get_unified_processor()
-                        unified_processor.check_news_alerts_async(all_news)
-                        print(f"✅ Triggered alert check for {len(all_news)} news items")
+                        unified_processor.check_news_alerts_async(all_news_to_save)
+                        print(f"✅ Triggered alert check for {len(all_news_to_save)} news items")
                     except Exception as e:
                         print(f"⚠️  Error triggering alerts: {e}")
                         import traceback
@@ -1287,6 +1295,38 @@ def get_news():
                     print(f"⚠️  Error triggering alerts for cached news: {e}")
                     import traceback
                     traceback.print_exc()
+            
+            # For force refresh, if we have cached news for immediate response, return it now
+            # and let fresh news be saved in background (will be available on next request)
+            if force_refresh and 'cached_news_for_response' in locals() and cached_news_for_response:
+                # Filter and prepare cached news for immediate response
+                cached_news_filtered = remove_duplicate_news(cached_news_for_response)
+                filter_phrase = "Gold rises, according to FXStreet data"
+                cached_news_filtered = [item for item in cached_news_filtered if filter_phrase not in item.get('title', '')]
+                
+                # Convert IDs to strings
+                for item in cached_news_filtered:
+                    if 'id' in item:
+                        item['id'] = str(item['id'])
+                    if 'added_to_feed_at' not in item:
+                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                
+                print(f"⚡ Force refresh: Returning {len(cached_news_filtered)} cached items immediately, fresh fetch continues in background")
+                response_data = {
+                    "news": cached_news_filtered,
+                    "last_updated": datetime.now().isoformat(),
+                    "sources": ["cached_data"],
+                    "total_articles": len(cached_news_filtered),
+                    "cache_status": "cached_stale"  # Indicates fresh fetch is happening
+                }
+                
+                # Add deployment notification if active
+                if DEPLOYMENT_NOTIFICATION["active"]:
+                    response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
+                
+                # Note: Fresh news will be saved to cache in background and available on next request
+                # This provides instant UI feedback while fresh data is being fetched
+                return jsonify(response_data)
             
             response_data = {
                 "news": all_news,
