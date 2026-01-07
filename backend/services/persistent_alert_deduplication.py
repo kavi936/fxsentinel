@@ -367,8 +367,10 @@ class PersistentAlertDeduplication:
                 
                 # Step 2: Alert doesn't exist or is expired - try to reserve it
                 # Use a unique timestamp to identify our reservation
+                # SOLUTION 4: Increased reservation window from 5 to 10 minutes
+                # This gives more time for Firebase propagation and reduces race conditions
                 now = datetime.now()
-                expires_at = now + timedelta(minutes=5)  # Short TTL for reservations
+                expires_at = now + timedelta(minutes=10)  # Increased from 5 to 10 minutes
                 our_reserved_at = now.isoformat()
                 
                 reserve_record = {
@@ -392,7 +394,9 @@ class PersistentAlertDeduplication:
                         return True  # Fail open
                 
                 # Step 4: Verify we got the reservation (handle eventual consistency)
-                time.sleep(0.2)  # Wait for Firebase to propagate
+                # SOLUTION 4: Increased verification delay from 0.2s to 0.5s
+                # This gives Firebase more time to propagate changes globally
+                time.sleep(0.5)  # Increased from 0.2s to 0.5s for better propagation
                 
                 verify_alert = self.firebase._make_request('GET', alert_path)
                 if verify_alert and isinstance(verify_alert, dict):
@@ -401,15 +405,15 @@ class PersistentAlertDeduplication:
                     
                     # If status is reserved and reserved_at matches ours, we got it
                     if verify_status == 'reserved' and verify_reserved_at == our_reserved_at:
-                        logger.debug(f"Successfully reserved alert for user {user_id}: {alert_type}")
+                        logger.info(f"✅ Successfully reserved alert for user {user_id}: {alert_type}")
                         return True
                     elif verify_status == 'reserved' and verify_reserved_at != our_reserved_at:
                         # Someone else reserved it first (different timestamp)
-                        logger.debug(f"Alert already reserved by another instance (their: {verify_reserved_at}, ours: {our_reserved_at})")
+                        logger.warning(f"🚫 Alert already reserved by another instance (their: {verify_reserved_at}, ours: {our_reserved_at})")
                         return False
                     elif verify_status == 'sent':
                         # Already sent
-                        logger.debug(f"Alert already sent for user {user_id}")
+                        logger.warning(f"🚫 Alert already sent for user {user_id}: {alert_type}")
                         return False
                     else:
                         # Status doesn't match - retry

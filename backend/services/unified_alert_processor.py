@@ -47,6 +47,12 @@ class UnifiedAlertProcessor:
         self._preferences_cache_ttl_seconds = 300  # Cache for 5 minutes
         self._cache_lock = threading.Lock()
         
+        # In-memory cache to prevent checking same news item multiple times
+        # Key: news_id, Value: last_checked timestamp
+        self._recently_checked: Dict[str, datetime] = {}
+        self._check_window_seconds = 30  # Don't check same news within 30 seconds
+        self._recently_checked_lock = threading.Lock()
+        
         logger.info("UnifiedAlertProcessor initialized with caching")
     
     def start(self):
@@ -165,6 +171,47 @@ class UnifiedAlertProcessor:
             
             logger.info(f"Found {len(high_impact)} high-impact forex news items")
             
+            # SOLUTION 1: Filter out recently checked items to prevent duplicate processing
+            # This prevents the same news item from being checked multiple times within 30 seconds
+            now = datetime.now()
+            high_impact_filtered = []
+            
+            with self._recently_checked_lock:
+                for news_item in high_impact:
+                    news_id = str(news_item.get('id', ''))
+                    if not news_id:
+                        # No ID - process anyway (fallback)
+                        high_impact_filtered.append(news_item)
+                        continue
+                    
+                    # Check if we've checked this recently
+                    if news_id in self._recently_checked:
+                        last_checked = self._recently_checked[news_id]
+                        age_seconds = (now - last_checked).total_seconds()
+                        if age_seconds < self._check_window_seconds:
+                            logger.debug(f"⏭️  Skipping recently checked news: {news_id} (checked {age_seconds:.1f}s ago) - {news_item.get('title', '')[:50]}")
+                            continue
+                    
+                    # Mark as checked and add to processing list
+                    high_impact_filtered.append(news_item)
+                    self._recently_checked[news_id] = now
+                
+                # Clean up old entries (keep cache size manageable)
+                if len(self._recently_checked) > 1000:
+                    # Remove entries older than check window
+                    cutoff = now - timedelta(seconds=self._check_window_seconds)
+                    self._recently_checked = {
+                        k: v for k, v in self._recently_checked.items() 
+                        if v > cutoff
+                    }
+                    logger.debug(f"🧹 Cleaned up recently checked cache, now {len(self._recently_checked)} entries")
+            
+            if not high_impact_filtered:
+                logger.info("No new high-impact news items to process (all were recently checked)")
+                return
+            
+            logger.info(f"Processing {len(high_impact_filtered)} news items (after filtering recently checked)")
+            
             # OPTIMIZATION: Check global content hash first (before processing users)
             # This prevents processing the same news item multiple times
             # If a news item was already sent globally, we don't need to check per-user
@@ -173,7 +220,7 @@ class UnifiedAlertProcessor:
             
             # Filter news items by global content hash (one check per news item)
             news_items_to_process = []
-            for news_item in high_impact[:3]:  # Max 3 items
+            for news_item in high_impact_filtered[:3]:  # Max 3 items
                 content_hash = dedup._get_news_content_hash(news_item)
                 if content_hash:
                     # Check if content is new globally
@@ -329,9 +376,15 @@ class UnifiedAlertProcessor:
             # The reservation happens inside should_send_news_alert with verification
             from services.persistent_alert_deduplication import should_send_news_alert
             
+            # SOLUTION 5: Add detailed logging to track alert checking
+            news_title = news_item.get('title', 'Unknown')[:50]
+            logger.info(f"🔍 Checking alert for user {user_id}: {news_title}...")
+            
             if not should_send_news_alert(news_item, user_id):
-                logger.debug(f"Duplicate alert prevented for user {user_id}: {news_item.get('title', '')[:30]}...")
+                logger.warning(f"🚫 Duplicate prevented for user {user_id}: {news_title}")
                 return False
+            
+            logger.info(f"✅ Alert approved for user {user_id}: {news_title}")
             
             # Additional delay to ensure Firebase reservation is fully propagated across all instances
             # This helps prevent race conditions in high-concurrency scenarios
@@ -389,18 +442,27 @@ class UnifiedAlertProcessor:
             if success:
                 # Mark alert as sent (direct function call)
                 from services.persistent_alert_deduplication import mark_news_alert_sent
-                mark_news_alert_sent(news_item, user_id)
+                mark_sent_success = mark_news_alert_sent(news_item, user_id)
+                if not mark_sent_success:
+                    logger.warning(f"⚠️  Failed to mark alert as sent in deduplication for user {user_id}")
                 
-                # Log alert to history (so it appears in the Alerts tab)
+                # SOLUTION 3: Log alert to history with enhanced error handling
+                # This ensures alerts appear in the Alerts tab history section
+                history_logged = False
                 try:
                     from services.firebase_realtime_storage import FirebaseRealtimeStorage
                     firebase_storage = FirebaseRealtimeStorage()
                     
+                    # Ensure we have all required fields for frontend display
+                    alert_title = alert_data.get('title') or news_item.get('title', 'Breaking Forex News')
+                    alert_content = alert_data.get('content', '')
+                    alert_timestamp = alert_data.get('timestamp') or news_item.get('timestamp') or datetime.now().isoformat()
+                    
                     history_data = {
                         'alert_type': alert_data.get('type', 'liveNews'),
-                        'title': alert_data.get('title', news_item.get('title', 'Breaking Forex News')),
-                        'content': alert_data.get('content', ''),
-                        'timestamp': alert_data.get('timestamp', news_item.get('timestamp', datetime.now().isoformat())),
+                        'title': alert_title,
+                        'content': alert_content,
+                        'timestamp': alert_timestamp,
                         'sent_via': ['telegram'],  # Currently only Telegram is supported
                         'status': 'sent',
                         'sent_at': datetime.now().isoformat(),
@@ -410,11 +472,22 @@ class UnifiedAlertProcessor:
                         'impact_level': alert_data.get('impact_level', news_item.get('impact', 'medium'))
                     }
                     
-                    firebase_storage.log_alert_history(user_id, history_data)
-                    logger.debug(f"Logged alert to history for user {user_id}")
+                    # Log with explicit success check
+                    history_logged = firebase_storage.log_alert_history(user_id, history_data)
+                    if history_logged:
+                        logger.info(f"✅ Logged alert to history for user {user_id}: {alert_title[:50]}...")
+                    else:
+                        logger.error(f"❌ Failed to log alert to history for user {user_id}: {alert_title[:50]}...")
+                        
                 except Exception as e:
-                    logger.error(f"Error logging alert to history: {e}")
+                    logger.error(f"❌ Error logging alert to history for user {user_id}: {e}", exc_info=True)
                     # Don't fail the alert send if history logging fails
+                    history_logged = False
+                
+                if history_logged:
+                    logger.info(f"✅ Alert sent and logged to history for user {user_id}: {alert_title[:50]}...")
+                else:
+                    logger.warning(f"⚠️  Alert sent but history logging failed for user {user_id}: {alert_title[:50]}...")
                 
                 logger.info(f"Alert sent successfully to user {user_id}")
                 return True
