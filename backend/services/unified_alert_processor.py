@@ -325,7 +325,17 @@ class UnifiedAlertProcessor:
             logger.warning(f"🚫 No user_id provided, skipping alert")
             return False
         
-        # CRITICAL FIX: Use per-user+news lock to prevent concurrent processing
+        # SOLUTION 1: Quick deduplication check BEFORE lock (fast path)
+        # This catches duplicates early without needing to acquire lock
+        from services.persistent_alert_deduplication import should_send_news_alert
+        logger.info(f"🔍 Quick deduplication check for user {user_id}: {news_title}...")
+        
+        quick_check = should_send_news_alert(news_item, user_id)
+        if not quick_check:
+            logger.warning(f"🚫 Duplicate prevented (quick check) for user {user_id}: {news_title}")
+            return False
+        
+        # SOLUTION 2: Use blocking lock to ensure proper serialization
         # This ensures only one thread processes the same user+news combination at a time
         lock_key = (user_id, news_id)
         
@@ -335,15 +345,27 @@ class UnifiedAlertProcessor:
                 self._processing_locks[lock_key] = threading.Lock()
             processing_lock = self._processing_locks[lock_key]
         
-        # Acquire lock before processing
-        if not processing_lock.acquire(blocking=False):
-            # Another thread is already processing this user+news combination
-            logger.warning(f"🚫 Another thread already processing alert for user {user_id}: {news_title}... (skipping)")
-            return False
+        # Acquire lock with blocking=True to ensure serialization
+        # This ensures only one thread processes this user+news at a time
+        logger.info(f"🔒 Acquiring lock for user {user_id}: {news_title}...")
+        processing_lock.acquire(blocking=True)  # Changed from blocking=False
         
         try:
             # DEBUG: Log entry point
             logger.info(f"🔍 _send_alert_to_user called for user {user_id}: {news_title}...")
+            
+            # SOLUTION 4: Double-check deduplication after acquiring lock
+            # This catches any duplicates that might have been processed while waiting for lock
+            logger.info(f"🔍 Double-check deduplication for user {user_id}: {news_title}...")
+            
+            should_send = should_send_news_alert(news_item, user_id)
+            logger.info(f"🔍 Deduplication result for user {user_id}: should_send={should_send}")
+            
+            if not should_send:
+                logger.warning(f"🚫 Duplicate prevented (double-check) for user {user_id}: {news_title}")
+                return False
+            
+            logger.info(f"✅ Alert approved for user {user_id}: {news_title}")
             
             # OPTIMIZATION: Get user settings from cache
             user_settings = self._get_user_settings_cached(user_id, user_data)
@@ -382,27 +404,23 @@ class UnifiedAlertProcessor:
                 logger.debug(f"User {user_id} has liveNews alerts disabled")
                 return False
             
-            # Check deduplication (direct function call)
-            # CRITICAL: This atomically checks AND reserves the alert to prevent race conditions
-            # The reservation happens inside should_send_news_alert with verification
-            from services.persistent_alert_deduplication import should_send_news_alert
-            
-            # SOLUTION 5: Add detailed logging to track alert checking
-            logger.info(f"🔍 Checking deduplication for user {user_id}: {news_title}...")
-            
-            should_send = should_send_news_alert(news_item, user_id)
-            logger.info(f"🔍 Deduplication result for user {user_id}: should_send={should_send}")
-            
-            if not should_send:
-                logger.warning(f"🚫 Duplicate prevented for user {user_id}: {news_title}")
-                return False
-            
-            logger.info(f"✅ Alert approved for user {user_id}: {news_title}")
-            
             # Additional delay to ensure Firebase reservation is fully propagated across all instances
             # This helps prevent race conditions in high-concurrency scenarios
             import time
-            time.sleep(0.3)  # 300ms delay to allow Firebase to propagate reservation globally
+            time.sleep(0.5)  # Increased to 500ms delay to allow Firebase to propagate reservation globally
+            
+            # SOLUTION 3: Mark alert as sent IMMEDIATELY after reservation (before sending)
+            # This prevents other threads from sending the same alert
+            from services.persistent_alert_deduplication import mark_news_alert_sent
+            mark_sent_success = mark_news_alert_sent(news_item, user_id)
+            if not mark_sent_success:
+                logger.warning(f"⚠️  Failed to mark alert as sent in deduplication for user {user_id}")
+                # Continue anyway - the reservation should still prevent duplicates
+            else:
+                logger.info(f"✅ Alert marked as sent (before delivery) for user {user_id}: {news_title}")
+            
+            # Additional delay after marking as sent to ensure Firebase propagation
+            time.sleep(0.2)  # 200ms delay to allow Firebase to propagate "sent" status
             
             # Import services for alert processing
             from services.news_alert_trigger import news_alert_trigger
@@ -453,11 +471,8 @@ class UnifiedAlertProcessor:
                 )
             
             if success:
-                # Mark alert as sent (direct function call)
-                from services.persistent_alert_deduplication import mark_news_alert_sent
-                mark_sent_success = mark_news_alert_sent(news_item, user_id)
-                if not mark_sent_success:
-                    logger.warning(f"⚠️  Failed to mark alert as sent in deduplication for user {user_id}")
+                # Alert already marked as sent above (before sending)
+                # Just log success here
                 
                 # SOLUTION 3: Log alert to history with enhanced error handling
                 # This ensures alerts appear in the Alerts tab history section
