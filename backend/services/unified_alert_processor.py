@@ -53,6 +53,11 @@ class UnifiedAlertProcessor:
         self._check_window_seconds = 30  # Don't check same news within 30 seconds
         self._recently_checked_lock = threading.Lock()
         
+        # Lock dictionary to prevent concurrent processing of same user+news combination
+        # Key: (user_id, news_id), Value: threading.Lock
+        self._processing_locks: Dict[Tuple[str, str], threading.Lock] = {}
+        self._processing_locks_lock = threading.Lock()  # Lock for the locks dictionary
+        
         logger.info("UnifiedAlertProcessor initialized with caching")
     
     def start(self):
@@ -212,33 +217,16 @@ class UnifiedAlertProcessor:
             
             logger.info(f"Processing {len(high_impact_filtered)} news items (after filtering recently checked)")
             
-            # OPTIMIZATION: Check global content hash first (before processing users)
-            # This prevents processing the same news item multiple times
-            # If a news item was already sent globally, we don't need to check per-user
-            from services.persistent_alert_deduplication import get_persistent_deduplication
-            dedup = get_persistent_deduplication()
-            
-            # Filter news items by global content hash (one check per news item)
-            news_items_to_process = []
-            for news_item in high_impact_filtered[:3]:  # Max 3 items
-                content_hash = dedup._get_news_content_hash(news_item)
-                if content_hash:
-                    # Check if content is new globally
-                    if dedup._check_global_content_hash(content_hash):
-                        # Content is new globally - add to processing list
-                        news_items_to_process.append(news_item)
-                    else:
-                        # Content already sent globally - skip (no need to check per-user)
-                        logger.debug(f"Skipping news item (already sent globally): {news_item.get('title', '')[:30]}...")
-                else:
-                    # No content hash - process anyway (fallback)
-                    news_items_to_process.append(news_item)
+            # FIX: Don't filter by global hash here - let per-user deduplication handle it
+            # Global hash check is done inside should_send_news_alert() as an optimization
+            # Removing this check allows per-user processing while still preventing duplicates
+            news_items_to_process = high_impact_filtered[:3]  # Max 3 items
             
             if not news_items_to_process:
-                logger.info("No new news items to process (all already sent globally)")
+                logger.info("No high-impact news items to process")
                 return
             
-            logger.info(f"Processing {len(news_items_to_process)} new news items (after global deduplication)")
+            logger.info(f"Processing {len(news_items_to_process)} news items for per-user deduplication")
             
             # Get all users with alerts enabled (direct function call)
             firebase = FirebaseRealtimeStorage()
@@ -327,12 +315,35 @@ class UnifiedAlertProcessor:
         Send alert to a single user (thread-safe)
         Uses direct function calls - no HTTP overhead
         OPTIMIZED: Uses cached user settings
+        CRITICAL: Uses per-user+news lock to prevent concurrent processing
         """
+        user_id = user_data.get('user_id')
+        news_id = str(news_item.get('id', ''))
+        news_title = news_item.get('title', 'Unknown')[:50]
+        
+        if not user_id:
+            logger.warning(f"🚫 No user_id provided, skipping alert")
+            return False
+        
+        # CRITICAL FIX: Use per-user+news lock to prevent concurrent processing
+        # This ensures only one thread processes the same user+news combination at a time
+        lock_key = (user_id, news_id)
+        
+        # Get or create lock for this user+news combination
+        with self._processing_locks_lock:
+            if lock_key not in self._processing_locks:
+                self._processing_locks[lock_key] = threading.Lock()
+            processing_lock = self._processing_locks[lock_key]
+        
+        # Acquire lock before processing
+        if not processing_lock.acquire(blocking=False):
+            # Another thread is already processing this user+news combination
+            logger.warning(f"🚫 Another thread already processing alert for user {user_id}: {news_title}... (skipping)")
+            return False
+        
         try:
-            user_id = user_data.get('user_id')
-            
-            if not user_id:
-                return False
+            # DEBUG: Log entry point
+            logger.info(f"🔍 _send_alert_to_user called for user {user_id}: {news_title}...")
             
             # OPTIMIZATION: Get user settings from cache
             user_settings = self._get_user_settings_cached(user_id, user_data)
@@ -377,10 +388,12 @@ class UnifiedAlertProcessor:
             from services.persistent_alert_deduplication import should_send_news_alert
             
             # SOLUTION 5: Add detailed logging to track alert checking
-            news_title = news_item.get('title', 'Unknown')[:50]
-            logger.info(f"🔍 Checking alert for user {user_id}: {news_title}...")
+            logger.info(f"🔍 Checking deduplication for user {user_id}: {news_title}...")
             
-            if not should_send_news_alert(news_item, user_id):
+            should_send = should_send_news_alert(news_item, user_id)
+            logger.info(f"🔍 Deduplication result for user {user_id}: should_send={should_send}")
+            
+            if not should_send:
                 logger.warning(f"🚫 Duplicate prevented for user {user_id}: {news_title}")
                 return False
             
@@ -473,7 +486,9 @@ class UnifiedAlertProcessor:
                     }
                     
                     # Log with explicit success check
+                    logger.info(f"🔍 Attempting to log alert to history for user {user_id}: {alert_title[:50]}...")
                     history_logged = firebase_storage.log_alert_history(user_id, history_data)
+                    logger.info(f"🔍 History logging result: {history_logged} for user {user_id}")
                     if history_logged:
                         logger.info(f"✅ Logged alert to history for user {user_id}: {alert_title[:50]}...")
                     else:
@@ -496,8 +511,14 @@ class UnifiedAlertProcessor:
                 return False
         
         except Exception as e:
-            logger.error(f"Error sending alert to user {user_data.get('user_id', 'unknown')}: {e}", exc_info=True)
+            logger.error(f"Error sending alert to user {user_id}: {e}", exc_info=True)
             return False
+        finally:
+            # Always release the lock
+            processing_lock.release()
+            
+            # Clean up lock if it's been unused (optional optimization)
+            # We'll keep locks for a while to avoid recreating them
     
     def _check_economic_calendar_alerts(self):
         """Check for economic calendar alerts (direct function calls)"""

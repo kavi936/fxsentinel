@@ -254,9 +254,12 @@ class PersistentAlertDeduplication:
                             # Content already sent globally - cache it (thread-safe)
                             with self._cache_lock:
                                 self._content_hash_cache[content_hash] = expires_at
+                            logger.info(f"🚫 Global content hash EXISTS (not expired): {content_hash[:16]}...")
                             return False
                     except Exception as e:
                         logger.warning(f"Error parsing expires_at for content hash: {e}")
+            else:
+                logger.info(f"✅ Global content hash NEW (not found in Firebase): {content_hash[:16]}...")
             
             # Content is new
             return True
@@ -295,15 +298,23 @@ class PersistentAlertDeduplication:
         CRITICAL: This method atomically checks AND reserves in a single operation
         """
         try:
+            news_title = news_item.get('title', 'Unknown')[:50]
+            
             # Generate content hash for global deduplication
             content_hash = self._get_news_content_hash(news_item)
             
             if content_hash:
                 # OPTIMIZATION: Check global content hash first (one check for all users)
-                if not self._check_global_content_hash(content_hash):
+                # DEBUG: Log global hash check
+                global_check_result = self._check_global_content_hash(content_hash)
+                logger.info(f"🔍 Global hash check for user {user_id}: hash={content_hash[:16]}..., result={global_check_result}, title={news_title}")
+                
+                if not global_check_result:
                     # Content already sent globally - no need to check per-user
-                    logger.debug(f"Global duplicate prevented: {news_item.get('title', '')[:30]}...")
+                    logger.warning(f"🚫 Global duplicate prevented for user {user_id}: {news_title}")
                     return False
+                else:
+                    logger.info(f"✅ Global hash check passed for user {user_id}: {news_title}")
             
             # Create content string from news item for per-user check (same logic as mark_news_alert_sent)
             news_id = str(news_item.get('id', ''))
@@ -343,8 +354,13 @@ class PersistentAlertDeduplication:
                 alert_key = self._generate_alert_key(alert_type, content, user_id)
                 alert_path = self._get_alert_path(alert_key)
                 
+                # DEBUG: Log attempt
+                logger.info(f"🔍 _check_and_reserve_alert attempt {attempt + 1}/{max_retries} for user {user_id}: {alert_type}, key={alert_key[:32]}...")
+                
                 # Step 1: Check if already exists (including reserved or sent)
                 existing_alert = self.firebase._make_request('GET', alert_path)
+                logger.info(f"🔍 Existing alert check result: {existing_alert is not None} for user {user_id}")
+                logger.info(f"🔍 Existing alert check result: {existing_alert is not None} for user {user_id}")
                 
                 if existing_alert and isinstance(existing_alert, dict):
                     # Check status - if reserved or sent, it's a duplicate
