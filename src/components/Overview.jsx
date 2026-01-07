@@ -60,6 +60,39 @@ const Overview = () => {
     return { value: 'Neutral', class: 'neutral' };
   };
 
+  // Helper function to safely convert any value to a string for rendering
+  // Prevents React errors when objects are accidentally rendered
+  const safeRenderValue = (value) => {
+    if (value === null || value === undefined) return '';
+    // If it's already a string, return it
+    if (typeof value === 'string') return value;
+    // If it's a number, convert to string
+    if (typeof value === 'number') return String(value);
+    // If it's a boolean, convert to string
+    if (typeof value === 'boolean') return String(value);
+    // If it's an array, join it
+    if (Array.isArray(value)) {
+      return value.map(item => safeRenderValue(item)).join(', ');
+    }
+    // If it's an object, format it nicely
+    if (typeof value === 'object' && value !== null) {
+      const entries = Object.entries(value);
+      if (entries.length === 0) return '';
+      // Format as "Key1: value1, Key2: value2"
+      return entries.map(([key, val]) => {
+        const formattedVal = safeRenderValue(val);
+        return `${key}: ${formattedVal}`;
+      }).join(', ');
+    }
+    // Fallback: convert to string
+    return String(value);
+  };
+
+  // Helper function specifically for positioning context values
+  const safePositioningValue = (value) => {
+    return safeRenderValue(value);
+  };
+
   // Helper function to clean up old cache entries
   const cleanupOldCache = () => {
     try {
@@ -2082,19 +2115,19 @@ const Overview = () => {
                       <div className="scenario bullish">
                         <div className="scenario-content">
                           <h4>Bullish</h4>
-                          <p>{aiAnalysis.forward_scenarios?.bullish || 'Above key resistance: potential move higher on positive data surprise'}</p>
+                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bullish) || 'Above key resistance: potential move higher on positive data surprise'}</p>
                         </div>
                       </div>
                       <div className="scenario bearish">
                         <div className="scenario-content">
                           <h4>Bearish</h4>
-                          <p>{aiAnalysis.forward_scenarios?.bearish || 'Below key support: potential move lower on negative data surprise'}</p>
+                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bearish) || 'Below key support: potential move lower on negative data surprise'}</p>
                         </div>
                       </div>
                       <div className="scenario neutral">
                         <div className="scenario-content">
                           <h4>Neutral</h4>
-                          <p>{aiAnalysis.forward_scenarios?.neutral || 'Range likely between key support and resistance if no breakout'}</p>
+                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.neutral) || 'Range likely between key support and resistance if no breakout'}</p>
                         </div>
                       </div>
                     </div>
@@ -2106,15 +2139,15 @@ const Overview = () => {
                     <div className="positioning-grid">
                       <div className="positioning-item">
                         <h4>Retail Sentiment</h4>
-                        <p>{aiAnalysis.positioning_context?.retail_sentiment || 'Retail positioning analysis based on current market conditions'}</p>
+                        <p>{safePositioningValue(aiAnalysis.positioning_context?.retail_sentiment) || 'Retail positioning analysis based on current market conditions'}</p>
                       </div>
                       <div className="positioning-item">
                         <h4>Institutional Flow</h4>
-                        <p>{aiAnalysis.positioning_context?.institutional_flow || 'Institutional money flow analysis'}</p>
+                        <p>{safePositioningValue(aiAnalysis.positioning_context?.institutional_flow) || 'Institutional money flow analysis'}</p>
                       </div>
                       <div className="positioning-item">
                         <h4>Market Bias</h4>
-                        <p>{aiAnalysis.positioning_context?.market_bias || 'Overall market bias based on positioning'}</p>
+                        <p>{safePositioningValue(aiAnalysis.positioning_context?.market_bias) || 'Overall market bias based on positioning'}</p>
                       </div>
                     </div>
                   </div>
@@ -2171,19 +2204,19 @@ const Overview = () => {
                           {aiAnalysis.market_reaction?.price_action && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Price Action</div>
-                              <div className="market-reaction-value">{aiAnalysis.market_reaction.price_action}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.market_reaction.price_action)}</div>
                             </div>
                           )}
                           {aiAnalysis.market_reaction?.volatility && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Volatility</div>
-                              <div className="market-reaction-value">{aiAnalysis.market_reaction.volatility}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.market_reaction.volatility)}</div>
                             </div>
                           )}
                           {aiAnalysis.market_reaction?.reason && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Reason</div>
-                              <div className="market-reaction-value">{aiAnalysis.market_reaction.reason}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.market_reaction.reason)}</div>
                             </div>
                           )}
                         </div>
@@ -2202,19 +2235,19 @@ const Overview = () => {
                           {aiAnalysis.implications_takeaways?.economic_context && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Economic Context</div>
-                              <div className="market-reaction-value">{aiAnalysis.implications_takeaways.economic_context}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.implications_takeaways.economic_context)}</div>
                             </div>
                           )}
                           {aiAnalysis.implications_takeaways?.event_bias && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Market Bias</div>
-                              <div className="market-reaction-value">{aiAnalysis.implications_takeaways.event_bias}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.implications_takeaways.event_bias)}</div>
                             </div>
                           )}
                           {aiAnalysis.implications_takeaways?.risk_level && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Risk Level</div>
-                              <div className="market-reaction-value">{aiAnalysis.implications_takeaways.risk_level}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.implications_takeaways.risk_level)}</div>
                             </div>
                           )}
                         </div>
@@ -2233,25 +2266,25 @@ const Overview = () => {
                           {aiAnalysis.trading_plan?.best_approach && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Strategy</div>
-                              <div className="market-reaction-value">{aiAnalysis.trading_plan.best_approach}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.best_approach)}</div>
                             </div>
                           )}
                           {aiAnalysis.trading_plan?.avoid_strategies && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Risk Management</div>
-                              <div className="market-reaction-value">{aiAnalysis.trading_plan.avoid_strategies}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.avoid_strategies)}</div>
                             </div>
                           )}
                           {aiAnalysis.trading_plan?.key_levels && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Key Levels</div>
-                              <div className="market-reaction-value">{aiAnalysis.trading_plan.key_levels}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.key_levels)}</div>
                             </div>
                           )}
                           {aiAnalysis.trading_plan?.position_sizing_risk && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Position Sizing</div>
-                              <div className="market-reaction-value">{aiAnalysis.trading_plan.position_sizing_risk}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.position_sizing_risk)}</div>
                             </div>
                           )}
                         </div>
@@ -2270,19 +2303,19 @@ const Overview = () => {
                           {aiAnalysis.big_picture?.economic_outlook && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Economic Outlook</div>
-                              <div className="market-reaction-value">{aiAnalysis.big_picture.economic_outlook}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.big_picture.economic_outlook)}</div>
                             </div>
                           )}
                           {aiAnalysis.big_picture?.medium_term_direction && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Medium-term Direction</div>
-                              <div className="market-reaction-value">{aiAnalysis.big_picture.medium_term_direction}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.big_picture.medium_term_direction)}</div>
                             </div>
                           )}
                           {aiAnalysis.big_picture?.forward_focus && (
                             <div className="market-reaction-item">
                               <div className="market-reaction-label">Forward Focus</div>
-                              <div className="market-reaction-value">{aiAnalysis.big_picture.forward_focus}</div>
+                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.big_picture.forward_focus)}</div>
                             </div>
                           )}
                         </div>
