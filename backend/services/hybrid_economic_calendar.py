@@ -2573,7 +2573,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '41K',
                 'forecast': '47K',
-                'previous': '-32K'
+                'previous': '-29K'
             },
             {
                 'title': 'Ivey PMI',
