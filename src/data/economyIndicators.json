@@ -1,5 +1,11 @@
 {
   "US": {
+    "centralBankRates": {
+      "rate": 3.75,
+      "trend": "down",
+      "bankName": "Fed",
+      "asOf": "2025-12-10"
+    },
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
@@ -356,6 +362,12 @@
     }
   },
   "EUR": {
+    "centralBankRates": {
+      "rate": 2.15,
+      "trend": "stable",
+      "bankName": "ECB",
+      "asOf": "2025-12-18"
+    },
     "indicators": {
       "interest-rate": {
         "currentValue": "2.15%",
@@ -714,6 +726,12 @@
     }
   },
   "GBP": {
+    "centralBankRates": {
+      "rate": 3.75,
+      "trend": "stable",
+      "bankName": "BOE",
+      "asOf": "2025-12-18"
+    },
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
@@ -1072,6 +1090,12 @@
     }
   },
   "JPY": {
+    "centralBankRates": {
+      "rate": 0.75,
+      "trend": "stable",
+      "bankName": "BOJ",
+      "asOf": "2025-12-19"
+    },
     "indicators": {
       "interest-rate": {
         "currentValue": "0.75%",

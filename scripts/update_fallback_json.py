@@ -67,6 +67,27 @@ def update_fallback_json():
     json_path = Path(__file__).parent.parent / 'src' / 'data' / 'economyIndicators.json'
     
     try:
+        # Preserve centralBankRates from existing JSON
+        existing_central_bank_rates = {}
+        if json_path.exists():
+            try:
+                with open(json_path, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+                    for country_code in countries:
+                        if country_code in existing_data:
+                            cbr = existing_data[country_code].get('centralBankRates')
+                            if cbr:
+                                existing_central_bank_rates[country_code] = cbr
+                                print(f"📌 Preserving central bank rates for {country_code}")
+            except Exception as e:
+                print(f"⚠️ Could not read existing JSON to preserve central bank rates: {e}")
+        
+        # Merge central bank rates with new data
+        for country_code in countries:
+            if country_code in all_data and country_code in existing_central_bank_rates:
+                all_data[country_code]['centralBankRates'] = existing_central_bank_rates[country_code]
+        
+        # Write merged data
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(all_data, f, indent=2, ensure_ascii=False)
         
@@ -74,7 +95,9 @@ def update_fallback_json():
         print(f"📊 Updated {len(all_data)} countries:")
         for country, data in all_data.items():
             indicator_count = len(data.get('indicators', {}))
-            print(f"   - {country}: {indicator_count} indicators")
+            has_cbr = 'centralBankRates' in data
+            cbr_status = " (with central bank rates)" if has_cbr else ""
+            print(f"   - {country}: {indicator_count} indicators{cbr_status}")
         
         return True
     except Exception as e:

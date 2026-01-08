@@ -6821,7 +6821,7 @@
 
 .scenarios-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: 1fr;
   gap: 15px;
   margin-top: 8px;
 }

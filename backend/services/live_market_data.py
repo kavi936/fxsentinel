@@ -156,139 +156,39 @@ class LiveMarketDataService:
                     market_sentiment[pair_key] = "bearish"
                 else:
                     market_sentiment[pair_key] = "neutral"
-                
-                # Key technical levels (approximate based on current price)
-                key_levels[pair_key] = self._calculate_technical_levels(price, pair_key)
         
-        # Calculate additional market context
-        bond_yields = self._get_bond_yields()
-        equity_indices = self._get_equity_indices()
-        commodity_prices = self._get_commodity_prices()
-        
-        # Generate positioning data based on market movements
-        retail_sentiment = self._generate_retail_sentiment(market_sentiment)
-        futures_positioning = self._generate_futures_positioning(market_sentiment)
-        institutional_flow = self._generate_institutional_flow(market_sentiment)
+        # Return only real, accurate data - set inaccurate/estimated data to None
+        # Technical levels removed - inaccurate calculations could mislead traders
+        # Bond yields, equity indices, commodities removed - using fallback values
+        # Positioning data removed - estimated values not reliable
         
         return {
             'current_prices': current_prices,
             'recent_volatility': recent_volatility,
             'market_sentiment': market_sentiment,
-            'key_levels': key_levels,
-            'bond_yields': bond_yields,
-            'equity_indices': equity_indices,
-            'commodity_prices': commodity_prices,
-            'retail_sentiment': retail_sentiment,
-            'futures_positioning': futures_positioning,
-            'institutional_flow': institutional_flow,
+            'key_levels': None,  # Removed - inaccurate calculations
+            'bond_yields': None,  # Removed - fallback values not accurate
+            'equity_indices': None,  # Removed - fallback values not accurate
+            'commodity_prices': None,  # Removed - fallback values not accurate
+            'retail_sentiment': None,  # Removed - estimated values not reliable
+            'futures_positioning': None,  # Removed - estimated values not reliable
+            'institutional_flow': None,  # Removed - estimated values not reliable
             'data_source': 'TradingView',
             'data_timestamp': datetime.now().isoformat(),
             'data_quality': 'live'
         }
     
-    def _calculate_technical_levels(self, price: float, pair: str) -> Dict:
-        """Calculate approximate technical levels based on current price"""
-        # Simple technical level calculation
-        # In a real implementation, you'd want to fetch actual technical analysis
-        
-        # Round to nearest significant level
-        if pair in ['EUR/USD', 'GBP/USD', 'AUD/USD', 'NZD/USD']:
-            # Major pairs - round to 0.0001
-            rounded_price = round(price, 4)
-            support = round(rounded_price - 0.0050, 4)
-            resistance = round(rounded_price + 0.0050, 4)
-        elif pair in ['USD/JPY', 'EUR/JPY', 'GBP/JPY']:
-            # JPY pairs - round to 0.01
-            rounded_price = round(price, 2)
-            support = round(rounded_price - 0.50, 2)
-            resistance = round(rounded_price + 0.50, 2)
-        else:
-            # Other pairs - round to 0.0001
-            rounded_price = round(price, 4)
-            support = round(rounded_price - 0.0050, 4)
-            resistance = round(rounded_price + 0.0050, 4)
-        
-        return {
-            'support': [support, support - (resistance - support) * 0.5, support - (resistance - support)],
-            'resistance': [resistance, resistance + (resistance - support) * 0.5, resistance + (resistance - support)]
-        }
-    
-    def _get_bond_yields(self) -> Dict:
-        """Get current bond yields (simplified)"""
-        # In a real implementation, you'd fetch this from a bond data provider
-        return {
-            'US_10Y': 4.5,
-            'DE_10Y': 2.3,
-            'JP_10Y': 0.8,
-            'UK_10Y': 4.2
-        }
-    
-    def _get_equity_indices(self) -> Dict:
-        """Get current equity indices (simplified)"""
-        # In a real implementation, you'd fetch this from an equity data provider
-        return {
-            'SPX': 4500,
-            'DAX': 16000,
-            'NIKKEI': 33000,
-            'FTSE': 7500
-        }
-    
-    def _get_commodity_prices(self) -> Dict:
-        """Get current commodity prices (simplified)"""
-        # In a real implementation, you'd fetch this from a commodity data provider
-        return {
-            'GOLD': 2000,
-            'OIL': 75,
-            'SILVER': 25,
-            'COPPER': 4.2
-        }
-    
-    def _generate_retail_sentiment(self, market_sentiment: Dict) -> Dict:
-        """Generate retail sentiment based on market movements"""
-        retail_sentiment = {}
-        
-        for pair, sentiment in market_sentiment.items():
-            if sentiment == 'bullish':
-                retail_sentiment[pair] = 0.7  # 70% long
-            elif sentiment == 'bearish':
-                retail_sentiment[pair] = 0.3  # 30% long (70% short)
-            else:
-                retail_sentiment[pair] = 0.5  # 50% long (neutral)
-        
-        return retail_sentiment
-    
-    def _generate_futures_positioning(self, market_sentiment: Dict) -> Dict:
-        """Generate futures positioning based on market sentiment"""
-        futures_positioning = {}
-        
-        for pair, sentiment in market_sentiment.items():
-            if sentiment == 'bullish':
-                futures_positioning[pair] = 15000  # Net long
-            elif sentiment == 'bearish':
-                futures_positioning[pair] = -15000  # Net short
-            else:
-                futures_positioning[pair] = 0  # Neutral
-        
-        return futures_positioning
-    
-    def _generate_institutional_flow(self, market_sentiment: Dict) -> Dict:
-        """Generate institutional flow based on market sentiment"""
-        institutional_flow = {}
-        
-        for pair, sentiment in market_sentiment.items():
-            if sentiment == 'bullish':
-                institutional_flow[pair] = 25.5  # Net buying
-            elif sentiment == 'bearish':
-                institutional_flow[pair] = -25.5  # Net selling
-            else:
-                institutional_flow[pair] = 0.0  # Neutral
-        
-        return institutional_flow
+    # Removed methods: _calculate_technical_levels, _get_bond_yields, _get_equity_indices, 
+    # _get_commodity_prices, _generate_retail_sentiment, _generate_futures_positioning, 
+    # _generate_institutional_flow
+    # These methods generated inaccurate/estimated data that could mislead traders.
+    # Will be re-implemented when real data providers are integrated.
     
     def _get_fallback_market_data(self) -> Dict:
         """Get fallback market data when live data is unavailable"""
         logger.warning("⚠️ Using fallback market data")
         
+        # Only return real data - set inaccurate/estimated data to None
         return {
             'current_prices': {
                 'EUR/USD': 1.0850,
@@ -314,26 +214,13 @@ class LiveMarketDataService:
                 'AUD/USD': 'neutral',
                 'USD/CAD': 'neutral'
             },
-            'key_levels': {
-                'EUR/USD': {'support': [1.0800, 1.0750, 1.0700], 'resistance': [1.0900, 1.0950, 1.1000]},
-                'USD/JPY': {'support': [148.00, 147.50, 147.00], 'resistance': [149.00, 149.50, 150.00]},
-                'GBP/USD': {'support': [1.2600, 1.2550, 1.2500], 'resistance': [1.2700, 1.2750, 1.2800]}
-            },
-            'bond_yields': {'US_10Y': 4.5, 'DE_10Y': 2.3, 'JP_10Y': 0.8},
-            'equity_indices': {'SPX': 4500, 'DAX': 16000, 'NIKKEI': 33000},
-            'commodity_prices': {'GOLD': 2000, 'OIL': 75, 'SILVER': 25},
-            'retail_sentiment': {
-                'EUR/USD': 0.5, 'USD/JPY': 0.5, 'GBP/USD': 0.5,
-                'USD/CHF': 0.5, 'AUD/USD': 0.5, 'USD/CAD': 0.5
-            },
-            'futures_positioning': {
-                'EUR/USD': 0, 'USD/JPY': 0, 'GBP/USD': 0,
-                'USD/CHF': 0, 'AUD/USD': 0, 'USD/CAD': 0
-            },
-            'institutional_flow': {
-                'EUR/USD': 0.0, 'USD/JPY': 0.0, 'GBP/USD': 0.0,
-                'USD/CHF': 0.0, 'AUD/USD': 0.0, 'USD/CAD': 0.0
-            },
+            'key_levels': None,  # Removed - inaccurate calculations
+            'bond_yields': None,  # Removed - fallback values not accurate
+            'equity_indices': None,  # Removed - fallback values not accurate
+            'commodity_prices': None,  # Removed - fallback values not accurate
+            'retail_sentiment': None,  # Removed - estimated values not reliable
+            'futures_positioning': None,  # Removed - estimated values not reliable
+            'institutional_flow': None,  # Removed - estimated values not reliable
             'data_source': 'fallback',
             'data_timestamp': datetime.now().isoformat(),
             'data_quality': 'fallback'
@@ -364,8 +251,7 @@ class LiveMarketDataService:
                           for pair in currency_pairs},
             'sentiment': {pair: market_data['market_sentiment'][pair] 
                          for pair in currency_pairs},
-            'technical_levels': {pair: market_data['key_levels'][pair] 
-                               for pair in currency_pairs},
+            'technical_levels': None,  # Removed - inaccurate calculations
             'data_quality': market_data['data_quality'],
             'data_timestamp': market_data['data_timestamp']
         }

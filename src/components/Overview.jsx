@@ -1097,7 +1097,7 @@ const Overview = () => {
       console.log('🐨 Forward Scenarios:', analysis.forward_scenarios);
       console.log('🐨 Trading Plan:', analysis.trading_plan);
       console.log('🐨 Big Picture:', analysis.big_picture);
-      console.log('🐨 Positioning Context:', analysis.positioning_context);
+      // console.log('🐨 Positioning Context:', analysis.positioning_context); // Removed - positioning context no longer used
       console.log('🐨 Next Catalysts:', analysis.next_catalysts);
       console.log('🐨 Sample Event Summary:', JSON.stringify(analysis.eventSummary || {}).substring(0, 200) || 'No content');
       console.log('🐨 Sample Market Reaction:', JSON.stringify(analysis.market_reaction || {}).substring(0, 200) || 'No content');
@@ -2048,11 +2048,11 @@ const Overview = () => {
                       </div>
                     </div>
                     <div className="key-takeaway">
-                      {aiAnalysis.key_takeaway || 'Analysis based on current market conditions and positioning data.'}
+                      {aiAnalysis.key_takeaway || 'Analysis based on current market conditions.'}
                     </div>
                   </div>
 
-                  {/* AI Overview - Enhanced with positioning data */}
+                  {/* AI Overview */}
                   <div className="ai-overview">
                     <div className="ai-indicator">
                       <div className="ai-label">Analysis Confidence</div>
@@ -2110,7 +2110,7 @@ const Overview = () => {
                     {/* DEBUG: Log the actual aiAnalysis state */}
                     {console.log('🦘🦘🦘 FRONTEND DISPLAY DEBUG - aiAnalysis state 🦘🦘🦘', aiAnalysis)}
                     {console.log('🦘 Forward Scenarios:', aiAnalysis?.forward_scenarios)}
-                    {console.log('🦘 Positioning Context:', aiAnalysis?.positioning_context)}
+                    {/* Positioning Context removed - no longer displayed */}
                     <div className="scenarios-grid">
                       <div className="scenario bullish">
                         <div className="scenario-content">
@@ -2133,8 +2133,8 @@ const Overview = () => {
                     </div>
                   </div>
 
-                  {/* NEW: Positioning Context */}
-                  <div className="positioning-context-section">
+                  {/* NEW: Positioning Context - REMOVED */}
+                  {/* <div className="positioning-context-section">
                     <h3 className="section-header">Market Positioning</h3>
                     <div className="positioning-grid">
                       <div className="positioning-item">
@@ -2150,7 +2150,7 @@ const Overview = () => {
                         <p>{safePositioningValue(aiAnalysis.positioning_context?.market_bias) || 'Overall market bias based on positioning'}</p>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* AI Analysis - Expandable Detailed Sections */}
                   <div className="ai-analysis-expandable">
@@ -2176,16 +2176,16 @@ const Overview = () => {
                           )}
                           <div className="event-metrics-grid">
                             <div className="event-metric">
-                              <div className="event-metric-label">Previous</div>
-                              <div className="event-metric-value">{aiAnalysis.eventSummary?.previous || 'N/A'}</div>
+                              <div className="event-metric-label">Actual</div>
+                              <div className="event-metric-value">{aiAnalysis.eventSummary?.actual || 'N/A'}</div>
                             </div>
                             <div className="event-metric">
                               <div className="event-metric-label">Expected</div>
                               <div className="event-metric-value">{aiAnalysis.eventSummary?.expected || 'N/A'}</div>
                             </div>
                             <div className="event-metric">
-                              <div className="event-metric-label">Actual</div>
-                              <div className="event-metric-value">{aiAnalysis.eventSummary?.actual || 'N/A'}</div>
+                              <div className="event-metric-label">Previous</div>
+                              <div className="event-metric-value">{aiAnalysis.eventSummary?.previous || 'N/A'}</div>
                             </div>
                           </div>
                         </div>

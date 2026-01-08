@@ -18,6 +18,7 @@ import re
 # Import our validation and market data services
 from services.data_validator import economic_data_validator
 from services.live_market_data import live_market_data_service
+from services.economy_context_service import economy_context_service
 
 try:
     import redis
@@ -28,6 +29,43 @@ except ImportError:
 import pickle
 
 logger = logging.getLogger(__name__)
+
+# Event type mapping for indicator filtering (Approach 4)
+EVENT_TYPE_MAPPING = {
+    'employment': ['unemployment', 'nonfarm-payrolls'],
+    'inflation': ['inflation-YoY', 'core-inflation-YoY'],
+    'gdp': ['gdp-growth'],
+    'interest-rate': ['interest-rate'],
+    'unemployment': ['unemployment'],
+    'cpi': ['inflation-YoY', 'core-inflation-YoY'],
+    'nfp': ['unemployment', 'nonfarm-payrolls'],
+    'adp': ['unemployment', 'nonfarm-payrolls'],
+    'payrolls': ['unemployment', 'nonfarm-payrolls']
+}
+
+# Policy targets for central banks (Approach 6)
+POLICY_TARGETS = {
+    'USD': {
+        'inflation': 2.0,  # Fed target
+        'unemployment': 4.0,  # Fed's "natural rate"
+        'central_bank': 'Federal Reserve'
+    },
+    'EUR': {
+        'inflation': 2.0,  # ECB target
+        'unemployment': None,
+        'central_bank': 'European Central Bank'
+    },
+    'GBP': {
+        'inflation': 2.0,  # BoE target
+        'unemployment': None,
+        'central_bank': 'Bank of England'
+    },
+    'JPY': {
+        'inflation': 2.0,  # BoJ target
+        'unemployment': None,
+        'central_bank': 'Bank of Japan'
+    }
+}
 
 # Check if Redis is available
 try:
@@ -56,22 +94,9 @@ class MarketContext:
     scenario_probabilities: Dict[str, float] = None  # Higher, Lower, In-line probabilities
     
     def __post_init__(self):
-        # Set default values if None
-        if self.retail_sentiment is None:
-            self.retail_sentiment = {
-                'EUR/USD': 0.65, 'USD/JPY': 0.35, 'GBP/USD': 0.50,
-                'USD/CHF': 0.70, 'AUD/USD': 0.40, 'USD/CAD': 0.55
-            }
-        if self.futures_positioning is None:
-            self.futures_positioning = {
-                'EUR/USD': 15000, 'USD/JPY': -8000, 'GBP/USD': 5000,
-                'USD/CHF': 12000, 'AUD/USD': -3000, 'USD/CAD': 2000
-            }
-        if self.institutional_flow is None:
-            self.institutional_flow = {
-                'EUR/USD': 25.5, 'USD/JPY': -15.2, 'GBP/USD': 8.7,
-                'USD/CHF': 18.3, 'AUD/USD': -12.1, 'USD/CAD': 5.4
-            }
+        # Don't set default values for positioning data - keep as None if not provided
+        # This prevents using inaccurate/estimated data
+        # Only set scenario_probabilities if None (this is event-specific, not market data)
         if self.scenario_probabilities is None:
             self.scenario_probabilities = {
                 'higher': 0.30, 'lower': 0.50, 'inline': 0.20
@@ -236,20 +261,23 @@ class GPTAIAnalyzer:
         """Create enhanced market context with live TradingView data"""
         try:
             # Use live data when available, fallback to original context
-            current_prices = live_data.get('current_prices', original_context.current_prices)
-            recent_volatility = live_data.get('recent_volatility', original_context.recent_volatility)
-            market_sentiment = live_data.get('market_sentiment', original_context.market_sentiment)
-            key_levels = live_data.get('key_levels', original_context.key_levels)
+            # Only use real, accurate data - ignore None values (inaccurate/estimated data)
+            current_prices = live_data.get('current_prices') or original_context.current_prices
+            recent_volatility = live_data.get('recent_volatility') or original_context.recent_volatility
+            market_sentiment = live_data.get('market_sentiment') or original_context.market_sentiment
             
-            # Use live positioning data
-            retail_sentiment = live_data.get('retail_sentiment', original_context.retail_sentiment)
-            futures_positioning = live_data.get('futures_positioning', original_context.futures_positioning)
-            institutional_flow = live_data.get('institutional_flow', original_context.institutional_flow)
+            # Key levels - use None if not available (inaccurate calculations removed)
+            key_levels = live_data.get('key_levels') if live_data.get('key_levels') is not None else original_context.key_levels
             
-            # Use live cross-market data
-            bond_yields = live_data.get('bond_yields', original_context.bond_yields)
-            equity_indices = live_data.get('equity_indices', original_context.equity_indices)
-            commodity_prices = live_data.get('commodity_prices', original_context.commodity_prices)
+            # Positioning data - keep as None if not available (estimated data removed)
+            retail_sentiment = live_data.get('retail_sentiment') if live_data.get('retail_sentiment') is not None else original_context.retail_sentiment
+            futures_positioning = live_data.get('futures_positioning') if live_data.get('futures_positioning') is not None else original_context.futures_positioning
+            institutional_flow = live_data.get('institutional_flow') if live_data.get('institutional_flow') is not None else original_context.institutional_flow
+            
+            # Cross-market data - keep as None if not available (fallback values removed)
+            bond_yields = live_data.get('bond_yields') if live_data.get('bond_yields') is not None else original_context.bond_yields
+            equity_indices = live_data.get('equity_indices') if live_data.get('equity_indices') is not None else original_context.equity_indices
+            commodity_prices = live_data.get('commodity_prices') if live_data.get('commodity_prices') is not None else original_context.commodity_prices
             
             return MarketContext(
                 current_prices=current_prices,
@@ -1187,17 +1215,761 @@ class GPTAIAnalyzer:
             logger.error(f"Error in GPT analysis: {e}")
             return self._get_fallback_analysis(event, analysis_type)
     
+    def _get_trading_sessions(self) -> Dict[str, Any]:
+        """Get current trading session information"""
+        try:
+            from datetime import datetime, timezone
+            
+            now = datetime.now(timezone.utc)
+            utc_hour = now.hour
+            utc_day = now.weekday()  # 0=Monday, 6=Sunday
+            
+            # Check if weekend
+            is_weekend = utc_day >= 5  # Saturday (5) or Sunday (6)
+            
+            # Check for major holidays
+            utc_month = now.month
+            utc_date = now.day
+            is_holiday = (
+                (utc_month == 1 and utc_date == 1) or  # New Year's Day
+                (utc_month == 12 and utc_date == 25) or  # Christmas Day
+                (utc_month == 12 and utc_date == 26)  # Boxing Day
+            )
+            
+            if is_weekend or is_holiday:
+                return {
+                    'active_sessions': [],
+                    'market_status': 'closed',
+                    'volatility_implication': 'Markets closed - no trading activity'
+                }
+            
+            # Trading session times (UTC)
+            sessions = [
+                {'name': 'Sydney', 'start': 22, 'end': 7},
+                {'name': 'Tokyo', 'start': 0, 'end': 9},
+                {'name': 'London', 'start': 8, 'end': 17},
+                {'name': 'New York', 'start': 13, 'end': 22}
+            ]
+            
+            active_sessions = []
+            for session in sessions:
+                if session['start'] <= session['end']:
+                    # Same day session
+                    is_active = session['start'] <= utc_hour < session['end']
+                else:
+                    # Overnight session
+                    is_active = utc_hour >= session['start'] or utc_hour < session['end']
+                
+                if is_active:
+                    active_sessions.append(session['name'])
+            
+            # Determine volatility implications
+            volatility_implication = "Normal trading hours"
+            if len(active_sessions) == 0:
+                volatility_implication = "Markets closed - no trading activity"
+            elif len(active_sessions) == 1:
+                session_name = active_sessions[0]
+                if session_name in ['London', 'New York']:
+                    volatility_implication = f"{session_name} session active - typically higher volatility"
+                else:
+                    volatility_implication = f"{session_name} session active - typically lower volatility"
+            elif len(active_sessions) >= 2:
+                if 'London' in active_sessions and 'New York' in active_sessions:
+                    volatility_implication = "London-NY overlap - highest volatility period (peak liquidity)"
+                elif 'Tokyo' in active_sessions and 'London' in active_sessions:
+                    volatility_implication = "Tokyo-London overlap - moderate to high volatility"
+                else:
+                    volatility_implication = "Multiple sessions active - moderate volatility"
+            
+            return {
+                'active_sessions': active_sessions,
+                'market_status': 'open' if active_sessions else 'closed',
+                'volatility_implication': volatility_implication,
+                'current_time_utc': now.strftime('%Y-%m-%d %H:%M UTC')
+            }
+        except Exception as e:
+            logger.warning(f"Error getting trading sessions: {e}")
+            return {
+                'active_sessions': [],
+                'market_status': 'unknown',
+                'volatility_implication': 'Unable to determine session status'
+            }
+    
+    def _get_top_3_pairs_for_currency(self, currency: str, event: Dict) -> List[str]:
+        """Get the 3 most important currency pairs affected by the event"""
+        # Priority order for pairs based on liquidity and importance
+        currency_priority_map = {
+            'USD': ['EUR/USD', 'USD/JPY', 'GBP/USD'],
+            'EUR': ['EUR/USD', 'EUR/GBP', 'EUR/JPY'],
+            'GBP': ['GBP/USD', 'EUR/GBP', 'GBP/JPY'],
+            'JPY': ['USD/JPY', 'EUR/JPY', 'GBP/JPY'],
+            'AUD': ['AUD/USD', 'AUD/JPY', 'EUR/AUD'],
+            'CAD': ['USD/CAD', 'EUR/CAD', 'GBP/CAD'],
+            'CHF': ['USD/CHF', 'EUR/CHF', 'GBP/CHF'],
+            'NZD': ['NZD/USD', 'NZD/JPY', 'AUD/NZD']
+        }
+        
+        # First, try to get pairs from event
+        event_pairs = event.get('currencyPairs', [])
+        if event_pairs and isinstance(event_pairs, list) and len(event_pairs) > 0:
+            # Take first 3 pairs from event
+            return event_pairs[:3]
+        
+        # Otherwise, use priority map
+        return currency_priority_map.get(currency.upper(), ['EUR/USD', 'USD/JPY', 'GBP/USD'])[:3]
+    
+    def _normalize_pair_format(self, pair: str) -> str:
+        """Normalize pair format: EUR/USD -> EURUSD"""
+        return pair.replace('/', '').upper()
+    
+    def _get_pairs_sentiment_data(self, currency: str, event: Dict, market_context: MarketContext) -> List[Dict[str, Any]]:
+        """Get sentiment data for the 3 most important pairs affected by the event"""
+        try:
+            from services.market_sentiment_service import market_sentiment_service
+            
+            # Get top 3 pairs
+            top_pairs = self._get_top_3_pairs_for_currency(currency, event)
+            
+            # Get sentiment data
+            sentiment_data = market_sentiment_service.get_market_sentiment()
+            if not sentiment_data:
+                return []
+            
+            pairs_sentiment = sentiment_data.get('pairs_sentiment', [])
+            if not pairs_sentiment:
+                return []
+            
+            # Extract sentiment for our top pairs
+            result = []
+            for pair_with_slash in top_pairs:
+                pair_normalized = self._normalize_pair_format(pair_with_slash)
+                
+                # Find sentiment for this pair
+                pair_sentiment = next(
+                    (p for p in pairs_sentiment if p.get('pair', '').upper() == pair_normalized),
+                    None
+                )
+                
+                if pair_sentiment:
+                    # Get daily change directly from TradingView data for accuracy
+                    daily_change = pair_sentiment.get('price_change', 0)  # This is already daily change %
+                    
+                    # Try to get more accurate daily change from TradingView if available
+                    try:
+                        from app import get_tradingview_prices
+                        tradingview_data = get_tradingview_prices()
+                        if tradingview_data and pair_normalized in tradingview_data:
+                            tv_pair_data = tradingview_data[pair_normalized]
+                            if 'changePercent' in tv_pair_data:
+                                daily_change = tv_pair_data['changePercent']
+                    except Exception as e:
+                        logger.debug(f"Could not get TradingView changePercent for {pair_normalized}: {e}")
+                        # Fall back to sentiment's price_change
+                    
+                    result.append({
+                        'pair': pair_with_slash,
+                        'sentiment': pair_sentiment.get('sentiment', 'neutral'),
+                        'percentage': pair_sentiment.get('percentage', 50),
+                        'daily_change': daily_change,  # Daily change percentage from TradingView
+                        'rsi': pair_sentiment.get('rsi', 50),
+                        'volatility': pair_sentiment.get('volatility', 0)
+                    })
+            
+            return result
+        except Exception as e:
+            logger.warning(f"Error fetching pairs sentiment data: {e}")
+            return []
+    
+    def _get_market_sentiment_data(self) -> Optional[Dict[str, Any]]:
+        """Fetch market sentiment data (VIX, Risk Appetite) from market sentiment service"""
+        try:
+            from services.market_sentiment_service import market_sentiment_service
+            
+            sentiment_data = market_sentiment_service.get_market_sentiment()
+            
+            if not sentiment_data:
+                return None
+            
+            # Extract VIX data
+            vix_data = sentiment_data.get('vix')
+            if not vix_data:
+                # Try to extract from market conditions
+                market_conditions = sentiment_data.get('market_conditions', [])
+                volatility_condition = next(
+                    (c for c in market_conditions if c.get('name') == 'Volatility Environment'),
+                    None
+                )
+                if volatility_condition and volatility_condition.get('detail'):
+                    # Parse VIX from detail string: "VIX: 15.0 (+0.0)"
+                    import re
+                    detail = volatility_condition.get('detail', '')
+                    vix_match = re.match(r'VIX:\s*([\d.]+)\s*\(([+-]?[\d.]+)\)', detail)
+                    if vix_match:
+                        vix_data = {
+                            'value': float(vix_match.group(1)),
+                            'change': float(vix_match.group(2)),
+                            'level': 'low' if float(vix_match.group(1)) < 15 else 'medium' if float(vix_match.group(1)) < 25 else 'high'
+                        }
+            
+            # Extract Risk Appetite data
+            risk_appetite_data = None
+            market_conditions = sentiment_data.get('market_conditions', [])
+            risk_appetite_condition = next(
+                (c for c in market_conditions if c.get('name') == 'Risk Appetite'),
+                None
+            )
+            if risk_appetite_condition:
+                risk_appetite_data = {
+                    'level': risk_appetite_condition.get('value'),  # 'low', 'medium', 'high'
+                    'percentage': risk_appetite_condition.get('percentage'),  # 25, 50, 75
+                    'safe_havens': risk_appetite_condition.get('detail', '').replace('Safe Havens: ', ''),
+                    'trend': risk_appetite_condition.get('trend', 'stable')
+                }
+            
+            return {
+                'vix': vix_data,
+                'risk_appetite': risk_appetite_data
+            }
+        except Exception as e:
+            logger.warning(f"Error fetching market sentiment data: {e}")
+            return None
+    
+    def _get_relevant_indicators(self, event_title: str) -> List[str]:
+        """
+        Get relevant indicator IDs based on event title (Approach 4)
+        
+        Args:
+            event_title: Title of the economic event
+        
+        Returns:
+            List of relevant indicator IDs, or empty list if no match found
+            (Only includes 'interest-rate' if event matches a known type)
+        """
+        event_title_lower = event_title.lower()
+        relevant_indicators = []
+        
+        # Match event title to event types
+        matched = False
+        for event_type, indicator_ids in EVENT_TYPE_MAPPING.items():
+            if event_type in event_title_lower:
+                relevant_indicators.extend(indicator_ids)
+                # Always include interest-rate for policy context when we have a match
+                if 'interest-rate' not in relevant_indicators:
+                    relevant_indicators.append('interest-rate')
+                matched = True
+                break
+        
+        # If no match found, return empty list (no economy context will be included)
+        if not matched:
+            return []
+        
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_indicators = []
+        for ind in relevant_indicators:
+            if ind not in seen:
+                seen.add(ind)
+                unique_indicators.append(ind)
+        
+        return unique_indicators
+    
+    def _get_economy_context(self, currency: str, relevant_indicator_ids: Optional[List[str]] = None) -> Optional[Dict]:
+        """
+        Get economy context for a currency (Approach 1)
+        
+        Args:
+            currency: Currency code (USD, EUR, GBP, JPY)
+            relevant_indicator_ids: Optional list of indicator IDs to filter (Approach 4)
+        
+        Returns:
+            Dict with central bank rate and indicators, or None if not available
+        """
+        try:
+            economy_context = economy_context_service.get_economy_context(currency)
+            if not economy_context:
+                return None
+            
+            # Filter indicators if relevant_indicator_ids provided (Approach 4)
+            if relevant_indicator_ids:
+                indicators = economy_context.get('indicators', {})
+                filtered_indicators = {
+                    ind_id: indicators[ind_id]
+                    for ind_id in relevant_indicator_ids
+                    if ind_id in indicators
+                }
+                economy_context['indicators'] = filtered_indicators
+            
+            return economy_context
+            
+        except Exception as e:
+            logger.warning(f"Error getting economy context for {currency}: {e}")
+            return None
+    
+    def _get_policy_pressure(self, currency: str, indicator_type: str, current_value: float) -> Optional[Dict]:
+        """
+        Calculate policy pressure based on deviation from central bank target (Approach 6)
+        
+        Args:
+            currency: Currency code (USD, EUR, GBP, JPY)
+            indicator_type: 'inflation' or 'unemployment'
+            current_value: Current value of the indicator
+        
+        Returns:
+            Dict with target, current, deviation, and pressure description, or None if not applicable
+        """
+        try:
+            policy_targets = POLICY_TARGETS.get(currency.upper())
+            if not policy_targets:
+                return None
+            
+            target = policy_targets.get(indicator_type)
+            if target is None:
+                return None
+            
+            # Calculate deviation
+            deviation = current_value - target
+            deviation_percent = (deviation / target * 100) if target != 0 else 0
+            
+            # Determine pressure level
+            if indicator_type == 'inflation':
+                if deviation > 0.5:  # More than 0.5pp above target
+                    pressure_level = 'strong hawkish pressure'
+                elif deviation > 0.2:  # More than 0.2pp above target
+                    pressure_level = 'moderate hawkish pressure'
+                elif deviation < -0.5:  # More than 0.5pp below target
+                    pressure_level = 'strong dovish pressure'
+                elif deviation < -0.2:  # More than 0.2pp below target
+                    pressure_level = 'moderate dovish pressure'
+                else:
+                    pressure_level = 'near target'
+            else:  # unemployment
+                if deviation > 0.5:  # More than 0.5pp above target
+                    pressure_level = 'strong dovish pressure'
+                elif deviation > 0.2:  # More than 0.2pp above target
+                    pressure_level = 'moderate dovish pressure'
+                elif deviation < -0.5:  # More than 0.5pp below target
+                    pressure_level = 'strong hawkish pressure'
+                elif deviation < -0.2:  # More than 0.2pp below target
+                    pressure_level = 'moderate hawkish pressure'
+                else:
+                    pressure_level = 'near target'
+            
+            return {
+                'target': target,
+                'current': current_value,
+                'deviation': deviation,
+                'deviation_percent': deviation_percent,
+                'pressure_level': pressure_level,
+                'indicator_type': indicator_type,
+                'central_bank': policy_targets.get('central_bank', '')
+            }
+            
+        except Exception as e:
+            logger.warning(f"Error calculating policy pressure for {currency} {indicator_type}: {e}")
+            return None
+    
+    def _calculate_indicator_statistics(self, ind_data: Dict) -> Optional[Dict]:
+        """
+        Calculate statistical values from indicator chartData
+        
+        Args:
+            ind_data: Indicator data dict with chartData array
+        
+        Returns:
+            Dict with average, deviation, min, max, trend, or None if insufficient data
+        """
+        try:
+            chart_data = ind_data.get('chartData', [])
+            if not chart_data or len(chart_data) < 2:
+                return None
+            
+            # Convert to float list (handle any string values)
+            values = []
+            for v in chart_data:
+                try:
+                    if isinstance(v, str):
+                        # Remove % and other characters
+                        v = float(v.replace('%', '').replace(',', '').strip())
+                    else:
+                        v = float(v)
+                    values.append(v)
+                except (ValueError, TypeError):
+                    continue
+            
+            if len(values) < 2:
+                return None
+            
+            # Calculate statistics
+            avg = sum(values) / len(values)
+            min_val = min(values)
+            max_val = max(values)
+            
+            # Calculate standard deviation
+            variance = sum((x - avg) ** 2 for x in values) / len(values)
+            std_dev = variance ** 0.5
+            
+            # Determine trend (comparing recent vs older values)
+            if len(values) >= 6:
+                recent_avg = sum(values[-6:]) / 6
+                older_avg = sum(values[:-6]) / len(values[:-6]) if len(values) > 6 else avg
+                if recent_avg > older_avg * 1.02:
+                    trend = 'increasing'
+                elif recent_avg < older_avg * 0.98:
+                    trend = 'decreasing'
+                else:
+                    trend = 'stable'
+            else:
+                # Simple trend from first to last
+                if values[-1] > values[0] * 1.02:
+                    trend = 'increasing'
+                elif values[-1] < values[0] * 0.98:
+                    trend = 'decreasing'
+                else:
+                    trend = 'stable'
+            
+            # Current value position relative to average
+            current_value_str = ind_data.get('currentValue', '')
+            try:
+                if isinstance(current_value_str, str):
+                    current_value = float(current_value_str.replace('%', '').replace(',', '').strip())
+                else:
+                    current_value = float(current_value_str)
+                
+                deviation_from_avg = current_value - avg
+                percent_from_avg = (deviation_from_avg / avg * 100) if avg != 0 else 0
+                
+                # Determine position
+                if current_value > avg + std_dev:
+                    position = 'above average'
+                elif current_value < avg - std_dev:
+                    position = 'below average'
+                else:
+                    position = 'near average'
+            except (ValueError, TypeError):
+                current_value = None
+                deviation_from_avg = None
+                percent_from_avg = None
+                position = None
+            
+            return {
+                'average': round(avg, 2),
+                'min': round(min_val, 2),
+                'max': round(max_val, 2),
+                'std_deviation': round(std_dev, 2),
+                'trend': trend,
+                'current_value': round(current_value, 2) if current_value is not None else None,
+                'deviation_from_avg': round(deviation_from_avg, 2) if deviation_from_avg is not None else None,
+                'percent_from_avg': round(percent_from_avg, 1) if percent_from_avg is not None else None,
+                'position': position,
+                'range': f"{round(min_val, 2)} - {round(max_val, 2)}"
+            }
+        except Exception as e:
+            logger.debug(f"Error calculating indicator statistics: {e}")
+            return None
+    
+    def _format_economy_context_for_prompt(self, economy_context: Dict) -> str:
+        """
+        Format economy context for inclusion in GPT prompt
+        
+        Args:
+            economy_context: Economy context dict from _get_economy_context
+        
+        Returns:
+            Formatted string for prompt
+        """
+        lines = []
+        currency = economy_context.get('currency', 'USD')
+        
+        # Central Bank Rate
+        cbr = economy_context.get('central_bank_rate')
+        if cbr:
+            trend_str = f" (Trend: {cbr.get('trend', 'stable')})" if cbr.get('trend') else ""
+            lines.append(f"- Central Bank Rate: {cbr.get('value', 'N/A')}%{trend_str}")
+        
+        # Indicators
+        indicators = economy_context.get('indicators', {})
+        
+        # Format common indicators
+        indicator_labels = {
+            'interest-rate': 'Interest Rate',
+            'inflation-YoY': 'CPI (YoY)',
+            'core-inflation-YoY': 'Core CPI (YoY)',
+            'gdp-growth': 'GDP Growth',
+            'unemployment': 'Unemployment Rate',
+            'nonfarm-payrolls': 'Non-Farm Payrolls'
+        }
+        
+        for ind_id, ind_data in indicators.items():
+            if not isinstance(ind_data, dict):
+                continue
+            
+            current_value = ind_data.get('currentValue', 'N/A')
+            # Remove % sign if present (we'll add it back if needed)
+            if isinstance(current_value, str) and current_value.endswith('%'):
+                current_value_display = current_value
+                current_value_numeric = current_value[:-1]
+            else:
+                current_value_display = current_value
+                current_value_numeric = current_value
+            
+            label = indicator_labels.get(ind_id, ind_id.replace('-', ' ').title())
+            
+            # Calculate statistics from chartData
+            stats = self._calculate_indicator_statistics(ind_data)
+            
+            if stats:
+                # Format with statistics
+                stat_line = f"- Current {label}: {current_value_display}"
+                stat_line += f" (Average: {stats['average']}, Range: {stats['range']}, Trend: {stats['trend']})"
+                
+                if stats['position']:
+                    stat_line += f" - Position: {stats['position']}"
+                    if stats['deviation_from_avg'] is not None:
+                        stat_line += f" ({stats['deviation_from_avg']:+.2f} from avg, {stats['percent_from_avg']:+.1f}%)"
+                
+                lines.append(stat_line)
+            else:
+                # Fallback to simple format if no statistics available
+                lines.append(f"- Current {label}: {current_value_display}")
+        
+        if not lines:
+            return "No economy context available"
+        
+        return "\n".join(lines)
+    
+    def _add_policy_context_to_prompt(self, currency: str, economy_context: Dict, event_title: str) -> str:
+        """
+        Add policy target analysis to prompt (Approach 6)
+        
+        Args:
+            currency: Currency code
+            economy_context: Economy context dict
+            event_title: Event title to determine if policy analysis is relevant
+        
+        Returns:
+            Formatted policy analysis section, or empty string if not applicable
+        """
+        try:
+            event_title_lower = event_title.lower()
+            indicators = economy_context.get('indicators', {})
+            
+            policy_lines = []
+            
+            # Check if event is inflation/CPI related
+            if any(keyword in event_title_lower for keyword in ['cpi', 'inflation', 'price']):
+                # Get inflation indicator
+                inflation_ind = indicators.get('inflation-YoY') or indicators.get('inflation')
+                if inflation_ind:
+                    current_value_str = inflation_ind.get('currentValue', '')
+                    # Extract numeric value
+                    try:
+                        current_value = float(str(current_value_str).replace('%', '').strip())
+                        policy_pressure = self._get_policy_pressure(currency, 'inflation', current_value)
+                        if policy_pressure:
+                            policy_lines.append(
+                                f"Inflation Policy Pressure: {policy_pressure['pressure_level']}"
+                            )
+                            policy_lines.append(
+                                f"  - Current: {policy_pressure['current']:.2f}%"
+                            )
+                            policy_lines.append(
+                                f"  - Target: {policy_pressure['target']:.2f}%"
+                            )
+                            policy_lines.append(
+                                f"  - Deviation: {policy_pressure['deviation']:+.2f}pp "
+                                f"({policy_pressure['deviation_percent']:+.1f}%)"
+                            )
+                    except (ValueError, TypeError):
+                        pass
+            
+            # Check if event is employment/unemployment related
+            if any(keyword in event_title_lower for keyword in ['employment', 'unemployment', 'nfp', 'adp', 'payrolls', 'jobs']):
+                # Get unemployment indicator
+                unemployment_ind = indicators.get('unemployment')
+                if unemployment_ind:
+                    current_value_str = unemployment_ind.get('currentValue', '')
+                    # Extract numeric value
+                    try:
+                        current_value = float(str(current_value_str).replace('%', '').strip())
+                        policy_pressure = self._get_policy_pressure(currency, 'unemployment', current_value)
+                        if policy_pressure:
+                            policy_lines.append(
+                                f"Unemployment Policy Pressure: {policy_pressure['pressure_level']}"
+                            )
+                            policy_lines.append(
+                                f"  - Current: {policy_pressure['current']:.2f}%"
+                            )
+                            policy_lines.append(
+                                f"  - Target: {policy_pressure['target']:.2f}%"
+                            )
+                            policy_lines.append(
+                                f"  - Deviation: {policy_pressure['deviation']:+.2f}pp "
+                                f"({policy_pressure['deviation_percent']:+.1f}%)"
+                            )
+                    except (ValueError, TypeError):
+                        pass
+            
+            if not policy_lines:
+                return ""
+            
+            return "POLICY TARGET ANALYSIS:\n" + "\n".join(policy_lines)
+            
+        except Exception as e:
+            logger.warning(f"Error adding policy context to prompt: {e}")
+            return ""
+    
     def _create_analysis_prompt(self, event: Dict, market_context: MarketContext, analysis_type: str) -> str:
-        """Create a comprehensive prompt for GPT analysis"""
+        """Create a comprehensive prompt for GPT analysis - only includes real, accurate data"""
         event_title = event.get('title', 'Unknown Event')
         currency = event.get('currency', 'USD')
         impact = event.get('impact', 'medium')
         previous = event.get('previous', 'N/A')
-        expected = event.get('expected', 'N/A')
+        # Handle both 'expected' and 'forecast' field names
+        expected = event.get('expected') or event.get('forecast') or 'N/A'
         actual = event.get('actual', 'N/A')
         
+        # Determine if this is pre-event or post-event analysis
+        is_pre_event = actual in ['N/A', 'TBD', '', None] or actual == 'TBD'
+        
+        # Build market context section - only include real, accurate data (exclude None values)
+        market_context_lines = []
+        market_context_lines.append(f"- Current Prices: {market_context.current_prices}")
+        market_context_lines.append(f"- Recent Volatility: {market_context.recent_volatility}")
+        market_context_lines.append(f"- Market Sentiment: {market_context.market_sentiment}")
+        
+        # Only include data that is not None (real data, not inaccurate/estimated)
+        if market_context.bond_yields is not None:
+            market_context_lines.append(f"- Bond Yields: {market_context.bond_yields}")
+        if market_context.equity_indices is not None:
+            market_context_lines.append(f"- Equity Indices: {market_context.equity_indices}")
+        if market_context.commodity_prices is not None:
+            market_context_lines.append(f"- Commodity Prices: {market_context.commodity_prices}")
+        if market_context.key_levels is not None:
+            market_context_lines.append(f"- Key Technical Levels: {market_context.key_levels}")
+        # Positioning data removed from prompt - no longer requested from GPT
+        # if market_context.retail_sentiment is not None:
+        #     market_context_lines.append(f"- Retail Sentiment: {market_context.retail_sentiment}")
+        # if market_context.futures_positioning is not None:
+        #     market_context_lines.append(f"- Futures Positioning: {market_context.futures_positioning}")
+        # if market_context.institutional_flow is not None:
+        #     market_context_lines.append(f"- Institutional Flow: {market_context.institutional_flow}")
+        
+        market_context_section = "\n".join(market_context_lines)
+        
+        # Get additional market context data
+        trading_sessions = self._get_trading_sessions()
+        sentiment_data = self._get_market_sentiment_data()
+        pairs_sentiment = self._get_pairs_sentiment_data(currency, event, market_context)
+        
+        # Build additional context section
+        additional_context_lines = []
+        
+        # Market Status Warning (if closed)
+        if trading_sessions:
+            market_status = trading_sessions.get('market_status', 'unknown')
+            if market_status == 'closed':
+                additional_context_lines.append(
+                    "⚠️ MARKET STATUS: Markets are currently CLOSED (weekend/holiday). "
+                    "Any analysis should consider that trading will resume when markets reopen. "
+                    "Price movements may be limited or non-existent until markets reopen."
+                )
+        
+        # Trading Session Context
+        if trading_sessions:
+            active_sessions = trading_sessions.get('active_sessions', [])
+            if active_sessions:
+                additional_context_lines.append(f"- Active Trading Sessions: {', '.join(active_sessions)}")
+                additional_context_lines.append(f"- Volatility Implication: {trading_sessions.get('volatility_implication', 'Normal trading hours')}")
+        
+        # VIX Fear Indicator
+        if sentiment_data and sentiment_data.get('vix'):
+            vix = sentiment_data['vix']
+            additional_context_lines.append(
+                f"- VIX Fear Indicator: {vix.get('value', 'N/A')} "
+                f"({vix.get('change', 0):+.1f}, Level: {vix.get('level', 'unknown')})"
+            )
+        
+        # Risk Appetite
+        if sentiment_data and sentiment_data.get('risk_appetite'):
+            risk = sentiment_data['risk_appetite']
+            additional_context_lines.append(
+                f"- Risk Appetite: {risk.get('level', 'unknown').upper()} "
+                f"({risk.get('percentage', 0)}%) - Safe Havens: {risk.get('safe_havens', 'None')}"
+            )
+        
+        # Pairs Sentiment (Top 3 most important pairs) - Contextual, not deterministic
+        if pairs_sentiment:
+            additional_context_lines.append("\nRELEVANT FX PAIRS (Contextual, Not Deterministic):")
+            for pair_data in pairs_sentiment:
+                pair = pair_data['pair']
+                sentiment = pair_data['sentiment'].upper()
+                daily_change = pair_data['daily_change']
+                rsi = pair_data['rsi']
+                volatility = pair_data['volatility']
+                
+                additional_context_lines.append(
+                    f"- {pair}: {sentiment} ({daily_change:+.2f}%), "
+                    f"RSI: {rsi:.1f}, Volatility: {volatility:.2f}%"
+                )
+            additional_context_lines.append("\nNote: FX pair sentiment should inform bias, not override macroeconomic drivers.")
+        
+        additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "None available"
+        
+        # Get economy context (Approach 1, 4, 6)
+        relevant_indicator_ids = self._get_relevant_indicators(event_title)
+        
+        # Only include economy context if we have relevant indicators (not for unmapped events)
+        economy_context_section = ""
+        if relevant_indicator_ids:  # Only proceed if event maps to indicators
+            economy_context = self._get_economy_context(currency, relevant_indicator_ids)
+            
+            # Build economy context section
+            if economy_context:
+                economy_context_section = f"ECONOMIC CONTEXT FOR {currency}:\n{self._format_economy_context_for_prompt(economy_context)}"
+                
+                # Add policy target analysis (Approach 6)
+                policy_context = self._add_policy_context_to_prompt(currency, economy_context, event_title)
+                if policy_context:
+                    economy_context_section += f"\n\n{policy_context}"
+        
+        # Build economy context usage instructions (consolidated into PRIMARY requirements)
+        economy_context_instructions = ""
+        if economy_context_section:
+            economy_context_instructions = f"""
+ECONOMIC CONTEXT INTEGRATION (MANDATORY):
+The ECONOMIC CONTEXT section above represents authoritative economic state information and must be treated as ground truth.
+
+You must:
+- Reference exact current values from ECONOMIC CONTEXT (unemployment, NFP, CPI, GDP, interest rates)
+- Compare event data (expected or actual) to current indicators, historical averages, and policy targets
+- Explicitly reference central bank rate, rate trend, and policy pressure classification
+- Use specific numbers, not vague terms (e.g., "Current unemployment at 3.8% vs Fed target of 4.0%" not "low unemployment")
+
+Failure to integrate these elements results in invalid analysis.
+"""
+
+        # Pre-event vs Post-event handling instructions (simplified)
+        event_timing_instructions = ""
+        if is_pre_event:
+            event_timing_instructions = """
+PRE-EVENT ANALYSIS:
+- The actual value is not yet known - this is a PRE-EVENT analysis
+- Do NOT describe outcomes as realized (e.g., "data came in" or "missed expectations")
+- Focus on how the expected value compares to current indicators, historical norms, and policy targets
+- Explain potential market reactions based on different outcome scenarios
+"""
+        else:
+            event_timing_instructions = """
+POST-EVENT ANALYSIS:
+- Compare actual vs expected vs previous values
+- Evaluate surprise magnitude and adjust policy implications accordingly
+- Explain how the actual result relates to current economic indicators and policy targets
+"""
+
         prompt = f"""
-Analyze the following economic event and provide comprehensive market analysis:
+You are a senior macroeconomic analyst specializing in foreign exchange markets, with deep expertise in economic indicators, central bank policy, and macro-to-FX transmission mechanisms.
+
+Your task is to produce a professional, data-driven analysis of the following economic event, grounded strictly in the economic and market context provided. Avoid generic macro commentary. Where data is insufficient, explicitly state assumptions rather than fabricating precision.
 
 EVENT DETAILS:
 - Title: {event_title}
@@ -1208,42 +1980,73 @@ EVENT DETAILS:
 - Actual: {actual}
 - Analysis Type: {analysis_type}
 
+{economy_context_section}
+
 MARKET CONTEXT:
-- Current Prices: {market_context.current_prices}
-- Market Sentiment: {market_context.market_sentiment}
-- Bond Yields: {market_context.bond_yields}
-- Equity Indices: {market_context.equity_indices}
+{market_context_section}
 
-IMPORTANT: For forward_scenarios, provide specific probability percentages for each scenario (bullish, bearish, neutral). 
-The probabilities should sum to approximately 100% and reflect the likelihood of each outcome based on the event data, 
-market context, and historical patterns. Include key price levels and reasoning for each scenario.
+ADDITIONAL MARKET CONTEXT:
+{additional_context_section}
 
-Please provide analysis in the following JSON format:
+PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
+
+1. ECONOMIC CONTEXT INTEGRATION (Mandatory):
+{economy_context_instructions}
+
+2. FORWARD SCENARIO CONSTRUCTION:
+   - Provide three scenarios with probability estimates that approximately sum to 100%
+   - Scenario naming (FX-specific): {currency}_strength_scenario, {currency}_weakness_scenario, range_or_indecision_scenario
+   - For each scenario: assign probability range (not false precision), reference macro driver, policy implication, expected FX reaction
+   - Use price levels only if key levels are provided in MARKET CONTEXT, OR clearly state assumptions
+
+3. VOLATILITY ASSESSMENT:
+   - Must consider: trading sessions, event impact level, VIX regime, risk appetite
+   - If markets are closed or liquidity is thin, explicitly state that volatility realization may be delayed
+
+4. POLICY IMPLICATIONS:
+   - Explain how the event influences policy trajectory
+   - Whether current data reinforces, challenges, or complicates existing policy pressure
+   - Avoid generic terms - use numbers and targets from ECONOMIC CONTEXT
+
+5. TRADING INTELLIGENCE (Macro-First):
+   - FX pairs most exposed to the macro outcome
+   - Risk management considerations
+   - Position sizing guidance relative to volatility
+   - Strategies to avoid in uncertain conditions
+   - FX pair sentiment should inform bias, not override macroeconomic drivers
+
+{event_timing_instructions}
+
+OUTPUT FORMAT (JSON):
 {{
     "headline": "Compelling headline summarizing the key takeaway",
     "key_takeaway": "Main insight in 1-2 sentences",
+    "analysis_confidence": "High | Medium | Low",
+    "assumptions": [
+        "Only include if assumptions were required due to missing data (e.g., 'Assuming normal liquidity during London-NY overlap', 'Assuming no surprise geopolitical headlines')"
+    ],
     "forward_scenarios": {{
-        "bullish": "Bullish scenario description with specific probability percentage (e.g., '60% probability: Above key resistance at [level], target [level]. Reason: [driver]')",
-        "bearish": "Bearish scenario description with specific probability percentage (e.g., '30% probability: Below key support at [level], target [level]. Reason: [driver]')", 
-        "neutral": "Neutral scenario description with specific probability percentage (e.g., '10% probability: Range trading between [level] and [level] if no breakout')"
+        "{currency}_strength_scenario": "{currency} strength scenario with probability range (e.g., '55-65% probability: {currency} strengthens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
+        "{currency}_weakness_scenario": "{currency} weakness scenario with probability range (e.g., '25-35% probability: {currency} weakens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
+        "range_or_indecision_scenario": "Range/indecision scenario with probability range (e.g., '10-20% probability: Range trading between [levels] if no clear macro driver emerges. Reason: [uncertainty factor]')"
     }},
     "event_summary": {{
         "release": "Event description",
-        "outcome": "What happened vs expectations",
+        "outcome": "{'What happened vs expectations (compare actual to expected and reference current economic indicators)' if not is_pre_event else 'Expected outcome analysis (compare expected value to current indicators and policy targets)'}",
         "previous": "{previous}",
         "expected": "{expected}",
         "actual": "{actual}"
     }},
     "market_reaction": {{
-        "price_action": "Expected price action",
-        "volatility": "Volatility expectations",
-        "reason": "Why this reaction is expected"
+        "price_action": "Specific expected price action with currency pairs. Use price levels only if provided in MARKET CONTEXT, otherwise state assumptions clearly",
+        "volatility": "Volatility expectations with reasoning (reference trading sessions, VIX, risk appetite). If markets closed or liquidity thin, state explicitly",
+        "reason": "Why this reaction is expected (reference economic context, policy pressure, current indicators from ECONOMIC CONTEXT)"
     }},
     "implications_takeaways": {{
-        "economic_context": "Economic implications",
-        "policy_implications": "Central bank policy implications",
-        "market_bias": "Overall market bias",
-        "risk_level": "Risk assessment"
+        "economic_context": "Economic implications - reference current indicator values, statistical context, and trends from ECONOMIC CONTEXT above",
+        "policy_implications": "Central bank policy implications - reference current rate, trend, policy pressure, and targets from ECONOMIC CONTEXT above. Explain how event reinforces, challenges, or complicates existing policy pressure",
+        "market_bias": "Overall market bias with specific reasoning based on economic context and macro drivers (not just technical indicators)",
+        "risk_level": "Risk assessment considering current economic conditions and policy environment"
     }},
     "trading_plan": {{
         "best_approach": "Recommended trading approach",
@@ -1253,16 +2056,17 @@ Please provide analysis in the following JSON format:
         "next_catalysts": "Upcoming events to watch"
     }},
     "big_picture": {{
-        "economic_outlook": "Economic outlook implications",
-        "medium_term_direction": "Medium-term market direction",
-        "policy_trajectory": "Policy trajectory implications",
-        "forward_focus": "What to focus on going forward"
+        "economic_outlook": "Economic outlook implications - reference current economic indicators, trends, and statistical context",
+        "medium_term_direction": "Medium-term market direction based on economic trajectory and policy context (avoid repetition with market_bias)",
+        "policy_trajectory": "Policy trajectory implications - reference current policy pressure, rate trends, and central bank targets",
+        "forward_focus": "What to focus on going forward - specific indicators and data points to monitor"
     }},
-    "positioning_context": {{
-        "retail_sentiment": "Retail trader sentiment",
-        "institutional_flow": "Institutional flow analysis",
-        "market_bias": "Overall market bias"
-    }},
+    # Positioning context removed from prompt - no longer requested from GPT
+    # "positioning_context": {{
+    #     "retail_sentiment": "Retail trader sentiment (if available, otherwise state not available)",
+    #     "institutional_flow": "Institutional flow analysis (if available, otherwise state not available)",
+    #     "market_bias": "Overall market bias based on macro drivers (not just technical indicators)"
+    # }},
     "next_catalysts": [
         "Upcoming event 1",
         "Upcoming event 2",
@@ -1270,7 +2074,12 @@ Please provide analysis in the following JSON format:
     ]
 }}
 
-Provide sophisticated, professional analysis that would be valuable for forex traders.
+SECONDARY QUALITY STANDARDS (GUIDANCE):
+- Use quantitative language wherever possible, but do not fabricate precision when data is missing
+- Avoid repeated phrasing across sections (market_bias, medium_term_direction, big_picture should be distinct)
+- Do not over-weight RSI or short-term price action - prioritize macro → policy → FX transmission
+- If certainty is low, state it explicitly in assumptions or analysis_confidence
+- FX pair sentiment should inform bias, not override macroeconomic drivers
 """
         return prompt
     
@@ -1289,10 +2098,43 @@ Provide sophisticated, professional analysis that would be valuable for forex tr
                 # Fallback if no JSON found
                 analysis_data = self._create_fallback_analysis_data(gpt_response, event)
             
+            # Normalize forward_scenarios to handle both old and new formats
+            forward_scenarios = analysis_data.get('forward_scenarios', {})
+            currency = event.get('currency', 'USD')
+            
+            # Convert new format to old format for backward compatibility
+            normalized_scenarios = {}
+            if forward_scenarios:
+                # Check for new format (currency-specific)
+                currency_upper = currency.upper()
+                strength_key = f"{currency_upper}_strength_scenario"
+                weakness_key = f"{currency_upper}_weakness_scenario"
+                range_key = "range_or_indecision_scenario"
+                
+                if strength_key in forward_scenarios or weakness_key in forward_scenarios:
+                    # New format - convert to old format for frontend compatibility
+                    normalized_scenarios = {
+                        'bullish': forward_scenarios.get(strength_key, forward_scenarios.get('bullish', '')),
+                        'bearish': forward_scenarios.get(weakness_key, forward_scenarios.get('bearish', '')),
+                        'neutral': forward_scenarios.get(range_key, forward_scenarios.get('neutral', ''))
+                    }
+                else:
+                    # Old format - use as is
+                    normalized_scenarios = forward_scenarios
+            
+            # Extract analysis_confidence if provided, otherwise use default
+            analysis_confidence = analysis_data.get('analysis_confidence', 'Medium')
+            # Map confidence to numeric score for backward compatibility
+            confidence_map = {'High': 90.0, 'Medium': 75.0, 'Low': 60.0}
+            confidence_score = confidence_map.get(analysis_confidence, 75.0)
+            
+            # Extract assumptions if provided
+            assumptions = analysis_data.get('assumptions', [])
+            
             return GPTAnalysisResult(
                 headline=analysis_data.get('headline', f"Analysis for {event.get('title', 'Unknown Event')}"),
                 key_takeaway=analysis_data.get('key_takeaway', 'Market analysis completed'),
-                forward_scenarios=analysis_data.get('forward_scenarios', {}),
+                forward_scenarios=normalized_scenarios,
                 event_summary=analysis_data.get('event_summary', {}),
                 market_reaction=analysis_data.get('market_reaction', {}),
                 implications_takeaways=analysis_data.get('implications_takeaways', {}),
@@ -1300,7 +2142,7 @@ Provide sophisticated, professional analysis that would be valuable for forex tr
                 big_picture=analysis_data.get('big_picture', {}),
                 positioning_context=analysis_data.get('positioning_context', {}),
                 next_catalysts=analysis_data.get('next_catalysts', []),
-                confidence_score=85.0,  # High confidence for GPT analysis
+                confidence_score=confidence_score,
                 analysis_timestamp=datetime.now().isoformat(),
                 event_id=str(event.get('id', 'unknown')),
                 analysis_type=analysis_type,
