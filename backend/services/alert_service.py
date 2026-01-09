@@ -203,10 +203,17 @@ class AlertService:
             circuit_breaker = get_telegram_circuit_breaker()
             dead_letter_queue = get_dead_letter_queue()
             
-            # Check circuit breaker state before attempting send
+            # Check circuit breaker state before attempting send (Phase 1 improvement: Enhanced logging)
             cb_stats = circuit_breaker.get_stats()
             if cb_stats['state'] == 'open':
-                logger.warning(f"Telegram circuit breaker is OPEN - rejecting request")
+                logger.warning(f"Telegram circuit breaker is OPEN - rejecting request for user {user_id}, chat_id {chat_id}")
+                logger.warning(f"Circuit breaker stats: {cb_stats}")
+                # Phase 2 improvement: Record metrics
+                try:
+                    from .alert_metrics import get_alert_metrics
+                    get_alert_metrics().record_circuit_breaker_open()
+                except Exception as e:
+                    logger.debug(f"Error recording metrics: {e}")
                 # Add to dead letter queue immediately
                 if user_id:
                     dead_letter_queue.add_failed_alert(
@@ -215,11 +222,19 @@ class AlertService:
                         alert_type=alert_type,
                         title=alert_data.get('title', 'Alert') if alert_data else message.split('\n')[0][:50] if message else 'Alert',
                         content=message,
-                        error_message="Circuit breaker is open",
+                        error_message=f"Circuit breaker is open (stats: {cb_stats})",
                         attempts=0,
                         alert_data=alert_data or {}
                     )
+                    # Phase 2 improvement: Record dead letter queue addition
+                    try:
+                        from .alert_metrics import get_alert_metrics
+                        get_alert_metrics().record_dead_letter_queue_addition()
+                    except Exception as e:
+                        logger.debug(f"Error recording metrics: {e}")
                 return False
+            else:
+                logger.debug(f"Circuit breaker state: {cb_stats['state']} - proceeding with alert send")
             
             # Attempt to send (robust_telegram_service handles retries internally)
             success, error = await send_telegram_message_async(
@@ -236,6 +251,12 @@ class AlertService:
                     monitoring.record_success(user_id, alert_type)
                 # Record success in circuit breaker
                 circuit_breaker._record_success()
+                # Phase 2 improvement: Record metrics
+                try:
+                    from .alert_metrics import get_alert_metrics
+                    get_alert_metrics().record_alert_sent(alert_type)
+                except Exception as e:
+                    logger.debug(f"Error recording metrics: {e}")
                 return True
             else:
                 logger.error(f"Failed to send Telegram alert to {chat_id}: {error}")
@@ -246,6 +267,12 @@ class AlertService:
                 
                 # Record failure in circuit breaker
                 circuit_breaker._record_failure()
+                # Phase 2 improvement: Record metrics
+                try:
+                    from .alert_metrics import get_alert_metrics
+                    get_alert_metrics().record_alert_failed(alert_type, error or "Unknown error")
+                except Exception as e:
+                    logger.debug(f"Error recording metrics: {e}")
                 
                 # Check if this was the final attempt (robust_telegram_service handles retries)
                 # For now, we'll add to dead letter queue if error suggests permanent failure
@@ -336,6 +363,12 @@ class AlertService:
                 from .alert_monitoring import get_alert_monitoring
                 monitoring = get_alert_monitoring()
                 monitoring.record_chat_id_lookup_failure(user_id)
+                # Phase 2 improvement: Record metrics
+                try:
+                    from .alert_metrics import get_alert_metrics
+                    get_alert_metrics().record_chat_id_lookup_failure()
+                except Exception as e:
+                    logger.debug(f"Error recording metrics: {e}")
             
             # Check if Telegram is enabled (check multiple structures for backward compatibility)
             if user_settings.get('telegram', False) or \

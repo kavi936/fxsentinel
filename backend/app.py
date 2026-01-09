@@ -2857,13 +2857,22 @@ def get_alert_settings():
             # Get real settings from Firebase
             try:
                 from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                from services.settings_validator import normalize_settings
                 firebase_storage = FirebaseRealtimeStorage()
                 settings = firebase_storage.get_user_alert_settings(user_id)
                 
                 if settings:
-                    return jsonify({"success": True, "settings": settings})
+                    # Normalize settings to ensure consistent format (Phase 1 improvement)
+                    normalized_settings = normalize_settings(settings)
+                    # Phase 2 improvement: Record metrics
+                    try:
+                        from services.alert_metrics import get_alert_metrics
+                        get_alert_metrics().record_settings_normalization()
+                    except Exception as e:
+                        logger.debug(f"Error recording metrics: {e}")
+                    return jsonify({"success": True, "settings": normalized_settings})
                 else:
-                    # Return default settings for new users
+                    # Return default settings for new users (already in canonical format)
                     default_settings = {
                         "channels": {
                             "telegram": {"enabled": False, "chatId": "", "username": ""},
@@ -3093,6 +3102,23 @@ Stay tuned for real market alerts."""
     except Exception as e:
         print(f"Error in test alert endpoint: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/alerts/metrics', methods=['GET'])
+def get_alert_metrics():
+    """Get alert system metrics (Phase 2 improvement)"""
+    try:
+        from services.alert_metrics import get_alert_metrics
+        metrics = get_alert_metrics()
+        return jsonify({
+            "success": True,
+            "metrics": metrics.get_metrics()
+        })
+    except Exception as e:
+        logger.error(f"Error getting alert metrics: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
 
 @app.route('/api/alerts/stats', methods=['GET'])
 def get_alert_stats():

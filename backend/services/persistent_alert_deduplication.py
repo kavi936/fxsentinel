@@ -23,7 +23,7 @@ class PersistentAlertDeduplication:
     
     def __init__(self):
         self.firebase = FirebaseRealtimeStorage()
-        self.alert_ttl_hours = 2  # How long to remember sent alerts (reduced from 24h to 2h)
+        self.alert_ttl_hours = 0.5  # How long to remember sent alerts (30 minutes - reduced from 2h to prevent blocking legitimate alerts)
         self.cleanup_interval = 20  # Cleanup every N operations (reduced from 50 for more frequent cleanup)
         self.operations_count = 0
         self.duplicates_prevented = 0
@@ -293,28 +293,26 @@ class PersistentAlertDeduplication:
     def should_send_news_alert(self, news_item: Dict[str, Any], user_id: str) -> bool:
         """
         Check if news alert should be sent (not a duplicate)
-        OPTIMIZED: First checks global content hash, then per-user
+        Phase 2 improvement: Hybrid approach - global hash is hint only, per-user is authoritative
         Uses atomic check-and-reserve to prevent race conditions
         CRITICAL: This method atomically checks AND reserves in a single operation
         """
         try:
             news_title = news_item.get('title', 'Unknown')[:50]
             
-            # Generate content hash for global deduplication
+            # Generate content hash for global deduplication (hint only)
             content_hash = self._get_news_content_hash(news_item)
             
+            # Phase 2 improvement: Check global hash as hint only (don't block)
+            # Per-user deduplication is authoritative
             if content_hash:
-                # OPTIMIZATION: Check global content hash first (one check for all users)
-                # DEBUG: Log global hash check
                 global_check_result = self._check_global_content_hash(content_hash)
-                logger.info(f"🔍 Global hash check for user {user_id}: hash={content_hash[:16]}..., result={global_check_result}, title={news_title}")
-                
                 if not global_check_result:
-                    # Content already sent globally - no need to check per-user
-                    logger.warning(f"🚫 Global duplicate prevented for user {user_id}: {news_title}")
-                    return False
+                    # Content may have been sent globally, but still check per-user
+                    # This prevents blocking if global hash was marked but delivery failed
+                    logger.info(f"⚠️  Global hash exists (hint) for user {user_id}: {news_title} - checking per-user deduplication anyway")
                 else:
-                    logger.info(f"✅ Global hash check passed for user {user_id}: {news_title}")
+                    logger.info(f"✅ Global hash check passed (hint) for user {user_id}: {news_title}")
             
             # Create content string from news item for per-user check (same logic as mark_news_alert_sent)
             news_id = str(news_item.get('id', ''))
@@ -330,8 +328,9 @@ class PersistentAlertDeduplication:
                 title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
                 content = f"news:{title_normalized}|{source}"
             
-            # CRITICAL: Atomic check-and-reserve operation
+            # CRITICAL: Atomic check-and-reserve operation (authoritative check)
             # This prevents race conditions by checking AND reserving in one go
+            # Per-user deduplication is the source of truth
             return self._check_and_reserve_alert('news', content, user_id)
             
         except Exception as e:
@@ -344,6 +343,10 @@ class PersistentAlertDeduplication:
         This is a single operation to prevent race conditions
         Uses optimistic locking with retry to handle Firebase eventual consistency
         Returns True if should send and successfully reserved, False otherwise
+        
+        FIXED: Made idempotent - if alert is already reserved recently (within 2 minutes),
+        allows it to proceed. This fixes the issue where double-check after quick-check
+        would block alerts that were just reserved.
         """
         import time
         max_retries = 3
@@ -366,7 +369,37 @@ class PersistentAlertDeduplication:
                     # Check status - if reserved or sent, it's a duplicate
                     status = existing_alert.get('status', 'sent')  # Default to 'sent' for backward compatibility
                     
-                    if status in ['reserved', 'sent']:
+                    # FIX: Handle 'reserved' status specially - if recently reserved (within 2 minutes),
+                    # allow it to proceed (likely our own reservation from quick check)
+                    if status == 'reserved':
+                        reserved_at_str = existing_alert.get('reserved_at')
+                        if reserved_at_str:
+                            try:
+                                reserved_at = datetime.fromisoformat(reserved_at_str)
+                                time_since_reservation = (datetime.now() - reserved_at).total_seconds()
+                                
+                                # If reserved within last 2 minutes, allow it (likely our own reservation)
+                                if time_since_reservation < 120:  # 2 minutes
+                                    logger.info(f"✅ Alert already reserved recently ({time_since_reservation:.1f}s ago) - allowing for user {user_id}: {alert_type}")
+                                    return True  # Allow - it's likely our own reservation from quick check
+                                else:
+                                    # Reserved but old - check expiration
+                                    expires_at_str = existing_alert.get('expires_at')
+                                    if expires_at_str:
+                                        try:
+                                            expires_at = datetime.fromisoformat(expires_at_str)
+                                            if datetime.now() < expires_at:
+                                                # Old reservation still valid - duplicate
+                                                self.duplicates_prevented += 1
+                                                logger.debug(f"Duplicate alert prevented (old reservation, status: {status}) for user {user_id}: {alert_type}")
+                                                return False
+                                        except Exception as e:
+                                            logger.warning(f"Error parsing expires_at: {e}")
+                            except Exception as e:
+                                logger.warning(f"Error parsing reserved_at: {e}")
+                                # If we can't parse, fall through to expiration check
+                    
+                    if status == 'sent':
                         # Check if expired
                         expires_at_str = existing_alert.get('expires_at')
                         if expires_at_str:
@@ -462,20 +495,13 @@ class PersistentAlertDeduplication:
         # Should not reach here, but fail open if we do
         return True
     
-    def mark_news_alert_sent(self, news_item: Dict[str, Any], user_id: str) -> bool:
+    def mark_news_alert_sent(self, news_item: Dict[str, Any], user_id: str, mark_global_hash: bool = False) -> bool:
         """
         Mark a news alert as sent after successful delivery
-        OPTIMIZED: Marks both global content hash and per-user alert
+        Phase 2 improvement: Only mark global hash if mark_global_hash=True (after successful delivery)
         Updates reserved record to sent status
         """
         try:
-            # Generate content hash for global deduplication
-            content_hash = self._get_news_content_hash(news_item)
-            
-            if content_hash:
-                # OPTIMIZATION: Mark global content hash (prevents sending to other users)
-                self._mark_global_content_hash(content_hash)
-            
             # Create content string from news item (same as should_send_news_alert)
             news_id = str(news_item.get('id', ''))
             
@@ -491,7 +517,17 @@ class PersistentAlertDeduplication:
                 content = f"news:{title_normalized}|{source}"
             
             # Mark per-user alert as sent (updates reserved record)
-            return self.mark_alert_sent('news', content, user_id)
+            per_user_success = self.mark_alert_sent('news', content, user_id)
+            
+            # Phase 2 improvement: Only mark global hash after successful delivery
+            if mark_global_hash and per_user_success:
+                content_hash = self._get_news_content_hash(news_item)
+                if content_hash:
+                    # Mark global content hash only after successful delivery
+                    self._mark_global_content_hash(content_hash)
+                    logger.info(f"✅ Global hash marked after successful delivery for user {user_id}")
+            
+            return per_user_success
             
         except Exception as e:
             logger.error(f"Error marking news alert as sent: {e}")
