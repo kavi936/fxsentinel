@@ -3149,6 +3149,26 @@ const Overview = () => {
               )}
             </div>
           </div>
+
+          {/* Central Bank Analysis Card */}
+          <div className="central-bank-analysis-card">
+            <div className="central-bank-analysis-header">
+              <div className="header-main">
+                <h2 className="central-bank-analysis-title">CENTRAL BANK ANALYSIS</h2>
+                <InfoIcon 
+                  tooltipText="Central Bank Analysis: Coming soon - AI-powered analysis of Federal Reserve speeches, Bank of Japan reports, ECB communications, and other central bank statements. This feature will provide sentiment analysis, policy implications, and market impact assessments for major central bank communications."
+                  position="bottom"
+                />
+              </div>
+            </div>
+            <div className="central-bank-analysis-content">
+              <div className="coming-soon-state">
+                <div className="coming-soon-icon">🏦</div>
+                <div className="coming-soon-text">Coming Soon</div>
+                <div className="coming-soon-subtext">AI-powered analysis of Fed speeches, BOJ reports, and central bank communications</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         

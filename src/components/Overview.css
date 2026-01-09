@@ -6433,7 +6433,8 @@
   .ai-analysis-card,
   .market-sentiment-card,
   .live-news-analysis-card,
-  .prediction-markets-card {
+  .prediction-markets-card,
+  .central-bank-analysis-card {
     max-width: 100%;
   }
 }
@@ -7600,7 +7601,8 @@
     grid-template-columns: 1fr;
   }
   
-  .prediction-markets-card {
+  .prediction-markets-card,
+  .central-bank-analysis-card {
     max-width: 100%;
   }
 }
@@ -7634,5 +7636,146 @@
   
   .probability-label {
     font-size: 9px;
+  }
+}
+
+/* Central Bank Analysis Card Styles */
+.central-bank-analysis-card {
+  background: linear-gradient(135deg, #1a0f0a 0%, #2a1a0f 25%, #3d2514 50%, #2a1a0f 75%, #1a0f0a 100%);
+  border: 1px solid rgba(255, 111, 97, .25);
+  border-radius: 20px;
+  margin-left: 0;
+  width: 100%;
+  max-width: 850px;
+  max-height: 600px;
+  min-height: 600px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(255, 111, 97, 0.15), 0 0 0 1px rgba(255, 111, 97, 0.2);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.central-bank-analysis-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    linear-gradient(135deg, rgba(255, 111, 97, 0.1) 0%, transparent 30%, rgba(255, 152, 0, 0.05) 70%, rgba(255, 111, 97, 0.08) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 152, 0, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(255, 111, 97, 0.02) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.central-bank-analysis-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 111, 97, 0.3);
+  position: relative;
+  z-index: 2;
+  margin-bottom: 8px;
+  background: transparent;
+  backdrop-filter: blur(10px);
+}
+
+.central-bank-analysis-title {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff;
+  margin: 0;
+  position: relative;
+  letter-spacing: 1.5px;
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.7),
+    0 0 20px rgba(255, 111, 97, 0.4);
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.central-bank-analysis-title::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, #ff6f61 0%, #ff9848 30%, #ffb347 60%, transparent 100%);
+  border-radius: 0.5px;
+}
+
+.central-bank-analysis-content {
+  flex: 1;
+  padding: 16px 20px;
+  overflow-y: auto;
+  position: relative;
+  z-index: 2;
+}
+
+.coming-soon-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 300px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  gap: 16px;
+}
+
+.coming-soon-icon {
+  font-size: 64px;
+  margin-bottom: 8px;
+  opacity: 0.8;
+  filter: drop-shadow(0 4px 8px rgba(255, 111, 97, 0.3));
+}
+
+.coming-soon-text {
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 20px rgba(255, 111, 97, 0.3);
+  letter-spacing: 1px;
+}
+
+.coming-soon-subtext {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 400px;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+@media (max-width: 1200px) {
+  .central-bank-analysis-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .central-bank-analysis-content {
+    padding: 12px 16px;
+  }
+  
+  .coming-soon-icon {
+    font-size: 48px;
+  }
+  
+  .coming-soon-text {
+    font-size: 20px;
+  }
+  
+  .coming-soon-subtext {
+    font-size: 13px;
   }
 }
