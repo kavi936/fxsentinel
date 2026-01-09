@@ -3687,7 +3687,78 @@ def get_market_sentiment():
             'error': 'Failed to fetch market sentiment',
             'message': str(e),
             'timestamp': datetime.now().isoformat(),
-            'trading_day': datetime.now().strftime('%Y-%m-%d')
+        }), 500
+
+@app.route('/api/prediction-markets', methods=['GET', 'OPTIONS'])
+def get_prediction_markets():
+    """Get prediction markets data from Polymarket"""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        return response
+    
+    try:
+        print("🔍 Fetching prediction markets data...")
+        
+        # Check for force refresh parameter
+        force_refresh = request.args.get('refresh', 'false').lower() == 'true'
+        
+        # Import the service
+        import importlib
+        import services.prediction_markets_service
+        importlib.reload(services.prediction_markets_service)
+        from services.prediction_markets_service import prediction_markets_service
+        
+        # Get markets data
+        result = prediction_markets_service.get_prediction_markets(force_refresh=force_refresh)
+        
+        if result.get('status') == 'success':
+            markets = result.get('markets', [])
+            print(f"✅ Successfully fetched {len(markets)} prediction markets")
+            return jsonify({
+                "status": "success",
+                "data": {
+                    "markets": markets,
+                    "summary": {
+                        "total_markets": len(markets),
+                        "platforms": ["polymarket"],
+                        "last_updated": result.get('timestamp'),
+                        "cached": result.get('cached', False)
+                    }
+                }
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "error": result.get('error', 'Unknown error'),
+                "data": {
+                    "markets": [],
+                    "summary": {
+                        "total_markets": 0,
+                        "platforms": [],
+                        "last_updated": None
+                    }
+                }
+            }), 500
+        
+    except Exception as e:
+        print(f"❌ Error fetching prediction markets: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "data": {
+                "markets": [],
+                "summary": {
+                    "total_markets": 0,
+                    "platforms": [],
+                    "last_updated": None
+                }
+            }
         }), 500
 
 @app.route('/api/sentiment/refresh', methods=['POST', 'OPTIONS'])
