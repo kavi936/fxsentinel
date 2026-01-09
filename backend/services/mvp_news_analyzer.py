@@ -7,7 +7,8 @@ Implements simplified two-paragraph analysis format with hybrid free/GPT analysi
 import json
 import logging
 import re
-from datetime import datetime
+import hashlib
+from datetime import datetime, timezone
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 import os
@@ -27,6 +28,9 @@ class MVPAnalysisResult:
     analysis_type: str  # free_enhanced or gpt_enhanced
     risk_assessment: Optional[Dict[str, str]] = None
     market_context: Optional[Dict[str, List[str]]] = None
+    cost: float = 0.0  # Cost of GPT API call in USD
+    data_quality: str = "unknown"  # live_data, cached, fallback, unknown
+    market_data_source: str = "unknown"  # TradingView, unknown
 
 class MVPNewsAnalyzer:
     """MVP news analyzer with hybrid free/GPT analysis"""
@@ -35,6 +39,20 @@ class MVPNewsAnalyzer:
         self.sentiment_keywords = self._load_sentiment_keywords()
         self.political_keywords = self._load_political_keywords()
         self.source_credibility = self._load_source_credibility()
+        
+        # Cost tracking
+        self.total_cost = 0.0
+        self.cost_estimates = {
+            'gpt-4-turbo-preview': 0.03,  # $0.03 per 1K tokens
+            'gpt-3.5-turbo': 0.002,       # $0.002 per 1K tokens (average)
+        }
+        
+        # Rate limiting
+        self.api_calls_this_hour = 0
+        self.max_calls_per_hour = 50  # Conservative limit
+        self.last_hour_reset = datetime.now()
+        
+        logger.info("✅ MVP News Analyzer initialized with cost tracking and rate limiting")
         
     def _load_sentiment_keywords(self) -> Dict[str, List[str]]:
         """Load sentiment keywords for analysis"""
@@ -153,6 +171,263 @@ class MVPNewsAnalyzer:
         source_lower = source.lower()
         return self.source_credibility.get(source_lower, 0.5)
     
+    def _calculate_cost_estimate(self, usage, model: str) -> float:
+        """Calculate cost estimate for GPT API usage"""
+        if not usage:
+            return 0.0
+        
+        # GPT-3.5-turbo pricing: $0.0015 per 1K input tokens, $0.002 per 1K output tokens
+        # GPT-4-turbo-preview: $0.01 per 1K input tokens, $0.03 per 1K output tokens
+        pricing = {
+            'gpt-3.5-turbo': {'input': 0.0015, 'output': 0.002},
+            'gpt-4-turbo-preview': {'input': 0.01, 'output': 0.03},
+            'gpt-4': {'input': 0.01, 'output': 0.03}
+        }
+        
+        model_pricing = pricing.get(model, pricing['gpt-3.5-turbo'])
+        
+        prompt_tokens = usage.prompt_tokens if hasattr(usage, 'prompt_tokens') else 0
+        completion_tokens = usage.completion_tokens if hasattr(usage, 'completion_tokens') else 0
+        
+        input_cost = (prompt_tokens / 1000) * model_pricing['input']
+        output_cost = (completion_tokens / 1000) * model_pricing['output']
+        total_cost = input_cost + output_cost
+        
+        return total_cost
+    
+    def _check_rate_limit(self) -> bool:
+        """Check if we're within rate limits"""
+        now = datetime.now()
+        
+        # Reset counter if hour has passed
+        if (now - self.last_hour_reset).total_seconds() > 3600:
+            self.api_calls_this_hour = 0
+            self.last_hour_reset = now
+            logger.info("🔄 Rate limit counter reset")
+        
+        is_within_limit = self.api_calls_this_hour < self.max_calls_per_hour
+        if not is_within_limit:
+            logger.warning(f"⚠️ Rate limit reached: {self.api_calls_this_hour}/{self.max_calls_per_hour} calls this hour")
+        
+        return is_within_limit
+    
+    def _select_model(self, news_item: Dict) -> str:
+        """Select appropriate GPT model based on news characteristics"""
+        impact = news_item.get('impact', 'medium').lower()
+        
+        # Use GPT-4 for high-impact news, GPT-3.5 for others
+        if impact == 'high':
+            return 'gpt-4-turbo-preview'
+        else:
+            return 'gpt-3.5-turbo'
+    
+    def _get_enhanced_market_context(self) -> Dict[str, Any]:
+        """Get enhanced market context from live market data service"""
+        try:
+            from services.live_market_data import live_market_data_service
+            
+            live_market_data = live_market_data_service.get_live_market_data()
+            
+            # Only use real data, ignore None values
+            market_context = {
+                'current_prices': live_market_data.get('current_prices') or {},
+                'recent_volatility': live_market_data.get('recent_volatility') or {},
+                'market_sentiment': live_market_data.get('market_sentiment') or {},
+                'data_source': live_market_data.get('data_source', 'unknown'),
+                'data_quality': live_market_data.get('data_quality', 'unknown')
+            }
+            
+            logger.info(f"✅ Live market data retrieved from {market_context['data_source']}")
+            return market_context
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Error getting live market data: {e}")
+            return {
+                'current_prices': {},
+                'recent_volatility': {},
+                'market_sentiment': {},
+                'data_source': 'unknown',
+                'data_quality': 'fallback'
+            }
+    
+    def _get_trading_sessions(self) -> Dict[str, Any]:
+        """Get current trading session information"""
+        try:
+            now = datetime.now(timezone.utc)
+            utc_hour = now.hour
+            utc_day = now.weekday()  # 0=Monday, 6=Sunday
+            
+            # Check if weekend
+            is_weekend = utc_day >= 5  # Saturday (5) or Sunday (6)
+            
+            # Check for major holidays
+            utc_month = now.month
+            utc_date = now.day
+            is_holiday = (
+                (utc_month == 1 and utc_date == 1) or  # New Year's Day
+                (utc_month == 12 and utc_date == 25) or  # Christmas Day
+                (utc_month == 12 and utc_date == 26)  # Boxing Day
+            )
+            
+            if is_weekend or is_holiday:
+                return {
+                    'active_sessions': [],
+                    'market_status': 'closed',
+                    'volatility_implication': 'Markets closed - no trading activity'
+                }
+            
+            # Trading session times (UTC)
+            sessions = [
+                {'name': 'Sydney', 'start': 22, 'end': 7},
+                {'name': 'Tokyo', 'start': 0, 'end': 9},
+                {'name': 'London', 'start': 8, 'end': 17},
+                {'name': 'New York', 'start': 13, 'end': 22}
+            ]
+            
+            active_sessions = []
+            for session in sessions:
+                if session['start'] <= session['end']:
+                    # Same day session
+                    is_active = session['start'] <= utc_hour < session['end']
+                else:
+                    # Overnight session
+                    is_active = utc_hour >= session['start'] or utc_hour < session['end']
+                
+                if is_active:
+                    active_sessions.append(session['name'])
+            
+            # Determine volatility implications
+            volatility_implication = "Normal trading hours"
+            if len(active_sessions) == 0:
+                volatility_implication = "Markets closed - no trading activity"
+            elif len(active_sessions) == 1:
+                session_name = active_sessions[0]
+                if session_name in ['London', 'New York']:
+                    volatility_implication = f"{session_name} session active - typically higher volatility"
+                else:
+                    volatility_implication = f"{session_name} session active - typically lower volatility"
+            elif len(active_sessions) >= 2:
+                if 'London' in active_sessions and 'New York' in active_sessions:
+                    volatility_implication = "London-NY overlap - highest volatility period (peak liquidity)"
+                elif 'Tokyo' in active_sessions and 'London' in active_sessions:
+                    volatility_implication = "Tokyo-London overlap - moderate to high volatility"
+                else:
+                    volatility_implication = "Multiple sessions active - moderate volatility"
+            
+            return {
+                'active_sessions': active_sessions,
+                'market_status': 'open' if active_sessions else 'closed',
+                'volatility_implication': volatility_implication,
+                'current_time_utc': now.strftime('%Y-%m-%d %H:%M UTC')
+            }
+        except Exception as e:
+            logger.warning(f"Error getting trading sessions: {e}")
+            return {
+                'active_sessions': [],
+                'market_status': 'unknown',
+                'volatility_implication': 'Unable to determine session status'
+            }
+    
+    def _get_market_sentiment_data(self) -> Optional[Dict[str, Any]]:
+        """Fetch market sentiment data (VIX, Risk Appetite) from market sentiment service"""
+        try:
+            from services.market_sentiment_service import market_sentiment_service
+            
+            sentiment_data = market_sentiment_service.get_market_sentiment()
+            
+            if not sentiment_data:
+                return None
+            
+            # Extract VIX data
+            vix_data = sentiment_data.get('vix')
+            if not vix_data:
+                # Try to extract from market conditions
+                market_conditions = sentiment_data.get('market_conditions', [])
+                volatility_condition = next(
+                    (c for c in market_conditions if c.get('name') == 'Volatility Environment'),
+                    None
+                )
+                if volatility_condition and volatility_condition.get('detail'):
+                    # Parse VIX from detail string: "VIX: 15.0 (+0.0)"
+                    detail = volatility_condition.get('detail', '')
+                    vix_match = re.match(r'VIX:\s*([\d.]+)\s*\(([+-]?[\d.]+)\)', detail)
+                    if vix_match:
+                        vix_data = {
+                            'value': float(vix_match.group(1)),
+                            'change': float(vix_match.group(2)),
+                            'level': 'low' if float(vix_match.group(1)) < 15 else 'medium' if float(vix_match.group(1)) < 25 else 'high'
+                        }
+            
+            # Extract Risk Appetite data
+            risk_appetite_data = None
+            market_conditions = sentiment_data.get('market_conditions', [])
+            risk_appetite_condition = next(
+                (c for c in market_conditions if c.get('name') == 'Risk Appetite'),
+                None
+            )
+            if risk_appetite_condition:
+                risk_appetite_data = {
+                    'level': risk_appetite_condition.get('value'),  # 'low', 'medium', 'high'
+                    'percentage': risk_appetite_condition.get('percentage'),  # 25, 50, 75
+                    'safe_havens': risk_appetite_condition.get('detail', '').replace('Safe Havens: ', ''),
+                    'trend': risk_appetite_condition.get('trend', 'stable')
+                }
+            
+            return {
+                'vix': vix_data,
+                'risk_appetite': risk_appetite_data
+            }
+        except Exception as e:
+            logger.warning(f"Error fetching market sentiment data: {e}")
+            return None
+    
+    def _normalize_pair_format(self, pair: str) -> str:
+        """Normalize pair format: EUR/USD -> EURUSD"""
+        return pair.replace('/', '').upper()
+    
+    def _get_pairs_sentiment_data(self, currency_pairs: List[str]) -> List[Dict[str, Any]]:
+        """Get sentiment data for currency pairs affected by the news"""
+        try:
+            from services.market_sentiment_service import market_sentiment_service
+            
+            # Get sentiment data
+            sentiment_data = market_sentiment_service.get_market_sentiment()
+            if not sentiment_data:
+                return []
+            
+            pairs_sentiment = sentiment_data.get('pairs_sentiment', [])
+            if not pairs_sentiment:
+                return []
+            
+            # Extract sentiment for our pairs
+            result = []
+            for pair_with_slash in currency_pairs[:3]:  # Top 3 pairs
+                pair_normalized = self._normalize_pair_format(pair_with_slash)
+                
+                # Find sentiment for this pair
+                pair_sentiment = next(
+                    (p for p in pairs_sentiment if p.get('pair', '').upper() == pair_normalized),
+                    None
+                )
+                
+                if pair_sentiment:
+                    # Get daily change directly from sentiment data
+                    daily_change = pair_sentiment.get('price_change', 0)
+                    
+                    result.append({
+                        'pair': pair_with_slash,
+                        'sentiment': pair_sentiment.get('sentiment', 'neutral'),
+                        'percentage': pair_sentiment.get('percentage', 50),
+                        'daily_change': daily_change,
+                        'rsi': pair_sentiment.get('rsi', 50),
+                        'volatility': pair_sentiment.get('volatility', 0)
+                    })
+            
+            return result
+        except Exception as e:
+            logger.warning(f"Error fetching pairs sentiment data: {e}")
+            return []
+    
     def analyze_news(self, news_item: Dict, market_context: Optional[Dict] = None) -> MVPAnalysisResult:
         """Analyze news using hybrid approach"""
         try:
@@ -218,7 +493,10 @@ class MVPNewsAnalyzer:
                 "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
                 "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
                 "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
-            }
+            },
+            cost=0.0,
+            data_quality="free_analysis",
+            market_data_source="unknown"
         )
         
         print(f"🔍 Free analysis - Result news_impact: {result.news_impact[:50]}...")
@@ -227,103 +505,94 @@ class MVPNewsAnalyzer:
         return result
     
     def _analyze_with_gpt(self, news_item: Dict, market_context: Optional[Dict] = None) -> MVPAnalysisResult:
-        """Analyze news using GPT with optimized prompts"""
+        """Analyze news using GPT with enhanced prompts and live market data"""
+        news_id = str(news_item.get('id', 'unknown'))
+        news_title = news_item.get('title', 'Unknown')[:100]
+        
         try:
             import openai
             import os
             
-            print(f"🔍 Starting GPT analysis...")
+            logger.info(f"🔍 Starting GPT analysis for news: {news_title}")
             
             # Get API key
             api_key = os.getenv('OPENAI_API_KEY')
             if not api_key:
-                print(f"🔍 No OpenAI API key found, falling back to free analysis")
                 logger.warning("No OpenAI API key found, falling back to free analysis")
                 return self._analyze_with_free(news_item)
             
-            print(f"🔍 OpenAI API key found, proceeding with GPT analysis")
+            # Check rate limit
+            if not self._check_rate_limit():
+                logger.warning("Rate limit exceeded, falling back to free analysis")
+                return self._analyze_with_free(news_item)
+            
+            # Select model based on impact
+            model = self._select_model(news_item)
+            logger.info(f"Selected model: {model} for news impact: {news_item.get('impact', 'medium')}")
             
             # Initialize OpenAI client
             client = openai.OpenAI(api_key=api_key, timeout=30.0)
             
-            # Create enhanced prompt for trader-focused analysis
+            # Get live market data
+            market_data = self._get_enhanced_market_context()
+            market_data_source = market_data.get('data_source', 'unknown')
+            data_quality = market_data.get('data_quality', 'unknown')
+            
+            # Get additional market context
+            trading_sessions = self._get_trading_sessions()
+            sentiment_data = self._get_market_sentiment_data()
+            
+            # Extract currency pairs from the news
             title = news_item.get('title', '')
             summary = news_item.get('summary', '')
             source = news_item.get('source', '')
-            
-            # Extract currency pairs from the news
             currency_pairs = self._extract_currency_pairs(title, summary)
             
-            prompt = f"""
-You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
-
-NEWS TO ANALYZE:
-Title: {title}
-Summary: {summary}
-Source: {source}
-Affected Currency Pairs: {currency_pairs}
-
-ANALYSIS REQUIREMENTS:
-
-1. **Market Impact Analysis** (2-3 sentences):
-   - Explain the specific market implications and sentiment
-   - Focus on which currency pairs are most affected and why
-   - Include magnitude of expected impact (high/medium/low)
-   - Reference current market context and positioning
-
-2. **Trading Intelligence** (2-3 sentences):
-   - Provide actionable market intelligence (NOT trade recommendations)
-   - Identify key levels to watch and market dynamics
-   - Explain what traders should monitor and why
-   - Include timeframe expectations and volatility outlook
-
-3. **Currency-Specific Analysis**:
-   - Focus on the most relevant currency pairs from the news
-   - Explain the specific impact on each major pair
-   - Consider cross-market correlations and safe-haven flows
-
-4. **Risk Context**:
-   - Identify potential market risks and uncertainties
-   - Explain what could amplify or dampen the impact
-   - Consider political, economic, and technical factors
-
-IMPORTANT GUIDELINES:
-- Be specific about currency pairs and market dynamics
-- Provide concrete market intelligence, not generic statements
-- Focus on "what to watch" rather than "what to do"
-- Consider current market positioning and sentiment
-- Include specific price levels and timeframes when relevant
-- Avoid generic phrases like "monitor for opportunities"
-
-RESPONSE FORMAT (JSON):
-{{
-    "news_impact": "Specific market impact explanation with currency focus...",
-    "trading_implications": "Actionable market intelligence and what to watch...",
-    "immediate_reaction": "bullish_usd|bearish_usd|neutral",
-    "key_pairs": ["EUR/USD", "USD/JPY"],
-    "volatility": "high|medium|low",
-    "timeframe": "specific timeframe like 'next 2-4 hours' or 'London session'",
-    "confidence": 85
-}}
-
-For immediate_reaction, use ONLY: "bullish_usd", "bearish_usd", or "neutral"
-For volatility, use ONLY: "high", "medium", or "low"
-For confidence, use 50-95 based on clarity and certainty of the news impact.
-"""
+            # Get pairs sentiment
+            pairs_sentiment = self._get_pairs_sentiment_data(currency_pairs)
             
-            # Call GPT
-            print(f"🔍 Calling GPT API...")
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=1000,
-                temperature=0.3
+            # Build enhanced prompt with live market data
+            prompt = self._create_enhanced_prompt(
+                news_item, currency_pairs, market_data, trading_sessions, 
+                sentiment_data, pairs_sentiment
             )
+            
+            # Call GPT API
+            logger.info(f"🔍 Calling GPT API with model: {model}")
+            try:
+                response = client.chat.completions.create(
+                    model=model,
+                    messages=[
+                        {"role": "system", "content": "You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    max_tokens=1000,
+                    temperature=0.3
+                )
+            except openai.RateLimitError as e:
+                logger.error(f"OpenAI RateLimitError for news {news_id}: {e}")
+                return self._analyze_with_free(news_item)
+            except openai.APITimeoutError as e:
+                logger.error(f"OpenAI APITimeoutError for news {news_id}: {e}")
+                return self._analyze_with_free(news_item)
+            except openai.AuthenticationError as e:
+                logger.error(f"OpenAI AuthenticationError: {e}")
+                return self._analyze_with_free(news_item)
+            except openai.APIError as e:
+                logger.error(f"OpenAI APIError for news {news_id}: {e}")
+                return self._analyze_with_free(news_item)
+            
+            # Calculate cost
+            cost = self._calculate_cost_estimate(response.usage, model)
+            self.total_cost += cost
+            logger.info(f"✅ GPT API call completed. Cost: ${cost:.4f}, Total cost: ${self.total_cost:.4f}")
+            
+            # Update rate limiting
+            self.api_calls_this_hour += 1
             
             # Parse response
             content = response.choices[0].message.content
-            print(f"🔍 GPT response received, length: {len(content)}")
-            print(f"🔍 GPT response preview: {content[:200]}...")
+            logger.info(f"🔍 GPT response received, length: {len(content)}")
             
             try:
                 # Try to extract JSON from response
@@ -331,19 +600,18 @@ For confidence, use 50-95 based on clarity and certainty of the news impact.
                     start = content.find('{')
                     end = content.rfind('}') + 1
                     json_str = content[start:end]
-                    print(f"🔍 Extracted JSON: {json_str}")
                     gpt_result = json.loads(json_str)
-                    print(f"🔍 JSON parsed successfully")
+                    logger.info("✅ JSON parsed successfully")
                 else:
-                    print(f"🔍 No JSON found in response")
+                    logger.error("No JSON found in GPT response")
                     raise ValueError("No JSON found in response")
                 
-                # Create MVP result
-                return MVPAnalysisResult(
+                # Create MVP result with cost and data quality tracking
+                result = MVPAnalysisResult(
                     news_impact=gpt_result.get('news_impact', ''),
                     trading_implications=gpt_result.get('trading_implications', ''),
                     immediate_reaction=gpt_result.get('immediate_reaction', 'neutral'),
-                    key_pairs=gpt_result.get('key_pairs', ['EUR/USD']),
+                    key_pairs=gpt_result.get('key_pairs', currency_pairs[:3] if currency_pairs else ['EUR/USD']),
                     volatility=gpt_result.get('volatility', 'medium'),
                     timeframe=gpt_result.get('timeframe', '1-24 hours'),
                     confidence=gpt_result.get('confidence', 75),
@@ -357,19 +625,189 @@ For confidence, use 50-95 based on clarity and certainty of the news impact.
                         "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
                         "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
                         "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
-                    }
+                    },
+                    cost=cost,
+                    data_quality=data_quality,
+                    market_data_source=market_data_source
                 )
                 
+                logger.info(f"✅ GPT analysis completed successfully for news: {news_title}")
+                return result
+                
             except (json.JSONDecodeError, ValueError) as e:
-                logger.error(f"Failed to parse GPT response: {e}")
-                logger.error(f"Raw response: {content}")
+                logger.error(f"Failed to parse GPT response for news {news_id}: {e}")
+                logger.error(f"Raw response preview: {content[:500]}")
+                logger.error(f"News title: {news_title}")
                 # Fallback to free analysis
                 return self._analyze_with_free(news_item)
                 
         except Exception as e:
-            logger.error(f"GPT analysis failed: {e}")
+            logger.error(f"Unexpected error in GPT analysis for news {news_id}: {e}")
+            logger.error(f"Error type: {type(e).__name__}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             # Fallback to free analysis
             return self._analyze_with_free(news_item)
+    
+    def _create_enhanced_prompt(self, news_item: Dict, currency_pairs: List[str], 
+                                market_data: Dict, trading_sessions: Dict,
+                                sentiment_data: Optional[Dict], pairs_sentiment: List[Dict]) -> str:
+        """Create enhanced prompt with live market data and context"""
+        title = news_item.get('title', '')
+        summary = news_item.get('summary', '')
+        source = news_item.get('source', '')
+        
+        # Build market context section
+        market_context_lines = []
+        if market_data.get('current_prices'):
+            market_context_lines.append(f"- Current Prices: {market_data['current_prices']}")
+        if market_data.get('recent_volatility'):
+            market_context_lines.append(f"- Recent Volatility: {market_data['recent_volatility']}")
+        if market_data.get('market_sentiment'):
+            market_context_lines.append(f"- Market Sentiment: {market_data['market_sentiment']}")
+        
+        market_context_section = "\n".join(market_context_lines) if market_context_lines else "Limited market data available"
+        
+        # Build additional context section
+        additional_context_lines = []
+        
+        # Market Status Warning (if closed)
+        if trading_sessions.get('market_status') == 'closed':
+            additional_context_lines.append(
+                "⚠️ MARKET STATUS: Markets are currently CLOSED (weekend/holiday). "
+                "Any analysis should consider that trading will resume when markets reopen. "
+                "Price movements may be limited or non-existent until markets reopen."
+            )
+        
+        # Trading Session Context
+        if trading_sessions.get('active_sessions'):
+            active_sessions = trading_sessions['active_sessions']
+            additional_context_lines.append(f"- Active Trading Sessions: {', '.join(active_sessions)}")
+            additional_context_lines.append(f"- Volatility Implication: {trading_sessions.get('volatility_implication', 'Normal trading hours')}")
+        
+        # VIX Fear Indicator
+        if sentiment_data and sentiment_data.get('vix'):
+            vix = sentiment_data['vix']
+            additional_context_lines.append(
+                f"- VIX Fear Indicator: {vix.get('value', 'N/A')} "
+                f"({vix.get('change', 0):+.1f}, Level: {vix.get('level', 'unknown')})"
+            )
+        
+        # Risk Appetite
+        if sentiment_data and sentiment_data.get('risk_appetite'):
+            risk = sentiment_data['risk_appetite']
+            additional_context_lines.append(
+                f"- Risk Appetite: {risk.get('level', 'unknown').upper()} "
+                f"({risk.get('percentage', 0)}%) - Safe Havens: {risk.get('safe_havens', 'None')}"
+            )
+        
+        # Pairs Sentiment (Contextual, not deterministic)
+        if pairs_sentiment:
+            additional_context_lines.append("\nRELEVANT FX PAIRS (Contextual, Not Deterministic):")
+            for pair_data in pairs_sentiment:
+                pair = pair_data['pair']
+                sentiment = pair_data['sentiment'].upper()
+                daily_change = pair_data['daily_change']
+                rsi = pair_data['rsi']
+                volatility = pair_data['volatility']
+                
+                additional_context_lines.append(
+                    f"- {pair}: {sentiment} ({daily_change:+.2f}%), "
+                    f"RSI: {rsi:.1f}, Volatility: {volatility:.2f}%"
+                )
+            additional_context_lines.append("\nNote: FX pair sentiment should inform bias, not override macroeconomic drivers.")
+        
+        additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "Limited additional context available"
+        
+        prompt = f"""
+You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
+
+NEWS TO ANALYZE:
+Title: {title}
+Summary: {summary}
+Source: {source}
+Affected Currency Pairs: {currency_pairs}
+
+CURRENT MARKET CONTEXT (Live Data):
+{market_context_section}
+
+ADDITIONAL MARKET CONTEXT:
+{additional_context_section}
+
+ANALYSIS REQUIREMENTS:
+
+1. **Market Impact Analysis** (2-3 sentences, 150-250 words):
+   - Explain the specific market implications and sentiment
+   - Focus on which currency pairs are most affected and why
+   - Include magnitude of expected impact (high/medium/low)
+   - Reference current market context, trading sessions, and volatility conditions
+   - Consider VIX level and risk appetite when relevant
+
+2. **Trading Intelligence** (2-3 sentences, 150-250 words):
+   - Provide actionable market intelligence (NOT trade recommendations)
+   - Identify key levels to watch and market dynamics
+   - Explain what traders should monitor and why
+   - Include timeframe expectations and volatility outlook
+   - Reference active trading sessions and liquidity conditions
+
+3. **Currency-Specific Analysis**:
+   - Focus on the most relevant currency pairs from the news
+   - Explain the specific impact on each major pair
+   - Consider cross-market correlations and safe-haven flows
+   - Reference current pair sentiment as contextual information (not deterministic)
+
+4. **Risk Context**:
+   - Identify potential market risks and uncertainties
+   - Explain what could amplify or dampen the impact
+   - Consider political, economic, and technical factors
+   - Reference VIX level and risk appetite when relevant
+
+IMPORTANT GUIDELINES:
+- Be specific about currency pairs and market dynamics
+- Provide concrete market intelligence, not generic statements
+- Focus on "what to watch" rather than "what to do"
+- Consider current market positioning and sentiment
+- Include specific price levels and timeframes when relevant
+- Avoid generic phrases like "monitor for opportunities"
+- Reference live market data when available (prices, volatility, sentiment)
+- Consider trading session context (higher volatility during London-NY overlap)
+- FX pair sentiment should inform bias, not override macroeconomic drivers
+
+CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no code blocks, no explanations outside the JSON.
+
+RESPONSE FORMAT (JSON ONLY):
+{{
+    "news_impact": "Specific market impact explanation with currency focus. 2-3 sentences explaining implications, affected pairs, and impact magnitude. Reference current market context and trading sessions.",
+    "trading_implications": "Actionable market intelligence and what to watch. 2-3 sentences identifying key levels, timeframes, and monitoring points. Reference volatility expectations and trading sessions.",
+    "immediate_reaction": "bullish_usd|bearish_usd|neutral",
+    "key_pairs": ["EUR/USD", "USD/JPY"],
+    "volatility": "high|medium|low",
+    "timeframe": "specific timeframe like 'next 2-4 hours' or 'London session'",
+    "confidence": 85
+}}
+
+VALIDATION RULES:
+- immediate_reaction: MUST be exactly "bullish_usd", "bearish_usd", or "neutral"
+- volatility: MUST be exactly "high", "medium", or "low"
+- confidence: Integer between 50-95
+- key_pairs: Array of 1-4 currency pairs in format "XXX/YYY"
+- news_impact: String, 150-250 words, no generic phrases
+- trading_implications: String, 150-250 words, specific and actionable
+
+EXAMPLE RESPONSE:
+{{
+    "news_impact": "Fed Chair Powell's hawkish comments suggest potential rate hikes ahead, creating bullish sentiment for USD. EUR/USD and GBP/USD are most affected, with expected downward pressure of 50-100 pips. Current market positioning shows USD strength, amplifying the impact. London-NY session overlap expected to see highest volatility.",
+    "trading_implications": "Monitor EUR/USD support at 1.0800 and GBP/USD at 1.2600 for potential breakdowns. Expect increased volatility during London session (next 2-4 hours) as markets digest the news. Watch for USD/JPY to test 149.00 resistance level. VIX at moderate levels suggests manageable risk environment.",
+    "immediate_reaction": "bullish_usd",
+    "key_pairs": ["EUR/USD", "GBP/USD", "USD/JPY"],
+    "volatility": "high",
+    "timeframe": "next 2-4 hours",
+    "confidence": 85
+}}
+
+Now analyze the news above and respond with ONLY the JSON object:
+"""
+        return prompt
     
     def _extract_currency_pairs(self, title: str, summary: str) -> List[str]:
         """Extract relevant currency pairs from news content"""
@@ -530,7 +968,10 @@ For confidence, use 50-95 based on clarity and certainty of the news impact.
                 "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
                 "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
                 "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
-            }
+            },
+            cost=0.0,
+            data_quality="fallback",
+            market_data_source="unknown"
         )
 
 # Create global instance
