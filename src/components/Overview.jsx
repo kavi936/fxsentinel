@@ -2994,7 +2994,7 @@ const Overview = () => {
                   tooltipText="Prediction Markets: See what retail and institutional traders are betting on. These markets aggregate crowd wisdom on economic events like Fed decisions, inflation data, and GDP releases. Use this as a sentiment indicator alongside technical analysis."
                   position="bottom"
                 />
-              </div>
+        </div>
               <div className="prediction-markets-controls">
                 <button 
                   className={`prediction-markets-refresh-btn ${predictionMarketsLoading ? 'spinning' : ''}`}
@@ -3027,8 +3027,19 @@ const Overview = () => {
                   <div className="empty-subtext">Markets related to economic events (Fed decisions, inflation, GDP) will appear here when available</div>
                 </div>
               ) : (
-                <div className="prediction-markets-list">
-                  {predictionMarkets.map((market) => {
+                <>
+                  {/* Check if all markets are historical/resolved */}
+                  {predictionMarkets.every(m => m.is_historical || m.closed || m.is_resolved) && (
+                    <div className="prediction-markets-notice">
+                      <div className="notice-icon">⏳</div>
+                      <div className="notice-content">
+                        <div className="notice-title">Historical Markets Only</div>
+                        <div className="notice-text">These are resolved markets from past events. Wait for markets to open to see live predictions for upcoming economic events.</div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="prediction-markets-list">
+                    {predictionMarkets.map((market) => {
                     const yesPrice = market.yes_price || 0;
                     const noPrice = market.no_price || 0;
                     const yesPercent = (yesPrice * 100).toFixed(0);
@@ -3133,7 +3144,8 @@ const Overview = () => {
                       </div>
                     );
                   })}
-                </div>
+                  </div>
+                </>
               )}
             </div>
           </div>
