@@ -409,15 +409,16 @@ class UnifiedAlertProcessor:
             import time
             time.sleep(0.5)  # Increased to 500ms delay to allow Firebase to propagate reservation globally
             
-            # SOLUTION 3: Mark alert as sent IMMEDIATELY after reservation (before sending)
+            # SOLUTION 3: Mark alert as reserved IMMEDIATELY after reservation (before sending)
             # This prevents other threads from sending the same alert
+            # Phase 2 improvement: Don't mark global hash yet - only mark per-user reservation
             from services.persistent_alert_deduplication import mark_news_alert_sent
-            mark_sent_success = mark_news_alert_sent(news_item, user_id)
+            mark_sent_success = mark_news_alert_sent(news_item, user_id, mark_global_hash=False)
             if not mark_sent_success:
-                logger.warning(f"⚠️  Failed to mark alert as sent in deduplication for user {user_id}")
+                logger.warning(f"⚠️  Failed to mark alert as reserved in deduplication for user {user_id}")
                 # Continue anyway - the reservation should still prevent duplicates
             else:
-                logger.info(f"✅ Alert marked as sent (before delivery) for user {user_id}: {news_title}")
+                logger.info(f"✅ Alert marked as reserved (before delivery) for user {user_id}: {news_title}")
             
             # Additional delay after marking as sent to ensure Firebase propagation
             time.sleep(0.2)  # 200ms delay to allow Firebase to propagate "sent" status
@@ -471,7 +472,12 @@ class UnifiedAlertProcessor:
                 )
             
             if success:
-                # Alert already marked as sent above (before sending)
+                # Phase 2 improvement: Mark global hash only after successful delivery
+                from services.persistent_alert_deduplication import mark_news_alert_sent
+                mark_news_alert_sent(news_item, user_id, mark_global_hash=True)
+                logger.info(f"✅ Alert delivery confirmed - global hash marked for user {user_id}")
+                
+                # Alert already marked as reserved above (before sending)
                 # Just log success here
                 
                 # SOLUTION 3: Log alert to history with enhanced error handling

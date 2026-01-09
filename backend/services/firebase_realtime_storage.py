@@ -8,7 +8,7 @@ import os
 import json
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 import requests
 from dotenv import load_dotenv
 
@@ -211,9 +211,71 @@ class FirebaseRealtimeStorage:
             logger.error(f"Error getting users with alerts: {e}")
             return []
     
-    def save_telegram_chat_id(self, user_id: str, chat_id: str) -> bool:
-        """Save user's Telegram chat ID"""
+    def _validate_chat_id(self, chat_id: str) -> Tuple[bool, Optional[str]]:
+        """
+        Validate Telegram chat ID format and check for duplicates
+        Returns: (is_valid, error_message)
+        Phase 1 improvement: Add validation to prevent invalid data entry
+        """
         try:
+            # Check if chat_id is empty or None
+            if not chat_id or not str(chat_id).strip():
+                return False, "Chat ID cannot be empty"
+            
+            chat_id_str = str(chat_id).strip()
+            
+            # Check for test/placeholder chat IDs (Phase 1 improvement)
+            invalid_chat_ids = ['123456789', '987654321', 'mock_chat_id', 'test_chat_id']
+            if chat_id_str in invalid_chat_ids:
+                return False, f"Invalid chat ID: {chat_id_str} appears to be a test/placeholder value"
+            
+            # Validate format: Telegram chat IDs are numeric strings (can be negative for groups)
+            # Allow numeric strings, including negative numbers
+            try:
+                int(chat_id_str)  # Check if it's a valid integer
+            except ValueError:
+                return False, f"Invalid chat ID format: {chat_id_str} is not a valid numeric chat ID"
+            
+            return True, None
+            
+        except Exception as e:
+            logger.error(f"Error validating chat ID: {e}")
+            return False, f"Validation error: {str(e)}"
+    
+    def _find_user_by_chat_id(self, chat_id: str) -> Optional[str]:
+        """
+        Find user ID by chat ID (for duplicate checking)
+        Returns: user_id if found, None otherwise
+        """
+        try:
+            # Get all users and check their chat IDs
+            users = self.get_all_users_with_alerts()
+            for user_data in users:
+                if user_data.get('telegram_chat_id') == str(chat_id):
+                    return user_data.get('user_id')
+            return None
+        except Exception as e:
+            logger.error(f"Error finding user by chat ID: {e}")
+            return None
+    
+    def save_telegram_chat_id(self, user_id: str, chat_id: str) -> bool:
+        """
+        Save user's Telegram chat ID with validation
+        Phase 1 improvement: Add validation to prevent invalid data entry
+        """
+        try:
+            # Validate chat ID format (Phase 1 improvement)
+            is_valid, error_message = self._validate_chat_id(chat_id)
+            if not is_valid:
+                logger.error(f"Invalid chat ID rejected for user {user_id}: {error_message}")
+                return False
+            
+            # Check for duplicates (Phase 1 improvement)
+            existing_user_id = self._find_user_by_chat_id(chat_id)
+            if existing_user_id and existing_user_id != user_id:
+                logger.error(f"Chat ID {chat_id} already in use by user {existing_user_id}, cannot assign to {user_id}")
+                return False
+            
             # Hash user_id to create a safe path for Firebase (no special characters)
             import hashlib
             safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
@@ -232,20 +294,67 @@ class FirebaseRealtimeStorage:
             return False
     
     def get_telegram_chat_id(self, user_id: str) -> Optional[str]:
-        """Get user's Telegram chat ID"""
+        """
+        Get user's Telegram chat ID with gradual migration support
+        Phase 2 improvement: Check new location first, fallback to old locations, migrate if found
+        """
         try:
             # Hash user_id to create a safe path for Firebase (no special characters)
             import hashlib
             safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            
+            # Step 1: Check new location first (single source of truth)
             path = f"alerts/users/{safe_user_id}/telegram_chat_id"
             result = self._make_request('GET', path)
             
             if result:
-                logger.info(f"Retrieved Telegram chat ID for user {user_id}")
+                logger.debug(f"Retrieved Telegram chat ID from new location for user {user_id}")
                 return str(result)
-            else:
-                logger.info(f"No Telegram chat ID found for user {user_id}")
-                return None
+            
+            # Step 2: Fallback to old locations (gradual migration)
+            logger.debug(f"Chat ID not found in new location for user {user_id}, checking old locations...")
+            
+            # Check old location: alerts/users/{safe_user_id}/settings/channels/telegram/chatId
+            settings_path = f"alerts/users/{safe_user_id}/settings"
+            settings = self._make_request('GET', settings_path)
+            
+            if settings and isinstance(settings, dict):
+                # Check new structure: settings.channels.telegram.chatId
+                chat_id = settings.get('channels', {}).get('telegram', {}).get('chatId')
+                if chat_id:
+                    logger.info(f"Found chat ID in old location (settings.channels.telegram.chatId) for user {user_id}, migrating...")
+                    # Migrate to new location
+                    if self.save_telegram_chat_id(user_id, str(chat_id)):
+                        logger.info(f"Successfully migrated chat ID to new location for user {user_id}")
+                        # Phase 2 improvement: Record metrics
+                        try:
+                            from .alert_metrics import get_alert_metrics
+                            get_alert_metrics().record_chat_id_migration()
+                        except Exception as e:
+                            logger.debug(f"Error recording metrics: {e}")
+                        return str(chat_id)
+                
+                # Check old structure: settings.telegram_chat_id
+                chat_id = settings.get('telegram_chat_id')
+                if chat_id:
+                    logger.info(f"Found chat ID in old location (settings.telegram_chat_id) for user {user_id}, migrating...")
+                    # Migrate to new location
+                    if self.save_telegram_chat_id(user_id, str(chat_id)):
+                        logger.info(f"Successfully migrated chat ID to new location for user {user_id}")
+                        # Phase 2 improvement: Record metrics
+                        try:
+                            from .alert_metrics import get_alert_metrics
+                            get_alert_metrics().record_chat_id_migration()
+                        except Exception as e:
+                            logger.debug(f"Error recording metrics: {e}")
+                        return str(chat_id)
+            
+            # Check mapping table: telegram_mappings/{chat_id}
+            # Note: This requires iterating through mappings, which is less efficient
+            # We'll skip this for now as it's the least common location
+            
+            logger.info(f"No Telegram chat ID found for user {user_id} in any location")
+            return None
                 
         except Exception as e:
             logger.error(f"Error getting Telegram chat ID: {e}")
