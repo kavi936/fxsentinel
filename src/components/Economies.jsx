@@ -4308,9 +4308,17 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         {data.description}
           </div>
 
-      <div className="economy-analysis" ref={analysisRef}>
-        <h2 className="analysis-title">Hollistic Scan</h2>
-        <p className="analysis-placeholder">Coming soon</p>
+      <div className="analysis-sections-container">
+        <div className="economy-analysis" ref={analysisRef}>
+          <h2 className="analysis-title">Hollistic Scan</h2>
+          <p className="analysis-placeholder">Coming soon</p>
+        </div>
+
+        <div className="yield-indicators-section">
+          <h2 className="analysis-title">Yield Indicators</h2>
+          <p className="analysis-placeholder">Coming soon</p>
+          <p className="yield-subtext">US10Y, US30Y, and other key yield curves</p>
+        </div>
       </div>
     </div>
   );
