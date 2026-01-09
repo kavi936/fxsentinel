@@ -37,6 +37,8 @@ export const config = {
     // Market sentiment endpoints
     marketSentiment: `${API_BASE_URL}/api/market-sentiment`,
     sentimentRefresh: `${API_BASE_URL}/api/sentiment/refresh`,
+    // Prediction markets endpoint
+    predictionMarkets: `${API_BASE_URL}/api/prediction-markets`,
     // Refund request endpoint
     requestRefund: `${API_BASE_URL}/api/request-refund`,
     // Feedback submission endpoint

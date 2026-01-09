@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
 import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
+import { usePredictionMarkets } from '../hooks/usePredictionMarkets.js';
 import LiveNewsFeed from './LiveNewsFeed';
 import { config } from '../config';
 import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
@@ -189,6 +190,16 @@ const Overview = () => {
     getSentimentColor, 
     formatTimeAgo 
   } = useMarketSentiment();
+
+  // Prediction Markets hook
+  const {
+    markets: predictionMarkets,
+    summary: predictionMarketsSummary,
+    loading: predictionMarketsLoading,
+    error: predictionMarketsError,
+    lastUpdate: predictionMarketsLastUpdate,
+    refresh: refreshPredictionMarkets
+  } = usePredictionMarkets();
 
   // Timezone state
   const [currentTimezone, setCurrentTimezone] = useState(() => {
@@ -2972,6 +2983,159 @@ const Overview = () => {
           {/* Live News + Analysis Card */}
           <div className="live-news-analysis-card">
             <LiveNewsFeed />
+          </div>
+
+          {/* Prediction Markets Card */}
+          <div className="prediction-markets-card">
+            <div className="prediction-markets-header">
+              <div className="header-main">
+                <h2 className="prediction-markets-title">PREDICTION MARKETS</h2>
+                <InfoIcon 
+                  tooltipText="Prediction Markets: See what retail and institutional traders are betting on. These markets aggregate crowd wisdom on economic events like Fed decisions, inflation data, and GDP releases. Use this as a sentiment indicator alongside technical analysis."
+                  position="bottom"
+                />
+              </div>
+              <div className="prediction-markets-controls">
+                <button 
+                  className={`prediction-markets-refresh-btn ${predictionMarketsLoading ? 'spinning' : ''}`}
+                  onClick={refreshPredictionMarkets}
+                  disabled={predictionMarketsLoading}
+                  title="Refresh Prediction Markets"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className="prediction-markets-content">
+              {predictionMarketsLoading ? (
+                <div className="prediction-markets-loading">
+                  <div className="loading-spinner"></div>
+                  <span>Loading prediction markets...</span>
+                </div>
+              ) : predictionMarketsError ? (
+                <div className="prediction-markets-error">
+                  <div className="error-icon">⚠️</div>
+                  <div className="error-text">{predictionMarketsError}</div>
+                  <button className="retry-btn" onClick={refreshPredictionMarkets}>Retry</button>
+                </div>
+              ) : predictionMarkets.length === 0 ? (
+                <div className="prediction-markets-empty">
+                  <div className="empty-icon">📊</div>
+                  <div className="empty-text">No active prediction markets</div>
+                  <div className="empty-subtext">Markets related to economic events (Fed decisions, inflation, GDP) will appear here when available</div>
+                </div>
+              ) : (
+                <div className="prediction-markets-list">
+                  {predictionMarkets.map((market) => {
+                    const yesPrice = market.yes_price || 0;
+                    const noPrice = market.no_price || 0;
+                    const yesPercent = (yesPrice * 100).toFixed(0);
+                    const noPercent = (noPrice * 100).toFixed(0);
+                    
+                    const isResolved = market.is_resolved || market.closed;
+                    
+                    return (
+                      <div key={market.id} className={`prediction-market-item ${isResolved ? 'resolved' : ''}`}>
+                        <div className="market-header-row">
+                          <div className="market-question">{market.question}</div>
+                          <div className="market-badges">
+                            {market.related_event && (
+                              <span className="market-event-badge">{market.related_event}</span>
+                            )}
+                            {isResolved && (
+                              <span className="market-status-badge resolved">Resolved</span>
+                            )}
+                            {market.accepting_orders && !isResolved && (
+                              <span className="market-status-badge active">Active</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="market-probability-row">
+                          <div className="probability-bar-container">
+                            <div className="probability-bar">
+                              {yesPrice > 0 && (
+                                <div 
+                                  className="probability-fill yes-fill" 
+                                  style={{ width: `${yesPercent}%` }}
+                                >
+                                  {yesPercent >= 15 && (
+                                    <span className="probability-label yes-label">
+                                      YES {yesPercent}%
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {noPrice > 0 && (
+                                <div 
+                                  className="probability-fill no-fill" 
+                                  style={{ width: `${noPercent}%` }}
+                                >
+                                  {noPercent >= 15 && (
+                                    <span className="probability-label no-label">
+                                      NO {noPercent}%
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="market-meta-row">
+                          {market.volume && (
+                            <div className="market-meta-item">
+                              <span className="meta-label">Volume:</span>
+                              <span className="meta-value">${(market.volume / 1000).toFixed(0)}k</span>
+                            </div>
+                          )}
+                          {market.liquidity && (
+                            <div className="market-meta-item">
+                              <span className="meta-label">Liquidity:</span>
+                              <span className="meta-value">${(market.liquidity / 1000).toFixed(0)}k</span>
+                            </div>
+                          )}
+                          {market.resolution_date && (
+                            <div className="market-meta-item">
+                              <span className="meta-label">Resolves:</span>
+                              <span className="meta-value">
+                                {(() => {
+                                  const date = new Date(market.resolution_date);
+                                  const now = new Date();
+                                  const isPast = date < now;
+                                  
+                                  if (isPast || market.closed) {
+                                    return `Resolved ${date.toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })}`;
+                                  }
+                                  
+                                  const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+                                  if (daysUntil <= 7) {
+                                    return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                                  }
+                                  
+                                  return date.toLocaleDateString('en-US', { 
+                                    month: 'short', 
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  });
+                                })()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
