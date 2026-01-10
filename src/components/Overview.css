@@ -6880,6 +6880,201 @@
   color: rgba(255, 255, 255, 0.9);
 }
 
+/* Market Scenarios Section */
+.market-scenarios-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.market-scenarios-section .section-header {
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+.market-scenarios-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.scenario-row {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  align-items: center;
+  transition: background-color 0.2s ease;
+}
+
+.scenario-row:last-child {
+  border-bottom: none;
+}
+
+.scenario-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.scenario-row.bearish {
+  border-left: 3px solid #ef4444;
+}
+
+.scenario-row.bullish {
+  border-left: 3px solid #10b981;
+}
+
+.scenario-row.neutral {
+  border-left: 3px solid #6b7280;
+}
+
+.scenario-column {
+  display: flex;
+  align-items: center;
+}
+
+.scenario-column.category-column {
+  justify-content: flex-start;
+}
+
+.scenario-column.value-column {
+  justify-content: flex-start;
+}
+
+.scenario-column.sentiment-column {
+  justify-content: flex-end;
+}
+
+.category-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
+  text-transform: capitalize;
+}
+
+.scenario-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.scenario-icon.above-icon {
+  color: #ef4444;
+}
+
+.scenario-icon.below-icon {
+  color: #10b981;
+}
+
+.value-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.value-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 45px;
+}
+
+.scenario-value-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 15px;
+  min-width: 60px;
+}
+
+.scenario-value-box.bearish {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+.scenario-value-box.neutral {
+  background: rgba(107, 114, 128, 0.15);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+  color: #9ca3af;
+}
+
+.scenario-value-box.bullish {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.scenario-sentiment {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.scenario-sentiment.bearish {
+  color: #ef4444;
+}
+
+.scenario-sentiment.neutral {
+  color: #9ca3af;
+}
+
+.scenario-sentiment.bullish {
+  color: #10b981;
+}
+
+.scenario-sentiment.very-bearish {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.scenario-sentiment.very-bullish {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* Market Scenarios Explanation */
+.market-scenarios-explanation {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.scenarios-explanation-text {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.scenarios-explanation-text .currency-highlight {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 1200px) {
+  .scenario-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .scenario-column.sentiment-column {
+    justify-content: flex-start;
+  }
+}
+
 /* Positioning Context */
 .positioning-context-section {
   background: rgba(255, 255, 255, 0.03);
