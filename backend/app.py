@@ -4175,6 +4175,13 @@ def get_tradingview_prices():
         }
         
         response = requests.post(url, headers=headers, json=data, timeout=5)
+        
+        # Check for rate limiting from TradingView
+        if response.status_code == 429:
+            print(f"⚠️ TradingView API rate limit hit (429). Status: {response.status_code}")
+            # Return None to trigger fallback data
+            return None
+        
         response.raise_for_status()
         
         result = response.json()
@@ -4234,8 +4241,15 @@ def get_tradingview_prices():
                 
                 return prices
                 
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 429:
+            print(f"⚠️ TradingView API rate limit exceeded (429): {e}")
+        else:
+            print(f"❌ TradingView API HTTP error ({e.response.status_code}): {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ TradingView API request error: {e}")
     except Exception as e:
-        print(f"Error fetching from TradingView: {e}")
+        print(f"❌ Error fetching from TradingView: {e}")
     
     return None
 
