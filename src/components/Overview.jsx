@@ -94,6 +94,276 @@ const Overview = () => {
     return safeRenderValue(value);
   };
 
+  // Helper function to parse numeric values from strings (handles "55.2", "55.2%", "-2.5K", etc.)
+  const parseNumericValue = (value) => {
+    if (!value || value === 'N/A' || value === '' || value === null || value === undefined) {
+      return null;
+    }
+    
+    // Handle string values like "55.2", "55.2%", "-2.5K", "200K", etc.
+    const cleaned = String(value).replace(/[^\d.-]/g, '');
+    const parsed = parseFloat(cleaned);
+    
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  // Determine event type and direction mapping
+  // Returns: { higherIsBullish: boolean, eventType: string }
+  const getEventDirectionMapping = (eventTitle) => {
+    if (!eventTitle) return { higherIsBullish: true, eventType: 'unknown' };
+    
+    const titleLower = eventTitle.toLowerCase();
+    
+    // IMPORTANT: Check more specific patterns first to avoid conflicts
+    
+    // Unemployment indicators - Higher = Bearish, Lower = Bullish
+    // Check this BEFORE employment to avoid conflicts
+    if (titleLower.includes('unemployment') || 
+        titleLower.includes('jobless') ||
+        titleLower.includes('jobless claims') ||
+        titleLower.includes('initial claims') ||
+        titleLower.includes('continuing claims') ||
+        titleLower.includes('unemployment rate') ||
+        titleLower.includes('unemployment claims')) {
+      return { higherIsBullish: false, eventType: 'unemployment' };
+    }
+    
+    // Wage/Earnings indicators - Higher = Bearish (inflationary pressure), Lower = Bullish
+    if (titleLower.includes('wage') ||
+        titleLower.includes('average earnings') ||
+        titleLower.includes('earnings growth') ||
+        titleLower.includes('hourly earnings') ||
+        titleLower.includes('wage growth')) {
+      return { higherIsBullish: false, eventType: 'wages' };
+    }
+    
+    // Inflation/CPI indicators - Higher = Bearish (inflationary), Lower = Bullish
+    // Check this early to avoid conflicts with other indicators
+    if (titleLower.includes('cpi') ||
+        titleLower.includes('consumer price index') ||
+        titleLower.includes('consumer price') ||
+        titleLower.includes('inflation') ||
+        titleLower.includes('ppi') ||
+        titleLower.includes('producer price index') ||
+        titleLower.includes('producer price') ||
+        titleLower.includes('core inflation') ||
+        titleLower.includes('core cpi')) {
+      return { higherIsBullish: false, eventType: 'inflation' };
+    }
+    
+    // Employment indicators - Higher = Bullish, Lower = Bearish
+    // Check after unemployment to avoid conflicts
+    if (titleLower.includes('non-farm payrolls') ||
+        titleLower.includes('nonfarm payrolls') ||
+        titleLower.includes('nfp') ||
+        titleLower.includes('adp employment') ||
+        titleLower.includes('adp payrolls') ||
+        titleLower.includes('payrolls') ||
+        titleLower.includes('employment change') ||
+        titleLower.includes('employment rate') ||
+        titleLower.includes('job creation') ||
+        titleLower.includes('jobs created') ||
+        (titleLower.includes('employment') && !titleLower.includes('unemployment'))) {
+      return { higherIsBullish: true, eventType: 'employment' };
+    }
+    
+    // Interest Rate indicators - Higher = Bullish for currency, Lower = Bearish
+    if (titleLower.includes('interest rate') ||
+        titleLower.includes('rate decision') ||
+        titleLower.includes('fed rate') ||
+        titleLower.includes('ecb rate') ||
+        titleLower.includes('boe rate') ||
+        titleLower.includes('boj rate') ||
+        titleLower.includes('rba rate') ||
+        titleLower.includes('boc rate') ||
+        titleLower.includes('snb rate') ||
+        titleLower.includes('rbnz rate') ||
+        titleLower.includes('cash rate') ||
+        titleLower.includes('policy rate') ||
+        titleLower.includes('monetary policy')) {
+      return { higherIsBullish: true, eventType: 'interest_rate' };
+    }
+    
+    // GDP indicators - Higher = Bullish, Lower = Bearish
+    if (titleLower.includes('gdp') ||
+        titleLower.includes('gross domestic product') ||
+        titleLower.includes('economic growth') ||
+        titleLower.includes('gdp growth') ||
+        titleLower.includes('gdp qoq') ||
+        titleLower.includes('gdp yoy')) {
+      return { higherIsBullish: true, eventType: 'gdp' };
+    }
+    
+    // Trade Balance - Higher = Bullish (surplus), Lower = Bearish (deficit)
+    // Note: Trade deficit is negative, so "higher" (less negative) = Bullish
+    if (titleLower.includes('trade balance') ||
+        titleLower.includes('trade surplus') ||
+        titleLower.includes('trade deficit') ||
+        titleLower.includes('current account') ||
+        titleLower.includes('balance of trade')) {
+      return { higherIsBullish: true, eventType: 'trade_balance' };
+    }
+    
+    // Retail Sales - Higher = Bullish, Lower = Bearish
+    if (titleLower.includes('retail sales') ||
+        titleLower.includes('consumer spending') ||
+        titleLower.includes('retail trade')) {
+      return { higherIsBullish: true, eventType: 'retail_sales' };
+    }
+    
+    // Manufacturing/Industrial - Higher = Bullish, Lower = Bearish
+    if (titleLower.includes('manufacturing') ||
+        titleLower.includes('industrial production') ||
+        titleLower.includes('factory orders') ||
+        titleLower.includes('durable goods') ||
+        titleLower.includes('industrial output')) {
+      return { higherIsBullish: true, eventType: 'manufacturing' };
+    }
+    
+    // PMI indicators - Higher = Bullish (above 50), Lower = Bearish (below 50)
+    if (titleLower.includes('pmi') ||
+        titleLower.includes('purchasing managers index') ||
+        titleLower.includes('purchasing managers')) {
+      return { higherIsBullish: true, eventType: 'pmi' };
+    }
+    
+    // Housing indicators - Higher = Bullish, Lower = Bearish
+    if (titleLower.includes('home sales') ||
+        titleLower.includes('housing starts') ||
+        titleLower.includes('building permits') ||
+        titleLower.includes('new home sales') ||
+        titleLower.includes('existing home sales') ||
+        titleLower.includes('house price') ||
+        titleLower.includes('housing market')) {
+      return { higherIsBullish: true, eventType: 'housing' };
+    }
+    
+    // Consumer Confidence/Sentiment - Higher = Bullish, Lower = Bearish
+    if (titleLower.includes('consumer confidence') ||
+        titleLower.includes('consumer sentiment') ||
+        titleLower.includes('business confidence') ||
+        titleLower.includes('business sentiment') ||
+        titleLower.includes('sentiment index')) {
+      return { higherIsBullish: true, eventType: 'confidence' };
+    }
+    
+    // Budget/Government Finance - Higher surplus = Bullish, Higher deficit = Bearish
+    // Note: Budget deficit is negative, so "higher" (less negative) = Bullish
+    if (titleLower.includes('budget balance') ||
+        titleLower.includes('budget surplus') ||
+        titleLower.includes('budget deficit') ||
+        titleLower.includes('government budget')) {
+      return { higherIsBullish: true, eventType: 'budget' };
+    }
+    
+    // Business Inventories - Higher = Bearish (oversupply), Lower = Bullish
+    if (titleLower.includes('business inventories') ||
+        titleLower.includes('inventory') ||
+        titleLower.includes('stockpiles')) {
+      return { higherIsBullish: false, eventType: 'inventories' };
+    }
+    
+    // Personal Income/Spending - Higher = Bullish, Lower = Bearish
+    if (titleLower.includes('personal income') ||
+        titleLower.includes('personal spending') ||
+        titleLower.includes('personal consumption')) {
+      return { higherIsBullish: true, eventType: 'personal' };
+    }
+    
+    // Default: assume higher is bullish (most economic indicators)
+    return { higherIsBullish: true, eventType: 'default' };
+  };
+
+  // Helper function to format value with unit (preserves % or other units from original)
+  const formatValueWithUnit = (value, originalExpected) => {
+    if (!originalExpected || originalExpected === 'N/A') {
+      return String(value);
+    }
+    
+    // Check if original has a % sign
+    const hasPercent = String(originalExpected).includes('%');
+    // Check if original has other units (K, M, B, etc.)
+    const unitMatch = String(originalExpected).match(/[KMkmBb]/);
+    const unit = unitMatch ? unitMatch[0].toUpperCase() : '';
+    
+    // Format the number
+    const formattedValue = Math.round(value * 100) / 100;
+    
+    // Add unit if present
+    if (hasPercent) {
+      return `${formattedValue}%`;
+    } else if (unit) {
+      return `${formattedValue}${unit}`;
+    }
+    return String(formattedValue);
+  };
+
+  // Calculate market scenarios based on actual vs expected with event-specific logic
+  const calculateMarketScenarios = (eventSummary, eventTitle) => {
+    const expected = parseNumericValue(eventSummary?.expected);
+    const originalExpected = eventSummary?.expected || '';
+    
+    // If we don't have an expected value, we can't calculate scenarios
+    if (expected === null) {
+      return null;
+    }
+    
+    const directionMapping = getEventDirectionMapping(eventTitle);
+    const { higherIsBullish } = directionMapping;
+    
+    const scenarios = {
+      above: [],
+      onForecast: [],
+      below: []
+    };
+    
+    // Format forecast value (no < or >)
+    const forecastValue = formatValueWithUnit(expected, originalExpected);
+    
+    // Simple scenarios: Just show above/below forecast with appropriate sentiment
+    // No made-up multipliers - just show what happens if actual is above or below expected
+    if (higherIsBullish) {
+      // Higher values are bullish (e.g., GDP, Employment, Retail Sales)
+      // Above forecast = Bullish
+      scenarios.above.push({
+        value: `>${forecastValue}`,
+        sentiment: 'Bullish',
+        sentimentClass: 'bullish'
+      });
+      
+      // Below forecast = Bearish
+      scenarios.below.push({
+        value: `<${forecastValue}`,
+        sentiment: 'Bearish',
+        sentimentClass: 'bearish'
+      });
+    } else {
+      // Higher values are bearish (e.g., Unemployment, CPI)
+      // Above forecast = Bearish
+      scenarios.above.push({
+        value: `>${forecastValue}`,
+        sentiment: 'Bearish',
+        sentimentClass: 'bearish'
+      });
+      
+      // Below forecast = Bullish
+      scenarios.below.push({
+        value: `<${forecastValue}`,
+        sentiment: 'Bullish',
+        sentimentClass: 'bullish'
+      });
+    }
+    
+    // On forecast scenario (neutral/ranging) - show forecast value without < or >
+    scenarios.onForecast.push({
+      value: forecastValue,
+      sentiment: 'Ranging',
+      sentimentClass: 'ranging'
+    });
+    
+    return scenarios;
+  };
+
   // Helper function to clean up old cache entries
   const cleanupOldCache = () => {
     try {
@@ -2143,6 +2413,106 @@ const Overview = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Market Scenarios Section */}
+                  {(() => {
+                    const eventTitle = aiAnalysis.eventSummary?.release || selectedEvent?.title || '';
+                    const marketScenarios = calculateMarketScenarios(aiAnalysis.eventSummary, eventTitle);
+                    
+                    if (!marketScenarios) {
+                      return null; // Don't show if we can't calculate scenarios
+                    }
+                    
+                    // Combine all scenarios into rows for table display
+                    const scenarioRows = [
+                      // Above rows
+                      ...marketScenarios.above.map((scenario, index) => ({
+                        category: index === 0 ? 'Above' : '',
+                        categoryIcon: index === 0 ? 'above' : null,
+                        value: scenario.value,
+                        sentiment: scenario.sentiment,
+                        sentimentClass: scenario.sentimentClass,
+                        rowClass: scenario.sentimentClass.includes('bearish') ? 'bearish' : 'bullish'
+                      })),
+                      // On Forecast rows
+                      ...marketScenarios.onForecast.map((scenario, index) => ({
+                        category: index === 0 ? 'On forecast' : '',
+                        categoryIcon: null,
+                        value: scenario.value,
+                        sentiment: scenario.sentiment,
+                        sentimentClass: scenario.sentimentClass,
+                        rowClass: 'neutral'
+                      })),
+                      // Below rows
+                      ...marketScenarios.below.map((scenario, index) => ({
+                        category: index === 0 ? 'Below' : '',
+                        categoryIcon: index === 0 ? 'below' : null,
+                        value: scenario.value,
+                        sentiment: scenario.sentiment,
+                        sentimentClass: scenario.sentimentClass,
+                        rowClass: scenario.sentimentClass.includes('bullish') ? 'bullish' : 'bearish'
+                      }))
+                    ];
+                    
+                    return (
+                      <div className="market-scenarios-section">
+                        <h3 className="section-header">Market Scenarios</h3>
+                        <div className="market-scenarios-table">
+                          {scenarioRows.map((row, index) => (
+                            <div key={index} className={`scenario-row ${row.rowClass}`}>
+                              {/* Column 1: Category Label */}
+                              <div className="scenario-column category-column">
+                                {row.category && (
+                                  <div className="category-label">
+                                    {row.categoryIcon === 'above' && (
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="scenario-icon above-icon">
+                                        <path d="M12 19V5M5 12l7-7 7 7"/>
+                                      </svg>
+                                    )}
+                                    {row.categoryIcon === 'below' && (
+                                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="scenario-icon below-icon">
+                                        <path d="M12 5v14M19 12l-7 7-7-7"/>
+                                      </svg>
+                                    )}
+                                    <span>{row.category}</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Column 2: Value */}
+                              <div className="scenario-column value-column">
+                                <span className={`scenario-value-box ${row.rowClass}`}>
+                                  {row.value}
+                                </span>
+                              </div>
+                              
+                              {/* Column 3: Sentiment */}
+                              <div className="scenario-column sentiment-column">
+                                <span className={`scenario-sentiment ${row.sentimentClass}`}>
+                                  {row.sentiment}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Currency Explanation Text */}
+                        {(() => {
+                          // Get currency from selectedEvent or from the event in aiAnalysis
+                          const currency = selectedEvent?.currency || 
+                                         aiAnalysis.event?.currency || 
+                                         'Currency';
+                          return (
+                            <div className="market-scenarios-explanation">
+                              <p className="scenarios-explanation-text">
+                                For the <span className="currency-highlight">{currency}</span> Currency
+                              </p>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })()}
 
                   {/* NEW: Positioning Context - REMOVED */}
                   {/* <div className="positioning-context-section">
