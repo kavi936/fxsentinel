@@ -3432,6 +3432,7 @@ def verify_telegram_connection_legacy():
         return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/forex-prices', methods=['GET', 'OPTIONS'])
+@limiter.limit("100 per minute")  # Allow frequent polling for live ticker (frontend polls every 5 seconds = 12/min)
 def get_forex_prices():
     """Get real-time forex prices from TradingView API only"""
     # Handle CORS preflight requests

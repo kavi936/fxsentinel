@@ -3077,7 +3077,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '54.0',
                 'forecast': '53.5',
-                'previous': '53.3'
+                'previous': '52.9'
             },
             {
                 'title': 'Prelim UoM Inflation Expectations',
@@ -3087,7 +3087,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '4.2%',
                 'forecast': 'N/A',
-                'previous': '4.1%'
+                'previous': '4.2%'
             },
             {
                 'title': 'FOMC Member Barkin Speaks',
