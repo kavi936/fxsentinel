@@ -140,7 +140,7 @@ class PredictionMarketsService:
             if market.get("archived"):
                 continue
             
-            # Prefer markets that are still accepting orders (active markets)
+            # Track whether market is accepting orders (key indicator of "live" market on Polymarket)
             accepting_orders = market.get("accepting_orders", False)
             
             # Check if market has future resolution date
@@ -157,8 +157,7 @@ class PredictionMarketsService:
                 except:
                     pass
             
-            # Prioritize active markets (accepting orders) or future markets
-            # Include recently resolved markets (within last 30 days) for context
+            # Track recently resolved markets (within last 30 days)
             is_recently_resolved = False
             if market.get("closed") and end_date_str:
                 try:
@@ -169,11 +168,9 @@ class PredictionMarketsService:
                 except:
                     pass
             
-            # Mark historical markets (closed and old)
-            # We'll include them if they're highly relevant, but prioritize active/future markets
+            # Mark historical markets (closed and old) - but these are common on Polymarket
+            # On Polymarket, most markets are historical, so we don't filter them out
             is_historical = market.get("closed") and not is_future and not is_recently_resolved
-            
-            # Don't skip historical markets yet - we'll filter by relevance after keyword matching
             
             # Skip if contains exclude keywords
             if any(exclude in text for exclude in self.exclude_keywords):
@@ -222,10 +219,8 @@ class PredictionMarketsService:
                 elif "boj" in matched_keywords or "bank of japan" in matched_keywords:
                     related_event = "BOJ Meeting"
                 
-                # Only include historical markets if they're highly relevant
-                if is_historical and relevance != "high":
-                    continue
-                
+                # Include all economically relevant markets - we prioritize by sorting, not filtering
+                # This ensures we get the best available data from Polymarket even if mostly historical
                 market["relevance"] = relevance
                 market["related_event"] = related_event
                 market["matched_keywords"] = matched_keywords
@@ -237,26 +232,27 @@ class PredictionMarketsService:
                 relevant_markets.append(market)
         
         # Sort by priority:
-        # 1. Active markets accepting orders (highest priority)
+        # 1. Markets accepting orders (highest priority - most "live" on Polymarket)
         # 2. Future markets (upcoming)
         # 3. Recently resolved (for context)
-        # 4. Historical markets (lowest priority, but still shown if highly relevant)
-        # 5. Within each group, sort by relevance
+        # 4. By relevance score (high > medium > low)
+        # 5. By number of matched keywords
+        # 6. By resolution date (closer first)
         relevant_markets.sort(
             key=lambda x: (
-                x.get("accepting_orders", False),  # Active markets first
+                x.get("accepting_orders", False),  # Markets accepting orders first
                 x.get("is_future", False),  # Then future markets
                 x.get("is_recently_resolved", False),  # Then recently resolved
-                not x.get("is_historical", False),  # Then non-historical
-                x["relevance"] == "high",  # Then by relevance
-                x.get("relevance") == "medium",
+                x["relevance"] == "high",  # Then by relevance: high
+                x.get("relevance") == "medium",  # Then: medium
+                -len(x.get("matched_keywords", [])),  # More matched keywords = higher priority
                 -x.get("days_until_resolution", 999) if x.get("days_until_resolution") else 999,  # Closer dates first
-                len(x.get("matched_keywords", []))
             ),
             reverse=True
         )
         
-        # Limit to top 10 unique markets (reduced to show only most relevant)
+        # Return top 10 markets (increased from original to show more options)
+        # Note: Deduplication by market_id already prevents duplicates from appearing
         return relevant_markets[:10]
     
     def _extract_prices_from_tokens(self, tokens: List[Dict]) -> tuple:
@@ -351,9 +347,10 @@ class PredictionMarketsService:
             all_markets = self._fetch_polymarket_markets()
             
             if not all_markets:
-                # Return cached data if available, even if expired
+                logger.warning("API failed to return any markets")
+                # Only return cached data if we have absolutely nothing else
                 if self.cached_markets:
-                    logger.warning("API failed, returning stale cache")
+                    logger.info("Falling back to cached data due to API failure")
                     return {
                         "status": "success",
                         "markets": self.cached_markets,
@@ -363,7 +360,7 @@ class PredictionMarketsService:
                     }
                 return {
                     "status": "error",
-                    "error": "Failed to fetch markets",
+                    "error": "Failed to fetch markets from Polymarket API",
                     "markets": []
                 }
             
@@ -371,15 +368,15 @@ class PredictionMarketsService:
             filtered_markets = self._filter_economic_markets(all_markets)
             
             if not filtered_markets:
-                logger.warning("No economic markets found after filtering")
-                # Return cached data if available
-                if self.cached_markets:
-                    return {
-                        "status": "success",
-                        "markets": self.cached_markets,
-                        "cached": True,
-                        "stale": True
-                    }
+                logger.warning(f"No economic markets found after filtering (checked {len(all_markets)} total markets)")
+                # If filtering produced nothing, still prefer fresh filtered results over stale cache
+                # This indicates the Polymarket API returned markets but none matched our criteria
+                return {
+                    "status": "success",
+                    "markets": [],
+                    "cached": False,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
             
             # Normalize data
             normalized_markets = [self._normalize_market_data(m) for m in filtered_markets]
@@ -389,6 +386,7 @@ class PredictionMarketsService:
             self.cached_markets = normalized_markets
             self.cache_timestamp = datetime.now(timezone.utc)
             
+            logger.info(f"Successfully fetched and cached {len(normalized_markets)} prediction markets")
             return {
                 "status": "success",
                 "markets": normalized_markets,
@@ -401,8 +399,9 @@ class PredictionMarketsService:
             import traceback
             traceback.print_exc()
             
-            # Return cached data if available
+            # Only return cached data if API throws an exception
             if self.cached_markets:
+                logger.info("Returning cached data due to exception")
                 return {
                     "status": "success",
                     "markets": self.cached_markets,
