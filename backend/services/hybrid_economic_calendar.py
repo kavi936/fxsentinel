@@ -3098,7 +3098,980 @@ class HybridEconomicCalendar:
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
-            }
+            },
+
+             # SUNDAY, JANUARY 11 From ForexFactory JSON Export - Week of Jan 11
+
+            {
+                'title': 'ANZ Job Advertisements m/m',
+                'date': 'Sun, Jan 11',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-0.8%'
+            },
+            {
+                'title': 'Household Spending m/m',
+                'date': 'Sun, Jan 11',
+                'time': '00:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '1.3%'
+            },
+
+            # MONDAY, JANUARY 12
+            {
+                'title': 'SECO Consumer Climate',
+                'date': 'Mon, Jan 12',
+                'time': '08:00 UTC',
+                'currency': 'CHF',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-33',
+                'previous': '-34'
+            },
+            {
+                'title': 'Sentix Investor Confidence',
+                'date': 'Mon, Jan 12',
+                'time': '09:30 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-5.1',
+                'previous': '-6.2'
+            },
+            {
+                'title': 'FOMC Member Barkin Speaks',
+                'date': 'Mon, Jan 12',
+                'time': '17:45 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': '10-y Bond Auction',
+                'date': 'Mon, Jan 12',
+                'time': '18:01 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '4.18|2.6'
+            },
+            {
+                'title': 'NZIER Business Confidence',
+                'date': 'Mon, Jan 12',
+                'time': '21:00 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '18'
+            },
+            {
+                'title': 'FOMC Member Williams Speaks',
+                'date': 'Mon, Jan 12',
+                'time': '23:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Westpac Consumer Sentiment',
+                'date': 'Mon, Jan 12',
+                'time': '23:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-9.0%'
+            },
+            {
+                'title': 'Bank Lending y/y',
+                'date': 'Mon, Jan 12',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '4.1%',
+                'previous': '4.2%'
+            },
+            {
+                'title': 'Current Account',
+                'date': 'Mon, Jan 12',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '3.04T',
+                'previous': '2.48T'
+            },
+            {
+                'title': 'BRC Retail Sales Monitor y/y',
+                'date': 'Mon, Jan 12',
+                'time': '00:01 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '1.2%'
+            },
+
+            # TUESDAY, JANUARY 13
+            {
+                'title': 'Economy Watchers Sentiment',
+                'date': 'Tue, Jan 13',
+                'time': '05:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '48.8',
+                'previous': '48.7'
+            },
+            {
+                'title': 'French Gov Budget Balance',
+                'date': 'Tue, Jan 13',
+                'time': '07:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-136.2B'
+            },
+            {
+                'title': 'M2 Money Supply y/y',
+                'date': 'Tue, Jan 13',
+                'time': '09:03 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '8.0%',
+                'previous': '8.0%'
+            },
+            {
+                'title': 'New Loans',
+                'date': 'Tue, Jan 13',
+                'time': '09:03 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '450B',
+                'previous': '390B'
+            },
+            {
+                'title': 'NFIB Small Business Index',
+                'date': 'Tue, Jan 13',
+                'time': '11:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '99.5',
+                'previous': '99.0'
+            },
+            {
+                'title': 'ADP Weekly Employment Change',
+                'date': 'Tue, Jan 13',
+                'time': '13:20 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '11.5K'
+            },
+            {
+                'title': 'Building Permits m/m',
+                'date': 'Tue, Jan 13',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '14.9%'
+            },
+            {
+                'title': 'Core CPI m/m',
+                'date': 'Tue, Jan 13',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'CPI m/m',
+                'date': 'Tue, Jan 13',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'CPI y/y',
+                'date': 'Tue, Jan 13',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '2.7%',
+                'previous': '2.7%'
+            },
+            {
+                'title': 'New Home Sales',
+                'date': 'Tue, Jan 13',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '715K',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Musalem Speaks',
+                'date': 'Tue, Jan 13',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'New Home Sales',
+                'date': 'Tue, Jan 13',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '800K'
+            },
+            {
+                'title': 'RCM/TIPP Economic Optimism',
+                'date': 'Tue, Jan 13',
+                'time': '15:10 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '48.2',
+                'previous': '47.9'
+            },
+            {
+                'title': '30-y Bond Auction',
+                'date': 'Tue, Jan 13',
+                'time': '18:01 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '4.77|2.4'
+            },
+            {
+                'title': 'Federal Budget Balance',
+                'date': 'Tue, Jan 13',
+                'time': '19:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-173.3B'
+            },
+            {
+                'title': 'FOMC Member Barkin Speaks',
+                'date': 'Tue, Jan 13',
+                'time': '21:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'API Weekly Statistical Bulletin',
+                'date': 'Tue, Jan 13',
+                'time': '21:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Building Consents m/m',
+                'date': 'Tue, Jan 13',
+                'time': '21:45 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-0.9%'
+            },
+            {
+                'title': 'M2 Money Stock y/y',
+                'date': 'Tue, Jan 13',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.9%',
+                'previous': '1.8%'
+            },
+            {
+                'title': 'ANZ Commodity Prices m/m',
+                'date': 'Tue, Jan 13',
+                'time': '00:00 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-1.6%'
+            },
+            {
+                'title': 'Trade Balance',
+                'date': 'Tue, Jan 13',
+                'time': '03:03 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '820B',
+                'previous': '793B'
+            },
+            {
+                'title': 'USD-Denominated Trade Balance',
+                'date': 'Tue, Jan 13',
+                'time': '03:04 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '114.2B',
+                'previous': '111.7B'
+            },
+
+            # WEDNESDAY, JANUARY 14
+            {
+                'title': 'Prelim Machine Tool Orders y/y',
+                'date': 'Wed, Jan 14',
+                'time': '06:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '14.2%'
+            },
+            {
+                'title': 'MPC Member Taylor Speaks',
+                'date': 'Wed, Jan 14',
+                'time': '08:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': '10-y Bond Auction',
+                'date': 'Wed, Jan 14',
+                'time': '10:33 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '4.61|3.1'
+            },
+            {
+                'title': 'German 30-y Bond Auction',
+                'date': 'Wed, Jan 14',
+                'time': '10:34 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '3.26|1.3'
+            },
+            {
+                'title': 'Core PPI m/m',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Core Retail Sales m/m',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.4%',
+                'previous': '0.4%'
+            },
+            {
+                'title': 'PPI m/m',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.4%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'Current Account',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-240B',
+                'previous': '-251B'
+            },
+            {
+                'title': 'Core PPI m/m',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'PPI m/m',
+                'date': 'Wed, Jan 14',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'FOMC Member Paulson Speaks',
+                'date': 'Wed, Jan 14',
+                'time': '14:50 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Business Inventories m/m',
+                'date': 'Wed, Jan 14',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'Existing Home Sales',
+                'date': 'Wed, Jan 14',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '4.24M',
+                'previous': '4.13M'
+            },
+            {
+                'title': 'FOMC Member Miran Speaks',
+                'date': 'Wed, Jan 14',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'MPC Member Ramsden Speaks',
+                'date': 'Wed, Jan 14',
+                'time': '15:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Crude Oil Inventories',
+                'date': 'Wed, Jan 14',
+                'time': '15:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-3.8M'
+            },
+            {
+                'title': 'FOMC Member Kashkari Speaks',
+                'date': 'Wed, Jan 14',
+                'time': '17:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Beige Book',
+                'date': 'Wed, Jan 14',
+                'time': '19:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Williams Speaks',
+                'date': 'Wed, Jan 14',
+                'time': '19:10 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'PPI y/y',
+                'date': 'Wed, Jan 14',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.4%',
+                'previous': '2.7%'
+            },
+            {
+                'title': 'MI Inflation Expectations',
+                'date': 'Wed, Jan 14',
+                'time': '00:00 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '4.7%'
+            },
+            {
+                'title': 'RICS House Price Balance',
+                'date': 'Wed, Jan 14',
+                'time': '00:01 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-15%',
+                'previous': '-16%'
+            },
+
+            # THURSDAY, JANUARY 15
+            {
+                'title': 'German WPI m/m',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'GDP m/m',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '-0.1%'
+            },
+            {
+                'title': 'Construction Output m/m',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '-0.6%'
+            },
+            {
+                'title': 'Goods Trade Balance',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-20.4B',
+                'previous': '-22.5B'
+            },
+            {
+                'title': 'Index of Services 3m/3m',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'Industrial Production m/m',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '1.1%'
+            },
+            {
+                'title': 'Manufacturing Production m/m',
+                'date': 'Thu, Jan 15',
+                'time': '07:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.5%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Foreign Direct Investment ytd/y',
+                'date': 'Thu, Jan 15',
+                'time': '07:02 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-7.5%'
+            },
+            {
+                'title': 'French Final CPI m/m',
+                'date': 'Thu, Jan 15',
+                'time': '07:45 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'ECB Economic Bulletin',
+                'date': 'Thu, Jan 15',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Italian Industrial Production m/m',
+                'date': 'Thu, Jan 15',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.5%',
+                'previous': '-1.0%'
+            },
+            {
+                'title': 'BOE Credit Conditions Survey',
+                'date': 'Thu, Jan 15',
+                'time': '09:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Industrial Production m/m',
+                'date': 'Thu, Jan 15',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '0.8%'
+            },
+            {
+                'title': 'Trade Balance',
+                'date': 'Thu, Jan 15',
+                'time': '10:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '15.2B',
+                'previous': '14.0B'
+            },
+            {
+                'title': 'Spanish 10-y Bond Auction',
+                'date': 'Thu, Jan 15',
+                'time': '10:03 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Italian Trade Balance',
+                'date': 'Thu, Jan 15',
+                'time': '11:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '5.22B',
+                'previous': '4.16B'
+            },
+            {
+                'title': 'Manufacturing Sales m/m',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-1.1%',
+                'previous': '-1.0%'
+            },
+            {
+                'title': 'Wholesale Sales m/m',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '210K',
+                'previous': '208K'
+            },
+            {
+                'title': 'Empire State Manufacturing Index',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '1.1',
+                'previous': '-3.9'
+            },
+            {
+                'title': 'Philly Fed Manufacturing Index',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '-2.9%',
+                'previous': '-10.2'
+            },
+            {
+                'title': 'Import Prices m/m',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.2%',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Import Prices m/m',
+                'date': 'Thu, Jan 15',
+                'time': '13:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'FOMC Member Bostic Speaks',
+                'date': 'Thu, Jan 15',
+                'time': '13:35 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Natural Gas Storage',
+                'date': 'Thu, Jan 15',
+                'time': '15:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-119B'
+            },
+            {
+                'title': 'FOMC Member Barkin Speaks',
+                'date': 'Thu, Jan 15',
+                'time': '17:40 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'TIC Long-Term Purchases',
+                'date': 'Thu, Jan 15',
+                'time': '21:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '17.5B'
+            },
+            {
+                'title': 'BusinessNZ Manufacturing Index',
+                'date': 'Thu, Jan 15',
+                'time': '21:30 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '51.4'
+            },
+            {
+                'title': 'FPI m/m',
+                'date': 'Thu, Jan 15',
+                'time': '21:45 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-0.4%'
+            },
+
+            # FRIDAY, JANUARY 16
+            {
+                'title': 'German Final CPI m/m',
+                'date': 'Fri, Jan 16',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.0%',
+                'previous': '0.0%'
+            },
+            {
+                'title': 'Housing Starts',
+                'date': 'Fri, Jan 16',
+                'time': '13:15 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '255K',
+                'previous': '254K'
+            },
+            {
+                'title': 'Foreign Securities Purchases',
+                'date': 'Fri, Jan 16',
+                'time': '13:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '46.62B'
+            },
+            {
+                'title': 'Capacity Utilization Rate',
+                'date': 'Fri, Jan 16',
+                'time': '14:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '76.1%',
+                'previous': '76.0%'
+            },
+            {
+                'title': 'Industrial Production m/m',
+                'date': 'Fri, Jan 16',
+                'time': '14:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'CB Leading Index m/m',
+                'date': 'Fri, Jan 16',
+                'time': '14:30 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-0.1%'
+            },
+            {
+                'title': 'NAHB Housing Market Index',
+                'date': 'Fri, Jan 16',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '39'
+            },
+            {
+                'title': 'CB Leading Index m/m',
+                'date': 'Fri, Jan 16',
+                'time': '15:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '0.3%'
+            },
+            {
+                'title': 'FOMC Member Jefferson Speaks',
+                'date': 'Fri, Jan 16',
+                'time': '20:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
         ]
         
         return events

@@ -1,11 +1,5 @@
 {
   "US": {
-    "centralBankRates": {
-      "rate": 3.75,
-      "trend": "down",
-      "bankName": "Fed",
-      "asOf": "2025-12-10"
-    },
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
@@ -240,8 +234,8 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "4.6%",
-        "asOf": "2025-11-01",
+        "currentValue": "4.4%",
+        "asOf": "2025-12-01",
         "chartData": [
           3.7,
           3.9,
@@ -264,7 +258,8 @@
           4.2,
           4.3,
           4.4,
-          4.6
+          4.5,
+          4.4
         ],
         "chartDates": [
           "2024-01-01",
@@ -288,7 +283,8 @@
           "2025-07-01",
           "2025-08-01",
           "2025-09-01",
-          "2025-11-01"
+          "2025-11-01",
+          "2025-12-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -299,8 +295,8 @@
         "description": "unemployment description"
       },
       "nonfarm-payrolls": {
-        "currentValue": "64K",
-        "asOf": "2025-11-01",
+        "currentValue": "50K",
+        "asOf": "2025-12-01",
         "chartData": [
           119.0,
           222.0,
@@ -321,10 +317,11 @@
           19.0,
           -13.0,
           72.0,
-          -4.0,
-          119.0,
-          -105.0,
-          64.0
+          -26.0,
+          108.0,
+          -173.0,
+          56.0,
+          50.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -349,7 +346,8 @@
           "2025-08-01",
           "2025-09-01",
           "2025-10-01",
-          "2025-11-01"
+          "2025-11-01",
+          "2025-12-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -359,15 +357,15 @@
         "nextRelease": "TBD",
         "description": "nonfarm-payrolls description"
       }
+    },
+    "centralBankRates": {
+      "rate": 3.75,
+      "trend": "down",
+      "bankName": "Fed",
+      "asOf": "2025-12-10"
     }
   },
   "EUR": {
-    "centralBankRates": {
-      "rate": 2.15,
-      "trend": "stable",
-      "bankName": "ECB",
-      "asOf": "2025-12-18"
-    },
     "indicators": {
       "interest-rate": {
         "currentValue": "2.15%",
@@ -433,8 +431,8 @@
         "description": "Main Refinancing Rate - The primary monetary policy tool set by the European Central Bank (ECB)."
       },
       "inflation": {
-        "currentValue": "2.1%",
-        "asOf": "2025-11-01",
+        "currentValue": "2.0%",
+        "asOf": "2025-12-01",
         "chartData": [
           2.8,
           2.6,
@@ -458,7 +456,8 @@
           2.0,
           2.2,
           2.1,
-          2.1
+          2.1,
+          2.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -483,7 +482,8 @@
           "2025-08-01",
           "2025-09-01",
           "2025-10-01",
-          "2025-11-01"
+          "2025-11-01",
+          "2025-12-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -494,8 +494,8 @@
         "description": "Harmonized Index of Consumer Prices (HICP) - The official measure of inflation for the eurozone."
       },
       "core-inflation-YoY": {
-        "currentValue": "2.4%",
-        "asOf": "2025-11-01",
+        "currentValue": "2.3%",
+        "asOf": "2025-12-01",
         "chartData": [
           3.3,
           3.1,
@@ -519,7 +519,8 @@
           2.3,
           2.4,
           2.4,
-          2.4
+          2.4,
+          2.3
         ],
         "chartDates": [
           "2024-01-01",
@@ -544,7 +545,8 @@
           "2025-08-01",
           "2025-09-01",
           "2025-10-01",
-          "2025-11-01"
+          "2025-11-01",
+          "2025-12-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -608,8 +610,8 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "6.4%",
-        "asOf": "2025-10-01",
+        "currentValue": "6.3%",
+        "asOf": "2025-11-01",
         "chartData": [
           6.6,
           6.6,
@@ -632,7 +634,68 @@
           6.4,
           6.4,
           6.4,
-          6.4
+          6.4,
+          6.3
+        ],
+        "chartDates": [
+          "2024-01-01",
+          "2024-02-01",
+          "2024-03-01",
+          "2024-04-01",
+          "2024-05-01",
+          "2024-06-01",
+          "2024-07-01",
+          "2024-08-01",
+          "2024-09-01",
+          "2024-10-01",
+          "2024-11-01",
+          "2024-12-01",
+          "2025-01-01",
+          "2025-02-01",
+          "2025-03-01",
+          "2025-04-01",
+          "2025-05-01",
+          "2025-06-01",
+          "2025-07-01",
+          "2025-08-01",
+          "2025-09-01",
+          "2025-10-01",
+          "2025-11-01"
+        ],
+        "source": "European Central Bank",
+        "sourceUrl": "https://ec.europa.eu/eurostat/web/lfs/data/main-tables",
+        "notes": "Unemployment Rate - %",
+        "unit": "%",
+        "frequency": "Monthly",
+        "nextRelease": "TBD",
+        "description": "unemployment description"
+      },
+      "current-account": {
+        "currentValue": "+€32.00B",
+        "asOf": "2025-10-01",
+        "chartData": [
+          29.73,
+          34.02,
+          39.6,
+          36.03,
+          6.68,
+          52.13,
+          39.48,
+          25.31,
+          43.47,
+          29.47,
+          26.77,
+          45.82,
+          3.1,
+          17.74,
+          37.49,
+          22.0,
+          -3.39,
+          39.04,
+          37.06,
+          22.25,
+          38.13,
+          32.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -659,63 +722,6 @@
           "2025-10-01"
         ],
         "source": "European Central Bank",
-        "sourceUrl": "https://ec.europa.eu/eurostat/web/lfs/data/main-tables",
-        "notes": "Unemployment Rate - %",
-        "unit": "%",
-        "frequency": "Monthly",
-        "nextRelease": "TBD",
-        "description": "unemployment description"
-      },
-      "current-account": {
-        "currentValue": "+€38.13B",
-        "asOf": "2025-09-01",
-        "chartData": [
-          29.73,
-          34.02,
-          39.6,
-          36.03,
-          6.68,
-          52.13,
-          39.48,
-          25.31,
-          43.47,
-          29.47,
-          26.77,
-          45.82,
-          3.1,
-          17.74,
-          37.49,
-          22.0,
-          -3.39,
-          39.04,
-          37.06,
-          22.25,
-          38.13
-        ],
-        "chartDates": [
-          "2024-01-01",
-          "2024-02-01",
-          "2024-03-01",
-          "2024-04-01",
-          "2024-05-01",
-          "2024-06-01",
-          "2024-07-01",
-          "2024-08-01",
-          "2024-09-01",
-          "2024-10-01",
-          "2024-11-01",
-          "2024-12-01",
-          "2025-01-01",
-          "2025-02-01",
-          "2025-03-01",
-          "2025-04-01",
-          "2025-05-01",
-          "2025-06-01",
-          "2025-07-01",
-          "2025-08-01",
-          "2025-09-01"
-        ],
-        "source": "European Central Bank",
         "sourceUrl": "https://www.ecb.europa.eu/stats/balance_of_payments_and_external/html/index.en.html",
         "notes": "Current Account - B",
         "unit": "B",
@@ -723,15 +729,15 @@
         "nextRelease": "TBD",
         "description": "current-account description"
       }
+    },
+    "centralBankRates": {
+      "rate": 2.15,
+      "trend": "stable",
+      "bankName": "ECB",
+      "asOf": "2025-12-18"
     }
   },
   "GBP": {
-    "centralBankRates": {
-      "rate": 3.75,
-      "trend": "stable",
-      "bankName": "BOE",
-      "asOf": "2025-12-18"
-    },
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
@@ -937,7 +943,7 @@
           0.2,
           0.2,
           0.7,
-          0.3,
+          0.2,
           0.1,
           1.4
         ],
@@ -1087,15 +1093,15 @@
         "nextRelease": "TBD",
         "description": "wage-growth description"
       }
+    },
+    "centralBankRates": {
+      "rate": 3.75,
+      "trend": "stable",
+      "bankName": "BOE",
+      "asOf": "2025-12-18"
     }
   },
   "JPY": {
-    "centralBankRates": {
-      "rate": 0.75,
-      "trend": "stable",
-      "bankName": "BOJ",
-      "asOf": "2025-12-19"
-    },
     "indicators": {
       "interest-rate": {
         "currentValue": "0.75%",
@@ -1455,6 +1461,12 @@
         "nextRelease": "TBD",
         "description": "current-account description"
       }
+    },
+    "centralBankRates": {
+      "rate": 0.75,
+      "trend": "stable",
+      "bankName": "BOJ",
+      "asOf": "2025-12-19"
     }
   }
 }
