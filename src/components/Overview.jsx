@@ -3454,7 +3454,8 @@ const Overview = () => {
                                   className="probability-fill yes-fill" 
                                   style={{ width: `${yesPercent}%` }}
                                 >
-                                  {yesPercent >= 15 && (
+                                  {/* Show label if >= 10% OR if it's the only price available */}
+                                  {(yesPercent >= 10 || noPrice === 0) && (
                                     <span className="probability-label yes-label">
                                       YES {yesPercent}%
                                     </span>
@@ -3466,7 +3467,8 @@ const Overview = () => {
                                   className="probability-fill no-fill" 
                                   style={{ width: `${noPercent}%` }}
                                 >
-                                  {noPercent >= 15 && (
+                                  {/* Show label if >= 10% OR if it's the only price available */}
+                                  {(noPercent >= 10 || yesPrice === 0) && (
                                     <span className="probability-label no-label">
                                       NO {noPercent}%
                                     </span>
