@@ -108,50 +108,25 @@ class PredictionMarketsService:
             self._background_refresh_interval_minutes = PAID_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES
             logger.info("Running in PAID TIER mode: Max 5/3 pages per platform, 10min cache")
         
-        # Initialize persistent cache (Firebase) or fallback to file cache
-        if PERSISTENT_CACHE_AVAILABLE:
-            try:
-                self.persistent_cache = get_persistent_prediction_markets_cache(max_age_minutes=self.cache_expiration_minutes)
-                self.use_persistent_cache = True
-                logger.info("Using Firebase persistent cache for prediction markets")
-            except Exception as e:
-                logger.warning(f"Failed to initialize persistent cache, falling back to file cache: {e}")
-                self.use_persistent_cache = False
-                self._init_file_cache()
-        else:
-            self.use_persistent_cache = False
-            self._init_file_cache()
-        
-        # Initialize cached data
-        self.cached_markets = None
-        self.cache_timestamp = None
-        self._load_cache()
-    
-    def _init_file_cache(self):
-        """Initialize file-based cache (fallback)"""
-        self.cache_file = os.path.join(os.path.dirname(__file__), "..", "prediction_markets_cache.json")
-        self.cache_file = os.path.normpath(self.cache_file)
-        
-        # Request deduplication: prevent concurrent refresh requests
+        # Initialize threading locks and refresh state (needed regardless of cache type)
         self._refresh_lock = threading.Lock()
         self._refresh_in_progress = False
         self._refresh_future = None
         self._refresh_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="prediction_markets_refresh")
-        
-        # Background refresh tracking
         self._last_background_refresh = None
         
         # API call budget tracking (for free tier 10-per-10-seconds limit)
         self._api_calls_last_10_seconds = []
         self._api_call_lock = threading.Lock()
         
-        # Dome API configuration
+        # Initialize Dome API configuration (needed regardless of cache type)
         self.dome_api_key = os.getenv('DOME_API_KEY')
         self.api_available = False
+        self.dome_client = None
+        self.dome_api_base_url = "https://api.domeapi.io/v1/polymarket"
         
         if not self.dome_api_key:
             logger.warning("DOME_API_KEY not set. Prediction markets will not be available.")
-            self.dome_client = None
             self.api_available = False
         elif DOME_SDK_AVAILABLE:
             try:
@@ -166,10 +141,8 @@ class PredictionMarketsService:
             logger.warning("Dome API SDK not available. Install with: pip install dome-api-sdk")
             self.dome_client = None
             self.api_available = False
-            # Fallback to direct HTTP requests
-            self.dome_api_base_url = "https://api.domeapi.io/v1/polymarket"
         
-        # Economic keywords for filtering - expanded to include forex-relevant markets
+        # Initialize filtering keywords and tags (needed regardless of cache type)
         self.economic_keywords = [
             # Federal Reserve & US Rates
             "federal reserve", "fed", "fomc", "interest rate", "rate hike", "rate cut", "rates",
@@ -249,7 +222,38 @@ class PredictionMarketsService:
             "15m", "30m", "1h", "4h"  # Exclude short-term crypto price movements
         ]
         
+        # Initialize cache file path (needed for fallback even when using persistent cache)
+        self.cache_file = os.path.join(os.path.dirname(__file__), "..", "prediction_markets_cache.json")
+        self.cache_file = os.path.normpath(self.cache_file)
+        
+        # Initialize persistent cache attributes (will be set if available)
+        self.persistent_cache = None
+        self.use_persistent_cache = False
+        
+        # Initialize persistent cache (Firebase) or fallback to file cache
+        if PERSISTENT_CACHE_AVAILABLE:
+            try:
+                self.persistent_cache = get_persistent_prediction_markets_cache(max_age_minutes=self.cache_expiration_minutes)
+                self.use_persistent_cache = True
+                logger.info("Using Firebase persistent cache for prediction markets")
+            except Exception as e:
+                logger.warning(f"Failed to initialize persistent cache, falling back to file cache: {e}")
+                self.use_persistent_cache = False
+        else:
+            self.use_persistent_cache = False
+        
+        # Initialize cached data
+        self.cached_markets = None
+        self.cache_timestamp = None
         self._load_cache()
+    
+    def _init_file_cache(self):
+        """Initialize file-based cache (fallback)"""
+        self.cache_file = os.path.join(os.path.dirname(__file__), "..", "prediction_markets_cache.json")
+        self.cache_file = os.path.normpath(self.cache_file)
+        
+        # Note: Threading locks, refresh state, Dome API configuration, and filtering keywords
+        # are now initialized in __init__ to ensure they're always available regardless of cache type
     
     def _check_api_budget(self) -> bool:
         """Check if we have budget for another API call (free tier only)
