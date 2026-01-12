@@ -3417,10 +3417,22 @@ const Overview = () => {
                     
                     const isResolved = market.is_resolved || market.closed;
                     
+                    // Check price quality
+                    const priceQuality = market.price_quality || "low";
+                    const priceSource = market.price_source || "fallback";
+                    const isEstimated = priceSource === "fallback" || priceQuality === "low";
+                    
                     return (
                       <div key={market.id} className={`prediction-market-item ${isResolved ? 'resolved' : ''}`}>
                         <div className="market-header-row">
-                          <div className="market-question">{market.question}</div>
+                          <div className="market-question">
+                            {market.question}
+                            {isEstimated && (
+                              <span className="price-quality-badge" title="Price is estimated - actual market prices may vary">
+                                Estimated
+                              </span>
+                            )}
+                          </div>
                           <div className="market-badges">
                             {market.related_event && (
                               <span className="market-event-badge">{market.related_event}</span>
