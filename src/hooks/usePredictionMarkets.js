@@ -47,14 +47,18 @@ export const usePredictionMarkets = () => {
     } catch (err) {
       console.error('❌ Error fetching prediction markets:', err);
       setError(err.message);
-      // Keep existing data on error (don't clear on transient errors)
-      if (!markets.markets || markets.markets.length === 0) {
-        setMarkets(fallbackMarkets);
-      }
+      // Use functional update to avoid stale closure
+      setMarkets(prevMarkets => {
+        // Keep existing data on error (don't clear on transient errors)
+        if (!prevMarkets.markets || prevMarkets.markets.length === 0) {
+          return fallbackMarkets;
+        }
+        return prevMarkets;
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Empty deps is fine now since we use functional updates
 
   useEffect(() => {
     fetchMarkets();
