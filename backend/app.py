@@ -3702,10 +3702,25 @@ def get_prediction_markets():
         return response
     
     try:
-        print("🔍 Fetching prediction markets data...")
+        print("Fetching prediction markets data...")
         
-        # Check for force refresh parameter
-        force_refresh = request.args.get('refresh', 'false').lower() == 'true'
+        # Validate and sanitize query parameters
+        force_refresh_param = request.args.get('refresh', 'false').lower()
+        if force_refresh_param not in ('true', 'false'):
+            return jsonify({
+                "status": "error",
+                "error": "Invalid 'refresh' parameter. Must be 'true' or 'false'.",
+                "data": {
+                    "markets": [],
+                    "summary": {
+                        "total_markets": 0,
+                        "platforms": [],
+                        "last_updated": None
+                    }
+                }
+            }), 400
+        
+        force_refresh = force_refresh_param == 'true'
         
         # Import the service
         import importlib

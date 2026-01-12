@@ -43,12 +43,20 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+# Import persistent cache service
+try:
+    from services.persistent_prediction_markets_cache import get_persistent_prediction_markets_cache
+    PERSISTENT_CACHE_AVAILABLE = True
+except ImportError:
+    PERSISTENT_CACHE_AVAILABLE = False
+    logger.warning("Persistent prediction markets cache not available. Using file-based cache.")
+
 if not DOME_SDK_AVAILABLE:
     logger.warning("dome-api-sdk not installed. Install with: pip install dome-api-sdk")
 
 # Configuration constants for free tier optimization
 FREE_TIER_MAX_PAGES_PER_PLATFORM = 2  # Reduced from 5/3 to 2/2 to stay within 10 queries per 10 seconds
-FREE_TIER_EARLY_STOP_THRESHOLD = 200  # Stop when we have 200 raw markets (enough to filter to 30+)
+FREE_TIER_EARLY_STOP_THRESHOLD = 400  # Stop when we have 400 raw markets (increased from 200 to get more variety)
 FREE_TIER_CACHE_EXPIRATION_MINUTES = 30  # Increased from 10 to reduce refresh frequency
 FREE_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 20  # Refresh every 20 minutes in background
 
@@ -58,6 +66,16 @@ PAID_TIER_MAX_PAGES_KALSHI = 3
 PAID_TIER_EARLY_STOP_THRESHOLD = 150
 PAID_TIER_CACHE_EXPIRATION_MINUTES = 10
 PAID_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 5
+
+# Market filtering limits
+MAX_FILTERED_MARKETS = 50  # Maximum markets to return after filtering (increased from 30)
+# Note: We return up to 50 markets, but frontend may display fewer based on UI constraints
+FREE_TIER_MAX_PRICE_FETCH_MARKETS = 5  # Max markets to fetch prices for on free tier
+PAID_TIER_MAX_PRICE_FETCH_MARKETS = 20  # Max markets to fetch prices for on paid tier
+
+# Date thresholds
+RECENTLY_RESOLVED_DAYS = 30  # Markets resolved within this many days are "recent"
+CLOSED_MARKET_GRACE_PERIOD_DAYS = 30  # Allow closed markets within this period (increased from 7 to show more markets)
 
 def _safe_get(obj, key, default=None):
     """Safely get attribute from object or dict"""
@@ -71,12 +89,6 @@ class PredictionMarketsService:
     """Main prediction markets service"""
     
     def __init__(self):
-        # Cache file in backend directory to match other services
-        self.cache_file = os.path.join(os.path.dirname(__file__), "..", "prediction_markets_cache.json")
-        self.cache_file = os.path.normpath(self.cache_file)
-        self.cached_markets = None
-        self.cache_timestamp = None
-        
         # Detect API tier (default to free tier for safety)
         self.is_free_tier = os.getenv('DOME_API_TIER', 'free').lower() == 'free'
         
@@ -95,6 +107,30 @@ class PredictionMarketsService:
             self.cache_expiration_minutes = PAID_TIER_CACHE_EXPIRATION_MINUTES
             self._background_refresh_interval_minutes = PAID_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES
             logger.info("Running in PAID TIER mode: Max 5/3 pages per platform, 10min cache")
+        
+        # Initialize persistent cache (Firebase) or fallback to file cache
+        if PERSISTENT_CACHE_AVAILABLE:
+            try:
+                self.persistent_cache = get_persistent_prediction_markets_cache(max_age_minutes=self.cache_expiration_minutes)
+                self.use_persistent_cache = True
+                logger.info("Using Firebase persistent cache for prediction markets")
+            except Exception as e:
+                logger.warning(f"Failed to initialize persistent cache, falling back to file cache: {e}")
+                self.use_persistent_cache = False
+                self._init_file_cache()
+        else:
+            self.use_persistent_cache = False
+            self._init_file_cache()
+        
+        # Initialize cached data
+        self.cached_markets = None
+        self.cache_timestamp = None
+        self._load_cache()
+    
+    def _init_file_cache(self):
+        """Initialize file-based cache (fallback)"""
+        self.cache_file = os.path.join(os.path.dirname(__file__), "..", "prediction_markets_cache.json")
+        self.cache_file = os.path.normpath(self.cache_file)
         
         # Request deduplication: prevent concurrent refresh requests
         self._refresh_lock = threading.Lock()
@@ -186,7 +222,14 @@ class PredictionMarketsService:
             
             # Government & Fiscal Policy
             "government", "fiscal", "budget", "deficit", "surplus", "debt",
-            "stimulus", "austerity", "spending", "tax", "taxes", "revenue"
+            "stimulus", "austerity", "spending", "tax", "taxes", "revenue",
+            
+            # General Economic Terms (broader matching)
+            "economic", "economy", "market", "financial", "markets", "finance",
+            "business", "corporate", "company", "companies", "sector", "industry",
+            "growth", "recession", "recovery", "expansion", "contraction",
+            "indicator", "data", "report", "release", "announcement", "statement",
+            "meeting", "conference", "speech", "testimony", "hearing"
         ]
         
         # Economic tags that indicate relevant markets
@@ -258,30 +301,77 @@ class PredictionMarketsService:
                     break
     
     def _load_cache(self):
-        """Load cached markets data"""
-        try:
-            with open(self.cache_file, 'r') as f:
-                data = json.load(f)
-                self.cached_markets = data.get('markets', [])
-                timestamp_str = data.get('timestamp')
-                if timestamp_str:
-                    self.cache_timestamp = datetime.fromisoformat(
-                        timestamp_str.replace('Z', '+00:00')
-                    )
-        except (FileNotFoundError, json.JSONDecodeError, ValueError):
-            self.cached_markets = None
-            self.cache_timestamp = None
+        """Load cached markets data from Firebase or file cache"""
+        if self.use_persistent_cache:
+            try:
+                cache_result = self.persistent_cache.load_markets(allow_stale=True, return_metadata=True)
+                if cache_result and isinstance(cache_result, dict):
+                    self.cached_markets = cache_result.get('markets', [])
+                    last_fetch_str = cache_result.get('last_fetch')
+                    if last_fetch_str:
+                        try:
+                            self.cache_timestamp = datetime.fromisoformat(last_fetch_str.replace('Z', '+00:00'))
+                        except (ValueError, TypeError):
+                            # Fallback to timestamp if last_fetch parsing fails
+                            cache_data = self.persistent_cache.firebase._make_request('GET', self.persistent_cache._get_cache_path())
+                            if cache_data and isinstance(cache_data, dict):
+                                timestamp_str = cache_data.get('timestamp')
+                                if timestamp_str:
+                                    self.cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                elif cache_result:
+                    # Backward compatibility: if return_metadata=False was used
+                    self.cached_markets = cache_result
+                    # Try to get timestamp from Firebase
+                    cache_data = self.persistent_cache.firebase._make_request('GET', self.persistent_cache._get_cache_path())
+                    if cache_data and isinstance(cache_data, dict):
+                        timestamp_str = cache_data.get('timestamp')
+                        if timestamp_str:
+                            self.cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                else:
+                    self.cached_markets = None
+                    self.cache_timestamp = None
+            except Exception as e:
+                logger.error(f"Error loading from persistent cache: {e}")
+                self.cached_markets = None
+                self.cache_timestamp = None
+        else:
+            # Fallback to file cache
+            try:
+                with open(self.cache_file, 'r') as f:
+                    data = json.load(f)
+                    self.cached_markets = data.get('markets', [])
+                    timestamp_str = data.get('timestamp')
+                    if timestamp_str:
+                        self.cache_timestamp = datetime.fromisoformat(
+                            timestamp_str.replace('Z', '+00:00')
+                        )
+            except (FileNotFoundError, json.JSONDecodeError, ValueError):
+                self.cached_markets = None
+                self.cache_timestamp = None
     
     def _save_cache(self, markets: List[Dict]):
-        """Save markets to cache"""
-        try:
-            with open(self.cache_file, 'w') as f:
-                json.dump({
-                    'markets': markets,
-                    'timestamp': datetime.now(timezone.utc).isoformat()
-                }, f, indent=2)
-        except Exception as e:
-            logger.error(f"Failed to save cache: {e}")
+        """Save markets to Firebase or file cache"""
+        if self.use_persistent_cache:
+            try:
+                success = self.persistent_cache.save_markets(markets)
+                if success:
+                    # Update local cache timestamp
+                    self.cache_timestamp = datetime.now(timezone.utc)
+                    self.cached_markets = markets
+                else:
+                    logger.warning("Failed to save to persistent cache, but continuing")
+            except Exception as e:
+                logger.error(f"Error saving to persistent cache: {e}")
+        else:
+            # Fallback to file cache
+            try:
+                with open(self.cache_file, 'w') as f:
+                    json.dump({
+                        'markets': markets,
+                        'timestamp': datetime.now(timezone.utc).isoformat()
+                    }, f, indent=2)
+            except Exception as e:
+                logger.error(f"Failed to save cache: {e}")
     
     def _is_cache_valid(self) -> bool:
         """Check if cache is still valid"""
@@ -573,6 +663,56 @@ class PredictionMarketsService:
         logger.info(f"Total markets fetched from Dome API: {len(markets)}")
         return markets
     
+    def _detect_platform(self, market: Dict[str, Any]) -> str:
+        """Detect platform from market structure
+        
+        Args:
+            market: Market dictionary
+            
+        Returns:
+            Platform name: "kalshi" or "polymarket"
+        """
+        if "market_ticker" in market or "event_ticker" in market:
+            return "kalshi"
+        return market.get("platform", "polymarket")
+    
+    def _get_market_id(self, market: Dict[str, Any], platform: Optional[str] = None) -> Optional[str]:
+        """Get unique market identifier based on platform
+        
+        Args:
+            market: Market dictionary
+            platform: Platform name (auto-detected if None)
+        
+        Returns:
+            Market ID string or None
+        """
+        if platform is None:
+            platform = self._detect_platform(market)
+        
+        if platform == "kalshi":
+            return _safe_get(market, "market_ticker") or _safe_get(market, "event_ticker")
+        else:
+            return _safe_get(market, "condition_id")
+    
+    def _is_market_resolved(self, market: Dict[str, Any], platform: str) -> bool:
+        """Check if market is resolved
+        
+        Args:
+            market: Market dictionary
+            platform: Platform name ("kalshi" or "polymarket")
+        
+        Returns:
+            True if market is resolved, False otherwise
+        """
+        if platform == "kalshi":
+            # Kalshi: market is resolved if result field is not None
+            result = _safe_get(market, "result")
+            return result is not None
+        else:
+            # Polymarket: market is resolved if winning_side is not None
+            winning_side = _safe_get(market, "winning_side")
+            return winning_side is not None
+    
     def _filter_economic_markets(self, markets: List[Dict]) -> List[Dict]:
         """Filter markets for economic/forex relevance"""
         relevant_markets = []
@@ -627,38 +767,45 @@ class PredictionMarketsService:
                     }
             else:
                 market = market_obj
-                # Detect platform from dict structure
-                if "market_ticker" in market or "event_ticker" in market:
-                    market["platform"] = "kalshi"
-                else:
-                    market["platform"] = market.get("platform", "polymarket")
+                # Detect platform from dict structure using helper method
+                market["platform"] = self._detect_platform(market)
             
-            # Deduplicate by market identifier
-            if market.get("platform") == "kalshi":
-                market_id = _safe_get(market, "market_ticker") or _safe_get(market, "event_ticker")
-            else:
-                market_id = _safe_get(market, "condition_id")
+            # Deduplicate by market identifier using helper method
+            platform = market.get("platform", "polymarket")
+            market_id = self._get_market_id(market, platform)
             
             if not market_id or market_id in seen_ids:
                 continue
             seen_ids.add(market_id)
             
-            # Check if market is resolved - exclude all resolved markets
-            platform = market.get("platform", "polymarket")
-            is_resolved = False
-            if platform == "kalshi":
-                # Kalshi: market is resolved if result field is not None
-                result = _safe_get(market, "result")
-                is_resolved = result is not None
-            else:
-                # Polymarket: market is resolved if winning_side is not None
-                winning_side = _safe_get(market, "winning_side")
-                is_resolved = winning_side is not None
+            # Check if market is resolved - allow recently resolved markets (within grace period)
+            # Also allow resolved markets if they're highly relevant (even if older)
+            is_resolved = self._is_market_resolved(market, platform)
             
-            # Skip all resolved markets
+            # Skip resolved markets only if they're old AND not highly relevant
             if is_resolved:
-                skipped_closed += 1
-                continue
+                # Check if recently resolved (within grace period)
+                completion_time = _safe_get(market, "completed_time") or _safe_get(market, "close_time")
+                is_recently_resolved = False
+                if completion_time:
+                    try:
+                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
+                        days_since_resolution = (now - completed_date).days
+                        is_recently_resolved = 0 <= days_since_resolution <= CLOSED_MARKET_GRACE_PERIOD_DAYS
+                    except (ValueError, TypeError):
+                        pass
+                
+                # Allow resolved markets if:
+                # 1. Recently resolved (within grace period), OR
+                # 2. We'll check relevance later and allow high-relevance markets
+                # For now, we'll check relevance after keyword matching, so we don't skip here
+                # We'll mark it as resolved and let it through for relevance check
+                if not is_recently_resolved:
+                    # Don't skip yet - we'll check relevance after keyword matching
+                    # Mark as old resolved for later filtering
+                    market["_is_old_resolved"] = True
+                else:
+                    market["_is_old_resolved"] = False
             
             # Get title (both platforms use "title")
             title = _safe_get(market, "title", "").lower()
@@ -678,11 +825,25 @@ class PredictionMarketsService:
             is_open = status == "open"
             is_closed = status == "closed"
             
-            # Note: Resolved markets are already filtered out above
-            # We'll filter closed markets after checking relevance (only open/active markets are shown)
-            
             # Track whether market is accepting orders (open markets are accepting orders)
             accepting_orders = is_open
+            
+            # Check if closed market is recently closed (within grace period)
+            # This needs to happen early so we can use it in relevance filtering later
+            if is_closed:
+                completion_time = _safe_get(market, "completed_time") or _safe_get(market, "close_time")
+                is_recently_closed = False
+                if completion_time:
+                    try:
+                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
+                        days_since_closed = (now - completed_date).days
+                        is_recently_closed = 0 <= days_since_closed <= CLOSED_MARKET_GRACE_PERIOD_DAYS
+                    except (ValueError, TypeError):
+                        pass
+                
+                # Mark as old closed for later filtering (we'll allow if highly relevant)
+                if not is_recently_closed:
+                    market["_is_old_closed"] = True
             
             # NEW: Check if market has embedded price data (prioritize these on free tier)
             has_embedded_price = False
@@ -823,32 +984,40 @@ class PredictionMarketsService:
                         relevance = "medium"  # Default to medium for other economic keywords
             
             # Only include markets that match economic keywords OR have economic tags
-            # Relaxed: Allow markets with economic tags even without keyword matches
+            # More lenient: Allow markets with economic tags OR general economic terms
             if not matched_keywords:
-                # Allow markets with economic tags (more lenient than before)
-                # This includes: politics, geopolitics, economics, finance, policy, elections, presidential
-                if has_economic_tag:
-                    # Market has economic tag but no keyword match - assign low relevance
+                # Check for general economic terms that might not be in keyword list
+                general_economic_terms = [
+                    "economic", "economy", "market", "financial", "finance", "business",
+                    "policy", "government", "regulation", "legislation", "law", "bill",
+                    "announcement", "statement", "meeting", "decision", "report", "data"
+                ]
+                has_general_term = any(term in text_lower for term in general_economic_terms)
+                
+                # Allow markets with economic tags OR general economic terms
+                if has_economic_tag or has_general_term:
+                    # Market has economic tag or general term but no specific keyword match
                     relevance = "low"
-                    matched_keywords = ["economic_tag"]  # Placeholder to allow through
+                    matched_keywords = ["economic_tag"] if has_economic_tag else ["general_economic_term"]
                 else:
-                    # No keywords AND no economic tags - exclude
+                    # No keywords, no economic tags, and no general terms - exclude
                     skipped_no_keywords += 1
                     continue
             
-            # NEW: Stricter geopolitics filtering - geopolitics tag alone isn't enough
-            # Must have forex-relevant keywords (currency, trade, sanctions affecting forex, etc.)
+            # Relaxed geopolitics filtering - allow if it has economic tag or general terms
+            # Only exclude pure geopolitics without any economic connection
             if has_economic_tag and "geopolitics" in tags:
-                # Check if it has actual forex-relevant keywords
-                forex_relevant_geopolitics_keywords = [
+                # Check if it has any economic connection (broader than before)
+                economic_connection_keywords = [
                     "trade", "tariff", "sanctions", "currency", "forex", "fx", "exchange rate",
                     "dollar", "euro", "pound", "yen", "yuan", "brexit", "trade war", "trade deal",
-                    "usd", "eur", "gbp", "jpy", "cny", "economic", "economy"
+                    "usd", "eur", "gbp", "jpy", "cny", "economic", "economy", "market",
+                    "financial", "policy", "government", "regulation"
                 ]
-                has_forex_relevant_geo = any(keyword in text_lower for keyword in forex_relevant_geopolitics_keywords)
+                has_economic_connection = any(keyword in text_lower for keyword in economic_connection_keywords)
                 
-                if not has_forex_relevant_geo:
-                    # Geopolitics tag but no forex relevance - exclude
+                # Only exclude if it's pure geopolitics with no economic connection
+                if not has_economic_connection and not matched_keywords:
                     skipped_no_keywords += 1
                     continue
             
@@ -856,27 +1025,15 @@ class PredictionMarketsService:
             if has_economic_tag and relevance == "low":
                         relevance = "medium"
             
-            # Filter closed markets: exclude closed markets UNLESS they're recently closed (within last 7 days)
-            # This allows us to show more markets while still prioritizing active ones
-            # Note: Resolved markets are already filtered out above
-            if is_closed:
-                # Allow recently closed markets (within 7 days) to show more results
-                if completion_time:
-                    try:
-                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
-                        days_since_closed = (now - completed_date).days
-                        if days_since_closed > 7:
-                            skipped_closed += 1
-                            continue
-                        # Market closed within last 7 days - allow it but mark as closed
-                    except (ValueError, TypeError):
-                        # Can't parse date, exclude closed market
-                        skipped_closed += 1
-                        continue
-                else:
-                    # Closed but no completion time - exclude
+            # NEW: Filter old resolved/closed markets based on relevance
+            # Allow old resolved/closed markets if they're highly relevant
+            if market.get("_is_old_resolved", False) or market.get("_is_old_closed", False):
+                # Only allow if high relevance (Fed, inflation, major economic events)
+                if relevance != "high":
                     skipped_closed += 1
                     continue
+                # High relevance old resolved/closed market - allow it
+                logger.debug(f"Allowing old resolved/closed market due to high relevance: {title[:50]}")
             
             if matched_keywords:
                 # Determine related event
@@ -928,10 +1085,11 @@ class PredictionMarketsService:
                 relevant_markets.append(market)
                 included_markets += 1
         
-        # Log filtering statistics
+        # Log filtering statistics with more detail
         logger.info(f"Filtering stats: checked={total_checked}, included={included_markets}, "
                    f"skipped_closed={skipped_closed}, skipped_exclude={skipped_exclude}, "
                    f"skipped_no_keywords={skipped_no_keywords}")
+        logger.info(f"Filtering result: {included_markets} markets passed filtering (target: {MAX_FILTERED_MARKETS})")
         
         # Sort by priority:
         # 1. Markets accepting orders (highest priority - most "live")
@@ -953,9 +1111,9 @@ class PredictionMarketsService:
             reverse=True
         )
         
-        # Return top 30 markets (increased to show more options)
+        # Return top markets (limited by MAX_FILTERED_MARKETS)
         # Note: Deduplication by market_id already prevents duplicates from appearing
-        return relevant_markets[:30]
+        return relevant_markets[:MAX_FILTERED_MARKETS]
     
     def _fetch_token_price(self, token_id: str, use_rate_limiter: bool = True) -> Optional[float]:
         """Fetch price for a specific token from Dome API
@@ -1028,6 +1186,74 @@ class PredictionMarketsService:
                         return float(price)
         except Exception as e:
             logger.debug(f"Could not fetch price for token {token_id[:20]}...: {e}")
+        
+        return None
+    
+    def _normalize_side_object(self, side_raw: Any) -> Dict[str, Any]:
+        """Normalize side_a or side_b object to dictionary format
+        
+        Handles multiple input formats: dict, object with __dict__, or object with __getitem__.
+        This eliminates code duplication when processing side_a and side_b.
+        
+        Args:
+            side_raw: Can be dict, object with __dict__, or object with __getitem__
+        
+        Returns:
+            Dictionary with id, label, and any price fields
+        """
+        if isinstance(side_raw, dict):
+            return side_raw.copy()
+        
+        if hasattr(side_raw, '__dict__'):
+            return side_raw.__dict__.copy()
+        
+        if hasattr(side_raw, '__getitem__'):
+            try:
+                # Try to extract common fields
+                return {
+                    k: side_raw[k] 
+                    for k in ['id', 'label', 'price', 'current_price', 'last_price', 'token_price', 'yes_price', 'no_price']
+                    if k in side_raw or hasattr(side_raw, k)
+                }
+            except (KeyError, TypeError):
+                pass
+        
+        # Fallback: extract what we can
+        return {
+            "id": _safe_get(side_raw, "id"),
+            "label": _safe_get(side_raw, "label", "")
+        }
+    
+    def _extract_price_from_side(self, side: Dict[str, Any], side_name: str = "side") -> Optional[float]:
+        """Extract price from a normalized side dictionary
+        
+        Checks multiple possible price field names to handle different API response formats.
+        
+        Args:
+            side: Normalized side dictionary
+            side_name: Name for logging (e.g., "side_a", "side_b")
+        
+        Returns:
+            Price as float, or None if not found
+        """
+        if not isinstance(side, dict):
+            return None
+        
+        price_candidate = (
+            _safe_get(side, "price") or 
+            _safe_get(side, "current_price") or 
+            _safe_get(side, "last_price") or
+            _safe_get(side, "token_price") or
+            _safe_get(side, "yes_price") or
+            _safe_get(side, "no_price")
+        )
+        
+        if price_candidate is not None:
+            try:
+                return float(price_candidate)
+            except (ValueError, TypeError):
+                logger.debug(f"Price value invalid for {side_name}: {price_candidate}")
+                return None
         
         return None
     
@@ -1107,107 +1333,49 @@ class PredictionMarketsService:
                     side_a_price = float(market_yes_price)
                     side_b_price = float(market_no_price)
                     price_source = "embedded"
-                    logger.info(f"✅ Found market-level prices: yes={side_a_price}, no={side_b_price}")
+                    logger.info(f"Found market-level prices: yes={side_a_price}, no={side_b_price}")
                 except (ValueError, TypeError):
-                    logger.debug(f"⚠️ Market-level price values invalid: yes={market_yes_price}, no={market_no_price}")
+                    logger.debug(f"Market-level price values invalid: yes={market_yes_price}, no={market_no_price}")
                     market_yes_price = None
                     market_no_price = None
             
             # Handle both dict and object formats for side_a and side_b
             # Only process if we didn't find market-level prices
             if side_a_price is None or side_b_price is None:
-                # Improved object handling - try multiple methods to extract data
-                if not isinstance(side_a_raw, dict):
-                    # Try to convert object to dict
-                    if hasattr(side_a_raw, '__dict__'):
-                        side_a = side_a_raw.__dict__.copy()
-                    elif hasattr(side_a_raw, '__getitem__'):
-                        # Try to access as dict-like
-                        try:
-                            side_a = {k: side_a_raw[k] for k in ['id', 'label', 'price', 'current_price', 'last_price', 'token_price'] if hasattr(side_a_raw, k) or (hasattr(side_a_raw, '__getitem__') and k in side_a_raw)}
-                        except:
-                            side_a = {"id": _safe_get(side_a_raw, "id"), "label": _safe_get(side_a_raw, "label", "")}
-                    else:
-                        side_a = {"id": _safe_get(side_a_raw, "id"), "label": _safe_get(side_a_raw, "label", "")}
-                else:
-                    side_a = side_a_raw.copy() if isinstance(side_a_raw, dict) else {}
-                
-                # Same for side_b
-                if not isinstance(side_b_raw, dict):
-                    if hasattr(side_b_raw, '__dict__'):
-                        side_b = side_b_raw.__dict__.copy()
-                    elif hasattr(side_b_raw, '__getitem__'):
-                        try:
-                            side_b = {k: side_b_raw[k] for k in ['id', 'label', 'price', 'current_price', 'last_price', 'token_price'] if hasattr(side_b_raw, k) or (hasattr(side_b_raw, '__getitem__') and k in side_b_raw)}
-                        except:
-                            side_b = {"id": _safe_get(side_b_raw, "id"), "label": _safe_get(side_b_raw, "label", "")}
-                    else:
-                        side_b = {"id": _safe_get(side_b_raw, "id"), "label": _safe_get(side_b_raw, "label", "")}
-                else:
-                    side_b = side_b_raw.copy() if isinstance(side_b_raw, dict) else {}
+                # Normalize side objects to dictionaries using helper method
+                side_a = self._normalize_side_object(side_a_raw)
+                side_b = self._normalize_side_object(side_b_raw)
                 
                 side_a_id = side_a.get("id") if isinstance(side_a, dict) else None
                 side_b_id = side_b.get("id") if isinstance(side_b, dict) else None
                 side_a_label = (side_a.get("label", "") if isinstance(side_a, dict) else "").lower()
                 side_b_label = (side_b.get("label", "") if isinstance(side_b, dict) else "").lower()
                 
-                # Check if prices are included directly in side_a/side_b (Dome API may include this)
-                if isinstance(side_a, dict):
-                    # Check multiple possible price field names
-                    side_a_price_candidate = (_safe_get(side_a, "price") or 
-                                           _safe_get(side_a, "current_price") or 
-                                           _safe_get(side_a, "last_price") or
-                                           _safe_get(side_a, "token_price") or
-                                           _safe_get(side_a, "yes_price") or
-                                           _safe_get(side_a, "no_price"))
-                    if side_a_price_candidate is not None:
-                        try:
-                            side_a_price = float(side_a_price_candidate)
-                            if price_source != "embedded":
-                                price_source = "embedded"
-                            logger.info(f"✅ Found side_a price in response: {side_a_price}")
-                        except (ValueError, TypeError):
-                            logger.debug(f"⚠️ side_a price value invalid: {side_a_price_candidate}")
-                            side_a_price = None
+                # Extract prices from sides using helper method
+                if side_a_price is None:
+                    extracted_price = self._extract_price_from_side(side_a, "side_a")
+                    if extracted_price is not None:
+                        side_a_price = extracted_price
+                        if price_source != "embedded":
+                            price_source = "embedded"
+                        logger.info(f"Found side_a price in response: {side_a_price}")
                     else:
-                        logger.debug(f"⚠️ No price found in side_a. Available fields: {list(side_a.keys()) if isinstance(side_a, dict) else 'N/A'}")
+                        logger.debug(f"No price found in side_a. Available fields: {list(side_a.keys()) if isinstance(side_a, dict) else 'N/A'}")
                 
-                if isinstance(side_b, dict):
-                    # Check multiple possible price field names
-                    side_b_price_candidate = (_safe_get(side_b, "price") or 
-                                           _safe_get(side_b, "current_price") or 
-                                           _safe_get(side_b, "last_price") or
-                                           _safe_get(side_b, "token_price") or
-                                           _safe_get(side_b, "yes_price") or
-                                           _safe_get(side_b, "no_price"))
-                    if side_b_price_candidate is not None:
-                        try:
-                            side_b_price = float(side_b_price_candidate)
-                            if price_source != "embedded":
-                                price_source = "embedded"
-                            logger.info(f"✅ Found side_b price in response: {side_b_price}")
-                        except (ValueError, TypeError):
-                            logger.debug(f"⚠️ side_b price value invalid: {side_b_price_candidate}")
-                            side_b_price = None
+                if side_b_price is None:
+                    extracted_price = self._extract_price_from_side(side_b, "side_b")
+                    if extracted_price is not None:
+                        side_b_price = extracted_price
+                        if price_source != "embedded":
+                            price_source = "embedded"
+                        logger.info(f"Found side_b price in response: {side_b_price}")
                     else:
-                        logger.debug(f"⚠️ No price found in side_b. Available fields: {list(side_b.keys()) if isinstance(side_b, dict) else 'N/A'}")
+                        logger.debug(f"No price found in side_b. Available fields: {list(side_b.keys()) if isinstance(side_b, dict) else 'N/A'}")
             else:
                 # We already have prices from market-level, but we still need side labels for Yes/No determination
-                if not isinstance(side_a_raw, dict):
-                    if hasattr(side_a_raw, '__dict__'):
-                        side_a = side_a_raw.__dict__.copy()
-                    else:
-                        side_a = {"id": _safe_get(side_a_raw, "id"), "label": _safe_get(side_a_raw, "label", "")}
-                else:
-                    side_a = side_a_raw.copy() if isinstance(side_a_raw, dict) else {}
-                
-                if not isinstance(side_b_raw, dict):
-                    if hasattr(side_b_raw, '__dict__'):
-                        side_b = side_b_raw.__dict__.copy()
-                    else:
-                        side_b = {"id": _safe_get(side_b_raw, "id"), "label": _safe_get(side_b_raw, "label", "")}
-                else:
-                    side_b = side_b_raw.copy() if isinstance(side_b_raw, dict) else {}
+                # Normalize side objects to get labels
+                side_a = self._normalize_side_object(side_a_raw)
+                side_b = self._normalize_side_object(side_b_raw)
                 
                 side_a_id = side_a.get("id") if isinstance(side_a, dict) else None
                 side_b_id = side_b.get("id") if isinstance(side_b, dict) else None
@@ -1255,19 +1423,19 @@ class PredictionMarketsService:
                             price_a = self._fetch_token_price(side_a_id, use_rate_limiter=True)
                             yes_price_temp = price_a
                             if price_a is not None:
-                                logger.debug(f"✅ Fetched yes_price (side_a): {price_a}")
+                                logger.debug(f"Fetched yes_price (side_a): {price_a}")
                                 price_source = "api"
                         elif side_b_is_yes and side_b_id:
                             price_b = self._fetch_token_price(side_b_id, use_rate_limiter=True)
                             yes_price_temp = price_b
                             if price_b is not None:
-                                logger.debug(f"✅ Fetched yes_price (side_b): {price_b}")
+                                logger.debug(f"Fetched yes_price (side_b): {price_b}")
                                 price_source = "api"
                         elif side_a_id:  # Fallback: assume side_a is Yes if we can't determine
                             price_a = self._fetch_token_price(side_a_id, use_rate_limiter=True)
                             yes_price_temp = price_a
                             if price_a is not None:
-                                logger.debug(f"✅ Fetched yes_price (side_a, fallback): {price_a}")
+                                logger.debug(f"Fetched yes_price (side_a, fallback): {price_a}")
                                 price_source = "api"
                     
                     # Second price fetch - rate limiter will ensure 1 second delay
@@ -1278,7 +1446,7 @@ class PredictionMarketsService:
                                 price_a = self._fetch_token_price(side_a_id, use_rate_limiter=True)
                                 no_price_temp = price_a
                                 if price_a is not None:
-                                    logger.debug(f"✅ Fetched no_price (side_a): {price_a}")
+                                    logger.debug(f"Fetched no_price (side_a): {price_a}")
                                     if price_source != "api":
                                         price_source = "api"
                         elif side_a_is_yes and side_a_id and yes_price_temp is not None:
@@ -1287,14 +1455,14 @@ class PredictionMarketsService:
                                 price_b = self._fetch_token_price(side_b_id, use_rate_limiter=True)
                                 no_price_temp = price_b
                                 if price_b is not None:
-                                    logger.debug(f"✅ Fetched no_price (side_b): {price_b}")
+                                    logger.debug(f"Fetched no_price (side_b): {price_b}")
                                     if price_source != "api":
                                         price_source = "api"
                         elif side_b_id and yes_price_temp is not None:  # Fallback: assume side_b is No
                             price_b = self._fetch_token_price(side_b_id, use_rate_limiter=True)
                             no_price_temp = price_b
                             if price_b is not None:
-                                logger.debug(f"✅ Fetched no_price (side_b, fallback): {price_b}")
+                                logger.debug(f"Fetched no_price (side_b, fallback): {price_b}")
                                 if price_source != "api":
                                     price_source = "api"
                 else:
@@ -1319,8 +1487,9 @@ class PredictionMarketsService:
                     no_price = 1.0
                     price_source = "resolved"
             
-            # If still no prices and market is open, estimate 50/50 as fallback
+            # Ensure prices always sum to 1 - handle missing prices
             if yes_price is None and no_price is None:
+                # Both missing - use 50/50 fallback
                 status = _safe_get(market, "status", "").lower()
                 market_title = market.get('title', 'unknown')[:50]
                 if status == "open":
@@ -1330,12 +1499,23 @@ class PredictionMarketsService:
                     if self.is_free_tier:
                         logger.debug(f"Free tier: No embedded price for '{market_title}...' - using 50/50 fallback")
                     else:
-                        logger.warning(f"⚠️ No price data found for open market '{market_title}...' - using 50/50 fallback. "
+                        logger.warning(f"No price data found for open market '{market_title}...' - using 50/50 fallback. "
                                      f"Platform: {platform}, side_a fields: {list(side_a.keys()) if isinstance(side_a, dict) else 'N/A'}, "
                                      f"side_b fields: {list(side_b.keys()) if isinstance(side_b, dict) else 'N/A'}")
                 else:
-                    # For closed markets without prices, log a warning
-                    logger.debug(f"No price data available for closed market {market_title}...")
+                    # For closed markets without prices, use 50/50 as fallback
+                    yes_price = 0.5
+                    no_price = 0.5
+                    price_source = "fallback"
+                    logger.debug(f"No price data available for closed market {market_title}... - using 50/50 fallback")
+            elif yes_price is None and no_price is not None:
+                # YES missing - calculate from NO
+                yes_price = max(0.0, 1.0 - no_price)
+                logger.debug(f"YES price missing, calculated from NO: {yes_price}")
+            elif no_price is None and yes_price is not None:
+                # NO missing - calculate from YES
+                no_price = max(0.0, 1.0 - yes_price)
+                logger.debug(f"NO price missing, calculated from YES: {no_price}")
         
         # Normalize to ensure they sum to 1 (if we have both)
         if yes_price is not None and no_price is not None:
@@ -1343,6 +1523,10 @@ class PredictionMarketsService:
             if total > 0:
                 yes_price = yes_price / total
                 no_price = no_price / total
+            else:
+                # Both are 0 or negative - fallback to 50/50
+                yes_price = 0.5
+                no_price = 0.5
         
         return yes_price, no_price, price_source
     
@@ -1523,58 +1707,80 @@ class PredictionMarketsService:
             
             # Normalize data
             normalized_markets = []
-            # On free tier, fetch prices for top markets only (within rate limit budget)
-            # Free tier: 10 queries per 10 seconds
-            # - 4 queries used for fetching markets (2 pages each platform)
-            # - 6 queries remaining for price fetching
-            # - Each Polymarket market needs 2 queries (yes + no prices)
-            # - So we can fetch prices for top 3 Polymarket markets
-            # - Or top 5 markets (some might be Kalshi with embedded prices)
+            
+            # Optimize price fetching: prioritize markets with embedded prices (Kalshi markets)
+            # Sort markets to prioritize those with embedded prices (avoids API calls)
+            filtered_markets.sort(
+                key=lambda x: (
+                    x.get("has_embedded_price", False),  # Markets with embedded prices first
+                    x.get("relevance") == "high",  # Then by relevance
+                    x.get("relevance") == "medium",
+                ),
+                reverse=True
+            )
             
             if self.is_free_tier:
-                # On free tier, fetch prices for top 5 markets only
-                max_price_fetch_markets = 5
+                # On free tier, fetch prices for top markets only
+                # Prioritize Kalshi markets (have embedded prices) to minimize API calls
+                max_price_fetch_markets = FREE_TIER_MAX_PRICE_FETCH_MARKETS
                 fetch_prices_enabled = True
-                logger.info(f"Free tier: Will fetch prices for top {max_price_fetch_markets} markets (within rate limit)")
+                
+                # Count how many markets need price fetching (Polymarket markets without embedded prices)
+                markets_needing_price_fetch = [
+                    m for m in filtered_markets[:max_price_fetch_markets]
+                    if m.get("platform", "polymarket") == "polymarket" and not m.get("has_embedded_price", False)
+                ]
+                price_queries_needed = len(markets_needing_price_fetch) * 2  # 2 queries per market
+                
+                logger.info(f"Free tier: Will fetch prices for {len(markets_needing_price_fetch)} Polymarket markets "
+                          f"({price_queries_needed} queries, ~{price_queries_needed} seconds). "
+                          f"Kalshi markets have embedded prices (no API calls needed).")
             else:
                 # On paid tier, respect FETCH_MARKET_PRICES env var
                 fetch_prices_enabled = os.getenv('FETCH_MARKET_PRICES', 'false').lower() == 'true'
-                max_price_fetch_markets = 20  # Paid tier can fetch more
-            
-            if fetch_prices_enabled and not self.is_free_tier:
-                # Count Polymarket markets that need price fetching
-                polymarket_count = sum(1 for m in filtered_markets if m.get("platform", "polymarket") == "polymarket")
-                total_price_queries_needed = polymarket_count * 2  # 2 prices per Polymarket market
-                logger.info(f"💰 Price fetching enabled: Will fetch prices for {polymarket_count} Polymarket markets "
-                          f"({total_price_queries_needed} queries, ~{total_price_queries_needed} seconds)")
+                max_price_fetch_markets = PAID_TIER_MAX_PRICE_FETCH_MARKETS  # Paid tier can fetch more
+                
+                if fetch_prices_enabled:
+                    # Count Polymarket markets that need price fetching
+                    polymarket_count = sum(1 for m in filtered_markets if m.get("platform", "polymarket") == "polymarket")
+                    total_price_queries_needed = polymarket_count * 2  # 2 prices per Polymarket market
+                    logger.info(f"Price fetching enabled: Will fetch prices for {polymarket_count} Polymarket markets "
+                              f"({total_price_queries_needed} queries, ~{total_price_queries_needed} seconds)")
             
             for idx, m in enumerate(filtered_markets):
                 # Log first market structure for debugging (only once per refresh)
                 if len(normalized_markets) == 0:
                     import json
-                    logger.info(f"🔍 Sample market structure from Dome API - Top-level keys: {list(m.keys())[:30]}")
+                    logger.info(f"Sample market structure from Dome API - Top-level keys: {list(m.keys())[:30]}")
                     if "side_a" in m:
                         side_a_sample = m.get("side_a")
                         if isinstance(side_a_sample, dict):
-                            logger.info(f"🔍 Sample side_a fields: {list(side_a_sample.keys())}")
-                            logger.info(f"🔍 Sample side_a values: {json.dumps({k: v for k, v in list(side_a_sample.items())[:10]}, default=str)}")
+                            logger.info(f"Sample side_a fields: {list(side_a_sample.keys())}")
+                            logger.info(f"Sample side_a values: {json.dumps({k: v for k, v in list(side_a_sample.items())[:10]}, default=str)}")
                         else:
-                            logger.info(f"🔍 Sample side_a type: {type(side_a_sample)}, value: {str(side_a_sample)[:200]}")
+                            logger.info(f"Sample side_a type: {type(side_a_sample)}, value: {str(side_a_sample)[:200]}")
                     if "side_b" in m:
                         side_b_sample = m.get("side_b")
                         if isinstance(side_b_sample, dict):
-                            logger.info(f"🔍 Sample side_b fields: {list(side_b_sample.keys())}")
-                            logger.info(f"🔍 Sample side_b values: {json.dumps({k: v for k, v in list(side_b_sample.items())[:10]}, default=str)}")
+                            logger.info(f"Sample side_b fields: {list(side_b_sample.keys())}")
+                            logger.info(f"Sample side_b values: {json.dumps({k: v for k, v in list(side_b_sample.items())[:10]}, default=str)}")
                     # Check for any price-related fields at market level
                     price_fields = [k for k in m.keys() if 'price' in k.lower() or 'yes' in k.lower() or 'no' in k.lower()]
                     if price_fields:
-                        logger.info(f"🔍 Found price-related fields at market level: {price_fields}")
+                        logger.info(f"Found price-related fields at market level: {price_fields}")
                 
-                # On free tier, only fetch prices for top N markets to stay within rate limits
-                # On paid tier, fetch prices for all markets if enabled
-                should_fetch_price = fetch_prices_enabled and (
-                    not self.is_free_tier or idx < max_price_fetch_markets
-                )
+                # On free tier, only fetch prices for Polymarket markets without embedded prices
+                # Kalshi markets have embedded prices, so skip API calls for them
+                if self.is_free_tier:
+                    # Only fetch prices for Polymarket markets without embedded prices
+                    is_polymarket = m.get("platform", "polymarket") == "polymarket"
+                    has_embedded = m.get("has_embedded_price", False)
+                    should_fetch_price = fetch_prices_enabled and is_polymarket and not has_embedded and idx < max_price_fetch_markets
+                else:
+                    # On paid tier, fetch prices for all markets if enabled
+                    should_fetch_price = fetch_prices_enabled and (
+                        not self.is_free_tier or idx < max_price_fetch_markets
+                    )
                 
                 # Normalize market data (fetch prices for top markets on free tier)
                 normalized_markets.append(self._normalize_market_data(m, fetch_price=should_fetch_price))
@@ -1583,21 +1789,14 @@ class PredictionMarketsService:
                 if should_fetch_price and m.get("platform", "polymarket") == "polymarket":
                     progress = idx + 1
                     if self.is_free_tier:
-                        logger.info(f"💰 Free tier: Fetching prices for market {progress}/{max_price_fetch_markets}")
+                        logger.info(f"Free tier: Fetching prices for market {progress}/{max_price_fetch_markets}")
                     else:
                         polymarket_count = sum(1 for m in filtered_markets if m.get("platform", "polymarket") == "polymarket")
-                        logger.info(f"💰 Price fetching progress: {progress}/{polymarket_count} Polymarket markets processed")
+                        logger.info(f"Price fetching progress: {progress}/{polymarket_count} Polymarket markets processed")
             
-            # Filter out any resolved markets that may have slipped through (safety check)
-            # Log how many are being filtered out for debugging
-            before_filter = len(normalized_markets)
-            resolved_markets = [m for m in normalized_markets if m.get("is_resolved", False)]
-            normalized_markets = [m for m in normalized_markets if not m.get("is_resolved", False)]
-            after_filter = len(normalized_markets)
-            if before_filter != after_filter:
-                logger.info(f"Filtered out {before_filter - after_filter} resolved markets after normalization ({before_filter} -> {after_filter})")
-                for resolved in resolved_markets[:3]:  # Log first 3 for debugging
-                    logger.debug(f"  - Resolved market: {resolved.get('question', 'unknown')[:50]} (is_resolved={resolved.get('is_resolved')})")
+            # Note: We no longer filter out resolved markets here because we already filter them
+            # in _filter_economic_markets (except for recently resolved ones within grace period)
+            # This allows recently resolved markets to be displayed
             
             # Save to cache
             self._save_cache(normalized_markets)
@@ -1637,59 +1836,76 @@ class PredictionMarketsService:
     def get_prediction_markets(self, force_refresh: bool = False) -> Dict[str, Any]:
         """Get filtered prediction markets with rate limiting workarounds
         
-        Strategy:
-        1. If cache is valid and not forcing refresh, return cached data immediately
-        2. If refresh is needed, check if one is already in progress (deduplication)
-        3. If refresh in progress, return stale cache immediately (don't wait)
-        4. If no refresh in progress, start background refresh and return stale cache
+        Strategy (similar to news feed):
+        1. Load cache (even if stale) for fast UI response
+        2. Check if should fetch new markets (based on last_fetch interval)
+        3. If cache exists and not forcing refresh, return stale cache immediately
+        4. If should fetch new, trigger background refresh (don't wait)
         5. Only block and wait if force_refresh=True AND no refresh in progress
         
         On free tier, be more conservative with refreshes to avoid hitting rate limits.
         """
         try:
-            # On free tier, be more conservative with refreshes
-            if self.is_free_tier and not force_refresh:
-                # Check if cache is still valid (30 minutes)
-                if self._is_cache_valid():
-                    logger.info("Using cached prediction markets data (free tier)")
-                    return {
-                        "status": "success",
-                        "markets": self.cached_markets,
-                        "cached": True,
-                        "timestamp": self.cache_timestamp.isoformat() if self.cache_timestamp else None
-                    }
-                
-                # On free tier, only refresh if cache is very stale (>30 min)
-                if self.cache_timestamp:
-                    cache_age = datetime.now(timezone.utc) - self.cache_timestamp.replace(tzinfo=timezone.utc)
-                    cache_age_minutes = cache_age.total_seconds() / 60
-                    
-                    if cache_age_minutes < self.cache_expiration_minutes:
-                        logger.info(f"Cache still fresh ({cache_age_minutes:.1f} min old), using cached data (free tier)")
-                        return {
-                            "status": "success",
-                            "markets": self.cached_markets,
-                            "cached": True,
-                            "stale": False,
-                            "timestamp": self.cache_timestamp.isoformat() if self.cache_timestamp else None
-                        }
+            # Load cache (even if stale) for fast UI response - similar to news feed pattern
+            cached_markets = None
+            last_fetch = None
             
-            # Fast path: use cache if valid and not forcing refresh (paid tier or force refresh)
-            if not force_refresh and self._is_cache_valid():
-                logger.info("Using cached prediction markets data")
+            if self.use_persistent_cache:
+                # Use persistent cache with metadata batching
+                cache_result = self.persistent_cache.load_markets(allow_stale=True, return_metadata=True)
+                if cache_result and isinstance(cache_result, dict):
+                    cached_markets = cache_result.get('markets', [])
+                    last_fetch = cache_result.get('last_fetch')
+                    if cached_markets:
+                        # Update local cache state
+                        self.cached_markets = cached_markets
+                        if last_fetch:
+                            try:
+                                self.cache_timestamp = datetime.fromisoformat(last_fetch.replace('Z', '+00:00'))
+                            except (ValueError, TypeError):
+                                pass
+                elif cache_result:
+                    cached_markets = cache_result
+                    self.cached_markets = cached_markets
+            else:
+                # Fallback: use existing cache loading
+                if self.cached_markets:
+                    cached_markets = self.cached_markets
+            
+            # Check if should fetch new markets (similar to news feed)
+            should_fetch_new = False
+            if not force_refresh:
+                if self.use_persistent_cache:
+                    # Use batched metadata to avoid extra Firebase call
+                    should_fetch_new = self.persistent_cache.should_fetch_new_markets(
+                        fetch_interval_minutes=self._background_refresh_interval_minutes,
+                        last_fetch=last_fetch
+                    )
+                else:
+                    # Fallback: check cache age
+                    if self.cache_timestamp:
+                        cache_age = datetime.now(timezone.utc) - self.cache_timestamp.replace(tzinfo=timezone.utc)
+                        cache_age_minutes = cache_age.total_seconds() / 60
+                        should_fetch_new = cache_age_minutes >= self._background_refresh_interval_minutes
+                    else:
+                        should_fetch_new = True
+            else:
+                should_fetch_new = True
+            
+            # If cache exists and not forcing refresh, return stale cache immediately (fast UI)
+            if cached_markets and not force_refresh:
+                logger.info(f"Returning cached prediction markets ({len(cached_markets)} markets) for fast UI loading")
                 
-                # Trigger background refresh if cache is getting stale (but don't wait)
-                cache_age = datetime.now(timezone.utc) - self.cache_timestamp.replace(tzinfo=timezone.utc)
-                cache_age_minutes = cache_age.total_seconds() / 60
-                
-                # If cache is older than background refresh interval, trigger background refresh
-                if cache_age_minutes >= self._background_refresh_interval_minutes:
+                # Trigger background refresh if should fetch new (but don't wait)
+                if should_fetch_new:
+                    logger.info("Cache is stale, triggering background refresh")
                     self._trigger_background_refresh()
                 
                 return {
                     "status": "success",
-                    "markets": self.cached_markets,
+                    "markets": cached_markets,
                     "cached": True,
+                    "stale": should_fetch_new,  # Mark as stale if refresh is needed
                     "timestamp": self.cache_timestamp.isoformat() if self.cache_timestamp else None
                 }
             
@@ -1698,10 +1914,10 @@ class PredictionMarketsService:
                 if self._refresh_in_progress:
                     # Another request is already refreshing - return stale cache immediately
                     logger.info("Refresh already in progress, returning stale cache")
-                    if self.cached_markets:
+                    if cached_markets:
                         return {
                             "status": "success",
-                            "markets": self.cached_markets,
+                            "markets": cached_markets,
                             "cached": True,
                             "stale": True,
                             "refresh_in_progress": True,
@@ -1714,7 +1930,7 @@ class PredictionMarketsService:
                 # Mark refresh as in progress
                 self._refresh_in_progress = True
             
-            # Perform refresh
+            # Perform refresh (only blocks if force_refresh=True)
             try:
                 result = self._do_refresh(force_refresh=force_refresh)
                 return result
