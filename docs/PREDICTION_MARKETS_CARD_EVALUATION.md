@@ -1,383 +1,565 @@
-# Prediction Markets Card - Feature Evaluation
+# Prediction Markets Card - System Evaluation & Improvement Recommendations
 
 ## Executive Summary
 
-This document evaluates the feasibility and implementation approach for adding a "Prediction Markets" card to the Overview page that displays retail trader predictions for currency movements from platforms like Kalshi and Polymarket.
+The Prediction Markets card is a well-architected feature that aggregates crowd wisdom from Polymarket and Kalshi to provide sentiment indicators for economic events relevant to forex trading. The system demonstrates solid engineering with proper caching, error handling, and filtering logic. However, there are significant opportunities to enhance its value specifically for forex traders by improving currency pair relevance, adding real-time price updates, and better integration with forex-specific data.
 
-## 1. Feasibility Assessment
+---
 
-### API Availability ✅
+## Current System Architecture
 
-**Kalshi API:**
-- REST API available for market data access
-- Provides order books, market statistics, trades, and portfolios
-- Requires API authentication (API keys + RSA-PSS signatures)
-- Official Python SDK available
-- Documentation: https://docs.kalshi.com
-- **Test Result**: Requires account setup and authentication - cannot test without credentials
+### Data Flow
 
-**Polymarket API:**
-- ✅ **REST API accessible** - No authentication required for public data
-- ✅ **CLOB API**: `https://clob.polymarket.com/markets` - Returns 1000+ markets per page
-- ✅ **Gamma API**: `https://gamma-api.polymarket.com/markets` - Returns market metadata
-- ✅ **Test Result**: Successfully fetched 5,000+ markets, found 570+ economic-related markets
-- ✅ **Ready to use immediately** - No setup required
-- Documentation: https://docs.polymarket.com
+The system follows a clean three-tier architecture:
 
-**Unified API Options:**
-- **Predexon**: Unified API for prediction market data, aggregates Polymarket and Kalshi data
-  - Cross-platform market matching
-  - Single API key access
-  - Documentation: https://docs.predexon.com
+1. **Frontend Layer** (`src/components/Overview.jsx`, `src/hooks/usePredictionMarkets.js`)
+   - React component with loading/error/empty states
+   - Custom hook for data fetching and state management
+   - Displays probability bars, market metadata, and resolution dates
 
-- **PolyRouter**: Standardized interface for normalized prediction market data
-  - Supports Kalshi, Polymarket, and others
-  - Single API key
-  - Website: https://www.polyrouter.io
+2. **API Layer** (`backend/app.py` - `/api/prediction-markets`)
+   - Flask endpoint with CORS support
+   - Handles refresh parameter for cache invalidation
+   - Returns standardized JSON response format
 
-- **Dome**: Unified API for prediction markets
-  - Live and historical data across multiple platforms
-  - YC-backed company
+3. **Service Layer** (`backend/services/prediction_markets_service.py`)
+   - Fetches data from Dome API (Polymarket + Kalshi)
+   - Implements sophisticated filtering for economic/forex relevance
+   - Caches results (Firebase persistent cache or file-based fallback)
+   - Handles rate limiting and API tier management (free vs paid)
 
-### Technical Feasibility: HIGH
+### Key Components
 
-Both platforms and unified APIs are accessible, making integration technically feasible.
+**Filtering System:**
+- Keyword-based matching for economic events (Fed, inflation, GDP, central banks, forex pairs)
+- Relevance scoring (high/medium/low) based on keyword importance
+- Exclusion filters for false positives (sports, entertainment, crypto price movements)
+- Date-based filtering (prioritizes active/future markets, allows recently resolved)
 
-## 2. Current Architecture Analysis
+**Caching Strategy:**
+- 10-minute cache expiration (paid tier) or 30-minute (free tier)
+- Firebase persistent cache with file-based fallback
+- Background refresh mechanism to keep data fresh
+- Graceful degradation on API failures
 
-### Existing Card Patterns
+**Data Normalization:**
+- Converts platform-specific formats (Polymarket/Kalshi) to unified structure
+- Extracts Yes/No prices from market tokens
+- Calculates resolution status and historical flags
+- Assigns related_event categories (FOMC Meeting, CPI Release, etc.)
 
-The Overview page follows a consistent card structure:
-- `cards-grid-container` and `cards-grid-container-second` for layout
-- Cards include:
-  - Header with title and InfoIcon
-  - Controls (refresh buttons, filters)
-  - Content sections with data visualization
-  - Loading and error states
+---
 
-### Existing Data Fetching Patterns
+## Strengths
 
-Current backend endpoints follow this pattern:
-- `/api/market-sentiment` - Market sentiment analysis
-- `/api/forex-prices` - Real-time forex prices
-- `/api/economic-calendar` - Economic calendar events
-- `/api/economy-indicators/<country>` - Economic indicators
+### 1. Robust Filtering Logic
 
-All endpoints:
-- Handle CORS preflight requests
-- Return JSON with status/data structure
-- Include error handling and fallback mechanisms
-- Support caching strategies
+The keyword-based filtering system is comprehensive and well-designed. It includes:
+- **200+ economic keywords** covering Fed decisions, inflation, GDP, employment, central banks, and forex pairs
+- **Smart relevance scoring** that prioritizes high-impact events (Fed, inflation, NFP) over general economic terms
+- **Effective exclusion patterns** that filter out sports betting, entertainment, and crypto price markets
+- **Word boundary matching** for "fed" to avoid false positives from "federal" in unrelated contexts
 
-### Frontend Data Fetching
+### 2. Excellent Error Handling
 
-Frontend uses:
-- Custom hooks (`useForexPrices`, `useMarketSentiment`)
-- Config-based endpoint management (`src/config.js`)
-- React state management with loading/error states
-- Automatic refresh capabilities
+The system demonstrates production-ready error handling:
+- Graceful fallback to cached data on API failures
+- Maintains existing data on transient errors (doesn't clear UI)
+- Comprehensive logging for debugging
+- User-friendly error states with retry functionality
 
-## 3. Implementation Approach
+### 3. Performance Optimization
 
-### Recommended Architecture
+Several optimizations ensure good performance:
+- **Early stopping** when enough markets are found (saves API calls)
+- **Rate limiting** with budget tracking for free tier (10 calls per 10 seconds)
+- **Background refresh** to avoid blocking user requests
+- **Embedded price detection** to prioritize markets with prices already available
 
-**Option A: Direct API Integration (Per Platform)**
+### 4. Multi-Platform Support
+
+The service supports both Polymarket and Kalshi, with platform detection and unified normalization. This provides broader market coverage and redundancy.
+
+### 5. Clean Code Structure
+
+The codebase is well-organized with:
+- Clear separation of concerns (fetching, filtering, normalization)
+- Comprehensive documentation
+- Type hints and error handling throughout
+- Configurable tier-based limits (free vs paid)
+
+---
+
+## Weaknesses & Issues
+
+### 1. Limited Forex-Specific Relevance
+
+**Problem:** While the system includes forex pair keywords (EUR/USD, GBP/USD, etc.), the filtering doesn't prioritize markets that directly impact specific currency pairs. A market about "Fed rate hike" is relevant to all USD pairs, but the system doesn't indicate which pairs are most affected.
+
+**Impact:** Forex traders need to manually interpret which markets affect their trading pairs. The system shows generic "Economic Event" or "FOMC Meeting" badges but doesn't link to specific currency pairs.
+
+**Example:** A market predicting "Fed will raise rates by 0.25%" affects EUR/USD, GBP/USD, USD/JPY, and USD/CHF differently, but the UI doesn't show this relationship.
+
+### 2. No Currency Pair Mapping
+
+**Problem:** The `related_event` field includes some forex pairs (EUR/USD, GBP/USD, USD/JPY) but only when those exact strings appear in the market title. Most markets don't mention specific pairs, so they get generic labels like "FOMC Meeting" or "Economic Event."
+
+**Impact:** Traders can't quickly see which markets are relevant to their trading pairs. They must read each market question and manually determine relevance.
+
+**Missing Feature:** The system should map economic events to affected currency pairs. For example:
+- Fed decisions → USD pairs (EUR/USD, GBP/USD, USD/JPY, USD/CHF)
+- ECB decisions → EUR pairs (EUR/USD, EUR/GBP, EUR/JPY)
+- BOE decisions → GBP pairs (GBP/USD, EUR/GBP, GBP/JPY)
+- BOJ decisions → JPY pairs (USD/JPY, EUR/JPY, GBP/JPY)
+
+### 3. Price Data Limitations
+
+**Problem:** The system relies on embedded prices from the Dome API, but price fetching is disabled by default (`FETCH_MARKET_PRICES=false`). This means:
+- Prices may be stale or estimated
+- Resolved markets show 0% or 100% (final outcome) rather than historical probabilities
+- No real-time price updates for active markets
+
+**Impact:** Traders can't see how market sentiment is changing in real-time. The probability bars may reflect outdated information.
+
+### 4. No Historical Accuracy Tracking
+
+**Problem:** The system shows historical/resolved markets but doesn't track whether predictions were accurate. This misses an opportunity to show:
+- Which prediction markets were most accurate
+- Historical performance of crowd wisdom
+- Confidence calibration (do high-probability predictions come true more often?)
+
+**Impact:** Traders can't assess the reliability of prediction markets as a signal. They don't know if 70% probability markets actually resolve correctly 70% of the time.
+
+### 5. Limited Integration with Other FXSentinel Features
+
+**Problem:** The Prediction Markets card exists in isolation. It doesn't integrate with:
+- Economic Calendar (to show which markets relate to upcoming events)
+- Market Sentiment (to compare prediction market sentiment with technical sentiment)
+- Major Pairs Sentiment (to correlate predictions with actual price movements)
+- News Feed (to show news articles related to prediction markets)
+
+**Impact:** Traders must manually connect the dots between prediction markets and other data sources. The feature feels disconnected from the rest of the platform.
+
+### 6. No Time-Based Filtering for Traders
+
+**Problem:** The system shows markets resolving in days/weeks/months, but doesn't prioritize by trading relevance. Forex traders care most about:
+- Markets resolving within 24-48 hours (immediate impact)
+- Markets resolving before major economic releases (pre-release sentiment)
+- Markets resolving during trading hours (intraday impact)
+
+**Impact:** Traders see a mix of short-term and long-term markets without clear prioritization for actionable trading signals.
+
+### 7. Missing Volume/Liquidity Context
+
+**Problem:** While the system displays volume and liquidity when available, it doesn't:
+- Highlight high-volume markets (more reliable signals)
+- Warn about low-liquidity markets (less reliable)
+- Show volume trends (is sentiment shifting?)
+
+**Impact:** Traders can't distinguish between high-confidence and low-confidence predictions. A 70% probability market with $10k volume is less reliable than one with $1M volume.
+
+### 8. No User Preferences/Filtering
+
+**Problem:** The system shows a fixed set of markets (top 50 after filtering) with no user control over:
+- Which currency pairs to prioritize
+- Which event types to show/hide
+- Time horizon preferences (short-term vs long-term)
+- Relevance threshold (high only vs all)
+
+**Impact:** Traders see markets that may not be relevant to their trading strategy. They can't customize the view for their needs.
+
+---
+
+## Improvement Recommendations for Forex Traders
+
+### Priority 1: Currency Pair Mapping & Relevance
+
+**Enhancement:** Add automatic currency pair mapping to each market based on the economic event type and affected currencies.
+
+**Implementation:**
+1. Extend the `related_event` logic to include `affected_currency_pairs` array
+2. Create a mapping function that determines which pairs are affected:
+   ```python
+   def _get_affected_currency_pairs(market, related_event, matched_keywords):
+       pairs = []
+       if "fed" in matched_keywords or "fomc" in matched_keywords:
+           pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF"]
+       elif "ecb" in matched_keywords:
+           pairs = ["EUR/USD", "EUR/GBP", "EUR/JPY", "EUR/CHF"]
+       elif "boe" in matched_keywords:
+           pairs = ["GBP/USD", "EUR/GBP", "GBP/JPY"]
+       # ... etc
+       return pairs
+   ```
+3. Display currency pair badges in the UI next to each market
+4. Add filtering by currency pair (user can select which pairs to show)
+
+**Benefits:**
+- Traders immediately see which markets affect their trading pairs
+- Reduces cognitive load (no manual interpretation needed)
+- Enables pair-specific filtering
+
+**Example UI Enhancement:**
 ```
-Frontend → Backend Endpoint → Kalshi/Polymarket APIs → Response
-```
-- Pros: Direct control, no third-party dependencies
-- Cons: Multiple API integrations, more maintenance
-
-**Option B: Unified API Integration**
-```
-Frontend → Backend Endpoint → Predexon/PolyRouter → Multiple Platforms → Response
-```
-- Pros: Single integration point, normalized data format
-- Cons: Additional third-party dependency, potential cost
-
-**Recommendation: Start with Polymarket (Direct Integration)**
-- ✅ **No authentication required** - Can start building immediately
-- ✅ **5,000+ markets available** - Rich economic data (Fed, inflation, indicators)
-- ✅ **REST API** - Easy integration with existing Python `requests` library
-- ✅ **Tested and working** - Successfully fetched real market data
-- Can add Kalshi or unified APIs later if needed
-
-### Data Structure Considerations
-
-**Prediction Market Data Points:**
-1. **Market Information**
-   - Market ID/Title
-   - Currency pair (e.g., "EUR/USD will be above 1.10")
-   - Resolution date/time
-   - Current probability/price
-
-2. **Market Statistics**
-   - Total volume
-   - Open interest
-   - Yes/No prices
-   - Last trade price
-
-3. **Sentiment Indicators**
-   - Retail bias (bullish/bearish)
-   - Confidence level (based on volume/liquidity)
-   - Time to resolution
-
-**Filtering Strategy:**
-- Filter markets by currency pairs (EUR, USD, GBP, JPY, etc.)
-- Filter by resolution timeframe (near-term: 1-7 days, medium-term: 1-4 weeks)
-- Prioritize markets with higher volume/liquidity
-- Focus on directional markets (price above/below thresholds)
-
-### Backend Endpoint Design
-
-**Proposed Endpoint:** `/api/prediction-markets`
-
-**Query Parameters:**
-- `refresh` (optional): Force refresh cache
-- `currency` (optional): Filter by currency (EUR, USD, GBP, JPY)
-- `timeframe` (optional): Filter by resolution timeframe
-
-**Response Structure:**
-```json
-{
-  "status": "success",
-  "data": {
-    "markets": [
-      {
-        "id": "string",
-        "platform": "kalshi" | "polymarket",
-        "title": "string",
-        "currency_pair": "EUR/USD",
-        "question": "EUR/USD will be above 1.10 by Dec 31",
-        "resolution_date": "ISO8601",
-        "yes_price": 0.65,
-        "no_price": 0.35,
-        "volume": 12345,
-        "sentiment": "bullish" | "bearish" | "neutral",
-        "confidence": 0.85,
-        "last_updated": "ISO8601"
-      }
-    ],
-    "summary": {
-      "total_markets": 10,
-      "platforms": ["kalshi", "polymarket"],
-      "last_updated": "ISO8601"
-    }
-  }
-}
+Market: "Will the Fed raise rates by 0.25%?"
+Affected Pairs: [EUR/USD] [GBP/USD] [USD/JPY] [USD/CHF]
+Probability: YES 65% | NO 35%
 ```
 
-### Frontend Component Structure
+### Priority 2: Integration with Economic Calendar
 
-**Component Location:** Add to `cards-grid-container-second` alongside Market Sentiment
+**Enhancement:** Link prediction markets to Economic Calendar events to show pre-release sentiment.
 
-**Component Features:**
-1. **Header Section**
-   - Title: "PREDICTION MARKETS"
-   - InfoIcon with tooltip explaining what prediction markets represent
-   - Refresh button
+**Implementation:**
+1. Match prediction markets to Economic Calendar events by:
+   - Event type (FOMC → Fed Meeting, CPI → Inflation Release)
+   - Resolution date proximity to event date
+   - Keyword matching (event title vs market question)
+2. Display prediction market probabilities in Economic Calendar event cards
+3. Show "Market Sentiment" section in event details with prediction market data
+4. Highlight markets resolving before major releases (pre-release sentiment indicator)
 
-2. **Market List Display**
-   - Grouped by currency pair
-   - Show probability bars (Yes/No prices)
-   - Display volume and sentiment indicators
-   - Color coding: Green (bullish), Red (bearish), Gray (neutral)
+**Benefits:**
+- Traders see crowd wisdom before economic releases
+- Combines fundamental data (calendar) with sentiment data (markets)
+- Provides actionable pre-release trading signals
 
-3. **Filters**
-   - Currency filter (EUR, USD, GBP, JPY, etc.)
-   - Timeframe filter (Near-term, Medium-term)
-   - Sort by volume, time to resolution, or sentiment
+**Example Integration:**
+```
+Economic Calendar Event: FOMC Rate Decision (Jan 15, 2024)
+Prediction Market Sentiment:
+  - Rate Hike: 65% probability (from Polymarket)
+  - Rate Cut: 15% probability
+  - No Change: 20% probability
+```
 
-4. **Empty/Loading States**
-   - Loading spinner during fetch
-   - Empty state if no markets available
-   - Error state with retry button
+### Priority 3: Real-Time Price Updates
 
-## 4. Challenges and Solutions
+**Enhancement:** Enable real-time price fetching and display price change indicators.
 
-### Challenge 1: Currency Market Filtering
+**Implementation:**
+1. Enable price fetching for top markets (`FETCH_MARKET_PRICES=true` for paid tier)
+2. Implement WebSocket or polling for active markets (update every 30-60 seconds)
+3. Show price change indicators (↑/↓) and percentage change since last update
+4. Highlight markets with significant probability shifts (>5% change)
 
-**Problem:** Prediction markets may not always have direct currency pair markets. Markets might be:
-- Event-based (e.g., "Fed will raise rates")
-- Outcome-based (e.g., "EUR will strengthen")
-- Price-threshold based (e.g., "EUR/USD > 1.10")
+**Benefits:**
+- Traders see sentiment shifts in real-time
+- Enables reactive trading based on market sentiment changes
+- Provides early warning for major sentiment shifts
 
-**Solution:**
-- Implement keyword-based filtering
-- Map economic events to relevant markets
-- Use natural language processing to identify currency-related markets
-- Focus on markets with clear currency implications
+**Example UI Enhancement:**
+```
+Market: "Fed Rate Hike"
+Probability: YES 65% ↑ (+3% in last hour) | NO 35%
+Last Updated: 2 minutes ago
+```
 
-### Challenge 2: Data Normalization
+### Priority 4: Historical Accuracy Dashboard
 
-**Problem:** Kalshi and Polymarket have different data structures
+**Enhancement:** Track prediction market accuracy over time and display performance metrics.
 
-**Solution:**
-- Create a unified data model in backend
-- Transform platform-specific responses to common format
-- Handle missing fields gracefully
-- Use adapter pattern for each platform
+**Implementation:**
+1. Store resolved market outcomes and compare to predictions
+2. Calculate accuracy metrics:
+   - Overall accuracy rate (correct predictions / total predictions)
+   - Accuracy by probability range (e.g., 70-80% predictions resolve correctly 75% of the time)
+   - Accuracy by event type (Fed decisions vs CPI releases)
+3. Display "Market Reliability" badge based on historical accuracy
+4. Show calibration chart (predicted probability vs actual outcome rate)
 
-### Challenge 3: Rate Limiting
+**Benefits:**
+- Traders can assess the reliability of prediction markets
+- Builds trust in the signal quality
+- Identifies which markets/types are most accurate
 
-**Problem:** API rate limits may restrict frequent updates
+**Example Display:**
+```
+Market: "Fed Rate Hike"
+Prediction: 65% YES
+Historical Accuracy: 72% (based on 50 similar markets)
+Reliability: High ⭐⭐⭐⭐
+```
 
-**Solution:**
-- Implement caching (similar to other endpoints)
-- Use reasonable refresh intervals (5-15 minutes)
-- Cache in backend to share across users
-- Implement exponential backoff for rate limit errors
+### Priority 5: Volume & Liquidity Indicators
 
-### Challenge 4: Regulatory Considerations
+**Enhancement:** Enhance volume/liquidity display and add reliability indicators.
 
-**Problem:** Prediction markets have varying legal status
+**Implementation:**
+1. Add volume thresholds for reliability:
+   - High Volume: >$100k (most reliable)
+   - Medium Volume: $10k-$100k (moderately reliable)
+   - Low Volume: <$10k (less reliable, show warning)
+2. Display volume trend (increasing/decreasing)
+3. Show "Market Depth" indicator (liquidity / volume ratio)
+4. Highlight high-volume markets as "High Confidence" signals
 
-**Solution:**
-- Display data for informational purposes only
-- Add disclaimers about data source
-- Ensure compliance with terms of service
-- Consider geoblocking if necessary
+**Benefits:**
+- Traders can filter by signal quality
+- Prevents over-reliance on low-volume markets
+- Identifies most reliable sentiment signals
 
-### Challenge 5: Data Quality and Relevance
+**Example UI Enhancement:**
+```
+Market: "Fed Rate Hike"
+Volume: $250k (High) 📈
+Liquidity: $50k
+Confidence: High ⭐⭐⭐⭐
+```
 
-**Problem:** Not all markets are relevant or have sufficient liquidity
+### Priority 6: Time-Based Prioritization
 
-**Solution:**
-- Filter by minimum volume threshold
-- Prioritize markets with clear currency implications
-- Show confidence indicators based on liquidity
-- Allow users to filter by relevance
+**Enhancement:** Add time-based filtering and prioritization for trading relevance.
 
-## 5. Value Proposition
+**Implementation:**
+1. Categorize markets by resolution timeframe:
+   - Immediate (0-24 hours) - highest priority
+   - Short-term (1-7 days) - high priority
+   - Medium-term (1-4 weeks) - medium priority
+   - Long-term (1+ months) - lower priority
+2. Add countdown timers for markets resolving soon
+3. Group markets by resolution date (Today, This Week, This Month)
+4. Highlight markets resolving during trading hours
 
-### Benefits for Users
+**Benefits:**
+- Traders focus on actionable, near-term signals
+- Reduces noise from long-term markets
+- Enables time-sensitive trading strategies
 
-1. **Retail Sentiment Insight**: See what retail traders are betting on, separate from institutional sentiment
-2. **Crowd Wisdom**: Leverage collective predictions from active traders
-3. **Alternative Data Source**: Complement existing technical and fundamental analysis
-4. **Contrarian Indicators**: Identify when retail sentiment diverges from market sentiment
+**Example UI Enhancement:**
+```
+Resolving Today (2 markets)
+  ⏰ Market A: Resolves in 4 hours
+  ⏰ Market B: Resolves in 8 hours
 
-### Integration with Existing Features
+Resolving This Week (5 markets)
+  📅 Market C: Resolves in 3 days
+  ...
+```
 
-- **Market Sentiment Card**: Compare prediction market sentiment with technical sentiment
-- **Economic Calendar**: Link prediction markets to upcoming economic events
-- **Live News Feed**: Show how news events correlate with prediction market movements
+### Priority 7: User Preferences & Filtering
 
-### Potential Use Cases
+**Enhancement:** Add user-configurable filters and preferences.
 
-1. **Pre-Event Analysis**: Check prediction markets before major economic releases
-2. **Sentiment Divergence**: Identify when retail prediction differs from technical indicators
-3. **Risk Assessment**: Use prediction market probabilities as risk indicators
-4. **Market Timing**: Consider prediction market signals for entry/exit timing
+**Implementation:**
+1. Add filter controls:
+   - Currency pairs (multi-select: EUR/USD, GBP/USD, etc.)
+   - Event types (FOMC, CPI, GDP, etc.)
+   - Time horizon (Today, This Week, This Month, All)
+   - Relevance level (High Only, Medium+, All)
+   - Volume threshold (High Only, Medium+, All)
+2. Save preferences to user profile/localStorage
+3. Add "Favorite Markets" feature (bookmark markets to track)
+4. Add sorting options (Date, Volume, Probability, Relevance)
 
-## 6. Implementation Phases
+**Benefits:**
+- Personalized view for each trader
+- Reduces information overload
+- Improves user experience
 
-### Phase 1: MVP (Minimum Viable Product) - ✅ READY TO START
-- **Polymarket integration** - ✅ Tested and working, no auth required
-- Basic market listing with key data points (Fed decisions, inflation, economic indicators)
-- Filtering by economic relevance (Fed, inflation, GDP, employment)
-- Filter by liquidity threshold and active status
-- Basic UI card matching existing design patterns
-- **Timeline**: Can be implemented this week
+**Example UI Enhancement:**
+```
+Filters:
+[EUR/USD] [GBP/USD] [USD/JPY] [All Pairs]
+[FOMC] [CPI] [GDP] [All Events]
+[Today] [This Week] [This Month] [All Time]
+[High Volume Only] [All Volumes]
 
-### Phase 2: Enhanced Features
-- Add second platform (Kalshi)
-- Advanced filtering and sorting
-- Sentiment aggregation across platforms
-- Historical trend display
+Sort By: [Date] [Volume] [Probability] [Relevance]
+```
 
-### Phase 3: Advanced Features
-- Integration with economic calendar events
-- Comparison with market sentiment card
-- Alert system for significant prediction shifts
-- Detailed market analysis popup
+### Priority 8: Integration with Market Sentiment
 
-## 7. Technical Requirements
+**Enhancement:** Compare prediction market sentiment with technical market sentiment.
 
-### Backend Requirements
-- New service module: `backend/services/prediction_markets_service.py`
-- API key management for Kalshi/Polymarket
-- Caching mechanism (similar to market sentiment)
-- Error handling and fallback logic
+**Implementation:**
+1. Link prediction markets to Major Pairs Sentiment cards
+2. Show correlation between prediction probability and actual price movement
+3. Display "Sentiment Alignment" indicator:
+   - Aligned: Prediction market bullish AND price moving up
+   - Divergence: Prediction market bullish BUT price moving down (potential reversal)
+4. Add "Sentiment Shift" alerts when prediction markets and technical sentiment diverge
 
-### Frontend Requirements
-- New component or section in Overview.jsx
-- Custom hook: `usePredictionMarkets` (optional)
-- CSS styling matching existing card designs
-- Config endpoint addition
+**Benefits:**
+- Identifies trading opportunities from sentiment divergence
+- Validates prediction markets against actual price action
+- Provides multi-signal confirmation
 
-### Dependencies
-- Backend: `requests` library (likely already present)
-- Optional: GraphQL client for Polymarket (if using GraphQL)
-- No new frontend dependencies required
+**Example Display:**
+```
+Market: "Fed Rate Hike" (65% probability)
+EUR/USD Sentiment: Bearish (price down 0.2%)
+Alignment: ✅ Aligned (both bearish on USD strength)
+```
 
-## 8. Recommendations
+---
 
-### Immediate Actions
+## Technical Implementation Details
 
-1. **Start with Polymarket API**
-   - Better API documentation available
-   - More active markets potentially
-   - Can validate concept before adding complexity
+### Backend Changes
 
-2. **Implement Backend Endpoint First**
-   - Create `/api/prediction-markets` endpoint
-   - Test API connectivity and data extraction
-   - Implement filtering and normalization
+**File: `backend/services/prediction_markets_service.py`**
 
-3. **Design Data Model**
-   - Define unified data structure
-   - Identify required vs optional fields
-   - Plan for multi-platform expansion
+1. **Add Currency Pair Mapping Function:**
+```python
+def _get_affected_currency_pairs(self, market: Dict, matched_keywords: List[str], related_event: str) -> List[str]:
+    """Determine which currency pairs are affected by this market"""
+    pairs = []
+    matched_lower = [k.lower() for k in matched_keywords]
+    
+    # Fed/FOMC affects USD pairs
+    if any(k in matched_lower for k in ["fed", "federal reserve", "fomc", "interest rate", "powell"]):
+        pairs.extend(["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "NZD/USD", "USD/CAD"])
+    
+    # ECB affects EUR pairs
+    if any(k in matched_lower for k in ["ecb", "european central bank", "lagarde"]):
+        pairs.extend(["EUR/USD", "EUR/GBP", "EUR/JPY", "EUR/CHF"])
+    
+    # BOE affects GBP pairs
+    if any(k in matched_lower for k in ["boe", "bank of england", "bailey"]):
+        pairs.extend(["GBP/USD", "EUR/GBP", "GBP/JPY", "GBP/CHF"])
+    
+    # BOJ affects JPY pairs
+    if any(k in matched_lower for k in ["boj", "bank of japan", "ueda", "kuroda"]):
+        pairs.extend(["USD/JPY", "EUR/JPY", "GBP/JPY", "AUD/JPY"])
+    
+    # RBA affects AUD pairs
+    if any(k in matched_lower for k in ["rba", "reserve bank of australia"]):
+        pairs.extend(["AUD/USD", "AUD/JPY", "AUD/NZD", "AUD/CAD"])
+    
+    # RBNZ affects NZD pairs
+    if any(k in matched_lower for k in ["rbnz", "reserve bank of new zealand"]):
+        pairs.extend(["NZD/USD", "NZD/JPY", "AUD/NZD"])
+    
+    # BOC affects CAD pairs
+    if any(k in matched_lower for k in ["boc", "bank of canada"]):
+        pairs.extend(["USD/CAD", "EUR/CAD", "GBP/CAD"])
+    
+    # SNB affects CHF pairs
+    if any(k in matched_lower for k in ["snb", "swiss national bank"]):
+        pairs.extend(["USD/CHF", "EUR/CHF", "GBP/CHF"])
+    
+    # Specific forex pair mentions
+    if any(k in matched_lower for k in ["eur/usd", "euro", "eurozone"]):
+        pairs.append("EUR/USD")
+    if any(k in matched_lower for k in ["gbp/usd", "british pound", "sterling"]):
+        pairs.append("GBP/USD")
+    if any(k in matched_lower for k in ["usd/jpy", "japanese yen", "yen"]):
+        pairs.append("USD/JPY")
+    if any(k in matched_lower for k in ["usd/chf", "swiss franc"]):
+        pairs.append("USD/CHF")
+    
+    # Remove duplicates and return
+    return list(set(pairs))
+```
 
-4. **Prototype Frontend Component**
-   - Add card to Overview page
-   - Implement basic market listing
-   - Test with real API data
+2. **Update Normalization to Include Currency Pairs:**
+```python
+# In _normalize_market_data method, add:
+affected_pairs = self._get_affected_currency_pairs(market, matched_keywords, related_event)
+normalized_market["affected_currency_pairs"] = affected_pairs
+```
 
-### Long-term Considerations
+3. **Add Historical Accuracy Tracking:**
+```python
+def _track_market_accuracy(self, market_id: str, predicted_probability: float, actual_outcome: str):
+    """Track prediction accuracy for historical analysis"""
+    # Store in Firebase or database
+    # Compare predicted vs actual
+    # Calculate accuracy metrics
+    pass
+```
 
-1. **Data Aggregation**: Consider unified APIs if maintaining multiple integrations becomes burdensome
-2. **Machine Learning**: Potentially use prediction market data to improve sentiment analysis
-3. **Historical Analysis**: Store historical prediction market data for trend analysis
-4. **User Preferences**: Allow users to customize which markets/platforms to display
+### Frontend Changes
 
-## 9. Risk Assessment
+**File: `src/components/Overview.jsx`**
 
-### Low Risk
-- Technical implementation (APIs are available)
-- UI/UX design (following existing patterns)
-- Backend architecture (consistent with current approach)
+1. **Add Currency Pair Badges:**
+```jsx
+{market.affected_currency_pairs && market.affected_currency_pairs.length > 0 && (
+  <div className="market-currency-pairs">
+    {market.affected_currency_pairs.map(pair => (
+      <span key={pair} className="currency-pair-badge">{pair}</span>
+    ))}
+  </div>
+)}
+```
 
-### Medium Risk
-- Data quality and relevance (requires careful filtering)
-- API rate limits (need caching strategy)
-- Legal/regulatory compliance (informational use should be fine)
+2. **Add Volume Reliability Indicator:**
+```jsx
+{market.volume && (
+  <div className="market-volume-indicator">
+    <span className="meta-label">Volume:</span>
+    <span className={`meta-value ${market.volume > 100000 ? 'high-volume' : market.volume > 10000 ? 'medium-volume' : 'low-volume'}`}>
+      ${(market.volume / 1000).toFixed(0)}k
+      {market.volume < 10000 && <span className="low-volume-warning">⚠️ Low Volume</span>}
+    </span>
+  </div>
+)}
+```
 
-### High Risk
-- API stability and availability (third-party dependency)
-- Market liquidity (some markets may have low volume)
-- User value perception (need to validate user interest)
+3. **Add Time-Based Grouping:**
+```jsx
+const groupMarketsByTime = (markets) => {
+  const now = new Date();
+  const groups = {
+    today: [],
+    thisWeek: [],
+    thisMonth: [],
+    later: []
+  };
+  
+  markets.forEach(market => {
+    if (!market.resolution_date) return;
+    const resolutionDate = new Date(market.resolution_date);
+    const daysUntil = Math.ceil((resolutionDate - now) / (1000 * 60 * 60 * 24));
+    
+    if (daysUntil <= 1) groups.today.push(market);
+    else if (daysUntil <= 7) groups.thisWeek.push(market);
+    else if (daysUntil <= 30) groups.thisMonth.push(market);
+    else groups.later.push(market);
+  });
+  
+  return groups;
+};
+```
 
-## 10. Success Metrics
+---
 
-### Quantitative Metrics
-- Number of markets displayed
-- API response times
-- Cache hit rates
-- User engagement (clicks, time spent)
+## Success Metrics
 
-### Qualitative Metrics
-- User feedback on value
-- Accuracy of predictions vs actual outcomes
-- Integration with other data sources
-- Overall user experience
+To measure the success of these improvements:
+
+1. **Engagement Metrics:**
+   - Time spent viewing Prediction Markets card
+   - Click-through rate to market details
+   - Refresh frequency (manual refreshes)
+
+2. **Usage Metrics:**
+   - Filter usage (which filters are most used)
+   - Currency pair filter selections
+   - Time horizon preferences
+
+3. **Value Metrics:**
+   - Correlation between prediction market probabilities and actual outcomes
+   - User feedback on usefulness for trading decisions
+   - Integration with other features (Economic Calendar, Market Sentiment)
+
+4. **Performance Metrics:**
+   - API response times
+   - Cache hit rates
+   - Error rates
+
+---
 
 ## Conclusion
 
-The Prediction Markets card is **technically feasible** and **strategically valuable**. It provides a unique data source that complements existing features. The implementation should start with a single platform (Polymarket) as an MVP, then expand based on user feedback and data quality.
+The Prediction Markets card is a solid foundation with excellent engineering practices. However, to maximize its value for forex traders, it needs:
 
-The main challenges are filtering relevant markets and normalizing data across platforms, but both are solvable with careful implementation. The feature aligns well with the existing architecture and would enhance the Overview page's value proposition.
+1. **Better forex-specific relevance** through currency pair mapping
+2. **Integration with other FXSentinel features** (Economic Calendar, Market Sentiment)
+3. **Real-time updates** for actionable trading signals
+4. **Historical accuracy tracking** to build trust
+5. **User customization** for personalized views
 
-**Recommendation: PROCEED with Phase 1 (MVP) implementation.**
-
+The recommended improvements prioritize features that directly impact trading decisions while maintaining the system's robust architecture and performance characteristics. Implementation should be phased, starting with currency pair mapping (highest impact, moderate effort) and progressing through integration features and advanced analytics.

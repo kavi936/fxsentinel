@@ -14,6 +14,19 @@ from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Any, Optional
 from concurrent.futures import ThreadPoolExecutor
 
+# Import curated markets
+try:
+    from services.curated_prediction_markets import (
+        CURATED_MARKETS,
+        get_curated_keywords,
+        get_market_priority,
+        get_affected_pairs_for_keywords
+    )
+    CURATED_MARKETS_AVAILABLE = True
+except ImportError:
+    CURATED_MARKETS_AVAILABLE = False
+    logger.warning("Curated markets not available. Using default keywords.")
+
 # Try to import Dome API SDK, fallback to requests if not available
 try:
     from dome_api_sdk import DomeClient
@@ -119,14 +132,19 @@ class PredictionMarketsService:
         self._api_calls_last_10_seconds = []
         self._api_call_lock = threading.Lock()
         
-        # Initialize Dome API configuration (needed regardless of cache type)
+        # Configuration: Use direct CLOB API for Polymarket (better rate limits, more data)
+        self.use_direct_clob = os.getenv('USE_DIRECT_CLOB', 'true').lower() == 'true'
+        self.clob_max_pages = int(os.getenv('CLOB_MAX_PAGES', '3'))  # Default: 3 pages = 3,000 markets
+        self.clob_request_delay = float(os.getenv('CLOB_REQUEST_DELAY', '0.5'))  # Delay between requests (seconds)
+        
+        # Initialize Dome API configuration (needed for Kalshi and Polymarket fallback)
         self.dome_api_key = os.getenv('DOME_API_KEY')
         self.api_available = False
         self.dome_client = None
         self.dome_api_base_url = "https://api.domeapi.io/v1/polymarket"
         
         if not self.dome_api_key:
-            logger.warning("DOME_API_KEY not set. Prediction markets will not be available.")
+            logger.warning("DOME_API_KEY not set. Kalshi markets will not be available.")
             self.api_available = False
         elif DOME_SDK_AVAILABLE:
             try:
@@ -141,6 +159,12 @@ class PredictionMarketsService:
             logger.warning("Dome API SDK not available. Install with: pip install dome-api-sdk")
             self.dome_client = None
             self.api_available = False
+        
+        # Log configuration
+        if self.use_direct_clob:
+            logger.info(f"Using direct Polymarket CLOB API (max {self.clob_max_pages} pages = {self.clob_max_pages * 1000} markets)")
+        else:
+            logger.info("Using DOME API for Polymarket (fallback mode)")
         
         # Initialize filtering keywords and tags (needed regardless of cache type)
         self.economic_keywords = [
@@ -515,13 +539,111 @@ class PredictionMarketsService:
         logger.info(f"Total Kalshi markets fetched: {len(markets)}")
         return markets
     
+    def _fetch_polymarket_clob_direct(self, early_stop_threshold: int = None) -> List[Dict]:
+        """Fetch markets directly from Polymarket CLOB API
+        
+        Args:
+            early_stop_threshold: Stop fetching if we have this many markets (saves API calls)
+                                  If None, uses instance-level threshold
+        
+        Returns:
+            List of market dictionaries from CLOB API
+        """
+        if early_stop_threshold is None:
+            early_stop_threshold = self.early_stop_threshold
+        
+        markets = []
+        cursor = None
+        max_pages = self.clob_max_pages
+        
+        try:
+            import requests
+            
+            logger.info(f"Fetching Polymarket markets directly from CLOB API (max {max_pages} pages)")
+            
+            for page in range(max_pages):
+                url = "https://clob.polymarket.com/markets"
+                params = {"limit": 1000}  # CLOB API supports up to 1000 per request
+                
+                if cursor:
+                    params["cursor"] = cursor
+                
+                try:
+                    # Add respectful delay between requests
+                    if page > 0:
+                        time.sleep(self.clob_request_delay)
+                    
+                    response = requests.get(url, params=params, timeout=15)
+                    
+                    if response.status_code == 429:
+                        logger.warning(f"Rate limit hit on CLOB API page {page + 1}, stopping")
+                        break
+                    elif response.status_code != 200:
+                        logger.error(f"CLOB API error: {response.status_code} - {response.text[:200]}")
+                        break
+                    
+                    data = response.json()
+                    page_markets = data.get("data", [])
+                    
+                    if not page_markets:
+                        logger.info(f"No more markets available (empty page {page + 1})")
+                        break
+                    
+                    # Mark markets as from CLOB API
+                    for market in page_markets:
+                        market["platform"] = "polymarket"
+                        market["_source"] = "clob_direct"
+                    
+                    markets.extend(page_markets)
+                    
+                    # Early stopping: if we have enough markets, stop fetching
+                    if len(markets) >= early_stop_threshold:
+                        logger.info(f"Early stopping CLOB fetch: have {len(markets)} markets (threshold: {early_stop_threshold})")
+                        break
+                    
+                    # Check pagination
+                    cursor = data.get("next_cursor")
+                    if not cursor:
+                        logger.info(f"No more pages available (no next_cursor)")
+                        break
+                    
+                    logger.info(f"Fetched CLOB page {page + 1}: {len(page_markets)} markets (total: {len(markets)})")
+                    
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Error fetching CLOB API page {page + 1}: {e}")
+                    break
+                except Exception as e:
+                    logger.error(f"Unexpected error fetching CLOB API page {page + 1}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    break
+        
+        except Exception as e:
+            logger.error(f"Error fetching from CLOB API: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+        
+        logger.info(f"Total markets fetched from CLOB API: {len(markets)}")
+        return markets
+    
     def _fetch_polymarket_markets(self, early_stop_threshold: int = None) -> List[Dict]:
-        """Fetch markets from Polymarket via Dome API using SDK
+        """Fetch markets from Polymarket - uses direct CLOB API or DOME API fallback
         
         Args:
             early_stop_threshold: Stop fetching if we have this many markets (saves API calls)
                                   If None, uses instance-level threshold
         """
+        # Use direct CLOB API if enabled (default), otherwise use DOME API
+        if self.use_direct_clob:
+            markets = self._fetch_polymarket_clob_direct(early_stop_threshold=early_stop_threshold)
+            if markets:
+                return markets
+            else:
+                logger.warning("CLOB API fetch failed, falling back to DOME API")
+                # Fall through to DOME API
+        
+        # Fallback to DOME API
         if not self.api_available:
             logger.error("Dome API not available. Check DOME_API_KEY configuration.")
             return []
@@ -708,14 +830,121 @@ class PredictionMarketsService:
         Returns:
             True if market is resolved, False otherwise
         """
+        # Check source to determine structure
+        source = market.get("_source", "dome")
+        is_clob_structure = source == "clob_direct" or "question" in market
+        
         if platform == "kalshi":
             # Kalshi: market is resolved if result field is not None
             result = _safe_get(market, "result")
             return result is not None
+        elif is_clob_structure:
+            # CLOB API: Check winning_side, closed status, or token prices
+            winning_side = _safe_get(market, "winning_side")
+            closed_val = _safe_get(market, "closed", False)
+            # Handle string booleans from CLOB API
+            closed = closed_val if isinstance(closed_val, bool) else str(closed_val).lower() == "true"
+            
+            # Also check if tokens show resolved state (100% or 0% prices)
+            tokens = _safe_get(market, "tokens", [])
+            if tokens:
+                for token in tokens:
+                    price = token.get("price")
+                    winner = token.get("winner")
+                    if winner is True or (price is not None and (price == 1 or price == 0)):
+                        return True
+                    if price is not None:
+                        try:
+                            price_float = float(price)
+                            # If any token is 1.0 or 0.0, market is resolved
+                            if price_float == 1.0 or price_float == 0.0:
+                                return True
+                        except (ValueError, TypeError):
+                            pass
+            
+            return winning_side is not None or closed
         else:
-            # Polymarket: market is resolved if winning_side is not None
+            # DOME API Polymarket: market is resolved if winning_side is not None
             winning_side = _safe_get(market, "winning_side")
             return winning_side is not None
+    
+    def _get_affected_currency_pairs(self, market: Dict, matched_keywords: List[str], related_event: str) -> List[str]:
+        """Determine which currency pairs are affected by this market
+        
+        Args:
+            market: Market dictionary
+            matched_keywords: List of matched economic keywords
+            related_event: Related event type (e.g., "FOMC Meeting", "CPI Release")
+        
+        Returns:
+            List of affected currency pairs (e.g., ["EUR/USD", "GBP/USD"])
+        """
+        pairs = []
+        matched_lower = [k.lower() for k in matched_keywords]
+        
+        # Fed/FOMC affects USD pairs
+        if any(k in matched_lower for k in ["fed", "federal reserve", "fomc", "interest rate", "rate hike", "rate cut", "rates", "powell", "jerome powell"]):
+            pairs.extend(["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "NZD/USD", "USD/CAD"])
+        
+        # ECB affects EUR pairs
+        if any(k in matched_lower for k in ["ecb", "european central bank", "lagarde", "christine lagarde"]):
+            pairs.extend(["EUR/USD", "EUR/GBP", "EUR/JPY", "EUR/CHF"])
+        
+        # BOE affects GBP pairs
+        if any(k in matched_lower for k in ["boe", "bank of england", "bailey", "andrew bailey"]):
+            pairs.extend(["GBP/USD", "EUR/GBP", "GBP/JPY", "GBP/CHF"])
+        
+        # BOJ affects JPY pairs
+        if any(k in matched_lower for k in ["boj", "bank of japan", "ueda", "kazuo ueda", "kuroda"]):
+            pairs.extend(["USD/JPY", "EUR/JPY", "GBP/JPY", "AUD/JPY"])
+        
+        # RBA affects AUD pairs
+        if any(k in matched_lower for k in ["rba", "reserve bank of australia"]):
+            pairs.extend(["AUD/USD", "AUD/JPY", "AUD/NZD", "AUD/CAD"])
+        
+        # RBNZ affects NZD pairs
+        if any(k in matched_lower for k in ["rbnz", "reserve bank of new zealand"]):
+            pairs.extend(["NZD/USD", "NZD/JPY", "AUD/NZD"])
+        
+        # BOC affects CAD pairs
+        if any(k in matched_lower for k in ["boc", "bank of canada"]):
+            pairs.extend(["USD/CAD", "EUR/CAD", "GBP/CAD"])
+        
+        # SNB affects CHF pairs
+        if any(k in matched_lower for k in ["snb", "swiss national bank"]):
+            pairs.extend(["USD/CHF", "EUR/CHF", "GBP/CHF"])
+        
+        # US economic data (CPI, GDP, NFP) affects USD pairs
+        if any(k in matched_lower for k in ["cpi", "consumer price index", "inflation", "ppi", "gdp", "gross domestic product", 
+                                             "employment", "nfp", "non-farm payrolls", "jobs report", "unemployment"]):
+            # Check if it's specifically US data (default assumption for these keywords)
+            pairs.extend(["EUR/USD", "GBP/USD", "USD/JPY", "USD/CHF", "AUD/USD", "NZD/USD", "USD/CAD"])
+        
+        # Specific forex pair mentions
+        if any(k in matched_lower for k in ["eur/usd", "euro", "eurozone", "euro zone"]):
+            if "EUR/USD" not in pairs:
+                pairs.append("EUR/USD")
+        if any(k in matched_lower for k in ["gbp/usd", "british pound", "sterling", "pound"]):
+            if "GBP/USD" not in pairs:
+                pairs.append("GBP/USD")
+        if any(k in matched_lower for k in ["usd/jpy", "japanese yen", "yen"]):
+            if "USD/JPY" not in pairs:
+                pairs.append("USD/JPY")
+        if any(k in matched_lower for k in ["usd/chf", "swiss franc", "franc"]):
+            if "USD/CHF" not in pairs:
+                pairs.append("USD/CHF")
+        if any(k in matched_lower for k in ["aud/usd", "australian dollar", "aussie"]):
+            if "AUD/USD" not in pairs:
+                pairs.append("AUD/USD")
+        if any(k in matched_lower for k in ["nzd/usd", "new zealand dollar", "kiwi"]):
+            if "NZD/USD" not in pairs:
+                pairs.append("NZD/USD")
+        if any(k in matched_lower for k in ["usd/cad", "canadian dollar", "loonie"]):
+            if "USD/CAD" not in pairs:
+                pairs.append("USD/CAD")
+        
+        # Remove duplicates and return
+        return list(set(pairs))
     
     def _filter_economic_markets(self, markets: List[Dict]) -> List[Dict]:
         """Filter markets for economic/forex relevance"""
@@ -782,37 +1011,36 @@ class PredictionMarketsService:
                 continue
             seen_ids.add(market_id)
             
-            # Check if market is resolved - allow recently resolved markets (within grace period)
-            # Also allow resolved markets if they're highly relevant (even if older)
+            # Get title/question - CLOB uses "question", DOME uses "title"
+            source = market.get("_source", "dome")
+            is_clob_structure = source == "clob_direct" or "question" in market
+            
+            if is_clob_structure:
+                title_raw = _safe_get(market, "question", "")
+                # Remove "arch" prefix if present (archived markets in CLOB API)
+                if title_raw.startswith("arch"):
+                    title_raw = title_raw[4:]  # Remove "arch" prefix
+                title = title_raw.lower()
+            else:
+                title = _safe_get(market, "title", "").lower()
+            
+            # Check if market is archived (CLOB API marks archived markets)
+            if is_clob_structure:
+                archived_val = _safe_get(market, "archived", False)
+                archived = archived_val if isinstance(archived_val, bool) else str(archived_val).lower() == "true"
+                # Also check if original question starts with "arch" (another indicator)
+                question_raw = _safe_get(market, "question", "")
+                if archived or (question_raw and question_raw.lower().startswith("arch")):
+                    skipped_closed += 1
+                    continue
+            
+            # Check if market is resolved - filter out ALL resolved markets per user requirement
             is_resolved = self._is_market_resolved(market, platform)
             
-            # Skip resolved markets only if they're old AND not highly relevant
+            # Skip ALL resolved markets (no exceptions)
             if is_resolved:
-                # Check if recently resolved (within grace period)
-                completion_time = _safe_get(market, "completed_time") or _safe_get(market, "close_time")
-                is_recently_resolved = False
-                if completion_time:
-                    try:
-                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
-                        days_since_resolution = (now - completed_date).days
-                        is_recently_resolved = 0 <= days_since_resolution <= CLOSED_MARKET_GRACE_PERIOD_DAYS
-                    except (ValueError, TypeError):
-                        pass
-                
-                # Allow resolved markets if:
-                # 1. Recently resolved (within grace period), OR
-                # 2. We'll check relevance later and allow high-relevance markets
-                # For now, we'll check relevance after keyword matching, so we don't skip here
-                # We'll mark it as resolved and let it through for relevance check
-                if not is_recently_resolved:
-                    # Don't skip yet - we'll check relevance after keyword matching
-                    # Mark as old resolved for later filtering
-                    market["_is_old_resolved"] = True
-                else:
-                    market["_is_old_resolved"] = False
-            
-            # Get title (both platforms use "title")
-            title = _safe_get(market, "title", "").lower()
+                skipped_closed += 1
+                continue
             
             # Handle tags (Polymarket has tags array, Kalshi might not)
             tags_list = _safe_get(market, "tags", [])
@@ -824,38 +1052,43 @@ class PredictionMarketsService:
             # Check if market has economic tags
             has_economic_tag = any(econ_tag in tags for econ_tag in self.economic_tags)
             
-            # Status field (both platforms use "status")
-            status = _safe_get(market, "status", "").lower()
-            is_open = status == "open"
-            is_closed = status == "closed"
-            
-            # Track whether market is accepting orders (open markets are accepting orders)
-            accepting_orders = is_open
-            
-            # Check if closed market is recently closed (within grace period)
-            # This needs to happen early so we can use it in relevance filtering later
-            if is_closed:
-                completion_time = _safe_get(market, "completed_time") or _safe_get(market, "close_time")
-                is_recently_closed = False
-                if completion_time:
-                    try:
-                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
-                        days_since_closed = (now - completed_date).days
-                        is_recently_closed = 0 <= days_since_closed <= CLOSED_MARKET_GRACE_PERIOD_DAYS
-                    except (ValueError, TypeError):
-                        pass
+            # Status field - handle both CLOB (booleans/strings) and DOME (status string)
+            if is_clob_structure:
+                # CLOB API may return strings "True"/"False" or actual booleans
+                active_val = _safe_get(market, "active", False)
+                closed_val = _safe_get(market, "closed", False)
+                accepting_orders_val = _safe_get(market, "accepting_orders", False)
                 
-                # Mark as old closed for later filtering (we'll allow if highly relevant)
-                if not is_recently_closed:
-                    market["_is_old_closed"] = True
+                # Convert string booleans to actual booleans
+                is_open = active_val if isinstance(active_val, bool) else str(active_val).lower() == "true"
+                is_closed = closed_val if isinstance(closed_val, bool) else str(closed_val).lower() == "true"
+                accepting_orders = accepting_orders_val if isinstance(accepting_orders_val, bool) else str(accepting_orders_val).lower() == "true"
+            else:
+                status = _safe_get(market, "status", "").lower()
+                is_open = status == "open"
+                is_closed = status == "closed"
+                accepting_orders = _safe_get(market, "accepting_orders", False) or is_open
+            
+            # Filter out closed markets (per user requirement - no resolved/closed markets)
+            if is_closed:
+                skipped_closed += 1
+                continue
             
             # NEW: Check if market has embedded price data (prioritize these on free tier)
             has_embedded_price = False
             
             if platform == "kalshi":
                 has_embedded_price = _safe_get(market, "last_price") is not None
+            elif is_clob_structure:
+                # CLOB API: Check if tokens array has prices
+                tokens = _safe_get(market, "tokens", [])
+                if tokens:
+                    has_embedded_price = any(
+                        token.get("price") is not None 
+                        for token in tokens
+                    )
             else:
-                # Polymarket: Check if side_a or side_b have prices
+                # DOME API Polymarket: Check if side_a or side_b have prices
                 side_a = _safe_get(market, "side_a", {})
                 side_b = _safe_get(market, "side_b", {})
                 
@@ -882,34 +1115,110 @@ class PredictionMarketsService:
             market["has_embedded_price"] = has_embedded_price
             
             # Check if market has future resolution date
-            # Both platforms use Unix timestamps: end_time, close_time (Kalshi), completed_time (Polymarket)
-            end_time = _safe_get(market, "end_time")
-            close_time = _safe_get(market, "close_time")  # Kalshi uses close_time
-            completed_time = _safe_get(market, "completed_time")  # Polymarket uses completed_time
-            
+            # CLOB uses ISO string (end_date_iso), DOME uses Unix timestamps
+            # IMPORTANT: Filter out markets with past resolution dates (past due)
             is_future = False
             days_until_resolution = None
+            resolution_date_obj = None
             
-            resolution_time = end_time or close_time
-            if resolution_time:
-                try:
-                    # Convert Unix timestamp to datetime
-                    end_date = datetime.fromtimestamp(resolution_time, tz=timezone.utc)
-                    is_future = end_date > now
-                    days_until_resolution = (end_date - now).days
-                except (ValueError, TypeError):
-                    pass
+            if is_clob_structure:
+                # CLOB API uses ISO string format
+                end_date_iso = _safe_get(market, "end_date_iso")
+                if end_date_iso:
+                    try:
+                        resolution_date_obj = datetime.fromisoformat(end_date_iso.replace('Z', '+00:00'))
+                        is_future = resolution_date_obj > now
+                        days_until_resolution = (resolution_date_obj - now).days
+                        days_since_resolution = (now - resolution_date_obj).days
+                        
+                        # Allow markets with future dates OR recently resolved (within last 30 days)
+                        # This ensures we show some markets even if most are historical
+                        if not is_future:
+                            # Market is in the past - only show if resolved recently (within 30 days)
+                            if days_since_resolution > 30:
+                                skipped_closed += 1
+                                continue
+                            # Market resolved recently - treat as "recently resolved" for display
+                            is_future = False
+                            days_until_resolution = None
+                    except (ValueError, TypeError):
+                        # If we can't parse the date, allow the market (might be valid without date)
+                        is_future = None  # Unknown
+                        days_until_resolution = None
+                else:
+                    # No resolution date - allow the market (some markets don't have clear dates)
+                    is_future = None  # Unknown
+                    days_until_resolution = None
+            else:
+                # DOME API uses Unix timestamps
+                end_time = _safe_get(market, "end_time")
+                close_time = _safe_get(market, "close_time")  # Kalshi uses close_time
+                resolution_time = end_time or close_time
+                if resolution_time:
+                    try:
+                        # Convert Unix timestamp to datetime
+                        resolution_date_obj = datetime.fromtimestamp(resolution_time, tz=timezone.utc)
+                        is_future = resolution_date_obj > now
+                        days_until_resolution = (resolution_date_obj - now).days
+                        days_since_resolution = (now - resolution_date_obj).days
+                        
+                        # Allow markets with future dates OR recently resolved (within last 30 days)
+                        # This ensures we show some markets even if most are historical
+                        if not is_future:
+                            # Market is in the past - only show if resolved recently (within 30 days)
+                            if days_since_resolution > 30:
+                                skipped_closed += 1
+                                continue
+                            # Market resolved recently - treat as "recently resolved" for display
+                            is_future = False
+                            days_until_resolution = None
+                    except (ValueError, TypeError):
+                        # If we can't parse the date, allow the market (might be valid without date)
+                        is_future = None  # Unknown
+                        days_until_resolution = None
+                else:
+                    # No resolution date - allow the market (some markets don't have clear dates)
+                    is_future = None  # Unknown
+                    days_until_resolution = None
             
             # Track recently resolved markets (within last 30 days)
             is_recently_resolved = False
-            completion_time = completed_time or close_time
-            if is_closed and completion_time:
-                try:
-                    completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
-                    days_since_resolution = (now - completed_date).days
-                    is_recently_resolved = 0 <= days_since_resolution <= 30
-                except (ValueError, TypeError):
-                    pass
+            if is_clob_structure:
+                # CLOB API - check completed_time or end_date_iso if closed
+                if is_closed:
+                    completed_time_iso = _safe_get(market, "completed_time")  # May be ISO string or timestamp
+                    end_date_iso = _safe_get(market, "end_date_iso")
+                    
+                    try:
+                        if completed_time_iso:
+                            # Try ISO format first
+                            try:
+                                completed_date = datetime.fromisoformat(str(completed_time_iso).replace('Z', '+00:00'))
+                            except:
+                                # Fallback to timestamp
+                                completed_date = datetime.fromtimestamp(completed_time_iso, tz=timezone.utc)
+                        elif end_date_iso:
+                            completed_date = datetime.fromisoformat(end_date_iso.replace('Z', '+00:00'))
+                        else:
+                            completed_date = None
+                        
+                        if completed_date:
+                            days_since_resolution = (now - completed_date).days
+                            is_recently_resolved = 0 <= days_since_resolution <= 30
+                    except (ValueError, TypeError):
+                        pass
+            else:
+                # DOME API uses Unix timestamps
+                completed_time = _safe_get(market, "completed_time")
+                close_time = _safe_get(market, "close_time")
+                completion_time = completed_time or close_time
+                if is_closed and completion_time:
+                    try:
+                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
+                        days_since_resolution = (now - completed_date).days
+                        is_recently_resolved = 0 <= days_since_resolution <= 30
+                    except (ValueError, TypeError):
+                        pass
             
             # Mark historical markets (closed and old)
             is_historical = is_closed and not is_future and not is_recently_resolved
@@ -1029,16 +1338,6 @@ class PredictionMarketsService:
             if has_economic_tag and relevance == "low":
                         relevance = "medium"
             
-            # NEW: Filter old resolved/closed markets based on relevance
-            # Allow old resolved/closed markets if they're highly relevant
-            if market.get("_is_old_resolved", False) or market.get("_is_old_closed", False):
-                # Only allow if high relevance (Fed, inflation, major economic events)
-                if relevance != "high":
-                    skipped_closed += 1
-                    continue
-                # High relevance old resolved/closed market - allow it
-                logger.debug(f"Allowing old resolved/closed market due to high relevance: {title[:50]}")
-            
             if matched_keywords:
                 # Determine related event
                 related_event = None
@@ -1075,10 +1374,28 @@ class PredictionMarketsService:
                 else:
                     related_event = "Economic Event"
                 
+                # Get affected currency pairs - use curated markets if available
+                if CURATED_MARKETS_AVAILABLE:
+                    affected_pairs = get_affected_pairs_for_keywords(matched_keywords)
+                    if not affected_pairs:
+                        # Fallback to original method
+                        affected_pairs = self._get_affected_currency_pairs(market, matched_keywords, related_event)
+                    # Calculate priority score for curated markets
+                    priority_score = get_market_priority(matched_keywords)
+                else:
+                    affected_pairs = self._get_affected_currency_pairs(market, matched_keywords, related_event)
+                    priority_score = 0
+                
+                # IMPORTANT: Filter out resolved markets - do not include them
+                if is_resolved:
+                    skipped_closed += 1
+                    continue
+                
                 # Store Dome API specific fields for later use
                 market["relevance"] = relevance
                 market["related_event"] = related_event
                 market["matched_keywords"] = matched_keywords
+                market["affected_currency_pairs"] = affected_pairs
                 market["accepting_orders"] = accepting_orders
                 market["is_future"] = is_future
                 market["days_until_resolution"] = days_until_resolution
@@ -1086,6 +1403,7 @@ class PredictionMarketsService:
                 market["is_historical"] = is_historical
                 market["is_open"] = is_open
                 market["is_closed"] = is_closed
+                market["priority_score"] = priority_score  # Add priority score for sorting
                 relevant_markets.append(market)
                 included_markets += 1
         
@@ -1095,15 +1413,17 @@ class PredictionMarketsService:
                    f"skipped_no_keywords={skipped_no_keywords}")
         logger.info(f"Filtering result: {included_markets} markets passed filtering (target: {MAX_FILTERED_MARKETS})")
         
-        # Sort by priority:
-        # 1. Markets accepting orders (highest priority - most "live")
-        # 2. Markets with embedded prices (important on free tier to avoid API calls)
-        # 3. Future markets (upcoming)
-        # 4. By relevance score (high > medium > low)
-        # 5. By number of matched keywords
-        # 6. By resolution date (closer first)
+        # Sort by priority (simplified for curated markets):
+        # 1. Priority score (curated markets first - higher priority)
+        # 2. Markets accepting orders (active trading)
+        # 3. Future markets (not resolved yet)
+        # 4. Relevance score (high to low)
+        # 5. Number of matched keywords (more keywords = more relevant)
+        # 6. Resolution date (sooner = more urgent)
+        # Note: Volume-based sorting will be done in frontend (highest to lowest)
         relevant_markets.sort(
             key=lambda x: (
+                -x.get("priority_score", 0),  # Curated markets first (higher priority score)
                 x.get("accepting_orders", False),  # Markets accepting orders first
                 x.get("has_embedded_price", False),  # Then markets with embedded prices (free tier optimization)
                 x.get("is_future", False),  # Then future markets
@@ -1114,6 +1434,10 @@ class PredictionMarketsService:
             ),
             reverse=True
         )
+        
+        # Limit to top markets (prioritize quality over quantity)
+        max_markets = min(MAX_FILTERED_MARKETS, len(relevant_markets))
+        relevant_markets = relevant_markets[:max_markets]
         
         # Return top markets (limited by MAX_FILTERED_MARKETS)
         # Note: Deduplication by market_id already prevents duplicates from appearing
@@ -1534,17 +1858,90 @@ class PredictionMarketsService:
         
         return yes_price, no_price, price_source
     
+    def _extract_prices_from_clob_market(self, market: Dict) -> tuple:
+        """Extract Yes/No prices from CLOB API market structure
+        
+        Args:
+            market: Market dictionary from CLOB API
+            
+        Returns:
+            Tuple of (yes_price, no_price, price_source)
+        """
+        tokens = market.get("tokens", [])
+        
+        if not tokens or len(tokens) < 2:
+            return None, None, "fallback"
+        
+        yes_price = None
+        no_price = None
+        
+        # Extract prices from tokens array
+        # CLOB API tokens have "outcome" field (e.g., "Yes", "No", "Arizona State", etc.)
+        for token in tokens:
+            outcome = str(token.get("outcome", "")).lower()
+            price = token.get("price")
+            
+            if price is not None:
+                try:
+                    price_float = float(price)
+                    # Check for Yes/No outcomes
+                    if outcome == "yes" or (outcome.startswith("yes") and len(outcome) <= 5):
+                        yes_price = price_float
+                    elif outcome == "no" or (outcome.startswith("no") and len(outcome) <= 4):
+                        no_price = price_float
+                    # Also check for "will" patterns (e.g., "Will X happen" -> Yes)
+                    elif "yes" in outcome or outcome.startswith("will"):
+                        if yes_price is None:
+                            yes_price = price_float
+                except (ValueError, TypeError):
+                    pass
+        
+        # Fallback: use first two tokens if Yes/No not found
+        # This handles markets with custom outcomes (e.g., "Arizona State" vs "Nevada")
+        if yes_price is None and no_price is None and len(tokens) >= 2:
+            try:
+                price0 = tokens[0].get("price")
+                price1 = tokens[1].get("price")
+                if price0 is not None and price1 is not None:
+                    yes_price = float(price0)
+                    no_price = float(price1)
+            except (ValueError, TypeError):
+                pass
+        
+        # Normalize to sum to 1.0
+        if yes_price is not None and no_price is not None:
+            total = yes_price + no_price
+            if total > 0:
+                yes_price = yes_price / total
+                no_price = no_price / total
+                # Check if market is resolved (prices are 1.0/0.0 or 0.0/1.0)
+                if (yes_price == 1.0 and no_price == 0.0) or (yes_price == 0.0 and no_price == 1.0):
+                    return yes_price, no_price, "resolved"
+                return yes_price, no_price, "embedded"
+            else:
+                return 0.5, 0.5, "fallback"
+        
+        return None, None, "fallback"
+    
     def _normalize_market_data(self, market: Dict, fetch_price: bool = False) -> Dict:
-        """Normalize Dome API market data to our format (handles both Polymarket and Kalshi)
+        """Normalize market data to our format (handles CLOB API, DOME API, Polymarket, and Kalshi)
         
         Args:
             market: Raw market data from API
             fetch_price: Whether to fetch prices via API (default: False, always False on free tier)
         """
         platform = market.get("platform", "polymarket")
+        source = market.get("_source", "dome")  # "clob_direct" or "dome"
         
-        # Extract prices from Dome API structure
-        yes_price, no_price, price_source = self._extract_prices_from_dome_market(market, fetch_price=fetch_price)
+        # Detect if this is CLOB API data structure
+        is_clob_structure = source == "clob_direct" or "question" in market or "tokens" in market
+        
+        # Extract prices based on data source
+        if is_clob_structure:
+            yes_price, no_price, price_source = self._extract_prices_from_clob_market(market)
+        else:
+            # Extract prices from DOME API structure
+            yes_price, no_price, price_source = self._extract_prices_from_dome_market(market, fetch_price=fetch_price)
         
         # Check if market is resolved
         # First check platform-specific resolved indicators (most reliable)
@@ -1556,11 +1953,9 @@ class PredictionMarketsService:
             winning_side = _safe_get(market, "winning_side")
             is_resolved = winning_side is not None
         
-        # Also check if prices indicate resolution (but only if we have actual prices, not fallback)
-        # Don't mark as resolved if prices are fallback (50/50) - those are just estimates
-        if not is_resolved and price_source != "fallback" and yes_price is not None and no_price is not None:
-            if (yes_price == 1.0 and no_price == 0.0) or (yes_price == 0.0 and no_price == 1.0):
-                is_resolved = True
+        # Don't mark as resolved based on prices alone - prices can be 0%/100% without market being resolved
+        # Only trust platform-specific resolved indicators (result, winning_side, closed status)
+        # Prices of 0%/100% can just mean very low/high probability, not actual resolution
         
         # Extract volume data (platform-specific)
         if platform == "kalshi":
@@ -1569,21 +1964,41 @@ class PredictionMarketsService:
             volume = _safe_get(market, "volume_total") or _safe_get(market, "volume_1_week")
         liquidity = None  # Dome API doesn't provide liquidity directly
         
-        # Convert resolution date from Unix timestamp to ISO format
+        # Convert resolution date - handle both CLOB (ISO string) and DOME (Unix timestamp)
         resolution_date = None
-        end_time = _safe_get(market, "end_time")
-        close_time = _safe_get(market, "close_time")  # Kalshi uses close_time
-        resolution_time = end_time or close_time
+        if is_clob_structure:
+            # CLOB API uses ISO string format
+            end_date_iso = _safe_get(market, "end_date_iso")
+            if end_date_iso:
+                try:
+                    # Parse ISO format string
+                    resolution_date = end_date_iso
+                    # Validate it's a valid ISO format
+                    datetime.fromisoformat(end_date_iso.replace('Z', '+00:00'))
+                except (ValueError, TypeError):
+                    pass
+        else:
+            # DOME API uses Unix timestamp
+            end_time = _safe_get(market, "end_time")
+            close_time = _safe_get(market, "close_time")  # Kalshi uses close_time
+            resolution_time = end_time or close_time
+            
+            if resolution_time:
+                try:
+                    end_date = datetime.fromtimestamp(resolution_time, tz=timezone.utc)
+                    resolution_date = end_date.isoformat()
+                except (ValueError, TypeError):
+                    pass
         
-        if resolution_time:
-            try:
-                end_date = datetime.fromtimestamp(resolution_time, tz=timezone.utc)
-                resolution_date = end_date.isoformat()
-            except (ValueError, TypeError):
-                pass
-        
-        # Get title (both platforms use "title")
-        title = _safe_get(market, "title", "")
+        # Get title/question - CLOB uses "question", DOME uses "title"
+        if is_clob_structure:
+            title_raw = _safe_get(market, "question", "")
+            # Remove "arch" prefix if present (archived markets in CLOB API)
+            if title_raw.startswith("arch"):
+                title_raw = title_raw[4:]  # Remove "arch" prefix
+            title = title_raw
+        else:
+            title = _safe_get(market, "title", "")
         
         # Get description (Dome API may not have description, use title)
         description = _safe_get(market, "description", title)
@@ -1600,6 +2015,24 @@ class PredictionMarketsService:
         else:
             market_id = _safe_get(market, "condition_id", "")
         
+        # Determine active/closed status - handle both CLOB (booleans/strings) and DOME (status string)
+        if is_clob_structure:
+            # CLOB API may return strings "True"/"False" or actual booleans
+            active_val = _safe_get(market, "active", False)
+            closed_val = _safe_get(market, "closed", False)
+            accepting_orders_val = _safe_get(market, "accepting_orders", False)
+            
+            # Convert string booleans to actual booleans
+            active = active_val if isinstance(active_val, bool) else str(active_val).lower() == "true"
+            closed = closed_val if isinstance(closed_val, bool) else str(closed_val).lower() == "true"
+            accepting_orders = accepting_orders_val if isinstance(accepting_orders_val, bool) else str(accepting_orders_val).lower() == "true"
+        else:
+            # DOME API uses status string
+            status = _safe_get(market, "status", "").lower()
+            active = status == "open"
+            closed = status == "closed"
+            accepting_orders = _safe_get(market, "accepting_orders", False) or active
+        
         # Determine price quality based on source
         price_quality_map = {
             "resolved": "high",
@@ -1612,25 +2045,26 @@ class PredictionMarketsService:
         return {
             "id": market_id,
             "platform": platform,
-            "question": title,  # Use title as question for display
+            "question": title,  # Use title/question as question for display
             "description": description,
             "category": category,
             "yes_price": yes_price,
             "no_price": no_price,
-            "price_source": price_source,  # NEW: Track where price came from
-            "price_quality": price_quality,  # NEW: Quality indicator (high/medium/low)
+            "price_source": price_source,  # Track where price came from
+            "price_quality": price_quality,  # Quality indicator (high/medium/low)
             "liquidity": liquidity,
             "volume": volume,
             "resolution_date": resolution_date,
-            "active": _safe_get(market, "is_open", False),
-            "closed": _safe_get(market, "is_closed", False),
-            "accepting_orders": _safe_get(market, "accepting_orders", False),
+            "active": active,
+            "closed": closed,
+            "accepting_orders": accepting_orders,
             "is_resolved": is_resolved,
             "is_future": _safe_get(market, "is_future", False),
             "is_historical": _safe_get(market, "is_historical", False),
             "days_until_resolution": _safe_get(market, "days_until_resolution"),
             "relevance": _safe_get(market, "relevance", "low"),
-            "related_event": _safe_get(market, "related_event")
+            "related_event": _safe_get(market, "related_event"),
+            "affected_currency_pairs": _safe_get(market, "affected_currency_pairs", [])  # Currency pairs affected by this market
         }
     
     def _do_refresh(self, force_refresh: bool = False) -> Dict[str, Any]:
@@ -1678,7 +2112,7 @@ class PredictionMarketsService:
             logger.info(f"Fetched {len(polymarket_markets)} Polymarket + {len(kalshi_markets)} Kalshi = {len(all_markets)} total markets")
             
             if not all_markets:
-                logger.warning("Dome API failed to return any markets")
+                logger.warning("Failed to fetch any markets from APIs")
                 # Only return cached data if we have absolutely nothing else
                 if self.cached_markets:
                     logger.info("Falling back to cached data due to API failure")
@@ -1691,7 +2125,7 @@ class PredictionMarketsService:
                     }
                 return {
                     "status": "error",
-                    "error": "Failed to fetch markets from Dome API. Please check DOME_API_KEY configuration.",
+                    "error": "Failed to fetch markets. Check API configuration (DOME_API_KEY for Kalshi, CLOB API for Polymarket).",
                     "markets": []
                 }
             
