@@ -3282,7 +3282,7 @@ class HybridEconomicCalendar:
                 'time': '13:20 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '11.8K',
                 'forecast': 'N/A',
                 'previous': '11.5K'
             },
@@ -3332,9 +3332,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '738K',
                 'forecast': '715K',
-                'previous': 'N/A'
+                'previous': '718K'
             },
             {
                 'title': 'FOMC Member Musalem Speaks',
@@ -3362,7 +3362,7 @@ class HybridEconomicCalendar:
                 'time': '15:10 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '47.2',
                 'forecast': '48.2',
                 'previous': '47.9'
             },
@@ -3412,7 +3412,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.8%',
                 'forecast': 'N/A',
                 'previous': '-0.9%'
             },
@@ -3422,7 +3422,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.9%',
                 'previous': '1.8%'
             },
@@ -3432,7 +3432,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.1%',
                 'forecast': 'N/A',
                 'previous': '-1.6%'
             },
@@ -3442,7 +3442,7 @@ class HybridEconomicCalendar:
                 'time': '03:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '809B',
                 'forecast': '820B',
                 'previous': '793B'
             },
@@ -3452,7 +3452,7 @@ class HybridEconomicCalendar:
                 'time': '03:04 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '114.1B',
                 'forecast': '114.2B',
                 'previous': '111.7B'
             },
@@ -3464,7 +3464,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '10.6%',
                 'forecast': 'N/A',
                 'previous': '14.2%'
             },
