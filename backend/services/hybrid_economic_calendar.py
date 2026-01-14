@@ -3504,7 +3504,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.2%',
                 'previous': 'N/A'
             },
@@ -3514,7 +3514,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.4%',
                 'previous': '0.4%'
             },
@@ -3524,8 +3524,8 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '0.3%',
+                'actual': '0.2%',
+                'forecast': '0.2%',
                 'previous': 'N/A'
             },
             {
@@ -3534,8 +3534,8 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '0.4%',
+                'actual': '0.6%',
+                'forecast': '0.5%',
                 'previous': '0.0%'
             },
             {
@@ -3544,7 +3544,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-226B',
                 'forecast': '-240B',
                 'previous': '-251B'
             },
