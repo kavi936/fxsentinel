@@ -3393,142 +3393,146 @@ const Overview = () => {
               ) : predictionMarkets.length === 0 ? (
                 <div className="prediction-markets-empty">
                   <div className="empty-icon">📊</div>
-                  <div className="empty-text">No active prediction markets</div>
-                  <div className="empty-subtext">Markets related to economic events (Fed decisions, inflation, GDP) will appear here when available</div>
+                  <div className="empty-text">No Active Markets</div>
+                  <div className="empty-subtext">No active prediction markets available at this time. Check back later for new markets on upcoming economic events.</div>
                 </div>
               ) : (
                 <>
-                  {/* Check if all markets are historical/resolved */}
-                  {predictionMarkets.every(m => m.is_historical || m.closed || m.is_resolved) && (
-                    <div className="prediction-markets-notice">
-                      <div className="notice-icon">⏳</div>
-                      <div className="notice-content">
-                        <div className="notice-title">Historical Markets Only</div>
-                        <div className="notice-text">These are resolved markets from past events. Wait for markets to open to see live predictions for upcoming economic events.</div>
-                      </div>
-                    </div>
-                  )}
                   <div className="prediction-markets-list">
-                    {predictionMarkets.map((market) => {
-                    const yesPrice = market.yes_price || 0;
-                    const noPrice = market.no_price || 0;
-                    const yesPercent = (yesPrice * 100).toFixed(0);
-                    const noPercent = (noPrice * 100).toFixed(0);
-                    
-                    const isResolved = market.is_resolved || market.closed;
-                    
-                    // Check price quality
-                    const priceQuality = market.price_quality || "low";
-                    const priceSource = market.price_source || "fallback";
-                    const isEstimated = priceSource === "fallback" || priceQuality === "low";
-                    
-                    return (
-                      <div key={market.id} className={`prediction-market-item ${isResolved ? 'resolved' : ''}`}>
-                        <div className="market-header-row">
-                          <div className="market-question">
-                            {market.question}
-                            {isEstimated && (
-                              <span className="price-quality-badge" title="Price is estimated - actual market prices may vary">
-                                Estimated
-                              </span>
-                            )}
-                          </div>
-                          <div className="market-badges">
-                            {market.related_event && (
-                              <span className="market-event-badge">{market.related_event}</span>
-                            )}
-                            {isResolved && (
-                              <span className="market-status-badge resolved">Resolved</span>
-                            )}
-                            {market.accepting_orders && !isResolved && (
-                              <span className="market-status-badge active">Active</span>
-                            )}
-                          </div>
-                        </div>
+                    {(() => {
+                      // Filter: Show active markets OR recently resolved markets (within 30 days) for context
+                      // This ensures users see some markets even if most are historical
+                      const activeMarkets = predictionMarkets.filter(m => {
+                        // Show if not resolved and not closed
+                        if (!m.is_resolved && !m.closed) {
+                          return true;
+                        }
+                        // Show if recently resolved (within 30 days) - useful context
+                        if (m.is_recently_resolved) {
+                          return true;
+                        }
+                        return false;
+                      });
+                      
+                      // Sort by volume (highest to lowest), then by other factors
+                      const sortedMarkets = [...activeMarkets].sort((a, b) => {
+                        const volumeA = a.volume || 0;
+                        const volumeB = b.volume || 0;
                         
-                        <div className="market-probability-row">
-                          <div className="probability-bar-container">
-                            <div className="probability-bar">
-                              {yesPrice > 0 && (
-                                <div 
-                                  className="probability-fill yes-fill" 
-                                  style={{ width: `${yesPercent}%` }}
-                                >
-                                  {/* Show label if >= 10% OR if it's the only price available */}
-                                  {(yesPercent >= 10 || noPrice === 0) && (
-                                    <span className="probability-label yes-label">
-                                      YES {yesPercent}%
-                                    </span>
+                        // Primary sort: volume (highest first)
+                        if (volumeB !== volumeA) {
+                          return volumeB - volumeA;
+                        }
+                        
+                        // Secondary sort: accepting orders first
+                        if (a.accepting_orders !== b.accepting_orders) {
+                          return b.accepting_orders ? 1 : -1;
+                        }
+                        
+                        // Tertiary sort: future markets first
+                        if (a.is_future !== b.is_future) {
+                          return b.is_future ? 1 : -1;
+                        }
+                        
+                        return 0;
+                      });
+                      
+                      return sortedMarkets.map((market) => {
+                        const yesPrice = market.yes_price || 0;
+                        const noPrice = market.no_price || 0;
+                        const yesPercent = (yesPrice * 100).toFixed(0);
+                        const noPercent = (noPrice * 100).toFixed(0);
+                        
+                        return (
+                          <div key={market.id} className="prediction-market-item">
+                            {/* Simplified Header - Just Question */}
+                            <div className="market-header-row">
+                              <div className="market-question">
+                                {market.question}
+                              </div>
+                            </div>
+                            
+                            {/* Simplified Probability Display */}
+                            <div className="market-probability-row">
+                              <div className="probability-bar-container">
+                                <div className="probability-bar">
+                                  {yesPrice > 0 && (
+                                    <div 
+                                      className="probability-fill yes-fill" 
+                                      style={{ width: `${yesPercent}%` }}
+                                    >
+                                      {(yesPercent >= 10 || noPrice === 0) && (
+                                        <span className="probability-label yes-label">
+                                          YES {yesPercent}%
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                  {noPrice > 0 && (
+                                    <div 
+                                      className="probability-fill no-fill" 
+                                      style={{ width: `${noPercent}%` }}
+                                    >
+                                      {(noPercent >= 10 || yesPrice === 0) && (
+                                        <span className="probability-label no-label">
+                                          NO {noPercent}%
+                                        </span>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
-                              )}
-                              {noPrice > 0 && (
-                                <div 
-                                  className="probability-fill no-fill" 
-                                  style={{ width: `${noPercent}%` }}
-                                >
-                                  {/* Show label if >= 10% OR if it's the only price available */}
-                                  {(noPercent >= 10 || yesPrice === 0) && (
-                                    <span className="probability-label no-label">
-                                      NO {noPercent}%
-                                    </span>
-                                  )}
+                              </div>
+                            </div>
+                            
+                            {/* Minimal Meta - Only Resolution Date if Future */}
+                            {market.resolution_date && market.is_future && (
+                              <div className="market-meta-row">
+                                <div className="market-meta-item">
+                                  <span className="meta-label">Resolves:</span>
+                                  <span className="meta-value">
+                                    {(() => {
+                                      const date = new Date(market.resolution_date);
+                                      const now = new Date();
+                                      
+                                      const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+                                      if (daysUntil <= 7) {
+                                        return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                                      }
+                                      
+                                      return date.toLocaleDateString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                      });
+                                    })()}
+                                  </span>
                                 </div>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                        
-                        <div className="market-meta-row">
-                          {market.volume && (
-                            <div className="market-meta-item">
-                              <span className="meta-label">Volume:</span>
-                              <span className="meta-value">${(market.volume / 1000).toFixed(0)}k</span>
-                            </div>
-                          )}
-                          {market.liquidity && (
-                            <div className="market-meta-item">
-                              <span className="meta-label">Liquidity:</span>
-                              <span className="meta-value">${(market.liquidity / 1000).toFixed(0)}k</span>
-                            </div>
-                          )}
-                          {market.resolution_date && (
-                            <div className="market-meta-item">
-                              <span className="meta-label">Resolves:</span>
-                              <span className="meta-value">
-                                {(() => {
-                                  const date = new Date(market.resolution_date);
-                                  const now = new Date();
-                                  const isPast = date < now;
-                                  
-                                  if (isPast || market.closed) {
-                                    return `Resolved ${date.toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      day: 'numeric',
-                                      year: 'numeric'
-                                    })}`;
-                                  }
-                                  
-                                  const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
-                                  if (daysUntil <= 7) {
-                                    return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
-                                  }
-                                  
-                                  return date.toLocaleDateString('en-US', { 
-                                    month: 'short', 
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  });
-                                })()}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                        
-                      </div>
-                    );
-                  })}
+                        );
+                      });
+                    })()}
                   </div>
+                  {(() => {
+                    // Check if we have any markets (active or recently resolved)
+                    const hasMarkets = predictionMarkets.some(m => {
+                      return (!m.is_resolved && !m.closed) || m.is_recently_resolved;
+                    });
+                    
+                    if (!hasMarkets) {
+                      return (
+                        <div className="prediction-markets-notice">
+                          <div className="notice-icon">⏳</div>
+                          <div className="notice-content">
+                            <div className="notice-title">No Active Markets</div>
+                            <div className="notice-text">No active prediction markets available at this time. Check back later for new markets on upcoming economic events.</div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </>
               )}
             </div>
