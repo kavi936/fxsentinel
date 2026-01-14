@@ -3506,7 +3506,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '0.0%',
                 'forecast': '0.2%',
-                'previous': 'N/A'
+                'previous': '0.3%'
             },
             {
                 'title': 'Core Retail Sales m/m',
@@ -3516,7 +3516,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '0.5%',
                 'forecast': '0.4%',
-                'previous': '0.4%'
+                'previous': '0.2%'
             },
             {
                 'title': 'PPI m/m',
@@ -3526,7 +3526,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '0.2%',
                 'forecast': '0.2%',
-                'previous': 'N/A'
+                'previous': '0.1'
             },
             {
                 'title': 'Retail Sales m/m',
@@ -3536,7 +3536,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': '0.6%',
                 'forecast': '0.5%',
-                'previous': '0.0%'
+                'previous': '-0.1%'
             },
             {
                 'title': 'Current Account',
@@ -3546,7 +3546,7 @@ class HybridEconomicCalendar:
                 'impact': 'low',
                 'actual': '-226B',
                 'forecast': '-240B',
-                'previous': '-251B'
+                'previous': '-249B'
             },
             {
                 'title': 'Core PPI m/m',
@@ -3554,7 +3554,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': 'N/A',
                 'previous': '0.1%'
             },
@@ -3564,7 +3564,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': 'N/A',
                 'previous': '0.3%'
             },
