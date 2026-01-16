@@ -2111,22 +2111,81 @@ const Overview = () => {
     return types[type] || type;
   };
 
-  const handleDocumentDownload = (doc) => {
+  const handleDocumentDownload = async (doc) => {
     // Ensure filePath is absolute (starts with /)
     // This ensures PDFs work correctly in both development and production
-    const filePath = doc.filePath.startsWith('/') 
+    let filePath = doc.filePath.startsWith('/') 
       ? doc.filePath 
       : `/${doc.filePath}`;
     
-    // Create a link element and trigger download/view
-    const link = document.createElement('a');
-    link.href = filePath;
-    link.download = doc.fileName || doc.title;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // In production, ensure we're using the correct base URL
+    // For static files, we should use relative paths from the root
+    console.log('📄 Opening document:', filePath);
+    
+    // Verify file exists by attempting a fetch
+    // This helps catch 404 errors before trying to open
+    try {
+      const response = await fetch(filePath, { 
+        method: 'HEAD',
+        cache: 'no-cache'
+      });
+      
+      if (!response.ok && response.status === 404) {
+        // Try with base URL if we're in a subdirectory
+        const baseUrl = window.location.origin;
+        const fullUrl = `${baseUrl}${filePath}`;
+        console.log('⚠️ File not found at relative path, trying full URL:', fullUrl);
+        
+        const fullResponse = await fetch(fullUrl, { method: 'HEAD' });
+        if (fullResponse.ok) {
+          filePath = fullUrl;
+        } else {
+          throw new Error(`File not found: ${filePath} (Status: ${response.status})`);
+        }
+      }
+    } catch (fetchError) {
+      // If HEAD request fails (CORS, network, etc.), still try to open
+      // The browser will show its own error if the file doesn't exist
+      console.warn('⚠️ Could not verify file existence:', fetchError);
+    }
+    
+    // Use window.open() to view PDF in browser
+    // This works better than forcing download and allows browser PDF viewer
+    try {
+      const newWindow = window.open(filePath, '_blank', 'noopener,noreferrer');
+      
+      // Check if popup was blocked
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        // Popup was blocked, use link method instead
+        const link = document.createElement('a');
+        link.href = filePath;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        // Don't use download attribute - let browser decide whether to view or download
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ Error opening document:', error);
+      // Fallback: try direct link method
+      try {
+        const link = document.createElement('a');
+        link.href = filePath;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+        }, 100);
+      } catch (fallbackError) {
+        console.error('❌ Fallback method also failed:', fallbackError);
+        alert(`Unable to open document: ${doc.fileName || doc.title}. The file may not be available on the server. Please try again later or contact support.`);
+      }
+    }
   };
 
   const formatDocumentDate = (dateStr) => {
