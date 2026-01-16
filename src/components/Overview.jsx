@@ -2112,11 +2112,18 @@ const Overview = () => {
   };
 
   const handleDocumentDownload = (doc) => {
-    // Create a link element and trigger download
+    // Ensure filePath is absolute (starts with /)
+    // This ensures PDFs work correctly in both development and production
+    const filePath = doc.filePath.startsWith('/') 
+      ? doc.filePath 
+      : `/${doc.filePath}`;
+    
+    // Create a link element and trigger download/view
     const link = document.createElement('a');
-    link.href = doc.filePath;
+    link.href = filePath;
     link.download = doc.fileName || doc.title;
     link.target = '_blank';
+    link.rel = 'noopener noreferrer';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
