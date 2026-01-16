@@ -60,6 +60,8 @@ test_session.session*
 !eslint.config.js
 !src/data/economyIndicators.json
 !src/data/economyIndicators.template.json
+!src/data/central-bank-documents.json
+!public/central-bank-documents.json
 analysis_history.json
 news_cache.json
 news_history.json
