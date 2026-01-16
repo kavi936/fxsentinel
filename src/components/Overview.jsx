@@ -2,6 +2,7 @@ import React, { useState, useEffect, Fragment } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
 import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
 import { usePredictionMarkets } from '../hooks/usePredictionMarkets.js';
+import { useCentralBankDocuments } from '../hooks/useCentralBankDocuments.js';
 import LiveNewsFeed from './LiveNewsFeed';
 import { config } from '../config';
 import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
@@ -471,12 +472,26 @@ const Overview = () => {
     refresh: refreshPredictionMarkets
   } = usePredictionMarkets();
 
+  // Central Bank Documents hook
+  const {
+    documents: centralBankDocuments,
+    loading: centralBankDocumentsLoading,
+    error: centralBankDocumentsError,
+    refresh: refreshCentralBankDocuments
+  } = useCentralBankDocuments();
+
   // Timezone state
   const [currentTimezone, setCurrentTimezone] = useState(() => {
     const tz = getUserTimezone();
     console.log('🌍 Initial timezone:', tz);
     return tz;
   });
+
+  // Central Bank Documents filter state
+  const [cbSearchQuery, setCbSearchQuery] = useState('');
+  const [cbFilterBank, setCbFilterBank] = useState('all');
+  const [cbFilterType, setCbFilterType] = useState('all');
+  const [cbFilterImpact, setCbFilterImpact] = useState('all');
 
   // Format last updated time
   const formatLastUpdated = (timestamp) => {
@@ -2027,6 +2042,97 @@ const Overview = () => {
   const getChangeColor = (change) => {
     if (!change) return '#666';
     return parseFloat(change) >= 0 ? '#00ff88' : '#ff4757';
+  };
+
+  // Central Bank Documents filtering and helpers
+  const getFilteredCentralBankDocuments = () => {
+    if (!centralBankDocuments || centralBankDocuments.length === 0) {
+      return [];
+    }
+
+    return centralBankDocuments.filter(doc => {
+      // Search query filter
+      if (cbSearchQuery) {
+        const query = cbSearchQuery.toLowerCase();
+        const matchesSearch = 
+          doc.title.toLowerCase().includes(query) ||
+          doc.description.toLowerCase().includes(query) ||
+          doc.tags.some(tag => tag.toLowerCase().includes(query)) ||
+          doc.centralBank.toLowerCase().includes(query);
+        
+        if (!matchesSearch) return false;
+      }
+
+      // Central bank filter
+      if (cbFilterBank !== 'all' && doc.centralBank !== cbFilterBank) {
+        return false;
+      }
+
+      // Type filter
+      if (cbFilterType !== 'all' && doc.type !== cbFilterType) {
+        return false;
+      }
+
+      // Impact filter
+      if (cbFilterImpact !== 'all' && doc.impact !== cbFilterImpact) {
+        return false;
+      }
+
+      return true;
+    }).sort((a, b) => {
+      // Sort by date (newest first)
+      return new Date(b.date) - new Date(a.date);
+    });
+  };
+
+  const getCentralBankName = (code) => {
+    const banks = {
+      'FED': 'Federal Reserve',
+      'ECB': 'European Central Bank',
+      'BOJ': 'Bank of Japan',
+      'BOE': 'Bank of England',
+      'RBA': 'Reserve Bank of Australia',
+      'BOC': 'Bank of Canada',
+      'SNB': 'Swiss National Bank',
+      'RBNZ': 'Reserve Bank of New Zealand'
+    };
+    return banks[code] || code;
+  };
+
+  const getDocumentTypeLabel = (type) => {
+    const types = {
+      'meeting_minutes': 'Meeting Minutes',
+      'speech': 'Speech',
+      'report': 'Report',
+      'cot_report': 'COT Report',
+      'chart': 'Chart',
+      'statement': 'Statement'
+    };
+    return types[type] || type;
+  };
+
+  const handleDocumentDownload = (doc) => {
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = doc.filePath;
+    link.download = doc.fileName || doc.title;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const formatDocumentDate = (dateStr) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch (e) {
+      return dateStr;
+    }
   };
 
 
@@ -3598,17 +3704,184 @@ const Overview = () => {
               <div className="header-main">
                 <h2 className="central-bank-analysis-title">CENTRAL BANK ANALYSIS</h2>
                 <InfoIcon 
-                  tooltipText="Central Bank Analysis: Coming soon - AI-powered analysis of Federal Reserve speeches, Bank of Japan reports, ECB communications, and other central bank statements. This feature will provide sentiment analysis, policy implications, and market impact assessments for major central bank communications."
+                  tooltipText="Central Bank Documents: Access official documents, meeting minutes, speeches, reports, and COT data from major central banks. Filter by bank, document type, or search by keywords. AI analysis coming soon."
                   position="bottom"
                 />
               </div>
+              <div className="central-bank-controls">
+                <button 
+                  className={`central-bank-refresh-btn ${centralBankDocumentsLoading ? 'spinning' : ''}`}
+                  onClick={refreshCentralBankDocuments}
+                  disabled={centralBankDocumentsLoading}
+                  title="Refresh Documents"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  </svg>
+                </button>
+              </div>
             </div>
             <div className="central-bank-analysis-content">
-              <div className="coming-soon-state">
-                <div className="coming-soon-icon">🏦</div>
-                <div className="coming-soon-text">Coming Soon</div>
-                <div className="coming-soon-subtext">AI-powered analysis of Fed speeches, BOJ reports, and central bank communications</div>
-              </div>
+              {centralBankDocumentsLoading ? (
+                <div className="central-bank-loading">
+                  <div className="loading-spinner"></div>
+                  <span>Loading documents...</span>
+                </div>
+              ) : centralBankDocumentsError ? (
+                <div className="central-bank-error">
+                  <div className="error-icon">⚠️</div>
+                  <div className="error-text">{centralBankDocumentsError}</div>
+                  <button className="retry-btn" onClick={refreshCentralBankDocuments}>Retry</button>
+                </div>
+              ) : (
+                <>
+                  {/* Search and Filters */}
+                  <div className="central-bank-filters">
+                    <div className="cb-search-container">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="search-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                      </svg>
+                      <input
+                        type="text"
+                        className="cb-search-input"
+                        placeholder="Search documents..."
+                        value={cbSearchQuery}
+                        onChange={(e) => setCbSearchQuery(e.target.value)}
+                      />
+                      {cbSearchQuery && (
+                        <button 
+                          className="cb-clear-search"
+                          onClick={() => setCbSearchQuery('')}
+                          title="Clear search"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M18 6L6 18M6 6l12 12"></path>
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                    <div className="cb-filter-row">
+                      <select 
+                        className="cb-filter-select"
+                        value={cbFilterBank}
+                        onChange={(e) => setCbFilterBank(e.target.value)}
+                      >
+                        <option value="all">All Banks</option>
+                        <option value="FED">Federal Reserve</option>
+                        <option value="ECB">European Central Bank</option>
+                        <option value="BOJ">Bank of Japan</option>
+                        <option value="BOE">Bank of England</option>
+                        <option value="RBA">Reserve Bank of Australia</option>
+                        <option value="BOC">Bank of Canada</option>
+                        <option value="SNB">Swiss National Bank</option>
+                        <option value="RBNZ">Reserve Bank of New Zealand</option>
+                      </select>
+                      <select 
+                        className="cb-filter-select"
+                        value={cbFilterType}
+                        onChange={(e) => setCbFilterType(e.target.value)}
+                      >
+                        <option value="all">All Types</option>
+                        <option value="meeting_minutes">Meeting Minutes</option>
+                        <option value="speech">Speech</option>
+                        <option value="report">Report</option>
+                        <option value="cot_report">COT Report</option>
+                        <option value="chart">Chart</option>
+                        <option value="statement">Statement</option>
+                      </select>
+                      <select 
+                        className="cb-filter-select"
+                        value={cbFilterImpact}
+                        onChange={(e) => setCbFilterImpact(e.target.value)}
+                      >
+                        <option value="all">All Impact</option>
+                        <option value="high">High Impact</option>
+                        <option value="medium">Medium Impact</option>
+                        <option value="low">Low Impact</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Documents List */}
+                  <div className="central-bank-documents-list">
+                    {getFilteredCentralBankDocuments().length > 0 ? (
+                      getFilteredCentralBankDocuments().map((doc) => (
+                        <div key={doc.id} className={`cb-document-item impact-${doc.impact}`}>
+                          <div className="cb-document-header">
+                            <div className="cb-document-title-row">
+                              <h3 className="cb-document-title">{doc.title}</h3>
+                              <div className="cb-document-badges">
+                                <span className={`cb-bank-badge bank-${doc.centralBank.toLowerCase()}`}>
+                                  {doc.centralBank}
+                                </span>
+                                <span className={`cb-impact-badge impact-${doc.impact}`}>
+                                  {doc.impact.toUpperCase()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="cb-document-meta">
+                              <span className="cb-document-date">{formatDocumentDate(doc.date)}</span>
+                              <span className="cb-document-type">{getDocumentTypeLabel(doc.type)}</span>
+                              <span className="cb-document-size">{doc.fileSize}</span>
+                            </div>
+                          </div>
+                          <div className="cb-document-description">
+                            {doc.description}
+                          </div>
+                          <div className="cb-document-footer">
+                            <div className="cb-document-tags">
+                              {doc.tags.slice(0, 3).map((tag, idx) => (
+                                <span key={idx} className="cb-tag">{tag}</span>
+                              ))}
+                              {doc.tags.length > 3 && (
+                                <span className="cb-tag-more">+{doc.tags.length - 3} more</span>
+                              )}
+                            </div>
+                            <div className="cb-document-actions">
+                              <button 
+                                className="cb-download-btn"
+                                onClick={() => handleDocumentDownload(doc)}
+                                title={`Download ${doc.fileName}`}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                  <polyline points="7 10 12 15 17 10"></polyline>
+                                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                Download
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="central-bank-empty">
+                        <div className="empty-icon">📄</div>
+                        <div className="empty-text">No documents found</div>
+                        <div className="empty-subtext">
+                          {cbSearchQuery || cbFilterBank !== 'all' || cbFilterType !== 'all' || cbFilterImpact !== 'all'
+                            ? "Try adjusting your filters to see more documents"
+                            : "No central bank documents available at this time"}
+                        </div>
+                        {(cbSearchQuery || cbFilterBank !== 'all' || cbFilterType !== 'all' || cbFilterImpact !== 'all') && (
+                          <button 
+                            className="cb-reset-filters-btn"
+                            onClick={() => {
+                              setCbSearchQuery('');
+                              setCbFilterBank('all');
+                              setCbFilterType('all');
+                              setCbFilterImpact('all');
+                            }}
+                          >
+                            Reset Filters
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

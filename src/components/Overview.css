@@ -8004,9 +8004,12 @@
 .central-bank-analysis-content {
   flex: 1;
   padding: 16px 20px;
-  overflow-y: auto;
+  overflow: hidden;
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .coming-soon-state {
@@ -8046,6 +8049,414 @@
   margin-top: 8px;
 }
 
+/* Central Bank Documents Styles */
+.central-bank-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.central-bank-refresh-btn {
+  background: rgba(255, 111, 97, 0.1);
+  border: 1px solid rgba(255, 111, 97, 0.3);
+  border-radius: 6px;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.central-bank-refresh-btn:hover {
+  background: rgba(255, 111, 97, 0.2);
+  border-color: rgba(255, 111, 97, 0.5);
+}
+
+.central-bank-refresh-btn.spinning svg {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.central-bank-loading,
+.central-bank-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.central-bank-loading .loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255, 111, 97, 0.3);
+  border-top-color: rgba(255, 111, 97, 0.8);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.central-bank-error .error-icon {
+  font-size: 48px;
+  opacity: 0.8;
+}
+
+.central-bank-error .error-text {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+}
+
+.central-bank-filters {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.cb-search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cb-search-container .search-icon {
+  position: absolute;
+  left: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.cb-search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 111, 97, 0.3);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.cb-search-input:focus {
+  outline: none;
+  border-color: rgba(255, 111, 97, 0.6);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.cb-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.cb-clear-search {
+  position: absolute;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.cb-clear-search:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cb-filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cb-filter-select {
+  flex: 1;
+  min-width: 120px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 111, 97, 0.3);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cb-filter-select:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 111, 97, 0.5);
+}
+
+.cb-filter-select:focus {
+  outline: none;
+  border-color: rgba(255, 111, 97, 0.6);
+}
+
+.cb-filter-select option {
+  background: #1a0f0a;
+  color: #ffffff;
+}
+
+.central-bank-documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  min-height: 0;
+}
+
+.central-bank-documents-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.central-bank-documents-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.central-bank-documents-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 111, 97, 0.3);
+  border-radius: 3px;
+}
+
+.central-bank-documents-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 111, 97, 0.5);
+}
+
+.cb-document-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 111, 97, 0.2);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  border-left: 3px solid rgba(255, 111, 97, 0.4);
+}
+
+.cb-document-item.impact-high {
+  border-left-color: rgba(255, 68, 68, 0.6);
+}
+
+.cb-document-item.impact-medium {
+  border-left-color: rgba(255, 152, 0, 0.6);
+}
+
+.cb-document-item.impact-low {
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+.cb-document-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 111, 97, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cb-document-header {
+  margin-bottom: 12px;
+}
+
+.cb-document-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.cb-document-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.cb-document-badges {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.cb-bank-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: rgba(255, 111, 97, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 111, 97, 0.4);
+}
+
+.cb-impact-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cb-impact-badge.impact-high {
+  background: rgba(255, 68, 68, 0.2);
+  color: #ff4444;
+  border: 1px solid rgba(255, 68, 68, 0.4);
+}
+
+.cb-impact-badge.impact-medium {
+  background: rgba(255, 152, 0, 0.2);
+  color: #ff9800;
+  border: 1px solid rgba(255, 152, 0, 0.4);
+}
+
+.cb-impact-badge.impact-low {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cb-document-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.cb-document-description {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.cb-document-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.cb-document-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.cb-tag {
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.cb-tag-more {
+  padding: 4px 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+}
+
+.cb-document-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cb-download-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(255, 111, 97, 0.15);
+  border: 1px solid rgba(255, 111, 97, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cb-download-btn:hover {
+  background: rgba(255, 111, 97, 0.25);
+  border-color: rgba(255, 111, 97, 0.5);
+  transform: translateY(-1px);
+}
+
+.cb-download-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.central-bank-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+
+.central-bank-empty .empty-icon {
+  font-size: 64px;
+  opacity: 0.6;
+}
+
+.central-bank-empty .empty-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.central-bank-empty .empty-subtext {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.cb-reset-filters-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 111, 97, 0.15);
+  border: 1px solid rgba(255, 111, 97, 0.3);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cb-reset-filters-btn:hover {
+  background: rgba(255, 111, 97, 0.25);
+  border-color: rgba(255, 111, 97, 0.5);
+}
+
 @media (max-width: 1200px) {
   .central-bank-analysis-card {
     max-width: 100%;
@@ -8057,15 +8468,26 @@
     padding: 12px 16px;
   }
   
-  .coming-soon-icon {
-    font-size: 48px;
+  .cb-filter-row {
+    flex-direction: column;
   }
   
-  .coming-soon-text {
-    font-size: 20px;
+  .cb-filter-select {
+    width: 100%;
   }
   
-  .coming-soon-subtext {
-    font-size: 13px;
+  .cb-document-title-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cb-document-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .cb-download-btn {
+    width: 100%;
+    justify-content: center;
   }
 }
