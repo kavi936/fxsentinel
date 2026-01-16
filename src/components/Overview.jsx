@@ -3437,81 +3437,135 @@ const Overview = () => {
                         return 0;
                       });
                       
-                      return sortedMarkets.map((market) => {
-                        const yesPrice = market.yes_price || 0;
-                        const noPrice = market.no_price || 0;
-                        const yesPercent = (yesPrice * 100).toFixed(0);
-                        const noPercent = (noPrice * 100).toFixed(0);
-                        
-                        return (
-                          <div key={market.id} className="prediction-market-item">
-                            {/* Simplified Header - Just Question */}
-                            <div className="market-header-row">
-                              <div className="market-question">
-                                {market.question}
-                              </div>
-                            </div>
-                            
-                            {/* Simplified Probability Display */}
-                            <div className="market-probability-row">
-                              <div className="probability-bar-container">
-                                <div className="probability-bar">
-                                  {yesPrice > 0 && (
-                                    <div 
-                                      className="probability-fill yes-fill" 
-                                      style={{ width: `${yesPercent}%` }}
-                                    >
-                                      {(yesPercent >= 10 || noPrice === 0) && (
-                                        <span className="probability-label yes-label">
-                                          YES {yesPercent}%
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
-                                  {noPrice > 0 && (
-                                    <div 
-                                      className="probability-fill no-fill" 
-                                      style={{ width: `${noPercent}%` }}
-                                    >
-                                      {(noPercent >= 10 || yesPrice === 0) && (
-                                        <span className="probability-label no-label">
-                                          NO {noPercent}%
-                                        </span>
-                                      )}
-                                    </div>
-                                  )}
+                      return sortedMarkets
+                        .filter(market => {
+                          // Filter out markets with invalid prices (already filtered in backend, but double-check)
+                          const yesPrice = market.yes_price;
+                          const noPrice = market.no_price;
+                          const volume = market.volume || 0;
+                          
+                          // Skip if prices are null/undefined (invalid data)
+                          if (yesPrice === null && noPrice === null && volume === 0) {
+                            return false;
+                          }
+                          
+                          // Skip if prices are 0/1 with no volume (no real trading data)
+                          if (yesPrice === 0 && noPrice === 1 && volume === 0) {
+                            return false;
+                          }
+                          
+                          return true;
+                        })
+                        .map((market) => {
+                          const yesPrice = market.yes_price;
+                          const noPrice = market.no_price;
+                          
+                          // Handle invalid/null prices
+                          const hasValidPrices = (yesPrice !== null && yesPrice !== undefined) || 
+                                                (noPrice !== null && noPrice !== undefined);
+                          
+                          const yesPriceValue = yesPrice || 0;
+                          const noPriceValue = noPrice || 0;
+                          const total = yesPriceValue + noPriceValue;
+                          
+                          // Normalize to percentages if we have valid prices
+                          const yesPercent = total > 0 ? ((yesPriceValue / total) * 100).toFixed(0) : '0';
+                          const noPercent = total > 0 ? ((noPriceValue / total) * 100).toFixed(0) : '0';
+                          
+                          return (
+                            <div key={market.id} className="prediction-market-item">
+                              {/* Simplified Header - Just Question */}
+                              <div className="market-header-row">
+                                <div className="market-question">
+                                  {market.question}
                                 </div>
                               </div>
-                            </div>
-                            
-                            {/* Minimal Meta - Only Resolution Date if Future */}
-                            {market.resolution_date && market.is_future && (
+                              
+                              {/* Simplified Probability Display */}
+                              {hasValidPrices && total > 0 ? (
+                                <div className="market-probability-row">
+                                  <div className="probability-bar-container">
+                                    <div className="probability-bar">
+                                      {yesPriceValue > 0 && (
+                                        <div 
+                                          className="probability-fill yes-fill" 
+                                          style={{ width: `${yesPercent}%` }}
+                                        >
+                                          {(parseFloat(yesPercent) >= 10 || noPriceValue === 0) && (
+                                            <span className="probability-label yes-label">
+                                              YES {yesPercent}%
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                      {noPriceValue > 0 && (
+                                        <div 
+                                          className="probability-fill no-fill" 
+                                          style={{ width: `${noPercent}%` }}
+                                        >
+                                          {(parseFloat(noPercent) >= 10 || yesPriceValue === 0) && (
+                                            <span className="probability-label no-label">
+                                              NO {noPercent}%
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="market-probability-row">
+                                  <div className="probability-bar-container">
+                                    <div className="probability-bar no-data">
+                                      <span className="probability-label no-data-label">
+                                        No price data available
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Meta Row - Resolution Date and URL */}
                               <div className="market-meta-row">
-                                <div className="market-meta-item">
-                                  <span className="meta-label">Resolves:</span>
-                                  <span className="meta-value">
-                                    {(() => {
-                                      const date = new Date(market.resolution_date);
-                                      const now = new Date();
-                                      
-                                      const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
-                                      if (daysUntil <= 7) {
-                                        return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
-                                      }
-                                      
-                                      return date.toLocaleDateString('en-US', { 
-                                        month: 'short', 
-                                        day: 'numeric',
-                                        year: 'numeric'
-                                      });
-                                    })()}
-                                  </span>
-                                </div>
+                                {market.resolution_date && market.is_future && (
+                                  <div className="market-meta-item">
+                                    <span className="meta-label">Resolves:</span>
+                                    <span className="meta-value">
+                                      {(() => {
+                                        const date = new Date(market.resolution_date);
+                                        const now = new Date();
+                                        
+                                        const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+                                        if (daysUntil <= 7) {
+                                          return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                                        }
+                                        
+                                        return date.toLocaleDateString('en-US', { 
+                                          month: 'short', 
+                                          day: 'numeric',
+                                          year: 'numeric'
+                                        });
+                                      })()}
+                                    </span>
+                                  </div>
+                                )}
+                                {market.url && (
+                                  <div className="market-meta-item">
+                                    <a 
+                                      href={market.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="market-link"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      View on {market.platform === 'kalshi' ? 'Kalshi' : 'Polymarket'} →
+                                    </a>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
-                        );
-                      });
+                            </div>
+                          );
+                        });
                     })()}
                   </div>
                   {(() => {

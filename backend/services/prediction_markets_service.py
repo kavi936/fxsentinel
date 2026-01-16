@@ -64,6 +64,14 @@ except ImportError:
     PERSISTENT_CACHE_AVAILABLE = False
     logger.warning("Persistent prediction markets cache not available. Using file-based cache.")
 
+# Import PolyRouter API client
+try:
+    from services.polyrouter_api_client import PolyRouterAPIClient
+    POLYROUTER_AVAILABLE = True
+except ImportError:
+    POLYROUTER_AVAILABLE = False
+    logger.warning("PolyRouter API client not available. Install dependencies if needed.")
+
 if not DOME_SDK_AVAILABLE:
     logger.warning("dome-api-sdk not installed. Install with: pip install dome-api-sdk")
 
@@ -266,6 +274,20 @@ class PredictionMarketsService:
         else:
             self.use_persistent_cache = False
         
+        # Initialize PolyRouter API client
+        self.use_polyrouter = os.getenv('USE_POLYROUTER', 'true').lower() == 'true'
+        
+        self.polyrouter_client = None
+        if POLYROUTER_AVAILABLE and self.use_polyrouter:
+            try:
+                self.polyrouter_client = PolyRouterAPIClient()
+                if self.polyrouter_client.available:
+                    logger.info("PolyRouter API client initialized and available")
+                else:
+                    logger.warning("PolyRouter API key not configured")
+            except Exception as e:
+                logger.warning(f"Failed to initialize PolyRouter client: {e}")
+        
         # Initialize cached data
         self.cached_markets = None
         self.cache_timestamp = None
@@ -408,6 +430,7 @@ class PredictionMarketsService:
         
         age = datetime.now(timezone.utc) - self.cache_timestamp.replace(tzinfo=timezone.utc)
         return age.total_seconds() < (self.cache_expiration_minutes * 60)
+    
     
     def _fetch_kalshi_markets(self, early_stop_threshold: int = None) -> List[Dict]:
         """Fetch markets from Kalshi via Dome API using SDK
@@ -1075,10 +1098,23 @@ class PredictionMarketsService:
                 continue
             
             # NEW: Check if market has embedded price data (prioritize these on free tier)
+            # Also validate that prices are meaningful (not 0/1 with no volume)
             has_embedded_price = False
+            has_valid_prices = False
+            
+            # Get volume for validation
+            if platform == "kalshi":
+                volume = _safe_get(market, "volume") or _safe_get(market, "volume_24h") or 0
+            elif is_clob_structure:
+                volume = _safe_get(market, "volume") or _safe_get(market, "volume_total") or 0
+            else:
+                volume = _safe_get(market, "volume_total") or _safe_get(market, "volume_1_week") or 0
             
             if platform == "kalshi":
-                has_embedded_price = _safe_get(market, "last_price") is not None
+                last_price = _safe_get(market, "last_price")
+                has_embedded_price = last_price is not None
+                # Valid if price is in range (0, 1) or market has volume
+                has_valid_prices = (last_price is not None and 0 < last_price < 1) or volume > 0
             elif is_clob_structure:
                 # CLOB API: Check if tokens array has prices
                 tokens = _safe_get(market, "tokens", [])
@@ -1087,6 +1123,13 @@ class PredictionMarketsService:
                         token.get("price") is not None 
                         for token in tokens
                     )
+                    # Check if prices are valid (not all 0 with no volume)
+                    valid_prices = [
+                        float(t.get("price", 0)) 
+                        for t in tokens 
+                        if t.get("price") is not None
+                    ]
+                    has_valid_prices = any(0 < p < 1 for p in valid_prices) or volume > 0
             else:
                 # DOME API Polymarket: Check if side_a or side_b have prices
                 side_a = _safe_get(market, "side_a", {})
@@ -1096,6 +1139,14 @@ class PredictionMarketsService:
                     has_embedded_price = any(
                         _safe_get(side_a, key) is not None 
                         for key in ["price", "current_price", "last_price", "token_price"]
+                    )
+                    # Check if prices are valid
+                    price_a = _safe_get(side_a, "price") or _safe_get(side_a, "current_price")
+                    price_b = _safe_get(side_b, "price") or _safe_get(side_b, "current_price") if isinstance(side_b, dict) else None
+                    has_valid_prices = (
+                        (price_a is not None and 0 < price_a < 1) or 
+                        (price_b is not None and 0 < price_b < 1) or 
+                        volume > 0
                     )
                 
                 if not has_embedded_price and isinstance(side_b, dict):
@@ -1111,8 +1162,15 @@ class PredictionMarketsService:
                         _safe_get(market, "no_price") is not None
                     )
             
-            # Store price availability flag
+            # Skip markets with invalid prices (0/1 with no volume = no real data)
+            if has_embedded_price and not has_valid_prices and volume == 0:
+                # Market has price data but it's invalid (likely 0/1 with no volume)
+                skipped_closed += 1
+                continue
+            
+            # Store price availability flags
             market["has_embedded_price"] = has_embedded_price
+            market["has_valid_prices"] = has_valid_prices
             
             # Check if market has future resolution date
             # CLOB uses ISO string (end_date_iso), DOME uses Unix timestamps
@@ -1131,11 +1189,12 @@ class PredictionMarketsService:
                         days_until_resolution = (resolution_date_obj - now).days
                         days_since_resolution = (now - resolution_date_obj).days
                         
-                        # Allow markets with future dates OR recently resolved (within last 30 days)
-                        # This ensures we show some markets even if most are historical
+                        # Allow markets with future dates OR recently resolved (within last 90 days)
+                        # Extended grace period to show more markets - many markets might be slightly old but still relevant
                         if not is_future:
-                            # Market is in the past - only show if resolved recently (within 30 days)
-                            if days_since_resolution > 30:
+                            # Market is in the past - only show if resolved recently (within 90 days)
+                            # This is more lenient to ensure we show some markets
+                            if days_since_resolution > 90:
                                 skipped_closed += 1
                                 continue
                             # Market resolved recently - treat as "recently resolved" for display
@@ -1162,11 +1221,12 @@ class PredictionMarketsService:
                         days_until_resolution = (resolution_date_obj - now).days
                         days_since_resolution = (now - resolution_date_obj).days
                         
-                        # Allow markets with future dates OR recently resolved (within last 30 days)
-                        # This ensures we show some markets even if most are historical
+                        # Allow markets with future dates OR recently resolved (within last 90 days)
+                        # Extended grace period to show more markets - many markets might be slightly old but still relevant
                         if not is_future:
-                            # Market is in the past - only show if resolved recently (within 30 days)
-                            if days_since_resolution > 30:
+                            # Market is in the past - only show if resolved recently (within 90 days)
+                            # This is more lenient to ensure we show some markets
+                            if days_since_resolution > 90:
                                 skipped_closed += 1
                                 continue
                             # Market resolved recently - treat as "recently resolved" for display
@@ -1181,7 +1241,7 @@ class PredictionMarketsService:
                     is_future = None  # Unknown
                     days_until_resolution = None
             
-            # Track recently resolved markets (within last 30 days)
+            # Track recently resolved markets (within last 90 days - matches grace period)
             is_recently_resolved = False
             if is_clob_structure:
                 # CLOB API - check completed_time or end_date_iso if closed
@@ -1204,7 +1264,7 @@ class PredictionMarketsService:
                         
                         if completed_date:
                             days_since_resolution = (now - completed_date).days
-                            is_recently_resolved = 0 <= days_since_resolution <= 30
+                            is_recently_resolved = 0 <= days_since_resolution <= 90  # Extended to 90 days
                     except (ValueError, TypeError):
                         pass
             else:
@@ -1387,7 +1447,8 @@ class PredictionMarketsService:
                     priority_score = 0
                 
                 # IMPORTANT: Filter out resolved markets - do not include them
-                if is_resolved:
+                # BUT: Allow recently resolved markets (within grace period) for context
+                if is_resolved and not is_recently_resolved:
                     skipped_closed += 1
                     continue
                 
@@ -1815,12 +1876,22 @@ class PredictionMarketsService:
                     no_price = 1.0
                     price_source = "resolved"
             
+            # Validate prices: If we have 0/1 prices with no volume, mark as invalid
+            # This indicates a market with no real trading data
+            market_volume = _safe_get(market, "volume") or _safe_get(market, "volume_total") or _safe_get(market, "volume_24h") or 0
+            if (yes_price == 0 or yes_price is None) and (no_price == 1 or (no_price is None and yes_price == 0)) and market_volume == 0:
+                # Market has no real price data - set to None
+                yes_price = None
+                no_price = None
+                price_source = "invalid"
+            
             # Ensure prices always sum to 1 - handle missing prices
             if yes_price is None and no_price is None:
-                # Both missing - use 50/50 fallback
+                # Both missing - use 50/50 fallback only if market has volume (indicates it's active)
                 status = _safe_get(market, "status", "").lower()
                 market_title = market.get('title', 'unknown')[:50]
-                if status == "open":
+                if status == "open" and market_volume > 0:
+                    # Only use 50/50 fallback for active markets with volume
                     yes_price = 0.5
                     no_price = 0.5
                     price_source = "fallback"
@@ -1831,11 +1902,12 @@ class PredictionMarketsService:
                                      f"Platform: {platform}, side_a fields: {list(side_a.keys()) if isinstance(side_a, dict) else 'N/A'}, "
                                      f"side_b fields: {list(side_b.keys()) if isinstance(side_b, dict) else 'N/A'}")
                 else:
-                    # For closed markets without prices, use 50/50 as fallback
-                    yes_price = 0.5
-                    no_price = 0.5
-                    price_source = "fallback"
-                    logger.debug(f"No price data available for closed market {market_title}... - using 50/50 fallback")
+                    # For markets with no volume or closed markets, don't use fallback - leave as None
+                    # This will cause the market to be filtered out
+                    yes_price = None
+                    no_price = None
+                    price_source = "invalid"
+                    logger.debug(f"No price data and no volume for market {market_title}... - marking as invalid")
             elif yes_price is None and no_price is not None:
                 # YES missing - calculate from NO
                 yes_price = max(0.0, 1.0 - no_price)
@@ -1877,6 +1949,10 @@ class PredictionMarketsService:
         
         # Extract prices from tokens array
         # CLOB API tokens have "outcome" field (e.g., "Yes", "No", "Arizona State", etc.)
+        # CRITICAL: Price of 0 might mean "no data" not "0% probability"
+        # Check for volume/liquidity to validate prices
+        market_volume = market.get("volume") or market.get("volume_total") or 0
+        
         for token in tokens:
             outcome = str(token.get("outcome", "")).lower()
             price = token.get("price")
@@ -1884,27 +1960,39 @@ class PredictionMarketsService:
             if price is not None:
                 try:
                     price_float = float(price)
-                    # Check for Yes/No outcomes
-                    if outcome == "yes" or (outcome.startswith("yes") and len(outcome) <= 5):
-                        yes_price = price_float
-                    elif outcome == "no" or (outcome.startswith("no") and len(outcome) <= 4):
-                        no_price = price_float
-                    # Also check for "will" patterns (e.g., "Will X happen" -> Yes)
-                    elif "yes" in outcome or outcome.startswith("will"):
-                        if yes_price is None:
+                    # Only accept price if:
+                    # 1. It's in valid range (0 < price < 1), OR
+                    # 2. It's exactly 0.5 (50/50), OR
+                    # 3. Market has volume (indicates real trading)
+                    is_valid_price = (0 < price_float < 1) or price_float == 0.5 or market_volume > 0
+                    
+                    if is_valid_price:
+                        # Check for Yes/No outcomes
+                        if outcome == "yes" or (outcome.startswith("yes") and len(outcome) <= 5):
                             yes_price = price_float
+                        elif outcome == "no" or (outcome.startswith("no") and len(outcome) <= 4):
+                            no_price = price_float
+                        # Also check for "will" patterns (e.g., "Will X happen" -> Yes)
+                        elif "yes" in outcome or outcome.startswith("will"):
+                            if yes_price is None:
+                                yes_price = price_float
                 except (ValueError, TypeError):
                     pass
         
         # Fallback: use first two tokens if Yes/No not found
         # This handles markets with custom outcomes (e.g., "Arizona State" vs "Nevada")
+        # Only use if prices are valid (not both 0 with no volume)
         if yes_price is None and no_price is None and len(tokens) >= 2:
             try:
                 price0 = tokens[0].get("price")
                 price1 = tokens[1].get("price")
                 if price0 is not None and price1 is not None:
-                    yes_price = float(price0)
-                    no_price = float(price1)
+                    price0_float = float(price0)
+                    price1_float = float(price1)
+                    # Only use if at least one price is valid OR market has volume
+                    if (0 < price0_float < 1 or 0 < price1_float < 1 or price0_float == 0.5 or price1_float == 0.5) or market_volume > 0:
+                        yes_price = price0_float
+                        no_price = price1_float
             except (ValueError, TypeError):
                 pass
         
@@ -1924,20 +2012,33 @@ class PredictionMarketsService:
         return None, None, "fallback"
     
     def _normalize_market_data(self, market: Dict, fetch_price: bool = False) -> Dict:
-        """Normalize market data to our format (handles CLOB API, DOME API, Polymarket, and Kalshi)
+        """Normalize market data to our format (handles CLOB API, DOME API, PolyRouter, Polymarket, and Kalshi)
         
         Args:
             market: Raw market data from API
             fetch_price: Whether to fetch prices via API (default: False, always False on free tier)
         """
         platform = market.get("platform", "polymarket")
-        source = market.get("_source", "dome")  # "clob_direct" or "dome"
+        source = market.get("_source", "dome")  # "clob_direct", "dome", or "polyrouter"
+        
+        # Detect if this is PolyRouter data (already normalized by PolyRouter client)
+        is_polyrouter = source == "polyrouter"
         
         # Detect if this is CLOB API data structure
-        is_clob_structure = source == "clob_direct" or "question" in market or "tokens" in market
+        is_clob_structure = source == "clob_direct" or ("question" in market and "tokens" in market)
         
         # Extract prices based on data source
-        if is_clob_structure:
+        if is_polyrouter:
+            # PolyRouter markets are already normalized by the client, prices are in yes_price/no_price
+            yes_price = market.get("yes_price")
+            no_price = market.get("no_price")
+            # Check if prices are valid (not None and not invalid 0/1 with no volume)
+            volume = market.get("volume") or 0
+            if (yes_price == 0 and no_price == 1 and volume == 0) or (yes_price is None and no_price is None):
+                price_source = "invalid"
+            else:
+                price_source = "embedded" if (yes_price is not None or no_price is not None) else "fallback"
+        elif is_clob_structure:
             yes_price, no_price, price_source = self._extract_prices_from_clob_market(market)
         else:
             # Extract prices from DOME API structure
@@ -1990,8 +2091,11 @@ class PredictionMarketsService:
                 except (ValueError, TypeError):
                     pass
         
-        # Get title/question - CLOB uses "question", DOME uses "title"
-        if is_clob_structure:
+        # Get title/question - CLOB uses "question", DOME/PolyRouter use "title"
+        if is_polyrouter:
+            # PolyRouter markets already have question field set by normalize_market
+            title = _safe_get(market, "question") or _safe_get(market, "title", "")
+        elif is_clob_structure:
             title_raw = _safe_get(market, "question", "")
             # Remove "arch" prefix if present (archived markets in CLOB API)
             if title_raw.startswith("arch"):
@@ -2008,6 +2112,31 @@ class PredictionMarketsService:
         # Get tags safely (Polymarket has tags, Kalshi might not)
         tags = _safe_get(market, "tags", [])
         category = tags[0] if tags and len(tags) > 0 else None
+        
+        # Extract URL (platform-specific)
+        market_url = None
+        if is_polyrouter:
+            # PolyRouter uses source_url
+            market_url = market.get("url") or market.get("source_url")
+        elif is_clob_structure:
+            # CLOB API: Construct Polymarket URL from condition_id or slug
+            condition_id = _safe_get(market, "condition_id")
+            slug = _safe_get(market, "slug") or _safe_get(market, "market_slug")
+            if slug:
+                market_url = f"https://polymarket.com/event/{slug}"
+            elif condition_id:
+                # Fallback: use condition_id to construct URL (may not work for all markets)
+                market_url = f"https://polymarket.com/condition/{condition_id}"
+        else:
+            # DOME API: May have url field, or construct from platform
+            market_url = _safe_get(market, "url")
+            if not market_url and platform == "kalshi":
+                # Try to construct Kalshi URL from market_ticker
+                market_ticker = _safe_get(market, "market_ticker")
+                event_ticker = _safe_get(market, "event_ticker")
+                if market_ticker and event_ticker:
+                    # Kalshi URL format: /markets/{event_ticker}/{market_ticker}
+                    market_url = f"https://kalshi.com/markets/{event_ticker}/{market_ticker}"
         
         # Get market ID (platform-specific)
         if platform == "kalshi":
@@ -2032,6 +2161,16 @@ class PredictionMarketsService:
             active = status == "open"
             closed = status == "closed"
             accepting_orders = _safe_get(market, "accepting_orders", False) or active
+        
+        # Don't filter out markets with invalid prices here - let them through
+        # The frontend will handle displaying "No price data" for these markets
+        # Only filter out if BOTH prices are None AND market is closed/resolved (truly invalid)
+        if price_source == "invalid" and (yes_price is None and no_price is None):
+            # Only filter if market is also closed/resolved (double-check)
+            if is_resolved or closed:
+                # Return None to indicate this market should be filtered out
+                return None
+            # Otherwise, allow through with None prices (frontend will show "No data")
         
         # Determine price quality based on source
         price_quality_map = {
@@ -2064,7 +2203,8 @@ class PredictionMarketsService:
             "days_until_resolution": _safe_get(market, "days_until_resolution"),
             "relevance": _safe_get(market, "relevance", "low"),
             "related_event": _safe_get(market, "related_event"),
-            "affected_currency_pairs": _safe_get(market, "affected_currency_pairs", [])  # Currency pairs affected by this market
+            "affected_currency_pairs": _safe_get(market, "affected_currency_pairs", []),  # Currency pairs affected by this market
+            "url": market_url  # URL to view market on original platform
         }
     
     def _do_refresh(self, force_refresh: bool = False) -> Dict[str, Any]:
@@ -2076,6 +2216,30 @@ class PredictionMarketsService:
             # Use instance-level early stopping threshold
             early_stop_threshold = self.early_stop_threshold
             
+            # Fetch from all available sources
+            all_markets = []
+            
+            # Fetch from PolyRouter API (provides normalized data with prices)
+            polyrouter_markets = []
+            
+            if self.polyrouter_client and self.polyrouter_client.available:
+                # Fetch from both Polymarket and Kalshi via PolyRouter
+                polymarket_markets_pr = self.polyrouter_client.get_markets(platform="polymarket", limit=100)
+                kalshi_markets_pr = self.polyrouter_client.get_markets(platform="kalshi", limit=100)
+                
+                # Normalize and add source marker
+                for market in polymarket_markets_pr + kalshi_markets_pr:
+                    try:
+                        normalized = self.polyrouter_client.normalize_market(market)
+                        normalized["_source"] = "polyrouter"
+                        all_markets.append(normalized)
+                    except Exception as e:
+                        logger.warning(f"Failed to normalize PolyRouter market: {e}")
+                        continue
+                
+                logger.info(f"Fetched {len(polymarket_markets_pr)} Polymarket + {len(kalshi_markets_pr)} Kalshi markets from PolyRouter")
+            
+            # Fetch from direct APIs (CLOB and DOME) as fallback/supplement
             # On free tier, fetch platforms sequentially with delays to stay within 10-per-10-seconds limit
             # On paid tier, can fetch in parallel
             if self.is_free_tier:
@@ -2094,6 +2258,8 @@ class PredictionMarketsService:
                 kalshi_markets = self._fetch_kalshi_markets(early_stop_threshold=early_stop_threshold)
                 
                 # Total: 4 API calls, well within 10-per-10-seconds limit
+                all_markets.extend(polymarket_markets)
+                all_markets.extend(kalshi_markets)
             else:
                 # On paid tier, can fetch in parallel
                 with ThreadPoolExecutor(max_workers=2) as executor:
@@ -2107,9 +2273,18 @@ class PredictionMarketsService:
                     )
                     polymarket_markets = polymarket_future.result()
                     kalshi_markets = kalshi_future.result()
+                    all_markets.extend(polymarket_markets)
+                    all_markets.extend(kalshi_markets)
             
-            all_markets = polymarket_markets + kalshi_markets
-            logger.info(f"Fetched {len(polymarket_markets)} Polymarket + {len(kalshi_markets)} Kalshi = {len(all_markets)} total markets")
+            # Count markets from each source (handle both dict and object types)
+            polyrouter_count = sum(1 for m in all_markets if (
+                isinstance(m, dict) and m.get("_source") == "polyrouter"
+            ) or (hasattr(m, "_source") and getattr(m, "_source", None) == "polyrouter"))
+            polymarket_count = len(polymarket_markets) if 'polymarket_markets' in locals() else 0
+            kalshi_count = len(kalshi_markets) if 'kalshi_markets' in locals() else 0
+            
+            logger.info(f"Fetched {polyrouter_count} PolyRouter + "
+                       f"{polymarket_count} Polymarket + {kalshi_count} Kalshi = {len(all_markets)} total markets")
             
             if not all_markets:
                 logger.warning("Failed to fetch any markets from APIs")
@@ -2221,7 +2396,10 @@ class PredictionMarketsService:
                     )
                 
                 # Normalize market data (fetch prices for top markets on free tier)
-                normalized_markets.append(self._normalize_market_data(m, fetch_price=should_fetch_price))
+                normalized = self._normalize_market_data(m, fetch_price=should_fetch_price)
+                # Only add if normalization returned valid market (not None - indicates invalid prices)
+                if normalized is not None:
+                    normalized_markets.append(normalized)
                 
                 # Log progress for markets with price fetching
                 if should_fetch_price and m.get("platform", "polymarket") == "polymarket":
