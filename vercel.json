@@ -55,6 +55,20 @@
       "dest": "/assets/$1"
     },
     {
+      "src": "/documents/(.*)",
+      "dest": "/documents/$1",
+      "headers": {
+        "Cache-Control": "public, max-age=31536000, immutable"
+      }
+    },
+    {
+      "src": "/central-bank-documents.json",
+      "dest": "/central-bank-documents.json",
+      "headers": {
+        "Cache-Control": "public, max-age=3600"
+      }
+    },
+    {
       "src": "/(.*)",
       "dest": "/index.html",
       "headers": {
