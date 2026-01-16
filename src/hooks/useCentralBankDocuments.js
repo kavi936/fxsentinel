@@ -16,11 +16,36 @@ export const useCentralBankDocuments = () => {
       setLoading(true);
       setError(null);
       
-      // Fetch from public directory (served statically)
-      const response = await fetch('/central-bank-documents.json');
+      // Try multiple paths to handle different deployment scenarios
+      const paths = [
+        '/central-bank-documents.json',
+        './central-bank-documents.json',
+        '/documents/central-bank-documents.json'
+      ];
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let response = null;
+      let lastError = null;
+      
+      for (const path of paths) {
+        try {
+          response = await fetch(path, {
+            cache: 'no-cache',
+            headers: {
+              'Accept': 'application/json'
+            }
+          });
+          
+          if (response.ok) {
+            break;
+          }
+        } catch (err) {
+          lastError = err;
+          continue;
+        }
+      }
+      
+      if (!response || !response.ok) {
+        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}. Tried paths: ${paths.join(', ')}`);
       }
       
       const data = await response.json();
@@ -29,7 +54,7 @@ export const useCentralBankDocuments = () => {
         setDocuments(data);
         console.log(`✅ Loaded ${data.documents.length} central bank documents`);
       } else {
-        throw new Error('Invalid data format');
+        throw new Error('Invalid data format - missing documents array');
       }
       
     } catch (err) {
