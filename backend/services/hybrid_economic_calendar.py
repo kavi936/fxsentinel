@@ -3946,7 +3946,7 @@ class HybridEconomicCalendar:
                 'time': '21:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '220.2B',
                 'forecast': 'N/A',
                 'previous': '17.5B'
             },
@@ -3956,7 +3956,7 @@ class HybridEconomicCalendar:
                 'time': '21:30 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '56.1',
                 'forecast': 'N/A',
                 'previous': '51.4'
             },
@@ -3966,7 +3966,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.3%',
                 'forecast': 'N/A',
                 'previous': '-0.4%'
             },
@@ -3978,7 +3978,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.0%',
                 'previous': '0.0%'
             },
@@ -3988,7 +3988,7 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '282K',
                 'forecast': '255K',
                 'previous': '254K'
             },
@@ -3998,7 +3998,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '16.33B',
                 'forecast': 'N/A',
                 'previous': '46.62B'
             },
@@ -4008,7 +4008,7 @@ class HybridEconomicCalendar:
                 'time': '14:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '76.3%',
                 'forecast': '76.1%',
                 'previous': '76.0%'
             },
@@ -4028,9 +4028,9 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': 'N/A',
-                'previous': '-0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'NAHB Housing Market Index',
@@ -4038,7 +4038,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '37',
                 'forecast': 'N/A',
                 'previous': '39'
             },
@@ -4048,7 +4048,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': 'N/A',
                 'previous': '0.3%'
             },
