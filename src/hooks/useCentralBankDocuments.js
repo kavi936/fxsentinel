@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
+// Import JSON as a module - bundled with the app, no routing needed
+import centralBankDocumentsData from '../data/central-bank-documents.json';
 
 const fallbackDocuments = {
   version: "1.0.0",
@@ -11,74 +13,44 @@ export const useCentralBankDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchDocuments = useCallback(async () => {
+  useEffect(() => {
     try {
       setLoading(true);
       setError(null);
       
-      // Try multiple paths to handle different deployment scenarios
-      const paths = [
-        '/central-bank-documents.json',
-        './central-bank-documents.json',
-        '/documents/central-bank-documents.json'
-      ];
-      
-      let response = null;
-      let lastError = null;
-      
-      for (const path of paths) {
-        try {
-          response = await fetch(path, {
-            cache: 'no-cache',
-            headers: {
-              'Accept': 'application/json'
-            }
-          });
-          
-          if (response.ok) {
-            break;
-          }
-        } catch (err) {
-          lastError = err;
-          continue;
-        }
-      }
-      
-      if (!response || !response.ok) {
-        throw new Error(`HTTP error! status: ${response?.status || 'unknown'}. Tried paths: ${paths.join(', ')}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.documents && Array.isArray(data.documents)) {
-        setDocuments(data);
-        console.log(`✅ Loaded ${data.documents.length} central bank documents`);
+      // Use imported JSON data directly (bundled with app during build)
+      if (centralBankDocumentsData && centralBankDocumentsData.documents && Array.isArray(centralBankDocumentsData.documents)) {
+        setDocuments(centralBankDocumentsData);
+        console.log(`✅ Loaded ${centralBankDocumentsData.documents.length} central bank documents`);
       } else {
         throw new Error('Invalid data format - missing documents array');
       }
       
     } catch (err) {
-      console.error('❌ Error fetching central bank documents:', err);
+      console.error('❌ Error loading central bank documents:', err);
       setError(err.message);
-      // Keep existing data on error (don't clear on transient errors)
-      if (documents.documents.length === 0) {
-        setDocuments(fallbackDocuments);
-      }
+      setDocuments(fallbackDocuments);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [fetchDocuments]);
+  const refreshDocuments = () => {
+    // For imported data, refresh just reloads the same data
+    // In the future, this could fetch from an API endpoint if needed
+    setLoading(true);
+    setTimeout(() => {
+      setDocuments(centralBankDocumentsData);
+      setLoading(false);
+    }, 100);
+  };
 
   return {
     documents: documents.documents || [],
     lastUpdated: documents.lastUpdated,
     loading,
     error,
-    refresh: fetchDocuments
+    refresh: refreshDocuments
   };
 };
 
