@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2026-01-16",
+  "lastUpdated": "2026-01-17",
   "documents": [
     {
       "id": "boj-2025-12-29-summary-opinions",
@@ -71,6 +71,24 @@
       "fileSize": "65 KB",
       "fileFormat": "PDF",
       "tags": ["statement", "fed_independence", "monetary_policy", "political_pressure", "doj", "congressional_testimony", "governance"],
+      "aiAnalysis": null,
+      "sentiment": null
+    },
+    {
+      "id": "boe-2025-11-05-monetary-policy-report",
+      "title": "Monetary Policy Report - November 2025",
+      "type": "report",
+      "centralBank": "BOE",
+      "date": "2025-11-05",
+      "category": "monetary_policy",
+      "impact": "high",
+      "affectedCurrencies": ["GBP", "USD", "EUR", "JPY"],
+      "description": "Bank of England's quarterly Monetary Policy Report from November 2025. The Monetary Policy Committee voted 5-4 to maintain Bank Rate at 4%. The report discusses inflation trends (CPI at 3.8% in September), underlying wage and price pressures, economic activity, labor market conditions, and the outlook for monetary policy. Includes analysis of risks around inflation persistence and weaker demand, with projections for inflation returning towards the 2% target.",
+      "fileName": "monetary-policy-report-BankOfEngland-november-2025.pdf",
+      "filePath": "/documents/central-bank/boe/monetary-policy-report-BankOfEngland-november-2025.pdf",
+      "fileSize": "3.3 MB",
+      "fileFormat": "PDF",
+      "tags": ["report", "monetary_policy", "inflation", "bank_rate", "economic_outlook", "cpi", "labor_market", "gdp", "wages", "price_stability", "mpc"],
       "aiAnalysis": null,
       "sentiment": null
     }
