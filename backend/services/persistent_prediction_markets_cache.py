@@ -37,12 +37,13 @@ class PersistentPredictionMarketsCache:
         """Get Firebase path for current markets cache"""
         return "prediction_markets_cache/current"
     
-    def save_markets(self, markets: List[Dict[str, Any]]) -> bool:
+    def save_markets(self, markets: List[Dict[str, Any]], price_history: Optional[Dict[str, Any]] = None) -> bool:
         """
         Save prediction markets to cache
         
         Args:
             markets: List of market dictionaries to save
+            price_history: Optional dict mapping market_id to list of price snapshots
         """
         try:
             # Prepare cache data
@@ -53,6 +54,10 @@ class PersistentPredictionMarketsCache:
                 'max_age_minutes': self.max_age_minutes,
                 'last_fetch': datetime.now(timezone.utc).isoformat()  # Track when markets were last fetched
             }
+            
+            # Add price history if provided
+            if price_history:
+                cache_data['price_history'] = price_history
             
             # Save to Firebase
             cache_path = self._get_cache_path()
@@ -183,26 +188,40 @@ class PersistentPredictionMarketsCache:
                     if allow_stale:
                         # Return stale cache for faster UI loading (fresh fetch will happen in background)
                         logger.info(f"Cache is stale ({age}), but returning it for faster UI loading")
+                        price_history = cache_data.get('price_history', {})
                         if return_metadata:
-                            return {'markets': markets, 'last_fetch': last_fetch_str}
+                            result = {'markets': markets, 'last_fetch': last_fetch_str}
+                            if price_history:
+                                result['price_history'] = price_history
+                            return result
                         return markets
                     else:
                         logger.info(f"Cache is too old ({age}), ignoring")
                         return None
                 
                 logger.info(f"Loaded {len(markets)} prediction markets from Firebase cache (age: {age})")
+                # Extract price history if available
+                price_history = cache_data.get('price_history', {})
+                
                 if return_metadata:
-                    return {'markets': markets, 'last_fetch': last_fetch_str}
+                    result = {'markets': markets, 'last_fetch': last_fetch_str}
+                    if price_history:
+                        result['price_history'] = price_history
+                    return result
                 return markets
                 
             except Exception as e:
                 logger.warning(f"Error parsing cache timestamp: {e}")
                 # If timestamp parsing fails, still return the markets (better than nothing)
                 markets = cache_data.get('markets', [])
+                price_history = cache_data.get('price_history', {})
                 if markets:
                     logger.info(f"Loaded {len(markets)} prediction markets from cache (timestamp parse error, but returning markets)")
                     if return_metadata:
-                        return {'markets': markets, 'last_fetch': last_fetch_str}
+                        result = {'markets': markets, 'last_fetch': last_fetch_str}
+                        if price_history:
+                            result['price_history'] = price_history
+                        return result
                     return markets
                 return None
             

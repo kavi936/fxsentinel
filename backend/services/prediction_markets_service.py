@@ -77,7 +77,7 @@ if not DOME_SDK_AVAILABLE:
 
 # Configuration constants for free tier optimization
 FREE_TIER_MAX_PAGES_PER_PLATFORM = 2  # Reduced from 5/3 to 2/2 to stay within 10 queries per 10 seconds
-FREE_TIER_EARLY_STOP_THRESHOLD = 400  # Stop when we have 400 raw markets (increased from 200 to get more variety)
+FREE_TIER_EARLY_STOP_THRESHOLD = 2000  # Increased from 400 to fetch more markets (economic markets may be deeper in results)
 FREE_TIER_CACHE_EXPIRATION_MINUTES = 30  # Increased from 10 to reduce refresh frequency
 FREE_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 20  # Refresh every 20 minutes in background
 
@@ -89,7 +89,7 @@ PAID_TIER_CACHE_EXPIRATION_MINUTES = 10
 PAID_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 5
 
 # Market filtering limits
-MAX_FILTERED_MARKETS = 50  # Maximum markets to return after filtering (increased from 30)
+MAX_FILTERED_MARKETS = 10  # Maximum markets to return after filtering (target: 5-10 macro-critical markets)
 # Note: We return up to 50 markets, but frontend may display fewer based on UI constraints
 FREE_TIER_MAX_PRICE_FETCH_MARKETS = 5  # Max markets to fetch prices for on free tier
 PAID_TIER_MAX_PRICE_FETCH_MARKETS = 20  # Max markets to fetch prices for on paid tier
@@ -291,6 +291,7 @@ class PredictionMarketsService:
         # Initialize cached data
         self.cached_markets = None
         self.cache_timestamp = None
+        self.price_history = {}  # Store historical price snapshots: {market_id: [{"timestamp": "...", "yes_price": 0.65, "no_price": 0.35}, ...]}
         self._load_cache()
     
     def _init_file_cache(self):
@@ -357,6 +358,10 @@ class PredictionMarketsService:
                 cache_result = self.persistent_cache.load_markets(allow_stale=True, return_metadata=True)
                 if cache_result and isinstance(cache_result, dict):
                     self.cached_markets = cache_result.get('markets', [])
+                    # Load price history from cache if available
+                    price_history_data = cache_result.get('price_history', {})
+                    if price_history_data:
+                        self.price_history = price_history_data
                     last_fetch_str = cache_result.get('last_fetch')
                     if last_fetch_str:
                         try:
@@ -390,6 +395,10 @@ class PredictionMarketsService:
                 with open(self.cache_file, 'r') as f:
                     data = json.load(f)
                     self.cached_markets = data.get('markets', [])
+                    # Load price history from file cache if available
+                    price_history_data = data.get('price_history', {})
+                    if price_history_data:
+                        self.price_history = price_history_data
                     timestamp_str = data.get('timestamp')
                     if timestamp_str:
                         self.cache_timestamp = datetime.fromisoformat(
@@ -403,7 +412,7 @@ class PredictionMarketsService:
         """Save markets to Firebase or file cache"""
         if self.use_persistent_cache:
             try:
-                success = self.persistent_cache.save_markets(markets)
+                success = self.persistent_cache.save_markets(markets, price_history=self.price_history if self.price_history else None)
                 if success:
                     # Update local cache timestamp
                     self.cache_timestamp = datetime.now(timezone.utc)
@@ -415,11 +424,16 @@ class PredictionMarketsService:
         else:
             # Fallback to file cache
             try:
+                cache_data = {
+                    'markets': markets,
+                    'timestamp': datetime.now(timezone.utc).isoformat()
+                }
+                # Add price history if available
+                if self.price_history:
+                    cache_data['price_history'] = self.price_history
+                
                 with open(self.cache_file, 'w') as f:
-                    json.dump({
-                        'markets': markets,
-                        'timestamp': datetime.now(timezone.utc).isoformat()
-                    }, f, indent=2)
+                    json.dump(cache_data, f, indent=2)
             except Exception as e:
                 logger.error(f"Failed to save cache: {e}")
     
@@ -430,6 +444,195 @@ class PredictionMarketsService:
         
         age = datetime.now(timezone.utc) - self.cache_timestamp.replace(tzinfo=timezone.utc)
         return age.total_seconds() < (self.cache_expiration_minutes * 60)
+    
+    def _store_price_snapshot(self, market_id: str, yes_price: Optional[float], no_price: Optional[float], timestamp: Optional[datetime] = None) -> None:
+        """Store a price snapshot for a market with timestamp
+        
+        Args:
+            market_id: Unique market identifier
+            yes_price: Yes probability (0-1) or None
+            no_price: No probability (0-1) or None
+            timestamp: Timestamp for snapshot (defaults to now)
+        """
+        if not market_id or (yes_price is None and no_price is None):
+            return
+        
+        if timestamp is None:
+            timestamp = datetime.now(timezone.utc)
+        
+        # Initialize history for this market if needed
+        if market_id not in self.price_history:
+            self.price_history[market_id] = []
+        
+        # Add new snapshot
+        snapshot = {
+            "timestamp": timestamp.isoformat(),
+            "yes_price": yes_price,
+            "no_price": no_price
+        }
+        
+        self.price_history[market_id].append(snapshot)
+        
+        # Keep only last 30 days of history (prune old snapshots)
+        cutoff_time = timestamp - timedelta(days=30)
+        self.price_history[market_id] = [
+            snap for snap in self.price_history[market_id]
+            if datetime.fromisoformat(snap["timestamp"].replace('Z', '+00:00')) >= cutoff_time
+        ]
+        
+        # Sort by timestamp (oldest first) for easier delta calculation
+        self.price_history[market_id].sort(key=lambda x: x["timestamp"])
+    
+    def _load_price_history(self, market_id: str, days: int = 7) -> List[Dict[str, Any]]:
+        """Load price history for a market within specified days
+        
+        Args:
+            market_id: Unique market identifier
+            days: Number of days to look back (default: 7)
+        
+        Returns:
+            List of price snapshots sorted by timestamp (oldest first)
+        """
+        if market_id not in self.price_history:
+            return []
+        
+        # Filter to last N days
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=days)
+        
+        history = [
+            snap for snap in self.price_history[market_id]
+            if datetime.fromisoformat(snap["timestamp"].replace('Z', '+00:00')) >= cutoff_time
+        ]
+        
+        # Sort by timestamp (oldest first)
+        history.sort(key=lambda x: x["timestamp"])
+        
+        return history
+    
+    def _calculate_price_deltas(self, market_id: str, current_yes_price: Optional[float], current_no_price: Optional[float]) -> Dict[str, Optional[float]]:
+        """Calculate price deltas (24h, 48h, 7d) from historical prices
+        
+        Args:
+            market_id: Unique market identifier
+            current_yes_price: Current Yes probability (0-1) or None
+            current_no_price: Current No probability (0-1) or None
+        
+        Returns:
+            Dict with keys: delta_24h, delta_48h, delta_7d (each is float percentage or None)
+            Deltas are calculated as percentage point changes (not percent change)
+        """
+        # Use Yes price for delta calculation (primary indicator)
+        current_price = current_yes_price
+        
+        if current_price is None:
+            return {"delta_24h": None, "delta_48h": None, "delta_7d": None}
+        
+        # Load price history
+        history = self._load_price_history(market_id, days=7)
+        
+        if not history:
+            # No history available - all deltas are None
+            return {"delta_24h": None, "delta_48h": None, "delta_7d": None}
+        
+        now = datetime.now(timezone.utc)
+        
+        # Helper function to find closest historical price to a target time
+        def find_closest_price(target_time):
+            """Find price from closest snapshot before target_time"""
+            closest_snap = None
+            min_time_diff = timedelta.max
+            
+            for snap in history:
+                snap_time = datetime.fromisoformat(snap["timestamp"].replace('Z', '+00:00'))
+                if snap_time > target_time:
+                    continue  # Only consider snapshots before target
+                
+                time_diff = target_time - snap_time
+                if time_diff < min_time_diff:
+                    min_time_diff = time_diff
+                    closest_snap = snap
+            
+            if closest_snap:
+                return closest_snap.get("yes_price")
+            return None
+        
+        # Calculate deltas for 24h, 48h, 7d
+        delta_24h = None
+        delta_48h = None
+        delta_7d = None
+        
+        # 24h delta
+        price_24h_ago = find_closest_price(now - timedelta(hours=24))
+        if price_24h_ago is not None:
+            delta_24h = (current_price - price_24h_ago) * 100  # Convert to percentage points
+        
+        # 48h delta
+        price_48h_ago = find_closest_price(now - timedelta(hours=48))
+        if price_48h_ago is not None:
+            delta_48h = (current_price - price_48h_ago) * 100  # Convert to percentage points
+        
+        # 7d delta
+        price_7d_ago = find_closest_price(now - timedelta(days=7))
+        if price_7d_ago is not None:
+            delta_7d = (current_price - price_7d_ago) * 100  # Convert to percentage points
+        
+        return {
+            "delta_24h": delta_24h,
+            "delta_48h": delta_48h,
+            "delta_7d": delta_7d
+        }
+    
+    def _calculate_conviction_score(self, volume: Optional[float], market_age: Optional[int] = None, liquidity_score: Optional[float] = None) -> tuple:
+        """Calculate conviction score based on volume, market age, and liquidity
+        
+        Args:
+            volume: Total volume traded (in USD or market units)
+            market_age: Age of market in days (optional, for future enhancement)
+            liquidity_score: Liquidity score 0-1 (optional, for future enhancement)
+        
+        Returns:
+            Tuple of (conviction_score: int 0-100, conviction_level: str "high"/"medium"/"low")
+        """
+        # Normalize volume (convert to float if needed)
+        volume_value = float(volume) if volume is not None else 0.0
+        
+        # Volume thresholds (in USD or market units)
+        # High conviction: volume > $50k
+        # Medium conviction: $10k < volume <= $50k  
+        # Low conviction: volume <= $10k
+        HIGH_CONVICTION_THRESHOLD = 50000
+        MEDIUM_CONVICTION_THRESHOLD = 10000
+        
+        if volume_value >= HIGH_CONVICTION_THRESHOLD:
+            # High conviction: 70-100 score
+            # Linear scaling: $50k = 70, $500k+ = 100
+            if volume_value >= 500000:
+                conviction_score = 100
+            else:
+                # Scale from 70 to 100 between $50k and $500k
+                normalized = (volume_value - HIGH_CONVICTION_THRESHOLD) / (500000 - HIGH_CONVICTION_THRESHOLD)
+                conviction_score = 70 + int(normalized * 30)
+            conviction_level = "high"
+        elif volume_value >= MEDIUM_CONVICTION_THRESHOLD:
+            # Medium conviction: 40-69 score
+            # Linear scaling: $10k = 40, $50k = 70
+            normalized = (volume_value - MEDIUM_CONVICTION_THRESHOLD) / (HIGH_CONVICTION_THRESHOLD - MEDIUM_CONVICTION_THRESHOLD)
+            conviction_score = 40 + int(normalized * 30)
+            conviction_level = "medium"
+        else:
+            # Low conviction: 10-39 score
+            # Linear scaling: $0 = 10, $10k = 40
+            if volume_value == 0:
+                conviction_score = 10
+            else:
+                normalized = volume_value / MEDIUM_CONVICTION_THRESHOLD
+                conviction_score = 10 + int(normalized * 30)
+            conviction_level = "low"
+        
+        # Future: Can enhance with market_age and liquidity_score factors
+        # For now, volume-based scoring is sufficient
+        
+        return conviction_score, conviction_level
     
     
     def _fetch_kalshi_markets(self, early_stop_threshold: int = None) -> List[Dict]:
@@ -525,6 +728,10 @@ class PredictionMarketsService:
                     
                     url = "https://api.domeapi.io/v1/kalshi/markets"
                     params = {"limit": limit, "offset": offset}
+                    # Try to filter by category if Kalshi API supports it
+                    # Note: These parameters may not be supported, but worth trying
+                    # params["category"] = "economics"  # Uncomment if API supports
+                    # params["tags"] = "economics,finance"  # Uncomment if API supports
                     
                     response = requests.get(url, params=params, headers=headers, timeout=15)
                     if response.status_code == 429:
@@ -587,6 +794,11 @@ class PredictionMarketsService:
             for page in range(max_pages):
                 url = "https://clob.polymarket.com/markets"
                 params = {"limit": 1000}  # CLOB API supports up to 1000 per request
+                
+                # Try to filter by category/tags if API supports it (may not work, but worth trying)
+                # Note: CLOB API may not support these, but adding for potential future support
+                # params["category"] = "economics"  # Uncomment if API supports category filtering
+                # params["tags"] = "economics,finance,politics"  # Uncomment if API supports tag filtering
                 
                 if cursor:
                     params["cursor"] = cursor
@@ -775,6 +987,10 @@ class PredictionMarketsService:
                         "limit": limit,
                         "offset": offset
                     }
+                    # Try to filter by category/tags if DOME API supports it
+                    # Note: These parameters may not be supported, but worth trying
+                    # params["category"] = "economics"  # Uncomment if API supports
+                    # params["tags"] = "economics,finance,politics"  # Uncomment if API supports
                     
                     response = requests.get(url, params=params, headers=headers, timeout=15)
                     if response.status_code == 429:
@@ -838,10 +1054,40 @@ class PredictionMarketsService:
         if platform is None:
             platform = self._detect_platform(market)
         
+        # Try multiple ID fields for each platform
         if platform == "kalshi":
-            return _safe_get(market, "market_ticker") or _safe_get(market, "event_ticker")
+            # Kalshi: Try market_ticker, event_ticker, or combination
+            market_ticker = _safe_get(market, "market_ticker")
+            event_ticker = _safe_get(market, "event_ticker")
+            if market_ticker:
+                # Use combination if both exist for better uniqueness
+                if event_ticker:
+                    return f"kalshi:{event_ticker}:{market_ticker}"
+                return f"kalshi:{market_ticker}"
+            elif event_ticker:
+                return f"kalshi:{event_ticker}"
         else:
-            return _safe_get(market, "condition_id")
+            # Polymarket: Try condition_id, slug, or question/title hash
+            condition_id = _safe_get(market, "condition_id")
+            if condition_id:
+                return f"polymarket:{condition_id}"
+            
+            # Fallback: Try slug
+            slug = _safe_get(market, "slug") or _safe_get(market, "market_slug")
+            if slug:
+                return f"polymarket:slug:{slug}"
+            
+            # Last resort: Use question/title as ID (for markets without IDs)
+            question = _safe_get(market, "question", "")
+            title = _safe_get(market, "title", "")
+            text_id = question or title
+            if text_id:
+                # Create a simple hash-based ID from the text
+                import hashlib
+                text_hash = hashlib.md5(text_id.encode()).hexdigest()[:12]
+                return f"polymarket:text:{text_hash}"
+        
+        return None
     
     def _is_market_resolved(self, market: Dict[str, Any], platform: str) -> bool:
         """Check if market is resolved
@@ -981,6 +1227,15 @@ class PredictionMarketsService:
         skipped_exclude = 0
         skipped_no_keywords = 0
         included_markets = 0
+        # Additional debug counters
+        debug_matched_keywords = 0
+        debug_reached_final_check = 0
+        debug_filtered_final_resolved = 0
+        debug_filtered_date = 0  # Track markets filtered by date (>90 days)
+        debug_no_market_id = 0  # Track markets without market_id
+        debug_duplicate_market_id = 0  # Track duplicate markets
+        debug_no_title = 0  # Track markets without titles
+        debug_sample_markets = []  # Store samples for logging
         
         for market_obj in markets:
             total_checked += 1
@@ -1030,7 +1285,13 @@ class PredictionMarketsService:
             platform = market.get("platform", "polymarket")
             market_id = self._get_market_id(market, platform)
             
-            if not market_id or market_id in seen_ids:
+            if not market_id:
+                debug_no_market_id += 1
+                if debug_no_market_id <= 3:
+                    logger.debug(f"🔍 Market has no ID: platform={platform}, keys={list(market.keys())[:10]}")
+                continue
+            if market_id in seen_ids:
+                debug_duplicate_market_id += 1
                 continue
             seen_ids.add(market_id)
             
@@ -1046,6 +1307,13 @@ class PredictionMarketsService:
                 title = title_raw.lower()
             else:
                 title = _safe_get(market, "title", "").lower()
+            
+            # DEBUG: Track markets without titles
+            if not title or title.strip() == "":
+                debug_no_title += 1
+                if debug_no_title <= 3:
+                    logger.debug(f"🔍 Market has no title: market_id={market_id}, platform={platform}, keys={list(market.keys())[:10]}")
+                # Don't skip - allow markets without titles to continue (they might match via tags)
             
             # Check if market is archived (CLOB API marks archived markets)
             if is_clob_structure:
@@ -1189,15 +1457,21 @@ class PredictionMarketsService:
                         days_until_resolution = (resolution_date_obj - now).days
                         days_since_resolution = (now - resolution_date_obj).days
                         
-                        # Allow markets with future dates OR recently resolved (within last 90 days)
-                        # Extended grace period to show more markets - many markets might be slightly old but still relevant
-                        if not is_future:
-                            # Market is in the past - only show if resolved recently (within 90 days)
-                            # This is more lenient to ensure we show some markets
+                        # IMPORTANT: Only filter by date if market is CLOSED/RESOLVED
+                        # Active markets (not closed) should be allowed regardless of date
+                        if not is_future and is_closed:
+                            # Market is in the past AND closed - only show if resolved recently (within 90 days)
                             if days_since_resolution > 90:
                                 skipped_closed += 1
+                                debug_filtered_date += 1
+                                if debug_filtered_date <= 5 or debug_filtered_date % 100 == 0:
+                                    logger.debug(f"🔍 Filtered (date >90 days, closed): title='{title[:80]}...', days_since={days_since_resolution}")
                                 continue
                             # Market resolved recently - treat as "recently resolved" for display
+                            is_future = False
+                            days_until_resolution = None
+                        elif not is_future and not is_closed:
+                            # Market is in the past but still active - allow it (might be ongoing)
                             is_future = False
                             days_until_resolution = None
                     except (ValueError, TypeError):
@@ -1221,15 +1495,21 @@ class PredictionMarketsService:
                         days_until_resolution = (resolution_date_obj - now).days
                         days_since_resolution = (now - resolution_date_obj).days
                         
-                        # Allow markets with future dates OR recently resolved (within last 90 days)
-                        # Extended grace period to show more markets - many markets might be slightly old but still relevant
-                        if not is_future:
-                            # Market is in the past - only show if resolved recently (within 90 days)
-                            # This is more lenient to ensure we show some markets
+                        # IMPORTANT: Only filter by date if market is CLOSED/RESOLVED
+                        # Active markets (not closed) should be allowed regardless of date
+                        if not is_future and is_closed:
+                            # Market is in the past AND closed - only show if resolved recently (within 90 days)
                             if days_since_resolution > 90:
                                 skipped_closed += 1
+                                debug_filtered_date += 1
+                                if debug_filtered_date <= 5 or debug_filtered_date % 100 == 0:
+                                    logger.debug(f"🔍 Filtered (date >90 days, closed): title='{title[:80]}...', days_since={days_since_resolution}")
                                 continue
                             # Market resolved recently - treat as "recently resolved" for display
+                            is_future = False
+                            days_until_resolution = None
+                        elif not is_future and not is_closed:
+                            # Market is in the past but still active - allow it (might be ongoing)
                             is_future = False
                             days_until_resolution = None
                     except (ValueError, TypeError):
@@ -1307,8 +1587,10 @@ class PredictionMarketsService:
                     skipped_exclude += 1
                     continue
             
-            # Skip sports betting markets (O/U, spread, etc.)
-            if any(sports_indicator in text_lower for sports_indicator in ["o/u", "over/under", "spread", "total points"]):
+            # Skip sports betting markets (O/U, spread, handicap, etc.)
+            sports_indicators = ["o/u", "over/under", "spread", "total points", "handicap", "handicaps", 
+                                "map handicap", "game handicap", "match handicap"]
+            if any(sports_indicator in text_lower for sports_indicator in sports_indicators):
                 skipped_exclude += 1
                 continue
             
@@ -1356,6 +1638,19 @@ class PredictionMarketsService:
                     elif relevance == "low":
                         relevance = "medium"  # Default to medium for other economic keywords
             
+            # DEBUG: Sample markets that reached keyword checking (passed closed/resolved checks)
+            markets_past_closed_checks = total_checked - skipped_closed
+            if len(debug_sample_markets) < 10 and markets_past_closed_checks > 0:
+                if markets_past_closed_checks % 50 == 0 or len(debug_sample_markets) == 0:
+                    debug_sample_markets.append({
+                        "title": title[:100] if title else "",
+                        "tags": tags[:5] if isinstance(tags, list) else [],
+                        "platform": platform,
+                        "is_closed": is_closed,
+                        "is_resolved": is_resolved if 'is_resolved' in locals() else None,
+                        "has_economic_tag": has_economic_tag if 'has_economic_tag' in locals() else None
+                    })
+            
             # Only include markets that match economic keywords OR have economic tags
             # More lenient: Allow markets with economic tags OR general economic terms
             if not matched_keywords:
@@ -1363,7 +1658,13 @@ class PredictionMarketsService:
                 general_economic_terms = [
                     "economic", "economy", "market", "financial", "finance", "business",
                     "policy", "government", "regulation", "legislation", "law", "bill",
-                    "announcement", "statement", "meeting", "decision", "report", "data"
+                    "announcement", "statement", "meeting", "decision", "report", "data",
+                    # Additional terms that might appear in economic markets
+                    "rate", "rates", "bank", "central", "monetary", "fiscal", "budget",
+                    "trade", "tariff", "inflation", "deflation", "gdp", "employment",
+                    "unemployment", "currency", "forex", "fx", "pair", "exchange",
+                    "dollar", "euro", "pound", "yen", "yuan", "sterling", "franc",
+                    "usd", "eur", "gbp", "jpy", "cny", "chf", "aud", "cad", "nzd"
                 ]
                 has_general_term = any(term in text_lower for term in general_economic_terms)
                 
@@ -1375,6 +1676,11 @@ class PredictionMarketsService:
                 else:
                     # No keywords, no economic tags, and no general terms - exclude
                     skipped_no_keywords += 1
+                    # DEBUG: Log ALL markets filtered for no keywords (to see what we're missing)
+                    if skipped_no_keywords <= 20:  # Log first 20 to see patterns
+                        tags_str = tags[:5] if isinstance(tags, list) else []
+                        title_str = title[:100] if title else "NO TITLE"
+                        logger.info(f"🔍 Filtered (no keywords): title='{title_str}...', tags={tags_str}, platform={platform}")
                     continue
             
             # Relaxed geopolitics filtering - allow if it has economic tag or general terms
@@ -1398,7 +1704,13 @@ class PredictionMarketsService:
             if has_economic_tag and relevance == "low":
                         relevance = "medium"
             
+            # DEBUG: Track markets that matched keywords
             if matched_keywords:
+                debug_matched_keywords += 1
+                # DEBUG: Log first few markets that matched keywords
+                if debug_matched_keywords <= 5:
+                    logger.debug(f"✅ Market matched keywords: {matched_keywords}, title='{title[:80]}...', relevance={relevance}")
+                
                 # Determine related event
                 related_event = None
                 matched_lower = [k.lower() for k in matched_keywords]
@@ -1446,10 +1758,17 @@ class PredictionMarketsService:
                     affected_pairs = self._get_affected_currency_pairs(market, matched_keywords, related_event)
                     priority_score = 0
                 
+                # DEBUG: Track markets reaching final resolved check
+                debug_reached_final_check += 1
+                
                 # IMPORTANT: Filter out resolved markets - do not include them
                 # BUT: Allow recently resolved markets (within grace period) for context
                 if is_resolved and not is_recently_resolved:
                     skipped_closed += 1
+                    debug_filtered_final_resolved += 1
+                    # DEBUG: Log if markets are being filtered here unexpectedly
+                    if debug_filtered_final_resolved <= 5:
+                        logger.warning(f"⚠️ Market filtered at FINAL resolved check (line 1654): title='{title[:80]}...', is_resolved={is_resolved}, is_recently_resolved={is_recently_resolved}, matched_keywords={matched_keywords}")
                     continue
                 
                 # Store Dome API specific fields for later use
@@ -1472,28 +1791,55 @@ class PredictionMarketsService:
         logger.info(f"Filtering stats: checked={total_checked}, included={included_markets}, "
                    f"skipped_closed={skipped_closed}, skipped_exclude={skipped_exclude}, "
                    f"skipped_no_keywords={skipped_no_keywords}")
+        
+        # DEBUG: Additional filtering stats
+        logger.info(f"🔍 DEBUG Filtering breakdown: "
+                   f"matched_keywords={debug_matched_keywords}, "
+                   f"reached_final_check={debug_reached_final_check}, "
+                   f"filtered_final_resolved={debug_filtered_final_resolved}, "
+                   f"filtered_date_>90days={debug_filtered_date}, "
+                   f"no_market_id={debug_no_market_id}, "
+                   f"duplicate_market_id={debug_duplicate_market_id}, "
+                   f"no_title={debug_no_title}")
+        
+        # DEBUG: Log sample markets that passed closed/resolved checks
+        if debug_sample_markets:
+            logger.info(f"🔍 Sample of markets that passed closed/resolved checks ({len(debug_sample_markets)} samples):")
+            for i, sample in enumerate(debug_sample_markets[:5], 1):
+                if not isinstance(sample, dict):
+                    continue
+                sample_title = sample.get('title', '')[:70] if sample.get('title') else 'NO TITLE'
+                sample_tags = sample.get('tags', [])
+                sample_tags_str = sample_tags[:3] if isinstance(sample_tags, list) else []
+                logger.info(f"  Sample {i}: title='{sample_title}...', platform={sample.get('platform', 'unknown')}, "
+                          f"tags={sample_tags_str}")
+        
         logger.info(f"Filtering result: {included_markets} markets passed filtering (target: {MAX_FILTERED_MARKETS})")
         
-        # Sort by priority (simplified for curated markets):
-        # 1. Priority score (curated markets first - higher priority)
-        # 2. Markets accepting orders (active trading)
-        # 3. Future markets (not resolved yet)
-        # 4. Relevance score (high to low)
-        # 5. Number of matched keywords (more keywords = more relevant)
-        # 6. Resolution date (sooner = more urgent)
-        # Note: Volume-based sorting will be done in frontend (highest to lowest)
+        # Sort by priority (Phase 3.2: Prioritize conviction + delta magnitude):
+        # 1. Conviction score (high to low) - volume-normalized confidence
+        # 2. Price delta magnitude (absolute value, high to low) - surfaces shifting markets
+        # 3. Priority score (curated markets)
+        # 4. Volume (high to low) - fallback for markets with same conviction/delta
+        # 5. Markets accepting orders (active trading)
+        # 6. Future markets (not resolved yet)
+        # 7. Relevance score (high to low)
+        # Note: New logic prioritizes "belief shifts" (high delta) and high conviction markets
+        # Using reverse=False with negated values to get descending order (higher values first)
         relevant_markets.sort(
             key=lambda x: (
-                -x.get("priority_score", 0),  # Curated markets first (higher priority score)
+                -x.get("conviction_score", 0),  # Primary: Conviction score (high to low)
+                -abs(x.get("price_delta_24h") or 0),  # Secondary: Delta magnitude (shifting markets first)
+                -x.get("priority_score", 0),  # Tertiary: Curated markets (higher priority score)
+                -(x.get("volume") or 0),  # Quaternary: Volume (high to low)
                 x.get("accepting_orders", False),  # Markets accepting orders first
                 x.get("has_embedded_price", False),  # Then markets with embedded prices (free tier optimization)
                 x.get("is_future", False),  # Then future markets
-                x["relevance"] == "high",  # Then by relevance: high
+                x.get("relevance") == "high",  # Then by relevance: high
                 x.get("relevance") == "medium",  # Then: medium
                 -len(x.get("matched_keywords", [])),  # More matched keywords = higher priority
-                -x.get("days_until_resolution", 999) if x.get("days_until_resolution") else 999,  # Closer dates first
             ),
-            reverse=True
+            reverse=False  # Changed from True: with negated values, False gives descending order
         )
         
         # Limit to top markets (prioritize quality over quantity)
@@ -2065,6 +2411,9 @@ class PredictionMarketsService:
             volume = _safe_get(market, "volume_total") or _safe_get(market, "volume_1_week")
         liquidity = None  # Dome API doesn't provide liquidity directly
         
+        # Calculate conviction score based on volume (Phase 2.2)
+        conviction_score, conviction_level = self._calculate_conviction_score(volume)
+        
         # Convert resolution date - handle both CLOB (ISO string) and DOME (Unix timestamp)
         resolution_date = None
         if is_clob_structure:
@@ -2181,6 +2530,14 @@ class PredictionMarketsService:
         }
         price_quality = price_quality_map.get(price_source, "low")
         
+        # Calculate price deltas from historical prices (Phase 1.3)
+        # Calculate BEFORE storing current snapshot (compare current to history)
+        deltas = self._calculate_price_deltas(market_id, yes_price, no_price)
+        
+        # Store current price snapshot for next time (after normalization, before return)
+        if market_id and (yes_price is not None or no_price is not None):
+            self._store_price_snapshot(market_id, yes_price, no_price)
+        
         return {
             "id": market_id,
             "platform": platform,
@@ -2204,7 +2561,14 @@ class PredictionMarketsService:
             "relevance": _safe_get(market, "relevance", "low"),
             "related_event": _safe_get(market, "related_event"),
             "affected_currency_pairs": _safe_get(market, "affected_currency_pairs", []),  # Currency pairs affected by this market
-            "url": market_url  # URL to view market on original platform
+            "url": market_url,  # URL to view market on original platform
+            # Price deltas (percentage point changes)
+            "price_delta_24h": deltas.get("delta_24h"),
+            "price_delta_48h": deltas.get("delta_48h"),
+            "price_delta_7d": deltas.get("delta_7d"),
+            # Conviction scoring (volume-normalized)
+            "conviction_score": conviction_score,
+            "conviction_level": conviction_level
         }
     
     def _do_refresh(self, force_refresh: bool = False) -> Dict[str, Any]:
@@ -2238,6 +2602,19 @@ class PredictionMarketsService:
                         continue
                 
                 logger.info(f"Fetched {len(polymarket_markets_pr)} Polymarket + {len(kalshi_markets_pr)} Kalshi markets from PolyRouter")
+            
+            # DEBUG: Log sample of markets from PolyRouter
+            if polymarket_markets_pr or kalshi_markets_pr:
+                logger.info(f"🔍 Sample PolyRouter markets (first 5):")
+                combined_pr_markets = (polymarket_markets_pr or []) + (kalshi_markets_pr or [])
+                for i, m in enumerate(combined_pr_markets[:5], 1):
+                    if m is None:
+                        continue
+                    title = _safe_get(m, "question") or _safe_get(m, "title", "NO TITLE")
+                    tags = _safe_get(m, "tags", []) or []
+                    platform = self._detect_platform(m) if isinstance(m, dict) else "unknown"
+                    tags_str = tags[:3] if isinstance(tags, list) else []
+                    logger.info(f"  {i}. [{platform}] {title[:80]}... | tags: {tags_str}")
             
             # Fetch from direct APIs (CLOB and DOME) as fallback/supplement
             # On free tier, fetch platforms sequentially with delays to stay within 10-per-10-seconds limit
@@ -2285,6 +2662,18 @@ class PredictionMarketsService:
             
             logger.info(f"Fetched {polyrouter_count} PolyRouter + "
                        f"{polymarket_count} Polymarket + {kalshi_count} Kalshi = {len(all_markets)} total markets")
+            
+            # DEBUG: Log sample of market titles/tags to see what we're actually fetching
+            if all_markets:
+                logger.info(f"🔍 Sample of fetched markets (first 10):")
+                for i, m in enumerate(all_markets[:10], 1):
+                    if m is None:
+                        continue
+                    title = _safe_get(m, "question") or _safe_get(m, "title", "NO TITLE")
+                    tags = _safe_get(m, "tags", []) or []
+                    platform = self._detect_platform(m) if isinstance(m, dict) else "unknown"
+                    tags_str = tags[:3] if isinstance(tags, list) else []
+                    logger.info(f"  {i}. [{platform}] {title[:80]}... | tags: {tags_str}")
             
             if not all_markets:
                 logger.warning("Failed to fetch any markets from APIs")
