@@ -3644,18 +3644,52 @@ const Overview = () => {
                           const yesPercent = total > 0 ? ((yesPriceValue / total) * 100).toFixed(0) : '0';
                           const noPercent = total > 0 ? ((noPriceValue / total) * 100).toFixed(0) : '0';
                           
+                          // Extract delta and conviction data (Phase 4)
+                          const delta24h = market.price_delta_24h;
+                          const delta48h = market.price_delta_48h;
+                          const delta7d = market.price_delta_7d;
+                          const convictionScore = market.conviction_score || 0;
+                          const convictionLevel = market.conviction_level || 'low';
+                          
+                          // Determine delta display class and text
+                          let deltaClass = '';
+                          let deltaText = '';
+                          if (delta24h !== null && delta24h !== undefined) {
+                            const absDelta = Math.abs(delta24h);
+                            if (absDelta >= 5) {
+                              deltaClass = delta24h > 0 ? 'positive' : 'negative';
+                              deltaText = `${delta24h > 0 ? '+' : ''}${delta24h.toFixed(1)}%`;
+                            } else {
+                              deltaClass = 'neutral';
+                              deltaText = `${delta24h > 0 ? '+' : ''}${delta24h.toFixed(1)}%`;
+                            }
+                          }
+                          
+                          // Determine conviction class for styling
+                          const convictionClass = `conviction-${convictionLevel}`;
+                          
                           return (
-                            <div key={market.id} className="prediction-market-item">
-                              {/* Simplified Header - Just Question */}
+                            <div key={market.id} className={`prediction-market-item ${convictionClass}`}>
+                              {/* Header - Question with Conviction Badge */}
                               <div className="market-header-row">
                                 <div className="market-question">
                                   {market.question}
                                 </div>
+                                {convictionLevel && (
+                                  <div className={`conviction-badge conviction-${convictionLevel}`}>
+                                    {convictionLevel.toUpperCase()}
+                                  </div>
+                                )}
                               </div>
                               
-                              {/* Simplified Probability Display */}
+                              {/* Probability Display with Delta Badge */}
                               {hasValidPrices && total > 0 ? (
                                 <div className="market-probability-row">
+                                  {deltaText && (
+                                    <div className={`price-delta ${deltaClass}`} title={`24h: ${delta24h !== null ? delta24h.toFixed(1) + '%' : 'N/A'}, 48h: ${delta48h !== null ? delta48h.toFixed(1) + '%' : 'N/A'}, 7d: ${delta7d !== null ? delta7d.toFixed(1) + '%' : 'N/A'}`}>
+                                      {deltaText}
+                                    </div>
+                                  )}
                                   <div className="probability-bar-container">
                                     <div className="probability-bar">
                                       {yesPriceValue > 0 && (
@@ -3697,7 +3731,7 @@ const Overview = () => {
                                 </div>
                               )}
                               
-                              {/* Meta Row - Resolution Date and URL */}
+                              {/* Meta Row - Resolution Date, Conviction Score, and URL */}
                               <div className="market-meta-row">
                                 {market.resolution_date && market.is_future && (
                                   <div className="market-meta-item">
@@ -3718,6 +3752,14 @@ const Overview = () => {
                                           year: 'numeric'
                                         });
                                       })()}
+                                    </span>
+                                  </div>
+                                )}
+                                {convictionScore > 0 && (
+                                  <div className="market-meta-item">
+                                    <span className="meta-label">Conviction:</span>
+                                    <span className={`meta-value conviction-${convictionLevel}`}>
+                                      {convictionScore}
                                     </span>
                                   </div>
                                 )}
@@ -3775,6 +3817,7 @@ const Overview = () => {
                 />
               </div>
               <div className="central-bank-controls">
+                <div className="central-bank-ai-badge">AI Analysis Coming Soon</div>
                 <button 
                   className={`central-bank-refresh-btn ${centralBankDocumentsLoading ? 'spinning' : ''}`}
                   onClick={refreshCentralBankDocuments}
