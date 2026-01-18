@@ -2585,6 +2585,9 @@ class PredictionMarketsService:
             
             # Fetch from PolyRouter API (provides normalized data with prices)
             polyrouter_markets = []
+            # Initialize PolyRouter market variables (in case PolyRouter is not available)
+            polymarket_markets_pr = []
+            kalshi_markets_pr = []
             
             if self.polyrouter_client and self.polyrouter_client.available:
                 # Fetch from both Polymarket and Kalshi via PolyRouter
