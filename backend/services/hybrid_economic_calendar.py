@@ -4255,7 +4255,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.4%',
                 'previous': '0.1%'
             },
@@ -4265,7 +4265,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.5%',
                 'forecast': '2.7%',
                 'previous': '2.8%'
             },
@@ -4275,9 +4275,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.7%',
                 'forecast': '2.7%',
-                'previous': '2.8%'
+                'previous': '2.9%'
             },
             {
                 'title': 'Common CPI y/y',
@@ -4285,7 +4285,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.85',
                 'forecast': '2.8%',
                 'previous': '2.8%'
             },
@@ -4295,7 +4295,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': 'N/A',
                 'previous': '-0.1%'
             },
