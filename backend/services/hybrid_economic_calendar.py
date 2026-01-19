@@ -4063,8 +4063,20 @@ class HybridEconomicCalendar:
                 'previous': 'N/A'
             },
 
+            # SATURDAY, JANUARY 17
+            {
+                'title': 'French Final CPI m/m',
+                'date': 'Sat, Jan 17',
+                'time': '07:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': '0.0%',
+                'forecast': '0.0%',
+                'previous': '0.0%'
+            },
+            
             # SUNDAY, JANUARY 18
-
+            
             {
                 'title': 'Core Machinery Orders m/m',
                 'date': 'Sun, Jan 18',
