@@ -3777,6 +3777,73 @@ def get_prediction_markets():
             }
         }), 500
 
+@app.route('/api/prediction-markets/<market_id>/history', methods=['GET', 'OPTIONS'])
+def get_prediction_market_history(market_id):
+    """Get price history for a specific prediction market"""
+    # Handle CORS preflight requests
+    if request.method == 'OPTIONS':
+        response = jsonify({'status': 'ok'})
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Methods', 'GET, OPTIONS')
+        return response
+    
+    try:
+        # Get query parameters
+        clob_token_id = request.args.get('clob_token_id')
+        interval = request.args.get('interval', 'max')  # 1m, 1w, 1d, 6h, 1h, max
+        fidelity = request.args.get('fidelity', '60')  # Resolution in minutes
+        
+        try:
+            fidelity = int(fidelity)
+        except (ValueError, TypeError):
+            fidelity = 60  # Default to 60 minutes
+        
+        # Import the service
+        import importlib
+        import services.prediction_markets_service
+        importlib.reload(services.prediction_markets_service)
+        from services.prediction_markets_service import prediction_markets_service
+        
+        # Get price history
+        result = prediction_markets_service.get_market_price_history(
+            market_id=market_id,
+            clob_token_id=clob_token_id,
+            interval=interval,
+            fidelity=fidelity
+        )
+        
+        if result.get('status') == 'success':
+            return jsonify({
+                "status": "success",
+                "data": {
+                    "market_id": market_id,
+                    "history": result.get('history', [])
+                }
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "error": result.get('error', 'Failed to fetch price history'),
+                "data": {
+                    "market_id": market_id,
+                    "history": []
+                }
+            }), 500
+        
+    except Exception as e:
+        print(f"❌ Error fetching prediction market history: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "data": {
+                "market_id": market_id,
+                "history": []
+            }
+        }), 500
+
 @app.route('/api/sentiment/refresh', methods=['POST', 'OPTIONS'])
 def refresh_sentiment():
     """Force refresh sentiment calculations"""

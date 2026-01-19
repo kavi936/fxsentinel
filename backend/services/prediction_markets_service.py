@@ -89,8 +89,9 @@ PAID_TIER_CACHE_EXPIRATION_MINUTES = 10
 PAID_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 5
 
 # Market filtering limits
-MAX_FILTERED_MARKETS = 10  # Maximum markets to return after filtering (target: 5-10 macro-critical markets)
-# Note: We return up to 50 markets, but frontend may display fewer based on UI constraints
+MAX_FILTERED_MARKETS = 50  # Maximum markets to return after filtering (increased to show more relevant economic events)
+MIN_VOLUME_THRESHOLD = 5000  # Minimum volume in USD to include market (filters out very low-volume markets)
+# Note: Frontend will display all returned markets in scrollable container
 FREE_TIER_MAX_PRICE_FETCH_MARKETS = 5  # Max markets to fetch prices for on free tier
 PAID_TIER_MAX_PRICE_FETCH_MARKETS = 20  # Max markets to fetch prices for on paid tier
 
@@ -251,7 +252,14 @@ class PredictionMarketsService:
             "hawks", "warriors", "lakers", "celtics", "vs.", "o/u", "over/under",
             "bitcoin up or down", "ethereum up or down", "crypto up or down",
             "up or down -", "up or down:",  # Exclude recurring crypto price markets
-            "15m", "30m", "1h", "4h"  # Exclude short-term crypto price movements
+            "15m", "30m", "1h", "4h",  # Exclude short-term crypto price movements
+            # Entertainment/personality political markets (not forex relevant)
+            "oprah", "winfrey", "andrew yang", "chelsea clinton", "mrbeast", "mr beast",
+            "lebron james", "george clooney", "phil murphy",
+            "bill pulte", "pulte",
+            # Celebrity nomination markets (not economic policy)
+            "win the", "win the 2028", "presidential nomination", "democratic nomination", "republican nomination",
+            "nominate himself", "nominate herself"
         ]
         
         # Initialize cache file path (needed for fallback even when using persistent cache)
@@ -895,6 +903,8 @@ class PredictionMarketsService:
         
         # Economic tag IDs discovered from tags API
         # These are tags relevant to forex/economic markets
+        # NOTE: Removed tag_id=2 (Politics) as it includes too many entertainment/personality markets
+        # Focus on actual economic/financial tags only
         economic_tag_ids = [
             "370",      # GDP
             "132",      # monetary policy
@@ -903,7 +913,7 @@ class PredictionMarketsService:
             "103167",   # Bank of Canada
             "103168",   # Bank of Japan
             "103176",   # Global Rates
-            "2",        # Politics (often contains economic events)
+            # Removed "2" (Politics) - too many non-economic markets
         ]
         
         logger.info(f"Fetching Polymarket markets from Gamma API (max {self.max_pages_polymarket} pages per tag)")
@@ -1766,6 +1776,34 @@ class PredictionMarketsService:
                 skipped_exclude += 1
                 continue
             
+            # Skip entertainment/personality political markets (not forex relevant)
+            # These are celebrity nomination markets that don't affect forex
+            entertainment_political_patterns = [
+                "win the 2028", "win the 2024", "win the 2026",  # Election winner markets for celebrities
+                "presidential nomination", "democratic nomination", "republican nomination",  # Nomination markets
+                "nominate himself", "nominate herself", "nominate as",  # Self-nomination markets
+            ]
+            # Check if it's a political market about personalities/entertainment
+            is_political_market = any(pattern in text_lower for pattern in [
+                "presidential", "president", "nomination", "nominate", "election", "elections"
+            ])
+            has_entertainment_pattern = any(pattern in text_lower for pattern in entertainment_political_patterns)
+            
+            # Exclude if it's a political market with entertainment patterns AND no economic keywords
+            if is_political_market and has_entertainment_pattern:
+                # Only exclude if it doesn't have clear economic connection
+                economic_indicators = [
+                    "fed", "federal reserve", "fomc", "interest rate", "rate", "rates",
+                    "inflation", "cpi", "gdp", "employment", "unemployment", "nfp",
+                    "central bank", "monetary policy", "ecb", "boe", "boj",
+                    "trade", "tariff", "currency", "forex", "fx", "dollar", "euro", "pound"
+                ]
+                has_economic_indicator = any(indicator in text_lower for indicator in economic_indicators)
+                
+                if not has_economic_indicator:
+                    skipped_exclude += 1
+                    continue
+            
             # Check for economic keywords
             relevance = "low"
             matched_keywords = []
@@ -1796,7 +1834,9 @@ class PredictionMarketsService:
                     ]
                     
                     medium_relevance_keywords = [
-                        "trump", "biden", "president", "presidential", "election",
+                        # Only include political keywords that have clear economic connection
+                        # Exclude pure personality/entertainment political markets
+                        # "trump", "biden", "president", "presidential", "election",  # Removed - too broad, catches entertainment markets
                         "trade", "tariff", "tariffs", "trade war",
                         "geopolitics", "sanctions", "brexit",
                         "euro", "pound", "yen", "dollar",
@@ -1944,6 +1984,17 @@ class PredictionMarketsService:
                         logger.warning(f"⚠️ Market filtered at FINAL resolved check (line 1654): title='{title[:80]}...', is_resolved={is_resolved}, is_recently_resolved={is_recently_resolved}, matched_keywords={matched_keywords}")
                     continue
                 
+                # Filter out markets with very low volume (less reliable, less useful for traders)
+                # Volume check happens here after we've extracted volume from the market
+                try:
+                    volume_value = float(volume) if volume is not None else 0.0
+                except (ValueError, TypeError):
+                    volume_value = 0.0
+                
+                if volume_value < MIN_VOLUME_THRESHOLD:
+                    skipped_exclude += 1
+                    continue
+                
                 # Store Dome API specific fields for later use
                 market["relevance"] = relevance
                 market["related_event"] = related_event
@@ -2020,27 +2071,305 @@ class PredictionMarketsService:
         
         relevant_markets.sort(
             key=lambda x: (
-                -safe_float(x.get("conviction_score"), 0),  # Primary: Conviction score (high to low)
-                -abs(safe_float(x.get("price_delta_24h"), 0)),  # Secondary: Delta magnitude (shifting markets first)
-                -safe_int(x.get("priority_score"), 0),  # Tertiary: Curated markets (higher priority score)
-                -safe_float(x.get("volume"), 0),  # Quaternary: Volume (high to low)
-                x.get("accepting_orders", False),  # Markets accepting orders first
-                x.get("has_embedded_price", False),  # Then markets with embedded prices (free tier optimization)
-                x.get("is_future", False),  # Then future markets
-                x.get("relevance") == "high",  # Then by relevance: high
-                x.get("relevance") == "medium",  # Then: medium
-                -len(x.get("matched_keywords", [])),  # More matched keywords = higher priority
+                # Primary: Active markets first (accepting orders, not resolved, not closed)
+                not x.get("accepting_orders", False),  # False (active) sorts before True (inactive)
+                x.get("is_resolved", False),  # False (not resolved) sorts before True (resolved)
+                x.get("closed", False),  # False (not closed) sorts before True (closed)
+                # Secondary: Future markets (more actionable than past markets)
+                not x.get("is_future", False),  # False (future) sorts before True (past)
+                # Tertiary: Conviction score (high to low) - volume-normalized confidence
+                -safe_float(x.get("conviction_score"), 0),
+                # Quaternary: Price delta magnitude (shifting markets first)
+                -abs(safe_float(x.get("price_delta_24h"), 0)),
+                # Quinary: Priority score (curated markets)
+                -safe_int(x.get("priority_score"), 0),
+                # Senary: Volume (high to low)
+                -safe_float(x.get("volume"), 0),
+                # Septenary: Relevance score
+                x.get("relevance") != "high",  # High relevance first
+                x.get("relevance") != "medium",  # Then medium
+                # Octonary: More matched keywords = higher priority
+                -len(x.get("matched_keywords", [])),
             ),
-            reverse=False  # Changed from True: with negated values, False gives descending order
+            reverse=False  # With negated values and boolean logic, False gives desired order
         )
         
+        # Deduplicate similar markets to avoid overwhelming users with redundant information
+        # Group markets by topic and keep only the best market from each group
+        deduplicated_markets = self._deduplicate_similar_markets(relevant_markets)
+        
         # Limit to top markets (prioritize quality over quantity)
-        max_markets = min(MAX_FILTERED_MARKETS, len(relevant_markets))
-        relevant_markets = relevant_markets[:max_markets]
+        max_markets = min(MAX_FILTERED_MARKETS, len(deduplicated_markets))
+        deduplicated_markets = deduplicated_markets[:max_markets]
+        
+        logger.info(f"Deduplication: {len(relevant_markets)} markets -> {len(deduplicated_markets)} unique markets")
         
         # Return top markets (limited by MAX_FILTERED_MARKETS)
-        # Note: Deduplication by market_id already prevents duplicates from appearing
-        return relevant_markets[:MAX_FILTERED_MARKETS]
+        return deduplicated_markets[:MAX_FILTERED_MARKETS]
+    
+    def _deduplicate_similar_markets(self, markets: List[Dict]) -> List[Dict]:
+        """Deduplicate similar markets by grouping them by topic and keeping the best from each group
+        
+        Groups markets by extracting a "topic key" (e.g., "US GDP 2025", "US GDP Q4 2025")
+        and keeps only the highest volume/highest conviction market from each group.
+        
+        Args:
+            markets: List of market dictionaries
+            
+        Returns:
+            Deduplicated list of markets
+        """
+        import re
+        
+        def safe_float(value, default=0):
+            if value is None:
+                return default
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return default
+        
+        def safe_int(value, default=0):
+            if value is None:
+                return default
+            try:
+                return int(float(value))
+            except (ValueError, TypeError):
+                return default
+        
+        def extract_topic_key(question: str) -> str:
+            """Extract a topic key from market question to group similar markets
+            
+            Examples:
+            - "Will US GDP growth in 2025 be between 0.5% and 1.0%?" -> "US GDP 2025"
+            - "Will US GDP growth in Q4 2025 be greater than 3.5%?" -> "US GDP Q4 2025"
+            - "Negative GDP growth in 2025?" -> "US GDP 2025"
+            """
+            if not question:
+                return ""
+            
+            question_lower = question.lower()
+            
+            # Extract country/region
+            country_patterns = [
+                (r'\bus\b|\bunited states\b', 'US'),
+                (r'\bgermany\b|\bgerman\b', 'Germany'),
+                (r'\buk\b|\bunited kingdom\b|\bbritain\b', 'UK'),
+                (r'\beurozone\b|\beuro zone\b|\beu\b', 'Eurozone'),
+                (r'\bjapan\b|\bjapanese\b', 'Japan'),
+                (r'\bchina\b|\bchinese\b', 'China'),
+            ]
+            
+            country = None
+            for pattern, name in country_patterns:
+                if re.search(pattern, question_lower):
+                    country = name
+                    break
+            
+            # Default to US if no country specified (most markets are US-focused)
+            if not country:
+                country = "US"
+            
+            # Extract indicator type
+            indicator_patterns = [
+                (r'\bgdp\b|\bgross domestic product\b', 'GDP'),
+                (r'\bcpi\b|\bconsumer price index\b|\binflation\b', 'CPI'),
+                (r'\bemployment\b|\bnfp\b|\bnon.?farm payrolls\b|\bunemployment\b', 'Employment'),
+                (r'\bfed\b|\bfederal reserve\b|\bfomc\b|\binterest rate\b', 'Fed'),
+                (r'\becb\b|\beuropean central bank\b', 'ECB'),
+                (r'\bboe\b|\bbank of england\b', 'BOE'),
+                (r'\bboj\b|\bbank of japan\b', 'BOJ'),
+            ]
+            
+            indicator = None
+            for pattern, name in indicator_patterns:
+                if re.search(pattern, question_lower):
+                    indicator = name
+                    break
+            
+            if not indicator:
+                # Try to extract from common patterns
+                if 'growth' in question_lower:
+                    indicator = 'GDP'  # GDP growth is implied
+                else:
+                    indicator = 'Economic'  # Generic fallback
+            
+            # Extract time period
+            time_period = None
+            year = None
+            
+            # Extract year first
+            year_match = re.search(r'\b(20\d{2})\b', question)
+            if year_match:
+                year = year_match.group(1)
+            
+            # Check for quarter (handle various formats: "Q4 2025", "Q4 2025", "in Q4 2025")
+            quarter_match = re.search(r'\bq([1-4])\s*(\d{4})\b', question_lower)
+            if quarter_match:
+                quarter = quarter_match.group(1)
+                year = quarter_match.group(2)
+                time_period = f"Q{quarter} {year}"
+            elif year:
+                time_period = year
+            
+            # Handle "negative" as a modifier (keep it separate from regular GDP ranges)
+            # This way "Negative GDP growth in 2025?" gets its own group
+            if 'negative' in question_lower or 'less than 0' in question_lower:
+                time_period = f"{time_period} Negative" if time_period else "Negative"
+            
+            # Build topic key
+            if time_period:
+                topic_key = f"{country} {indicator} {time_period}"
+            else:
+                topic_key = f"{country} {indicator}"
+            
+            return topic_key.strip()
+        
+        # Group markets by topic key
+        topic_groups = {}
+        for market in markets:
+            question = market.get("question", "") or market.get("title", "")
+            topic_key = extract_topic_key(question)
+            
+            if topic_key not in topic_groups:
+                topic_groups[topic_key] = []
+            topic_groups[topic_key].append(market)
+        
+        # For each topic group, keep only the best market
+        deduplicated = []
+        for topic_key, group_markets in topic_groups.items():
+            if len(group_markets) == 1:
+                # Only one market in this topic - keep it
+                deduplicated.append(group_markets[0])
+            else:
+                # Multiple markets for same topic - keep the best one
+                # Score each market and pick the highest scoring one
+                best_market = max(group_markets, key=lambda m: (
+                    # Prioritize active markets
+                    not m.get("is_resolved", False) and not m.get("closed", False),
+                    m.get("accepting_orders", False),
+                    # Then by volume (higher is better)
+                    safe_float(m.get("volume"), 0),
+                    # Then by conviction score
+                    safe_float(m.get("conviction_score"), 0),
+                    # Then by how "balanced" the probabilities are (not 0%/100% or 100%/0%)
+                    # Balanced markets (50/50) are more interesting than extreme ones
+                    -abs(0.5 - (safe_float(m.get("yes_price"), 0.5))),
+                ))
+                deduplicated.append(best_market)
+        
+        # Re-sort deduplicated markets using the same logic as before
+        deduplicated.sort(
+            key=lambda x: (
+                not x.get("accepting_orders", False),
+                x.get("is_resolved", False),
+                x.get("closed", False),
+                not x.get("is_future", False),
+                -safe_float(x.get("conviction_score"), 0),
+                -abs(safe_float(x.get("price_delta_24h"), 0)),
+                -safe_int(x.get("priority_score"), 0),
+                -safe_float(x.get("volume"), 0),
+                x.get("relevance") != "high",
+                x.get("relevance") != "medium",
+                -len(x.get("matched_keywords", [])),
+            ),
+            reverse=False
+        )
+        
+        return deduplicated
+    
+    def get_market_price_history(self, market_id: str, clob_token_id: str = None, interval: str = "max", fidelity: int = 60) -> Dict[str, Any]:
+        """Fetch price history for a market from CLOB API
+        
+        Args:
+            market_id: Market identifier (for finding market in cache)
+            clob_token_id: CLOB token ID for the "Yes" token (required for Polymarket)
+            interval: Time interval (1m, 1w, 1d, 6h, 1h, max)
+            fidelity: Resolution in minutes (default: 60 = 1 hour)
+        
+        Returns:
+            Dict with status and history data
+        """
+        if not clob_token_id:
+            # Try to find market in cached data to get clob_token_id
+            if self.cached_markets:
+                for market in self.cached_markets:
+                    if market.get("id") == market_id:
+                        clob_token_ids = market.get("clob_token_ids")
+                        if clob_token_ids and isinstance(clob_token_ids, list) and len(clob_token_ids) > 0:
+                            # Use first token ID (usually "Yes" token)
+                            clob_token_id = clob_token_ids[0]
+                            break
+            
+            if not clob_token_id:
+                return {
+                    "status": "error",
+                    "error": "No CLOB token ID available for this market",
+                    "history": []
+                }
+        
+        try:
+            import requests
+            
+            # CLOB API endpoint for price history
+            url = "https://clob.polymarket.com/prices-history"
+            params = {
+                "market": clob_token_id,
+                "interval": interval,
+                "fidelity": fidelity
+            }
+            
+            logger.info(f"Fetching price history for market {market_id} (token: {clob_token_id[:20]}...)")
+            
+            response = requests.get(url, params=params, timeout=15)
+            
+            if response.status_code != 200:
+                logger.error(f"CLOB API error: {response.status_code} - {response.text}")
+                return {
+                    "status": "error",
+                    "error": f"API error: {response.status_code}",
+                    "history": []
+                }
+            
+            data = response.json()
+            history = data.get("history", [])
+            
+            # Transform data to our format: [{timestamp, yes_price}, ...]
+            # CLOB returns: [{"t": timestamp_seconds, "p": price}, ...]
+            transformed_history = []
+            for point in history:
+                timestamp_seconds = point.get("t")
+                price = point.get("p")
+                
+                if timestamp_seconds and price is not None:
+                    # Convert Unix timestamp to ISO string
+                    timestamp_dt = datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc)
+                    transformed_history.append({
+                        "timestamp": timestamp_dt.isoformat(),
+                        "yes_price": float(price),
+                        "no_price": 1.0 - float(price)  # Calculate NO price from YES price
+                    })
+            
+            # Sort by timestamp (oldest first)
+            transformed_history.sort(key=lambda x: x["timestamp"])
+            
+            logger.info(f"Fetched {len(transformed_history)} price history points for market {market_id}")
+            
+            return {
+                "status": "success",
+                "history": transformed_history,
+                "market_id": market_id
+            }
+            
+        except Exception as e:
+            logger.error(f"Error fetching price history for market {market_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "status": "error",
+                "error": str(e),
+                "history": []
+            }
     
     def _fetch_token_price(self, token_id: str, use_rate_limiter: bool = True) -> Optional[float]:
         """Fetch price for a specific token from Dome API
@@ -2777,6 +3106,22 @@ class PredictionMarketsService:
         else:
             market_id = _safe_get(market, "condition_id", "")
         
+        # Extract clobTokenIds for Polymarket markets (needed for price history API)
+        clob_token_ids = None
+        if platform == "polymarket" and is_gamma_structure:
+            # Gamma API provides clobTokenIds array
+            clob_token_ids_raw = _safe_get(market, "clobTokenIds")
+            if clob_token_ids_raw:
+                # Handle both array and JSON string formats
+                if isinstance(clob_token_ids_raw, list):
+                    clob_token_ids = clob_token_ids_raw
+                elif isinstance(clob_token_ids_raw, str):
+                    try:
+                        import json
+                        clob_token_ids = json.loads(clob_token_ids_raw)
+                    except (json.JSONDecodeError, ValueError):
+                        clob_token_ids = None
+        
         # Determine active/closed status - handle Gamma API, CLOB (booleans/strings), and DOME (status string)
         if is_gamma_structure:
             # Gamma API: uses boolean fields directly
@@ -2852,6 +3197,7 @@ class PredictionMarketsService:
             "related_event": _safe_get(market, "related_event"),
             "affected_currency_pairs": _safe_get(market, "affected_currency_pairs", []),  # Currency pairs affected by this market
             "url": market_url,  # URL to view market on original platform
+            "clob_token_ids": clob_token_ids,  # CLOB token IDs for fetching price history (Polymarket only)
             # Price deltas (percentage point changes)
             "price_delta_24h": deltas.get("delta_24h"),
             "price_delta_48h": deltas.get("delta_48h"),

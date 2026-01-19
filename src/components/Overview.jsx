@@ -10,6 +10,343 @@ import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
 
+// Mini Price Chart Component
+const MiniPriceChart = ({ data }) => {
+  const [chartHover, setChartHover] = useState(null);
+
+  if (!data || data.length === 0) return null;
+
+  // Filter and sort data
+  const validData = data
+    .filter(point => point && point.yes_price !== null && point.yes_price !== undefined && point.timestamp)
+    .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+
+  if (validData.length === 0) return null;
+
+  // Chart dimensions (responsive - using viewBox for scaling)
+  // Base dimensions for calculations (will scale via viewBox)
+  const baseWidth = 600;
+  const baseHeight = 200;
+  const padding = { top: 20, right: 20, bottom: 30, left: 50 };
+  const chartWidth = baseWidth - padding.left - padding.right;
+  const chartHeight = baseHeight - padding.top - padding.bottom;
+
+  // Calculate Y scale (0-100% for probabilities)
+  const minPrice = 0;
+  const maxPrice = 100;
+  const priceRange = maxPrice - minPrice;
+
+  // Calculate X positions
+  const xStep = chartWidth / (validData.length - 1 || 1);
+  const points = validData.map((point, index) => {
+    const x = padding.left + (index * xStep);
+    const yesPricePercent = point.yes_price * 100;
+    const y = padding.top + ((maxPrice - yesPricePercent) / priceRange) * chartHeight;
+    return { ...point, x, y, yesPricePercent };
+  });
+
+  // Create path for line
+  const linePath = points.map((point, index) => 
+    `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+  ).join(' ');
+
+  // Create area path
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top + chartHeight} L ${points[0].x} ${padding.top + chartHeight} Z`;
+
+  // Format date for X-axis
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  // Format date with time for tooltip
+  const formatDateFull = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Handle chart hover
+  const handleChartHover = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const svgRect = event.currentTarget.querySelector('svg').getBoundingClientRect();
+    
+    // Calculate scale factor (SVG scales to fit container)
+    const scaleX = svgRect.width / baseWidth;
+    const scaleY = svgRect.height / baseHeight;
+    
+    // Calculate relative position within SVG
+    const relativeX = Math.min(Math.max((event.clientX - svgRect.left - (padding.left * scaleX)) / (chartWidth * scaleX), 0), 1);
+    const lastIndex = validData.length - 1;
+    const index = Math.round(relativeX * lastIndex);
+    
+    if (index >= 0 && index < validData.length) {
+      const point = validData[index];
+      const pointX = padding.left + (index * xStep);
+      const yesPricePercent = point.yes_price * 100;
+      const pointY = padding.top + ((maxPrice - yesPricePercent) / priceRange) * chartHeight;
+      
+      // Calculate percentage positions for tooltip (relative to SVG)
+      const xPercent = ((pointX / baseWidth) * 100);
+      const yPercent = ((pointY / baseHeight) * 100);
+      
+      // Calculate trend (compare with previous value)
+      let trend = null;
+      let changePercent = null;
+      if (index > 0) {
+        const currentValue = point.yes_price;
+        const previousValue = validData[index - 1].yes_price;
+        const change = currentValue - previousValue;
+        changePercent = ((change / previousValue) * 100).toFixed(2);
+        trend = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
+      }
+      
+      // Smart tooltip positioning
+      const tooltipWidth = 120;
+      const tooltipHeight = 60;
+      const margin = 10;
+      
+      let tooltipXPercent = xPercent;
+      let tooltipYPercent = yPercent;
+      let tooltipPosition = 'top';
+      
+      // Adjust horizontal position (relative to SVG dimensions)
+      const tooltipX = (xPercent / 100) * svgRect.width;
+      if (tooltipX - tooltipWidth / 2 < margin) {
+        tooltipXPercent = ((margin + tooltipWidth / 2) / svgRect.width) * 100;
+      } else if (tooltipX + tooltipWidth / 2 > svgRect.width - margin) {
+        tooltipXPercent = ((svgRect.width - margin - tooltipWidth / 2) / svgRect.width) * 100;
+      }
+      
+      // Adjust vertical position (relative to SVG dimensions)
+      const tooltipY = (yPercent / 100) * svgRect.height;
+      if (tooltipY - tooltipHeight - 20 < margin) {
+        tooltipPosition = 'bottom';
+        tooltipYPercent = yPercent + 5;
+      } else {
+        tooltipPosition = 'top';
+        tooltipYPercent = yPercent - 5;
+      }
+      
+      setChartHover({
+        index,
+        value: yesPricePercent,
+        xPercent: tooltipXPercent,
+        yPercent: tooltipYPercent,
+        xPixel: pointX, // Keep in base coordinates for SVG viewBox
+        yPixel: pointY, // Keep in base coordinates for SVG viewBox
+        trend,
+        changePercent,
+        position: tooltipPosition,
+        date: point.timestamp
+      });
+    }
+  };
+
+  const clearChartHover = () => {
+    setChartHover(null);
+  };
+
+  // Y-axis labels
+  const yAxisLabels = [0, 50, 100].map(percent => ({
+    value: percent,
+    y: padding.top + ((maxPrice - percent) / priceRange) * chartHeight
+  }));
+
+  // X-axis labels (first and last)
+  const xAxisLabels = [];
+  if (validData.length > 0) {
+    xAxisLabels.push({ index: 0, label: formatDate(validData[0].timestamp) });
+    if (validData.length > 1) {
+      xAxisLabels.push({ index: validData.length - 1, label: formatDate(validData[validData.length - 1].timestamp) });
+    }
+  }
+
+  return (
+    <div className="mini-price-chart-container">
+      <div className="mini-chart-header">
+        <span className="mini-chart-title">Price History</span>
+        <span className="mini-chart-current">
+          Current: {points.length > 0 ? `${points[points.length - 1].yesPricePercent.toFixed(1)}%` : 'N/A'}
+        </span>
+      </div>
+      <div 
+        className="mini-chart-wrapper"
+        onMouseMove={handleChartHover}
+        onMouseLeave={clearChartHover}
+        style={{ position: 'relative', cursor: 'crosshair', width: '100%' }}
+      >
+        <svg 
+          viewBox={`0 0 ${baseWidth} ${baseHeight}`}
+          preserveAspectRatio="xMidYMid meet"
+          style={{ width: '100%', height: 'auto', maxHeight: '250px', background: 'transparent' }}
+        >
+        <defs>
+          <linearGradient id="mini-chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.3)" />
+            <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
+          </linearGradient>
+        </defs>
+
+        {/* Grid lines */}
+        {yAxisLabels.map((label, idx) => (
+          <line
+            key={`grid-${idx}`}
+            x1={padding.left}
+            y1={label.y}
+            x2={baseWidth - padding.right}
+            y2={label.y}
+            stroke="rgba(255, 255, 255, 0.1)"
+            strokeWidth="1"
+          />
+        ))}
+
+        {/* Area fill */}
+        <path
+          d={areaPath}
+          fill="url(#mini-chart-gradient)"
+        />
+
+        {/* Line */}
+        <path
+          d={linePath}
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Crosshair lines */}
+        {chartHover && (
+          <>
+            {/* Vertical crosshair line */}
+            <line
+              x1={chartHover.xPixel}
+              y1={padding.top}
+              x2={chartHover.xPixel}
+              y2={baseHeight - padding.bottom}
+              stroke="rgba(96, 165, 250, 0.5)"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+              className="pm-chart-crosshair-line pm-chart-crosshair-vertical"
+            />
+            {/* Horizontal crosshair line */}
+            <line
+              x1={padding.left}
+              y1={chartHover.yPixel}
+              x2={baseWidth - padding.right}
+              y2={chartHover.yPixel}
+              stroke="rgba(96, 165, 250, 0.5)"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+              className="pm-chart-crosshair-line pm-chart-crosshair-horizontal"
+            />
+            {/* Active point highlight */}
+            <circle
+              cx={chartHover.xPixel}
+              cy={chartHover.yPixel}
+              r="4"
+              fill="#60a5fa"
+              stroke="#ffffff"
+              strokeWidth="2"
+              className="pm-chart-active-point"
+            />
+          </>
+        )}
+
+        {/* Data points (only show some to avoid clutter) */}
+        {points.map((point, index) => {
+          const isActive = chartHover && chartHover.index === index;
+          // Only show some points to avoid clutter, but always show active one
+          if (!isActive && index % Math.ceil(points.length / 20) !== 0 && index !== points.length - 1) {
+            return null;
+          }
+          return (
+            <circle
+              key={index}
+              cx={point.x}
+              cy={point.y}
+              r={isActive ? "4" : "2"}
+              fill={isActive ? "#ffffff" : "#60a5fa"}
+              stroke={isActive ? "#60a5fa" : "none"}
+              strokeWidth={isActive ? "2" : "0"}
+              style={{ transition: 'all 0.2s ease' }}
+            />
+          );
+        })}
+
+        {/* Y-axis labels */}
+        {yAxisLabels.map((label, idx) => (
+          <text
+            key={`y-label-${idx}`}
+            x={padding.left - 10}
+            y={label.y + 4}
+            textAnchor="end"
+            fill="rgba(255, 255, 255, 0.5)"
+            fontSize="10"
+          >
+            {label.value}%
+          </text>
+        ))}
+
+        {/* X-axis labels */}
+        {xAxisLabels.map((label, idx) => {
+          const point = points[label.index];
+          if (!point) return null;
+          return (
+            <text
+              key={`x-label-${idx}`}
+              x={point.x}
+              y={baseHeight - padding.bottom + 15}
+              textAnchor="middle"
+              fill="rgba(255, 255, 255, 0.5)"
+              fontSize="10"
+            >
+              {label.label}
+            </text>
+          );
+        })}
+        </svg>
+        
+        {/* Tooltip */}
+        {chartHover && (
+          <div
+            className={`pm-chart-tooltip pm-chart-tooltip-${chartHover.position || 'top'}`}
+            style={{
+              left: `${chartHover.xPercent}%`,
+              top: `${chartHover.yPercent}%`,
+              transform: 'translate(-50%, -100%)'
+            }}
+          >
+            <div className="pm-chart-tooltip-value">
+              {chartHover.value.toFixed(1)}%
+              {chartHover.trend && (
+                <span className={`pm-chart-tooltip-trend pm-chart-tooltip-trend-${chartHover.trend}`}>
+                  {chartHover.trend === 'up' ? '↑' : chartHover.trend === 'down' ? '↓' : '→'}
+                </span>
+              )}
+            </div>
+            {chartHover.changePercent && chartHover.trend && (
+              <div className="pm-chart-tooltip-change">
+                {chartHover.trend === 'up' ? '+' : ''}{chartHover.changePercent}%
+              </div>
+            )}
+            <div className="pm-chart-tooltip-date">
+              {formatDateFull(chartHover.date)}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Overview = () => {
   // Helper function to capitalize sentiment values
   const capitalizeSentiment = (value) => {
@@ -492,6 +829,18 @@ const Overview = () => {
   const [cbFilterBank, setCbFilterBank] = useState('all');
   const [cbFilterType, setCbFilterType] = useState('all');
   const [cbFilterImpact, setCbFilterImpact] = useState('all');
+  
+  // Prediction Markets filter state and modals
+  const [pmSearchQuery, setPmSearchQuery] = useState('');
+  const [pmFilterTopic, setPmFilterTopic] = useState('all');
+  const [pmFilterStatus, setPmFilterStatus] = useState('all');
+  const [pmFilterConviction, setPmFilterConviction] = useState('all');
+  
+  // Prediction Markets modal states
+  const [isPmTopicModalOpen, setIsPmTopicModalOpen] = useState(false);
+  const [isPmStatusModalOpen, setIsPmStatusModalOpen] = useState(false);
+  const [isPmConvictionModalOpen, setIsPmConvictionModalOpen] = useState(false);
+  const [isPmSearchModalOpen, setIsPmSearchModalOpen] = useState(false);
 
   // Format last updated time
   const formatLastUpdated = (timestamp) => {
@@ -636,6 +985,12 @@ const Overview = () => {
   // Chart popup state
   const [chartPopupOpen, setChartPopupOpen] = useState(false);
   const [selectedChartEvent, setSelectedChartEvent] = useState(null);
+  
+  // Prediction market expanded state (market_id -> boolean)
+  const [expandedMarkets, setExpandedMarkets] = useState({});
+  
+  // Prediction market chart data cache (market_id -> chartData)
+  const [pmChartDataCache, setPmChartDataCache] = useState({});
 
   // Economic Calendar Button Handlers
   const handleDatePicker = () => {
@@ -645,6 +1000,39 @@ const Overview = () => {
   const handleFilter = () => {
     console.log('🔄 Opening filter modal');
     setIsFilterModalOpen(true);
+  };
+  
+  // Prediction Markets modal handlers
+  const handlePmTopicClick = () => {
+    setIsPmTopicModalOpen(true);
+  };
+  
+  const handlePmStatusClick = () => {
+    setIsPmStatusModalOpen(true);
+  };
+  
+  const handlePmConvictionClick = () => {
+    setIsPmConvictionModalOpen(true);
+  };
+  
+  const handlePmSearchClick = () => {
+    setIsPmSearchModalOpen(true);
+  };
+  
+  const handleClosePmTopicModal = () => {
+    setIsPmTopicModalOpen(false);
+  };
+  
+  const handleClosePmStatusModal = () => {
+    setIsPmStatusModalOpen(false);
+  };
+  
+  const handleClosePmConvictionModal = () => {
+    setIsPmConvictionModalOpen(false);
+  };
+  
+  const handleClosePmSearchModal = () => {
+    setIsPmSearchModalOpen(false);
   };
 
   // Chart popup handlers
@@ -658,6 +1046,73 @@ const Overview = () => {
   const handleCloseChart = () => {
     setChartPopupOpen(false);
     setSelectedChartEvent(null);
+  };
+
+  // Prediction market expand/collapse handlers
+  const handleMarketToggle = async (market) => {
+    const marketId = market.id;
+    const isExpanded = expandedMarkets[marketId] || false;
+    
+    // Toggle expanded state
+    setExpandedMarkets(prev => ({
+      ...prev,
+      [marketId]: !isExpanded
+    }));
+    
+    // If expanding and we don't have chart data yet, fetch it
+    if (!isExpanded && !pmChartDataCache[marketId]) {
+      await fetchMarketChartData(market);
+    }
+  };
+
+  const fetchMarketChartData = async (market) => {
+    const marketId = market.id;
+    
+    // Don't fetch if already cached
+    if (pmChartDataCache[marketId]) {
+      return;
+    }
+
+    try {
+      const clobTokenIds = market.clob_token_ids;
+      if (!clobTokenIds || !Array.isArray(clobTokenIds) || clobTokenIds.length === 0) {
+        // No CLOB token ID - can't fetch history
+        setPmChartDataCache(prev => ({
+          ...prev,
+          [marketId]: { error: 'No historical data available for this market' }
+        }));
+        return;
+      }
+
+      const clobTokenId = clobTokenIds[0];
+      const url = `${config.endpoints.predictionMarketHistory(marketId)}?clob_token_id=${clobTokenId}&interval=max&fidelity=60`;
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.status === 'success' && data.data && data.data.history) {
+        setPmChartDataCache(prev => ({
+          ...prev,
+          [marketId]: data.data
+        }));
+      } else {
+        setPmChartDataCache(prev => ({
+          ...prev,
+          [marketId]: { error: data.error || 'No historical data available' }
+        }));
+      }
+    } catch (err) {
+      console.error('❌ Error fetching price history:', err);
+      setPmChartDataCache(prev => ({
+        ...prev,
+        [marketId]: { error: 'Failed to load historical data' }
+      }));
+    }
   };
 
   // Cleanup old cache on mount
@@ -3536,8 +3991,39 @@ const Overview = () => {
                   tooltipText="Prediction Markets: See what retail and institutional traders are betting on. These markets aggregate crowd wisdom on economic events like Fed decisions, inflation data, and GDP releases. Use this as a sentiment indicator alongside technical analysis."
                   position="bottom"
                 />
-        </div>
-              <div className="prediction-markets-controls">
+                <div className="prediction-markets-filter-buttons">
+                  <button 
+                    className={`pm-filter-btn ${pmFilterTopic !== 'all' ? 'active' : ''}`}
+                    onClick={handlePmTopicClick}
+                    title="Filter by Topic"
+                  >
+                    Topic
+                  </button>
+                  <button 
+                    className={`pm-filter-btn ${pmFilterStatus !== 'all' ? 'active' : ''}`}
+                    onClick={handlePmStatusClick}
+                    title="Filter by Status"
+                  >
+                    Status
+                  </button>
+                  <button 
+                    className={`pm-filter-btn ${pmFilterConviction !== 'all' ? 'active' : ''}`}
+                    onClick={handlePmConvictionClick}
+                    title="Filter by Conviction"
+                  >
+                    Conviction
+                  </button>
+                  <button 
+                    className={`pm-filter-btn ${pmSearchQuery ? 'active' : ''}`}
+                    onClick={handlePmSearchClick}
+                    title="Search Markets"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <path d="M21 21l-4.35-4.35"></path>
+                    </svg>
+                  </button>
+                </div>
                 <button 
                   className={`prediction-markets-refresh-btn ${predictionMarketsLoading ? 'spinning' : ''}`}
                   onClick={refreshPredictionMarkets}
@@ -3571,19 +4057,104 @@ const Overview = () => {
                 <>
                   <div className="prediction-markets-list">
                     {(() => {
-                      // Filter: Show active markets OR recently resolved markets (within 30 days) for context
-                      // This ensures users see some markets even if most are historical
-                      const activeMarkets = predictionMarkets.filter(m => {
-                        // Show if not resolved and not closed
-                        if (!m.is_resolved && !m.closed) {
-                          return true;
+                      // Apply search and filters
+                      const now = new Date();
+                      let filteredMarkets = predictionMarkets.filter(m => {
+                        // Minimum volume threshold: Skip markets with very low volume (< $5K)
+                        const volume = m.volume || 0;
+                        if (volume < 5000) {
+                          return false;
                         }
-                        // Show if recently resolved (within 30 days) - useful context
-                        if (m.is_recently_resolved) {
-                          return true;
+                        
+                        // Search filter: Check if question/title matches search query
+                        if (pmSearchQuery) {
+                          const query = pmSearchQuery.toLowerCase();
+                          const question = (m.question || m.title || '').toLowerCase();
+                          if (!question.includes(query)) {
+                            return false;
+                          }
                         }
-                        return false;
+                        
+                        // Topic filter: Check if market matches selected topic
+                        if (pmFilterTopic !== 'all') {
+                          const question = (m.question || m.title || '').toLowerCase();
+                          let matchesTopic = false;
+                          
+                          if (pmFilterTopic === 'GDP' && (question.includes('gdp') || question.includes('gross domestic product'))) {
+                            matchesTopic = true;
+                          } else if (pmFilterTopic === 'CPI' && (question.includes('cpi') || question.includes('consumer price index') || question.includes('inflation'))) {
+                            matchesTopic = true;
+                          } else if (pmFilterTopic === 'Fed' && (question.includes('fed') || question.includes('federal reserve') || question.includes('fomc') || question.includes('interest rate'))) {
+                            matchesTopic = true;
+                          } else if (pmFilterTopic === 'Employment' && (question.includes('employment') || question.includes('nfp') || question.includes('non-farm payrolls') || question.includes('unemployment'))) {
+                            matchesTopic = true;
+                          } else if (pmFilterTopic === 'ECB' && question.includes('ecb')) {
+                            matchesTopic = true;
+                          } else if (pmFilterTopic === 'BOE' && (question.includes('boe') || question.includes('bank of england'))) {
+                            matchesTopic = true;
+                          } else if (pmFilterTopic === 'BOJ' && (question.includes('boj') || question.includes('bank of japan'))) {
+                            matchesTopic = true;
+                          }
+                          
+                          if (!matchesTopic) {
+                            return false;
+                          }
+                        }
+                        
+                        // Status filter: Filter by active/resolved status
+                        if (pmFilterStatus === 'active') {
+                          // Only show active markets
+                          if (m.is_resolved || m.closed) {
+                            return false;
+                          }
+                        } else if (pmFilterStatus === 'resolved') {
+                          // Only show resolved markets
+                          if (!m.is_resolved && !m.closed) {
+                            return false;
+                          }
+                        } else {
+                          // 'all' - apply default filtering logic
+                          // Show if not resolved and not closed (active markets)
+                          if (!m.is_resolved && !m.closed) {
+                            return true;
+                          }
+                          
+                          // For resolved/closed markets, check if resolution date has actually passed
+                          if (m.resolution_date) {
+                            const resolutionDate = new Date(m.resolution_date);
+                            const daysSinceResolution = Math.floor((now - resolutionDate) / (1000 * 60 * 60 * 24));
+                            
+                            // Only show if:
+                            // 1. Resolution date hasn't passed yet (market closed but not yet resolved)
+                            // 2. OR resolved within last 7 days (recent outcomes for context)
+                            if (daysSinceResolution < 0) {
+                              return true;
+                            } else if (daysSinceResolution >= 0 && daysSinceResolution <= 7) {
+                              return true;
+                            }
+                            return false;
+                          }
+                          
+                          // Show if recently resolved flag is set (fallback)
+                          if (m.is_recently_resolved) {
+                            return true;
+                          }
+                          
+                          return false;
+                        }
+                        
+                        return true;
                       });
+                      
+                      // Conviction filter: Filter by conviction level
+                      if (pmFilterConviction !== 'all') {
+                        filteredMarkets = filteredMarkets.filter(m => {
+                          const convictionLevel = (m.conviction_level || 'low').toLowerCase();
+                          return convictionLevel === pmFilterConviction.toLowerCase();
+                        });
+                      }
+                      
+                      const activeMarkets = filteredMarkets;
                       
                       // Sort by volume (highest to lowest), then by other factors
                       const sortedMarkets = [...activeMarkets].sort((a, b) => {
@@ -3667,18 +4238,41 @@ const Overview = () => {
                           // Determine conviction class for styling
                           const convictionClass = `conviction-${convictionLevel}`;
                           
+                          const isExpanded = expandedMarkets[market.id] || false;
+                          const chartData = pmChartDataCache[market.id];
+                          
                           return (
-                            <div key={market.id} className={`prediction-market-item ${convictionClass}`}>
+                            <div 
+                              key={market.id} 
+                              className={`prediction-market-item ${convictionClass} ${isExpanded ? 'expanded' : ''}`}
+                            >
                               {/* Header - Question with Conviction Badge */}
-                              <div className="market-header-row">
+                              <div className="market-header-row" onClick={() => handleMarketToggle(market)} style={{ cursor: 'pointer' }}>
                                 <div className="market-question">
                                   {market.question}
                                 </div>
-                                {convictionLevel && (
-                                  <div className={`conviction-badge conviction-${convictionLevel}`}>
-                                    {convictionLevel.toUpperCase()}
-                                  </div>
-                                )}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  {convictionLevel && (
+                                    <div className={`conviction-badge conviction-${convictionLevel}`}>
+                                      {convictionLevel.toUpperCase()}
+                                    </div>
+                                  )}
+                                  <svg 
+                                    width="16" 
+                                    height="16" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2"
+                                    style={{ 
+                                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                                      transition: 'transform 0.2s ease',
+                                      color: 'rgba(255, 255, 255, 0.6)'
+                                    }}
+                                  >
+                                    <path d="M6 9l6 6 6-6"></path>
+                                  </svg>
+                                </div>
                               </div>
                               
                               {/* Probability Display with Delta Badge */}
@@ -3730,21 +4324,69 @@ const Overview = () => {
                                 </div>
                               )}
                               
-                              {/* Meta Row - Resolution Date, Conviction Score, and URL */}
+                              {/* Meta Row - Volume, Price, Resolution Date, and URL */}
                               <div className="market-meta-row">
-                                {market.resolution_date && market.is_future && (
+                                {/* Volume */}
+                                {market.volume && market.volume > 0 && (
                                   <div className="market-meta-item">
-                                    <span className="meta-label">Resolves:</span>
+                                    <span className="meta-label">Volume:</span>
+                                    <span className={`meta-value ${(() => {
+                                      const vol = market.volume;
+                                      if (vol >= 50000) return 'high-volume';
+                                      if (vol >= 10000) return 'medium-volume';
+                                      return 'low-volume';
+                                    })()}`}>
+                                      {(() => {
+                                        const vol = market.volume;
+                                        if (vol >= 1000000) return `$${(vol / 1000000).toFixed(2)}M`;
+                                        if (vol >= 1000) return `$${(vol / 1000).toFixed(1)}K`;
+                                        return `$${vol.toFixed(0)}`;
+                                      })()}
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {/* Price Display */}
+                                {hasValidPrices && total > 0 && (
+                                  <div className="market-meta-item">
+                                    <span className="meta-label">Price:</span>
+                                    <span className="meta-value">
+                                      YES {yesPercent}% / NO {noPercent}%
+                                    </span>
+                                  </div>
+                                )}
+                                
+                                {/* Resolution Date */}
+                                {market.resolution_date && (
+                                  <div className="market-meta-item">
+                                    <span className="meta-label">
+                                      {(() => {
+                                        const date = new Date(market.resolution_date);
+                                        const now = new Date();
+                                        const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+                                        
+                                        // Determine if market is future or past
+                                        if (daysUntil > 0) {
+                                          return 'Resolves:';
+                                        } else if (market.is_resolved || market.closed) {
+                                          return 'Resolved:';
+                                        } else {
+                                          return 'Resolves:';
+                                        }
+                                      })()}
+                                    </span>
                                     <span className="meta-value">
                                       {(() => {
                                         const date = new Date(market.resolution_date);
                                         const now = new Date();
-                                        
                                         const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
-                                        if (daysUntil <= 7) {
+                                        
+                                        // Show "In X days" for future dates within 7 days
+                                        if (daysUntil > 0 && daysUntil <= 7) {
                                           return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
                                         }
                                         
+                                        // Show formatted date for all other cases
                                         return date.toLocaleDateString('en-US', { 
                                           month: 'short', 
                                           day: 'numeric',
@@ -3754,28 +4396,43 @@ const Overview = () => {
                                     </span>
                                   </div>
                                 )}
-                                {convictionScore > 0 && (
-                                  <div className="market-meta-item">
-                                    <span className="meta-label">Conviction:</span>
-                                    <span className={`meta-value conviction-${convictionLevel}`}>
-                                      {convictionScore}
-                                    </span>
-                                  </div>
-                                )}
+                                
+                                {/* URL Link */}
                                 {market.url && (
-                                  <div className="market-meta-item">
+                                  <div className="market-meta-item market-link-item" onClick={(e) => e.stopPropagation()}>
                                     <a 
                                       href={market.url} 
                                       target="_blank" 
                                       rel="noopener noreferrer"
                                       className="market-link"
-                                      onClick={(e) => e.stopPropagation()}
                                     >
-                                      View on {market.platform === 'kalshi' ? 'Kalshi' : 'Polymarket'} →
+                                      View on {market.platform === 'kalshi' ? 'Kalshi' : 'Polymarket'}
                                     </a>
                                   </div>
                                 )}
                               </div>
+                              
+                              {/* Expanded Chart Section */}
+                              {isExpanded && (
+                                <div className="market-chart-expanded" onClick={(e) => e.stopPropagation()}>
+                                  {!chartData ? (
+                                    <div className="market-chart-loading">
+                                      <div className="loading-spinner"></div>
+                                      <span>Loading price history...</span>
+                                    </div>
+                                  ) : chartData.error ? (
+                                    <div className="market-chart-error">
+                                      <span>{chartData.error}</span>
+                                    </div>
+                                  ) : chartData.history && chartData.history.length > 0 ? (
+                                    <MiniPriceChart data={chartData.history} />
+                                  ) : (
+                                    <div className="market-chart-error">
+                                      <span>No historical data available</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           );
                         });
@@ -4425,12 +5082,328 @@ const Overview = () => {
         </div>
       )}
 
+      {/* Prediction Markets Modals */}
+      
+      {/* Topic Filter Modal */}
+      {isPmTopicModalOpen && (
+        <div className="modal-overlay" onClick={handleClosePmTopicModal}>
+          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Filter by Topic</h2>
+              <button className="modal-close-btn" onClick={handleClosePmTopicModal}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="pm-modal-content">
+              <div className="pm-filter-options">
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-all"
+                    name="topic"
+                    checked={pmFilterTopic === 'all'}
+                    onChange={() => setPmFilterTopic('all')}
+                  />
+                  <label htmlFor="topic-all" className="pm-filter-label">
+                    All Topics
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-gdp"
+                    name="topic"
+                    checked={pmFilterTopic === 'GDP'}
+                    onChange={() => setPmFilterTopic('GDP')}
+                  />
+                  <label htmlFor="topic-gdp" className="pm-filter-label">
+                    GDP
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-cpi"
+                    name="topic"
+                    checked={pmFilterTopic === 'CPI'}
+                    onChange={() => setPmFilterTopic('CPI')}
+                  />
+                  <label htmlFor="topic-cpi" className="pm-filter-label">
+                    CPI / Inflation
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-fed"
+                    name="topic"
+                    checked={pmFilterTopic === 'Fed'}
+                    onChange={() => setPmFilterTopic('Fed')}
+                  />
+                  <label htmlFor="topic-fed" className="pm-filter-label">
+                    Fed / Interest Rates
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-employment"
+                    name="topic"
+                    checked={pmFilterTopic === 'Employment'}
+                    onChange={() => setPmFilterTopic('Employment')}
+                  />
+                  <label htmlFor="topic-employment" className="pm-filter-label">
+                    Employment / NFP
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-ecb"
+                    name="topic"
+                    checked={pmFilterTopic === 'ECB'}
+                    onChange={() => setPmFilterTopic('ECB')}
+                  />
+                  <label htmlFor="topic-ecb" className="pm-filter-label">
+                    ECB
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-boe"
+                    name="topic"
+                    checked={pmFilterTopic === 'BOE'}
+                    onChange={() => setPmFilterTopic('BOE')}
+                  />
+                  <label htmlFor="topic-boe" className="pm-filter-label">
+                    BOE
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="topic-boj"
+                    name="topic"
+                    checked={pmFilterTopic === 'BOJ'}
+                    onChange={() => setPmFilterTopic('BOJ')}
+                  />
+                  <label htmlFor="topic-boj" className="pm-filter-label">
+                    BOJ
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="pm-modal-actions">
+              <button className="btn-cancel" onClick={handleClosePmTopicModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Status Filter Modal */}
+      {isPmStatusModalOpen && (
+        <div className="modal-overlay" onClick={handleClosePmStatusModal}>
+          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Filter by Status</h2>
+              <button className="modal-close-btn" onClick={handleClosePmStatusModal}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="pm-modal-content">
+              <div className="pm-filter-options">
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="status-all"
+                    name="status"
+                    checked={pmFilterStatus === 'all'}
+                    onChange={() => setPmFilterStatus('all')}
+                  />
+                  <label htmlFor="status-all" className="pm-filter-label">
+                    All Status
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="status-active"
+                    name="status"
+                    checked={pmFilterStatus === 'active'}
+                    onChange={() => setPmFilterStatus('active')}
+                  />
+                  <label htmlFor="status-active" className="pm-filter-label">
+                    Active Only
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="status-resolved"
+                    name="status"
+                    checked={pmFilterStatus === 'resolved'}
+                    onChange={() => setPmFilterStatus('resolved')}
+                  />
+                  <label htmlFor="status-resolved" className="pm-filter-label">
+                    Resolved
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="pm-modal-actions">
+              <button className="btn-cancel" onClick={handleClosePmStatusModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Conviction Filter Modal */}
+      {isPmConvictionModalOpen && (
+        <div className="modal-overlay" onClick={handleClosePmConvictionModal}>
+          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Filter by Conviction</h2>
+              <button className="modal-close-btn" onClick={handleClosePmConvictionModal}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="pm-modal-content">
+              <div className="pm-filter-options">
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="conviction-all"
+                    name="conviction"
+                    checked={pmFilterConviction === 'all'}
+                    onChange={() => setPmFilterConviction('all')}
+                  />
+                  <label htmlFor="conviction-all" className="pm-filter-label">
+                    All Conviction
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="conviction-high"
+                    name="conviction"
+                    checked={pmFilterConviction === 'high'}
+                    onChange={() => setPmFilterConviction('high')}
+                  />
+                  <label htmlFor="conviction-high" className="pm-filter-label">
+                    High
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="conviction-medium"
+                    name="conviction"
+                    checked={pmFilterConviction === 'medium'}
+                    onChange={() => setPmFilterConviction('medium')}
+                  />
+                  <label htmlFor="conviction-medium" className="pm-filter-label">
+                    Medium
+                  </label>
+                </div>
+                <div className="pm-filter-option">
+                  <input
+                    type="radio"
+                    id="conviction-low"
+                    name="conviction"
+                    checked={pmFilterConviction === 'low'}
+                    onChange={() => setPmFilterConviction('low')}
+                  />
+                  <label htmlFor="conviction-low" className="pm-filter-label">
+                    Low
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div className="pm-modal-actions">
+              <button className="btn-cancel" onClick={handleClosePmConvictionModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Search Modal */}
+      {isPmSearchModalOpen && (
+        <div className="modal-overlay" onClick={handleClosePmSearchModal}>
+          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Search Markets</h2>
+              <button className="modal-close-btn" onClick={handleClosePmSearchModal}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="pm-modal-content">
+              <div className="pm-search-modal-content">
+                <div className="pm-search-input-container">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="pm-search-icon">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                  </svg>
+                  <input
+                    type="text"
+                    className="pm-search-modal-input"
+                    placeholder="Search markets by question or title..."
+                    value={pmSearchQuery}
+                    onChange={(e) => setPmSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  {pmSearchQuery && (
+                    <button 
+                      className="pm-clear-search-btn"
+                      onClick={() => setPmSearchQuery('')}
+                      title="Clear search"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6l12 12"></path>
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {pmSearchQuery && (
+                  <div className="pm-search-hint">
+                    Searching for: <strong>"{pmSearchQuery}"</strong>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="pm-modal-actions">
+              <button className="btn-reset" onClick={() => setPmSearchQuery('')}>
+                Clear
+              </button>
+              <button className="btn-save" onClick={handleClosePmSearchModal}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Chart Popup */}
       <EconomicChartPopup
         event={selectedChartEvent}
         isOpen={chartPopupOpen}
         onClose={handleCloseChart}
       />
+
 
       {/* Footer Disclaimer */}
       {/* <div className="overview-footer">

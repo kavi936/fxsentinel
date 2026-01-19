@@ -435,7 +435,7 @@
         "description": "Main Refinancing Rate - The primary monetary policy tool set by the European Central Bank (ECB)."
       },
       "inflation": {
-        "currentValue": "2.0%",
+        "currentValue": "1.9%",
         "asOf": "2025-12-01",
         "chartData": [
           2.8,
@@ -461,7 +461,7 @@
           2.2,
           2.1,
           2.1,
-          2.0
+          1.9
         ],
         "chartDates": [
           "2024-01-01",
