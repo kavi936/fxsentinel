@@ -4074,7 +4074,7 @@ class HybridEconomicCalendar:
                 'forecast': '0.0%',
                 'previous': '0.0%'
             },
-            
+
             # SUNDAY, JANUARY 18
             
             {
@@ -4083,7 +4083,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-11.0&',
                 'forecast': '-5.2%',
                 'previous': '7.0%'
             },
@@ -4093,7 +4093,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': 'N/A',
                 'previous': '0.3%'
             },
@@ -4103,7 +4103,7 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.8%',
                 'forecast': 'N/A',
                 'previous': '-1.8%'
             },
@@ -4113,7 +4113,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.37%',
                 'forecast': 'N/A',
                 'previous': '-0.39%'
             },
@@ -4123,7 +4123,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.8%',
                 'forecast': '-3.1%',
                 'previous': '-2.6%'
             },
@@ -4133,7 +4133,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.5%',
                 'forecast': '4.5%',
                 'previous': '4.8%'
             },
@@ -4143,7 +4143,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.2%',
                 'forecast': '5.1%',
                 'previous': '4.8%'
             },
@@ -4163,7 +4163,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '1.1%',
                 'previous': '1.3%'
             },
@@ -4173,7 +4173,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.1%',
                 'forecast': '5.2%',
                 'previous': '5.1%'
             },
@@ -4183,7 +4183,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.75',
                 'forecast': '-2.6%',
                 'previous': '-2.6%'
             },
@@ -4193,7 +4193,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '0.0%',
                 'previous': '0.9%'
             },
@@ -4225,7 +4225,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.3%',
                 'previous': '2.3%'
             },
@@ -4235,7 +4235,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.9%',
                 'forecast': '2.0%',
                 'previous': '2.0%'
             },
