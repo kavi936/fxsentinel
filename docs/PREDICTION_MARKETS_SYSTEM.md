@@ -1246,3 +1246,295 @@ The Prediction Markets card system is a comprehensive solution for displaying cr
 - Integration into macro narratives as supporting evidence
 - Alert system for significant probability shifts
 
+---
+
+## Recommendations & Improvements
+
+This section outlines recommendations for improving the prediction markets system based on code analysis and evaluation.
+
+### Code Organization & Architecture
+
+**1. Refactor Service Layer into Smaller Modules**
+
+The `prediction_markets_service.py` file is currently 3500+ lines and handles too many responsibilities. Consider splitting into focused modules:
+
+- **API Clients Module** (`prediction_markets_api_clients.py`):
+  - `GammaAPIClient` - Polymarket Gamma API integration
+  - `CLOBAPIClient` - Polymarket CLOB API integration
+  - `DOMEAPIClient` - DOME API integration for Kalshi
+  - `PolyRouterClient` - PolyRouter API integration
+
+- **Filtering Service** (`prediction_markets_filter.py`):
+  - `EconomicMarketFilter` - Keyword-based filtering logic
+  - `MarketDeduplicator` - Deduplication logic
+  - `MarketPrioritizer` - Sorting and prioritization
+
+- **Normalization Service** (`prediction_markets_normalizer.py`):
+  - `MarketNormalizer` - Data normalization logic
+  - `PriceExtractor` - Price extraction from various formats
+
+- **Price Tracking Service** (`prediction_markets_price_tracker.py`):
+  - `PriceHistoryManager` - Price snapshot storage and retrieval
+  - `DeltaCalculator` - Price delta calculations
+
+- **Cache Service** (already exists but could be enhanced):
+  - `PredictionMarketsCache` - Unified cache interface
+
+**Benefits:**
+- Easier to test individual components
+- Clearer separation of concerns
+- Reduced cognitive load when reading code
+- Better maintainability
+
+### Filtering & Matching Improvements
+
+**2. Enhance Filtering with Semantic Matching**
+
+The current keyword-based filtering is brittle and may miss nuanced markets. Consider improvements:
+
+- **Semantic Similarity**: Use embeddings or ML models to match markets semantically rather than exact keyword matching
+  - Example: "Will the US economy grow?" should match even without exact "GDP" keyword
+  - Could use sentence transformers or OpenAI embeddings for similarity matching
+
+- **ML-Based Classification**: Train or use a classifier to identify economic/forex-relevant markets
+  - Binary classification: economic vs non-economic
+  - Multi-class: Fed, CPI, GDP, Employment, etc.
+  - Could use existing market descriptions as training data
+
+- **Fuzzy Matching**: Improve keyword matching with fuzzy string matching for typos and variations
+  - Example: "Federal Reserve" vs "Fed Reserve" vs "FED"
+
+**3. Improve Topic Extraction for Deduplication**
+
+The current regex-based topic extraction in `_deduplicate_similar_markets()` could be more robust:
+
+- Use NLP techniques to extract entities (countries, indicators, dates)
+- Handle more date formats and time periods
+- Better handling of market variations (e.g., "Q4 2025" vs "fourth quarter 2025")
+
+### Conviction Scoring Enhancements
+
+**4. Enhance Conviction Score Calculation**
+
+The current conviction score is purely volume-based. Consider adding:
+
+- **Market Age Factor**: Newer markets may have less conviction despite volume
+  - Formula: `conviction_score = volume_score * age_factor`
+  - Age factor: 1.0 for markets > 7 days old, 0.7 for markets < 7 days old
+
+- **Price Stability**: Volatile prices suggest lower conviction
+  - Calculate price volatility over last 24h
+  - Penalize markets with high volatility
+
+- **Liquidity Depth**: Tighter bid-ask spreads suggest higher conviction
+  - If orderbook data available, use spread as conviction indicator
+  - Narrower spreads = higher conviction
+
+- **Trader Diversity**: Many small traders vs few large traders
+  - If available, analyze trade size distribution
+  - More diverse traders = higher conviction
+
+**Example Enhanced Formula:**
+```python
+conviction_score = (
+    volume_score * 0.4 +
+    price_stability_score * 0.3 +
+    liquidity_score * 0.2 +
+    age_factor * 0.1
+) * 100
+```
+
+### Price Tracking Improvements
+
+**5. Independent Price Tracking Service**
+
+Currently, price snapshots are only stored during full refresh cycles. Consider:
+
+- **Separate Background Job**: Run a lightweight job that periodically stores price snapshots
+  - Runs every 15-30 minutes independently of full refresh
+  - Only fetches prices for active markets (not full market data)
+  - Ensures continuous price history even if full refresh fails
+
+- **Price History Retention**: Implement retention policy
+  - Keep last 30 days of price history
+  - Archive older data to reduce storage costs
+  - Allow querying historical price trends
+
+- **Gap Detection**: Detect and handle gaps in price history
+  - Alert when price history gaps detected
+  - Interpolate missing data points if needed
+
+### Performance Optimizations
+
+**6. Optimize Filtering Before Normalization**
+
+Currently, all fetched markets are normalized before filtering, which processes many markets that will be discarded:
+
+- **Filter First**: Apply keyword filtering before normalization
+  - Reduces processing overhead
+  - Only normalize markets that pass initial filters
+  - Significant performance improvement for large market sets
+
+- **Cache Topic Keys**: Cache extracted topic keys for deduplication
+  - Avoid re-extracting topic keys on every deduplication pass
+  - Store topic key in normalized market data
+
+- **Parallel Processing**: Use parallel processing for normalization
+  - Normalize multiple markets concurrently
+  - Use ThreadPoolExecutor for I/O-bound operations (API calls)
+
+**7. Frontend Filtering Optimization**
+
+The frontend re-filters data that was already filtered by the backend:
+
+- **Move Filtering to Backend**: Accept filter parameters via query string
+  - `/api/prediction-markets?topic=GDP&status=active&conviction=high`
+  - Backend applies filters and returns filtered results
+  - Frontend only handles display logic
+
+- **Client-Side Caching**: Cache filtered results in React state
+  - Avoid re-filtering on every render
+  - Use useMemo for expensive filter operations
+
+### Error Handling & Resilience
+
+**8. Improve Error Recovery**
+
+Enhance error handling for better resilience:
+
+- **Graceful Degradation**: If one API fails, continue with others
+  - Polymarket fails → Use Kalshi data only
+  - Firebase cache fails → Use file cache
+  - All APIs fail → Return stale cache with warning
+
+- **Retry Logic**: Implement exponential backoff for transient failures
+  - Retry failed API calls with increasing delays
+  - Max retries: 3 attempts
+  - Log retry attempts for monitoring
+
+- **Circuit Breaker Pattern**: Prevent cascading failures
+  - If API fails repeatedly, temporarily stop calling it
+  - Resume after cooldown period
+  - Prevents overwhelming failing services
+
+**9. Better Error Reporting**
+
+Improve error visibility and debugging:
+
+- **Structured Logging**: Use structured logs with context
+  - Include market IDs, API endpoints, error types
+  - Easier to trace issues in production
+
+- **Error Metrics**: Track error rates and types
+  - Monitor API failure rates
+  - Alert on high error rates
+  - Track cache hit/miss rates
+
+### Testing & Quality Assurance
+
+**10. Add Comprehensive Testing**
+
+The codebase lacks visible test coverage. Add:
+
+- **Unit Tests**: Test individual functions
+  - Filtering logic
+  - Normalization logic
+  - Price delta calculations
+  - Conviction score calculations
+
+- **Integration Tests**: Test API integrations
+  - Mock API responses
+  - Test error handling
+  - Test caching behavior
+
+- **End-to-End Tests**: Test full data flow
+  - Frontend → Backend → Service → Cache
+  - Verify data transformation correctness
+
+**11. Code Quality Improvements**
+
+- **Remove Debug Logging**: Clean up excessive debug logging scattered throughout code
+- **Type Hints**: Add comprehensive type hints for better IDE support
+- **Documentation**: Add docstrings to all public methods
+- **Code Comments**: Add comments explaining complex logic
+
+### Configuration & Monitoring
+
+**12. Configuration Management**
+
+Improve configuration handling:
+
+- **Config File**: Move hardcoded constants to config file
+  - Tier settings, thresholds, limits
+  - Easier to adjust without code changes
+
+- **Feature Flags**: Use feature flags for experimental features
+  - Enable/disable semantic matching
+  - A/B test filtering improvements
+
+**13. Monitoring & Observability**
+
+Add monitoring for production visibility:
+
+- **Metrics**: Track key metrics
+  - API call counts and latencies
+  - Cache hit/miss rates
+  - Market counts at each filtering stage
+  - Error rates by type
+
+- **Dashboards**: Create dashboards for system health
+  - API status
+  - Cache performance
+  - Data freshness
+
+- **Alerts**: Set up alerts for critical issues
+  - API failures
+  - Cache failures
+  - High error rates
+
+### Documentation & Developer Experience
+
+**14. API Documentation**
+
+Improve API documentation:
+
+- **OpenAPI/Swagger**: Generate API documentation
+  - Document all endpoints
+  - Request/response schemas
+  - Example requests/responses
+
+- **Code Examples**: Add code examples for common use cases
+  - How to add new filtering keywords
+  - How to add new API source
+  - How to customize conviction scoring
+
+**15. Developer Onboarding**
+
+Improve developer experience:
+
+- **Setup Guide**: Step-by-step setup instructions
+- **Architecture Diagrams**: Visual diagrams of system architecture
+- **Troubleshooting Guide**: Common issues and solutions
+
+---
+
+## Priority Recommendations
+
+**High Priority (Immediate Impact):**
+1. Refactor service layer into smaller modules
+2. Filter before normalization (performance)
+3. Add comprehensive testing
+4. Improve error handling and recovery
+
+**Medium Priority (Quality Improvements):**
+5. Enhance conviction scoring with additional factors
+6. Implement independent price tracking service
+7. Move filtering to backend (reduce redundancy)
+8. Add monitoring and observability
+
+**Low Priority (Future Enhancements):**
+9. Implement semantic matching for filtering
+10. Add ML-based classification
+11. Improve topic extraction with NLP
+12. Add comprehensive API documentation
+
