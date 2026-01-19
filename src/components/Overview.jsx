@@ -3564,9 +3564,8 @@ const Overview = () => {
                 </div>
               ) : predictionMarkets.length === 0 ? (
                 <div className="prediction-markets-empty">
-                  <div className="empty-icon">📊</div>
-                  <div className="empty-text">No Active Markets</div>
-                  <div className="empty-subtext">No active prediction markets available at this time. Check back later for new markets on upcoming economic events.</div>
+                  <div className="empty-text">No Active Prediction Markets</div>
+                  <div className="empty-subtext">No active prediction markets available at this time.</div>
                 </div>
               ) : (
                 <>

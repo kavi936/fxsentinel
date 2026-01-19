@@ -593,8 +593,19 @@ class PredictionMarketsService:
         Returns:
             Tuple of (conviction_score: int 0-100, conviction_level: str "high"/"medium"/"low")
         """
-        # Normalize volume (convert to float if needed)
-        volume_value = float(volume) if volume is not None else 0.0
+        # Normalize volume (convert to float if needed) - handle strings from Gamma API
+        if volume is None:
+            volume_value = 0.0
+        elif isinstance(volume, str):
+            try:
+                volume_value = float(volume)
+            except (ValueError, TypeError):
+                volume_value = 0.0
+        else:
+            try:
+                volume_value = float(volume)
+            except (ValueError, TypeError):
+                volume_value = 0.0
         
         # Volume thresholds (in USD or market units)
         # High conviction: volume > $50k
@@ -862,14 +873,170 @@ class PredictionMarketsService:
         logger.info(f"Total markets fetched from CLOB API: {len(markets)}")
         return markets
     
+    def _fetch_polymarket_gamma_api(self, early_stop_threshold: int = None) -> List[Dict]:
+        """Fetch markets from Polymarket using Gamma API (correct approach)
+        
+        Uses Gamma API /events endpoint with tag filtering for efficient discovery.
+        Extracts markets from events and parses outcomePrices.
+        
+        Args:
+            early_stop_threshold: Stop fetching if we have this many markets (saves API calls)
+                                  If None, uses instance-level threshold
+        
+        Returns:
+            List of market dictionaries with platform="polymarket" and _source="gamma"
+        """
+        if early_stop_threshold is None:
+            early_stop_threshold = self.early_stop_threshold
+        
+        markets = []
+        import requests
+        import json
+        
+        # Economic tag IDs discovered from tags API
+        # These are tags relevant to forex/economic markets
+        economic_tag_ids = [
+            "370",      # GDP
+            "132",      # monetary policy
+            "130",      # economy1
+            "996",      # employment rate
+            "103167",   # Bank of Canada
+            "103168",   # Bank of Japan
+            "103176",   # Global Rates
+            "2",        # Politics (often contains economic events)
+        ]
+        
+        logger.info(f"Fetching Polymarket markets from Gamma API (max {self.max_pages_polymarket} pages per tag)")
+        
+        try:
+            # Fetch events for each economic tag
+            for tag_id in economic_tag_ids:
+                if len(markets) >= early_stop_threshold:
+                    logger.info(f"Early stopping: have {len(markets)} markets (threshold: {early_stop_threshold})")
+                    break
+                
+                # Fetch events with this tag
+                url = "https://gamma-api.polymarket.com/events"
+                params = {
+                    "tag_id": tag_id,
+                    "active": "true",
+                    "closed": "false",
+                    "limit": 100  # Max per request
+                }
+                
+                try:
+                    response = requests.get(url, params=params, timeout=15)
+                    
+                    if response.status_code == 429:
+                        logger.warning(f"Rate limit hit on Gamma API for tag {tag_id}, skipping")
+                        time.sleep(2)  # Wait before next tag
+                        continue
+                    elif response.status_code != 200:
+                        logger.warning(f"Gamma API error for tag {tag_id}: {response.status_code}")
+                        continue
+                    
+                    events = response.json()
+                    if not isinstance(events, list):
+                        logger.warning(f"Unexpected response format for tag {tag_id}")
+                        continue
+                    
+                    markets_before_tag = len(markets)
+                    
+                    # Extract markets from events
+                    for event in events:
+                        if len(markets) >= early_stop_threshold:
+                            break
+                        
+                        # Skip if event is not active
+                        if not event.get("active", False) or event.get("closed", False):
+                            continue
+                        
+                        # Extract markets from event
+                        event_markets = event.get("markets", [])
+                        for market in event_markets:
+                            # Skip closed markets
+                            if market.get("closed", False):
+                                continue
+                            
+                            # Add event-level metadata to market
+                            market["platform"] = "polymarket"
+                            market["_source"] = "gamma"
+                            market["event_id"] = event.get("id")
+                            market["event_slug"] = event.get("slug")
+                            market["event_title"] = event.get("title")
+                            market["event_tags"] = event.get("tags", [])
+                            
+                            # Parse outcomePrices if available
+                            outcome_prices_str = market.get("outcomePrices")
+                            if outcome_prices_str:
+                                try:
+                                    outcome_prices = json.loads(outcome_prices_str)
+                                    outcomes_str = market.get("outcomes", "[]")
+                                    outcomes = json.loads(outcomes_str) if outcomes_str else []
+                                    
+                                    # Map outcomes to prices
+                                    # Index 0 is usually "Yes", index 1 is "No"
+                                    if len(outcome_prices) >= 2 and len(outcomes) >= 2:
+                                        yes_idx = 0 if "yes" in outcomes[0].lower() else 1
+                                        no_idx = 1 - yes_idx
+                                        
+                                        yes_price = float(outcome_prices[yes_idx])
+                                        no_price = float(outcome_prices[no_idx])
+                                        
+                                        # Check if market is resolved (prices are 0/1 or 1/0)
+                                        if (yes_price == 0 and no_price == 1) or (yes_price == 1 and no_price == 0):
+                                            market["_is_resolved"] = True
+                                        
+                                        # Store parsed prices
+                                        market["yes_price"] = yes_price
+                                        market["no_price"] = no_price
+                                        market["_prices_parsed"] = True
+                                except (json.JSONDecodeError, ValueError, IndexError) as e:
+                                    logger.debug(f"Failed to parse outcomePrices for market {market.get('id')}: {e}")
+                            
+                            markets.append(market)
+                    
+                    markets_added = len(markets) - markets_before_tag
+                    logger.info(f"Fetched {len(events)} events from tag {tag_id}, extracted {markets_added} markets")
+                    
+                    # Rate limiting: wait between tag requests
+                    if tag_id != economic_tag_ids[-1]:  # Don't wait after last tag
+                        time.sleep(0.5)
+                
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Error fetching Gamma API for tag {tag_id}: {e}")
+                    continue
+                except Exception as e:
+                    logger.error(f"Unexpected error fetching Gamma API for tag {tag_id}: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    continue
+            
+            logger.info(f"Total markets fetched from Gamma API: {len(markets)}")
+            return markets
+        
+        except Exception as e:
+            logger.error(f"Error fetching from Gamma API: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
     def _fetch_polymarket_markets(self, early_stop_threshold: int = None) -> List[Dict]:
-        """Fetch markets from Polymarket - uses direct CLOB API or DOME API fallback
+        """Fetch markets from Polymarket - uses Gamma API (correct approach) or CLOB/DOME fallback
         
         Args:
             early_stop_threshold: Stop fetching if we have this many markets (saves API calls)
                                   If None, uses instance-level threshold
         """
-        # Use direct CLOB API if enabled (default), otherwise use DOME API
+        # Use Gamma API for proper market discovery (correct approach)
+        gamma_markets = self._fetch_polymarket_gamma_api(early_stop_threshold=early_stop_threshold)
+        
+        if gamma_markets:
+            logger.info(f"Using Gamma API: fetched {len(gamma_markets)} markets")
+            return gamma_markets
+        
+        # Fallback to CLOB API if Gamma API fails
+        logger.warning("Gamma API returned no markets, falling back to CLOB API")
         if self.use_direct_clob:
             markets = self._fetch_polymarket_clob_direct(early_stop_threshold=early_stop_threshold)
             if markets:
@@ -1325,14 +1492,6 @@ class PredictionMarketsService:
                     skipped_closed += 1
                     continue
             
-            # Check if market is resolved - filter out ALL resolved markets per user requirement
-            is_resolved = self._is_market_resolved(market, platform)
-            
-            # Skip ALL resolved markets (no exceptions)
-            if is_resolved:
-                skipped_closed += 1
-                continue
-            
             # Handle tags (Polymarket has tags array, Kalshi might not)
             tags_list = _safe_get(market, "tags", [])
             if not tags_list:
@@ -1360,8 +1519,57 @@ class PredictionMarketsService:
                 is_closed = status == "closed"
                 accepting_orders = _safe_get(market, "accepting_orders", False) or is_open
             
-            # Filter out closed markets (per user requirement - no resolved/closed markets)
-            if is_closed:
+            # Check if market is resolved
+            is_resolved = self._is_market_resolved(market, platform)
+            
+            # IMPORTANT: Calculate is_recently_resolved BEFORE filtering closed/resolved markets
+            # This allows recently resolved markets to pass through even if closed/resolved
+            is_recently_resolved = False
+            if is_clob_structure:
+                # CLOB API - check completed_time or end_date_iso if closed
+                if is_closed or is_resolved:
+                    completed_time_iso = _safe_get(market, "completed_time")  # May be ISO string or timestamp
+                    end_date_iso = _safe_get(market, "end_date_iso")
+                    
+                    try:
+                        if completed_time_iso:
+                            # Try ISO format first
+                            try:
+                                completed_date = datetime.fromisoformat(str(completed_time_iso).replace('Z', '+00:00'))
+                            except:
+                                # Fallback to timestamp
+                                completed_date = datetime.fromtimestamp(completed_time_iso, tz=timezone.utc)
+                        elif end_date_iso:
+                            completed_date = datetime.fromisoformat(end_date_iso.replace('Z', '+00:00'))
+                        else:
+                            completed_date = None
+                        
+                        if completed_date:
+                            days_since_resolution = (now - completed_date).days
+                            # Use 30 days for recently resolved (matching frontend expectation)
+                            is_recently_resolved = 0 <= days_since_resolution <= 30
+                    except (ValueError, TypeError):
+                        pass
+            else:
+                # DOME API uses Unix timestamps
+                completed_time = _safe_get(market, "completed_time")
+                close_time = _safe_get(market, "close_time")
+                completion_time = completed_time or close_time
+                if (is_closed or is_resolved) and completion_time:
+                    try:
+                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
+                        days_since_resolution = (now - completed_date).days
+                        is_recently_resolved = 0 <= days_since_resolution <= 30
+                    except (ValueError, TypeError):
+                        pass
+            
+            # Filter out resolved/closed markets UNLESS they're recently resolved (within grace period)
+            # This allows recently resolved markets to show for context
+            if is_resolved and not is_recently_resolved:
+                skipped_closed += 1
+                continue
+            
+            if is_closed and not is_recently_resolved:
                 skipped_closed += 1
                 continue
             
@@ -1521,47 +1729,11 @@ class PredictionMarketsService:
                     is_future = None  # Unknown
                     days_until_resolution = None
             
-            # Track recently resolved markets (within last 90 days - matches grace period)
-            is_recently_resolved = False
-            if is_clob_structure:
-                # CLOB API - check completed_time or end_date_iso if closed
-                if is_closed:
-                    completed_time_iso = _safe_get(market, "completed_time")  # May be ISO string or timestamp
-                    end_date_iso = _safe_get(market, "end_date_iso")
-                    
-                    try:
-                        if completed_time_iso:
-                            # Try ISO format first
-                            try:
-                                completed_date = datetime.fromisoformat(str(completed_time_iso).replace('Z', '+00:00'))
-                            except:
-                                # Fallback to timestamp
-                                completed_date = datetime.fromtimestamp(completed_time_iso, tz=timezone.utc)
-                        elif end_date_iso:
-                            completed_date = datetime.fromisoformat(end_date_iso.replace('Z', '+00:00'))
-                        else:
-                            completed_date = None
-                        
-                        if completed_date:
-                            days_since_resolution = (now - completed_date).days
-                            is_recently_resolved = 0 <= days_since_resolution <= 90  # Extended to 90 days
-                    except (ValueError, TypeError):
-                        pass
-            else:
-                # DOME API uses Unix timestamps
-                completed_time = _safe_get(market, "completed_time")
-                close_time = _safe_get(market, "close_time")
-                completion_time = completed_time or close_time
-                if is_closed and completion_time:
-                    try:
-                        completed_date = datetime.fromtimestamp(completion_time, tz=timezone.utc)
-                        days_since_resolution = (now - completed_date).days
-                        is_recently_resolved = 0 <= days_since_resolution <= 30
-                    except (ValueError, TypeError):
-                        pass
+            # is_recently_resolved is already calculated above (before filtering checks)
+            # No need to recalculate here
             
             # Mark historical markets (closed and old)
-            is_historical = is_closed and not is_future and not is_recently_resolved
+            is_historical = (is_closed or is_resolved) and not is_future and not is_recently_resolved
             
             # Skip if contains exclude keywords (check both title and tags)
             # Use case-insensitive matching
@@ -1761,8 +1933,9 @@ class PredictionMarketsService:
                 # DEBUG: Track markets reaching final resolved check
                 debug_reached_final_check += 1
                 
-                # IMPORTANT: Filter out resolved markets - do not include them
-                # BUT: Allow recently resolved markets (within grace period) for context
+                # Note: Resolved/closed markets are already filtered earlier (unless recently resolved)
+                # This check is redundant but kept for safety
+                # Markets that reach here should either be active OR recently resolved
                 if is_resolved and not is_recently_resolved:
                     skipped_closed += 1
                     debug_filtered_final_resolved += 1
@@ -1826,12 +1999,31 @@ class PredictionMarketsService:
         # 7. Relevance score (high to low)
         # Note: New logic prioritizes "belief shifts" (high delta) and high conviction markets
         # Using reverse=False with negated values to get descending order (higher values first)
+        # IMPORTANT: Convert all numeric values to float/int to avoid "bad operand type for unary -: 'str'" errors
+        def safe_float(value, default=0):
+            """Safely convert value to float, handling strings and None"""
+            if value is None:
+                return default
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return default
+        
+        def safe_int(value, default=0):
+            """Safely convert value to int, handling strings and None"""
+            if value is None:
+                return default
+            try:
+                return int(float(value))  # Convert via float first to handle "123.0" strings
+            except (ValueError, TypeError):
+                return default
+        
         relevant_markets.sort(
             key=lambda x: (
-                -x.get("conviction_score", 0),  # Primary: Conviction score (high to low)
-                -abs(x.get("price_delta_24h") or 0),  # Secondary: Delta magnitude (shifting markets first)
-                -x.get("priority_score", 0),  # Tertiary: Curated markets (higher priority score)
-                -(x.get("volume") or 0),  # Quaternary: Volume (high to low)
+                -safe_float(x.get("conviction_score"), 0),  # Primary: Conviction score (high to low)
+                -abs(safe_float(x.get("price_delta_24h"), 0)),  # Secondary: Delta magnitude (shifting markets first)
+                -safe_int(x.get("priority_score"), 0),  # Tertiary: Curated markets (higher priority score)
+                -safe_float(x.get("volume"), 0),  # Quaternary: Volume (high to low)
                 x.get("accepting_orders", False),  # Markets accepting orders first
                 x.get("has_embedded_price", False),  # Then markets with embedded prices (free tier optimization)
                 x.get("is_future", False),  # Then future markets
@@ -2370,11 +2562,48 @@ class PredictionMarketsService:
         # Detect if this is PolyRouter data (already normalized by PolyRouter client)
         is_polyrouter = source == "polyrouter"
         
+        # Detect if this is Gamma API data structure
+        is_gamma_structure = source == "gamma" or ("event_id" in market and "outcomePrices" in market)
+        
         # Detect if this is CLOB API data structure
-        is_clob_structure = source == "clob_direct" or ("question" in market and "tokens" in market)
+        is_clob_structure = source == "clob_direct" or ("question" in market and "tokens" in market and not is_gamma_structure)
         
         # Extract prices based on data source
-        if is_polyrouter:
+        if is_gamma_structure:
+            # Gamma API: prices already parsed from outcomePrices in fetch method
+            yes_price = market.get("yes_price")
+            no_price = market.get("no_price")
+            if yes_price is not None and no_price is not None:
+                price_source = "embedded"
+            elif market.get("_prices_parsed"):
+                # Prices were parsed but are None/0 - might be resolved market
+                if yes_price == 0 and no_price == 1:
+                    price_source = "resolved"
+                elif yes_price == 1 and no_price == 0:
+                    price_source = "resolved"
+                else:
+                    price_source = "fallback"
+            else:
+                # Try to parse outcomePrices if not already parsed
+                outcome_prices_str = market.get("outcomePrices")
+                if outcome_prices_str:
+                    try:
+                        import json
+                        outcome_prices = json.loads(outcome_prices_str)
+                        outcomes_str = market.get("outcomes", "[]")
+                        outcomes = json.loads(outcomes_str) if outcomes_str else []
+                        
+                        if len(outcome_prices) >= 2 and len(outcomes) >= 2:
+                            yes_idx = 0 if "yes" in outcomes[0].lower() else 1
+                            no_idx = 1 - yes_idx
+                            yes_price = float(outcome_prices[yes_idx])
+                            no_price = float(outcome_prices[no_idx])
+                            price_source = "embedded"
+                    except (json.JSONDecodeError, ValueError, IndexError):
+                        price_source = "fallback"
+                else:
+                    price_source = "fallback"
+        elif is_polyrouter:
             # PolyRouter markets are already normalized by the client, prices are in yes_price/no_price
             yes_price = market.get("yes_price")
             no_price = market.get("no_price")
@@ -2393,7 +2622,10 @@ class PredictionMarketsService:
         # Check if market is resolved
         # First check platform-specific resolved indicators (most reliable)
         is_resolved = False
-        if platform == "kalshi":
+        if is_gamma_structure:
+            # Gamma API: check _is_resolved flag or umaResolutionStatus
+            is_resolved = market.get("_is_resolved", False) or _safe_get(market, "umaResolutionStatus") == "resolved"
+        elif platform == "kalshi":
             result = _safe_get(market, "result")
             is_resolved = result is not None
         else:
@@ -2405,18 +2637,49 @@ class PredictionMarketsService:
         # Prices of 0%/100% can just mean very low/high probability, not actual resolution
         
         # Extract volume data (platform-specific)
-        if platform == "kalshi":
+        if is_gamma_structure:
+            # Gamma API: volume is at market level, can be string or number
+            volume_raw = _safe_get(market, "volume") or _safe_get(market, "volumeNum")
+            if volume_raw:
+                try:
+                    volume = float(volume_raw) if isinstance(volume_raw, str) else volume_raw
+                except (ValueError, TypeError):
+                    volume = 0
+            else:
+                volume = 0
+            # Gamma API also provides liquidity
+            liquidity_raw = _safe_get(market, "liquidity") or _safe_get(market, "liquidityNum")
+            if liquidity_raw:
+                try:
+                    liquidity = float(liquidity_raw) if isinstance(liquidity_raw, str) else liquidity_raw
+                except (ValueError, TypeError):
+                    liquidity = None
+            else:
+                liquidity = None
+        elif platform == "kalshi":
             volume = _safe_get(market, "volume") or _safe_get(market, "volume_24h")
+            liquidity = None  # Kalshi doesn't provide liquidity directly
         else:
             volume = _safe_get(market, "volume_total") or _safe_get(market, "volume_1_week")
-        liquidity = None  # Dome API doesn't provide liquidity directly
+            liquidity = None  # Dome API doesn't provide liquidity directly
         
         # Calculate conviction score based on volume (Phase 2.2)
         conviction_score, conviction_level = self._calculate_conviction_score(volume)
         
-        # Convert resolution date - handle both CLOB (ISO string) and DOME (Unix timestamp)
+        # Convert resolution date - handle Gamma API, CLOB (ISO string), and DOME (Unix timestamp)
         resolution_date = None
-        if is_clob_structure:
+        if is_gamma_structure:
+            # Gamma API uses ISO string format in endDate field
+            end_date = _safe_get(market, "endDate") or _safe_get(market, "end_date_iso")
+            if end_date:
+                try:
+                    # Parse ISO format string
+                    resolution_date = end_date
+                    # Validate it's a valid ISO format
+                    datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                except (ValueError, TypeError):
+                    pass
+        elif is_clob_structure:
             # CLOB API uses ISO string format
             end_date_iso = _safe_get(market, "end_date_iso")
             if end_date_iso:
@@ -2440,8 +2703,11 @@ class PredictionMarketsService:
                 except (ValueError, TypeError):
                     pass
         
-        # Get title/question - CLOB uses "question", DOME/PolyRouter use "title"
-        if is_polyrouter:
+        # Get title/question - Gamma uses "question", CLOB uses "question", DOME/PolyRouter use "title"
+        if is_gamma_structure:
+            # Gamma API: market has "question" field, event has "title"
+            title = _safe_get(market, "question") or _safe_get(market, "event_title") or _safe_get(market, "title", "")
+        elif is_polyrouter:
             # PolyRouter markets already have question field set by normalize_market
             title = _safe_get(market, "question") or _safe_get(market, "title", "")
         elif is_clob_structure:
@@ -2458,13 +2724,28 @@ class PredictionMarketsService:
         if description:
             description = description[:300]
         
-        # Get tags safely (Polymarket has tags, Kalshi might not)
-        tags = _safe_get(market, "tags", [])
+        # Get tags safely (Gamma API has event_tags, Polymarket has tags, Kalshi might not)
+        if is_gamma_structure:
+            # Gamma API: tags are at event level
+            tags = _safe_get(market, "event_tags", [])
+            # Extract tag labels if tags are dicts
+            if tags and isinstance(tags[0], dict):
+                tags = [t.get("label", "") for t in tags if t.get("label")]
+        else:
+            tags = _safe_get(market, "tags", [])
         category = tags[0] if tags and len(tags) > 0 else None
         
         # Extract URL (platform-specific)
         market_url = None
-        if is_polyrouter:
+        if is_gamma_structure:
+            # Gamma API: Construct URL from event slug or market slug
+            event_slug = _safe_get(market, "event_slug")
+            market_slug = _safe_get(market, "slug")
+            if event_slug:
+                market_url = f"https://polymarket.com/event/{event_slug}"
+            elif market_slug:
+                market_url = f"https://polymarket.com/event/{market_slug}"
+        elif is_polyrouter:
             # PolyRouter uses source_url
             market_url = market.get("url") or market.get("source_url")
         elif is_clob_structure:
@@ -2490,11 +2771,19 @@ class PredictionMarketsService:
         # Get market ID (platform-specific)
         if platform == "kalshi":
             market_id = _safe_get(market, "market_ticker") or _safe_get(market, "event_ticker", "")
+        elif is_gamma_structure:
+            # Gamma API: use conditionId or market id
+            market_id = _safe_get(market, "conditionId") or _safe_get(market, "id", "")
         else:
             market_id = _safe_get(market, "condition_id", "")
         
-        # Determine active/closed status - handle both CLOB (booleans/strings) and DOME (status string)
-        if is_clob_structure:
+        # Determine active/closed status - handle Gamma API, CLOB (booleans/strings), and DOME (status string)
+        if is_gamma_structure:
+            # Gamma API: uses boolean fields directly
+            active = _safe_get(market, "active", False)
+            closed = _safe_get(market, "closed", False)
+            accepting_orders = _safe_get(market, "acceptingOrders", False)
+        elif is_clob_structure:
             # CLOB API may return strings "True"/"False" or actual booleans
             active_val = _safe_get(market, "active", False)
             closed_val = _safe_get(market, "closed", False)
@@ -2557,6 +2846,7 @@ class PredictionMarketsService:
             "is_resolved": is_resolved,
             "is_future": _safe_get(market, "is_future", False),
             "is_historical": _safe_get(market, "is_historical", False),
+            "is_recently_resolved": _safe_get(market, "is_recently_resolved", False),  # CRITICAL: Include this field for frontend filtering
             "days_until_resolution": _safe_get(market, "days_until_resolution"),
             "relevance": _safe_get(market, "relevance", "low"),
             "related_event": _safe_get(market, "related_event"),
