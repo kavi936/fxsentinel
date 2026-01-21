@@ -1,5 +1,7 @@
 # FXSentinel SEO Analysis & Trust Building Strategy
 
+> **📋 Action Checklist**: After creating visuals, follow the step-by-step guide: **[SEO_IMPLEMENTATION_CHECKLIST.md](./SEO_IMPLEMENTATION_CHECKLIST.md)**
+
 ## Current SEO Status: ✅ HONEST FOUNDATION
 
 ### What's Working Well:

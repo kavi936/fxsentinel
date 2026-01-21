@@ -4457,9 +4457,9 @@ class HybridEconomicCalendar:
                 'time': '13:20 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '8.0K',
                 'forecast': 'N/A',
-                'previous': '11.8K'
+                'previous': '11.3K'
             },
             {
                 'title': 'GDT Price Index',
@@ -4467,7 +4467,7 @@ class HybridEconomicCalendar:
                 'time': '15:50 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.5%',
                 'forecast': 'N/A',
                 'previous': '6.3%'
             },
@@ -4497,7 +4497,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': 'N/A',
                 'previous': '0.0%'
             },
