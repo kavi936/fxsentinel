@@ -4509,7 +4509,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.4%',
                 'forecast': '3.3%',
                 'previous': '3.2%'
             },
@@ -4519,7 +4519,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.2%',
                 'forecast': '3.3%',
                 'previous': '3.2%'
             },
@@ -4529,9 +4529,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.1%',
-                'previous': '0.3%'
+                'previous': '0.5%'
             },
             {
                 'title': 'PPI Output m/m',
@@ -4539,7 +4539,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.1%',
                 'previous': '0.1%'
             },
@@ -4549,7 +4549,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.2%',
                 'forecast': '4.1%',
                 'previous': '3.8%'
             },
