@@ -62,6 +62,15 @@ VITE_FIREBASE_MEASUREMENT_ID=G-1QMRKVJD8C
 
 ## Common Error Codes and Solutions
 
+### `Cross-Origin-Opener-Policy (COOP) Error`
+**Cause**: Browser security policy (COOP) blocking popup window communication
+**Error Message**: "Cross-Origin-Opener-Policy policy would block the window.closed call"
+**Solution**: 
+- **FIXED**: The app now automatically uses redirect method on production to avoid COOP issues
+- On production, Google sign-in uses redirect instead of popup
+- On localhost, it tries popup first but falls back to redirect if COOP is detected
+- This is the most common cause of Google sign-in failures on production sites
+
 ### `auth/popup-blocked`
 **Cause**: Browser blocked the popup window
 **Solution**: 
@@ -117,11 +126,13 @@ VITE_FIREBASE_MEASUREMENT_ID=G-1QMRKVJD8C
 
 The following improvements have been made to the Google sign-in implementation:
 
-1. **Error Logging**: All errors are now logged to console with detailed information
-2. **Popup Fallback**: Automatically falls back to redirect method if popup is blocked
-3. **Loading States**: Buttons show loading state during sign-in process
-4. **Better Error Messages**: Users see specific error messages instead of generic ones
-5. **Redirect Handling**: Properly handles redirect result after Google OAuth callback
+1. **COOP Error Fix**: **CRITICAL FIX** - Production now uses redirect method directly to avoid Cross-Origin-Opener-Policy errors that were blocking sign-in
+2. **Error Logging**: All errors are now logged to console with detailed information
+3. **Popup Fallback**: Automatically falls back to redirect method if popup is blocked or COOP error detected
+4. **Loading States**: Buttons show loading state during sign-in process
+5. **Better Error Messages**: Users see specific error messages instead of generic ones
+6. **Redirect Handling**: Properly handles redirect result after Google OAuth callback
+7. **Production Optimization**: On production, uses redirect method directly (no popup attempt) to avoid COOP issues
 
 ## Still Not Working?
 
