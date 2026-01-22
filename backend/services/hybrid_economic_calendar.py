@@ -4709,9 +4709,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.21T',
                 'forecast': '-0.04T',
-                'previous': '0.06T'
+                'previous': '0.01T'
             },
             {
                 'title': 'Employment Change',
@@ -4719,9 +4719,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '65.2K',
                 'forecast': '26.5K',
-                'previous': '-21.3K'
+                'previous': '-28.7K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -4729,7 +4729,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.1%',
                 'forecast': '4.4%',
                 'previous': '4.3%'
             },
