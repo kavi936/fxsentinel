@@ -128,27 +128,15 @@ const Login = () => {
         </div>
 
         <button 
-          className={`auth-social-button ${isLoading ? 'loading' : ''}`}
+          className="auth-social-button"
           onClick={async () => {
-            if (isLoading) return; // Prevent multiple clicks
-            setIsLoading(true);
-            setError('');
             try {
-              const result = await signInWithGoogle();
-              // Only navigate if we got a result (popup method)
-              // Redirect method will handle navigation automatically
-              if (result) {
-                navigate('/auth-redirect');
-              }
+              await signInWithGoogle();
+              navigate('/auth-redirect');
             } catch (err) {
-              // Use the error message from the auth context (already user-friendly)
-              setError(err.message || 'Failed to sign in with Google. Please try again.');
-              console.error('Google sign-in error in Login component:', err);
-            } finally {
-              setIsLoading(false);
+              setError('Failed to sign in with Google. Please try again.');
             }
           }}
-          disabled={isLoading}
         >
           {isLoading ? (
             <>
