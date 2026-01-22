@@ -555,6 +555,147 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section id="testimonials" className="testimonials">
+        <div className="testimonials-inner">
+          <h2 className="section-title animate-on-scroll">Trusted by Traders Worldwide</h2>
+          <p className="testimonials-subtitle animate-on-scroll">See what traders are saying about FXSentinel</p>
+          <div className="testimonials-grid">
+            <div className="testimonial-card animate-on-scroll">
+              <div className="testimonial-rating">
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+              </div>
+              <p className="testimonial-text">
+                "FXSentinel helped me understand why EUR/USD moved 200 pips after the ECB announcement. I was positioned before the move and made my biggest profit of the month. The AI analysis is incredibly accurate."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">
+                  <span>MJ</span>
+                </div>
+                <div className="testimonial-info">
+                  <h4>Michael Johnson</h4>
+                  <p>Professional Forex Trader</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card animate-on-scroll">
+              <div className="testimonial-rating">
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+              </div>
+              <p className="testimonial-text">
+                "I used to spend hours reading news and still miss important events. Now I get instant Telegram alerts with analysis that tells me exactly what to expect. This tool has completely changed my trading workflow."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">
+                  <span>SC</span>
+                </div>
+                <div className="testimonial-info">
+                  <h4>Sarah Chen</h4>
+                  <p>Day Trader</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card animate-on-scroll">
+              <div className="testimonial-rating">
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+              </div>
+              <p className="testimonial-text">
+                "The AI analysis is incredible. It explains market moves in a way that makes sense, not just technical jargon. I've avoided several bad trades thanks to the insights provided. Worth every penny."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">
+                  <span>DR</span>
+                </div>
+                <div className="testimonial-info">
+                  <h4>David Rodriguez</h4>
+                  <p>Swing Trader</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card animate-on-scroll">
+              <div className="testimonial-rating">
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+              </div>
+              <p className="testimonial-text">
+                "As someone new to forex trading, FXSentinel's explanations help me understand the 'why' behind market movements. The economic calendar with AI analysis is a game-changer for learning."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">
+                  <span>EW</span>
+                </div>
+                <div className="testimonial-info">
+                  <h4>Emma Williams</h4>
+                  <p>Beginner Trader</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card animate-on-scroll">
+              <div className="testimonial-rating">
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+              </div>
+              <p className="testimonial-text">
+                "The prediction markets feature is brilliant. Seeing how the market is pricing central bank decisions helps me position my trades better. This is the most comprehensive trading tool I've used."
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">
+                  <span>AK</span>
+                </div>
+                <div className="testimonial-info">
+                  <h4>Alex Kumar</h4>
+                  <p>Institutional Trader</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="testimonial-card animate-on-scroll">
+              <div className="testimonial-rating">
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+                <span className="star">★</span>
+              </div>
+              <p className="testimonial-text">
+                "I've tried multiple news aggregation tools, but none compare to FXSentinel. The real-time alerts and market sentiment analysis have improved my win rate significantly. Highly recommend!"
+              </p>
+              <div className="testimonial-author">
+                <div className="testimonial-avatar">
+                  <span>LT</span>
+                </div>
+                <div className="testimonial-info">
+                  <h4>Lisa Thompson</h4>
+                  <p>Professional Trader</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Alerts Section */}
       <section className="alerts-showcase">
         <div className="alerts-showcase-inner">
