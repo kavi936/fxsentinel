@@ -5143,7 +5143,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.2%',
                 'previous': '-0.6%'
             },
@@ -5153,7 +5153,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': '1.2%',
                 'previous': '-0.2%'
             },
