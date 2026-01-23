@@ -4967,7 +4967,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Flash Manufacturing PMI',
-                'date': 'Thu, Jan 22',
+                'date': 'Fri, Jan 23',
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
@@ -4977,7 +4977,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BOJ Policy Rate',
-                'date': 'Thu, Jan 22',
+                'date': 'Fri, Jan 23',
                 'time': '03:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
@@ -4987,7 +4987,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Monetary Policy Statement',
-                'date': 'Thu, Jan 22',
+                'date': 'Fri, Jan 23',
                 'time': '03:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
@@ -4997,7 +4997,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BOJ Outlook Report',
-                'date': 'Thu, Jan 22',
+                'date': 'Fri, Jan 23',
                 'time': '03:31 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
