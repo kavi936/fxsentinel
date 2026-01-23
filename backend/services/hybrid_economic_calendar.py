@@ -4981,7 +4981,7 @@ class HybridEconomicCalendar:
                 'time': '03:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '<0.75%',
                 'forecast': '<0.75%',
                 'previous': '<0.75%'
             },
