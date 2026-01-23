@@ -1626,11 +1626,11 @@ section.animate-in .section-title.animate-on-scroll,
 /* Features Section Merged into Hero */
 .hero-features-section {
   width: 100%;
-  padding: 4rem 0 calc(6rem + 20vh) 0;
+  padding: 4rem 0 calc(6rem + 10vh) 0;
   position: relative;
   z-index: 2;
   margin-top: 2rem;
-  margin-bottom: -20vh;
+  margin-bottom: -10vh;
 }
 
 .hero-features-inner {
@@ -1643,6 +1643,7 @@ section.animate-in .section-title.animate-on-scroll,
   align-items: center;
   position: relative;
   z-index: 2;
+  overflow: visible;
 }
 
 .hero-features-content {
@@ -1699,6 +1700,7 @@ section.animate-in .section-title.animate-on-scroll,
   align-items: center;
   position: relative;
   z-index: 2;
+  overflow: visible;
 }
 
 .hero-features-image {
@@ -1707,7 +1709,8 @@ section.animate-in .section-title.animate-on-scroll,
   max-width: 100%;
   display: block;
   object-fit: contain;
-  transform: translateY(-10vh);
+  transform: translateY(-5vh) scale(1.15);
+  transform-origin: center center;
 }
 
 /* Alerts Showcase Section */
