@@ -16,14 +16,14 @@ export const useCentralBankDocuments = () => {
 
   useEffect(() => {
     const loadDocuments = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
+    try {
+      setLoading(true);
+      setError(null);
+      
         // First, try to use the imported JSON data (bundled with app during build)
         // This works in both development and production when Vite bundles it correctly
-        if (centralBankDocumentsData && centralBankDocumentsData.documents && Array.isArray(centralBankDocumentsData.documents)) {
-          setDocuments(centralBankDocumentsData);
+      if (centralBankDocumentsData && centralBankDocumentsData.documents && Array.isArray(centralBankDocumentsData.documents)) {
+        setDocuments(centralBankDocumentsData);
           console.log(`✅ Loaded ${centralBankDocumentsData.documents.length} central bank documents from bundled data`);
           setLoading(false);
           return;
@@ -52,19 +52,19 @@ export const useCentralBankDocuments = () => {
           } catch (err) {
             fetchError = err;
             continue;
-          }
+      }
         }
         
         // If all methods fail, throw an error
         throw new Error('Failed to load central bank documents: Import failed and all fetch paths failed');
-        
-      } catch (err) {
-        console.error('❌ Error loading central bank documents:', err);
-        setError(err.message);
-        setDocuments(fallbackDocuments);
-      } finally {
-        setLoading(false);
-      }
+      
+    } catch (err) {
+      console.error('❌ Error loading central bank documents:', err);
+      setError(err.message);
+      setDocuments(fallbackDocuments);
+    } finally {
+      setLoading(false);
+    }
     };
 
     loadDocuments();
@@ -75,7 +75,7 @@ export const useCentralBankDocuments = () => {
     try {
       // Try to reload from imported data first
       if (centralBankDocumentsData && centralBankDocumentsData.documents && Array.isArray(centralBankDocumentsData.documents)) {
-        setDocuments(centralBankDocumentsData);
+      setDocuments(centralBankDocumentsData);
         setLoading(false);
         return;
       }
