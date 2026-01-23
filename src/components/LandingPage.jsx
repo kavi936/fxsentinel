@@ -9,6 +9,7 @@ import fxstreetLogo from '../assets/fxstreet-nobg.png';
 import cnbcLogo from '../assets/CNBC.png';
 import telegramLogo from '../assets/telegram.png';
 import phoneImage from '../assets/IMG_8110-portrait.png';
+import featuresGlanceImage from '../assets/FXSentinelFeaturesGlance.png';
 import LiveTicker from './LiveTicker';
 import { trackLandingPageView, trackSignupClick, trackEngagement, trackFeatureUsage } from '../utils/analytics';
 
@@ -370,6 +371,38 @@ const LandingPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Features at a Glance - Merged into Hero Section */}
+        <div className="hero-features-section">
+          <div className="hero-features-inner">
+            <div className="hero-features-content">
+              <h2 className="hero-features-title animate-on-scroll">Features at a Glance</h2>
+              <p className="hero-features-description animate-on-scroll">
+                Get a comprehensive view of everything FXSentinel offers. From real-time economic indicators 
+                to AI-powered analysis, prediction markets, and live news feeds - all in one powerful dashboard 
+                designed for serious traders.
+              </p>
+              <Link 
+                to="/signup" 
+                className="hero-features-button primary-button"
+                onClick={() => {
+                  trackSignupClick('features_at_glance');
+                  trackEngagement('features_at_glance_cta_click');
+                }}
+              >
+                Explore All Features
+              </Link>
+            </div>
+            <div className="hero-features-image-container">
+              <img 
+                src={featuresGlanceImage} 
+                alt="FXSentinel Dashboard - Features Overview" 
+                className="hero-features-image"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Data Powered By Section */}
@@ -383,6 +416,7 @@ const LandingPage = () => {
                   src={tradingviewLogo} 
                   alt="TradingView" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -390,6 +424,7 @@ const LandingPage = () => {
                   src={finnhubLogo} 
                   alt="Finnhub" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -397,6 +432,7 @@ const LandingPage = () => {
                   src={fxstreetLogo} 
                   alt="FXStreet" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -404,6 +440,7 @@ const LandingPage = () => {
                   src={cnbcLogo} 
                   alt="CNBC" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               {/* Duplicate logos for seamless scrolling */}
@@ -412,6 +449,7 @@ const LandingPage = () => {
                   src={tradingviewLogo} 
                   alt="TradingView" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -419,6 +457,7 @@ const LandingPage = () => {
                   src={finnhubLogo} 
                   alt="Finnhub" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -426,6 +465,7 @@ const LandingPage = () => {
                   src={fxstreetLogo} 
                   alt="FXStreet" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -433,6 +473,7 @@ const LandingPage = () => {
                   src={cnbcLogo} 
                   alt="CNBC" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               {/* Additional duplicates for longer loop */}
@@ -441,6 +482,7 @@ const LandingPage = () => {
                   src={tradingviewLogo} 
                   alt="TradingView" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -448,6 +490,7 @@ const LandingPage = () => {
                   src={finnhubLogo} 
                   alt="Finnhub" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -455,6 +498,7 @@ const LandingPage = () => {
                   src={fxstreetLogo} 
                   alt="FXStreet" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -462,6 +506,7 @@ const LandingPage = () => {
                   src={cnbcLogo} 
                   alt="CNBC" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -469,6 +514,7 @@ const LandingPage = () => {
                   src={tradingviewLogo} 
                   alt="TradingView" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -476,6 +522,7 @@ const LandingPage = () => {
                   src={finnhubLogo} 
                   alt="Finnhub" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -483,6 +530,7 @@ const LandingPage = () => {
                   src={fxstreetLogo} 
                   alt="FXStreet" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
               <div className="logo-item">
@@ -490,6 +538,7 @@ const LandingPage = () => {
                   src={cnbcLogo} 
                   alt="CNBC" 
                   className="data-logo"
+                  loading="lazy"
                 />
               </div>
             </div>
@@ -705,6 +754,7 @@ const LandingPage = () => {
                 src={phoneImage} 
                 alt="FXSentinel Alerts on iPhone" 
                 className="phone-image"
+                loading="lazy"
               />
             </div>
             <div className="alerts-text animate-on-scroll">
@@ -718,6 +768,7 @@ const LandingPage = () => {
                   src={telegramLogo} 
                   alt="Telegram" 
                   className="telegram-logo"
+                  loading="lazy"
                 />
               </div>
             </div>
