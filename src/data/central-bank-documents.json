@@ -91,6 +91,24 @@
       "tags": ["report", "monetary_policy", "inflation", "bank_rate", "economic_outlook", "cpi", "labor_market", "gdp", "wages", "price_stability", "mpc"],
       "aiAnalysis": null,
       "sentiment": null
+    },
+    {
+      "id": "boj-2026-01-23-outlook-report",
+      "title": "Outlook for Economic Activity and Prices - January 2026",
+      "type": "report",
+      "centralBank": "BOJ",
+      "date": "2026-01-23",
+      "category": "economic_outlook",
+      "impact": "high",
+      "affectedCurrencies": ["JPY", "USD", "EUR", "GBP", "AUD"],
+      "description": "Bank of Japan's quarterly Outlook for Economic Activity and Prices report from January 2026. The Policy Board projects Japan's economy to continue growing moderately, with CPI inflation likely to decelerate below 2% in the first half of 2026 before gradually rising to levels consistent with the price stability target. Includes GDP growth projections for fiscal 2025-2027, analysis of wage-price dynamics, monetary policy outlook with expectations for continued policy rate increases, and assessment of risks including trade policies, overseas economic activity, and financial market developments.",
+      "fileName": "BOJOutlookForEconomicActivityJan2026.pdf",
+      "filePath": "/documents/central-bank/boj/BOJOutlookForEconomicActivityJan2026.pdf",
+      "fileSize": "1.1 MB",
+      "fileFormat": "PDF",
+      "tags": ["report", "economic_outlook", "inflation", "monetary_policy", "cpi", "gdp", "wages", "labor_market", "price_stability", "policy_rate", "trade_policies", "financial_conditions"],
+      "aiAnalysis": null,
+      "sentiment": null
     }
   ]
 }
