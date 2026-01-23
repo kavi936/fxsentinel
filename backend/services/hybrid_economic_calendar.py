@@ -4901,7 +4901,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-120B',
                 'forecast': 'N/A',
                 'previous': '-71B'
             },
@@ -4911,7 +4911,7 @@ class HybridEconomicCalendar:
                 'time': '17:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.6M',
                 'forecast': 'N/A',
                 'previous': '3.4M'
             },
@@ -4921,7 +4921,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.5%',
                 'previous': '1.0%'
             },
@@ -4931,7 +4931,7 @@ class HybridEconomicCalendar:
                 'time': '22:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.4',
                 'forecast': 'N/A',
                 'previous': '52.2'
             },
@@ -4941,7 +4941,7 @@ class HybridEconomicCalendar:
                 'time': '22:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '56.0',
                 'forecast': 'N/A',
                 'previous': '51.0'
             },
@@ -4951,7 +4951,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.4%',
                 'forecast': '2.4%',
                 'previous': '3.0%'
             },
@@ -4961,7 +4961,7 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-16',
                 'forecast': '-16',
                 'previous': '-17'
             },
@@ -4971,7 +4971,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.5',
                 'forecast': '50.1',
                 'previous': '49.7'
             },
