@@ -9,20 +9,10 @@
       }
     }
   ],
-  "rewrites": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/robots"
-    }
-  ],
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/api/sitemap",
+      "dest": "/sitemap.xml",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=3600"
@@ -30,7 +20,7 @@
     },
     {
       "src": "/robots.txt",
-      "dest": "/api/robots",
+      "dest": "/robots.txt",
       "headers": {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "public, max-age=3600"
