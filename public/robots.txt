@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://fxsentinel.io/sitemap.xml
+
+# Allow all pages to be indexed
+Allow: /blog/
+Allow: /login
+Allow: /signup
+Allow: /disclaimer
+Allow: /privacy
+
+# Disallow private/dashboard pages
+Disallow: /dashboard
+Disallow: /trial-welcome
+Disallow: /auth-redirect
+
+# Allow assets
+Allow: /assets/
+Allow: /*.png
+Allow: /*.jpg
+Allow: /*.jpeg
+Allow: /*.gif
+Allow: /*.svg
+Allow: /*.webp
