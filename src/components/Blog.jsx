@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import analyticsTracker, { trackBlogPostEngagement } from '../utils/analytics';
 import './Blog.css';
 
 const Blog = () => {
@@ -9,6 +10,12 @@ const Blog = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    // Track blog page view
+    analyticsTracker.trackPageView('blog');
+    
+    // Update page title and meta for SEO
+    document.title = 'FXSentinel Blog - Forex Trading Insights & Market Analysis';
+    
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
@@ -163,6 +170,10 @@ const Blog = () => {
       <section className="blog-header">
         <div className="blog-header-inner">
           <h1 className="blog-title">FXSentinel Blog</h1>
+          <p className="blog-subtitle">
+            Expert insights on forex trading, market analysis, and AI-powered trading tools. 
+            Learn how to trade economic news, understand market sentiment, and make better trading decisions.
+          </p>
         </div>
       </section>
 
@@ -172,9 +183,13 @@ const Blog = () => {
           <div className="blog-grid">
             {blogPosts.map((post) => (
               <article key={post.id} className="blog-card">
-                <Link to={`/blog/${post.slug}`} className="blog-card-link">
+                <Link 
+                  to={`/blog/${post.slug}`} 
+                  className="blog-card-link"
+                  onClick={() => trackBlogPostEngagement(post.slug, 'click', { title: post.title, category: post.category })}
+                >
                   <div className="blog-card-image">
-                    <img src={post.image} alt={post.title} />
+                    <img src={post.image} alt={post.title} loading="lazy" />
                     <div className="blog-card-category">{post.category}</div>
                   </div>
                   <div className="blog-card-content">
