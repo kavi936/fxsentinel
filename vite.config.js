@@ -20,13 +20,23 @@ export default defineConfig({
         assetFileNames: (assetInfo) => {
           const info = assetInfo.name.split('.')
           const ext = info[info.length - 1]
+          const name = info[0]
+          
+          // Keep sitemap.xml and robots.txt at root, don't hash them
+          if (name === 'sitemap' || name === 'robots') {
+            return `[name][extname]`
+          }
+          
           if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(ext)) {
             return `assets/[name]-[hash][extname]`
           }
           return `assets/[name]-[hash][extname]`
         }
       }
-    }
+    },
+    // Ensure public folder files are copied correctly
+    publicDir: 'public',
+    copyPublicDir: true
   },
   server: {
     port: 5173,
