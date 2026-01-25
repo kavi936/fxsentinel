@@ -7,43 +7,37 @@
       "config": {
         "distDir": "dist"
       }
-    },
-    {
-      "src": "api/sitemap.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/robots.js",
-      "use": "@vercel/node"
     }
   ],
-  "rewrites": [
+  "headers": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
     },
     {
       "source": "/robots.txt",
-      "destination": "/api/robots"
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
     }
   ],
   "routes": [
-    {
-      "src": "/sitemap.xml",
-      "dest": "/api/sitemap",
-      "headers": {
-        "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
-      }
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "/api/robots",
-      "headers": {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, max-age=3600"
-      }
-    },
     {
       "src": "/central-bank-documents.json",
       "dest": "/central-bank-documents.json",
