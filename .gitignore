@@ -61,11 +61,6 @@ test_session.session*
 !src/data/economyIndicators.json
 !src/data/economyIndicators.template.json
 !src/data/central-bank-documents.json
-!public/central-bank-documents.json
-# Allow central bank PDF documents to be tracked
-!public/documents/
-!public/documents/central-bank/
-!public/documents/central-bank/**/*.pdf
 analysis_history.json
 news_cache.json
 news_history.json
@@ -141,7 +136,14 @@ dist
 
 # Gatsby files
 .cache/
-public
+# Ignore public directory but allow specific files
+public/*
+!public/sitemap.xml
+!public/robots.txt
+!public/central-bank-documents.json
+!public/documents/
+!public/documents/central-bank/
+!public/documents/central-bank/**/*.pdf
 
 # Storybook build outputs
 .out
