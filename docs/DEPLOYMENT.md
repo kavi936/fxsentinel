@@ -13,7 +13,7 @@ Quick deployment options for investor demos and production hosting.
    ```
 
 2. **Deploy on Railway**:
-   - Go to [railway.app](https://railway.app)
+   - Go to [railway.app](https://railway.app)22
    - Sign up with GitHub
    - Click "New Project" → "Deploy from GitHub repo"
    - Select your repository

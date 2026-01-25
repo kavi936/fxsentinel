@@ -19,13 +19,21 @@ import AIHiddenPatterns from './components/blog-posts/AIHiddenPatterns';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import BannerNotifications from './components/BannerNotifications';
+import { useRouteTracking } from './hooks/useRouteTracking';
 import './App.css';
+
+// Component to handle route tracking
+function RouteTracker() {
+  useRouteTracking();
+  return null;
+}
 
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <Router>
+          <RouteTracker />
           <div className="app">
             <BannerNotifications />
             <Routes>

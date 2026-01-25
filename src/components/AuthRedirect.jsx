@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { trackAuthRedirect } from '../utils/analytics';
 
 const AuthRedirect = () => {
   const { currentUser, isDeveloper, hasCheckedDeveloperStatus } = useAuth();
@@ -23,6 +24,10 @@ const AuthRedirect = () => {
       navigate('/login');
       return;
     }
+
+    // Track auth redirect funnel step
+    const authMethod = currentUser.providerData?.[0]?.providerId === 'google.com' ? 'google' : 'email';
+    trackAuthRedirect(authMethod);
 
     // All users (including developers and free tier) go directly to dashboard
     if (isDeveloper) {
