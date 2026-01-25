@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import analyticsTracker from '../utils/analytics';
 import './Privacy.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
@@ -8,6 +9,12 @@ const Privacy = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    // Track privacy page view
+    analyticsTracker.trackPageView('privacy');
+    
+    // Update page title and meta for SEO
+    document.title = 'Privacy Policy - FXSentinel | Data Protection & Privacy';
+    
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       setIsScrolled(scrollPosition > 50);

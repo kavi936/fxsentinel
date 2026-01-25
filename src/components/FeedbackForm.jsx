@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import analyticsTracker from '../utils/analytics';
 import { config } from '../config';
 import './FeedbackForm.css';
 
 const FeedbackForm = () => {
+  useEffect(() => {
+    // Track feedback page view
+    analyticsTracker.trackPageView('feedback');
+    
+    // Update page title for SEO
+    document.title = 'Feedback - FXSentinel | Help Us Improve';
+  }, []);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [formData, setFormData] = useState({

@@ -11,7 +11,15 @@ import telegramLogo from '../assets/telegram.png';
 import phoneImage from '../assets/IMG_8110-portrait.png';
 import featuresGlanceImage from '../assets/FXSentinelFeaturesGlance.png';
 import LiveTicker from './LiveTicker';
-import { trackLandingPageView, trackSignupClick, trackEngagement, trackFeatureUsage } from '../utils/analytics';
+import { 
+  trackLandingPageView, 
+  trackSignupClick, 
+  trackEngagement, 
+  trackFeatureUsage,
+  trackCTAClick,
+  trackTestimonialView,
+  trackFeatureCardInteraction
+} from '../utils/analytics';
 
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -362,6 +370,7 @@ const LandingPage = () => {
                 to="/signup" 
                 className="primary-button"
                 onClick={() => {
+                  trackCTAClick('start_for_free', 'hero_section');
                   trackSignupClick('hero_button');
                   trackEngagement('hero_signup_button_click');
                 }}
@@ -386,6 +395,7 @@ const LandingPage = () => {
                 to="/signup" 
                 className="hero-features-button primary-button"
                 onClick={() => {
+                  trackCTAClick('explore_all_features', 'hero_features_section');
                   trackSignupClick('features_at_glance');
                   trackEngagement('features_at_glance_cta_click');
                 }}
@@ -551,7 +561,11 @@ const LandingPage = () => {
         <div className="features-inner">
           <h2 className="section-title animate-on-scroll">Why Traders Choose FXSentinel</h2>
           <div className="features-grid">
-            <div className="feature-card animate-on-scroll">
+            <div 
+              className="feature-card animate-on-scroll"
+              onMouseEnter={() => trackFeatureCardInteraction('never_miss_events', 'hover')}
+              onClick={() => trackFeatureCardInteraction('never_miss_events', 'click')}
+            >
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -564,7 +578,11 @@ const LandingPage = () => {
               <h3>Never Miss Market-Moving Events</h3>
               <p>Stop losing money because you missed the news. We monitor 100+ sources including premium financial data providers and global news feeds to catch every economic release that moves your trades - from major central bank decisions to key economic indicators.</p>
             </div>
-            <div className="feature-card animate-on-scroll">
+            <div 
+              className="feature-card animate-on-scroll"
+              onMouseEnter={() => trackFeatureCardInteraction('understand_why', 'hover')}
+              onClick={() => trackFeatureCardInteraction('understand_why', 'click')}
+            >
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 11H15M9 15H15M9 7H15M5 3H19C20.1046 3 21 3.89543 21 5V19C21 20.1046 20.1046 21 19 21H5C3.89543 21 3 20.1046 3 19V5C3 3.89543 3.89543 3 5 3Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -576,7 +594,11 @@ const LandingPage = () => {
               <h3>Understand the "Why" Behind Every Move</h3>
               <p>Don't just see the numbers - understand what they mean. Our AI analysis instantly explains how each economic event will impact EUR/USD, USD/JPY, and Gold, giving you the context to make smarter trading decisions.</p>
             </div>
-            <div className="feature-card animate-on-scroll">
+            <div 
+              className="feature-card animate-on-scroll"
+              onMouseEnter={() => trackFeatureCardInteraction('alerts_before_market', 'hover')}
+              onClick={() => trackFeatureCardInteraction('alerts_before_market', 'click')}
+            >
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -585,7 +607,11 @@ const LandingPage = () => {
               <h3>Get Alerts Before the Market Reacts</h3>
               <p>While others are still reading the news, you're already positioned. Receive instant Telegram notifications with AI-powered analysis and specific pair reactions within seconds of economic releases.</p>
             </div>
-            <div className="feature-card animate-on-scroll">
+            <div 
+              className="feature-card animate-on-scroll"
+              onMouseEnter={() => trackFeatureCardInteraction('focus_on_trades', 'hover')}
+              onClick={() => trackFeatureCardInteraction('focus_on_trades', 'click')}
+            >
               <div className="feature-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
@@ -599,7 +625,16 @@ const LandingPage = () => {
           </div>
                       <div className="features-cta">
               <p className="features-cta-text"><span>Ready to get started?</span> 👉</p>
-              <Link to="/signup" className="features-cta-button">Start Free Today</Link>
+              <Link 
+                to="/signup" 
+                className="features-cta-button"
+                onClick={() => {
+                  trackCTAClick('start_free_today', 'features_section');
+                  trackSignupClick('features_cta');
+                }}
+              >
+                Start Free Today
+              </Link>
             </div>
         </div>
       </section>
@@ -610,7 +645,10 @@ const LandingPage = () => {
           <h2 className="section-title animate-on-scroll">Trusted by Traders Worldwide</h2>
           <p className="testimonials-subtitle animate-on-scroll">See what traders are saying about FXSentinel</p>
           <div className="testimonials-grid">
-            <div className="testimonial-card animate-on-scroll">
+            <div 
+              className="testimonial-card animate-on-scroll"
+              onMouseEnter={() => trackTestimonialView(0)}
+            >
               <div className="testimonial-rating">
                 <span className="star">★</span>
                 <span className="star">★</span>
