@@ -16,7 +16,7 @@ import ProfilePopup from './ProfilePopup';
 import MarketStatusPopup from './MarketStatusPopup';
 import ReviewBanner from './ReviewBanner';
 import MobileWarningBanner from './MobileWarningBanner';
-import { trackEngagement, trackFeatureUsage, trackTrialStart } from '../utils/analytics';
+import { trackEngagement, trackFeatureUsage, trackTrialStart, trackDashboardAccess } from '../utils/analytics';
 
 function Dashboard() {
   const { currentUser, logout } = useAuth();
@@ -60,14 +60,33 @@ function Dashboard() {
   const [mobileWarningVisible, setMobileWarningVisible] = useState(false);
   const [navTabsExpanded, setNavTabsExpanded] = useState(false);
 
-  // Track dashboard view
+  // Track dashboard access and first view
   useEffect(() => {
-    trackEngagement('dashboard_view');
+    if (!currentUser) return;
+    
+    // Check if this is the first time user is viewing dashboard
+    const hasVisitedDashboard = localStorage.getItem(`dashboard_visited_${currentUser.uid}`);
+    const isFirstView = !hasVisitedDashboard;
+    
+    // Track dashboard access with funnel step
+    trackDashboardAccess(isFirstView, subscriptionStatus?.status || 'unknown');
+    
+    // Mark dashboard as visited
+    if (isFirstView) {
+      localStorage.setItem(`dashboard_visited_${currentUser.uid}`, 'true');
+    }
+    
+    // Also track engagement for backward compatibility
+    trackEngagement('dashboard_view', {
+      is_first_view: isFirstView,
+      subscription_status: subscriptionStatus?.status || 'unknown'
+    });
+    
     // Track tier information if needed
     if (subscriptionStatus?.status) {
       console.log(`📊 User tier: ${subscriptionStatus.status}`);
     }
-  }, [subscriptionStatus]);
+  }, [currentUser, subscriptionStatus]);
 
   // Check subscription status on mount
   useEffect(() => {

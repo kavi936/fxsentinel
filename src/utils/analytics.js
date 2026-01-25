@@ -20,9 +20,12 @@ class AnalyticsTracker {
       feature_exploration: 2,
       signup_click: 3,
       signup_completion: 4,
-      trial_start: 5,
-      payment_attempt: 6,
-      payment_success: 7
+      auth_redirect: 5,
+      dashboard_access: 6,
+      dashboard_first_view: 7,
+      trial_start: 8,
+      payment_attempt: 9,
+      payment_success: 10
     };
     
     // Initialize scroll and visibility tracking
@@ -31,52 +34,176 @@ class AnalyticsTracker {
     this.initTimeTracking();
   }
 
-  // Extract UTM parameters from URL
+  // Extract UTM parameters from URL with enhanced referrer detection
   extractUTMParams() {
     const urlParams = new URLSearchParams(window.location.search);
+    const referrer = document.referrer || '';
     
-    // Handle short source parameter
-    const shortSource = urlParams.get('s');
-    let utm_source = urlParams.get('utm_source') || 'direct';
-    let utm_medium = urlParams.get('utm_medium') || 'none';
-    
-    // Map short sources to full UTM parameters
-    if (shortSource) {
-      switch (shortSource) {
-        case 'ig':
-          utm_source = 'instagram';
-          utm_medium = 'social';
-          break;
-        case 'tw':
-          utm_source = 'twitter';
-          utm_medium = 'social';
-          break;
-        case 'tk':
-          utm_source = 'tiktok';
-          utm_medium = 'social';
-          break;
-        case 'fb':
-          utm_source = 'facebook';
-          utm_medium = 'social';
-          break;
-        case 'li':
-          utm_source = 'linkedin';
-          utm_medium = 'social';
-          break;
-        case 'yt':
-          utm_source = 'youtube';
-          utm_medium = 'social';
-          break;
-      }
+    // Priority 1: Check UTM parameters first (highest priority)
+    if (urlParams.get('utm_source')) {
+      return {
+        utm_source: urlParams.get('utm_source'),
+        utm_medium: urlParams.get('utm_medium') || 'none',
+        utm_campaign: urlParams.get('utm_campaign') || 'none',
+        utm_content: urlParams.get('utm_content') || 'none',
+        utm_term: urlParams.get('utm_term') || 'none',
+        referrer: referrer
+      };
     }
     
+    // Priority 2: Handle short source parameter
+    const shortSource = urlParams.get('s');
+    if (shortSource) {
+      const mapped = this.mapShortSource(shortSource);
+      return {
+        ...mapped,
+        referrer: referrer
+      };
+    }
+    
+    // Priority 3: Detect traffic source from referrer
+    const referrerSource = this.detectReferrerSource(referrer);
+    if (referrerSource) {
+      return {
+        ...referrerSource,
+        referrer: referrer
+      };
+    }
+    
+    // Default: Direct traffic
     return {
-      utm_source: utm_source,
-      utm_medium: utm_medium,
-      utm_campaign: urlParams.get('utm_campaign') || 'bio',
-      utm_content: urlParams.get('utm_content') || 'profile',
-      utm_term: urlParams.get('utm_term') || 'forex'
+      utm_source: 'direct',
+      utm_medium: 'none',
+      utm_campaign: 'direct',
+      utm_content: 'direct',
+      utm_term: 'direct',
+      referrer: referrer
     };
+  }
+
+  // Map short source codes to full UTM parameters
+  mapShortSource(shortSource) {
+    const mapping = {
+      'ig': { utm_source: 'instagram', utm_medium: 'social', utm_campaign: 'bio', utm_content: 'profile', utm_term: 'instagram' },
+      'tw': { utm_source: 'twitter', utm_medium: 'social', utm_campaign: 'bio', utm_content: 'profile', utm_term: 'twitter' },
+      'tk': { utm_source: 'tiktok', utm_medium: 'social', utm_campaign: 'bio', utm_content: 'profile', utm_term: 'tiktok' },
+      'fb': { utm_source: 'facebook', utm_medium: 'social', utm_campaign: 'bio', utm_content: 'profile', utm_term: 'facebook' },
+      'li': { utm_source: 'linkedin', utm_medium: 'social', utm_campaign: 'bio', utm_content: 'profile', utm_term: 'linkedin' },
+      'yt': { utm_source: 'youtube', utm_medium: 'social', utm_campaign: 'bio', utm_content: 'profile', utm_term: 'youtube' }
+    };
+    
+    return mapping[shortSource] || { utm_source: 'direct', utm_medium: 'none', utm_campaign: 'unknown', utm_content: 'unknown', utm_term: 'unknown' };
+  }
+
+  // Detect traffic source from referrer URL
+  detectReferrerSource(referrer) {
+    if (!referrer) return null;
+    
+    const referrerLower = referrer.toLowerCase();
+    
+    // Google Search detection
+    if (referrerLower.includes('google.com/search') || 
+        (referrerLower.includes('google.') && referrerLower.includes('/search'))) {
+      const searchQuery = this.extractSearchQuery(referrer);
+      return {
+        utm_source: 'google',
+        utm_medium: 'organic',
+        utm_campaign: 'search',
+        utm_content: searchQuery || 'organic_search',
+        utm_term: searchQuery || 'organic_search'
+      };
+    }
+    
+    // Instagram detection
+    if (referrerLower.includes('instagram.com') || referrerLower.includes('instagr.am')) {
+      return {
+        utm_source: 'instagram',
+        utm_medium: 'social',
+        utm_campaign: 'organic',
+        utm_content: 'profile_link',
+        utm_term: 'instagram'
+      };
+    }
+    
+    // Twitter/X detection
+    if (referrerLower.includes('twitter.com') || referrerLower.includes('x.com')) {
+      return {
+        utm_source: 'twitter',
+        utm_medium: 'social',
+        utm_campaign: 'organic',
+        utm_content: 'tweet',
+        utm_term: 'twitter'
+      };
+    }
+    
+    // Facebook detection
+    if (referrerLower.includes('facebook.com') || referrerLower.includes('fb.com')) {
+      return {
+        utm_source: 'facebook',
+        utm_medium: 'social',
+        utm_campaign: 'organic',
+        utm_content: 'post',
+        utm_term: 'facebook'
+      };
+    }
+    
+    // LinkedIn detection
+    if (referrerLower.includes('linkedin.com')) {
+      return {
+        utm_source: 'linkedin',
+        utm_medium: 'social',
+        utm_campaign: 'organic',
+        utm_content: 'post',
+        utm_term: 'linkedin'
+      };
+    }
+    
+    // TikTok detection
+    if (referrerLower.includes('tiktok.com')) {
+      return {
+        utm_source: 'tiktok',
+        utm_medium: 'social',
+        utm_campaign: 'organic',
+        utm_content: 'video',
+        utm_term: 'tiktok'
+      };
+    }
+    
+    // YouTube detection
+    if (referrerLower.includes('youtube.com') || referrerLower.includes('youtu.be')) {
+      return {
+        utm_source: 'youtube',
+        utm_medium: 'social',
+        utm_campaign: 'organic',
+        utm_content: 'video',
+        utm_term: 'youtube'
+      };
+    }
+    
+    // Bing Search detection
+    if (referrerLower.includes('bing.com/search')) {
+      const searchQuery = this.extractSearchQuery(referrer);
+      return {
+        utm_source: 'bing',
+        utm_medium: 'organic',
+        utm_campaign: 'search',
+        utm_content: searchQuery || 'organic_search',
+        utm_term: searchQuery || 'organic_search'
+      };
+    }
+    
+    return null;
+  }
+
+  // Extract search query from referrer URL
+  extractSearchQuery(referrer) {
+    try {
+      const url = new URL(referrer);
+      const query = url.searchParams.get('q') || url.searchParams.get('query') || '';
+      return query.substring(0, 100); // Limit length
+    } catch (e) {
+      return null;
+    }
   }
 
   // Generate unique session ID
@@ -99,7 +226,24 @@ class AnalyticsTracker {
     // Firebase Analytics
     logEvent(analytics, 'page_view', eventData);
 
-    // Google Analytics 4
+    // Google Tag Manager / Google Analytics 4
+    // Push to dataLayer for GTM
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'page_view',
+        page_title: pageName,
+        page_location: window.location.href,
+        page_name: pageName,
+        utm_source: this.utmParams.utm_source,
+        utm_medium: this.utmParams.utm_medium,
+        utm_campaign: this.utmParams.utm_campaign,
+        utm_content: this.utmParams.utm_content,
+        utm_term: this.utmParams.utm_term,
+        referrer: this.utmParams.referrer || document.referrer
+      });
+    }
+    
+    // Also use gtag if available (direct GA4 or GTM)
     if (window.gtag) {
       gtag('event', 'page_view', {
         page_title: pageName,
@@ -138,7 +282,19 @@ class AnalyticsTracker {
     // Firebase Analytics
     logEvent(analytics, 'funnel_step', eventData);
 
-    // Google Analytics 4
+    // Google Tag Manager / Google Analytics 4
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'funnel_step',
+        funnel_step: stepName,
+        funnel_step_number: stepNumber,
+        utm_source: this.utmParams.utm_source,
+        utm_medium: this.utmParams.utm_medium,
+        utm_campaign: this.utmParams.utm_campaign,
+        ...stepData
+      });
+    }
+    
     if (window.gtag) {
       gtag('event', 'funnel_step', {
         funnel_step: stepName,
@@ -174,7 +330,17 @@ class AnalyticsTracker {
     // Firebase Analytics
     logEvent(analytics, eventName, enhancedData);
 
-    // Google Analytics 4
+    // Google Tag Manager / Google Analytics 4
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: eventName,
+        utm_source: this.utmParams.utm_source,
+        utm_medium: this.utmParams.utm_medium,
+        utm_campaign: this.utmParams.utm_campaign,
+        ...eventData
+      });
+    }
+    
     if (window.gtag) {
       gtag('event', eventName, {
         custom_parameter_1: this.utmParams.utm_source,
@@ -208,6 +374,20 @@ class AnalyticsTracker {
 
     // Firebase Analytics
     logEvent(analytics, 'conversion', eventData);
+
+    // Google Tag Manager / Google Analytics 4
+    if (window.dataLayer) {
+      window.dataLayer.push({
+        event: 'conversion',
+        conversion_type: conversionType,
+        conversion_value: conversionData.value || 0,
+        currency: conversionData.currency || 'USD',
+        utm_source: this.utmParams.utm_source,
+        utm_medium: this.utmParams.utm_medium,
+        utm_campaign: this.utmParams.utm_campaign,
+        ...conversionData
+      });
+    }
 
     // Google Analytics 4
     if (window.gtag) {
@@ -555,6 +735,27 @@ export const trackPaymentAttempt = (amount = 0) => {
 export const trackPaymentSuccess = (amount = 0) => {
   analyticsTracker.trackFunnelStep('payment_success', { amount });
   analyticsTracker.trackConversion('payment_success', { value: amount });
+};
+
+// New funnel step tracking functions
+export const trackAuthRedirect = (authMethod = 'unknown') => {
+  analyticsTracker.trackFunnelStep('auth_redirect', { auth_method: authMethod });
+  analyticsTracker.trackPageView('auth_redirect', { auth_method: authMethod });
+};
+
+export const trackDashboardAccess = (isFirstView = false, subscriptionStatus = null) => {
+  analyticsTracker.trackFunnelStep('dashboard_access', { 
+    is_first_view: isFirstView,
+    subscription_status: subscriptionStatus 
+  });
+  analyticsTracker.trackEngagement('dashboard_access', { 
+    is_first_view: isFirstView,
+    subscription_status: subscriptionStatus 
+  });
+  
+  if (isFirstView) {
+    analyticsTracker.trackFunnelStep('dashboard_first_view', { subscription_status: subscriptionStatus });
+  }
 };
 
 export const trackFeatureUsage = (featureName, usageData = {}) => {
