@@ -7,12 +7,30 @@
       "config": {
         "distDir": "dist"
       }
+    },
+    {
+      "src": "api/sitemap.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/robots.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/robots"
     }
   ],
   "routes": [
     {
       "src": "/sitemap.xml",
-      "dest": "/sitemap.xml",
+      "dest": "/api/sitemap",
       "headers": {
         "Content-Type": "application/xml; charset=utf-8",
         "Cache-Control": "public, max-age=3600"
@@ -20,7 +38,7 @@
     },
     {
       "src": "/robots.txt",
-      "dest": "/robots.txt",
+      "dest": "/api/robots",
       "headers": {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "public, max-age=3600"
