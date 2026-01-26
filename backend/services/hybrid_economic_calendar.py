@@ -5206,7 +5206,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '87.6',
                 'forecast': '88.3',
                 'previous': '87.6'
             },
@@ -5236,9 +5236,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
-                'previous': '0.2%'
+                'previous': '0.1%'
             },
             {
                 'title': 'Durable Goods Orders m/m',
@@ -5246,9 +5246,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '5.3',
                 'forecast': '3.1%',
-                'previous': '-2.2%'
+                'previous': '-2.1%'
             },
             {
                 'title': 'Belgian NBB Business Climate',
@@ -5256,7 +5256,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-8.8',
                 'forecast': '-10.2',
                 'previous': '-11.9'
             },
