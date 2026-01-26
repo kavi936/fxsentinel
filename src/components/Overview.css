@@ -3176,33 +3176,39 @@
   }
 } 
 
-/* First Grid Container - Economic Calendar and AI Analysis */
-.cards-grid-container {
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  gap: 30px;
-  margin: 10px;
-  max-width: 100%;
-}
-
-/* Second Grid Container - Market Sentiment and Live News + Analysis */
-.cards-grid-container-second {
+/* Resizable Grid Container Styles */
+/* Overview Grid Container - Simple 2x3 CSS Grid */
+.overview-grid-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 30px;
+  grid-template-rows: 1fr 1fr 1fr;
+  gap: 15px;
   margin: 10px;
-  margin-top: 30px;
-  max-width: 100%;
+  width: 100%;
+  min-height: 600px;
 }
 
-/* Third Grid Container - Prediction Markets */
-.cards-grid-container-third {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 30px;
-  margin: 10px;
-  margin-top: 30px;
-  max-width: 100%;
+/* Grid Card Base Styles */
+.grid-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Ensure cards maintain their styling within grid */
+.grid-card.news-calendar,
+.grid-card.ai-analysis-card,
+.grid-card.market-sentiment-card,
+.grid-card.live-news-analysis-card,
+.grid-card.prediction-markets-card,
+.grid-card.central-bank-analysis-card {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Live News + Analysis Card Styles */
@@ -6423,27 +6429,30 @@
 
 /* Responsive adjustments for the grid layout */
 @media (max-width: 1200px) {
-  .cards-grid-container,
-  .cards-grid-container-second {
-    grid-template-columns: 1fr;
-    gap: 10px;
+  .overview-grid-container {
+    margin: 5px;
   }
   
-  .news-calendar,
-  .ai-analysis-card,
-  .market-sentiment-card,
-  .live-news-analysis-card,
-  .prediction-markets-card,
-  .central-bank-analysis-card {
+  .grid-card.news-calendar,
+  .grid-card.ai-analysis-card,
+  .grid-card.market-sentiment-card,
+  .grid-card.live-news-analysis-card,
+  .grid-card.prediction-markets-card,
+  .grid-card.central-bank-analysis-card {
     max-width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .cards-grid-container,
-  .cards-grid-container-second {
-    margin: 10px;
-    gap: 10px;
+  .overview-grid-container {
+    margin: 5px;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+  
+  /* Stack cards vertically on mobile */
+  .grid-card {
+    grid-column: 1 !important;
   }
   
   .sentiment-content,
@@ -6461,15 +6470,11 @@
   .ai-value {
     font-size: 20px;
   }
-  
-
 }
 
 @media (max-width: 480px) {
-  .cards-grid-container,
-  .cards-grid-container-second {
+  .overview-grid-container {
     margin: 5px;
-    gap: 10px;
   }
   
   .sentiment-content,
@@ -6495,8 +6500,6 @@
   .ai-insight-item {
     padding: 10px 12px;
   }
-  
-
 } 
 
 /* Footer Disclaimer Styles */

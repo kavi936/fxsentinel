@@ -834,6 +834,8 @@ const Overview = () => {
   const [pmSearchQuery, setPmSearchQuery] = useState('');
   const [pmFilterTopic, setPmFilterTopic] = useState('all');
   const [pmFilterStatus, setPmFilterStatus] = useState('all');
+
+
   const [pmFilterConviction, setPmFilterConviction] = useState('all');
   
   // Prediction Markets modal states
@@ -2715,10 +2717,10 @@ const Overview = () => {
           </div>
         </div>
 
-        {/* Cards Grid Container */}
-        <div className="cards-grid-container">
-          {/* Economic Calendar - Based on recovered structure */}
-          <div className="news-calendar">
+        {/* Cards Grid Container - Simple 2x3 CSS Grid */}
+        <div className="overview-grid-container">
+              {/* Economic Calendar - Left Column, Row 1 */}
+              <div className="news-calendar grid-card">
             <div className="calendar-header">
               <div className="header-main">
                 <h2 className="calendar-title">ECONOMIC CALENDAR</h2>
@@ -2894,8 +2896,8 @@ const Overview = () => {
             </div>
           </div>
 
-          {/* AI Analysis Card */}
-          <div className="ai-analysis-card">
+              {/* AI Analysis Card - Right Column, Row 1 */}
+              <div className="ai-analysis-card grid-card">
             <div className="ai-header">
               <div className="header-main">
                 <h2 className="ai-title">AI ANALYSIS</h2>
@@ -3410,12 +3412,9 @@ const Overview = () => {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Second Cards Grid Container */}
-        <div className="cards-grid-container-second">
-          {/* Market Sentiment Card */}
-          <div className="market-sentiment-card">
+              {/* Market Sentiment Card - Left Column, Row 2 */}
+              <div className="market-sentiment-card grid-card">
             <div className="sentiment-header">
               <div className="header-main">
                 <h2 className="sentiment-title">MARKET SENTIMENT</h2>
@@ -3977,13 +3976,13 @@ const Overview = () => {
               </div>
             </div>
 
-          {/* Live News + Analysis Card */}
-          <div className="live-news-analysis-card">
+              {/* Live News + Analysis Card - Right Column, Row 2 */}
+              <div className="live-news-analysis-card grid-card">
             <LiveNewsFeed />
           </div>
 
-          {/* Prediction Markets Card */}
-          <div className="prediction-markets-card">
+              {/* Prediction Markets Card - Left Column, Row 3 */}
+              <div className="prediction-markets-card grid-card">
             <div className="prediction-markets-header">
               <div className="header-main">
                 <h2 className="prediction-markets-title">PREDICTION MARKETS</h2>
@@ -4462,8 +4461,8 @@ const Overview = () => {
             </div>
           </div>
 
-          {/* Central Bank Analysis Card */}
-          <div className="central-bank-analysis-card">
+              {/* Central Bank Analysis Card - Right Column, Row 3 */}
+              <div className="central-bank-analysis-card grid-card">
             <div className="central-bank-analysis-header">
               <div className="header-main">
                 <h2 className="central-bank-analysis-title">CENTRAL BANK ANALYSIS</h2>
@@ -4648,10 +4647,8 @@ const Overview = () => {
                 </>
               )}
             </div>
-          </div>
+              </div>
         </div>
-
-        
 
       {/* Forex Pairs Selection Modal */}
       {isEditing && (
@@ -5426,8 +5423,8 @@ const Overview = () => {
           </div>
         </div>
       </div> */}
+      </div>
     </div>
-  </div>
   );
 };
 
