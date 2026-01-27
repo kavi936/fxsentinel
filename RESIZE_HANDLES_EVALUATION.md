@@ -7,7 +7,7 @@
 1. **Handle Position Calculation** (`calculateHandlePositions`)
    - Already calculates positions for 7 handles (3 vertical + 4 horizontal)
    - Positions are calculated but not rendered
-   - Handles are positioned in the 15px gaps between cards
+   - Handles are positioned in the 25px gaps between cards
 
 2. **State Management**
    - `columnWidths`: Array[3][2] - Controls column widths per row
@@ -17,7 +17,7 @@
 3. **Position Calculation System**
    - `calculateCardPositions()` - Recalculates all card positions when state changes
    - Uses memoization for performance
-   - Handles gaps correctly (15px split as 7.5px on each side)
+   - Handles gaps correctly (25px split as 12.5px on each side)
 
 4. **CSS Architecture**
    - Absolute positioning system
@@ -106,7 +106,7 @@
 
 /* Vertical Handle (between columns) */
 .grid-resize-handle.vertical {
-  width: 15px; /* Matches GAP */
+  width: 25px; /* Matches GAP */
   height: 100%; /* Full container height */
   cursor: col-resize;
 }
@@ -114,7 +114,7 @@
 /* Horizontal Handle (between rows) */
 .grid-resize-handle.horizontal {
   width: 100%; /* Full column width */
-  height: 15px; /* Matches GAP */
+  height: 25px; /* Matches GAP */
   cursor: row-resize;
 }
 ```
@@ -279,7 +279,7 @@ const updateRowHeights = (colIndex, rowIndex, deltaPercent) => {
    - Easy to calculate handle positions
 
 2. **Gap System Already Exists**
-   - 15px gaps are already calculated
+   - 25px gaps are already calculated
    - Handles fit perfectly in these gaps
    - No layout shifts needed
 
@@ -489,7 +489,7 @@ const handleMouseUp = useCallback(() => {
 
 ### What Works Perfectly
 ✅ Absolute positioning system - handles fit naturally
-✅ Gap system (15px) - handles positioned in gaps
+✅ Gap system (25px) - handles positioned in gaps
 ✅ State-driven updates - changing state auto-updates layout
 ✅ Memoized calculations - performance optimized
 ✅ localStorage persistence - already implemented

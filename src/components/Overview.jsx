@@ -991,12 +991,12 @@ const Overview = () => {
   // - Cards are absolutely positioned within a relative container
   // - Positions calculated based on columnWidths and rowHeights state
   // - Unified row positions ensure cards in same row align horizontally
-  // - Gap handling: 15px gap split evenly (7.5px) on each side
+  // - Gap handling: 25px gap split evenly (12.5px) on each side
   // Base height set to middle value between previous extremes (2500px and 1000px)
-  // With all rows at 150px minimum: 150px + 15px + 150px + 15px + 150px = 480px minimum
+  // With all rows at 150px minimum: 150px + 25px + 150px + 25px + 150px = 500px minimum
   // 1750px base provides headroom for dynamic resizing
   const BASE_CONTAINER_HEIGHT = 1750; // Middle value: allows cards to grow while maintaining reasonable base
-  const GAP = 15;
+  const GAP = 25;
 
   // Memoized calculation function with error handling
   const calculateCardPositions = useCallback((containerWidth, containerHeight, gap = GAP) => {
@@ -1026,7 +1026,7 @@ const Overview = () => {
       const row3Top = row2Top + row2MaxHeight + gap;
       
       // Calculate handle width (half on each side of the gap)
-      const handleHalfWidth = gap / 2; // 7.5px
+      const handleHalfWidth = gap / 2; // 12.5px
       
       // Safe access with fallbacks for column widths
       const getColumnWidth = (row, col) => {
@@ -1286,8 +1286,8 @@ const Overview = () => {
       
       // Use the calculated height or base height, whichever is larger
       // Ensure minimum container height accounts for all minimums
-      // All rows now require 150px minimum, so container needs at least 480px
-      const minimumContainerHeight = 150 + GAP + 150 + GAP + 150; // 480px minimum
+      // All rows now require 150px minimum, so container needs at least 500px
+      const minimumContainerHeight = 150 + GAP + 150 + GAP + 150; // 500px minimum
       return Math.max(minimumContainerHeight, Math.max(BASE_CONTAINER_HEIGHT, totalHeight));
     } catch (error) {
       console.error('❌ Error calculating container height:', error);
