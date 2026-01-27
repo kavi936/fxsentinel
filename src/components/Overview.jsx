@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment } from 'react';
+import React, { useState, useEffect, Fragment, useRef, useMemo, useCallback } from 'react';
 import { useForexPrices } from '../hooks/useForexPrices';
 import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
 import { usePredictionMarkets } from '../hooks/usePredictionMarkets.js';
@@ -843,6 +843,542 @@ const Overview = () => {
   const [isPmStatusModalOpen, setIsPmStatusModalOpen] = useState(false);
   const [isPmConvictionModalOpen, setIsPmConvictionModalOpen] = useState(false);
   const [isPmSearchModalOpen, setIsPmSearchModalOpen] = useState(false);
+
+  // ============================================
+  // PHASE 1: Resizable Grid State Management
+  // ============================================
+  // 
+  // ARCHITECTURE OVERVIEW:
+  // This component implements a custom resizable grid system using absolute positioning
+  // instead of CSS Grid. This approach provides:
+  // 
+  // 1. Flexibility: Each card can have independent column/row dimensions
+  // 2. Persistence: User preferences saved to localStorage
+  // 3. Dynamic Layout: Container height adjusts based on row heights
+  // 4. Unified Rows: Cards in the same row align horizontally (same top position)
+  // 
+  // STATE STRUCTURE:
+  // - columnWidths: Array[3][2] - Width ratios for each row's two columns
+  //   Format: [[leftCol, rightCol], [leftCol, rightCol], [leftCol, rightCol]]
+  //   Values are ratios (0.0 to 1.0) that must sum to ~1.0 per row
+  // 
+  // - rowHeights: Array[2][3] - Height ratios for each column's three rows
+  //   Format: [[row1, row2, row3], [row1, row2, row3]]
+  //   Values are ratios (0.0 to 1.0) that must sum to ~1.0 per column
+  // 
+  // LAYOUT STRUCTURE (2 columns × 3 rows):
+  //   Row 1: Economic Calendar (left) | AI Analysis (right)
+  //   Row 2: Market Sentiment (left)  | Live News (right)
+  //   Row 3: Prediction Markets (left) | Central Bank (right)
+  // 
+  // Default state: Equal 2x3 grid (50/50 columns, 1/3 rows)
+  const getDefaultColumnWidths = () => [
+    [0.5, 0.5], // Row 1: Economic Calendar | AI Analysis (50/50 split)
+    [0.5, 0.5], // Row 2: Market Sentiment | Live News (50/50 split)
+    [0.5, 0.5]  // Row 3: Prediction Markets | Central Bank (50/50 split)
+  ];
+  
+  const getDefaultRowHeights = () => [
+    [1/3, 1/3, 1/3], // Left column: Economic Calendar, Market Sentiment, Prediction Markets (equal thirds)
+    [1/3, 1/3, 1/3]  // Right column: AI Analysis, Live News, Central Bank (equal thirds)
+  ];
+
+  // Load grid sizes from localStorage or use defaults
+  // Includes validation to ensure data integrity and prevent layout errors
+  const [columnWidths, setColumnWidths] = useState(() => {
+    try {
+      const saved = localStorage.getItem('overview-column-widths');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate structure: 3 rows, each with 2 columns that sum to ~1.0
+        if (Array.isArray(parsed) && parsed.length === 3 && 
+            parsed.every(row => 
+              Array.isArray(row) && 
+              row.length === 2 && 
+              Math.abs(row.reduce((a, b) => a + b, 0) - 1) < 0.01
+            )) {
+          console.log('✅ Loaded saved column widths:', parsed);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Failed to load saved column widths:', e);
+    }
+    const defaults = getDefaultColumnWidths();
+    console.log('📐 Using default column widths:', defaults);
+    return defaults;
+  });
+
+  const [rowHeights, setRowHeights] = useState(() => {
+    try {
+      const saved = localStorage.getItem('overview-row-heights');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate structure: 2 columns, each with 3 rows that sum to ~1.0
+        if (Array.isArray(parsed) && parsed.length === 2 &&
+            parsed.every(col => 
+              Array.isArray(col) && 
+              col.length === 3 && 
+              Math.abs(col.reduce((a, b) => a + b, 0) - 1) < 0.01
+            )) {
+          // CRITICAL FIX: Validate that Row 3 heights are reasonable
+          // If Row 3 (index 2) is too small, it will cause display issues
+          // Updated threshold: 0.1 (10% = 175px at 1750px base) ensures cards can reach 150px minimum
+          const row3Left = parsed[0]?.[2] ?? 1/3;
+          const row3Right = parsed[1]?.[2] ?? 1/3;
+          const MIN_ROW3_HEIGHT = 0.1; // 10% minimum (175px at 1750px base, allows growth to 150px+)
+          
+          if (row3Left < MIN_ROW3_HEIGHT || row3Right < MIN_ROW3_HEIGHT) {
+            console.warn('⚠️ Row 3 heights too small, resetting to defaults:', {
+              row3Left,
+              row3Right,
+              minimum: MIN_ROW3_HEIGHT
+            });
+            // Reset to defaults if Row 3 is too small
+            const defaults = getDefaultRowHeights();
+            console.log('📐 Using default row heights (Row 3 was too small):', defaults);
+            return defaults;
+          }
+          
+          console.log('✅ Loaded saved row heights:', parsed);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Failed to load saved row heights:', e);
+    }
+    const defaults = getDefaultRowHeights();
+    console.log('📐 Using default row heights:', defaults);
+    return defaults;
+  });
+
+  // Save grid sizes to localStorage when they change
+  useEffect(() => {
+    try {
+      localStorage.setItem('overview-column-widths', JSON.stringify(columnWidths));
+      console.log('💾 Saved column widths to localStorage:', columnWidths);
+    } catch (e) {
+      console.warn('⚠️ Failed to save column widths:', e);
+    }
+  }, [columnWidths]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('overview-row-heights', JSON.stringify(rowHeights));
+      console.log('💾 Saved row heights to localStorage:', rowHeights);
+    } catch (e) {
+      console.warn('⚠️ Failed to save row heights:', e);
+    }
+  }, [rowHeights]);
+
+  // Debug: Log current state on mount and when it changes
+  useEffect(() => {
+    console.log('🔍 Current grid state:', {
+      columnWidths,
+      rowHeights,
+      columnWidthsSum: columnWidths.map(row => row.reduce((a, b) => a + b)),
+      rowHeightsSum: rowHeights.map(col => col.reduce((a, b) => a + b))
+    });
+  }, [columnWidths, rowHeights]);
+
+  // ============================================
+  // PHASE 2: Position Calculation Helper
+  // ============================================
+  // Calculate positions for all 6 cards based on state
+  // Uses absolute positioning for flexible resizing
+  // 
+  // Architecture:
+  // - Cards are absolutely positioned within a relative container
+  // - Positions calculated based on columnWidths and rowHeights state
+  // - Unified row positions ensure cards in same row align horizontally
+  // - Gap handling: 15px gap split evenly (7.5px) on each side
+  // Base height set to middle value between previous extremes (2500px and 1000px)
+  // With all rows at 150px minimum: 150px + 15px + 150px + 15px + 150px = 480px minimum
+  // 1750px base provides headroom for dynamic resizing
+  const BASE_CONTAINER_HEIGHT = 1750; // Middle value: allows cards to grow while maintaining reasonable base
+  const GAP = 15;
+
+  // Memoized calculation function with error handling
+  const calculateCardPositions = useCallback((containerWidth, containerHeight, gap = GAP) => {
+    try {
+      // Validate inputs
+      if (!Array.isArray(columnWidths) || columnWidths.length !== 3) {
+        console.error('❌ Invalid columnWidths structure:', columnWidths);
+        return {};
+      }
+      if (!Array.isArray(rowHeights) || rowHeights.length !== 2) {
+        console.error('❌ Invalid rowHeights structure:', rowHeights);
+        return {};
+      }
+
+      // Calculate unified row positions (not per-column)
+      // This ensures all cards in the same row start at the same top position
+      const row1Top = 0;
+      const row1MaxHeight = Math.max(
+        (rowHeights[0]?.[0] ?? 1/3), 
+        (rowHeights[1]?.[0] ?? 1/3)
+      ) * BASE_CONTAINER_HEIGHT;
+      const row2Top = row1Top + row1MaxHeight + gap;
+      const row2MaxHeight = Math.max(
+        (rowHeights[0]?.[1] ?? 1/3), 
+        (rowHeights[1]?.[1] ?? 1/3)
+      ) * BASE_CONTAINER_HEIGHT;
+      const row3Top = row2Top + row2MaxHeight + gap;
+      
+      // Calculate handle width (half on each side of the gap)
+      const handleHalfWidth = gap / 2; // 7.5px
+      
+      // Safe access with fallbacks for column widths
+      const getColumnWidth = (row, col) => {
+        const width = columnWidths[row]?.[col] ?? 0.5;
+        return Math.max(0.1, Math.min(0.9, width)); // Clamp between 10% and 90%
+      };
+      
+      // Safe access with fallbacks for row heights
+      // CRITICAL FIX: Enforce minimum heights per row to prevent cards from being too small
+      // All rows now use the same minimum percentage for consistency
+      const getRowHeight = (col, row) => {
+        const height = rowHeights[col]?.[row] ?? 1/3;
+        // Clamp between reasonable bounds
+        // All rows use 0.1 (10% = 175px at 1750px base) as minimum
+        // Note: getCardHeight() enforces absolute 150px minimum for all rows, so this is a percentage floor
+        // REMOVED 90% MAX: Changed to 0.95 (95%) to allow cards to grow larger if needed
+        const minHeight = 0.1; // All rows use same minimum (10% ensures >= 150px at 1750px base)
+        return Math.max(minHeight, Math.min(0.95, height)); // Clamp between min and 95% (allows up to 1662px at 1750px base)
+      };
+      
+      // Helper to calculate card height with absolute minimum enforcement
+      // This ensures cards never get too small, even if rowHeights are corrupted
+      const getCardHeight = (col, row) => {
+        const calculatedHeight = getRowHeight(col, row) * BASE_CONTAINER_HEIGHT;
+        // Enforce absolute minimum heights (in pixels) for each row
+        // All rows now have the same minimum height for consistency
+        const absoluteMinimums = {
+          0: 150, // Row 1: 150px minimum
+          1: 150, // Row 2: 150px minimum  
+          2: 150  // Row 3: 150px minimum (same as other rows for consistent layout)
+        };
+        return Math.max(absoluteMinimums[row] || 150, calculatedHeight);
+      };
+      
+      // Return positions for all 6 cards
+      const positions = {
+        // Row 1 - Both cards start at row1Top (0)
+        economicCalendar: {
+          left: 0,
+          top: row1Top,
+          width: `calc(${getColumnWidth(0, 0) * 100}% - ${handleHalfWidth}px)`,
+          height: getCardHeight(0, 0),
+          row: 0,
+          col: 0
+        },
+        aiAnalysis: {
+          left: `calc(${getColumnWidth(0, 0) * 100}% + ${handleHalfWidth}px)`,
+          top: row1Top, // Same as economicCalendar
+          width: `calc(${getColumnWidth(0, 1) * 100}% - ${handleHalfWidth}px)`,
+          height: getCardHeight(1, 0),
+          row: 0,
+          col: 1
+        },
+        // Row 2 - Both cards start at row2Top (same position)
+        marketSentiment: {
+          left: 0,
+          top: row2Top, // Same as liveNews
+          width: `calc(${getColumnWidth(1, 0) * 100}% - ${handleHalfWidth}px)`,
+          height: getCardHeight(0, 1),
+          row: 1,
+          col: 0
+        },
+        liveNews: {
+          left: `calc(${getColumnWidth(1, 0) * 100}% + ${handleHalfWidth}px)`,
+          top: row2Top, // Same as marketSentiment
+          width: `calc(${getColumnWidth(1, 1) * 100}% - ${handleHalfWidth}px)`,
+          height: getCardHeight(1, 1),
+          row: 1,
+          col: 1
+        },
+        // Row 3 - Both cards start at row3Top (same position)
+        // NOTE: These cards now have the same minimum height (150px) as other rows for consistency
+        predictionMarkets: {
+          left: 0,
+          top: row3Top, // Same as centralBank
+          width: `calc(${getColumnWidth(2, 0) * 100}% - ${handleHalfWidth}px)`,
+          height: getCardHeight(0, 2), // Minimum 150px enforced (same as other rows)
+          row: 2,
+          col: 0
+        },
+        centralBank: {
+          left: `calc(${getColumnWidth(2, 0) * 100}% + ${handleHalfWidth}px)`,
+          top: row3Top, // Same as predictionMarkets
+          width: `calc(${getColumnWidth(2, 1) * 100}% - ${handleHalfWidth}px)`,
+          height: getCardHeight(1, 2), // Minimum 150px enforced (same as other rows)
+          row: 2,
+          col: 1
+        }
+      };
+      
+      return positions;
+    } catch (error) {
+      console.error('❌ Error calculating card positions:', error);
+      // Return default positions on error
+      return {};
+    }
+  }, [columnWidths, rowHeights]);
+
+  // Calculate handle positions for all 7 handles (for future resize functionality)
+  // Memoized with error handling
+  const calculateHandlePositions = useCallback((containerWidth, containerHeight, gap = GAP) => {
+    try {
+      // Validate inputs
+      if (!Array.isArray(columnWidths) || columnWidths.length !== 3) {
+        console.error('❌ Invalid columnWidths structure:', columnWidths);
+        return { vertical: [], horizontal: [], containerHeight: BASE_CONTAINER_HEIGHT };
+      }
+      if (!Array.isArray(rowHeights) || rowHeights.length !== 2) {
+        console.error('❌ Invalid rowHeights structure:', rowHeights);
+        return { vertical: [], horizontal: [], containerHeight: BASE_CONTAINER_HEIGHT };
+      }
+
+      // Use unified row positions (same as calculateCardPositions)
+      const row1Top = 0;
+      const row1MaxHeight = Math.max(
+        (rowHeights[0]?.[0] ?? 1/3), 
+        (rowHeights[1]?.[0] ?? 1/3)
+      ) * BASE_CONTAINER_HEIGHT;
+      const row2Top = row1Top + row1MaxHeight + gap;
+      const row2MaxHeight = Math.max(
+        (rowHeights[0]?.[1] ?? 1/3), 
+        (rowHeights[1]?.[1] ?? 1/3)
+      ) * BASE_CONTAINER_HEIGHT;
+      const row3Top = row2Top + row2MaxHeight + gap;
+      const row3MaxHeight = Math.max(
+        (rowHeights[0]?.[2] ?? 1/3), 
+        (rowHeights[1]?.[2] ?? 1/3)
+      ) * BASE_CONTAINER_HEIGHT;
+      
+      const handleHalfWidth = gap / 2;
+      const handleWidth = gap;
+      
+      // Safe access with fallbacks
+      const getColumnWidth = (row, col) => {
+        const width = columnWidths[row]?.[col] ?? 0.5;
+        return Math.max(0.1, Math.min(0.9, width));
+      };
+      
+      // Calculate total container height needed
+      const actualContainerHeight = row3Top + row3MaxHeight;
+      
+      return {
+        // Vertical handles (3 total - one per row)
+        vertical: [
+          {
+            // Row 1: Between Economic Calendar and AI Analysis
+            left: `calc(${getColumnWidth(0, 0) * 100}% - ${handleHalfWidth}px)`,
+            top: 0,
+            width: handleWidth,
+            height: actualContainerHeight,
+            rowIndex: 0
+          },
+          {
+            // Row 2: Between Market Sentiment and Live News
+            left: `calc(${getColumnWidth(1, 0) * 100}% - ${handleHalfWidth}px)`,
+            top: 0,
+            width: handleWidth,
+            height: actualContainerHeight,
+            rowIndex: 1
+          },
+          {
+            // Row 3: Between Prediction Markets and Central Bank
+            left: `calc(${getColumnWidth(2, 0) * 100}% - ${handleHalfWidth}px)`,
+            top: 0,
+            width: handleWidth,
+            height: actualContainerHeight,
+            rowIndex: 2
+          }
+        ],
+        // Horizontal handles (4 total - 2 per column)
+        horizontal: [
+          {
+            // Left column: Between Economic Calendar (row 0) and Market Sentiment (row 1)
+            left: 0,
+            top: row2Top - gap,
+            width: `calc(${getColumnWidth(0, 0) * 100}% + ${handleHalfWidth}px)`,
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 0
+          },
+          {
+            // Left column: Between Market Sentiment (row 1) and Prediction Markets (row 2)
+            left: 0,
+            top: row3Top - gap,
+            width: `calc(${Math.max(getColumnWidth(1, 0), getColumnWidth(2, 0)) * 100}% + ${handleHalfWidth}px)`,
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 1
+          },
+          {
+            // Right column: Between AI Analysis (row 0) and Live News (row 1)
+            left: `calc(${getColumnWidth(0, 0) * 100}% + ${handleHalfWidth}px)`,
+            top: row2Top - gap,
+            right: 0,
+            height: handleWidth,
+            colIndex: 1,
+            rowIndex: 0
+          },
+          {
+            // Right column: Between Live News (row 1) and Central Bank (row 2)
+            left: `calc(${getColumnWidth(1, 0) * 100}% + ${handleHalfWidth}px)`,
+            top: row3Top - gap,
+            right: 0,
+            height: handleWidth,
+            colIndex: 1,
+            rowIndex: 1
+          }
+        ],
+        containerHeight: actualContainerHeight
+      };
+    } catch (error) {
+      console.error('❌ Error calculating handle positions:', error);
+      return { vertical: [], horizontal: [], containerHeight: BASE_CONTAINER_HEIGHT };
+    }
+  }, [columnWidths, rowHeights]);
+
+  // Container ref for getting actual dimensions
+  const gridContainerRef = useRef(null);
+  const [containerDimensions, setContainerDimensions] = useState({ width: 1200, height: BASE_CONTAINER_HEIGHT });
+
+  // Memoized container height calculation with error handling
+  // Calculates dynamic height based on row heights to accommodate varying card sizes
+  const calculateContainerHeight = useCallback(() => {
+    try {
+      if (!Array.isArray(rowHeights) || rowHeights.length !== 2) {
+        console.warn('⚠️ Invalid rowHeights, using default height');
+        return BASE_CONTAINER_HEIGHT;
+      }
+
+      // Calculate unified row heights (using max across columns)
+      // This ensures the container is tall enough for the tallest card in each row
+      // CRITICAL FIX: Enforce minimum heights to match card minimums
+      const row1MaxHeight = Math.max(
+        150, // Absolute minimum 150px
+        Math.max(
+          (rowHeights[0]?.[0] ?? 1/3), 
+          (rowHeights[1]?.[0] ?? 1/3)
+        ) * BASE_CONTAINER_HEIGHT
+      );
+      const row2MaxHeight = Math.max(
+        150, // Absolute minimum 150px
+        Math.max(
+          (rowHeights[0]?.[1] ?? 1/3), 
+          (rowHeights[1]?.[1] ?? 1/3)
+        ) * BASE_CONTAINER_HEIGHT
+      );
+      const row3MaxHeight = Math.max(
+        150, // Absolute minimum 150px (matches card minimums for Row 3 - same as other rows)
+        Math.max(
+          (rowHeights[0]?.[2] ?? 1/3), 
+          (rowHeights[1]?.[2] ?? 1/3)
+        ) * BASE_CONTAINER_HEIGHT
+      );
+      
+      // Calculate total height needed (rows + gaps)
+      const totalHeight = row1MaxHeight + GAP + row2MaxHeight + GAP + row3MaxHeight;
+      
+      // Use the calculated height or base height, whichever is larger
+      // Ensure minimum container height accounts for all minimums
+      // All rows now require 150px minimum, so container needs at least 480px
+      const minimumContainerHeight = 150 + GAP + 150 + GAP + 150; // 480px minimum
+      return Math.max(minimumContainerHeight, Math.max(BASE_CONTAINER_HEIGHT, totalHeight));
+    } catch (error) {
+      console.error('❌ Error calculating container height:', error);
+      return BASE_CONTAINER_HEIGHT;
+    }
+  }, [rowHeights]);
+
+  // Update container dimensions when component mounts or resizes
+  // Optimized with debouncing for resize events to prevent excessive recalculations
+  useEffect(() => {
+    let resizeTimeout;
+    const updateDimensions = () => {
+      if (gridContainerRef.current) {
+        try {
+          const rect = gridContainerRef.current.getBoundingClientRect();
+          const calculatedHeight = calculateContainerHeight();
+          setContainerDimensions({
+            width: rect.width,
+            height: calculatedHeight
+          });
+          console.log('📏 Container dimensions updated:', { 
+            width: rect.width, 
+            height: calculatedHeight,
+            calculatedFrom: 'rowHeights',
+            rowHeights
+          });
+        } catch (error) {
+          console.error('❌ Error updating container dimensions:', error);
+        }
+      }
+    };
+
+    // Initial update
+    updateDimensions();
+    
+    // Debounced resize handler (150ms delay)
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(updateDimensions, 150);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(resizeTimeout);
+    };
+  }, [rowHeights, calculateContainerHeight]);
+
+  // Memoized card positions calculation for render optimization
+  // Recalculates only when dependencies change (containerDimensions, columnWidths, rowHeights)
+  const calculatedContainerHeight = useMemo(() => {
+    return calculateContainerHeight();
+  }, [calculateContainerHeight]);
+
+  const cardPositions = useMemo(() => {
+    try {
+      return calculateCardPositions(containerDimensions.width, calculatedContainerHeight);
+    } catch (error) {
+      console.error('❌ Error calculating card positions in memo:', error);
+      return {};
+    }
+  }, [calculateCardPositions, containerDimensions.width, calculatedContainerHeight]);
+
+  // Debug: Verify positions don't overlap (development only)
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const handlePositions = calculateHandlePositions(containerDimensions.width, calculatedContainerHeight);
+        
+        console.log('📊 Calculated Card Positions:', cardPositions);
+        console.log('📊 Calculated Handle Positions:', handlePositions);
+        console.log('📊 Container Height Needed:', handlePositions.containerHeight);
+        
+        // Verify positions don't overlap
+        const cards = Object.values(cardPositions);
+        for (let i = 0; i < cards.length; i++) {
+          for (let j = i + 1; j < cards.length; j++) {
+            const card1 = cards[i];
+            const card2 = cards[j];
+            // Check if cards are in same row and column (should never overlap)
+            if (card1 && card2 && card1.row === card2.row && card1.col === card2.col) {
+              console.error('❌ Overlap detected:', card1, card2);
+            }
+          }
+        }
+        console.log('✅ No overlap detected in card positions');
+      } catch (error) {
+        console.error('❌ Error in position verification:', error);
+      }
+    }
+  }, [cardPositions, containerDimensions, calculateHandlePositions, calculatedContainerHeight]);
 
   // Format last updated time
   const formatLastUpdated = (timestamp) => {
@@ -2717,10 +3253,71 @@ const Overview = () => {
           </div>
         </div>
 
-        {/* Cards Grid Container - Simple 2x3 CSS Grid */}
-        <div className="overview-grid-container">
-              {/* Economic Calendar - Left Column, Row 1 */}
-              <div className="news-calendar grid-card">
+        {/* Cards Grid Container - Using absolute positioning for flexible resizing */}
+        {/* Card positions are memoized and recalculate only when dependencies change */}
+        {(() => {
+          // Validate card positions before rendering
+          if (!cardPositions || Object.keys(cardPositions).length === 0) {
+            console.warn('⚠️ No card positions available, rendering fallback');
+            return (
+              <div className="overview-grid-container" style={{ padding: '20px', textAlign: 'center' }}>
+                <p>Unable to load grid layout. Please refresh the page.</p>
+              </div>
+            );
+          }
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log('🎯 Rendering with:', {
+              containerWidth: containerDimensions.width,
+              containerHeight: calculatedContainerHeight,
+              cardPositions: {
+                economicCalendar: cardPositions.economicCalendar ? { top: cardPositions.economicCalendar.top, height: cardPositions.economicCalendar.height } : null,
+                aiAnalysis: cardPositions.aiAnalysis ? { top: cardPositions.aiAnalysis.top, height: cardPositions.aiAnalysis.height } : null,
+                marketSentiment: cardPositions.marketSentiment ? { top: cardPositions.marketSentiment.top, height: cardPositions.marketSentiment.height } : null,
+                liveNews: cardPositions.liveNews ? { top: cardPositions.liveNews.top, height: cardPositions.liveNews.height } : null,
+                predictionMarkets: cardPositions.predictionMarkets ? { top: cardPositions.predictionMarkets.top, height: cardPositions.predictionMarkets.height } : null,
+                centralBank: cardPositions.centralBank ? { top: cardPositions.centralBank.top, height: cardPositions.centralBank.height } : null
+              }
+            });
+          }
+          
+          // Helper function to safely get position values
+          const getPosition = (cardKey, prop) => {
+            const card = cardPositions[cardKey];
+            if (!card || card[prop] === undefined) {
+              console.warn(`⚠️ Missing position data for ${cardKey}.${prop}`);
+              return prop === 'left' || prop === 'top' ? 0 : '100%';
+            }
+            const value = card[prop];
+            return typeof value === 'number' ? `${value}px` : value;
+          };
+          
+          return (
+            <div 
+              ref={gridContainerRef}
+              className="overview-grid-container"
+              style={{ 
+                position: 'relative',
+                display: 'block', // Override CSS Grid - CRITICAL FIX
+                height: `${calculatedContainerHeight}px`,
+                minHeight: `${calculatedContainerHeight}px`,
+                width: '100%'
+              }}
+            >
+              <>
+                {/* Economic Calendar - Left Column, Row 1 */}
+                <div 
+                  className="news-calendar grid-card"
+                  style={{
+                    position: 'absolute',
+                    left: getPosition('economicCalendar', 'left'),
+                    top: getPosition('economicCalendar', 'top'),
+                    width: getPosition('economicCalendar', 'width'),
+                    height: getPosition('economicCalendar', 'height'),
+                    zIndex: 1,
+                    minHeight: 0  // Override CSS min-height to allow calculated heights
+                  }}
+                >
             <div className="calendar-header">
               <div className="header-main">
                 <h2 className="calendar-title">ECONOMIC CALENDAR</h2>
@@ -2896,8 +3493,19 @@ const Overview = () => {
             </div>
           </div>
 
-              {/* AI Analysis Card - Right Column, Row 1 */}
-              <div className="ai-analysis-card grid-card">
+                {/* AI Analysis Card - Right Column, Row 1 */}
+                <div 
+                  className="ai-analysis-card grid-card"
+                  style={{
+                    position: 'absolute',
+                    left: getPosition('aiAnalysis', 'left'),
+                    top: getPosition('aiAnalysis', 'top'),
+                    width: getPosition('aiAnalysis', 'width'),
+                    height: getPosition('aiAnalysis', 'height'),
+                    zIndex: 1,
+                    minHeight: 0  // Override CSS min-height to allow calculated heights
+                  }}
+                >
             <div className="ai-header">
               <div className="header-main">
                 <h2 className="ai-title">AI ANALYSIS</h2>
@@ -3413,8 +4021,19 @@ const Overview = () => {
             </div>
           </div>
 
-              {/* Market Sentiment Card - Left Column, Row 2 */}
-              <div className="market-sentiment-card grid-card">
+                {/* Market Sentiment Card - Left Column, Row 2 */}
+                <div 
+                  className="market-sentiment-card grid-card"
+                  style={{
+                    position: 'absolute',
+                    left: getPosition('marketSentiment', 'left'),
+                    top: getPosition('marketSentiment', 'top'),
+                    width: getPosition('marketSentiment', 'width'),
+                    height: getPosition('marketSentiment', 'height'),
+                    zIndex: 1,
+                    minHeight: 0  // Override CSS min-height to allow calculated heights
+                  }}
+                >
             <div className="sentiment-header">
               <div className="header-main">
                 <h2 className="sentiment-title">MARKET SENTIMENT</h2>
@@ -3976,13 +4595,35 @@ const Overview = () => {
               </div>
             </div>
 
-              {/* Live News + Analysis Card - Right Column, Row 2 */}
-              <div className="live-news-analysis-card grid-card">
+                {/* Live News + Analysis Card - Right Column, Row 2 */}
+                <div 
+                  className="live-news-analysis-card grid-card"
+                  style={{
+                    position: 'absolute',
+                    left: getPosition('liveNews', 'left'),
+                    top: getPosition('liveNews', 'top'),
+                    width: getPosition('liveNews', 'width'),
+                    height: getPosition('liveNews', 'height'),
+                    zIndex: 1,
+                    minHeight: 0  // Override CSS min-height to allow calculated heights
+                  }}
+                >
             <LiveNewsFeed />
           </div>
 
-              {/* Prediction Markets Card - Left Column, Row 3 */}
-              <div className="prediction-markets-card grid-card">
+                {/* Prediction Markets Card - Left Column, Row 3 */}
+                <div 
+                  className="prediction-markets-card grid-card"
+                  style={{
+                    position: 'absolute',
+                    left: getPosition('predictionMarkets', 'left'),
+                    top: getPosition('predictionMarkets', 'top'),
+                    width: getPosition('predictionMarkets', 'width'),
+                    height: getPosition('predictionMarkets', 'height'),
+                    zIndex: 1,
+                    minHeight: 0  // Override CSS min-height to allow calculated heights
+                  }}
+                >
             <div className="prediction-markets-header">
               <div className="header-main">
                 <h2 className="prediction-markets-title">PREDICTION MARKETS</h2>
@@ -4461,8 +5102,19 @@ const Overview = () => {
             </div>
           </div>
 
-              {/* Central Bank Analysis Card - Right Column, Row 3 */}
-              <div className="central-bank-analysis-card grid-card">
+                {/* Central Bank Analysis Card - Right Column, Row 3 */}
+                <div 
+                  className="central-bank-analysis-card grid-card"
+                  style={{
+                    position: 'absolute',
+                    left: getPosition('centralBank', 'left'),
+                    top: getPosition('centralBank', 'top'),
+                    width: getPosition('centralBank', 'width'),
+                    height: getPosition('centralBank', 'height'),
+                    zIndex: 1,
+                    minHeight: 0  // Override CSS min-height to allow calculated heights
+                  }}
+                >
             <div className="central-bank-analysis-header">
               <div className="header-main">
                 <h2 className="central-bank-analysis-title">CENTRAL BANK ANALYSIS</h2>
@@ -4647,8 +5299,11 @@ const Overview = () => {
                 </>
               )}
             </div>
-              </div>
-        </div>
+            </div>
+            </>
+            </div>
+          );
+        })()}
 
       {/* Forex Pairs Selection Modal */}
       {isEditing && (
