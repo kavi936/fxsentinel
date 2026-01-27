@@ -248,11 +248,9 @@
   background: linear-gradient(135deg, #0f0f0f 0%, #1a0a0a 25%, #1e0505 50%, #1a0a0a 75%, #0f0f0f 100%);
   border: 1px solid rgba(255, 68, 68, .15);
   border-radius: 20px;
-  margin-top: 20px;
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  max-height: 650px;
   min-height: 650px;
   overflow: hidden;
   box-shadow: 0 8px 32px #0006, 0 0 0 1px #ff44441a;
@@ -3186,6 +3184,7 @@
   margin: 10px;
   width: 100%;
   min-height: 600px;
+  max-height: 2000px;
 }
 
 /* Grid Card Base Styles */
@@ -3219,7 +3218,6 @@
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  max-height: 600px;
   min-height: 600px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15), 0 0 0 1px rgba(34, 197, 94, 0.2);
@@ -3338,10 +3336,8 @@
   border: 1px solid rgba(99, 102, 241, .25);
   border-radius: 20px;
   margin-left: 0;
-  margin-top: 20px;
   width: 100%;
   max-width: 850px;
-  max-height: 650px;
   min-height: 650px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15), 0 0 0 1px rgba(99, 102, 241, 0.2);
@@ -4478,7 +4474,6 @@
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  max-height: 600px;
   min-height: 600px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(255, 68, 68, 0.15), 0 0 0 1px rgba(255, 68, 68, 0.2);
@@ -7387,7 +7382,6 @@
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  max-height: 600px;
   min-height: 600px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.2);
@@ -8631,7 +8625,6 @@
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  max-height: 600px;
   min-height: 600px;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(255, 111, 97, 0.15), 0 0 0 1px rgba(255, 111, 97, 0.2);
