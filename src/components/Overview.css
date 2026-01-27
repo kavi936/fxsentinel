@@ -1787,8 +1787,7 @@
 .calendar-content {
   flex: 1;
   overflow-y: auto;
-  height: calc(100% - 80px); /* Subtract header height */
-  max-height: calc(650px - 80px); /* Match container max-height minus header */
+  min-height: 0; /* Critical: Allow flex shrinking for proper flexbox behavior */
   color: white;
   position: relative;
   z-index: 2;
@@ -3175,16 +3174,37 @@
 } 
 
 /* Resizable Grid Container Styles */
-/* Overview Grid Container - Simple 2x3 CSS Grid */
+/* ============================================
+ * ARCHITECTURE NOTE: Absolute Positioning Grid System
+ * ============================================
+ * This container uses absolute positioning instead of CSS Grid for flexibility.
+ * 
+ * Why absolute positioning?
+ * - Allows dynamic resizing of individual cards (column/row dimensions)
+ * - Supports custom row heights per column (not possible with CSS Grid)
+ * - Enables precise control over card positions and gaps
+ * - State-driven layout that persists user preferences
+ * 
+ * Implementation:
+ * - CSS defines base container styles (position: relative, dimensions)
+ * - JavaScript overrides display: grid with display: block
+ * - Cards are absolutely positioned using calculated positions
+ * - Container height is dynamically calculated based on row heights
+ * 
+ * Layout Structure (2 columns × 3 rows):
+ *   Row 1: Economic Calendar (left) | AI Analysis (right)
+ *   Row 2: Market Sentiment (left)  | Live News (right)
+ *   Row 3: Prediction Markets (left) | Central Bank (right)
+ * ============================================ */
 .overview-grid-container {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
-  gap: 15px;
+  /* Base container - acts as positioning context for absolutely positioned children */
+  position: relative;
+  display: block; /* Overridden by inline styles, but kept here as fallback */
   margin: 10px;
   width: 100%;
-  min-height: 600px;
-  max-height: 2000px;
+  min-height: 480px; /* Updated: 150px + 15px + 150px + 15px + 150px = 480px minimum (all rows same height) */
+  max-height: 3000px; /* Maximum height to accommodate larger cards */
+  /* Gap is handled in JavaScript calculations (15px) */
 }
 
 /* Grid Card Base Styles */
@@ -3198,6 +3218,7 @@
 }
 
 /* Ensure cards maintain their styling within grid */
+/* NOTE: When using absolute positioning, dimensions are set via inline styles */
 .grid-card.news-calendar,
 .grid-card.ai-analysis-card,
 .grid-card.market-sentiment-card,
@@ -3208,6 +3229,13 @@
   height: 100%;
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* CRITICAL FIX: Remove height: 100% for absolutely positioned cards */
+/* This allows inline height styles (e.g., height: 200px) to work properly */
+/* Similar to how width works - inline styles override CSS */
+.grid-card[style*="position: absolute"] {
+  height: auto; /* Let inline style control height, just like width */
 }
 
 /* Live News + Analysis Card Styles */
@@ -3293,6 +3321,7 @@
   flex: 1;
   padding: 10px 10px;
   overflow-y: auto;
+  min-height: 0; /* Critical: Allow flex shrinking for proper flexbox behavior */
   position: relative;
   z-index: 2;
   display: flex;
@@ -3694,8 +3723,7 @@
 .ai-content {
   flex: 1;
   overflow-y: auto;
-  height: calc(100% - 80px);
-  max-height: calc(650px - 80px);
+  min-height: 0; /* Critical: Allow flex shrinking for proper flexbox behavior */
   color: white;
   position: relative;
   z-index: 2;
@@ -4644,8 +4672,7 @@
 .sentiment-content {
   flex: 1;
   overflow-y: auto;
-  height: calc(100% - 20px);
-  max-height: calc(500px - 20px);
+  min-height: 0; /* Critical: Allow flex shrinking for proper flexbox behavior */
   color: white;
   position: relative;
   z-index: 2;
@@ -6439,15 +6466,20 @@
 }
 
 @media (max-width: 768px) {
+  /* Tablet and Mobile: Stack cards vertically */
+  /* Note: JavaScript handles repositioning, but CSS provides fallback styling */
   .overview-grid-container {
     margin: 5px;
-    grid-template-columns: 1fr;
-    grid-template-rows: auto;
+    /* Height will be calculated dynamically by JavaScript */
+    min-height: auto;
   }
   
-  /* Stack cards vertically on mobile */
+  /* Ensure absolutely positioned cards don't overflow on mobile */
   .grid-card {
-    grid-column: 1 !important;
+    /* Cards will be repositioned by JavaScript calculations */
+    /* Fallback: ensure cards don't exceed container width */
+    max-width: 100% !important;
+    box-sizing: border-box;
   }
   
   .sentiment-content,
@@ -6468,8 +6500,19 @@
 }
 
 @media (max-width: 480px) {
+  /* Small Mobile: Further optimize spacing and sizing */
   .overview-grid-container {
     margin: 5px;
+    /* Reduce min-height on very small screens */
+    min-height: 400px;
+  }
+  
+  /* Ensure cards fit within viewport */
+  .grid-card {
+    /* Cards should be repositioned by JavaScript for mobile */
+    /* Ensure no horizontal overflow */
+    max-width: calc(100% - 10px) !important;
+    box-sizing: border-box;
   }
   
   .sentiment-content,
@@ -7382,7 +7425,7 @@
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  min-height: 600px;
+  min-height: 150px; /* Same height as other cards for consistent layout */
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.15), 0 0 0 1px rgba(59, 130, 246, 0.2);
   display: flex;
@@ -7632,6 +7675,7 @@
   padding: 16px 20px;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0; /* Critical: Allow flex shrinking for proper flexbox behavior */
   position: relative;
   z-index: 2;
   width: 100%;
@@ -8625,7 +8669,7 @@
   margin-left: 0;
   width: 100%;
   max-width: 850px;
-  min-height: 600px;
+  min-height: 150px; /* Same height as other cards for consistent layout */
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(255, 111, 97, 0.15), 0 0 0 1px rgba(255, 111, 97, 0.2);
   display: flex;
