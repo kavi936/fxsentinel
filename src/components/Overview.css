@@ -3202,9 +3202,9 @@
   display: block; /* Overridden by inline styles, but kept here as fallback */
   margin: 10px;
   width: 100%;
-  min-height: 480px; /* Updated: 150px + 15px + 150px + 15px + 150px = 480px minimum (all rows same height) */
+  min-height: 500px; /* Updated: 150px + 25px + 150px + 25px + 150px = 500px minimum (all rows same height) */
   max-height: 3000px; /* Maximum height to accommodate larger cards */
-  /* Gap is handled in JavaScript calculations (15px) */
+  /* Gap is handled in JavaScript calculations (25px) */
 }
 
 /* Grid Card Base Styles */
