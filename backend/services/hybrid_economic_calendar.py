@@ -5418,8 +5418,8 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '0.1%',
+                'actual': '1.0%',
+                'forecast': '0.7%',
                 'previous': '0.0%'
             },
             {
@@ -5428,7 +5428,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.8%',
                 'forecast': '3.5%',
                 'previous': '3.4%'
             },
@@ -5438,7 +5438,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.4%',
                 'previous': '0.3%'
             },

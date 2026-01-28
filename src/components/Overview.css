@@ -3238,6 +3238,142 @@
   height: auto; /* Let inline style control height, just like width */
 }
 
+/* ============================================
+ * Resize Handle Styles
+ * ============================================
+ * Handles are positioned in the 25px gaps between cards
+ * Z-index: 10 ensures handles are above cards (z-index: 1)
+ * ============================================ */
+
+/* Resize Handle Base Styles */
+.grid-resize-handle {
+  position: absolute;
+  background: transparent; /* Transparent by default */
+  border: none; /* No border by default */
+  z-index: 10;
+  touch-action: none; /* Prevent scrolling during drag on mobile */
+}
+
+/* Sleek gradient line indicator - hidden by default */
+.grid-resize-handle::before {
+  content: '';
+  position: absolute;
+  background: transparent;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+}
+
+/* Vertical Handle (between columns) */
+.grid-resize-handle.vertical {
+  width: 25px; /* Matches GAP */
+  height: 100%; /* Full container height */
+  cursor: col-resize;
+}
+
+/* Vertical handle sleek gradient line - centered horizontally */
+.grid-resize-handle.vertical::before {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 68, 68, 0.4) 20%,
+    rgba(255, 68, 68, 0.8) 50%,
+    rgba(255, 68, 68, 0.4) 80%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 8px rgba(255, 68, 68, 0.3),
+    0 0 4px rgba(255, 68, 68, 0.2);
+  border-radius: 2px;
+}
+
+/* Horizontal Handle (between rows) */
+.grid-resize-handle.horizontal {
+  width: 100%; /* Full column width */
+  height: 25px; /* Matches GAP */
+  cursor: row-resize;
+}
+
+/* Horizontal handle sleek gradient line - centered vertically */
+.grid-resize-handle.horizontal::before {
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 68, 68, 0.4) 20%,
+    rgba(255, 68, 68, 0.8) 50%,
+    rgba(255, 68, 68, 0.4) 80%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 8px rgba(255, 68, 68, 0.3),
+    0 0 4px rgba(255, 68, 68, 0.2);
+  border-radius: 2px;
+}
+
+/* Show sleek gradient line on handle hover */
+.grid-resize-handle:hover::before {
+  opacity: 1;
+}
+
+/* Enhanced glow on hover for better visibility */
+.grid-resize-handle.vertical:hover::before {
+  box-shadow: 
+    0 0 12px rgba(255, 68, 68, 0.5),
+    0 0 6px rgba(255, 68, 68, 0.3),
+    0 0 2px rgba(255, 68, 68, 0.4);
+}
+
+.grid-resize-handle.horizontal:hover::before {
+  box-shadow: 
+    0 0 12px rgba(255, 68, 68, 0.5),
+    0 0 6px rgba(255, 68, 68, 0.3),
+    0 0 2px rgba(255, 68, 68, 0.4);
+}
+
+/* Active state during dragging - enhanced visibility */
+.grid-resize-handle.active {
+  cursor: grabbing;
+}
+
+.grid-resize-handle.active::before {
+  opacity: 1;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(255, 68, 68, 0.6) 15%,
+    rgba(255, 68, 68, 1) 50%,
+    rgba(255, 68, 68, 0.6) 85%,
+    transparent 100%
+  );
+  box-shadow: 
+    0 0 16px rgba(255, 68, 68, 0.6),
+    0 0 8px rgba(255, 68, 68, 0.4),
+    0 0 4px rgba(255, 68, 68, 0.5);
+  transition: none; /* Disable transitions during drag for better performance */
+}
+
+/* Horizontal active state gradient */
+.grid-resize-handle.horizontal.active::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 68, 68, 0.6) 15%,
+    rgba(255, 68, 68, 1) 50%,
+    rgba(255, 68, 68, 0.6) 85%,
+    transparent 100%
+  );
+}
+
 /* Live News + Analysis Card Styles */
 .live-news-analysis-card {
   background: linear-gradient(180deg, #0a1a0a 0%, #1a2e0a 50%, #1b692d 100%);
