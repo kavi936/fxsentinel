@@ -1375,6 +1375,8 @@ const Overview = () => {
   const activeHandleRef = useRef(null);
   const startPositionRef = useRef({ x: 0, y: 0 });
   const startStateRef = useRef({ columnWidths: null, rowHeights: null });
+  const rafRef = useRef(null); // For requestAnimationFrame throttling
+  const pendingUpdateRef = useRef(null); // Store pending mouse event
 
   // Update refs when state changes
   useEffect(() => {
@@ -1468,8 +1470,8 @@ const Overview = () => {
     });
   }, []);
 
-  // Handle mouse move during drag (defined first to avoid circular dependency)
-  const handleMouseMove = useCallback((e) => {
+  // Core update logic (extracted for reuse in mouse and touch events)
+  const performResizeUpdate = useCallback((clientX, clientY) => {
     if (!isDraggingRef.current || !activeHandleRef.current || !gridContainerRef.current) return;
     
     try {
@@ -1478,9 +1480,20 @@ const Overview = () => {
       const startPos = startPositionRef.current;
       const startState = startStateRef.current;
       
+      // Check minimum container size before allowing resize
+      const MIN_CONTAINER_WIDTH = 400;
+      const MIN_CONTAINER_HEIGHT = 300;
+      
+      if (handle.type === 'vertical' && containerRect.width < MIN_CONTAINER_WIDTH) {
+        return; // Don't allow vertical resize if container too narrow
+      }
+      if (handle.type === 'horizontal' && containerRect.height < MIN_CONTAINER_HEIGHT) {
+        return; // Don't allow horizontal resize if container too short
+      }
+      
       if (handle.type === 'vertical') {
         // Calculate delta in pixels from start position
-        const deltaX = e.clientX - startPos.x;
+        const deltaX = clientX - startPos.x;
         
         // Convert to percentage of container width
         const deltaPercent = deltaX / containerRect.width;
@@ -1511,7 +1524,7 @@ const Overview = () => {
         ));
       } else if (handle.type === 'horizontal') {
         // Calculate delta in pixels from start position
-        const deltaY = e.clientY - startPos.y;
+        const deltaY = clientY - startPos.y;
         
         // Convert to percentage of container height
         const deltaPercent = deltaY / containerRect.height;
@@ -1557,19 +1570,85 @@ const Overview = () => {
         }
       }
     } catch (error) {
-      console.error('❌ Error in handleMouseMove:', error);
+      console.error('❌ Error in performResizeUpdate:', error);
     }
   }, []);
 
-  // Handle mouse up (end drag)
+  // Handle mouse move during drag (throttled with requestAnimationFrame)
+  const handleMouseMove = useCallback((e) => {
+    // Store the latest mouse event
+    pendingUpdateRef.current = { clientX: e.clientX, clientY: e.clientY };
+    
+    // If RAF is already scheduled, skip (throttling)
+    if (rafRef.current) return;
+    
+    // Schedule update on next animation frame
+    rafRef.current = requestAnimationFrame(() => {
+      if (pendingUpdateRef.current) {
+        performResizeUpdate(pendingUpdateRef.current.clientX, pendingUpdateRef.current.clientY);
+        pendingUpdateRef.current = null;
+      }
+      rafRef.current = null;
+    });
+  }, [performResizeUpdate]);
+
+  // Handle touch move (throttled with requestAnimationFrame) - defined before handleMouseUp
+  const handleTouchMove = useCallback((e) => {
+    e.preventDefault(); // Prevent scrolling
+    if (e.touches.length !== 1) {
+      // Multi-touch: cancel drag by calling cleanup directly
+      setIsDragging(false);
+      setActiveHandle(null);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      pendingUpdateRef.current = null;
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+      document.removeEventListener('touchcancel', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      return;
+    }
+    
+    const touch = e.touches[0];
+    // Store the latest touch event
+    pendingUpdateRef.current = { clientX: touch.clientX, clientY: touch.clientY };
+    
+    // If RAF is already scheduled, skip (throttling)
+    if (rafRef.current) return;
+    
+    // Schedule update on next animation frame
+    rafRef.current = requestAnimationFrame(() => {
+      if (pendingUpdateRef.current) {
+        performResizeUpdate(pendingUpdateRef.current.clientX, pendingUpdateRef.current.clientY);
+        pendingUpdateRef.current = null;
+      }
+      rafRef.current = null;
+    });
+  }, [performResizeUpdate]);
+
+  // Handle mouse up / touch end (end drag)
   const handleMouseUp = useCallback(() => {
     try {
       setIsDragging(false);
       setActiveHandle(null);
       
+      // Cancel any pending RAF updates
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      pendingUpdateRef.current = null;
+      
       // Remove global listeners
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+      document.removeEventListener('touchcancel', handleMouseUp);
       
       // Restore text selection and cursor
       document.body.style.userSelect = '';
@@ -1577,25 +1656,35 @@ const Overview = () => {
     } catch (error) {
       console.error('❌ Error in handleMouseUp:', error);
     }
-  }, [handleMouseMove]);
+  }, [handleMouseMove, handleTouchMove]);
 
-  // Handle mouse down on resize handle
+  // Handle mouse down / touch start on resize handle
   const handleMouseDown = useCallback((e, handleType, handleData) => {
     e.preventDefault();
     e.stopPropagation();
     
     try {
+      // Get coordinates from mouse or touch event
+      const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+      const clientY = e.clientY ?? e.touches?.[0]?.clientY;
+      
+      if (clientX === undefined || clientY === undefined) return;
+      
       setIsDragging(true);
       setActiveHandle({ type: handleType, ...handleData });
-      setStartPosition({ x: e.clientX, y: e.clientY });
+      setStartPosition({ x: clientX, y: clientY });
       setStartState({ 
         columnWidths: JSON.parse(JSON.stringify(columnWidths)), // Deep copy
         rowHeights: JSON.parse(JSON.stringify(rowHeights)) // Deep copy
       });
       
-      // Add global listeners for mouse move and mouse up
+      // Add global listeners for mouse/touch move and up
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('mouseleave', handleMouseUp); // Handle mouse leaving window
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('touchend', handleMouseUp);
+      document.addEventListener('touchcancel', handleMouseUp);
       
       // Prevent text selection during drag
       document.body.style.userSelect = 'none';
@@ -1603,17 +1692,30 @@ const Overview = () => {
     } catch (error) {
       console.error('❌ Error in handleMouseDown:', error);
     }
-  }, [columnWidths, rowHeights, handleMouseMove, handleMouseUp]);
+  }, [columnWidths, rowHeights, handleMouseMove, handleMouseUp, handleTouchMove]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
+      // Cancel any pending RAF updates
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+      
+      // Remove all event listeners
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseleave', handleMouseUp);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleMouseUp);
+      document.removeEventListener('touchcancel', handleMouseUp);
+      
+      // Restore document styles
       document.body.style.userSelect = '';
       document.body.style.cursor = '';
     };
-  }, [handleMouseMove, handleMouseUp]);
+  }, [handleMouseMove, handleMouseUp, handleTouchMove]);
 
   // Debug: Verify positions don't overlap (development only)
   useEffect(() => {
@@ -5582,6 +5684,7 @@ const Overview = () => {
                               height: handle.height,
                             }}
                             onMouseDown={(e) => handleMouseDown(e, 'vertical', { rowIndex: handle.rowIndex })}
+                            onTouchStart={(e) => handleMouseDown(e, 'vertical', { rowIndex: handle.rowIndex })}
                           />
                         ))}
                         
@@ -5598,6 +5701,10 @@ const Overview = () => {
                               right: handle.right,
                             }}
                             onMouseDown={(e) => handleMouseDown(e, 'horizontal', { 
+                              colIndex: handle.colIndex, 
+                              rowIndex: handle.rowIndex 
+                            })}
+                            onTouchStart={(e) => handleMouseDown(e, 'horizontal', { 
                               colIndex: handle.colIndex, 
                               rowIndex: handle.rowIndex 
                             })}
