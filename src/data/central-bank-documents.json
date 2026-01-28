@@ -109,6 +109,24 @@
       "tags": ["report", "economic_outlook", "inflation", "monetary_policy", "cpi", "gdp", "wages", "labor_market", "price_stability", "policy_rate", "trade_policies", "financial_conditions"],
       "aiAnalysis": null,
       "sentiment": null
+    },
+    {
+      "id": "boj-2026-01-28-meeting-minutes",
+      "title": "Monetary Policy Meeting Minutes - January 28, 2026",
+      "type": "meeting_minutes",
+      "centralBank": "BOJ",
+      "date": "2026-01-28",
+      "category": "monetary_policy",
+      "impact": "high",
+      "affectedCurrencies": ["JPY", "USD", "EUR", "GBP", "AUD"],
+      "description": "Bank of Japan's Monetary Policy Meeting minutes from January 28, 2026. Contains detailed discussions and decisions from the Policy Board meeting, including policy rate decisions, assessment of economic and financial conditions, price developments, and the outlook for economic activity and prices. Provides insights into the Board's views on monetary policy stance and future policy direction.",
+      "fileName": "BOJMinutesJan282026.pdf",
+      "filePath": "/documents/central-bank/boj/BOJMinutesJan282026.pdf",
+      "fileSize": "264 KB",
+      "fileFormat": "PDF",
+      "tags": ["meeting_minutes", "monetary_policy", "policy_decision", "interest_rates", "economic_assessment", "price_developments", "policy_board", "financial_conditions"],
+      "aiAnalysis": null,
+      "sentiment": null
     }
   ]
 }
