@@ -1886,6 +1886,36 @@ const Overview = () => {
   const [calendarSource, setCalendarSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
 
+  // Economic calendar card width for responsive currency pairs display
+  // Calculate width directly from columnWidths and containerDimensions (more reliable than ResizeObserver)
+  // Width formula: containerWidth * columnWidth[0][0] - handleHalfWidth (12.5px)
+  const economicCalendarCardRef = useRef(null);
+  
+  // Calculate actual pixel width from state values - use useMemo to get a value, not a function
+  const economicCalendarCardWidth = useMemo(() => {
+    if (!containerDimensions.width || !columnWidths || !Array.isArray(columnWidths[0])) {
+      return 600; // Default fallback
+    }
+    
+    const GAP = 25;
+    const handleHalfWidth = GAP / 2; // 12.5px
+    const columnWidthRatio = columnWidths[0]?.[0] ?? 0.5; // Row 0, Column 0 (economic calendar)
+    const containerWidth = containerDimensions.width;
+    
+    // Calculate: containerWidth * percentage - handleHalfWidth
+    // This matches the CSS calc() formula: calc(${getColumnWidth(0, 0) * 100}% - ${handleHalfWidth}px)
+    const cardWidth = (containerWidth * columnWidthRatio) - handleHalfWidth;
+    
+    return Math.max(0, cardWidth); // Ensure non-negative
+  }, [containerDimensions.width, columnWidths]);
+
+  // Calculate max currency pairs to show based on actual card width
+  // When the card gets thinner (resized by user), show fewer pairs to prevent crowding
+  // Use useMemo to get a value that updates automatically when width changes
+  const maxCurrencyPairs = useMemo(() => {
+    return economicCalendarCardWidth <= 600 ? 1 : 3;
+  }, [economicCalendarCardWidth]);
+
   // Chart popup state
   const [chartPopupOpen, setChartPopupOpen] = useState(false);
   const [selectedChartEvent, setSelectedChartEvent] = useState(null);
@@ -3673,6 +3703,7 @@ const Overview = () => {
               <>
                 {/* Economic Calendar - Left Column, Row 1 */}
                 <div 
+                  ref={economicCalendarCardRef}
                   className="news-calendar grid-card"
                   style={{
                     position: 'absolute',
@@ -3752,7 +3783,8 @@ const Overview = () => {
               </div>
               <div className="events-list">
                 {getFilteredEvents().length > 0 ? (
-                  getFilteredEvents().map((event, index) => (
+                  getFilteredEvents().map((event, index) => {
+                    return (
                     <div 
                       key={`${event.id}-${currentTimezone}-${index}`}
                       className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
@@ -3783,12 +3815,12 @@ const Overview = () => {
                           <div className="affected-pairs">
                             {event.currencyPairs && event.currencyPairs.length > 0 ? (
                               <>
-                                {event.currencyPairs.slice(0, 3).map((pair, pairIndex) => (
+                                {event.currencyPairs.slice(0, maxCurrencyPairs).map((pair, pairIndex) => (
                                   <span key={pairIndex} className="pair-badge">{pair}</span>
                                 ))}
-                                {event.currencyPairs.length > 3 && (
+                                {event.currencyPairs.length > maxCurrencyPairs && (
                                   <span className="pair-badge pair-count">
-                                    +{event.currencyPairs.length - 3} more
+                                    +{event.currencyPairs.length - maxCurrencyPairs} more
                                   </span>
                                 )}
                               </>
@@ -3826,7 +3858,8 @@ const Overview = () => {
                       </div> */}
                     </div>
                   </div>
-                ))
+                    );
+                  })
                 ) : (
                   <div className="no-events-state">
                     <div className="no-events-icon">📅</div>
