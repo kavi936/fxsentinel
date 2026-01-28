@@ -1174,25 +1174,25 @@ const Overview = () => {
           {
             // Row 1: Between Economic Calendar and AI Analysis
             left: `calc(${getColumnWidth(0, 0) * 100}% - ${handleHalfWidth}px)`,
-            top: 0,
+            top: row1Top,
             width: handleWidth,
-            height: actualContainerHeight,
+            height: row1MaxHeight,
             rowIndex: 0
           },
           {
             // Row 2: Between Market Sentiment and Live News
             left: `calc(${getColumnWidth(1, 0) * 100}% - ${handleHalfWidth}px)`,
-            top: 0,
+            top: row2Top,
             width: handleWidth,
-            height: actualContainerHeight,
+            height: row2MaxHeight,
             rowIndex: 1
           },
           {
             // Row 3: Between Prediction Markets and Central Bank
             left: `calc(${getColumnWidth(2, 0) * 100}% - ${handleHalfWidth}px)`,
-            top: 0,
+            top: row3Top,
             width: handleWidth,
-            height: actualContainerHeight,
+            height: row3MaxHeight,
             rowIndex: 2
           }
         ],
@@ -1350,6 +1350,270 @@ const Overview = () => {
       return {};
     }
   }, [calculateCardPositions, containerDimensions.width, calculatedContainerHeight]);
+
+  // Memoized handle positions calculation for render optimization
+  const handlePositions = useMemo(() => {
+    try {
+      return calculateHandlePositions(containerDimensions.width, calculatedContainerHeight);
+    } catch (error) {
+      console.error('❌ Error calculating handle positions in memo:', error);
+      return { vertical: [], horizontal: [], containerHeight: calculatedContainerHeight };
+    }
+  }, [calculateHandlePositions, containerDimensions.width, calculatedContainerHeight]);
+
+  // ============================================
+  // PHASE 2: Resize Handle Drag Functionality
+  // ============================================
+  // State management for drag operations
+  const [isDragging, setIsDragging] = useState(false);
+  const [activeHandle, setActiveHandle] = useState(null); // { type: 'vertical' | 'horizontal', rowIndex?: number, colIndex?: number }
+  const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
+  const [startState, setStartState] = useState({ columnWidths: null, rowHeights: null });
+
+  // Refs to avoid stale closures in event handlers
+  const isDraggingRef = useRef(false);
+  const activeHandleRef = useRef(null);
+  const startPositionRef = useRef({ x: 0, y: 0 });
+  const startStateRef = useRef({ columnWidths: null, rowHeights: null });
+
+  // Update refs when state changes
+  useEffect(() => {
+    isDraggingRef.current = isDragging;
+  }, [isDragging]);
+
+  useEffect(() => {
+    activeHandleRef.current = activeHandle;
+  }, [activeHandle]);
+
+  useEffect(() => {
+    startPositionRef.current = startPosition;
+  }, [startPosition]);
+
+  useEffect(() => {
+    startStateRef.current = startState;
+  }, [startState]);
+
+  // Update column widths function for vertical handles
+  const updateColumnWidths = useCallback((rowIndex, deltaPercent) => {
+    setColumnWidths(prev => {
+      try {
+        const newWidths = prev.map((row, idx) => {
+          if (idx !== rowIndex) return row; // Don't modify other rows
+          
+          const [leftWidth, rightWidth] = row;
+          
+          // Calculate new left width (clamped to min/max)
+          const newLeftWidth = Math.max(0.1, Math.min(0.9, leftWidth + deltaPercent));
+          const newRightWidth = 1.0 - newLeftWidth;
+          
+          // Ensure both widths respect constraints
+          const finalLeftWidth = Math.max(0.1, Math.min(0.9, newLeftWidth));
+          const finalRightWidth = Math.max(0.1, Math.min(0.9, newRightWidth));
+          
+          // Normalize to ensure sum = 1.0
+          const total = finalLeftWidth + finalRightWidth;
+          return total > 0 ? [finalLeftWidth / total, finalRightWidth / total] : [0.5, 0.5];
+        });
+        
+        return newWidths;
+      } catch (error) {
+        console.error('❌ Error updating column widths:', error);
+        return prev; // Return previous state on error
+      }
+    });
+  }, []);
+
+  // Update row heights function for horizontal handles
+  // This function adjusts two adjacent rows while normalizing all three to sum to 1.0
+  const updateRowHeights = useCallback((colIndex, rowIndex, deltaPercent) => {
+    setRowHeights(prev => {
+      try {
+        const newHeights = prev.map((col, idx) => {
+          if (idx !== colIndex) return col; // Don't modify other columns
+          
+          const columnHeights = [...col];
+          const currentHeight = columnHeights[rowIndex];
+          const nextHeight = columnHeights[rowIndex + 1];
+          const thirdRowIndex = rowIndex === 0 ? 2 : (rowIndex === 1 ? 0 : 1); // The row not being adjusted
+          const thirdHeight = columnHeights[thirdRowIndex];
+          
+          // Calculate new heights for the two rows being adjusted
+          // Dragging down (positive delta) increases top row, decreases bottom row
+          const newCurrentHeight = Math.max(0.1, Math.min(0.95, currentHeight + deltaPercent));
+          const newNextHeight = Math.max(0.1, Math.min(0.95, nextHeight - deltaPercent));
+          
+          // Ensure both heights respect constraints
+          const finalCurrentHeight = Math.max(0.1, Math.min(0.95, newCurrentHeight));
+          const finalNextHeight = Math.max(0.1, Math.min(0.95, newNextHeight));
+          
+          // Calculate total including the third row (which maintains its value)
+          const total = finalCurrentHeight + finalNextHeight + thirdHeight;
+          
+          // Normalize all three rows to ensure sum = 1.0
+          // This maintains relative proportions while ensuring the sum constraint
+          if (total > 0) {
+            columnHeights[rowIndex] = finalCurrentHeight / total;
+            columnHeights[rowIndex + 1] = finalNextHeight / total;
+            columnHeights[thirdRowIndex] = thirdHeight / total;
+          }
+          
+          return columnHeights;
+        });
+        
+        return newHeights;
+      } catch (error) {
+        console.error('❌ Error updating row heights:', error);
+        return prev; // Return previous state on error
+      }
+    });
+  }, []);
+
+  // Handle mouse move during drag (defined first to avoid circular dependency)
+  const handleMouseMove = useCallback((e) => {
+    if (!isDraggingRef.current || !activeHandleRef.current || !gridContainerRef.current) return;
+    
+    try {
+      const containerRect = gridContainerRef.current.getBoundingClientRect();
+      const handle = activeHandleRef.current;
+      const startPos = startPositionRef.current;
+      const startState = startStateRef.current;
+      
+      if (handle.type === 'vertical') {
+        // Calculate delta in pixels from start position
+        const deltaX = e.clientX - startPos.x;
+        
+        // Convert to percentage of container width
+        const deltaPercent = deltaX / containerRect.width;
+        
+        // Get initial state from startState (use ref to avoid stale closure)
+        const baseWidths = startState.columnWidths;
+        if (!baseWidths) return; // Safety check
+        
+        const baseRow = baseWidths[handle.rowIndex] || [0.5, 0.5];
+        const [baseLeftWidth] = baseRow;
+        
+        // Calculate new left width based on initial state + delta
+        const newLeftWidth = Math.max(0.1, Math.min(0.9, baseLeftWidth + deltaPercent));
+        const newRightWidth = 1.0 - newLeftWidth;
+        
+        // Ensure both widths respect constraints
+        const finalLeftWidth = Math.max(0.1, Math.min(0.9, newLeftWidth));
+        const finalRightWidth = Math.max(0.1, Math.min(0.9, newRightWidth));
+        
+        // Normalize to ensure sum = 1.0
+        const total = finalLeftWidth + finalRightWidth;
+        const normalizedLeft = total > 0 ? finalLeftWidth / total : 0.5;
+        const normalizedRight = total > 0 ? finalRightWidth / total : 0.5;
+        
+        // Update only the specific row
+        setColumnWidths(prev => prev.map((row, idx) => 
+          idx === handle.rowIndex ? [normalizedLeft, normalizedRight] : row
+        ));
+      } else if (handle.type === 'horizontal') {
+        // Calculate delta in pixels from start position
+        const deltaY = e.clientY - startPos.y;
+        
+        // Convert to percentage of container height
+        const deltaPercent = deltaY / containerRect.height;
+        
+        // Get initial state from startState (use ref to avoid stale closure)
+        const baseHeights = startState.rowHeights;
+        if (!baseHeights) return; // Safety check
+        
+        const baseColumn = baseHeights[handle.colIndex] || [1/3, 1/3, 1/3];
+        const currentHeight = baseColumn[handle.rowIndex];
+        const nextHeight = baseColumn[handle.rowIndex + 1];
+        const thirdRowIndex = handle.rowIndex === 0 ? 2 : (handle.rowIndex === 1 ? 0 : 1);
+        const thirdHeight = baseColumn[thirdRowIndex];
+        
+        // Calculate new heights based on initial state + delta
+        // Dragging down (positive delta) increases top row, decreases bottom row
+        const newCurrentHeight = Math.max(0.1, Math.min(0.95, currentHeight + deltaPercent));
+        const newNextHeight = Math.max(0.1, Math.min(0.95, nextHeight - deltaPercent));
+        
+        // Ensure both heights respect constraints
+        const finalCurrentHeight = Math.max(0.1, Math.min(0.95, newCurrentHeight));
+        const finalNextHeight = Math.max(0.1, Math.min(0.95, newNextHeight));
+        
+        // Calculate total including the third row (which maintains its value)
+        const total = finalCurrentHeight + finalNextHeight + thirdHeight;
+        
+        // Normalize all three rows to ensure sum = 1.0
+        if (total > 0) {
+          const normalizedCurrent = finalCurrentHeight / total;
+          const normalizedNext = finalNextHeight / total;
+          const normalizedThird = thirdHeight / total;
+          
+          // Update only the specific column
+          setRowHeights(prev => prev.map((col, idx) => {
+            if (idx !== handle.colIndex) return col;
+            
+            const newColumn = [...col];
+            newColumn[handle.rowIndex] = normalizedCurrent;
+            newColumn[handle.rowIndex + 1] = normalizedNext;
+            newColumn[thirdRowIndex] = normalizedThird;
+            return newColumn;
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error in handleMouseMove:', error);
+    }
+  }, []);
+
+  // Handle mouse up (end drag)
+  const handleMouseUp = useCallback(() => {
+    try {
+      setIsDragging(false);
+      setActiveHandle(null);
+      
+      // Remove global listeners
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      
+      // Restore text selection and cursor
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    } catch (error) {
+      console.error('❌ Error in handleMouseUp:', error);
+    }
+  }, [handleMouseMove]);
+
+  // Handle mouse down on resize handle
+  const handleMouseDown = useCallback((e, handleType, handleData) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    try {
+      setIsDragging(true);
+      setActiveHandle({ type: handleType, ...handleData });
+      setStartPosition({ x: e.clientX, y: e.clientY });
+      setStartState({ 
+        columnWidths: JSON.parse(JSON.stringify(columnWidths)), // Deep copy
+        rowHeights: JSON.parse(JSON.stringify(rowHeights)) // Deep copy
+      });
+      
+      // Add global listeners for mouse move and mouse up
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      // Prevent text selection during drag
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = handleType === 'vertical' ? 'col-resize' : 'row-resize';
+    } catch (error) {
+      console.error('❌ Error in handleMouseDown:', error);
+    }
+  }, [columnWidths, rowHeights, handleMouseMove, handleMouseUp]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+    };
+  }, [handleMouseMove, handleMouseUp]);
 
   // Debug: Verify positions don't overlap (development only)
   useEffect(() => {
@@ -5300,6 +5564,52 @@ const Overview = () => {
               )}
             </div>
             </div>
+
+                {/* Resize Handles */}
+                {(() => {
+                  try {
+                    return (
+                      <>
+                        {/* Vertical Handles (3 total - between columns) */}
+                        {handlePositions.vertical && handlePositions.vertical.map((handle, index) => (
+                          <div
+                            key={`vertical-${index}`}
+                            className={`grid-resize-handle vertical ${isDragging && activeHandle?.type === 'vertical' && activeHandle?.rowIndex === handle.rowIndex ? 'active' : ''}`}
+                            style={{
+                              left: handle.left,
+                              top: handle.top,
+                              width: handle.width,
+                              height: handle.height,
+                            }}
+                            onMouseDown={(e) => handleMouseDown(e, 'vertical', { rowIndex: handle.rowIndex })}
+                          />
+                        ))}
+                        
+                        {/* Horizontal Handles (4 total - between rows) */}
+                        {handlePositions.horizontal && handlePositions.horizontal.map((handle, index) => (
+                          <div
+                            key={`horizontal-${index}`}
+                            className={`grid-resize-handle horizontal ${isDragging && activeHandle?.type === 'horizontal' && activeHandle?.colIndex === handle.colIndex && activeHandle?.rowIndex === handle.rowIndex ? 'active' : ''}`}
+                            style={{
+                              left: handle.left,
+                              top: handle.top,
+                              width: handle.width,
+                              height: handle.height,
+                              right: handle.right,
+                            }}
+                            onMouseDown={(e) => handleMouseDown(e, 'horizontal', { 
+                              colIndex: handle.colIndex, 
+                              rowIndex: handle.rowIndex 
+                            })}
+                          />
+                        ))}
+                      </>
+                    );
+                  } catch (error) {
+                    console.error('❌ Error rendering handles:', error);
+                    return null;
+                  }
+                })()}
             </>
             </div>
           );
