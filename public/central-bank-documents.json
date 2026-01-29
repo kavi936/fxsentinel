@@ -127,6 +127,24 @@
       "tags": ["meeting_minutes", "monetary_policy", "policy_decision", "interest_rates", "economic_assessment", "price_developments", "policy_board", "financial_conditions"],
       "aiAnalysis": null,
       "sentiment": null
+    },
+    {
+      "id": "fed-2026-01-28-fomc-statement",
+      "title": "FOMC Statement - January 28, 2026",
+      "type": "statement",
+      "centralBank": "FED",
+      "date": "2026-01-28",
+      "category": "monetary_policy",
+      "impact": "high",
+      "affectedCurrencies": ["USD", "EUR", "GBP", "JPY", "CHF", "CAD"],
+      "description": "Federal Open Market Committee (FOMC) statement from January 28, 2026. Contains the Committee's decision on the target range for the federal funds rate, assessment of economic activity, labor market conditions, inflation developments, and the outlook for monetary policy. Provides key insights into the Fed's policy stance and forward guidance on interest rates.",
+      "fileName": "FOMCStatementJanuary282026.pdf",
+      "filePath": "/documents/central-bank/fed/FOMCStatementJanuary282026.pdf",
+      "fileSize": "234 KB",
+      "fileFormat": "PDF",
+      "tags": ["statement", "fomc", "monetary_policy", "interest_rates", "federal_funds_rate", "economic_outlook", "inflation", "labor_market", "forward_guidance", "policy_decision"],
+      "aiAnalysis": null,
+      "sentiment": null
     }
   ]
 }
