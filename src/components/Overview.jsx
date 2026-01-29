@@ -1026,6 +1026,15 @@ const Overview = () => {
   const BASE_CONTAINER_HEIGHT = 1750; // Middle value: allows cards to grow while maintaining reasonable base
   const GAP = 25;
 
+  // Mobile detection: 1 column × 6 rows layout for phones (< 768px)
+  // Must be declared before calculateCardPositions which uses it
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768;
+    }
+    return false;
+  });
+
   // Memoized calculation function with error handling
   // Note: bottomPadding is accessed from closure to extend Row 3 card heights
   const calculateCardPositions = useCallback((containerWidth, containerHeight, gap = GAP) => {
@@ -1040,6 +1049,98 @@ const Overview = () => {
         return {};
       }
 
+      // MOBILE LAYOUT: 1 column × 6 rows (stacked vertically)
+      if (isMobile) {
+        // Helper to calculate card height with absolute minimum enforcement
+        const getCardHeight = (col, row) => {
+          const height = rowHeights[col]?.[row] ?? 1/3;
+          const calculatedHeight = Math.max(0.1, Math.min(0.95, height)) * BASE_CONTAINER_HEIGHT;
+          const baseHeight = Math.max(150, calculatedHeight); // 150px minimum
+          
+          // Only last card (centralBank, row 2, col 1) can extend with bottomPadding
+          if (row === 2 && col === 1) {
+            return baseHeight + (bottomPadding || 0);
+          }
+          
+          return baseHeight;
+        };
+        
+        // Calculate positions for 6 cards stacked vertically
+        // Order: economicCalendar, aiAnalysis, marketSentiment, liveNews, predictionMarkets, centralBank
+        let currentTop = 0;
+        
+        const economicCalendarHeight = getCardHeight(0, 0);
+        const aiAnalysisHeight = getCardHeight(1, 0);
+        const marketSentimentHeight = getCardHeight(0, 1);
+        const liveNewsHeight = getCardHeight(1, 1);
+        const predictionMarketsHeight = getCardHeight(0, 2);
+        const centralBankHeight = getCardHeight(1, 2);
+        
+        const positions = {
+          economicCalendar: {
+            left: 0,
+            top: currentTop,
+            width: '100%',
+            height: economicCalendarHeight,
+            row: 0,
+            col: 0
+          }
+        };
+        
+        currentTop += economicCalendarHeight + gap;
+        positions.aiAnalysis = {
+          left: 0,
+          top: currentTop,
+          width: '100%',
+          height: aiAnalysisHeight,
+          row: 1,
+          col: 0
+        };
+        
+        currentTop += aiAnalysisHeight + gap;
+        positions.marketSentiment = {
+          left: 0,
+          top: currentTop,
+          width: '100%',
+          height: marketSentimentHeight,
+          row: 2,
+          col: 0
+        };
+        
+        currentTop += marketSentimentHeight + gap;
+        positions.liveNews = {
+          left: 0,
+          top: currentTop,
+          width: '100%',
+          height: liveNewsHeight,
+          row: 3,
+          col: 0
+        };
+        
+        currentTop += liveNewsHeight + gap;
+        positions.predictionMarkets = {
+          left: 0,
+          top: currentTop,
+          width: '100%',
+          height: predictionMarketsHeight,
+          row: 4,
+          col: 0
+        };
+        
+        currentTop += predictionMarketsHeight + gap;
+        positions.centralBank = {
+          left: 0,
+          top: currentTop,
+          width: '100%',
+          height: centralBankHeight,
+          row: 5,
+          col: 0
+        };
+        
+        return positions;
+      }
+
+      // DESKTOP LAYOUT: 2 columns × 3 rows (original layout)
       // Calculate unified row positions (not per-column)
       // This ensures all cards in the same row start at the same top position
       const row1Top = 0;
@@ -1161,7 +1262,7 @@ const Overview = () => {
       // Return default positions on error
       return {};
     }
-  }, [columnWidths, rowHeights, bottomPadding]);
+  }, [columnWidths, rowHeights, bottomPadding, isMobile]);
 
   // Calculate handle positions for all 7 handles (for future resize functionality)
   // Memoized with error handling
@@ -1177,6 +1278,105 @@ const Overview = () => {
         return { vertical: [], horizontal: [], bottom: [], containerHeight: BASE_CONTAINER_HEIGHT };
       }
 
+      // MOBILE LAYOUT: 1 column × 6 rows - only horizontal handles between cards
+      if (isMobile) {
+        const handleWidth = gap;
+        
+        // Calculate card heights (same logic as calculateCardPositions)
+        const getCardHeight = (col, row) => {
+          const height = rowHeights[col]?.[row] ?? 1/3;
+          const calculatedHeight = Math.max(0.1, Math.min(0.95, height)) * BASE_CONTAINER_HEIGHT;
+          return Math.max(150, calculatedHeight); // 150px minimum
+        };
+        
+        const card1Height = getCardHeight(0, 0); // economicCalendar
+        const card2Height = getCardHeight(1, 0); // aiAnalysis
+        const card3Height = getCardHeight(0, 1); // marketSentiment
+        const card4Height = getCardHeight(1, 1); // liveNews
+        const card5Height = getCardHeight(0, 2); // predictionMarkets
+        const card6Height = getCardHeight(1, 2) + (bottomPadding || 0); // centralBank (can extend)
+        
+        // Calculate top positions for each card
+        let card1Top = 0;
+        let card2Top = card1Top + card1Height + gap;
+        let card3Top = card2Top + card2Height + gap;
+        let card4Top = card3Top + card3Height + gap;
+        let card5Top = card4Top + card4Height + gap;
+        let card6Top = card5Top + card5Height + gap;
+        
+        // Calculate container height
+        const actualContainerHeight = card6Top + card6Height;
+        
+        // Horizontal handles: 5 handles between cards (full width)
+        const horizontal = [
+          {
+            // Between card1 and card2
+            left: 0,
+            top: card2Top - gap,
+            width: '100%',
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 0
+          },
+          {
+            // Between card2 and card3
+            left: 0,
+            top: card3Top - gap,
+            width: '100%',
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 1
+          },
+          {
+            // Between card3 and card4
+            left: 0,
+            top: card4Top - gap,
+            width: '100%',
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 2
+          },
+          {
+            // Between card4 and card5
+            left: 0,
+            top: card5Top - gap,
+            width: '100%',
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 3
+          },
+          {
+            // Between card5 and card6
+            left: 0,
+            top: card6Top - gap,
+            width: '100%',
+            height: handleWidth,
+            colIndex: 0,
+            rowIndex: 4
+          }
+        ];
+        
+        // Bottom handle: 1 handle at bottom of last card
+        const bottomHandleTop = card6Top + card6Height;
+        const bottom = [
+          {
+            left: 0,
+            top: bottomHandleTop,
+            width: '100%',
+            height: handleWidth,
+            colIndex: 0
+          }
+        ];
+        
+        return {
+          vertical: [], // No vertical handles on mobile (only 1 column)
+          horizontal,
+          bottom,
+          containerHeight: actualContainerHeight
+        };
+      }
+
+      // DESKTOP LAYOUT: 2 columns × 3 rows
       // Use unified row positions (same as calculateCardPositions)
       const row1Top = 0;
       const row1MaxHeight = Math.max(
@@ -1317,7 +1517,7 @@ const Overview = () => {
       console.error('❌ Error calculating handle positions:', error);
       return { vertical: [], horizontal: [], bottom: [], containerHeight: BASE_CONTAINER_HEIGHT };
     }
-  }, [columnWidths, rowHeights, bottomPadding]);
+  }, [columnWidths, rowHeights, bottomPadding, isMobile]);
 
   // Container ref for getting actual dimensions
   const gridContainerRef = useRef(null);
@@ -1332,6 +1532,37 @@ const Overview = () => {
         return BASE_CONTAINER_HEIGHT;
       }
 
+      // MOBILE LAYOUT: 1 column × 6 rows
+      if (isMobile) {
+        // Calculate heights for all 6 cards stacked vertically
+        const getCardHeight = (col, row) => {
+          const height = rowHeights[col]?.[row] ?? 1/3;
+          const calculatedHeight = Math.max(0.1, Math.min(0.95, height)) * BASE_CONTAINER_HEIGHT;
+          return Math.max(150, calculatedHeight); // 150px minimum
+        };
+        
+        const card1Height = getCardHeight(0, 0); // economicCalendar
+        const card2Height = getCardHeight(1, 0); // aiAnalysis
+        const card3Height = getCardHeight(0, 1); // marketSentiment
+        const card4Height = getCardHeight(1, 1); // liveNews
+        const card5Height = getCardHeight(0, 2); // predictionMarkets
+        const card6Height = getCardHeight(1, 2) + (bottomPadding || 0); // centralBank (can extend)
+        
+        // Total height: 6 cards + 5 gaps + bottom padding (on last card)
+        const totalHeight = card1Height + GAP + 
+                           card2Height + GAP + 
+                           card3Height + GAP + 
+                           card4Height + GAP + 
+                           card5Height + GAP + 
+                           card6Height;
+        
+        // Minimum: 6 × 150px + 5 × 25px = 900px + 125px = 1025px
+        const minimumContainerHeight = (6 * 150) + (5 * GAP); // 1025px minimum
+        const MAX_CONTAINER_HEIGHT = 3000; // Match CSS max-height
+        return Math.min(MAX_CONTAINER_HEIGHT, Math.max(minimumContainerHeight, totalHeight));
+      }
+
+      // DESKTOP LAYOUT: 2 columns × 3 rows
       // Calculate unified row heights (using max across columns)
       // This ensures the container is tall enough for the tallest card in each row
       // CRITICAL FIX: Enforce minimum heights to match card minimums
@@ -1373,7 +1604,25 @@ const Overview = () => {
       console.error('❌ Error calculating container height:', error);
       return BASE_CONTAINER_HEIGHT;
     }
-  }, [rowHeights, bottomPadding]);
+  }, [rowHeights, bottomPadding, isMobile]);
+
+  // Mobile detection: Update on window resize
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      console.log('📱 Mobile detection:', { isMobile: mobile, width: window.innerWidth });
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkMobile);
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // Update container dimensions when component mounts or resizes
   // Optimized with debouncing for resize events to prevent excessive recalculations
@@ -1392,7 +1641,8 @@ const Overview = () => {
             width: rect.width, 
             height: calculatedHeight,
             calculatedFrom: 'rowHeights',
-            rowHeights
+            rowHeights,
+            isMobile
           });
         } catch (error) {
           console.error('❌ Error updating container dimensions:', error);
@@ -1414,7 +1664,7 @@ const Overview = () => {
       window.removeEventListener('resize', handleResize);
       clearTimeout(resizeTimeout);
     };
-  }, [rowHeights, calculateContainerHeight]);
+  }, [rowHeights, calculateContainerHeight, isMobile]);
 
   // Memoized card positions calculation for render optimization
   // Recalculates only when dependencies change (containerDimensions, columnWidths, rowHeights)

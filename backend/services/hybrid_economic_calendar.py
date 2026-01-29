@@ -5602,7 +5602,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '37.9',
                 'forecast': '37.1',
                 'previous': '37.2'
             },
@@ -5622,7 +5622,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.8%',
                 'forecast': '3.0%',
                 'previous': '3.0%'
             },
@@ -5632,7 +5632,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '2.9%',
                 'previous': '2.9%'
             },
