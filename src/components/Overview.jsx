@@ -971,6 +971,34 @@ const Overview = () => {
     }
   }, [rowHeights]);
 
+  // Bottom padding state - allows extending Row 3 cards downward
+  const [bottomPadding, setBottomPadding] = useState(() => {
+    try {
+      const saved = localStorage.getItem('overview-bottom-padding');
+      if (saved !== null) {
+        const parsed = parseInt(saved, 10);
+        if (!isNaN(parsed) && parsed >= 0) {
+          console.log('✅ Loaded saved bottom padding:', parsed);
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('⚠️ Failed to load saved bottom padding:', e);
+    }
+    console.log('📐 Using default bottom padding: 0');
+    return 0;
+  });
+
+  // Save bottom padding to localStorage when it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('overview-bottom-padding', bottomPadding.toString());
+      console.log('💾 Saved bottom padding to localStorage:', bottomPadding);
+    } catch (e) {
+      console.warn('⚠️ Failed to save bottom padding:', e);
+    }
+  }, [bottomPadding]);
+
   // Debug: Log current state on mount and when it changes
   useEffect(() => {
     console.log('🔍 Current grid state:', {
@@ -999,6 +1027,7 @@ const Overview = () => {
   const GAP = 25;
 
   // Memoized calculation function with error handling
+  // Note: bottomPadding is accessed from closure to extend Row 3 card heights
   const calculateCardPositions = useCallback((containerWidth, containerHeight, gap = GAP) => {
     try {
       // Validate inputs
@@ -1049,6 +1078,7 @@ const Overview = () => {
       
       // Helper to calculate card height with absolute minimum enforcement
       // This ensures cards never get too small, even if rowHeights are corrupted
+      // Row 3 cards can extend downward using bottomPadding
       const getCardHeight = (col, row) => {
         const calculatedHeight = getRowHeight(col, row) * BASE_CONTAINER_HEIGHT;
         // Enforce absolute minimum heights (in pixels) for each row
@@ -1058,7 +1088,15 @@ const Overview = () => {
           1: 150, // Row 2: 150px minimum  
           2: 150  // Row 3: 150px minimum (same as other rows for consistent layout)
         };
-        return Math.max(absoluteMinimums[row] || 150, calculatedHeight);
+        const baseHeight = Math.max(absoluteMinimums[row] || 150, calculatedHeight);
+        
+        // Row 3 cards can extend downward with bottomPadding
+        // Split bottomPadding evenly between left and right column cards
+        if (row === 2) {
+          return baseHeight + (bottomPadding || 0);
+        }
+        
+        return baseHeight;
       };
       
       // Return positions for all 6 cards
@@ -1123,7 +1161,7 @@ const Overview = () => {
       // Return default positions on error
       return {};
     }
-  }, [columnWidths, rowHeights]);
+  }, [columnWidths, rowHeights, bottomPadding]);
 
   // Calculate handle positions for all 7 handles (for future resize functionality)
   // Memoized with error handling
@@ -1132,11 +1170,11 @@ const Overview = () => {
       // Validate inputs
       if (!Array.isArray(columnWidths) || columnWidths.length !== 3) {
         console.error('❌ Invalid columnWidths structure:', columnWidths);
-        return { vertical: [], horizontal: [], containerHeight: BASE_CONTAINER_HEIGHT };
+        return { vertical: [], horizontal: [], bottom: [], containerHeight: BASE_CONTAINER_HEIGHT };
       }
       if (!Array.isArray(rowHeights) || rowHeights.length !== 2) {
         console.error('❌ Invalid rowHeights structure:', rowHeights);
-        return { vertical: [], horizontal: [], containerHeight: BASE_CONTAINER_HEIGHT };
+        return { vertical: [], horizontal: [], bottom: [], containerHeight: BASE_CONTAINER_HEIGHT };
       }
 
       // Use unified row positions (same as calculateCardPositions)
@@ -1165,8 +1203,26 @@ const Overview = () => {
         return Math.max(0.1, Math.min(0.9, width));
       };
       
-      // Calculate total container height needed
-      const actualContainerHeight = row3Top + row3MaxHeight;
+      // Calculate actual Row 3 card heights (including bottomPadding extension)
+      // Use the same logic as getCardHeight to get the actual extended height
+      const getRow3CardHeight = (col) => {
+        const row3Height = Math.max(
+          (rowHeights[col]?.[2] ?? 1/3),
+          0.1 // Minimum 10%
+        ) * BASE_CONTAINER_HEIGHT;
+        const baseHeight = Math.max(150, row3Height); // Enforce 150px minimum
+        return baseHeight + (bottomPadding || 0); // Add bottomPadding for extension
+      };
+      
+      // Use the maximum height across both columns (same as row3MaxHeight logic)
+      const row3ActualHeight = Math.max(getRow3CardHeight(0), getRow3CardHeight(1));
+      
+      // Calculate total container height needed (including bottom padding for Row 3 extension)
+      const actualContainerHeight = row3Top + row3ActualHeight;
+      
+      // Calculate bottom handle positions (below extended Row 3 cards)
+      // Handles should be at the bottom of the extended cards, not the original cards
+      const bottomHandleTop = row3Top + row3ActualHeight;
       
       return {
         // Vertical handles (3 total - one per row)
@@ -1189,10 +1245,11 @@ const Overview = () => {
           },
           {
             // Row 3: Between Prediction Markets and Central Bank
+            // Height includes bottomPadding extension so handle spans full card height
             left: `calc(${getColumnWidth(2, 0) * 100}% - ${handleHalfWidth}px)`,
             top: row3Top,
             width: handleWidth,
-            height: row3MaxHeight,
+            height: row3ActualHeight, // Use extended height, not just row3MaxHeight
             rowIndex: 2
           }
         ],
@@ -1235,13 +1292,32 @@ const Overview = () => {
             rowIndex: 1
           }
         ],
+        // Bottom handles (2 total - one per column) for extending Row 3 cards downward
+        bottom: [
+          {
+            // Left column bottom handle
+            left: 0,
+            top: bottomHandleTop,
+            width: `calc(${getColumnWidth(2, 0) * 100}% + ${handleHalfWidth}px)`,
+            height: handleWidth,
+            colIndex: 0
+          },
+          {
+            // Right column bottom handle
+            left: `calc(${getColumnWidth(2, 0) * 100}% + ${handleHalfWidth}px)`,
+            top: bottomHandleTop,
+            right: 0,
+            height: handleWidth,
+            colIndex: 1
+          }
+        ],
         containerHeight: actualContainerHeight
       };
     } catch (error) {
       console.error('❌ Error calculating handle positions:', error);
-      return { vertical: [], horizontal: [], containerHeight: BASE_CONTAINER_HEIGHT };
+      return { vertical: [], horizontal: [], bottom: [], containerHeight: BASE_CONTAINER_HEIGHT };
     }
-  }, [columnWidths, rowHeights]);
+  }, [columnWidths, rowHeights, bottomPadding]);
 
   // Container ref for getting actual dimensions
   const gridContainerRef = useRef(null);
@@ -1281,19 +1357,23 @@ const Overview = () => {
         ) * BASE_CONTAINER_HEIGHT
       );
       
-      // Calculate total height needed (rows + gaps)
-      const totalHeight = row1MaxHeight + GAP + row2MaxHeight + GAP + row3MaxHeight;
+      // Calculate total height needed (rows + gaps + bottom padding)
+      // Note: Row 3 cards extend downward with bottomPadding, so container must accommodate this
+      const row3HeightWithPadding = row3MaxHeight + (bottomPadding || 0);
+      const totalHeight = row1MaxHeight + GAP + row2MaxHeight + GAP + row3HeightWithPadding;
       
       // Use the calculated height or base height, whichever is larger
       // Ensure minimum container height accounts for all minimums
       // All rows now require 150px minimum, so container needs at least 500px
+      // Maximum height is 3000px (CSS constraint)
       const minimumContainerHeight = 150 + GAP + 150 + GAP + 150; // 500px minimum
-      return Math.max(minimumContainerHeight, Math.max(BASE_CONTAINER_HEIGHT, totalHeight));
+      const MAX_CONTAINER_HEIGHT = 3000; // Match CSS max-height
+      return Math.min(MAX_CONTAINER_HEIGHT, Math.max(minimumContainerHeight, Math.max(BASE_CONTAINER_HEIGHT, totalHeight)));
     } catch (error) {
       console.error('❌ Error calculating container height:', error);
       return BASE_CONTAINER_HEIGHT;
     }
-  }, [rowHeights]);
+  }, [rowHeights, bottomPadding]);
 
   // Update container dimensions when component mounts or resizes
   // Optimized with debouncing for resize events to prevent excessive recalculations
@@ -1349,7 +1429,7 @@ const Overview = () => {
       console.error('❌ Error calculating card positions in memo:', error);
       return {};
     }
-  }, [calculateCardPositions, containerDimensions.width, calculatedContainerHeight]);
+  }, [calculateCardPositions, containerDimensions.width, calculatedContainerHeight, bottomPadding]);
 
   // Memoized handle positions calculation for render optimization
   const handlePositions = useMemo(() => {
@@ -1357,7 +1437,7 @@ const Overview = () => {
       return calculateHandlePositions(containerDimensions.width, calculatedContainerHeight);
     } catch (error) {
       console.error('❌ Error calculating handle positions in memo:', error);
-      return { vertical: [], horizontal: [], containerHeight: calculatedContainerHeight };
+      return { vertical: [], horizontal: [], bottom: [], containerHeight: calculatedContainerHeight };
     }
   }, [calculateHandlePositions, containerDimensions.width, calculatedContainerHeight]);
 
@@ -1368,7 +1448,7 @@ const Overview = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [activeHandle, setActiveHandle] = useState(null); // { type: 'vertical' | 'horizontal', rowIndex?: number, colIndex?: number }
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
-  const [startState, setStartState] = useState({ columnWidths: null, rowHeights: null });
+  const [startState, setStartState] = useState({ columnWidths: null, rowHeights: null, bottomPadding: null });
 
   // Refs to avoid stale closures in event handlers
   const isDraggingRef = useRef(false);
@@ -1568,6 +1648,47 @@ const Overview = () => {
             return newColumn;
           }));
         }
+      } else if (handle.type === 'bottom') {
+        // Calculate delta in pixels from start position
+        const deltaY = clientY - startPos.y;
+        
+        // Get initial bottom padding from startState
+        const baseBottomPadding = startState.bottomPadding || 0;
+        
+        // Calculate base container height (without bottom padding) using initial state
+        const baseHeights = startState.rowHeights;
+        if (!baseHeights) return; // Safety check
+        
+        const row1MaxHeight = Math.max(
+          150,
+          Math.max(
+            (baseHeights[0]?.[0] ?? 1/3), 
+            (baseHeights[1]?.[0] ?? 1/3)
+          ) * BASE_CONTAINER_HEIGHT
+        );
+        const row2MaxHeight = Math.max(
+          150,
+          Math.max(
+            (baseHeights[0]?.[1] ?? 1/3), 
+            (baseHeights[1]?.[1] ?? 1/3)
+          ) * BASE_CONTAINER_HEIGHT
+        );
+        const row3MaxHeight = Math.max(
+          150,
+          Math.max(
+            (baseHeights[0]?.[2] ?? 1/3), 
+            (baseHeights[1]?.[2] ?? 1/3)
+          ) * BASE_CONTAINER_HEIGHT
+        );
+        const baseHeight = row1MaxHeight + GAP + row2MaxHeight + GAP + row3MaxHeight;
+        
+        // Calculate new bottom padding (clamped to minimum 0 and maximum that keeps total <= 3000px)
+        const MAX_CONTAINER_HEIGHT = 3000;
+        const maxBottomPadding = Math.max(0, MAX_CONTAINER_HEIGHT - baseHeight);
+        const newBottomPadding = Math.max(0, Math.min(maxBottomPadding, baseBottomPadding + deltaY));
+        
+        // Update bottom padding (this will extend Row 3 cards downward)
+        setBottomPadding(newBottomPadding);
       }
     } catch (error) {
       console.error('❌ Error in performResizeUpdate:', error);
@@ -1675,7 +1796,8 @@ const Overview = () => {
       setStartPosition({ x: clientX, y: clientY });
       setStartState({ 
         columnWidths: JSON.parse(JSON.stringify(columnWidths)), // Deep copy
-        rowHeights: JSON.parse(JSON.stringify(rowHeights)) // Deep copy
+        rowHeights: JSON.parse(JSON.stringify(rowHeights)), // Deep copy
+        bottomPadding: bottomPadding // Copy current bottom padding
       });
       
       // Add global listeners for mouse/touch move and up
@@ -1688,11 +1810,15 @@ const Overview = () => {
       
       // Prevent text selection during drag
       document.body.style.userSelect = 'none';
-      document.body.style.cursor = handleType === 'vertical' ? 'col-resize' : 'row-resize';
+      if (handleType === 'vertical') {
+        document.body.style.cursor = 'col-resize';
+      } else if (handleType === 'horizontal' || handleType === 'bottom') {
+        document.body.style.cursor = 'row-resize';
+      }
     } catch (error) {
       console.error('❌ Error in handleMouseDown:', error);
     }
-  }, [columnWidths, rowHeights, handleMouseMove, handleMouseUp, handleTouchMove]);
+  }, [columnWidths, rowHeights, bottomPadding, handleMouseMove, handleMouseUp, handleTouchMove]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -5740,6 +5866,27 @@ const Overview = () => {
                             onTouchStart={(e) => handleMouseDown(e, 'horizontal', { 
                               colIndex: handle.colIndex, 
                               rowIndex: handle.rowIndex 
+                            })}
+                          />
+                        ))}
+                        
+                        {/* Bottom Handles (2 total - one per column) for extending Row 3 cards downward */}
+                        {handlePositions.bottom && handlePositions.bottom.map((handle, index) => (
+                          <div
+                            key={`bottom-${index}`}
+                            className={`grid-resize-handle horizontal ${isDragging && activeHandle?.type === 'bottom' && activeHandle?.colIndex === handle.colIndex ? 'active' : ''}`}
+                            style={{
+                              left: handle.left,
+                              top: handle.top,
+                              width: handle.width,
+                              height: handle.height,
+                              right: handle.right,
+                            }}
+                            onMouseDown={(e) => handleMouseDown(e, 'bottom', { 
+                              colIndex: handle.colIndex
+                            })}
+                            onTouchStart={(e) => handleMouseDown(e, 'bottom', { 
+                              colIndex: handle.colIndex
                             })}
                           />
                         ))}
