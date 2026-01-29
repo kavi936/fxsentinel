@@ -3483,6 +3483,7 @@
   position: relative;
   display: block; /* Overridden by inline styles, but kept here as fallback */
   margin: 10px;
+  padding-bottom: 40px; /* Additional space at bottom for plain background */
   width: 100%;
   min-height: 500px; /* Updated: 150px + 25px + 150px + 25px + 150px = 500px minimum (all rows same height) */
   max-height: 3000px; /* Maximum height to accommodate larger cards */
