@@ -5652,9 +5652,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.2B',
                 'forecast': '-0.7B',
-                'previous': '-0.6B'
+                'previous': '-0.4B'
             },
             {
                 'title': 'Unemployment Claims',
@@ -5662,7 +5662,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '209K',
                 'forecast': '202K',
                 'previous': '200K'
             },
@@ -5672,7 +5672,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.9%',
                 'forecast': '4.9%',
                 'previous': '4.9%'
             },
@@ -5682,7 +5682,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.9%',
                 'forecast': '-1.9%',
                 'previous': '-1.9%'
             },
@@ -5692,7 +5692,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-56.8B',
                 'forecast': '-44.5B',
                 'previous': '-29.4B'
             },
@@ -5702,7 +5702,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.7%',
                 'forecast': '0.5%',
                 'previous': '-1.3%'
             },
@@ -5712,7 +5712,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.2%',
                 'previous': '0.2%'
             },
@@ -5722,8 +5722,8 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
+                'actual': '-242B',
+                'forecast': '-237B',
                 'previous': '-120B'
             },
             {
