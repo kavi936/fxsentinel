@@ -5530,7 +5530,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.3M',
                 'forecast': 'N/A',
                 'previous': '3.6M'
             },
@@ -5540,7 +5540,7 @@ class HybridEconomicCalendar:
                 'time': '19:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.75%',
                 'forecast': '3.75%',
                 'previous': '3.75%'
             },
@@ -5570,9 +5570,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52M',
                 'forecast': '40M',
-                'previous': '-163M'
+                'previous': '-335M'
             },
             {
                 'title': 'ANZ Business Confidence',
@@ -5580,7 +5580,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '64.1',
                 'forecast': 'N/A',
                 'previous': '73.6'
             },
@@ -5590,7 +5590,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '-0.2%',
                 'previous': '-0.4%'
             },
