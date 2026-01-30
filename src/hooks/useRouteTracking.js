@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import analyticsTracker from '../utils/analytics';
+import { useCanonicalTag } from './useCanonicalTag';
 
 /**
  * Hook to automatically track page views when route changes
@@ -8,6 +9,9 @@ import analyticsTracker from '../utils/analytics';
  */
 export const useRouteTracking = () => {
   const location = useLocation();
+  
+  // Set canonical tag for current route
+  useCanonicalTag();
   
   useEffect(() => {
     // Map route paths to readable page names
