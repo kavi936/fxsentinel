@@ -6305,7 +6305,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Cash Rate',
-                'date': 'Tue, Feb 02',
+                'date': 'Tue, Feb 03',
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -6315,7 +6315,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBA Monetary Policy Statement',
-                'date': 'Tue, Feb 02',
+                'date': 'Tue, Feb 03',
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -6325,7 +6325,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBA Rate Statement',
-                'date': 'Tue, Feb 02',
+                'date': 'Tue, Feb 03',
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -6345,7 +6345,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBA Press Conference',
-                'date': 'Mon, Feb 02',
+                'date': 'Tue, Feb 03',
                 'time': '04:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
