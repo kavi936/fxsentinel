@@ -6309,7 +6309,7 @@ class HybridEconomicCalendar:
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.85%',
                 'forecast': '3.85%',
                 'previous': '3.60%'
             },
