@@ -1634,6 +1634,7 @@ section.animate-in .section-title.animate-on-scroll,
   z-index: 2;
   margin-top: 2rem;
   margin-bottom: -10vh;
+  overflow: visible;
 }
 
 .hero-features-inner {
@@ -1703,7 +1704,8 @@ section.animate-in .section-title.animate-on-scroll,
   align-items: center;
   position: relative;
   z-index: 2;
-  overflow: hidden; /* Changed from visible to prevent scrollbars */
+  /* Removed overflow hidden to prevent cropping */
+  overflow: visible;
 }
 
 .hero-features-image {
@@ -1712,7 +1714,8 @@ section.animate-in .section-title.animate-on-scroll,
   max-width: 100%;
   display: block;
   object-fit: contain;
-  transform: translateY(-5vh) scale(1.15);
+  /* Reduced scale from 1.15 to 1.05 to fit better without cropping */
+  transform: translateY(-5vh) scale(1.05);
   transform-origin: center center;
 }
 
@@ -2471,6 +2474,10 @@ section.animate-in .section-title.animate-on-scroll,
   .hero-features-inner {
     grid-template-columns: 1fr;
     gap: 2rem;
+  }
+  
+  .hero-features-image-container {
+    overflow: visible;
   }
 
   .hero-features-content {
