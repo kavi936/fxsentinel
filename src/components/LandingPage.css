@@ -140,6 +140,9 @@ body {
   margin: -8px 0;
   transition: filter 0.2s ease;
   flex-shrink: 0;
+  /* Prevent scrollbars */
+  display: block;
+  object-fit: contain;
 }
 
 .nav-logo:hover .logo {
@@ -1700,7 +1703,7 @@ section.animate-in .section-title.animate-on-scroll,
   align-items: center;
   position: relative;
   z-index: 2;
-  overflow: visible;
+  overflow: hidden; /* Changed from visible to prevent scrollbars */
 }
 
 .hero-features-image {
@@ -1758,6 +1761,8 @@ section.animate-in .section-title.animate-on-scroll,
   justify-content: flex-end;
   align-items: center;
   position: relative;
+  /* Prevent scrollbars */
+  overflow: hidden;
 }
 
 .phone-image {
@@ -1766,6 +1771,9 @@ section.animate-in .section-title.animate-on-scroll,
   border-radius: 20px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   transition: transform 0.3s ease;
+  /* Prevent scrollbars from appearing */
+  display: block;
+  object-fit: contain;
 }
 
 .phone-image:hover {
@@ -2580,6 +2588,27 @@ section.animate-in .section-title.animate-on-scroll,
     box-sizing: border-box !important;
   }
   
+  /* Hide scrollbars on image containers and prevent overflow */
+  img, picture {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+  }
+  
+  /* Hide scrollbars on all containers */
+  picture, .phone-mockup, .hero-features-image-container, .data-powered-logos {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+  
+  picture::-webkit-scrollbar,
+  .phone-mockup::-webkit-scrollbar,
+  .hero-features-image-container::-webkit-scrollbar,
+  .data-powered-logos::-webkit-scrollbar {
+    display: none; /* Chrome/Safari/Opera */
+  }
+  
   /* Force all text content to break properly on mobile */
   p, h1, h2, h3, h4, h5, h6, span, div {
     word-break: break-word !important;
@@ -3170,6 +3199,8 @@ section.animate-in .section-title.animate-on-scroll,
     order: 2;
     max-width: 250px;
     margin: 0 auto;
+    /* Ensure no scrollbars on mobile */
+    overflow: hidden;
   }
   
   .phone-image {
@@ -4119,6 +4150,13 @@ body.mobile-menu-open {
   position: relative;
   margin-top: 1rem;
   padding: 0 1rem;
+  /* Hide scrollbars on all browsers */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.data-powered-logos::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera */
 }
 
 /* Removed fade effects for seamless scrolling */
@@ -4169,6 +4207,8 @@ body.mobile-menu-open {
   opacity: 0.8;
   transition: opacity 0.3s ease;
   display: block;
+  /* Prevent scrollbars */
+  flex-shrink: 0;
 }
 
 .logo-item:hover .data-logo {
@@ -4191,6 +4231,13 @@ body.mobile-menu-open {
     /* Ensure proper overflow handling for animation */
     overflow: hidden;
     position: relative;
+    /* Hide scrollbars on mobile */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .data-powered-logos::-webkit-scrollbar {
+    display: none;
   }
   
   .logo-item {
@@ -4225,6 +4272,13 @@ body.mobile-menu-open {
     /* Ensure proper overflow handling */
     overflow: hidden;
     position: relative;
+    /* Hide scrollbars on very small screens */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .data-powered-logos::-webkit-scrollbar {
+    display: none;
   }
   
   .logo-item {
