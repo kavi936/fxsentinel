@@ -2672,7 +2672,8 @@ section.animate-in .section-title.animate-on-scroll,
   .hero {
     min-height: auto;
     height: auto;
-    padding: 2rem 0 0 0;
+    /* Increased top padding to clear navbar (80px navbar + 40px breathing room) */
+    padding: 120px 0 0 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2685,10 +2686,8 @@ section.animate-in .section-title.animate-on-scroll,
   /* Ensure consistent hero height behavior */
   .hero-inner {
     min-height: auto;
-  }
-  
-  .hero-inner {
-    padding: 0 15px;
+    /* Add extra top padding for better spacing from navbar */
+    padding: 2rem 15px 0 15px;
   }
   
   .hero-content {
@@ -2699,14 +2698,29 @@ section.animate-in .section-title.animate-on-scroll,
     align-items: center;
     justify-content: center;
     height: 100%;
+    /* Add gap between elements for better mobile spacing */
+    gap: 0;
   }
   
+  /* Increased spacing between hero elements on mobile */
   .hero-badge-container {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .hero-title {
+    margin-bottom: 2rem;
+  }
+  
+  .hero-subtitle {
+    margin-bottom: 2rem;
   }
   
   .live-ticker-container {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  
+  .hero-buttons {
+    margin-bottom: 2rem;
   }
   
   /* Data Powered By Section */
@@ -2854,7 +2868,8 @@ section.animate-in .section-title.animate-on-scroll,
 
   .hero-features-section {
     padding: 2rem 0 3rem 0;
-    margin-top: 0;
+    /* Increased spacing between hero-inner and hero-features-section */
+    margin-top: 4rem;
     margin-bottom: 0;
     overflow-x: hidden;
     width: 100%;
@@ -3153,14 +3168,16 @@ section.animate-in .section-title.animate-on-scroll,
   
   .phone-mockup {
     order: 2;
-    max-width: 300px;
+    max-width: 250px;
     margin: 0 auto;
   }
   
   .phone-image {
-    width: 100%;
+    width: auto;
     height: auto;
-    max-width: 300px;
+    /* Primary constraint: height for vertical image */
+    max-height: 750px;
+    max-width: 380px;
   }
   
   .alerts-text {
@@ -3428,11 +3445,14 @@ section.animate-in .section-title.animate-on-scroll,
   .hero {
     min-height: auto;
     height: auto;
-    padding: 1.5rem 0 0 0;
+    /* Maintain proper clearance from navbar even on small screens */
+    padding: 110px 0 0 0;
   }
   
   .hero-inner {
     min-height: auto;
+    /* Add padding for better spacing */
+    padding: 1.5rem 15px 0 15px;
   }
   
   .hero-badge {
@@ -3453,6 +3473,27 @@ section.animate-in .section-title.animate-on-scroll,
     align-items: center;
     justify-content: center;
     height: 100%;
+  }
+  
+  /* Maintain spacing between elements on small screens */
+  .hero-badge-container {
+    margin-bottom: 1.75rem;
+  }
+  
+  .hero-title {
+    margin-bottom: 1.75rem;
+  }
+  
+  .hero-subtitle {
+    margin-bottom: 1.75rem;
+  }
+  
+  .live-ticker-container {
+    margin-bottom: 1.75rem;
+  }
+  
+  .hero-buttons {
+    margin-bottom: 1.75rem;
   }
   
   /* Improve features and pricing on very small screens */
@@ -3945,7 +3986,9 @@ body.mobile-menu-open {
   }
   
   .phone-image {
-    max-width: 250px;
+    /* Primary constraint: height for vertical image on smaller screens */
+    max-height: 640px;
+    max-width: 320px;
   }
   
   .telegram-icon {
@@ -3991,7 +4034,9 @@ body.mobile-menu-open {
   }
   
   .phone-image {
-    max-width: 200px;
+    /* Primary constraint: height for vertical image on very small screens */
+    max-height: 600px;
+    max-width: 300px;
   }
   
   .telegram-logo {
@@ -4143,11 +4188,15 @@ body.mobile-menu-open {
   
   .data-powered-logos {
     padding: 0 0.5rem;
+    /* Ensure proper overflow handling for animation */
+    overflow: hidden;
+    position: relative;
   }
   
   .logo-item {
     height: 44px;
-    min-width: 120px;
+    /* Reduced min-width to ensure all logos cycle through on smaller screens */
+    min-width: 100px;
     padding: 0 0.75rem;
   }
   
@@ -4157,8 +4206,14 @@ body.mobile-menu-open {
   }
   
   .logo-scroll {
-    gap: 2rem;
-    animation: scroll-left 15s linear infinite;
+    /* Reduced gap for better mobile display */
+    gap: 1.5rem;
+    /* Slower animation to ensure all logos are visible */
+    animation: scroll-left 25s linear infinite;
+    /* Ensure proper width calculation for seamless loop */
+    width: max-content;
+    /* Force hardware acceleration for smoother animation */
+    will-change: transform;
   }
   
   /* Fade effects removed for seamless scrolling */
@@ -4167,11 +4222,15 @@ body.mobile-menu-open {
 @media (max-width: 480px) {
   .data-powered-logos {
     padding: 0 0.25rem;
+    /* Ensure proper overflow handling */
+    overflow: hidden;
+    position: relative;
   }
   
   .logo-item {
     height: 38px;
-    min-width: 100px;
+    /* Further reduced min-width for very small screens */
+    min-width: 80px;
     padding: 0 0.5rem;
   }
   
@@ -4181,8 +4240,14 @@ body.mobile-menu-open {
   }
   
   .logo-scroll {
-    gap: 1.5rem;
-    animation: scroll-left 12s linear infinite;
+    /* Smaller gap for very small screens */
+    gap: 1rem;
+    /* Slower animation to ensure visibility of all logos */
+    animation: scroll-left 20s linear infinite;
+    /* Ensure proper width calculation for seamless loop */
+    width: max-content;
+    /* Force hardware acceleration for smoother animation */
+    will-change: transform;
   }
   
   /* Additional optimizations for very small screens */

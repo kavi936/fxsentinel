@@ -2346,10 +2346,12 @@
   box-shadow: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
-  overflow-x: auto;
+  overflow-x: hidden; /* Changed: Let child handle scrolling */
   overflow-y: hidden;
   height: 50px;
   border-bottom: 1px solid rgba(51, 51, 51, 0.3);
+  /* Mobile touch support */
+  touch-action: pan-x; /* Allow horizontal panning */
 }
 
 /* Edit Button */
@@ -2387,6 +2389,7 @@
   gap: 0;
   flex: 1;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: none; /* Firefox - hide scrollbar */
   -ms-overflow-style: none; /* IE/Edge - hide scrollbar */
   padding: 0;
@@ -2397,6 +2400,10 @@
   min-width: 0; /* Allow flex shrinking */
   scroll-behavior: smooth; /* Smooth scrolling */
   width: max-content; /* Ensure container expands to fit all content */
+  /* Mobile touch scrolling support */
+  -webkit-overflow-scrolling: touch; /* iOS smooth momentum scrolling */
+  touch-action: pan-x; /* Allow horizontal panning gestures */
+  overscroll-behavior-x: contain; /* Prevent scroll chaining */
 }
 
 .ticker-pairs-inline::-webkit-scrollbar {
@@ -2953,6 +2960,16 @@
     height: auto;
     min-height: 50px;
     padding: 10px 16px;
+    /* Ensure mobile scrolling works */
+    overflow-x: hidden;
+    touch-action: pan-x;
+  }
+  
+  .ticker-pairs-inline {
+    /* Enhanced mobile touch scrolling */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
   }
   
   .ticker-pair {
@@ -2973,6 +2990,16 @@
   
   .market-ticker {
     padding: 8px 12px;
+    /* Ensure mobile scrolling works on small screens */
+    overflow-x: hidden;
+    touch-action: pan-x;
+  }
+  
+  .ticker-pairs-inline {
+    /* Enhanced mobile touch scrolling for small screens */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    overscroll-behavior-x: contain;
   }
   
   .ticker-pair {
@@ -6901,6 +6928,24 @@
     box-sizing: border-box;
   }
   
+  /* MOBILE SCROLL FIX: Disable card internal scrolling on mobile */
+  /* Allow cards to expand naturally and use only page-level scrolling */
+  .calendar-content,
+  .news-content,
+  .ai-content,
+  .sentiment-content,
+  .prediction-markets-content,
+  .central-bank-documents-list {
+    overflow-y: visible !important; /* Disable internal scrolling */
+    overflow-x: hidden;
+    /* Ensure touch gestures scroll the page, not the card */
+    touch-action: pan-y;
+    /* Allow cards to expand to fit content */
+    min-height: auto;
+    max-height: none;
+    height: auto;
+  }
+  
   .sentiment-content,
   .ai-content,
   .news-content {
@@ -6932,6 +6977,20 @@
     /* Ensure no horizontal overflow */
     max-width: calc(100% - 10px) !important;
     box-sizing: border-box;
+  }
+  
+  /* MOBILE SCROLL FIX: Ensure card scrolling is disabled on small mobile */
+  .calendar-content,
+  .news-content,
+  .ai-content,
+  .sentiment-content,
+  .prediction-markets-content,
+  .central-bank-documents-list {
+    overflow-y: visible !important; /* Disable internal scrolling */
+    overflow-x: hidden;
+    touch-action: pan-y; /* Ensure page scrolling works */
+    min-height: auto;
+    max-height: none;
   }
   
   .sentiment-content,
