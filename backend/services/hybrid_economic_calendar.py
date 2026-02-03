@@ -6279,9 +6279,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-4.6%	',
                 'forecast': 'N/A',
-                'previous': '2.8%'
+                'previous': '2.7%'
             },
             {
                 'title': 'Monetary Base y/y',
@@ -6289,7 +6289,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-9.5%',
                 'forecast': '-10.2%',
                 'previous': '-9.8%'
             },
@@ -6299,7 +6299,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-14.9%',
                 'forecast': '-6.4%',
                 'previous': '15.2%'
             },
