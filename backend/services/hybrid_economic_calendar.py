@@ -6416,22 +6416,12 @@ class HybridEconomicCalendar:
                 'previous': 'N/A'
             },
             {
-                'title': 'JOLTS Job Openings',
-                'date': 'Tue, Feb 03',
-                'time': '15:00 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '7.21M',
-                'previous': '7.15M'
-            },
-            {
                 'title': 'RCM/TIPP Economic Optimism',
                 'date': 'Tue, Feb 03',
                 'time': '15:10 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '48.8',
                 'forecast': '47.9',
                 'previous': '47.2'
             },
@@ -6441,7 +6431,7 @@ class HybridEconomicCalendar:
                 'time': '15:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '14.9M',
                 'forecast': '15.4M',
                 'previous': '16.0M'
             },
@@ -6451,7 +6441,7 @@ class HybridEconomicCalendar:
                 'time': '15:50 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.7%',
                 'forecast': 'N/A',
                 'previous': '1.5%'
             },
@@ -6471,7 +6461,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
                 'previous': '0.0%'
             },
@@ -6481,7 +6471,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '5.4%',
                 'forecast': '5.3%',
                 'previous': '5.3%'
             },
@@ -6491,7 +6481,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.5%',
                 'previous': '0.5%'
             },
@@ -6501,7 +6491,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': 'N/A',
                 'previous': '-2.1%'
             },
@@ -6511,7 +6501,7 @@ class HybridEconomicCalendar:
                 'time': '01:45 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.3',
                 'forecast': '51.9',
                 'previous': '52.0'
             },
