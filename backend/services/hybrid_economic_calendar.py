@@ -6523,27 +6523,18 @@ class HybridEconomicCalendar:
                 'time': '08:15 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '53.5',
                 'forecast': '57.0',
                 'previous': '57.1'
             },
-            {
-                'title': 'Trade Balance',
-                'date': 'Wed, Feb 04',
-                'time': '08:15 UTC',
-                'currency': 'CHF',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '4.85B',
-                'previous': '3.84B'
-            },
+            
             {
                 'title': 'Italian Services PMI',
                 'date': 'Wed, Feb 04',
                 'time': '08:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.9',
                 'forecast': '51.6',
                 'previous': '51.5'
             },
@@ -6553,7 +6544,7 @@ class HybridEconomicCalendar:
                 'time': '08:50 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '48.4',
                 'forecast': '48.0',
                 'previous': '47.9'
             },
@@ -6563,7 +6554,7 @@ class HybridEconomicCalendar:
                 'time': '08:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.4',
                 'forecast': '53.3',
                 'previous': '53.3'
             },
@@ -6573,7 +6564,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.6',
                 'forecast': '51.9',
                 'previous': '51.9'
             },
@@ -6583,7 +6574,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '54.0',
                 'forecast': '54.1',
                 'previous': '54.3'
             },
@@ -6593,7 +6584,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.2%',
                 'forecast': '2.2%',
                 'previous': '2.3%'
             },
@@ -6603,9 +6594,9 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.8%',
-                'previous': '2.0%'
+                'previous': '1.9%'
             },
             {
                 'title': 'PPI m/m',
@@ -6613,9 +6604,9 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.3%	',
                 'forecast': '-0.2%',
-                'previous': '0.5%'
+                'previous': '0.7%'
             },
             {
                 'title': 'Italian Prelim CPI m/m',
@@ -6623,7 +6614,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.3%',
                 'previous': '0.2%'
             },
@@ -6633,9 +6624,9 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '22K',
                 'forecast': '48K',
-                'previous': '41K'
+                'previous': '37K'
             },
             {
                 'title': 'Final Services PMI',
@@ -6643,7 +6634,7 @@ class HybridEconomicCalendar:
                 'time': '14:45 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.7',
                 'forecast': '52.5',
                 'previous': '52.5'
             },
@@ -6653,7 +6644,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '53.8',
                 'forecast': '53.6',
                 'previous': '54.4'
             },
@@ -6663,7 +6654,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.5M',
                 'forecast': 'N/A',
                 'previous': '-2.3M'
             },
