@@ -2053,6 +2053,11 @@ def get_enhanced_analysis(news_id):
     print(f"🔍 DEBUG: Request method: {request.method}")
     print(f"🔍 DEBUG: Request headers: {dict(request.headers)}")
     try:
+        # Initialize user information variables (will be set from POST request if available)
+        user_id = None
+        user_email = None
+        user_name = None
+        
         # Get event data from request body if POST, otherwise from Finnhub calendar
         print(f"🔍 DEBUG: Getting event data...")
         if request.method == 'POST':
@@ -2060,7 +2065,12 @@ def get_enhanced_analysis(news_id):
             print(f"🔍 DEBUG: Request data keys: {list(request_data.keys()) if request_data else 'None'}")
             event = request_data.get('event')
             analysis_type = request_data.get('analysisType', 'pre-event')
+            # Extract user information for OpenAI usage tracking
+            user_id = request_data.get('user_id')
+            user_email = request_data.get('user_email')
+            user_name = request_data.get('user_name')
             print(f"🚨 Using event data from request: {event.get('title', 'Unknown')} - {event.get('currency', 'Unknown')}")
+            print(f"👤 User info - ID: {user_id}, Email: {user_email}, Name: {user_name}")
             print(f"🔍 DEBUG: Event keys: {list(event.keys()) if event else 'None'}")
         else:
             # Get the economic event by ID from Finnhub calendar data
@@ -2185,7 +2195,13 @@ def get_enhanced_analysis(news_id):
         # Use GPT analyzer (Tier 1) - it has built-in event-specific fallbacks
         print(f"🚨🚨🚨 USING GPT TIER 1 ANALYZER (Event-Specific Analysis) 🚨🚨🚨")
         print(f"🔍 DEBUG: About to call gpt_ai_analyzer.analyze_macro_event...")
-        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type)
+        # Pass user information for OpenAI usage tracking
+        user_info = {
+            'user_id': user_id,
+            'user_email': user_email,
+            'user_name': user_name
+        } if user_id or user_email else None
+        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type, user_info=user_info)
         print(f"🔍 DEBUG: GPT Tier 1 analysis completed successfully!")
         
         # Debug: Log what we're getting from GPT

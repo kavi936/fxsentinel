@@ -3,6 +3,7 @@ import { useForexPrices } from '../hooks/useForexPrices';
 import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
 import { usePredictionMarkets } from '../hooks/usePredictionMarkets.js';
 import { useCentralBankDocuments } from '../hooks/useCentralBankDocuments.js';
+import { useAuth } from '../contexts/AuthContext';
 import LiveNewsFeed from './LiveNewsFeed';
 import { config } from '../config';
 import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
@@ -785,6 +786,7 @@ const Overview = () => {
     CNY: true
   });
   
+  const { currentUser } = useAuth();
   const { prices, loading, error } = useForexPrices();
   const { 
     sentiment, 
@@ -3126,7 +3128,11 @@ const Overview = () => {
             currentTime: new Date().toISOString(),
             eventTime: new Date().toISOString(),
             isPostEvent: isPostEvent
-          }
+          },
+          // Include user information for OpenAI usage tracking
+          user_id: currentUser?.uid || null,
+          user_email: currentUser?.email || null,
+          user_name: currentUser?.displayName || null
         })
       });
       
