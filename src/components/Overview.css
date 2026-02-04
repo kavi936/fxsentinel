@@ -2346,12 +2346,11 @@
   box-shadow: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
   position: relative;
-  overflow-x: hidden; /* Changed: Let child handle scrolling */
+  overflow-x: visible; /* Allow child to scroll horizontally */
   overflow-y: hidden;
   height: 50px;
   border-bottom: 1px solid rgba(51, 51, 51, 0.3);
-  /* Mobile touch support */
-  touch-action: pan-x; /* Allow horizontal panning */
+  /* Touch action handled by child .ticker-pairs-inline */
 }
 
 /* Edit Button */
@@ -2387,7 +2386,7 @@
   display: flex;
   align-items: center;
   gap: 0;
-  flex: 1;
+  flex: 0 1 auto; /* Allow shrinking but also allow content to expand */
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none; /* Firefox - hide scrollbar */
@@ -2400,6 +2399,7 @@
   min-width: 0; /* Allow flex shrinking */
   scroll-behavior: smooth; /* Smooth scrolling */
   width: max-content; /* Ensure container expands to fit all content */
+  max-width: 100%; /* Prevent overflow on large screens */
   /* Mobile touch scrolling support */
   -webkit-overflow-scrolling: touch; /* iOS smooth momentum scrolling */
   touch-action: pan-x; /* Allow horizontal panning gestures */
@@ -2960,13 +2960,15 @@
     height: auto;
     min-height: 50px;
     padding: 10px 16px;
-    /* Ensure mobile scrolling works */
-    overflow-x: hidden;
-    touch-action: pan-x;
+    /* Allow child to scroll horizontally on mobile */
+    overflow-x: visible;
   }
   
   .ticker-pairs-inline {
     /* Enhanced mobile touch scrolling */
+    flex: 0 0 auto; /* Don't shrink on mobile - allow content to overflow */
+    width: max-content; /* Ensure content can expand beyond container */
+    max-width: none; /* Remove max-width constraint on mobile */
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
@@ -2990,13 +2992,15 @@
   
   .market-ticker {
     padding: 8px 12px;
-    /* Ensure mobile scrolling works on small screens */
-    overflow-x: hidden;
-    touch-action: pan-x;
+    /* Allow child to scroll horizontally on small mobile */
+    overflow-x: visible;
   }
   
   .ticker-pairs-inline {
     /* Enhanced mobile touch scrolling for small screens */
+    flex: 0 0 auto; /* Don't shrink on small screens - allow content to overflow */
+    width: max-content; /* Ensure content can expand beyond container */
+    max-width: none; /* Remove max-width constraint on small screens */
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;

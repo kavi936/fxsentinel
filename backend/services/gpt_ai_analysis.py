@@ -188,7 +188,7 @@ class GPTAIAnalyzer:
         # Note: _load_economic_indicators_cache method removed - cache will be populated on demand
     
     def analyze_macro_event(self, event: Dict, market_context: MarketContext, 
-                          analysis_type: str = "pre_event") -> GPTAnalysisResult:
+                          analysis_type: str = "pre_event", user_info: Dict = None) -> GPTAnalysisResult:
         """
         Generate comprehensive GPT analysis for macro events with data validation
         
@@ -196,6 +196,7 @@ class GPTAIAnalyzer:
             event: Economic event data (will be validated)
             market_context: Enhanced market context with positioning data
             analysis_type: "pre_event" or "post_event"
+            user_info: Optional dict with user_id, user_email, user_name for OpenAI usage tracking
         """
         try:
             # Step 1: Validate event data
@@ -236,7 +237,7 @@ class GPTAIAnalyzer:
             
             # Step 7: Generate analysis with validated data and live market context
             analysis_result = self._generate_enhanced_gpt_analysis(
-                validated_event, enhanced_market_context, analysis_type, model
+                validated_event, enhanced_market_context, analysis_type, model, user_info=user_info
             )
             
             # Step 8: Add data quality information
@@ -1177,7 +1178,7 @@ class GPTAIAnalyzer:
         return self._get_fallback_analysis(event, analysis_type)
     
     def _generate_enhanced_gpt_analysis(self, event: Dict, market_context: MarketContext, 
-                                      analysis_type: str, model: str) -> GPTAnalysisResult:
+                                      analysis_type: str, model: str, user_info: Dict = None) -> GPTAnalysisResult:
         """Generate enhanced GPT analysis with real API calls"""
         try:
             if not self.client:
@@ -1187,16 +1188,31 @@ class GPTAIAnalyzer:
             # Prepare the prompt for GPT
             prompt = self._create_analysis_prompt(event, market_context, analysis_type)
             
-            # Make API call to OpenAI
-            response = self.client.chat.completions.create(
-                model=model,
-                messages=[
+            # Prepare user identifier for OpenAI usage tracking
+            # Use email if available, otherwise user_id, otherwise None
+            openai_user = None
+            if user_info:
+                openai_user = user_info.get('user_email') or user_info.get('user_id')
+                if openai_user:
+                    logger.info(f"👤 Tracking OpenAI usage for user: {openai_user}")
+            
+            # Prepare API call parameters
+            api_params = {
+                "model": model,
+                "messages": [
                     {"role": "system", "content": "You are a professional forex market analyst with deep expertise in economic events and their market impact."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=2000,
-                temperature=0.3
-            )
+                "max_tokens": 2000,
+                "temperature": 0.3
+            }
+            
+            # Add user parameter for OpenAI usage tracking if available
+            if openai_user:
+                api_params["user"] = openai_user
+            
+            # Make API call to OpenAI
+            response = self.client.chat.completions.create(**api_params)
             
             # Parse the response
             gpt_response = response.choices[0].message.content
