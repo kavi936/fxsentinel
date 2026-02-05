@@ -6862,6 +6862,16 @@ class HybridEconomicCalendar:
                 'previous': 'N/A'
             },
             {
+                'title': 'JOLTS Job Openings',
+                'date': 'Thu, Feb 05',
+                'time': '15:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '7.25M',
+                'previous': '7.15M'
+            },
+            {
                 'title': 'Natural Gas Storage',
                 'date': 'Thu, Feb 05',
                 'time': '15:30 UTC',
