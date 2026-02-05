@@ -28,7 +28,7 @@ const LandingPage = () => {
   // Track landing page view on component mount
   useEffect(() => {
     // Set consistent page title for GA4
-    document.title = 'FXSentinel - AI-Powered Forex Market Analysis | Real-Time Trading Alerts';
+    document.title = 'FXSentinel - Smarter Market Dashboard | Powered with AI';
     trackLandingPageView();
   }, []);
 

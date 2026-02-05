@@ -1,4 +1,4 @@
-# Quick Start: Continuing Analytics & SEO Work
+ # Quick Start: Continuing Analytics & SEO Work
 
 > **Quick Reference**: What to do next
 
