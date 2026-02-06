@@ -141,6 +141,7 @@ public/*
 !public/sitemap.xml
 !public/robots.txt
 !public/central-bank-documents.json
+!public/og-image.png
 !public/documents/
 !public/documents/central-bank/
 !public/documents/central-bank/**/*.pdf
