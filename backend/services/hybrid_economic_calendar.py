@@ -7009,7 +7009,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-24.8K',
                 'forecast': '7.2K',
                 'previous': '8.2K'
             },
@@ -7019,7 +7019,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '6.5%',
                 'forecast': '6.8%',
                 'previous': '6.8%'
             },
