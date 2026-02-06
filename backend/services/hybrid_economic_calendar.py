@@ -7024,42 +7024,12 @@ class HybridEconomicCalendar:
                 'previous': '6.8%'
             },
             {
-                'title': 'Average Hourly Earnings m/m',
-                'date': 'Fri, Feb 06',
-                'time': '13:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '0.3%',
-                'previous': '0.3%'
-            },
-            {
-                'title': 'Non-Farm Employment Change',
-                'date': 'Fri, Feb 06',
-                'time': '13:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '67K',
-                'previous': '50K'
-            },
-            {
-                'title': 'Unemployment Rate',
-                'date': 'Fri, Feb 06',
-                'time': '13:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '4.4%',
-                'previous': '4.4%'
-            },
-            {
                 'title': 'Ivey PMI',
                 'date': 'Fri, Feb 06',
                 'time': '15:00 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '50.9',
                 'forecast': '49.7',
                 'previous': '51.9'
             },
@@ -7069,9 +7039,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '57.3',
                 'forecast': '55.4',
-                'previous': '54.0'
+                'previous': '56.4'
             },
             {
                 'title': 'Prelim UoM Inflation Expectations',
@@ -7079,9 +7049,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.5%',
                 'forecast': 'N/A',
-                'previous': '4.2%'
+                'previous': '4.0%'
             },
             {
                 'title': 'FOMC Member Jefferson Speaks',
