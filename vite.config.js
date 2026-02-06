@@ -22,8 +22,8 @@ export default defineConfig({
           const ext = info[info.length - 1]
           const name = info[0]
           
-          // Keep sitemap.xml and robots.txt at root, don't hash them
-          if (name === 'sitemap' || name === 'robots') {
+          // Keep sitemap.xml, robots.txt, and og-image.png at root, don't hash them
+          if (name === 'sitemap' || name === 'robots' || name === 'og-image') {
             return `[name][extname]`
           }
           
