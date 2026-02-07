@@ -375,7 +375,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "2.15%",
-        "asOf": "2025-12-18",
+        "asOf": "2026-01-31",
         "chartData": [
           4.5,
           4.5,
@@ -394,6 +394,7 @@
           2.65,
           2.4,
           2.4,
+          2.15,
           2.15,
           2.15,
           2.15,
@@ -426,7 +427,8 @@
           "2025-09-11",
           "2025-10-31",
           "2025-11-30",
-          "2025-12-18"
+          "2025-12-18",
+          "2026-01-31"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
@@ -437,8 +439,8 @@
         "description": "Main Refinancing Rate - The primary monetary policy tool set by the European Central Bank (ECB)."
       },
       "inflation": {
-        "currentValue": "1.9%",
-        "asOf": "2025-12-01",
+        "currentValue": "1.7%",
+        "asOf": "2026-01-01",
         "chartData": [
           2.8,
           2.6,
@@ -463,7 +465,8 @@
           2.2,
           2.1,
           2.1,
-          1.9
+          1.9,
+          1.7
         ],
         "chartDates": [
           "2024-01-01",
@@ -489,7 +492,8 @@
           "2025-09-01",
           "2025-10-01",
           "2025-11-01",
-          "2025-12-01"
+          "2025-12-01",
+          "2026-01-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -500,8 +504,8 @@
         "description": "Harmonized Index of Consumer Prices (HICP) - The official measure of inflation for the eurozone."
       },
       "core-inflation-YoY": {
-        "currentValue": "2.3%",
-        "asOf": "2025-12-01",
+        "currentValue": "2.2%",
+        "asOf": "2026-01-01",
         "chartData": [
           3.3,
           3.1,
@@ -526,7 +530,8 @@
           2.4,
           2.4,
           2.4,
-          2.3
+          2.3,
+          2.2
         ],
         "chartDates": [
           "2024-01-01",
@@ -552,7 +557,8 @@
           "2025-09-01",
           "2025-10-01",
           "2025-11-01",
-          "2025-12-01"
+          "2025-12-01",
+          "2026-01-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -753,7 +759,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
-        "asOf": "2025-12-18",
+        "asOf": "2026-01-31",
         "chartData": [
           5.25,
           5.25,
@@ -778,6 +784,7 @@
           4.0,
           4.0,
           4.0,
+          3.75,
           3.75
         ],
         "chartDates": [
@@ -804,7 +811,8 @@
           "2025-09-18",
           "2025-10-31",
           "2025-11-06",
-          "2025-12-18"
+          "2025-12-18",
+          "2026-01-31"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate",
