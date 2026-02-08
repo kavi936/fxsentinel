@@ -39,6 +39,18 @@ class StripeService:
             return False
         return email.lower() in [dev_email.lower() for dev_email in self.developer_emails]
 
+    @staticmethod
+    def _normalize_subscription_status(raw):
+        """Map Firestore/legacy/Stripe status to one of: free, premium, past_due. Avoids 'Unknown' for existing users."""
+        if raw is None:
+            return 'free'
+        s = (str(raw).strip().lower() if str(raw).strip() else '') or 'free'
+        if s in ('premium', 'active'):
+            return 'premium'
+        if s == 'past_due':
+            return 'past_due'
+        return 'free'
+
     def get_developer_access_status(self, email):
         """Get developer access status for an email"""
         is_developer = self.is_developer_email(email)
@@ -164,8 +176,7 @@ class StripeService:
                 }
             
             user_data = user_doc.to_dict()
-            status = user_data.get('subscription_status', 'free')
-            
+            status = self._normalize_subscription_status(user_data.get('subscription_status'))
             return {
                 'status': status,
                 'monthly_analysis_count': user_data.get('monthly_analysis_count', 0),
@@ -191,7 +202,7 @@ class StripeService:
 
     def get_analysis_limit(self, user_data):
         """Get the analysis limit based on subscription status"""
-        status = user_data.get('subscription_status', 'free')
+        status = self._normalize_subscription_status(user_data.get('subscription_status'))
         if status == 'premium':
             return {'type': 'daily', 'limit': self.premium_limit}
         elif status == 'developer':
@@ -236,7 +247,7 @@ class StripeService:
                 }
             
             user_data = user_doc.to_dict()
-            status = user_data.get('subscription_status', 'free')
+            status = self._normalize_subscription_status(user_data.get('subscription_status'))
             today = datetime.now().date()
             current_month_start = today.replace(day=1)
             
@@ -315,7 +326,7 @@ class StripeService:
                 return
             
             user_data = user_doc.to_dict()
-            status = user_data.get('subscription_status', 'free')
+            status = self._normalize_subscription_status(user_data.get('subscription_status'))
             today = datetime.now().date()
             current_month_start = today.replace(day=1)
             
