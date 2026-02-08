@@ -3309,7 +3309,25 @@ const Overview = () => {
       
       // Fallback to basic analysis if enhanced fails
       try {
-        const basicResponse = await fetch(`${config.endpoints.backend}/api/analysis/${event.id}`);
+        // Get Firebase ID token for backend authentication and user tracking
+        let authToken = null;
+        if (currentUser) {
+          try {
+            authToken = await currentUser.getIdToken();
+          } catch (error) {
+            console.error('Error getting Firebase token:', error);
+          }
+        }
+        
+        // Prepare headers with Authorization token if available
+        const headers = {};
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
+        const basicResponse = await fetch(`${config.endpoints.backend}/api/analysis/${event.id}`, {
+          headers: headers
+        });
         if (basicResponse.ok) {
           const basicAnalysis = await basicResponse.json();
           return {

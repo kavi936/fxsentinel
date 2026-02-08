@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
+import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -40,6 +42,7 @@ const Login = () => {
 
   return (
     <div className="auth-container">
+      <EmbeddedBrowserWarning />
       <div className="auth-background">
         {/* Data stream background effect */}
       </div>
@@ -130,11 +133,22 @@ const Login = () => {
         <button 
           className="auth-social-button"
           onClick={async () => {
+            setIsLoading(true);
+            setError('');
             try {
               await signInWithGoogle();
               navigate('/auth-redirect');
             } catch (err) {
-              setError('Failed to sign in with Google. Please try again.');
+              // Check if this is the Google OAuth blocked error
+              if (isGoogleOAuthBlockedError(err) || err.code === 'auth/embedded-browser-blocked') {
+                // Show the full error message which includes instructions
+                const errorMessage = err.message || 'Google sign-in is not available in this browser. Please open this link in Safari or Chrome.';
+                setError(errorMessage);
+              } else {
+                setError('Failed to sign in with Google. Please try again.');
+              }
+            } finally {
+              setIsLoading(false);
             }
           }}
         >

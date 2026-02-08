@@ -1230,6 +1230,13 @@ class GPTAIAnalyzer:
                 openai_user = user_info.get('user_email') or user_info.get('user_id')
                 if openai_user:
                     logger.info(f"👤 Tracking OpenAI usage for user: {openai_user}")
+                    print(f"👤👤👤 OPENAI USER TRACKING: {openai_user} 👤👤👤")
+                else:
+                    logger.warning(f"⚠️ User info provided but no email or user_id: {user_info}")
+                    print(f"⚠️⚠️⚠️ NO USER IDENTIFIER IN USER_INFO: {user_info} ⚠️⚠️⚠️")
+            else:
+                logger.warning("⚠️ No user_info provided to OpenAI API call")
+                print(f"⚠️⚠️⚠️ NO USER_INFO PROVIDED TO OPENAI API CALL ⚠️⚠️⚠️")
             
             # Prepare API call parameters
             api_params = {
@@ -1245,8 +1252,15 @@ class GPTAIAnalyzer:
             # Add user parameter for OpenAI usage tracking if available
             if openai_user:
                 api_params["user"] = openai_user
+                logger.info(f"✅ Adding 'user' parameter to OpenAI API call: {openai_user}")
+                print(f"✅✅✅ ADDING USER PARAMETER TO OPENAI: {openai_user} ✅✅✅")
+            else:
+                logger.warning("⚠️ NOT adding 'user' parameter to OpenAI API call - no user identifier")
+                print(f"❌❌❌ NOT ADDING USER PARAMETER TO OPENAI API CALL ❌❌❌")
             
             # Make API call to OpenAI
+            logger.info(f"🚀 Making OpenAI API call with params: model={model}, user={openai_user or 'None'}")
+            print(f"🚀🚀🚀 OPENAI API CALL - Model: {model}, User: {openai_user or 'None'} 🚀🚀🚀")
             response = self.client.chat.completions.create(**api_params)
             
             # Parse the response

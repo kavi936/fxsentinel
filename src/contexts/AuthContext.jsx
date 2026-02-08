@@ -11,6 +11,7 @@ import {
   updateProfile,
   sendPasswordResetEmail
 } from 'firebase/auth';
+import { isGoogleOAuthBlockedError, detectEmbeddedBrowser } from '../utils/browserDetection';
 
 const AuthContext = createContext();
 
@@ -121,6 +122,18 @@ export const AuthProvider = ({ children }) => {
   // Google sign in
   const signInWithGoogle = async () => {
     try {
+      // Check if we're in an embedded browser before attempting sign-in
+      const browserInfo = detectEmbeddedBrowser();
+      if (browserInfo.isEmbedded) {
+        // Create a custom error with helpful information
+        const embeddedBrowserError = new Error(
+          `Google sign-in is not available in ${browserInfo.browserName}. ${browserInfo.instructions || 'Please open this link in Safari or Chrome.'}`
+        );
+        embeddedBrowserError.code = 'auth/embedded-browser-blocked';
+        embeddedBrowserError.browserInfo = browserInfo;
+        throw embeddedBrowserError;
+      }
+
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
       
@@ -129,6 +142,18 @@ export const AuthProvider = ({ children }) => {
       
       return result;
     } catch (error) {
+      // Check if this is the Google OAuth blocked error
+      if (isGoogleOAuthBlockedError(error)) {
+        const browserInfo = detectEmbeddedBrowser();
+        // Enhance the error with helpful information
+        const enhancedError = new Error(
+          `Google sign-in is blocked in this browser. ${browserInfo.isEmbedded ? browserInfo.instructions : 'Please try opening this link in Safari or Chrome instead.'}`
+        );
+        enhancedError.code = error.code || 'auth/google-oauth-blocked';
+        enhancedError.originalError = error;
+        enhancedError.browserInfo = browserInfo;
+        throw enhancedError;
+      }
       throw error;
     }
   };
