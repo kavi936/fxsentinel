@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { getAdditionalUserInfo } from 'firebase/auth';
 import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
@@ -97,10 +98,33 @@ const Signup = () => {
   const handleGoogleSignIn = async () => {
     try {
       setError('');
-      await signInWithGoogle();
+      setIsLoading(true);
+      
+      // Sign in with Google (popup method)
+      const result = await signInWithGoogle();
+      
+      // Track conversion only for new signups (not returning logins)
+      // Firebase v9+ requires getAdditionalUserInfo() to access isNewUser
+      const additionalUserInfo = getAdditionalUserInfo(result);
+      const isNewUser = additionalUserInfo?.isNewUser || 
+        (result?.user?.metadata?.creationTime === result?.user?.metadata?.lastSignInTime);
+      
+      if (result?.user && isNewUser) {
+        trackSignupCompletion('google', {
+          email: result.user.email,
+          provider: 'google.com',
+          displayName: result.user.displayName
+        });
+      }
+      
       navigate('/auth-redirect');
     } catch (err) {
       setError('Failed to sign in with Google. Please try again.');
+      trackError('google_signup_failure', { 
+        error: err.message || 'unknown_error'
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 

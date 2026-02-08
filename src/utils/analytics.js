@@ -4,7 +4,13 @@ import { logEvent } from 'firebase/analytics';
 // Analytics utility for comprehensive tracking
 class AnalyticsTracker {
   constructor() {
-    this.utmParams = this.extractUTMParams();
+    // Try to retrieve persisted UTM params first, then extract from URL
+    this.utmParams = this.getPersistedUTMParams() || this.extractUTMParams();
+    // Persist UTM params if they exist (for use after redirects)
+    if (this.utmParams && this.utmParams.utm_source !== 'direct') {
+      this.persistUTMParams(this.utmParams);
+    }
+    
     this.sessionId = this.generateSessionId();
     this.userJourney = [];
     this.pageStartTime = Date.now();
@@ -34,6 +40,35 @@ class AnalyticsTracker {
     this.initTimeTracking();
   }
 
+  // Persist UTM parameters to sessionStorage (survives redirects)
+  persistUTMParams(utmParams) {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.setItem('fxsentinel_utm_params', JSON.stringify(utmParams));
+        console.log('📊 Analytics: UTM params persisted', utmParams);
+      }
+    } catch (e) {
+      console.warn('📊 Analytics: Failed to persist UTM params', e);
+    }
+  }
+
+  // Retrieve persisted UTM parameters from sessionStorage
+  getPersistedUTMParams() {
+    try {
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        const stored = sessionStorage.getItem('fxsentinel_utm_params');
+        if (stored) {
+          const params = JSON.parse(stored);
+          console.log('📊 Analytics: Retrieved persisted UTM params', params);
+          return params;
+        }
+      }
+    } catch (e) {
+      console.warn('📊 Analytics: Failed to retrieve persisted UTM params', e);
+    }
+    return null;
+  }
+
   // Extract UTM parameters from URL with enhanced referrer detection
   extractUTMParams() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -41,7 +76,7 @@ class AnalyticsTracker {
     
     // Priority 1: Check UTM parameters first (highest priority)
     if (urlParams.get('utm_source')) {
-      return {
+      const params = {
         utm_source: urlParams.get('utm_source'),
         utm_medium: urlParams.get('utm_medium') || 'none',
         utm_campaign: urlParams.get('utm_campaign') || 'none',
@@ -49,28 +84,38 @@ class AnalyticsTracker {
         utm_term: urlParams.get('utm_term') || 'none',
         referrer: referrer
       };
+      // Persist UTM params when found in URL
+      this.persistUTMParams(params);
+      return params;
     }
     
     // Priority 2: Handle short source parameter
     const shortSource = urlParams.get('s');
     if (shortSource) {
       const mapped = this.mapShortSource(shortSource);
-      return {
+      const params = {
         ...mapped,
         referrer: referrer
       };
+      this.persistUTMParams(params);
+      return params;
     }
     
     // Priority 3: Detect traffic source from referrer
     const referrerSource = this.detectReferrerSource(referrer);
     if (referrerSource) {
-      return {
+      const params = {
         ...referrerSource,
         referrer: referrer
       };
+      // Only persist if it's not direct traffic
+      if (referrerSource.utm_source !== 'direct') {
+        this.persistUTMParams(params);
+      }
+      return params;
     }
     
-    // Default: Direct traffic
+    // Default: Direct traffic (don't persist direct traffic)
     return {
       utm_source: 'direct',
       utm_medium: 'none',
@@ -806,4 +851,6 @@ export const trackSearchQuery = (query, resultsCount = 0) => {
 // Initialize device tracking on import
 if (typeof window !== 'undefined') {
   analyticsTracker.trackDeviceInfo();
+  // Expose analytics tracker to window for debugging/testing
+  window.analyticsTracker = analyticsTracker;
 }
