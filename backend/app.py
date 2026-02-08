@@ -1741,6 +1741,15 @@ def get_analysis(news_id):
         print(f"🦊 BACKEND - Analysis requested for news_id: {news_id}")
         print(f"🦊 BACKEND - News ID type: {type(news_id)}")
         print(f"🦊 BACKEND - News ID value: {news_id}")
+        
+        # Extract user information from Firebase token for OpenAI usage tracking
+        token_user_info = _extract_user_from_token()
+        print(f"🔍 DEBUG: Token user info extracted in get_analysis: {token_user_info}")
+        if token_user_info:
+            print(f"👤 User from token: {token_user_info.get('user_email') or token_user_info.get('user_id')}")
+        else:
+            print(f"⚠️ No user info extracted from token - check Authorization header")
+        
         # Convert to int for comparison if it's a string
         try:
             news_id_int = int(news_id)
@@ -1750,6 +1759,7 @@ def get_analysis(news_id):
             news_id_int = None
         print(f"🦊 BACKEND - Request headers: {dict(request.headers)}")
         print(f"🦊 BACKEND - Request origin: {request.headers.get('Origin', 'Unknown')}")
+        print(f"🦊 BACKEND - Authorization header present: {'Authorization' in request.headers}")
         
         # First try to get the news item from cached news data
         from services.persistent_news_cache import get_persistent_news_cache
@@ -1846,6 +1856,10 @@ def generate_news_analysis(news_item):
     try:
         print(f"🔍 Starting MVP news analysis for: {news_item.get('title', 'No title')}")
         
+        # Extract user information from Firebase token for OpenAI usage tracking
+        token_user_info = _extract_user_from_token()
+        print(f"🔍 DEBUG: Token user info extracted in generate_news_analysis: {token_user_info}")
+        
         # Import MVP analyzer and analysis history
         from services.mvp_news_analyzer import mvp_news_analyzer
         from services.analysis_history import analysis_history
@@ -1859,8 +1873,13 @@ def generate_news_analysis(news_item):
             }
         }
         
-        # Analyze news using MVP analyzer
-        mvp_result = mvp_news_analyzer.analyze_news(news_item, market_context)
+        # Analyze news using MVP analyzer with user info for tracking
+        if token_user_info:
+            print(f"👤👤👤 PASSING USER INFO TO MVP ANALYZER: {token_user_info} 👤👤👤")
+        else:
+            print(f"❌❌❌ NO USER INFO FOR MVP ANALYZER ❌❌❌")
+        
+        mvp_result = mvp_news_analyzer.analyze_news(news_item, market_context, user_info=token_user_info)
         
         print(f"🔍 MVP analysis completed: {mvp_result.immediate_reaction}")
         print(f"🔍 MVP analysis news_impact length: {len(mvp_result.news_impact) if mvp_result.news_impact else 0}")
@@ -2053,7 +2072,12 @@ def get_enhanced_analysis(news_id):
     print(f"🔍 DEBUG: Request method: {request.method}")
     print(f"🔍 DEBUG: Request headers: {dict(request.headers)}")
     try:
-        # Initialize user information variables (will be set from POST request if available)
+        # Extract user information from Firebase token (more reliable than frontend)
+        # This ensures we always have user info since users must be signed in to access dashboard
+        token_user_info = _extract_user_from_token()
+        print(f"🔍 DEBUG: Token user info extracted: {token_user_info}")
+        
+        # Initialize user information variables (will be set from POST request or token)
         user_id = None
         user_email = None
         user_name = None
@@ -2065,10 +2089,10 @@ def get_enhanced_analysis(news_id):
             print(f"🔍 DEBUG: Request data keys: {list(request_data.keys()) if request_data else 'None'}")
             event = request_data.get('event')
             analysis_type = request_data.get('analysisType', 'pre-event')
-            # Extract user information for OpenAI usage tracking
-            user_id = request_data.get('user_id')
-            user_email = request_data.get('user_email')
-            user_name = request_data.get('user_name')
+            # Extract user information from request body (fallback to token if not provided)
+            user_id = request_data.get('user_id') or (token_user_info.get('user_id') if token_user_info else None)
+            user_email = request_data.get('user_email') or (token_user_info.get('user_email') if token_user_info else None)
+            user_name = request_data.get('user_name') or (token_user_info.get('user_name') if token_user_info else None)
             print(f"🚨 Using event data from request: {event.get('title', 'Unknown')} - {event.get('currency', 'Unknown')}")
             print(f"👤 User info - ID: {user_id}, Email: {user_email}, Name: {user_name}")
             print(f"🔍 DEBUG: Event keys: {list(event.keys()) if event else 'None'}")
@@ -2077,6 +2101,11 @@ def get_enhanced_analysis(news_id):
             print(f"🔍 DEBUG: Getting event by ID from calendar...")
             event = get_economic_event_by_id(news_id)
             analysis_type = 'pre-event'
+            # Use user info from token for GET requests
+            if token_user_info:
+                user_id = token_user_info.get('user_id')
+                user_email = token_user_info.get('user_email')
+                user_name = token_user_info.get('user_name')
             print(f"🔍 DEBUG: Event from calendar: {event.get('title', 'Unknown') if event else 'None'}")
         
         if not event:
@@ -2201,6 +2230,15 @@ def get_enhanced_analysis(news_id):
             'user_email': user_email,
             'user_name': user_name
         } if user_id or user_email else None
+        
+        if user_info:
+            print(f"👤👤👤 PASSING USER INFO TO ANALYZER: {user_info} 👤👤👤")
+            print(f"👤 Tracking analysis for user: {user_info.get('user_email') or user_info.get('user_id')}")
+        else:
+            print(f"❌❌❌ NO USER INFO TO PASS TO ANALYZER ❌❌❌")
+            print(f"❌ user_id: {user_id}, user_email: {user_email}, user_name: {user_name}")
+            print(f"❌ token_user_info: {token_user_info if 'token_user_info' in locals() else 'Not extracted'}")
+        
         gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type, user_info=user_info)
         print(f"🔍 DEBUG: GPT Tier 1 analysis completed successfully!")
         
@@ -3386,6 +3424,47 @@ def _check_subscription_status(user_id):
         return False  # Deny access if we can't verify subscription
 
 # Security helper functions
+def _extract_user_from_token():
+    """
+    Extract user information from Firebase ID token in Authorization header.
+    Returns dict with user_id, user_email, user_name, or None if not available.
+    This is more reliable than relying on frontend to send user info.
+    """
+    try:
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return None
+        
+        token = auth_header.split('Bearer ')[1]
+        
+        # Verify the Firebase ID token
+        decoded_token = auth.verify_id_token(token)
+        
+        user_info = {
+            'user_id': decoded_token.get('uid', ''),
+            'user_email': decoded_token.get('email', ''),
+            'user_name': decoded_token.get('name', '') or decoded_token.get('display_name', '')
+        }
+        
+        # Only return if we have at least user_id
+        if user_info['user_id']:
+            logger.info(f"👤 Extracted user from token: {user_info['user_email'] or user_info['user_id']}")
+            print(f"👤 Extracted user from token: {user_info['user_email'] or user_info['user_id']}")
+            return user_info
+        
+        return None
+        
+    except auth.InvalidIdTokenError:
+        logger.debug("Invalid Firebase token in request")
+        return None
+    except auth.ExpiredIdTokenError:
+        logger.debug("Expired Firebase token in request")
+        return None
+    except Exception as e:
+        logger.debug(f"Could not extract user from token: {e}")
+        print(f"⚠️ Could not extract user from token: {e}")
+        return None
+
 def _verify_user_access(user_id):
     """Verify user has access to dashboard - SIMPLIFIED SECURITY CHECK"""
     try:

@@ -6,6 +6,8 @@ import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import { trackSignupCompletion, trackError, trackEngagement } from '../utils/analytics';
+import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
+import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 
 const Signup = () => {
   const [showForm, setShowForm] = useState(false);
@@ -119,10 +121,22 @@ const Signup = () => {
       
       navigate('/auth-redirect');
     } catch (err) {
-      setError('Failed to sign in with Google. Please try again.');
-      trackError('google_signup_failure', { 
-        error: err.message || 'unknown_error'
-      });
+      // Check if this is the Google OAuth blocked error
+      if (isGoogleOAuthBlockedError(err) || err.code === 'auth/embedded-browser-blocked') {
+        // Show the full error message which includes instructions
+        const errorMessage = err.message || 'Google sign-in is not available in this browser. Please open this link in Safari or Chrome.';
+        setError(errorMessage);
+        trackError('google_signup_failure_embedded_browser', { 
+          error: err.code || 'embedded-browser-blocked',
+          browserInfo: err.browserInfo || 'unknown'
+        });
+      } else {
+        setError('Failed to sign in with Google. Please try again.');
+        trackError('google_signup_failure', { 
+          error: err.message || 'unknown_error',
+          code: err.code || 'unknown'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -130,6 +144,7 @@ const Signup = () => {
 
   return (
     <div className="auth-container">
+      <EmbeddedBrowserWarning />
       <div className="auth-background">
         {/* Data stream background effect */}
       </div>

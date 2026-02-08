@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { config } from '../config';
 import { formatNewsTime, getUserTimezone, getTimezoneAbbreviation } from '../utils/timezoneUtils';
 import { sanitizeNewsItem, sanitizeAnalysis } from '../utils/sanitize';
+import { useAuth } from '../contexts/AuthContext';
 import './LiveNewsFeed.css';
 import InfoIcon from './InfoIcon.jsx';
 
@@ -200,6 +201,7 @@ const LiveNewsFeed = () => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [forceRefreshing, setForceRefreshing] = useState(false);
+  const { currentUser } = useAuth();
 
   // Debug useEffect to monitor state changes (development only)
   useEffect(() => {
@@ -426,8 +428,26 @@ const LiveNewsFeed = () => {
       const newsId = String(newsItem.id);
       const requestUrl = config.endpoints.analysis(newsId) + '?t=' + Date.now();
       
+      // Get Firebase ID token for backend authentication and user tracking
+      let authToken = null;
+      if (currentUser) {
+        try {
+          authToken = await currentUser.getIdToken();
+        } catch (error) {
+          console.error('Error getting Firebase token:', error);
+        }
+      }
+      
+      // Prepare headers with Authorization token if available
+      const headers = {};
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
       // Make API call to get real GPT analysis
-      const response = await fetch(requestUrl);
+      const response = await fetch(requestUrl, {
+        headers: headers
+      });
       
       // Handle rate limit errors before parsing JSON
       if (response.status === 429) {
