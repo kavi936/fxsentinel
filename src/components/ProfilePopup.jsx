@@ -73,8 +73,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     }
   };
 
-  // Check if user is developer
+  // Developer: either hardcoded email (legacy) or API says so (DEVELOPER_EMAILS env)
   const isDeveloper = currentUser?.email === 'kavi.cf412@gmail.com';
+  const isDeveloperAccount = isDeveloper || subscriptionStatus?.status === 'developer' || subscriptionStatus?.is_developer === true;
 
   // Check if user is beta tester
   const isBetaTester = subscriptionStatus?.status === 'beta_tester' || subscriptionStatus?.is_beta_tester === true;
@@ -342,10 +343,10 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                   <h3>{getUserDisplayName()}</h3>
                   <p className="user-email">{currentUser?.email || 'No email'}</p>
                   <p className="user-status">
-                    {isDeveloper ? 'Developer' : 
+                    {isDeveloperAccount ? 'Developer' : 
                      subscriptionStatus?.status === 'free' ? 'Free Plan' :
                      subscriptionStatus?.status === 'premium' ? 'Premium Plan' :
-                     subscriptionStatus?.status === 'developer' ? 'Developer' : 'Free Plan'}
+                     subscriptionStatus?.status === 'past_due' ? 'Payment Due' : 'Free Plan'}
                   </p>
                 </div>
               </div>
@@ -497,7 +498,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                 <div className="loading-state">
                   <p>Loading subscription details...</p>
                 </div>
-              ) : isDeveloper ? (
+              ) : isDeveloperAccount ? (
                 <div className="subscription-details developer-account">
                   <div className="subscription-status">
                     <h4>Current Plan</h4>
@@ -612,7 +613,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     </div>
                   )}
 
-                  {!isDeveloper && (
+                  {!isDeveloperAccount && (
                     <div className="billing-actions">
                       <button 
                         className="primary-btn"
