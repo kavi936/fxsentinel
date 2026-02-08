@@ -3116,11 +3116,27 @@ const Overview = () => {
       console.log('🦄 Event Title:', event.title);
       console.log('🦄 URL:', `${config.endpoints.backend}/api/enhanced-analysis/${event.id}`);
       
+      // Get Firebase ID token for backend authentication and user tracking
+      let authToken = null;
+      if (currentUser) {
+        try {
+          authToken = await currentUser.getIdToken();
+        } catch (error) {
+          console.error('Error getting Firebase token:', error);
+        }
+      }
+
+      // Prepare headers with Authorization token if available
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const response = await fetch(`${config.endpoints.backend}/api/enhanced-analysis/${event.id}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         body: JSON.stringify({
           event: event,
           analysisType: isPostEvent ? 'post-event' : 'pre-event',
@@ -3129,7 +3145,7 @@ const Overview = () => {
             eventTime: new Date().toISOString(),
             isPostEvent: isPostEvent
           },
-          // Include user information for OpenAI usage tracking
+          // Include user information for OpenAI usage tracking (fallback if token extraction fails)
           user_id: currentUser?.uid || null,
           user_email: currentUser?.email || null,
           user_name: currentUser?.displayName || null
