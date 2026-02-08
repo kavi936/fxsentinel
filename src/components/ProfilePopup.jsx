@@ -14,6 +14,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
   const [isLoadingSubscription, setIsLoadingSubscription] = useState(false);
   const [isLoadingPortal, setIsLoadingPortal] = useState(false);
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
+  const [upgradeError, setUpgradeError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [formData, setFormData] = useState({
     displayName: currentUser?.displayName || '',
@@ -129,11 +130,40 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     }
   };
 
-  // Handle subscription management
+  // Upgrade to Premium: create Stripe Checkout session and redirect to payment (for free users)
+  const handleUpgradeToPremium = async () => {
+    if (!currentUser) return;
+    setIsLoadingPortal(true);
+    setUpgradeError(null);
+    try {
+      const response = await fetch(`${config.API_BASE_URL}/api/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: currentUser.uid,
+          email: currentUser.email,
+          name: currentUser.displayName || currentUser.email,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok && data.session_url) {
+        window.location.href = data.session_url;
+        return;
+      }
+      setUpgradeError(data.message || data.error || 'Could not start checkout. Please try again.');
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      setUpgradeError(error.message || 'Network error. Please try again.');
+    } finally {
+      setIsLoadingPortal(false);
+    }
+  };
+
+  // Manage existing subscription: Stripe Customer Portal (for premium users)
   const handleManageSubscription = async () => {
     if (!currentUser) return;
-    
     setIsLoadingPortal(true);
+    setUpgradeError(null);
     try {
       const response = await fetch(`${config.API_BASE_URL}/api/create-portal-session`, {
         method: 'POST',
@@ -143,15 +173,15 @@ const ProfilePopup = ({ isOpen, onClose }) => {
           return_url: window.location.href
         }),
       });
-      
-      if (response.ok) {
-        const { url } = await response.json();
-        window.location.href = url; // Redirect to Stripe Customer Portal
-      } else {
-        console.error('Failed to create portal session');
+      const data = await response.json();
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+        return;
       }
+      setUpgradeError(data.error || 'Could not open billing portal.');
     } catch (error) {
       console.error('Error creating portal session:', error);
+      setUpgradeError(error.message || 'Network error. Please try again.');
     } finally {
       setIsLoadingPortal(false);
     }
@@ -160,6 +190,7 @@ const ProfilePopup = ({ isOpen, onClose }) => {
   // Fetch subscription status and usage data when component mounts or user changes
   useEffect(() => {
     if (isOpen && currentUser) {
+      setUpgradeError(null);
       fetchSubscriptionStatus();
       fetchUsageData();
     }
@@ -535,11 +566,14 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                         </ul>
                         <button 
                           className="upgrade-btn"
-                          onClick={handleManageSubscription}
+                          onClick={handleUpgradeToPremium}
                           disabled={isLoadingPortal}
                         >
                           {isLoadingPortal ? 'Loading...' : 'Upgrade to Premium'}
                         </button>
+                        {upgradeError && (
+                          <p className="upgrade-error" style={{ color: '#dc3545', marginTop: '8px', fontSize: '14px' }}>{upgradeError}</p>
+                        )}
                       </div>
                     </div>
                   )}

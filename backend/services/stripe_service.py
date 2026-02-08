@@ -301,7 +301,7 @@ class StripeService:
             }
 
     def increment_analysis_count(self, user_id, email=None):
-        """Increment the analysis count for a user based on their tier"""
+        """Increment the analysis count for a user based on their tier. Called only when an AI analysis actually runs."""
         try:
             # Skip for developers
             if email and self.is_developer_email(email):
@@ -316,18 +316,22 @@ class StripeService:
             
             user_data = user_doc.to_dict()
             status = user_data.get('subscription_status', 'free')
+            today = datetime.now().date()
+            current_month_start = today.replace(day=1)
             
-            # Increment appropriate counter based on subscription status
+            # Ensure reset fields exist so can_perform_analysis doesn't zero the count on next read
+            # (docs created by ai_usage_tracker don't have these)
+            updates = {}
             if status == 'premium':
-                # Premium users: increment daily count
-                self.db.collection('users').document(user_id).update({
-                    'daily_analysis_count': firestore.Increment(1)
-                })
-            else:  # free
-                # Free users: increment monthly count
-                self.db.collection('users').document(user_id).update({
-                    'monthly_analysis_count': firestore.Increment(1)
-                })
+                if user_data.get('last_daily_reset') != today:
+                    updates['last_daily_reset'] = today
+                updates['daily_analysis_count'] = firestore.Increment(1)
+            else:
+                if user_data.get('last_monthly_reset') != current_month_start:
+                    updates['last_monthly_reset'] = current_month_start
+                updates['monthly_analysis_count'] = firestore.Increment(1)
+            
+            self.db.collection('users').document(user_id).update(updates)
                 
         except Exception as e:
             print(f"Error incrementing analysis count: {e}")
