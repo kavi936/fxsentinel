@@ -14,8 +14,11 @@ import logging
 from datetime import datetime
 from dotenv import load_dotenv
 import stripe
-from firebase_admin import credentials, firestore, initialize_app
+from firebase_admin import credentials, firestore, initialize_app, auth
 from services.stripe_service import StripeService
+
+# Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
+load_dotenv()
 from services.coupon_service import CouponService
 
 # Optional import for Google Sheets service
@@ -27,32 +30,35 @@ except ImportError:
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Firebase initialization
+# Firebase initialization (requires project ID for Auth token verification / AI usage tracking)
 try:
     import firebase_admin
-    from firebase_admin import credentials, firestore, initialize_app
-    
+    from firebase_admin import credentials, firestore, initialize_app, auth
+
+    # Project ID is required for auth.verify_id_token() - get from env or default
+    _firebase_project_id = os.getenv('FIREBASE_PROJECT_ID') or os.getenv('GOOGLE_CLOUD_PROJECT') or 'fxsentinel'
+    if not os.getenv('GOOGLE_CLOUD_PROJECT'):
+        os.environ['GOOGLE_CLOUD_PROJECT'] = _firebase_project_id
+
     # Initialize Firebase if not already initialized
     if not firebase_admin._apps:
-        # Use service account key if available, otherwise use default credentials
         if os.path.exists('firebase-service-account.json'):
             cred = credentials.Certificate('firebase-service-account.json')
-            initialize_app(cred)
+            initialize_app(cred, {'projectId': _firebase_project_id})
         else:
-            # Use default credentials (for development)
-            initialize_app()
-        
-        print("✅ Firebase initialized successfully")
+            # Default credentials (e.g. ADC) - still need projectId for Auth
+            initialize_app(options={'projectId': _firebase_project_id})
+
+        print(f"✅ Firebase initialized successfully (project: {_firebase_project_id})")
     else:
         print("✅ Firebase already initialized")
-        
+
 except ImportError:
     print("⚠️ Firebase Admin SDK not installed")
+    auth = None  # Set auth to None if import fails
 except Exception as e:
     print(f"⚠️ Firebase initialization failed: {e}")
-
-# Load environment variables from .env file
-load_dotenv()
+    auth = None  # Set auth to None if initialization fails
 
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
@@ -97,7 +103,9 @@ else:
     print("⚠️ Google Sheets service not available (gspread not installed)")
 
 # Configure CORS to allow requests from all origins (including file:// and null origins)
-CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False)
+# allow_headers must include Authorization so frontend can send Firebase ID token for user tracking
+CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=False,
+     allow_headers=["Content-Type", "Authorization"])
 
 # Initialize unified alert processor on app startup (works in production with WSGI servers)
 def initialize_unified_alert_processor():
@@ -1818,6 +1826,12 @@ def get_analysis(news_id):
         if news_item:
             print(f"🦊 BACKEND - Generating news analysis for: {news_item.get('title', 'No title')}")
             analysis = generate_news_analysis(news_item)
+            # Billing: increment usage so profile popup shows correct count (token_user_info from earlier in this handler)
+            if token_user_info and analysis and analysis.get('analysis_type') != 'error':
+                try:
+                    stripe_service.increment_analysis_count(token_user_info.get('user_id'), token_user_info.get('user_email'))
+                except Exception as billing_err:
+                    logger.debug(f"Billing count increment failed (non-critical): {billing_err}")
             print(f"🦊 BACKEND - Analysis generated successfully")
             print(f"🦊 BACKEND - Analysis type: {analysis.get('analysis_type', 'unknown')}")
             print(f"🦊 BACKEND - Analysis news_impact length: {len(analysis.get('news_impact', ''))}")
@@ -2085,15 +2099,15 @@ def get_enhanced_analysis(news_id):
         # Get event data from request body if POST, otherwise from Finnhub calendar
         print(f"🔍 DEBUG: Getting event data...")
         if request.method == 'POST':
-            request_data = request.get_json()
+            request_data = request.get_json() or {}
             print(f"🔍 DEBUG: Request data keys: {list(request_data.keys()) if request_data else 'None'}")
             event = request_data.get('event')
             analysis_type = request_data.get('analysisType', 'pre-event')
-            # Extract user information from request body (fallback to token if not provided)
-            user_id = request_data.get('user_id') or (token_user_info.get('user_id') if token_user_info else None)
-            user_email = request_data.get('user_email') or (token_user_info.get('user_email') if token_user_info else None)
-            user_name = request_data.get('user_name') or (token_user_info.get('user_name') if token_user_info else None)
-            print(f"🚨 Using event data from request: {event.get('title', 'Unknown')} - {event.get('currency', 'Unknown')}")
+            # Prefer token over body for user (token is verified; body can be spoofed). Enables OpenAI usage dashboard per-user.
+            user_id = (token_user_info.get('user_id') if token_user_info else None) or request_data.get('user_id')
+            user_email = (token_user_info.get('user_email') if token_user_info else None) or request_data.get('user_email')
+            user_name = (token_user_info.get('user_name') if token_user_info else None) or request_data.get('user_name')
+            print(f"🚨 Using event data from request: {event.get('title', 'Unknown') if event else 'Unknown'} - {event.get('currency', 'Unknown') if event else 'Unknown'}")
             print(f"👤 User info - ID: {user_id}, Email: {user_email}, Name: {user_name}")
             print(f"🔍 DEBUG: Event keys: {list(event.keys()) if event else 'None'}")
         else:
@@ -2255,6 +2269,26 @@ def get_enhanced_analysis(news_id):
         print(f"🚨 Cache Hit: {getattr(gpt_analysis, 'cache_hit', False)}")
         print(f"🚨 Cost Estimate: ${getattr(gpt_analysis, 'cost_estimate', 0.0):.4f}")
         print(f"🚨🚨🚨 END AI ANALYSIS DEBUG 🚨🚨🚨")
+        
+        # Redundant Firestore tracking at API layer so we never miss (analyzer also tracks; this ensures /api/enhanced-analysis is always logged)
+        if user_info:
+            try:
+                from services.ai_usage_tracker import ai_usage_tracker
+                ai_usage_tracker.track_analysis_usage(
+                    user_info=user_info,
+                    analysis_type=analysis_type,
+                    event_id=validated_event.get('id'),
+                    model_used=getattr(gpt_analysis, 'model_used', None),
+                    cost_estimate=getattr(gpt_analysis, 'cost_estimate'),
+                    cache_hit=getattr(gpt_analysis, 'cache_hit', False)
+                )
+            except Exception as track_err:
+                logger.debug(f"API-layer usage tracking failed (non-critical): {track_err}")
+            # Billing: increment free/premium usage so profile popup shows correct count
+            try:
+                stripe_service.increment_analysis_count(user_info.get('user_id'), user_info.get('user_email'))
+            except Exception as billing_err:
+                logger.debug(f"Billing count increment failed (non-critical): {billing_err}")
         
         # Transform GPT Tier 1 analysis to frontend-compatible format
         print(f"🔍 DEBUG: Starting response transformation...")
@@ -3431,14 +3465,35 @@ def _extract_user_from_token():
     This is more reliable than relying on frontend to send user info.
     """
     try:
-        auth_header = request.headers.get('Authorization', '')
-        if not auth_header.startswith('Bearer '):
+        # Get auth module - check if it exists in globals first
+        auth_module = globals().get('auth')
+        
+        # If auth is not available or is None, try to import it
+        if auth_module is None:
+            try:
+                from firebase_admin import auth as auth_module
+            except (ImportError, NameError, AttributeError) as import_error:
+                logger.debug(f"Firebase Admin SDK auth not available: {import_error}")
+                print(f"⚠️ Firebase auth not available: {import_error}")
+                return None
+        
+        # Verify auth_module is actually available and not None
+        if auth_module is None:
+            logger.debug("Firebase auth module is None, cannot extract user from token")
             return None
         
-        token = auth_header.split('Bearer ')[1]
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            logger.debug("No Bearer token in Authorization header")
+            return None
+        
+        token = auth_header.split('Bearer ')[1].strip()
+        if not token:
+            logger.debug("Authorization header had Bearer but empty token")
+            return None
         
         # Verify the Firebase ID token
-        decoded_token = auth.verify_id_token(token)
+        decoded_token = auth_module.verify_id_token(token)
         
         user_info = {
             'user_id': decoded_token.get('uid', ''),
@@ -3446,23 +3501,28 @@ def _extract_user_from_token():
             'user_name': decoded_token.get('name', '') or decoded_token.get('display_name', '')
         }
         
-        # Only return if we have at least user_id
+        # Only return if we have at least user_id (Firebase tokens always have uid)
         if user_info['user_id']:
             logger.info(f"👤 Extracted user from token: {user_info['user_email'] or user_info['user_id']}")
             print(f"👤 Extracted user from token: {user_info['user_email'] or user_info['user_id']}")
             return user_info
         
+        logger.debug("Token decoded but missing uid in payload")
         return None
         
-    except auth.InvalidIdTokenError:
-        logger.debug("Invalid Firebase token in request")
-        return None
-    except auth.ExpiredIdTokenError:
-        logger.debug("Expired Firebase token in request")
-        return None
     except Exception as e:
-        logger.debug(f"Could not extract user from token: {e}")
-        print(f"⚠️ Could not extract user from token: {e}")
+        # Handle Firebase auth errors gracefully
+        error_type = type(e).__name__
+        error_module = type(e).__module__
+        
+        # Check if it's a Firebase auth error (using string matching to avoid NameError)
+        if 'InvalidIdTokenError' in error_type or 'ExpiredIdTokenError' in error_type:
+            logger.debug(f"Firebase token error: {e}")
+            return None
+        
+        # Log the actual error for debugging (so you can see why OpenAI dashboard has no users)
+        logger.warning(f"Could not extract user from token: {e} (type: {error_type})")
+        print(f"⚠️ Could not extract user from token: {e} (type: {error_type})")
         return None
 
 def _verify_user_access(user_id):
@@ -5388,12 +5448,8 @@ def check_analysis_permission(user_id):
         email = request.args.get('email')
         
         permission_data = stripe_service.can_perform_analysis(user_id, email)
-        
-        # If user can perform analysis, increment the count
-        # Stripe service handles monthly vs daily increment based on tier
-        if permission_data.get('can_perform', False) and permission_data.get('status') != 'developer':
-            stripe_service.increment_analysis_count(user_id, email)
-        
+        # Do NOT increment here: counts are incremented only when analysis actually runs
+        # (enhanced-analysis and /api/analysis), so the billing section reflects real usage.
         return jsonify(permission_data)
     except Exception as e:
         return jsonify({'error': str(e)}), 500

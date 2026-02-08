@@ -13,20 +13,38 @@ The AI Usage Tracking system tracks which users are using AI analysis features, 
 ### 1. User Tracking Flow
 
 ```
-User Request → Backend extracts user from Firebase token → 
-AI Analyzer receives user_info → OpenAI API call includes user parameter →
-Usage logged to Firestore → Available via API endpoints
+User Request (with Authorization: Bearer <Firebase ID token>) →
+Backend extracts user from token (preferred) or request body →
+user_info passed to GPT analyzer →
+OpenAI API call includes "user" parameter (email or uid) →
+Usage appears in OpenAI Usage dashboard under "Users" dropdown →
+Usage also logged to Firestore (ai_usage_logs + users) →
+List users via GET /api/ai-usage/stats (admin only)
 ```
 
-### 2. What Gets Tracked
+**Important**: The backend **prefers the Firebase token** over the request body for user identity (token is verified; body can be spoofed). Ensure the frontend sends `Authorization: Bearer <idToken>` so the OpenAI dashboard shows per-user usage.
+
+### 2. Where AI Analysis Is Used (all covered for user tracking)
+
+| Entry point | Route | Frontend | Analyzer | User from token/body | OpenAI `user` + Firestore |
+|-------------|-------|----------|----------|----------------------|---------------------------|
+| **Economic calendar** | `POST /api/enhanced-analysis/<news_id>` | Overview.jsx | GPTAIAnalyzer | ✅ Token preferred, then body | ✅ Yes |
+| **Live news (dashboard)** | `GET /api/analysis/<news_id>` | LiveNewsFeed.jsx | MVPNewsAnalyzer | ✅ Token only (GET has no body) | ✅ Yes |
+| Calendar fallback (basic) | `GET /api/analysis/<id>` | Overview.jsx | MVP / basic | ✅ Token only | ✅ Yes (if MVP GPT path) |
+
+- **Economic calendar**: User is extracted in `get_enhanced_analysis` (token then body), passed to `gpt_ai_analyzer.analyze_macro_event(..., user_info=user_info)`. Redundant Firestore tracking at API layer.
+- **Live news**: User is extracted in `generate_news_analysis` via `_extract_user_from_token()`, passed to `mvp_news_analyzer.analyze_news(..., user_info=token_user_info)`. MVP adds OpenAI `user` and calls `ai_usage_tracker.track_analysis_usage` when GPT is used.
+- Both frontends send `Authorization: Bearer <idToken>` when the user is logged in.
+
+### 3. What Gets Tracked
 
 - **User identification**: user_id, user_email, user_name
-- **Analysis details**: analysis_type, event_id, model_used
+- **Analysis details**: analysis_type (e.g. pre-event, post-event, news), event_id, model_used
 - **Cost tracking**: cost_estimate per analysis
 - **Cache status**: Whether result was cached (no OpenAI cost)
 - **Timestamps**: When each analysis was performed
 
-### 3. Storage
+### 4. Storage
 
 - **Firestore Collection**: `ai_usage_logs` - Detailed log of every analysis
 - **Firestore Collection**: `users` - User documents with aggregated stats:
@@ -45,10 +63,11 @@ Usage logged to Firestore → Available via API endpoints
    python scripts/test_ai_usage_tracking.py
    ```
 
-2. **Make some AI analysis requests**:
+2. **Make some AI analysis requests** (both entry points):
    - Log in as different users
-   - Generate AI analyses from the dashboard
-   - Check that each user's usage appears separately
+   - **Economic calendar**: click "Analyze" on an event to trigger `/api/enhanced-analysis`
+   - **Live news**: click "Analyze" on a news item to trigger `/api/analysis`
+   - Check that each user's usage appears separately in Firestore and in the OpenAI Usage dashboard
 
 3. **Check OpenAI Dashboard**:
    - Go to https://platform.openai.com/usage
@@ -171,12 +190,21 @@ Get detailed usage statistics for a specific user.
 }
 ```
 
+## Getting Users for Feedback (Quick Reference)
+
+1. **Set `DEVELOPER_EMAILS`** in backend `.env` to your admin email (comma-separated for multiple).
+2. **Call the API** as a logged-in admin:
+   - `GET /api/ai-usage/stats?days=30&min_analyses=1`
+   - Send header: `Authorization: Bearer <your Firebase ID token>`
+3. **Response** includes `active_users[]` with `user_email`, `user_name`, `total_analyses`, `last_usage`. Use these emails to reach out for feedback.
+4. **OpenAI dashboard**: Go to https://platform.openai.com/usage and use the **Users** dropdown to see usage per user (same identifiers you pass as the `user` parameter).
+
 ## Contacting Users for Feedback
 
 ### Method 1: Export Email List
 
-1. Get active users via API
-2. Extract email addresses
+1. Get active users via API (see above)
+2. Extract `user_email` from `active_users`
 3. Send feedback request email
 
 ### Method 2: Firebase Console
@@ -196,10 +224,11 @@ Add a feedback request component that shows to active users:
 
 ### Issue: All usage shows under my name in OpenAI dashboard
 
-**Solution**: 
-- Verify frontend is sending Authorization header
-- Check backend logs for "👤 Tracking OpenAI usage for user" messages
-- Ensure `_extract_user_from_token()` is working
+**Causes and fixes**:
+- **CORS**: Backend must allow `Authorization` in preflight. The app uses `CORS(..., allow_headers=["Content-Type", "Authorization"])`. If you added custom OPTIONS handlers elsewhere, ensure they include `Authorization` in `Access-Control-Allow-Headers`.
+- **Token not sent**: In DevTools → Network, check the request to `/api/enhanced-analysis/...` has header `Authorization: Bearer <token>`. Frontend gets the token via `currentUser.getIdToken()` and adds it to the fetch headers.
+- **Token extraction failing**: Backend logs will show `⚠️ Could not extract user from token: ...`. Common causes: Firebase Admin not initialized, wrong project, or expired/invalid token. Ensure `firebase-service-account.json` (or env) is set and Firebase is initialized at startup.
+- **User from token**: Backend prefers token over request body. If token is valid, you should see `👤 Extracted user from token: <email or uid>` and then `✅✅✅ ADDING USER PARAMETER TO OPENAI: ...` in logs.
 
 ### Issue: No usage data in Firestore
 

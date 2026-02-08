@@ -2,6 +2,7 @@
 AI Analysis Usage Tracker
 Tracks which users are using AI analysis features for analytics and feedback collection
 """
+import hashlib
 import os
 from datetime import datetime, timezone, timedelta
 from firebase_admin import firestore
@@ -42,18 +43,21 @@ class AIUsageTracker:
             logger.debug("Firebase not available, skipping usage tracking")
             return
         
-        if not user_info or not user_info.get('user_id'):
-            logger.debug("No user info provided, skipping usage tracking")
+        # Require at least one identifier so we can list users for feedback (OpenAI dashboard + our Firestore)
+        user_id = user_info.get('user_id') if user_info else None
+        user_email = (user_info.get('user_email') or '').strip() if user_info else ''
+        if not user_info or (not user_id and not user_email):
+            logger.debug("No user info (user_id or user_email) provided, skipping usage tracking")
             return
         
+        # Use stable doc id: prefer Firebase uid; if only email, use prefixed hash so we can still list users
+        doc_id = user_id if user_id else ('email_' + hashlib.sha256(user_email.encode()).hexdigest()[:28])
+        user_name = (user_info.get('user_name') or '').strip() if user_info else ''
+        
         try:
-            user_id = user_info.get('user_id')
-            user_email = user_info.get('user_email', '')
-            user_name = user_info.get('user_name', '')
-            
             # Create usage log entry
             usage_log = {
-                'user_id': user_id,
+                'user_id': user_id or doc_id,
                 'user_email': user_email,
                 'user_name': user_name,
                 'analysis_type': analysis_type,
@@ -68,8 +72,8 @@ class AIUsageTracker:
             # Add to usage_logs collection
             self.db.collection('ai_usage_logs').add(usage_log)
             
-            # Update user's last_ai_usage timestamp and increment counters
-            user_ref = self.db.collection('users').document(user_id)
+            # Update user's last_ai_usage timestamp and increment counters (doc_id is uid or email_xxx)
+            user_ref = self.db.collection('users').document(doc_id)
             user_doc = user_ref.get()
             
             if user_doc.exists:
@@ -88,7 +92,7 @@ class AIUsageTracker:
             else:
                 # Create user document if it doesn't exist
                 user_ref.set({
-                    'user_id': user_id,
+                    'user_id': user_id or doc_id,
                     'user_email': user_email,
                     'user_name': user_name,
                     'last_ai_usage': datetime.now(timezone.utc),
