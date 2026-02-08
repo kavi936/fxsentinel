@@ -428,8 +428,14 @@ class MVPNewsAnalyzer:
             logger.warning(f"Error fetching pairs sentiment data: {e}")
             return []
     
-    def analyze_news(self, news_item: Dict, market_context: Optional[Dict] = None) -> MVPAnalysisResult:
-        """Analyze news using hybrid approach"""
+    def analyze_news(self, news_item: Dict, market_context: Optional[Dict] = None, user_info: Optional[Dict] = None) -> MVPAnalysisResult:
+        """Analyze news using hybrid approach
+        
+        Args:
+            news_item: News item to analyze
+            market_context: Optional market context data
+            user_info: Optional dict with user_id, user_email, user_name for OpenAI usage tracking
+        """
         try:
             # Determine analysis method
             should_use_gpt = self.should_use_gpt_analysis(news_item)
@@ -437,7 +443,7 @@ class MVPNewsAnalyzer:
             
             if should_use_gpt:
                 print(f"🔍 Attempting GPT analysis...")
-                result = self._analyze_with_gpt(news_item, market_context)
+                result = self._analyze_with_gpt(news_item, market_context, user_info=user_info)
                 print(f"🔍 GPT analysis completed, type: {result.analysis_type}")
                 return result
             else:
@@ -504,8 +510,14 @@ class MVPNewsAnalyzer:
         
         return result
     
-    def _analyze_with_gpt(self, news_item: Dict, market_context: Optional[Dict] = None) -> MVPAnalysisResult:
-        """Analyze news using GPT with enhanced prompts and live market data"""
+    def _analyze_with_gpt(self, news_item: Dict, market_context: Optional[Dict] = None, user_info: Optional[Dict] = None) -> MVPAnalysisResult:
+        """Analyze news using GPT with enhanced prompts and live market data
+        
+        Args:
+            news_item: News item to analyze
+            market_context: Optional market context data
+            user_info: Optional dict with user_id, user_email, user_name for OpenAI usage tracking
+        """
         news_id = str(news_item.get('id', 'unknown'))
         news_title = news_item.get('title', 'Unknown')[:100]
         
@@ -557,18 +569,33 @@ class MVPNewsAnalyzer:
                 sentiment_data, pairs_sentiment
             )
             
+            # Prepare user identifier for OpenAI usage tracking
+            # Use email if available, otherwise user_id, otherwise None
+            openai_user = None
+            if user_info:
+                openai_user = user_info.get('user_email') or user_info.get('user_id')
+                if openai_user:
+                    logger.info(f"👤 Tracking OpenAI usage for user: {openai_user}")
+            
+            # Prepare API call parameters
+            api_params = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": "You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 1000,
+                "temperature": 0.3
+            }
+            
+            # Add user parameter for OpenAI usage tracking if available
+            if openai_user:
+                api_params["user"] = openai_user
+            
             # Call GPT API
             logger.info(f"🔍 Calling GPT API with model: {model}")
             try:
-                response = client.chat.completions.create(
-                    model=model,
-                    messages=[
-                        {"role": "system", "content": "You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    max_tokens=1000,
-                    temperature=0.3
-                )
+                response = client.chat.completions.create(**api_params)
             except openai.RateLimitError as e:
                 logger.error(f"OpenAI RateLimitError for news {news_id}: {e}")
                 return self._analyze_with_free(news_item)
@@ -589,6 +616,21 @@ class MVPNewsAnalyzer:
             
             # Update rate limiting
             self.api_calls_this_hour += 1
+            
+            # Track usage for analytics
+            if user_info:
+                try:
+                    from services.ai_usage_tracker import ai_usage_tracker
+                    ai_usage_tracker.track_analysis_usage(
+                        user_info=user_info,
+                        analysis_type='news',
+                        event_id=news_id,
+                        model_used=model,
+                        cost_estimate=cost,
+                        cache_hit=False
+                    )
+                except Exception as e:
+                    logger.debug(f"Usage tracking failed (non-critical): {e}")
             
             # Parse response
             content = response.choices[0].message.content

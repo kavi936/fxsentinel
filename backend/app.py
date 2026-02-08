@@ -2272,6 +2272,99 @@ def get_enhanced_analysis(news_id):
             "event_id": news_id
         }), 500
 
+@app.route('/api/ai-usage/stats', methods=['GET'])
+@limiter.limit("20 per minute")
+def get_ai_usage_stats():
+    """Get AI usage statistics - requires admin authentication"""
+    try:
+        # Check admin authentication
+        token_user_info = _extract_user_from_token()
+        if not token_user_info:
+            return jsonify({
+                'error': 'Unauthorized',
+                'message': 'Firebase authentication required'
+            }), 401
+        
+        # Check if user is developer/admin
+        developer_emails = os.getenv('DEVELOPER_EMAILS', '').split(',')
+        developer_emails = [e.strip().lower() for e in developer_emails if e.strip()]
+        user_email = token_user_info.get('user_email', '').lower()
+        
+        if user_email not in developer_emails:
+            return jsonify({
+                'error': 'Forbidden',
+                'message': 'Admin access required'
+            }), 403
+        
+        # Get query parameters
+        days = int(request.args.get('days', 7))
+        min_analyses = int(request.args.get('min_analyses', 1))
+        
+        from services.ai_usage_tracker import ai_usage_tracker
+        active_users = ai_usage_tracker.get_active_users(days=days, min_analyses=min_analyses)
+        
+        return jsonify({
+            'success': True,
+            'period_days': days,
+            'min_analyses': min_analyses,
+            'active_users_count': len(active_users),
+            'active_users': active_users,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting AI usage stats: {e}")
+        return jsonify({
+            'error': 'Failed to get usage stats',
+            'message': str(e)
+        }), 500
+
+@app.route('/api/ai-usage/user/<user_id>', methods=['GET'])
+@limiter.limit("20 per minute")
+def get_user_ai_usage(user_id):
+    """Get AI usage statistics for a specific user - requires admin authentication"""
+    try:
+        # Check admin authentication
+        token_user_info = _extract_user_from_token()
+        if not token_user_info:
+            return jsonify({
+                'error': 'Unauthorized',
+                'message': 'Firebase authentication required'
+            }), 401
+        
+        # Check if user is developer/admin
+        developer_emails = os.getenv('DEVELOPER_EMAILS', '').split(',')
+        developer_emails = [e.strip().lower() for e in developer_emails if e.strip()]
+        user_email = token_user_info.get('user_email', '').lower()
+        
+        if user_email not in developer_emails:
+            return jsonify({
+                'error': 'Forbidden',
+                'message': 'Admin access required'
+            }), 403
+        
+        from services.ai_usage_tracker import ai_usage_tracker
+        stats = ai_usage_tracker.get_user_usage_stats(user_id)
+        
+        if not stats:
+            return jsonify({
+                'error': 'Not found',
+                'message': 'User not found or no usage data'
+            }), 404
+        
+        return jsonify({
+            'success': True,
+            'stats': stats,
+            'timestamp': datetime.now().isoformat()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting user AI usage: {e}")
+        return jsonify({
+            'error': 'Failed to get user usage',
+            'message': str(e)
+        }), 500
+
 @app.route('/api/health')
 @limiter.exempt  # Health endpoints should not be rate limited
 def health_check():

@@ -221,7 +221,27 @@ class GPTAIAnalyzer:
             cached_result = self._get_cached_analysis(cache_key)
             
             if cached_result:
-                logger.info(f"✅ Cache hit for event {validated_event.get('id', 'unknown')}")
+                # Track user even for cached results (for internal analytics)
+                # Note: Cached results don't make OpenAI API calls, so they won't appear in OpenAI usage dashboard
+                # but we still track internally who requested them
+                if user_info:
+                    user_identifier = user_info.get('user_email') or user_info.get('user_id')
+                    logger.info(f"✅ Cache hit for event {validated_event.get('id', 'unknown')} (requested by: {user_identifier})")
+                    # Track cached usage
+                    try:
+                        from services.ai_usage_tracker import ai_usage_tracker
+                        ai_usage_tracker.track_analysis_usage(
+                            user_info=user_info,
+                            analysis_type=analysis_type,
+                            event_id=validated_event.get('id'),
+                            model_used=cached_result.model_used,
+                            cost_estimate=0.0,  # Cached = no cost
+                            cache_hit=True
+                        )
+                    except Exception as e:
+                        logger.debug(f"Usage tracking failed (non-critical): {e}")
+                else:
+                    logger.info(f"✅ Cache hit for event {validated_event.get('id', 'unknown')} (anonymous)")
                 cached_result.cache_hit = True
                 cached_result.data_quality = "cached"
                 cached_result.market_data_source = live_market_data.get('data_source', 'unknown')
@@ -248,7 +268,22 @@ class GPTAIAnalyzer:
             # Step 9: Cache the result
             self._cache_analysis(cache_key, analysis_result)
             
-            # Step 10: Update rate limiting
+            # Step 10: Track usage for analytics
+            if user_info:
+                try:
+                    from services.ai_usage_tracker import ai_usage_tracker
+                    ai_usage_tracker.track_analysis_usage(
+                        user_info=user_info,
+                        analysis_type=analysis_type,
+                        event_id=validated_event.get('id'),
+                        model_used=model,
+                        cost_estimate=analysis_result.cost_estimate,
+                        cache_hit=False
+                    )
+                except Exception as e:
+                    logger.debug(f"Usage tracking failed (non-critical): {e}")
+            
+            # Step 11: Update rate limiting
             self.api_calls_this_hour += 1
             
             logger.info(f"✅ Enhanced GPT analysis generated using {model}, cost: ${analysis_result.cost_estimate:.4f}")
