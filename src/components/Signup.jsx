@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getAdditionalUserInfo } from 'firebase/auth';
 import './Auth.css';
@@ -22,7 +22,9 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [passwordStrength, setPasswordStrength] = useState('');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signup, signInWithGoogle } = useAuth();
+  const planPremium = searchParams.get('plan') === 'premium';
 
   // Track signup page view
   React.useEffect(() => {
@@ -85,7 +87,7 @@ const Signup = () => {
         hasFirstName: !!formData.firstName,
         hasLastName: !!formData.lastName
       });
-      navigate('/auth-redirect');
+      navigate(planPremium ? '/auth-redirect?plan=premium' : '/auth-redirect');
     } catch (err) {
       setError('Failed to create account. Please try again.');
       trackError('signup_failure', { 
@@ -118,8 +120,7 @@ const Signup = () => {
           displayName: result.user.displayName
         });
       }
-      
-      navigate('/auth-redirect');
+      navigate(planPremium ? '/auth-redirect?plan=premium' : '/auth-redirect');
     } catch (err) {
       // Check if this is the Google OAuth blocked error
       if (isGoogleOAuthBlockedError(err) || err.code === 'auth/embedded-browser-blocked') {
