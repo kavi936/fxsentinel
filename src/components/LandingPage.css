@@ -1670,7 +1670,7 @@ section.animate-in .section-title.animate-on-scroll,
   position: relative;
   margin-bottom: 0.5rem;
   display: block;
-  opacity: 1 !important;
+  animation: fadeInUp 1s ease-out 1s both;
 }
 
 .hero-features-title::after {
@@ -1690,12 +1690,13 @@ section.animate-in .section-title.animate-on-scroll,
   line-height: 1.7;
   margin-bottom: 1rem;
   display: block;
-  opacity: 1 !important;
+  animation: fadeInUp 1s ease-out 1.2s both;
 }
 
 .hero-features-button {
   align-self: flex-start;
   margin-top: 0.5rem;
+  animation: fadeInUp 1s ease-out 1.4s both;
 }
 
 .hero-features-image-container {
@@ -1706,6 +1707,7 @@ section.animate-in .section-title.animate-on-scroll,
   z-index: 2;
   /* Removed overflow hidden to prevent cropping */
   overflow: visible;
+  animation: fadeInUp 1s ease-out 1.6s both;
 }
 
 .hero-features-image {

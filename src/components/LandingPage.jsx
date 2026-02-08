@@ -383,12 +383,12 @@ const LandingPage = () => {
           </div>
         </div>
 
-        {/* Features at a Glance - Merged into Hero Section */}
+        {/* Features at a Glance - Merged into Hero Section (same load-time fadeInUp as hero-content) */}
         <div className="hero-features-section">
           <div className="hero-features-inner">
             <div className="hero-features-content">
-              <h2 className="hero-features-title animate-on-scroll">Features at a Glance</h2>
-              <p className="hero-features-description animate-on-scroll">
+              <h2 className="hero-features-title">Features at a Glance</h2>
+              <p className="hero-features-description">
                 Get a comprehensive view of everything FXSentinel offers. From real-time economic indicators 
                 to AI-powered analysis, prediction markets, and live news feeds - all in one powerful dashboard 
                 designed for serious traders.
@@ -890,7 +890,7 @@ const LandingPage = () => {
                 <li>Impact level filtering</li>
                 <li>Quiet hours configuration</li>
               </ul>
-              <Link to="/signup" className="pricing-button">Start Premium</Link>
+              <Link to="/signup?plan=premium" className="pricing-button">Start Premium</Link>
             </div>
           </div>
         </div>
