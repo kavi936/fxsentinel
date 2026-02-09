@@ -145,6 +145,42 @@
       "tags": ["statement", "fomc", "monetary_policy", "interest_rates", "federal_funds_rate", "economic_outlook", "inflation", "labor_market", "forward_guidance", "policy_decision"],
       "aiAnalysis": null,
       "sentiment": null
+    },
+    {
+      "id": "ecb-2026-02-06-monetary-statement",
+      "title": "ECB Monetary Policy Statement - February 2026",
+      "type": "statement",
+      "centralBank": "ECB",
+      "date": "2026-02-06",
+      "category": "monetary_policy",
+      "impact": "high",
+      "affectedCurrencies": ["EUR", "USD", "GBP", "JPY", "CHF"],
+      "description": "European Central Bank (ECB) monetary policy statement from February 2026. Contains the Governing Council's decision on key ECB interest rates, assessment of the economic and monetary developments in the euro area, inflation outlook, and forward guidance on monetary policy. Provides insights into the ECB's policy stance and expectations for price stability.",
+      "fileName": "ECBMonetaryStatementFeb.pdf",
+      "filePath": "/documents/central-bank/ecb/ECBMonetaryStatementFeb.pdf",
+      "fileSize": "104 KB",
+      "fileFormat": "PDF",
+      "tags": ["statement", "ecb", "monetary_policy", "interest_rates", "governing_council", "inflation", "economic_outlook", "price_stability", "forward_guidance", "euro_area"],
+      "aiAnalysis": null,
+      "sentiment": null
+    },
+    {
+      "id": "boe-2026-02-01-monetary-policy-report",
+      "title": "Monetary Policy Report - February 2026",
+      "type": "report",
+      "centralBank": "BOE",
+      "date": "2026-02-01",
+      "category": "monetary_policy",
+      "impact": "high",
+      "affectedCurrencies": ["GBP", "USD", "EUR", "JPY"],
+      "description": "Bank of England's Monetary Policy Report from February 2026. Contains the Monetary Policy Committee's assessment of economic developments, inflation trends, labor market conditions, and the outlook for monetary policy. Includes analysis of risks to the economic outlook, projections for inflation and GDP growth, and the Committee's policy decisions on Bank Rate.",
+      "fileName": "BOEFebReport.pdf",
+      "filePath": "/documents/central-bank/boe/BOEFebReport.pdf",
+      "fileSize": "143 KB",
+      "fileFormat": "PDF",
+      "tags": ["report", "monetary_policy", "inflation", "bank_rate", "economic_outlook", "cpi", "labor_market", "gdp", "mpc", "price_stability", "economic_projections"],
+      "aiAnalysis": null,
+      "sentiment": null
     }
   ]
 }
