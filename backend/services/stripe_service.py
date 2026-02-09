@@ -1,10 +1,28 @@
 import stripe
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from firebase_admin import firestore
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _date_to_firestore(d):
+    """Firestore does not accept datetime.date; use start-of-day UTC as datetime."""
+    if d is None:
+        return None
+    if hasattr(d, 'date') and callable(getattr(d, 'date', None)):
+        d = d.date()
+    return datetime.combine(d, datetime.min.time(), tzinfo=timezone.utc)
+
+
+def _firestore_to_date(v):
+    """Normalize a Firestore timestamp/datetime to date for comparison with today."""
+    if v is None:
+        return None
+    if hasattr(v, 'date') and callable(v.date):
+        return v.date()
+    return v
 
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
@@ -68,9 +86,9 @@ class StripeService:
                 'subscription_status': 'free',
                 'monthly_analysis_count': initial_monthly_count,
                 'daily_analysis_count': initial_daily_count,
-                'last_monthly_reset': current_month_start,
-                'last_daily_reset': today,
-                'account_created': datetime.now(),
+                'last_monthly_reset': _date_to_firestore(current_month_start),
+                'last_daily_reset': _date_to_firestore(today),
+                'account_created': datetime.now(timezone.utc),
                 **({'user_email': email} if email else {}),
             })
             return True
@@ -111,9 +129,9 @@ class StripeService:
                         'subscription_status': 'free',  # Default to free tier
                         'monthly_analysis_count': 0,
                         'daily_analysis_count': 0,
-                        'last_monthly_reset': today.replace(day=1),  # First day of current month
-                        'last_daily_reset': today,
-                        'account_created': datetime.now()
+                        'last_monthly_reset': _date_to_firestore(today.replace(day=1)),
+                        'last_daily_reset': _date_to_firestore(today),
+                        'account_created': datetime.now(timezone.utc)
                     })
                 except Exception as firebase_error:
                     print(f"⚠️ Firebase update failed, but Stripe customer created: {firebase_error}")
@@ -271,13 +289,14 @@ class StripeService:
                 self._ensure_user_doc_exists(user_id, email=email, initial_monthly_count=0, initial_daily_count=0)
                 user_doc = self.db.collection('users').document(user_id).get()
             if not user_doc.exists:
+                # Return free-tier shape so UI shows 0/15 instead of "limit reached" (monthly_limit 0 was triggering that)
                 return {
-                    'can_perform': False,
+                    'can_perform': True,
                     'daily_usage': 0,
                     'monthly_usage': 0,
                     'daily_limit': None,
-                    'monthly_limit': 0,
-                    'status': 'no_subscription'
+                    'monthly_limit': self.free_limit,
+                    'status': 'free'
                 }
 
             user_data = user_doc.to_dict()
@@ -285,22 +304,22 @@ class StripeService:
             today = datetime.now().date()
             current_month_start = today.replace(day=1)
 
-            # Reset counters if needed
-            last_daily_reset = user_data.get('last_daily_reset')
-            last_monthly_reset = user_data.get('last_monthly_reset')
-            
+            # Reset counters if needed (Firestore returns datetime/timestamp; normalize to date for comparison)
+            last_daily_reset = _firestore_to_date(user_data.get('last_daily_reset'))
+            last_monthly_reset = _firestore_to_date(user_data.get('last_monthly_reset'))
+
             updates = {}
-            
+
             # Reset daily count if it's a new day (for premium users)
             if last_daily_reset != today:
                 updates['daily_analysis_count'] = 0
-                updates['last_daily_reset'] = today
+                updates['last_daily_reset'] = _date_to_firestore(today)
                 user_data['daily_analysis_count'] = 0
-            
+
             # Reset monthly count if it's a new month (for free users)
             if last_monthly_reset != current_month_start:
                 updates['monthly_analysis_count'] = 0
-                updates['last_monthly_reset'] = current_month_start
+                updates['last_monthly_reset'] = _date_to_firestore(current_month_start)
                 user_data['monthly_analysis_count'] = 0
             
             # Apply updates if any
@@ -346,21 +365,22 @@ class StripeService:
             }
 
     def increment_analysis_count(self, user_id, email=None):
-        """Increment the analysis count for a user based on their tier. Called only when an AI analysis actually runs."""
+        """Increment the analysis count for a user based on their tier. Called only when an AI analysis actually runs.
+        Returns True if the count was updated, False otherwise (e.g. Firestore unavailable or database not created)."""
         try:
             # Skip for developers
             if email and self.is_developer_email(email):
-                return
+                return True
 
             if not self.firebase_available or not self.db:
-                return
+                return False
 
             user_ref = self.db.collection('users').document(user_id)
             user_doc = user_ref.get()
             if not user_doc.exists:
                 # New user: create doc with count 1 so billing UI and limits work (no more silent no-op)
                 self._ensure_user_doc_exists(user_id, email=email, initial_monthly_count=1, initial_daily_count=0)
-                return
+                return True
             user_data = user_doc.to_dict()
             status = self._normalize_subscription_status(user_data.get('subscription_status'))
             today = datetime.now().date()
@@ -369,18 +389,20 @@ class StripeService:
             # Ensure reset fields exist so can_perform_analysis doesn't zero the count on next read
             updates = {}
             if status == 'premium':
-                if user_data.get('last_daily_reset') != today:
-                    updates['last_daily_reset'] = today
+                if _firestore_to_date(user_data.get('last_daily_reset')) != today:
+                    updates['last_daily_reset'] = _date_to_firestore(today)
                 updates['daily_analysis_count'] = firestore.Increment(1)
             else:
-                if user_data.get('last_monthly_reset') != current_month_start:
-                    updates['last_monthly_reset'] = current_month_start
+                if _firestore_to_date(user_data.get('last_monthly_reset')) != current_month_start:
+                    updates['last_monthly_reset'] = _date_to_firestore(current_month_start)
                 updates['monthly_analysis_count'] = firestore.Increment(1)
 
             if updates:
                 user_ref.update(updates)
+            return True
         except Exception as e:
             print(f"Error incrementing analysis count: {e}")
+            return False
 
     def handle_webhook(self, payload, sig_header):
         """Handle Stripe webhook events"""
@@ -427,11 +449,11 @@ class StripeService:
                 self.db.collection('users').document(user_id).update({
                     'subscription_status': 'premium',
                     'subscription_id': subscription_id,
-                    'current_period_end': datetime.fromtimestamp(subscription['current_period_end']),
+                    'current_period_end': datetime.fromtimestamp(subscription['current_period_end'], tz=timezone.utc),
                     'daily_analysis_count': 0,
-                    'last_daily_reset': today,
-                    'upgraded_to_premium_at': datetime.now(),
-                    'webhook_processed_at': datetime.now()
+                    'last_daily_reset': _date_to_firestore(today),
+                    'upgraded_to_premium_at': datetime.now(timezone.utc),
+                    'webhook_processed_at': datetime.now(timezone.utc)
                 })
                 print(f"✅ Updated user {user_id} subscription status to premium")
             else:
@@ -463,16 +485,16 @@ class StripeService:
                 
                 update_data = {
                     'subscription_status': mapped_status,
-                    'current_period_end': datetime.fromtimestamp(subscription['current_period_end']),
-                    'webhook_processed_at': datetime.now()
+                    'current_period_end': datetime.fromtimestamp(subscription['current_period_end'], tz=timezone.utc),
+                    'webhook_processed_at': datetime.now(timezone.utc)
                 }
                 
                 # Reset to monthly counting if downgrading to free
                 if mapped_status == 'free':
                     today = datetime.now().date()
                     update_data['monthly_analysis_count'] = 0
-                    update_data['last_monthly_reset'] = today.replace(day=1)
-                    update_data['downgraded_to_free_at'] = datetime.now()
+                    update_data['last_monthly_reset'] = _date_to_firestore(today.replace(day=1))
+                    update_data['downgraded_to_free_at'] = datetime.now(timezone.utc)
                 
                 self.db.collection('users').document(user_id).update(update_data)
                 print(f"✅ Updated user {user_id} subscription status to {mapped_status}")
@@ -495,10 +517,10 @@ class StripeService:
                 today = datetime.now().date()
                 self.db.collection('users').document(user_id).update({
                     'subscription_status': 'free',  # Downgrade to free tier
-                    'subscription_cancelled_at': datetime.now(),
+                    'subscription_cancelled_at': datetime.now(timezone.utc),
                     'monthly_analysis_count': 0,
-                    'last_monthly_reset': today.replace(day=1),
-                    'webhook_processed_at': datetime.now()
+                    'last_monthly_reset': _date_to_firestore(today.replace(day=1)),
+                    'webhook_processed_at': datetime.now(timezone.utc)
                 })
                 print(f"✅ Updated user {user_id} subscription status to free (downgraded from premium)")
             else:
@@ -519,10 +541,10 @@ class StripeService:
             
             if user_id and self.firebase_available and self.db:
                 self.db.collection('users').document(user_id).update({
-                    'last_payment_date': datetime.now(),
+                    'last_payment_date': datetime.now(timezone.utc),
                     'subscription_status': 'premium',
                     'last_payment_amount': amount_paid,
-                    'webhook_processed_at': datetime.now()
+                    'webhook_processed_at': datetime.now(timezone.utc)
                 })
                 print(f"✅ Updated user {user_id} payment status to premium")
             else:
@@ -544,9 +566,9 @@ class StripeService:
             if user_id and self.firebase_available and self.db:
                 self.db.collection('users').document(user_id).update({
                     'subscription_status': 'past_due',
-                    'last_payment_failure': datetime.now(),
+                    'last_payment_failure': datetime.now(timezone.utc),
                     'amount_due': amount_due,
-                    'webhook_processed_at': datetime.now()
+                    'webhook_processed_at': datetime.now(timezone.utc)
                 })
                 print(f"⚠️ Updated user {user_id} subscription status to past_due")
             else:

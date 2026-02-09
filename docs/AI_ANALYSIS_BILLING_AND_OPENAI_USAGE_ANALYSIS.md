@@ -118,6 +118,50 @@ So **both analysis paths** send a stable user identifier to OpenAI when `user_in
 - **No token / no user_info**: If the frontend doesn’t send `Authorization: Bearer <idToken>` or the backend can’t extract the user, `user_info` is missing and `user` is not set; usage then appears under your API key only, not per user.  
 - **Cached responses**: Cached analyses don’t call the OpenAI API, so they don’t create new usage entries in the OpenAI dashboard. They still increment your app’s billing count (see below).
 
+### 4.4 Why the dashboard might show only your name / How to see per-end-user usage
+
+- **Main Usage page (platform.openai.com/usage)** often shows **account-level** or **organization-level** totals. The “Users” dropdown there may refer to **OpenAI organization members** (team seats), not the end-user `user` parameter you pass from your app. So it’s normal for the main view to show only “your” name as the billable account.
+- **To see usage per end-user (the `user` values we send):**
+  1. **Use the Usage API** (not just the dashboard):  
+     `GET https://api.openai.com/v1/organization/usage/completions`  
+     with query params: `start_time`, `end_time` (Unix seconds), and **`group_by=user_id`**.  
+     The response buckets will include **`user_id`** for each value we pass as `user` in `chat.completions.create` (e.g. user email or Firebase uid).
+  2. **Use an Organization Admin API key** for that request. The normal API key used for completions may not have permission; an **Admin** key from your OpenAI organization settings is required for the Usage API.
+  3. **Ensure every analysis request sends the token**: Our frontend (`Overview.jsx`, `LiveNewsFeed.jsx`) sends `Authorization: Bearer <idToken>`. If any client (e.g. Postman, curl, or a missing header) calls the analysis endpoints without the token, those requests won’t have `user_info` and won’t set `user`; their usage will appear with `user_id: null` in the API and only under the key in the dashboard.
+- **Optional: script to pull per-user usage**  
+  A small script that calls the Usage API with `group_by=user_id` and prints per-user token/request counts is in `backend/scripts/openai_usage_by_user.py`. Set `OPENAI_ADMIN_API_KEY` (or use your org’s Admin key) and run it to see which end-users (emails/IDs) are consuming API usage.
+
+### 4.5 How to find user emails or user IDs
+
+You have **two ways** to get a list of who is using AI analysis (with email or user ID):
+
+**Option A – From your app (simplest)**  
+- The backend already has an **admin-only** endpoint that returns users who used AI and their identifiers.  
+- **Endpoint:** `GET /api/ai-usage/stats?days=30&min_analyses=1`  
+- **Auth:** Send your Firebase ID token in the header: `Authorization: Bearer <your-id-token>`.  
+- **Who can call it:** Only requests where the token’s email is in `DEVELOPER_EMAILS` (in `.env`) are allowed.  
+- **Response:** JSON with `active_users`: each item has `user_id`, `user_email`, `user_name`, `total_analyses`, `last_usage`, `last_usage_type`.  
+- **What you need to do:**  
+  1. Add your email to `DEVELOPER_EMAILS` in `backend/.env` if it’s not there.  
+  2. From your frontend (or Postman) while logged in as you, call `GET <backend>/api/ai-usage/stats?days=30` with the `Authorization: Bearer <idToken>` header.  
+  3. Use the `active_users` array; each element has `user_email` and `user_id`.
+
+**Option B – From OpenAI’s Usage API**  
+- OpenAI stores the `user` value we send (email or Firebase uid) and exposes it when you call the Usage API with `group_by=user_id`.  
+- **What you need to do:**  
+  1. Get an **OpenAI Organization Admin** API key (from your OpenAI org settings; the normal API key may not have access to the Usage API).  
+  2. In `backend/.env` set `OPENAI_ADMIN_API_KEY=<that-admin-key>`.  
+  3. Run: `cd backend && python scripts/openai_usage_by_user.py --days 30`.  
+  4. The script prints each identifier we sent (email or uid) and their request/token counts.  
+- So you get **user emails/IDs from OpenAI’s data** (same identifiers we pass on each request).
+
+**Summary**
+
+| Goal | What to do |
+|------|------------|
+| Get user emails/IDs from **our app** | Use Option A: developer email in `DEVELOPER_EMAILS`, then call `GET /api/ai-usage/stats` with Bearer token. |
+| Get user emails/IDs from **OpenAI’s usage** | Use Option B: set `OPENAI_ADMIN_API_KEY`, run `scripts/openai_usage_by_user.py`. |
+
 ---
 
 ## 5. Evaluation and Potential Issues
@@ -207,6 +251,24 @@ So the first time a new user opens Billing or runs an analysis, their `users` do
 3. Restart the backend. On startup you should see: `✅ Firebase initialized with service account: ...` instead of `⚠️ Firebase initialized with default credentials only...`.
 
 After this, token verification will succeed and billing + OpenAI per-user attribution will work.
+
+### Billing not updating / "database (default) does not exist for project fxsentinel"
+
+**Cause**: Subscription status, usage counts, and billing limits are stored in **Firestore**. If the Firestore database has never been created for your Firebase project, all reads/writes return `404 The database (default) does not exist`.
+
+You will see in logs:
+- `Error incrementing analysis count: 404 The database (default) does not exist for project fxsentinel ...`
+- `Error getting subscription status: 404 ...`
+- `📊 USAGE TRACKING: Billing increment failed (Firestore unavailable or database not created). Billing UI will not update.`
+
+**Fix**:
+1. Open [Firebase Console](https://console.firebase.google.com/) and select your project (e.g. **fxsentinel**).
+2. Go to **Build → Firestore Database**.
+3. Click **Create database** (if you haven’t already). Choose **production** or **test** mode and a location (e.g. `us-central1`).
+4. After the database is created, restart the backend. Subscription status and `increment_analysis_count` will then read/write the `users` collection and the billing section will update correctly.
+
+Direct link (replace `fxsentinel` with your project ID if different):  
+https://console.cloud.google.com/firestore/welcome?project=fxsentinel
 
 ### OpenAI usage dashboard shows only one user (e.g. only “Kavi Choudhary”)
 
