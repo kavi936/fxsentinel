@@ -43,6 +43,13 @@ yarn-error.log*
 .env.production.local
 backend/.env
 
+# Firebase / Google service account keys (never commit; contains private key)
+**/firebase-service-account.json
+**/*service-account*.json
+**/*-service-account.json
+**/google-services.json
+**/GoogleService-Info.plist
+
 # Session files and sensitive data
 *.session
 *.session-journal

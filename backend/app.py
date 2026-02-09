@@ -40,16 +40,38 @@ try:
     if not os.getenv('GOOGLE_CLOUD_PROJECT'):
         os.environ['GOOGLE_CLOUD_PROJECT'] = _firebase_project_id
 
-    # Initialize Firebase if not already initialized
+    # Initialize Firebase if not already initialized (required for token verification → usage tracking & OpenAI per-user)
+    # Order: 1) env JSON (for hosted apps where the file is not in the repo), 2) file path
     if not firebase_admin._apps:
-        if os.path.exists('firebase-service-account.json'):
-            cred = credentials.Certificate('firebase-service-account.json')
+        cred = None
+        _cred_source = None
+        _json_env = os.getenv('FIREBASE_SERVICE_ACCOUNT_JSON')
+        if _json_env and _json_env.strip():
+            try:
+                import json
+                _cred_dict = json.loads(_json_env)
+                cred = credentials.Certificate(_cred_dict)
+                _cred_source = "FIREBASE_SERVICE_ACCOUNT_JSON (env)"
+            except Exception as json_err:
+                print(f"⚠️ FIREBASE_SERVICE_ACCOUNT_JSON invalid JSON: {json_err}")
+        if cred is None:
+            _cred_paths = [
+                'firebase-service-account.json',
+                os.path.join(os.path.dirname(__file__), 'firebase-service-account.json'),
+                os.getenv('GOOGLE_APPLICATION_CREDENTIALS', ''),
+            ]
+            for _p in _cred_paths:
+                if _p and os.path.exists(_p):
+                    cred = credentials.Certificate(_p)
+                    _cred_source = _p
+                    break
+        if cred is not None:
             initialize_app(cred, {'projectId': _firebase_project_id})
+            print(f"✅ Firebase initialized with service account: {_cred_source} (project: {_firebase_project_id})")
         else:
-            # Default credentials (e.g. ADC) - still need projectId for Auth
             initialize_app(options={'projectId': _firebase_project_id})
-
-        print(f"✅ Firebase initialized successfully (project: {_firebase_project_id})")
+            print("⚠️ Firebase initialized with default credentials only. Token verification may fail → usage tracking disabled.")
+            print("   For local: add backend/firebase-service-account.json (in .gitignore). For hosted: set FIREBASE_SERVICE_ACCOUNT_JSON to the JSON string in your host's env/secrets.")
     else:
         print("✅ Firebase already initialized")
 
@@ -1750,13 +1772,13 @@ def get_analysis(news_id):
         print(f"🦊 BACKEND - News ID type: {type(news_id)}")
         print(f"🦊 BACKEND - News ID value: {news_id}")
         
-        # Extract user information from Firebase token for OpenAI usage tracking
+        # Extract user information from Firebase token (required for usage tracking + OpenAI per-user; GET has no body fallback)
         token_user_info = _extract_user_from_token()
         print(f"🔍 DEBUG: Token user info extracted in get_analysis: {token_user_info}")
         if token_user_info:
-            print(f"👤 User from token: {token_user_info.get('user_email') or token_user_info.get('user_id')}")
+            print(f"👤 User from token: {token_user_info.get('user_email') or token_user_info.get('user_id')} (billing will be incremented after analysis)")
         else:
-            print(f"⚠️ No user info extracted from token - check Authorization header")
+            print(f"⚠️ No user info from token (verification failed or no Authorization header). Billing will NOT be incremented for this request.")
         
         # Convert to int for comparison if it's a string
         try:
@@ -1830,8 +1852,15 @@ def get_analysis(news_id):
             if token_user_info and analysis and analysis.get('analysis_type') != 'error':
                 try:
                     stripe_service.increment_analysis_count(token_user_info.get('user_id'), token_user_info.get('user_email'))
+                    print(f"📊 USAGE TRACKING: Incremented billing count for user_id={token_user_info.get('user_id')} ({token_user_info.get('user_email') or 'no email'})")
                 except Exception as billing_err:
                     logger.debug(f"Billing count increment failed (non-critical): {billing_err}")
+                    print(f"📊 USAGE TRACKING: Billing increment failed: {billing_err}")
+            else:
+                if not token_user_info:
+                    print("📊 USAGE TRACKING SKIPPED: No user identity (token verification failed). Billing count NOT incremented.")
+                elif not analysis or analysis.get('analysis_type') == 'error':
+                    print("📊 USAGE TRACKING SKIPPED: Analysis failed or error type, billing not incremented.")
             print(f"🦊 BACKEND - Analysis generated successfully")
             print(f"🦊 BACKEND - Analysis type: {analysis.get('analysis_type', 'unknown')}")
             print(f"🦊 BACKEND - Analysis news_impact length: {len(analysis.get('news_impact', ''))}")
@@ -2290,8 +2319,12 @@ def get_enhanced_analysis(news_id):
             # Billing: increment free/premium usage so profile popup shows correct count
             try:
                 stripe_service.increment_analysis_count(user_info.get('user_id'), user_info.get('user_email'))
+                print(f"📊 USAGE TRACKING: Incremented billing for user_id={user_info.get('user_id')} ({user_info.get('user_email') or 'no email'})")
             except Exception as billing_err:
                 logger.debug(f"Billing count increment failed (non-critical): {billing_err}")
+                print(f"📊 USAGE TRACKING: Billing increment failed: {billing_err}")
+        else:
+            print("📊 USAGE TRACKING SKIPPED: No user_info (token + body fallback both missing). Billing not incremented.")
         
         # Transform GPT Tier 1 analysis to frontend-compatible format
         print(f"🔍 DEBUG: Starting response transformation...")
@@ -3516,14 +3549,19 @@ def _extract_user_from_token():
     except Exception as e:
         # Handle Firebase auth errors gracefully
         error_type = type(e).__name__
-        error_module = type(e).__module__
+        error_msg = str(e).lower()
         
         # Check if it's a Firebase auth error (using string matching to avoid NameError)
         if 'InvalidIdTokenError' in error_type or 'ExpiredIdTokenError' in error_type:
             logger.debug(f"Firebase token error: {e}")
             return None
         
-        # Log the actual error for debugging (so you can see why OpenAI dashboard has no users)
+        # DefaultCredentialsError: backend cannot verify token → usage tracking and per-user OpenAI attribution disabled
+        if 'DefaultCredentialsError' in error_type or 'default credentials' in error_msg or 'were not found' in error_msg:
+            print("📊 USAGE TRACKING DISABLED: Backend has no Google/Firebase credentials to verify the token.")
+            print("   → Fix: Add backend/firebase-service-account.json OR set GOOGLE_APPLICATION_CREDENTIALS to its path.")
+            print("   → Without this: billing count is not incremented and OpenAI usage will not show per user.")
+        
         logger.warning(f"Could not extract user from token: {e} (type: {error_type})")
         print(f"⚠️ Could not extract user from token: {e} (type: {error_type})")
         return None
