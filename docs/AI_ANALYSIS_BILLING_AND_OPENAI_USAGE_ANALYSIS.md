@@ -195,6 +195,19 @@ This should give you a full picture of how tracking, billing UI, and OpenAI usag
 
 So the first time a new user opens Billing or runs an analysis, their `users` doc is created and subsequent usage is counted and shown correctly.
 
+### Usage not tracked / billing not incrementing (DefaultCredentialsError in logs)
+
+**Cause**: The backend cannot **verify** the Firebase ID token because it has no Google/Firebase credentials. In logs you will see:
+- `Could not extract user from token: Your default credentials were not found... (type: DefaultCredentialsError)`
+- `📊 USAGE TRACKING SKIPPED: No user identity (token verification failed). Billing count NOT incremented.`
+
+**Fix** (one of the following):
+1. **Service account file**: Place your Firebase service account JSON in the backend directory and name it `firebase-service-account.json`. The app looks for it in the current directory and in `backend/firebase-service-account.json`.
+2. **Environment variable**: Set `GOOGLE_APPLICATION_CREDENTIALS` to the **absolute path** of that JSON file.
+3. Restart the backend. On startup you should see: `✅ Firebase initialized with service account: ...` instead of `⚠️ Firebase initialized with default credentials only...`.
+
+After this, token verification will succeed and billing + OpenAI per-user attribution will work.
+
 ### OpenAI usage dashboard shows only one user (e.g. only “Kavi Choudhary”)
 
 **Causes**:
