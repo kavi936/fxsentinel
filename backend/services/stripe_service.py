@@ -51,6 +51,33 @@ class StripeService:
             return 'past_due'
         return 'free'
 
+    def _ensure_user_doc_exists(self, user_id, email=None, initial_monthly_count=0, initial_daily_count=0):
+        """
+        Create Firestore users/<user_id> doc if it does not exist (free tier).
+        Fixes billing/UI not updating for new users who never went through Stripe checkout.
+        """
+        if not self.firebase_available or not self.db:
+            return False
+        try:
+            user_ref = self.db.collection('users').document(user_id)
+            if user_ref.get().exists:
+                return True
+            today = datetime.now().date()
+            current_month_start = today.replace(day=1)
+            user_ref.set({
+                'subscription_status': 'free',
+                'monthly_analysis_count': initial_monthly_count,
+                'daily_analysis_count': initial_daily_count,
+                'last_monthly_reset': current_month_start,
+                'last_daily_reset': today,
+                'account_created': datetime.now(),
+                **({'user_email': email} if email else {}),
+            })
+            return True
+        except Exception as e:
+            print(f"Error ensuring user doc exists: {e}")
+            return False
+
     def get_developer_access_status(self, email):
         """Get developer access status for an email"""
         is_developer = self.is_developer_email(email)
@@ -164,7 +191,10 @@ class StripeService:
             
             user_doc = self.db.collection('users').document(user_id).get()
             if not user_doc.exists:
-                # Return default free status for new users
+                # Create user doc so billing UI and increment_analysis_count work for new users
+                self._ensure_user_doc_exists(user_id, email=email, initial_monthly_count=0, initial_daily_count=0)
+                user_doc = self.db.collection('users').document(user_id).get()
+            if not user_doc.exists:
                 return {
                     'status': 'free',
                     'monthly_analysis_count': 0,
@@ -174,7 +204,7 @@ class StripeService:
                     'stripe_customer_id': None,
                     'is_developer': False
                 }
-            
+
             user_data = user_doc.to_dict()
             status = self._normalize_subscription_status(user_data.get('subscription_status'))
             return {
@@ -237,6 +267,10 @@ class StripeService:
             
             user_doc = self.db.collection('users').document(user_id).get()
             if not user_doc.exists:
+                # Create user doc so new users get 0/15 and can perform first analysis
+                self._ensure_user_doc_exists(user_id, email=email, initial_monthly_count=0, initial_daily_count=0)
+                user_doc = self.db.collection('users').document(user_id).get()
+            if not user_doc.exists:
                 return {
                     'can_perform': False,
                     'daily_usage': 0,
@@ -245,12 +279,12 @@ class StripeService:
                     'monthly_limit': 0,
                     'status': 'no_subscription'
                 }
-            
+
             user_data = user_doc.to_dict()
             status = self._normalize_subscription_status(user_data.get('subscription_status'))
             today = datetime.now().date()
             current_month_start = today.replace(day=1)
-            
+
             # Reset counters if needed
             last_daily_reset = user_data.get('last_daily_reset')
             last_monthly_reset = user_data.get('last_monthly_reset')
@@ -317,21 +351,22 @@ class StripeService:
             # Skip for developers
             if email and self.is_developer_email(email):
                 return
-            
+
             if not self.firebase_available or not self.db:
                 return
-                
-            user_doc = self.db.collection('users').document(user_id).get()
+
+            user_ref = self.db.collection('users').document(user_id)
+            user_doc = user_ref.get()
             if not user_doc.exists:
+                # New user: create doc with count 1 so billing UI and limits work (no more silent no-op)
+                self._ensure_user_doc_exists(user_id, email=email, initial_monthly_count=1, initial_daily_count=0)
                 return
-            
             user_data = user_doc.to_dict()
             status = self._normalize_subscription_status(user_data.get('subscription_status'))
             today = datetime.now().date()
             current_month_start = today.replace(day=1)
-            
+
             # Ensure reset fields exist so can_perform_analysis doesn't zero the count on next read
-            # (docs created by ai_usage_tracker don't have these)
             updates = {}
             if status == 'premium':
                 if user_data.get('last_daily_reset') != today:
@@ -341,9 +376,9 @@ class StripeService:
                 if user_data.get('last_monthly_reset') != current_month_start:
                     updates['last_monthly_reset'] = current_month_start
                 updates['monthly_analysis_count'] = firestore.Increment(1)
-            
-            self.db.collection('users').document(user_id).update(updates)
-                
+
+            if updates:
+                user_ref.update(updates)
         except Exception as e:
             print(f"Error incrementing analysis count: {e}")
 

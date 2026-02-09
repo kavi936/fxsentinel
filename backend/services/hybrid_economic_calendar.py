@@ -7075,7 +7075,7 @@ class HybridEconomicCalendar:
             },
 
             # SUNDAY, FEBRUARY 08
-            
+
             {
                 'title': 'Lower House Elections',
                 'date': 'Sun, Feb 08',
@@ -7102,9 +7102,9 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.4%',
                 'forecast': '3.0%',
-                'previous': '0.5%'
+                'previous': '1.7%'
             },
             {
                 'title': 'Bank Lending y/y',
@@ -7112,9 +7112,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.5%',
                 'forecast': '4.5%',
-                'previous': '4.4%'
+                'previous': '4.3%'
             },
             {
                 'title': 'Current Account',
@@ -7122,7 +7122,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.70T',
                 'forecast': '2.95T',
                 'previous': '3.14T'
             },
@@ -7132,7 +7132,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': '0.2%',
                 'previous': '1.0%'
             },

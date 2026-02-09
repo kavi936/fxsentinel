@@ -2107,6 +2107,9 @@ def get_enhanced_analysis(news_id):
             user_id = (token_user_info.get('user_id') if token_user_info else None) or request_data.get('user_id')
             user_email = (token_user_info.get('user_email') if token_user_info else None) or request_data.get('user_email')
             user_name = (token_user_info.get('user_name') if token_user_info else None) or request_data.get('user_name')
+            if not token_user_info and (user_id or user_email):
+                logger.warning("Using user from request body (no valid token). Ensure frontend sends Authorization: Bearer <idToken> for OpenAI per-user usage.")
+                print("⚠️ User from request body only (token missing or invalid) - OpenAI usage may not show per user if token is not sent.")
             print(f"🚨 Using event data from request: {event.get('title', 'Unknown') if event else 'Unknown'} - {event.get('currency', 'Unknown') if event else 'Unknown'}")
             print(f"👤 User info - ID: {user_id}, Email: {user_email}, Name: {user_name}")
             print(f"🔍 DEBUG: Event keys: {list(event.keys()) if event else 'None'}")
