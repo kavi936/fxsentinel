@@ -214,14 +214,18 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Usage notifications
+  // Usage notifications (limitType: 'daily' | 'monthly' for correct copy)
   const addUsageNotification = (event, data = {}) => {
+    const limitType = data.limitType || 'daily';
+    const periodLabel = limitType === 'monthly' ? 'monthly' : 'daily';
+    const periodLabelCap = limitType === 'monthly' ? 'Monthly' : 'Daily';
+
     switch (event) {
       case 'usage_warning':
         addNotification({
           type: 'usage',
           title: 'Usage Limit Warning',
-          message: `You've used ${data.used}/${data.limit} AI analyses today. ${data.remaining} remaining.`,
+          message: `You've used ${data.used}/${data.limit} AI analyses this ${periodLabel}. ${data.remaining} remaining.`,
           priority: 'medium',
           icon: '⚠️'
         });
@@ -230,8 +234,8 @@ export const NotificationProvider = ({ children }) => {
       case 'usage_limit_reached':
         addNotification({
           type: 'usage',
-          title: 'Daily Limit Reached',
-          message: 'You\'ve reached your daily AI analysis limit. Upgrade to Premium for unlimited access.',
+          title: `${periodLabelCap} Limit Reached`,
+          message: `You've reached your ${periodLabel} AI analysis limit. Upgrade to Premium for more.`,
           priority: 'high',
           icon: '🚫',
           action: {
@@ -241,8 +245,8 @@ export const NotificationProvider = ({ children }) => {
         });
         addBannerNotification({
           type: 'warning',
-          title: 'Daily Limit Reached',
-          message: 'You\'ve reached your daily AI analysis limit. Upgrade for unlimited access.',
+          title: `${periodLabelCap} Limit Reached`,
+          message: `You've reached your ${periodLabel} AI analysis limit. Upgrade for more.`,
           duration: 8000,
           action: {
             label: 'Upgrade',

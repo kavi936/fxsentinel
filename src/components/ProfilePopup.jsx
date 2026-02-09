@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { config } from '../config';
@@ -16,6 +16,9 @@ const ProfilePopup = ({ isOpen, onClose }) => {
   const [isLoadingUsage, setIsLoadingUsage] = useState(false);
   const [upgradeError, setUpgradeError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [activeUsersList, setActiveUsersList] = useState(null);
+  const [activeUsersLoading, setActiveUsersLoading] = useState(false);
+  const [activeUsersError, setActiveUsersError] = useState(null);
   const [formData, setFormData] = useState({
     displayName: currentUser?.displayName || '',
     email: currentUser?.email || '',
@@ -71,6 +74,40 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     } catch (error) {
       console.error('Failed to log out:', error);
     }
+  };
+
+  // Option A: fetch active users (admin-only) for user emails/IDs
+  const fetchActiveUsers = async (days = 30) => {
+    if (!currentUser) return;
+    setActiveUsersLoading(true);
+    setActiveUsersError(null);
+    setActiveUsersList(null);
+    try {
+      const token = await currentUser.getIdToken();
+      const res = await fetch(
+        `${config.API_BASE_URL}/api/ai-usage/stats?days=${days}&min_analyses=1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || `Request failed: ${res.status}`);
+      }
+      const data = await res.json();
+      setActiveUsersList(data.active_users || []);
+    } catch (e) {
+      setActiveUsersError(e.message || 'Failed to load active users');
+    } finally {
+      setActiveUsersLoading(false);
+    }
+  };
+
+  const copyActiveUsersToClipboard = () => {
+    if (!activeUsersList?.length) return;
+    const text = activeUsersList
+      .map((u) => `${u.user_email || '(no email)'}\t${u.user_id}\t${u.user_name || ''}\t${u.total_analyses || 0}`)
+      .join('\n');
+    const header = 'Email\tUser ID\tName\tTotal analyses\n';
+    navigator.clipboard.writeText(header + text);
   };
 
   // Developer: either hardcoded email (legacy) or API says so (DEVELOPER_EMAILS env)
@@ -254,33 +291,51 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  // Only notify when we *transition* to limit reached (avoid spamming on every 30s refetch)
+  const prevAtLimitRef = useRef(false);
+  const prevWarningRef = useRef(false);
+
   // Check for usage warnings (freemium model)
   useEffect(() => {
-    if (usageData && subscriptionStatus) {
-      const status = subscriptionStatus.status;
-      
-      if (status === 'free') {
-        // Free tier: monthly limit
-        const { monthly_usage, monthly_limit } = usageData;
-        const remaining = monthly_limit - monthly_usage;
-        
-        if (remaining === 0) {
-          addUsageNotification('usage_limit_reached', { used: monthly_usage, limit: monthly_limit });
-        } else if (remaining <= 3) {
-          addUsageNotification('usage_warning', { used: monthly_usage, limit: monthly_limit, remaining });
-        }
-      } else if (status === 'premium') {
-        // Premium tier: daily limit
-        const { daily_usage, daily_limit } = usageData;
-        const remaining = daily_limit - daily_usage;
-        
-        if (remaining === 0) {
-          addUsageNotification('usage_limit_reached', { used: daily_usage, limit: daily_limit });
-        } else if (remaining <= 5) {
-          addUsageNotification('usage_warning', { used: daily_usage, limit: daily_limit, remaining });
-        }
-      }
+    if (!usageData || !subscriptionStatus) return;
+
+    const status = subscriptionStatus.status;
+    let remaining = null;
+    let used = 0;
+    let limit = 0;
+    let limitType = 'monthly';
+
+    if (status === 'free') {
+      used = usageData.monthly_usage ?? 0;
+      limit = usageData.monthly_limit ?? 15;
+      remaining = limit - used;
+      limitType = 'monthly';
+    } else if (status === 'premium') {
+      used = usageData.daily_usage ?? 0;
+      limit = usageData.daily_limit ?? 50;
+      remaining = limit - used;
+      limitType = 'daily';
+    } else {
+      return;
     }
+
+    // Don't treat "limit 0" as at limit - backend uses 0 for no_subscription/unknown; real plans have limit 15 or 50
+    const atLimit = remaining !== null && limit > 0 && remaining <= 0;
+    const inWarning = remaining !== null && limit > 0 && remaining > 0 && ((limitType === 'monthly' && remaining <= 3) || (limitType === 'daily' && remaining <= 5));
+
+    // Only fire limit_reached when we just crossed into "at limit" (not on every refetch)
+    if (atLimit && !prevAtLimitRef.current) {
+      addUsageNotification('usage_limit_reached', { used, limit, limitType });
+      prevAtLimitRef.current = true;
+    }
+    if (!atLimit) prevAtLimitRef.current = false;
+
+    // Only fire warning once when entering warning zone (avoid spam)
+    if (inWarning && !prevWarningRef.current) {
+      addUsageNotification('usage_warning', { used, limit, remaining, limitType });
+      prevWarningRef.current = true;
+    }
+    if (!inWarning) prevWarningRef.current = false;
   }, [usageData, subscriptionStatus, addUsageNotification]);
 
   if (!isOpen) return null;
@@ -517,6 +572,43 @@ const ProfilePopup = ({ isOpen, onClose }) => {
 
                   <div className="developer-note">
                     <p>This is a developer account with full access for testing purposes. No payment required.</p>
+                  </div>
+
+                  <div className="developer-active-users" style={{ marginTop: '1rem', padding: '0.75rem', background: 'var(--bg-secondary, #f5f5f5)', borderRadius: '8px' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '14px' }}>Active users (Option A)</h4>
+                    <p style={{ margin: '0 0 0.5rem 0', fontSize: '12px', color: 'var(--text-muted, #666)' }}>
+                      Users who used AI analysis in the last 30 days (user email & ID).
+                    </p>
+                    <button
+                      type="button"
+                      className="edit-btn"
+                      style={{ marginRight: '0.5rem' }}
+                      onClick={() => fetchActiveUsers(30)}
+                      disabled={activeUsersLoading}
+                    >
+                      {activeUsersLoading ? 'Loading...' : 'Load active users'}
+                    </button>
+                    {activeUsersList && (
+                      <>
+                        <button type="button" className="cancel-btn" onClick={copyActiveUsersToClipboard}>
+                          Copy to clipboard
+                        </button>
+                        <ul style={{ marginTop: '0.75rem', paddingLeft: '1.25rem', fontSize: '13px', maxHeight: '200px', overflowY: 'auto' }}>
+                          {activeUsersList.length === 0 ? (
+                            <li>No active users in the period.</li>
+                          ) : (
+                            activeUsersList.map((u, i) => (
+                              <li key={u.user_id || i}>
+                                <strong>{u.user_email || '(no email)'}</strong> — {u.user_id} — {u.total_analyses ?? 0} analyses
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      </>
+                    )}
+                    {activeUsersError && (
+                      <p style={{ marginTop: '0.5rem', fontSize: '12px', color: '#c62828' }}>{activeUsersError}</p>
+                    )}
                   </div>
                 </div>
               ) : subscriptionStatus ? (

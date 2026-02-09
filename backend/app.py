@@ -100,10 +100,20 @@ app = Flask(__name__)
 # Initialize background alert worker
 # background_worker.init_app(app)  # Removed - not needed
 
+# Rate limit key: per-user when Firebase token present, else per-IP (so analysis limits don't starve other users on same IP)
+def _rate_limit_key():
+    try:
+        info = _extract_user_from_token()
+        if info and info.get('user_id'):
+            return f"user:{info.get('user_id')}"
+    except Exception:
+        pass
+    return get_remote_address()
+
 # Initialize rate limiter
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address,
+    key_func=_rate_limit_key,
     default_limits=["200 per day", "50 per hour"],
     storage_uri="memory://",
     enabled=True
@@ -1780,6 +1790,20 @@ def get_analysis(news_id):
         else:
             print(f"⚠️ No user info from token (verification failed or no Authorization header). Billing will NOT be incremented for this request.")
         
+        # Enforce quota before running analysis: return 429 when limit reached (avoids burning OpenAI cost then failing)
+        if token_user_info:
+            permission = stripe_service.can_perform_analysis(token_user_info.get('user_id'), token_user_info.get('user_email'))
+            if not permission.get('can_perform'):
+                return jsonify({
+                    'error': 'analysis_limit_reached',
+                    'message': 'Analysis limit reached for your plan.',
+                    'daily_usage': permission.get('daily_usage'),
+                    'monthly_usage': permission.get('monthly_usage'),
+                    'daily_limit': permission.get('daily_limit'),
+                    'monthly_limit': permission.get('monthly_limit'),
+                    'status': permission.get('status')
+                }), 429
+        
         # Convert to int for comparison if it's a string
         try:
             news_id_int = int(news_id)
@@ -1851,8 +1875,11 @@ def get_analysis(news_id):
             # Billing: increment usage so profile popup shows correct count (token_user_info from earlier in this handler)
             if token_user_info and analysis and analysis.get('analysis_type') != 'error':
                 try:
-                    stripe_service.increment_analysis_count(token_user_info.get('user_id'), token_user_info.get('user_email'))
-                    print(f"📊 USAGE TRACKING: Incremented billing count for user_id={token_user_info.get('user_id')} ({token_user_info.get('user_email') or 'no email'})")
+                    ok = stripe_service.increment_analysis_count(token_user_info.get('user_id'), token_user_info.get('user_email'))
+                    if ok:
+                        print(f"📊 USAGE TRACKING: Incremented billing count for user_id={token_user_info.get('user_id')} ({token_user_info.get('user_email') or 'no email'})")
+                    else:
+                        print(f"📊 USAGE TRACKING: Billing increment failed (Firestore unavailable or database not created). Billing UI will not update.")
                 except Exception as billing_err:
                     logger.debug(f"Billing count increment failed (non-critical): {billing_err}")
                     print(f"📊 USAGE TRACKING: Billing increment failed: {billing_err}")
@@ -2109,6 +2136,7 @@ def get_technical_analysis(pair):
         return jsonify({"error": "Failed to perform technical analysis"}), 500
 
 @app.route('/api/enhanced-analysis/<news_id>', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def get_enhanced_analysis(news_id):
     """Get comprehensive GPT-powered analysis for economic events with data validation"""
     print(f"🚨🚨🚨 ENHANCED ANALYSIS ENDPOINT CALLED - ID: {news_id} 🚨🚨🚨")
@@ -2156,6 +2184,20 @@ def get_enhanced_analysis(news_id):
         
         if not event:
             return jsonify({"error": "Event not found"}), 404
+        
+        # Enforce quota before running expensive GPT analysis: return 429 when limit reached
+        if user_id:
+            permission = stripe_service.can_perform_analysis(user_id, user_email)
+            if not permission.get('can_perform'):
+                return jsonify({
+                    'error': 'analysis_limit_reached',
+                    'message': 'Analysis limit reached for your plan.',
+                    'daily_usage': permission.get('daily_usage'),
+                    'monthly_usage': permission.get('monthly_usage'),
+                    'daily_limit': permission.get('daily_limit'),
+                    'monthly_limit': permission.get('monthly_limit'),
+                    'status': permission.get('status')
+                }), 429
         
         # Import the data validation service
         print(f"🔍 DEBUG: Importing data validator...")
@@ -2318,8 +2360,11 @@ def get_enhanced_analysis(news_id):
                 logger.debug(f"API-layer usage tracking failed (non-critical): {track_err}")
             # Billing: increment free/premium usage so profile popup shows correct count
             try:
-                stripe_service.increment_analysis_count(user_info.get('user_id'), user_info.get('user_email'))
-                print(f"📊 USAGE TRACKING: Incremented billing for user_id={user_info.get('user_id')} ({user_info.get('user_email') or 'no email'})")
+                ok = stripe_service.increment_analysis_count(user_info.get('user_id'), user_info.get('user_email'))
+                if ok:
+                    print(f"📊 USAGE TRACKING: Incremented billing for user_id={user_info.get('user_id')} ({user_info.get('user_email') or 'no email'})")
+                else:
+                    print("📊 USAGE TRACKING: Billing increment failed (Firestore unavailable or database not created). Billing UI will not update.")
             except Exception as billing_err:
                 logger.debug(f"Billing count increment failed (non-critical): {billing_err}")
                 print(f"📊 USAGE TRACKING: Billing increment failed: {billing_err}")
