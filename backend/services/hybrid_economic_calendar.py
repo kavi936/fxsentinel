@@ -7144,7 +7144,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '47.6',
                 'forecast': '49.1',
                 'previous': '48.6'
             },
@@ -7154,37 +7154,18 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-30',
                 'forecast': '-30',
                 'previous': '-31'
             },
-            {
-                'title': 'M2 Money Supply y/y',
-                'date': 'Mon, Feb 09',
-                'time': '09:03 UTC',
-                'currency': 'CNY',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '8.3%',
-                'previous': '8.5%'
-            },
-            {
-                'title': 'New Loans',
-                'date': 'Mon, Feb 09',
-                'time': '09:03 UTC',
-                'currency': 'CNY',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '910B'
-            },
+            
             {
                 'title': 'Sentix Investor Confidence',
                 'date': 'Mon, Feb 09',
                 'time': '09:30 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-30',
                 'forecast': '-0.2',
                 'previous': '-1.8'
             },
