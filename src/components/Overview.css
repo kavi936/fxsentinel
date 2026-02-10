@@ -2368,11 +2368,14 @@
   border: 1px solid #444;
   outline: none;
   padding: 0;
+  position: relative;
+  z-index: 10; /* Ensure button stays above animated content */
 }
 
 .ticker-edit-btn:hover {
   background: #333;
   transform: scale(1.05);
+  z-index: 21; /* Even higher on hover */
 }
 
 .ticker-edit-btn svg {
@@ -2960,10 +2963,32 @@
     height: auto;
     min-height: 50px;
     padding: 10px 16px;
-    /* Allow child overflow to be visible (child handles scrolling) */
-    overflow-x: visible;
+    /* Clip overflow for scroll animation container */
+    overflow-x: hidden;
+    overflow-y: hidden;
     /* Ensure flex container can constrain child properly */
     min-width: 0;
+    position: relative; /* Create stacking context */
+  }
+  
+  /* Ensure edit button stays above animated content on mobile */
+  .market-ticker .ticker-edit-btn {
+    z-index: 20; /* Higher z-index to stay above animated content */
+    background: #1a1a1a; /* Solid background to cover content behind */
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5); /* Shadow to help separate from content */
+  }
+  
+  /* Add background overlay behind button area to prevent content showing through */
+  .market-ticker::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 68px; /* Button width (36px) + gap (16px) + padding (16px) */
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
+    z-index: 5; /* Above content, below button */
+    pointer-events: none; /* Don't block clicks */
   }
   
   .ticker-pairs-inline {
@@ -2979,6 +3004,23 @@
     /* Explicitly enable horizontal scrolling */
     overflow-x: auto;
     overflow-y: hidden;
+  }
+  
+  /* Continuous scroll animation for mobile when content overflows */
+  .ticker-pairs-inline.ticker-scroll-animation {
+    overflow-x: hidden; /* Hide scrollbar, use animation instead */
+    width: max-content !important; /* Allow content to expand for animation */
+    flex: none !important; /* Override flex to allow natural width */
+    position: relative;
+    z-index: 1; /* Below edit button but above background */
+    animation: tickerScroll 30s linear infinite;
+    /* Add padding-left to prevent content from going under button */
+    margin-left: 0;
+  }
+  
+  /* Pause animation on hover for better UX */
+  .ticker-pairs-inline.ticker-scroll-animation:hover {
+    animation-play-state: paused;
   }
   
   .ticker-pair {
@@ -2999,10 +3041,32 @@
   
   .market-ticker {
     padding: 8px 12px;
-    /* Allow child overflow to be visible (child handles scrolling) */
-    overflow-x: visible;
+    /* Clip overflow for scroll animation container */
+    overflow-x: hidden;
+    overflow-y: hidden;
     /* Ensure flex container can constrain child properly */
     min-width: 0;
+    position: relative; /* Create stacking context */
+  }
+  
+  /* Ensure edit button stays above animated content on small mobile */
+  .market-ticker .ticker-edit-btn {
+    z-index: 20; /* Higher z-index to stay above animated content */
+    background: #1a1a1a; /* Solid background to cover content behind */
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.5); /* Shadow to help separate from content */
+  }
+  
+  /* Add background overlay behind button area to prevent content showing through */
+  .market-ticker::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 56px; /* Button width (36px) + gap (smaller on 480px) + padding (12px) */
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.8) 50%, transparent 100%);
+    z-index: 5; /* Above content, below button */
+    pointer-events: none; /* Don't block clicks */
   }
   
   .ticker-pairs-inline {
@@ -3018,6 +3082,24 @@
     /* Explicitly enable horizontal scrolling */
     overflow-x: auto;
     overflow-y: hidden;
+  }
+  
+  /* Continuous scroll animation for small mobile when content overflows */
+  .ticker-pairs-inline.ticker-scroll-animation {
+    overflow-x: hidden; /* Hide scrollbar, use animation instead */
+    width: max-content !important; /* Allow content to expand for animation */
+    flex: none !important; /* Override flex to allow natural width */
+    position: relative;
+    z-index: 1; /* Below edit button but above background */
+    animation: tickerScroll 25s linear infinite; /* Slightly faster on smaller screens */
+    /* Add padding-left to prevent content from going under button */
+    margin-left: 0;
+  }
+  
+  /* Pause animation on hover/touch for better UX */
+  .ticker-pairs-inline.ticker-scroll-animation:hover,
+  .ticker-pairs-inline.ticker-scroll-animation:active {
+    animation-play-state: paused;
   }
   
   .ticker-pair {
@@ -3036,7 +3118,18 @@
   .pair-separator {
     margin: 0 10px;
   }
-} 
+}
+
+/* Continuous scroll animation for mobile ticker */
+/* Animates content from right to left, creating seamless loop with duplicated content */
+@keyframes tickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%); /* Move by exactly half the content width (first set) */
+  }
+}
 
 /* Responsive Design - Large Screens */
 @media (min-width: 1400px) {
