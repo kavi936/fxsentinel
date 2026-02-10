@@ -2960,18 +2960,25 @@
     height: auto;
     min-height: 50px;
     padding: 10px 16px;
-    /* Allow child to scroll horizontally on mobile */
+    /* Allow child overflow to be visible (child handles scrolling) */
     overflow-x: visible;
+    /* Ensure flex container can constrain child properly */
+    min-width: 0;
   }
   
   .ticker-pairs-inline {
     /* Enhanced mobile touch scrolling */
-    flex: 0 0 auto; /* Don't shrink on mobile - allow content to overflow */
-    width: max-content; /* Ensure content can expand beyond container */
-    max-width: none; /* Remove max-width constraint on mobile */
+    flex: 1 1 0%; /* Take available space from flex parent, allow shrinking */
+    width: auto; /* Remove max-content - let parent constrain width for scrolling */
+    max-width: 100%; /* Constrain to parent width so content can overflow */
+    min-width: 0; /* Prevent flex constraints */
+    /* Ensure scrolling works on mobile - content will overflow this constrained container */
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
+    /* Explicitly enable horizontal scrolling */
+    overflow-x: auto;
+    overflow-y: hidden;
   }
   
   .ticker-pair {
@@ -2992,18 +2999,25 @@
   
   .market-ticker {
     padding: 8px 12px;
-    /* Allow child to scroll horizontally on small mobile */
+    /* Allow child overflow to be visible (child handles scrolling) */
     overflow-x: visible;
+    /* Ensure flex container can constrain child properly */
+    min-width: 0;
   }
   
   .ticker-pairs-inline {
     /* Enhanced mobile touch scrolling for small screens */
-    flex: 0 0 auto; /* Don't shrink on small screens - allow content to overflow */
-    width: max-content; /* Ensure content can expand beyond container */
-    max-width: none; /* Remove max-width constraint on small screens */
+    flex: 1 1 0%; /* Take available space from flex parent, allow shrinking */
+    width: auto; /* Remove max-content - let parent constrain width for scrolling */
+    max-width: 100%; /* Constrain to parent width so content can overflow */
+    min-width: 0; /* Prevent flex constraints */
+    /* Ensure scrolling works on small mobile - content will overflow this constrained container */
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
+    /* Explicitly enable horizontal scrolling */
+    overflow-x: auto;
+    overflow-y: hidden;
   }
   
   .ticker-pair {
