@@ -7337,9 +7337,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.2%',
-                'previous': '0.3%'
+                'previous': '0.2%'
             },
             {
                 'title': 'FOMC Member Hammack Speaks',

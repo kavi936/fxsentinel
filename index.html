@@ -11,12 +11,21 @@
     })(window,document,'script','dataLayer','GTM-M64QPF8Z');</script>
     <!-- End Google Tag Manager -->
     
+    <!-- Web App Manifest (Required for Chrome Android) -->
+    <link rel="manifest" href="/manifest.json" />
+    
     <!-- Favicon and App Icons -->
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <link rel="shortcut icon" href="/favicon.png" />
+    <!-- Apple Touch Icon (Required for iOS Chrome/Safari) - must come first for iOS -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+    <!-- Standard favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon.png" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.png" />
     
     <!-- Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -52,7 +61,13 @@
     <!-- Additional SEO Meta Tags -->
     <meta name="theme-color" content="#ff4444" />
     <meta name="msapplication-TileColor" content="#ff4444" />
+    <meta name="msapplication-TileImage" content="/favicon.png" />
     <meta name="application-name" content="FXSentinel" />
+    
+    <!-- Android Chrome specific -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
     <!-- Canonical URL - Dynamically set by useCanonicalTag hook -->
     
