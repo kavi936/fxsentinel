@@ -808,6 +808,25 @@ function Dashboard() {
             <div className="welcome-message">
               Welcome, <span className="username">{getUserDisplayName(true)}</span>
             </div>
+            {/* Market status - shown in navbar-left on mobile */}
+            <div 
+              className="market-status market-status-mobile"
+              onClick={() => setMarketStatusOpen(true)}
+              style={{ cursor: 'pointer' }}
+              title="Click for detailed market status"
+            >
+              <span className={`status-dot ${marketStatus.isOpen ? 'open' : 'closed'}`}></span>
+              <div className="status-content">
+                <span className="status-text">
+                  {marketStatus.isOpen ? 'Markets Open' : 'Markets Closed'}
+                  {marketStatus.activeSessions && marketStatus.activeSessions.length > 0 && (
+                    <span className="session-brackets">
+                      ({marketStatus.activeSessions.map(session => session.name).join(', ')})
+                    </span>
+                  )}
+                </span>
+              </div>
+            </div>
             <div className="datetime-container">
               <div className="live-time">
                 <span className="date-section">{formatCurrentTime().date}</span>
@@ -913,10 +932,11 @@ function Dashboard() {
                 <polyline points="12,6 12,12 16,14"/>
               </svg>
             </button>
-            <Link to="/" className="home-btn" title="Back to Home">
+            <Link to="/" className="home-btn" title="Log out / Back to Home">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9,22 9,12 15,12 15,22"/>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16 17 21 12 16 7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
             </Link>
           </div>
@@ -961,23 +981,6 @@ function Dashboard() {
               >
                 Alerts
               </button>
-            </div>
-          </div>
-          
-          <div className="mobile-menu-section">
-            <h3>Market Status</h3>
-            <div className="mobile-actions">
-              <div className="mobile-action-btn">
-                <span className={`status-dot ${marketStatus.isOpen ? 'open' : 'closed'}`}></span>
-                <span>
-                  {marketStatus.isOpen ? 'Markets Open' : 'Markets Closed'}
-                  {marketStatus.activeSessions && marketStatus.activeSessions.length > 0 && (
-                    <span className="session-brackets">
-                      {' '}({marketStatus.activeSessions.map(session => session.name).join(', ')})
-                    </span>
-                  )}
-                </span>
-              </div>
             </div>
           </div>
           

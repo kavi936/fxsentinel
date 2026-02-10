@@ -391,20 +391,40 @@
   color: #ffffff;
 }
 
-/* Responsive Design */
+/* ========== Mobile & small screen only (desktop unchanged) ========== */
 @media (max-width: 768px) {
+  .market-status-popup-overlay {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    align-items: flex-start;
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
+
   .market-status-popup {
     width: 95vw;
-    max-height: 80vh;
+    max-width: 95vw;
+    max-height: 85vh;
     margin: 20px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9);
   }
 
   .market-status-popup-header {
     padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
   .market-status-popup-header h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .market-status-popup .close-button {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
   }
 
   .market-status-popup-content {
@@ -416,8 +436,17 @@
     gap: 12px;
   }
 
+  .time-item {
+    padding: 14px;
+  }
+
   .sessions-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .session-card {
+    padding: 14px;
   }
 
   .next-session-info {
@@ -438,44 +467,120 @@
 }
 
 @media (max-width: 480px) {
+  .market-status-popup-overlay {
+    align-items: stretch;
+    padding: 0;
+  }
+
   .market-status-popup {
     width: 100vw;
+    width: 100dvw;
     height: 100vh;
+    height: 100dvh;
     max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
     margin: 0;
+    animation: marketStatusSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes marketStatusSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .market-status-popup-header {
-    padding: 12px 16px;
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
   }
 
-  .close-button {
-    width: 32px;
-    height: 32px;
+  .market-status-popup .close-button {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
   }
 
   .market-status-popup-content {
     max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 80px);
     padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
   }
 
   .status-overview {
     flex-direction: column;
     text-align: center;
     padding: 16px;
+    margin-bottom: 20px;
   }
 
   .market-status-indicator {
     margin-right: 0;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+    width: 52px;
+    height: 52px;
+  }
+
+  .status-info h3 {
+    font-size: 1.35rem;
+  }
+
+  .status-description {
+    font-size: 0.9rem;
+  }
+
+  .time-label {
+    font-size: 0.85rem;
+  }
+
+  .time-value {
+    font-size: 1.05rem;
   }
 
   .session-card {
-    padding: 12px;
+    padding: 14px;
+  }
+
+  .session-header h5 {
+    font-size: 1rem;
   }
 
   .next-session {
     padding: 16px;
+  }
+
+  .next-session-name {
+    font-size: 1.1rem;
+  }
+
+  .market-hours-info h4,
+  .active-sessions h4,
+  .next-session h4 {
+    font-size: 1rem;
+  }
+
+  .hours-header,
+  .hours-row {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .market-note {
+    padding: 14px;
+  }
+
+  .note-content p {
+    font-size: 0.85rem;
   }
 }

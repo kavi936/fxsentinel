@@ -573,20 +573,40 @@ input:checked + .toggle-slider:before {
   box-shadow: 0 4px 12px rgba(255, 68, 68, 0.3);
 }
 
-/* Responsive Design */
+/* ========== Mobile & small screen only (desktop unchanged) ========== */
 @media (max-width: 768px) {
+  .profile-popup-overlay {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    align-items: flex-start;
+    padding-top: max(20px, env(safe-area-inset-top));
+  }
+
   .profile-popup {
     width: 95vw;
-    max-height: 80vh;
+    max-width: 95vw;
+    max-height: 85vh;
     margin: 20px;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9);
   }
 
   .profile-popup-header {
     padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
   }
 
   .profile-popup-header h2 {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
+  }
+
+  .close-button {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
   }
 
   .profile-popup-tabs {
@@ -594,8 +614,12 @@ input:checked + .toggle-slider:before {
   }
 
   .tab-btn {
-    font-size: 0.75rem;
-    padding: 10px 6px;
+    font-size: 0.8rem;
+    padding: 12px 10px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .profile-section,
@@ -621,50 +645,121 @@ input:checked + .toggle-slider:before {
   .edit-actions {
     flex-direction: column;
   }
-}
 
-@media (max-width: 480px) {
-  .profile-popup {
-    width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-    margin: 0;
-  }
-
-  .profile-popup-header {
+  .form-group input,
+  .form-group select {
+    min-height: 44px;
     padding: 12px 16px;
   }
 
+  .edit-btn,
+  .save-btn,
+  .cancel-btn {
+    min-height: 44px;
+    padding: 12px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-popup-overlay {
+    align-items: stretch;
+    padding: 0;
+  }
+
+  .profile-popup {
+    width: 100vw;
+    width: 100dvw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
+    border-radius: 0;
+    margin: 0;
+    animation: profilePopupSlideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes profilePopupSlideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .profile-popup-header {
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+  }
+
   .close-button {
-    width: 32px;
-    height: 32px;
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    padding: 10px;
   }
 
   .profile-popup-tabs {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
   }
 
   .tab-btn {
     text-align: center;
-    padding: 8px;
+    padding: 12px 8px;
+    font-size: 0.8rem;
+    min-height: 44px;
   }
 
   .profile-popup-content {
     max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .profile-section,
+  .settings-section,
+  .security-section {
+    padding: 16px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 
   .profile-avatar {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
   }
 
   .avatar-initials {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
 
   .profile-info h3 {
-    font-size: 1.2rem;
+    font-size: 1.25rem;
+  }
+
+  .form-group label {
+    font-size: 0.95rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 16px; /* Prevents zoom on focus in iOS */
+    min-height: 48px;
+  }
+
+  .setting-item {
+    padding: 16px 0;
+  }
+
+  .toggle-switch {
+    min-width: 50px;
+    min-height: 28px;
   }
 }
 
