@@ -4023,36 +4023,71 @@ const Overview = () => {
             </div>
 
             {/* Currency Pairs */}
-            <div className="ticker-pairs-inline">
+            <div className={`ticker-pairs-inline ${isMobile ? 'ticker-scroll-animation' : ''}`}>
               {loading ? (
                 <span className="loading-pairs">Loading...</span>
               ) : (
-                tickerPairs.map((pair, index) => {
-                  const priceData = prices[pair.key];
-                  const price = priceData?.price || '0.0000';
-                  const change = priceData?.change || '0.0000';
-                  const isUp = parseFloat(change) >= 0;
+                <>
+                  {/* Original content */}
+                  {tickerPairs.map((pair, index) => {
+                    const priceData = prices[pair.key];
+                    const price = priceData?.price || '0.0000';
+                    const change = priceData?.change || '0.0000';
+                    const isUp = parseFloat(change) >= 0;
 
-                  return (
-                    <React.Fragment key={pair.key}>
-                      <div className="ticker-pair-inline">
-                        <span className="pair-label-inline">{pair.label}</span>
-                        <span className={`pair-rate-inline ${isUp ? 'positive' : 'negative'}`}>
-                          {formatPrice(price)}
-                        </span>
-                        <span className={`pair-change-inline ${isUp ? 'positive' : 'negative'}`}>
-                          {formatChange(change)}
-                        </span>
-                        <span className={`pair-percentage-inline ${isUp ? 'positive' : 'negative'}`}>
-                          {formatPercentage(change, price)}
-                        </span>
-                      </div>
-                      {index < tickerPairs.length - 1 && (
-                        <span className="pair-separator-inline">|</span>
-                      )}
-                    </React.Fragment>
-                  );
-                })
+                    return (
+                      <React.Fragment key={pair.key}>
+                        <div className="ticker-pair-inline">
+                          <span className="pair-label-inline">{pair.label}</span>
+                          <span className={`pair-rate-inline ${isUp ? 'positive' : 'negative'}`}>
+                            {formatPrice(price)}
+                          </span>
+                          <span className={`pair-change-inline ${isUp ? 'positive' : 'negative'}`}>
+                            {formatChange(change)}
+                          </span>
+                          <span className={`pair-percentage-inline ${isUp ? 'positive' : 'negative'}`}>
+                            {formatPercentage(change, price)}
+                          </span>
+                        </div>
+                        {index < tickerPairs.length - 1 && (
+                          <span className="pair-separator-inline">|</span>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                  {/* Duplicated content for seamless scroll animation (mobile only) */}
+                  {isMobile && tickerPairs.length > 0 && (
+                    <>
+                      <span className="pair-separator-inline">|</span>
+                          {tickerPairs.map((pair, index) => {
+                            const priceData = prices[pair.key];
+                            const price = priceData?.price || '0.0000';
+                            const change = priceData?.change || '0.0000';
+                            const isUp = parseFloat(change) >= 0;
+
+                            return (
+                              <React.Fragment key={`duplicate-${pair.key}`}>
+                                <div className="ticker-pair-inline">
+                                  <span className="pair-label-inline">{pair.label}</span>
+                                  <span className={`pair-rate-inline ${isUp ? 'positive' : 'negative'}`}>
+                                    {formatPrice(price)}
+                                  </span>
+                                  <span className={`pair-change-inline ${isUp ? 'positive' : 'negative'}`}>
+                                    {formatChange(change)}
+                                  </span>
+                                  <span className={`pair-percentage-inline ${isUp ? 'positive' : 'negative'}`}>
+                                    {formatPercentage(change, price)}
+                                  </span>
+                                </div>
+                                {index < tickerPairs.length - 1 && (
+                                  <span className="pair-separator-inline">|</span>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                    </>
+                  )}
+                </>
               )}
             </div>
 
