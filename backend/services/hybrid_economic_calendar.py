@@ -7267,7 +7267,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '25.3%',
                 'forecast': 'N/A',
                 'previous': '10.9%'
             },
@@ -7277,8 +7277,8 @@ class HybridEconomicCalendar:
                 'time': '11:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '99.9',
+                'actual': '99.3',
+                'forecast': '99.8',
                 'previous': '99.5'
             },
             {
