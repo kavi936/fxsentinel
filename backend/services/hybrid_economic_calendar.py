@@ -7225,7 +7225,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.6%',
                 'forecast': 'N/A',
                 'previous': '-1.7%'
             },
@@ -7235,7 +7235,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.6%',
                 'forecast': '1.8%',
                 'previous': '1.7%'
             },
@@ -7245,7 +7245,7 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '1.2%',
                 'previous': '1.0%'
             },
@@ -7255,9 +7255,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3',
                 'forecast': 'N/A',
-                'previous': '3'
+                'previous': '2'
             },
 
             # TUESDAY, FEBRUARY 10
@@ -7269,7 +7269,7 @@ class HybridEconomicCalendar:
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
-                'previous': '10.6%'
+                'previous': '10.9%'
             },
             {
                 'title': 'NFIB Small Business Index',
