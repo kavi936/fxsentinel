@@ -451,6 +451,11 @@
   transition: all 0.3s ease;
 }
 
+/* Hide market status in navbar-left on desktop - only show on mobile */
+.market-status-mobile {
+  display: none;
+}
+
 .market-status:hover {
   background: rgba(255, 68, 68, 0.1);
   border-color: rgba(255, 68, 68, 0.3);
@@ -894,10 +899,6 @@ body.mobile-menu-open {
 
 .mobile-menu-overlay.active .mobile-menu-section:nth-child(2) {
   transition-delay: 0.2s;
-}
-
-.mobile-menu-overlay.active .mobile-menu-section:nth-child(3) {
-  transition-delay: 0.3s;
 }
 
 /* Enhanced Header with Glassmorphism */
@@ -2015,18 +2016,125 @@ body.mobile-menu-open {
   }
 }
 
+/* Mobile and small screens only: prevent navbar overflow and constrain logo */
 @media (max-width: 768px) {
+  .dashboard-navbar {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  
   .navbar-container {
     padding: 0 0.7rem;
     gap: 0.7rem;
+    /* Reduce padding and gap on mobile */
+    padding: 0 1rem;
+    gap: 0.75rem;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
   }
   
   .navbar-left {
-    gap: 0.7rem;
+    gap: 0.5rem; /* Reduced gap for tighter spacing on tablets */
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .welcome-message {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+  
+  .datetime-container {
+    flex-shrink: 1;
+    box-sizing: border-box;
+    min-width: 140px;
+    max-width: 180px;
+    padding: 5px 8px; /* Reduced padding for tighter spacing */
+  }
+  
+  .live-time {
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .date-section,
+  .time-section {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
   
   .navbar-center {
-    margin: 0 0.7rem;
+    overflow: hidden;
+  }
+  
+  .navbar-right {
+    min-width: 0;
+    overflow: hidden;
+  }
+  
+  .market-status {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+  
+  .status-text {
+    min-width: 0;
+    overflow: hidden;
+    max-width: 100%;
+  }
+  
+  .navbar-tabs.expanded {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .navbar-logo {
+    max-width: 200px; /* Slightly larger logo on tablets/small screens */
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  
+  .navbar-logo picture {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+  }
+  
+  .navbar-logo img {
+    max-width: 100%;
+    display: block;
+    box-sizing: border-box;
+  }
+  
+  .navbar-center {
+    margin: 0 0.5rem;
+  }
+  
+  .market-status {
+    min-width: 150px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+  }
+  
+  .welcome-message {
+    max-width: 120px;
+  }
+  
+  .navbar-tabs.expanded {
+    min-width: 360px;
+    max-width: 420px;
   }
   
   .navbar-tabs.collapsed {
@@ -2160,14 +2268,44 @@ body.mobile-menu-open {
   .navbar-container {
     padding: 0 0.6rem;
     gap: 0.6rem;
+    /* Further reduce padding */
+    padding: 0 0.75rem;
+    gap: 0.5rem;
   }
   
   .navbar-left {
-    gap: 0.6rem;
+    gap: 0.35rem; /* Further reduced gap for tighter spacing */
   }
   
   .navbar-center {
     margin: 0 0.6rem;
+    /* Further reduce margin */
+    margin: 0 0.25rem;
+  }
+  
+  /* Further reduce datetime container */
+  .datetime-container {
+    min-width: 120px;
+    max-width: 150px;
+    padding: 4px 7px; /* Reduced padding for tighter spacing */
+  }
+  
+  /* Further reduce market status */
+  .market-status {
+    min-width: 130px;
+    padding: 0.5rem 0.7rem;
+    font-size: 0.7rem;
+  }
+  
+  /* Hide welcome message earlier */
+  .welcome-message {
+    display: none;
+  }
+  
+  /* Further reduce expanded tabs */
+  .navbar-tabs.expanded {
+    min-width: 300px;
+    max-width: 360px;
   }
   
   .navbar-tabs.collapsed {
@@ -2261,6 +2399,12 @@ body.mobile-menu-open {
     display: flex;
   }
   
+  .navbar-container {
+    /* Minimal padding on small mobile */
+    padding: 0 0.5rem;
+    gap: 0.5rem;
+  }
+  
   .navbar-center {
     display: none;
   }
@@ -2269,19 +2413,56 @@ body.mobile-menu-open {
     display: none;
   }
   
+  /* Hide market-status from navbar-right on mobile since it's now in navbar-left */
+  .navbar-right .market-status {
+    display: none;
+  }
+  
   .navbar-left {
     flex: 1;
     justify-content: space-between;
+    /* Minimal gap between elements */
+    gap: 0.15rem;
   }
   
   .welcome-message {
     display: none;
   }
   
+  /* Market status in navbar-left on mobile - larger version */
+  .market-status-mobile {
+    display: flex !important;
+    min-width: auto;
+    max-width: 160px; /* Increased from 140px */
+    padding: 0.5rem 0.75rem; /* Increased padding for larger container */
+    font-size: 0.7rem; /* Slightly larger font */
+    margin-right: 0;
+    flex-shrink: 1;
+    gap: 0.5rem; /* Increased internal gap */
+  }
+  
+  .market-status-mobile .status-text {
+    font-size: 0.7rem; /* Increased from 0.65rem */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .market-status-mobile .session-brackets {
+    display: none; /* Hide session names on mobile to save space */
+  }
+  
   .datetime-container {
-    min-width: 100px;
-    max-width: 130px;
-    padding: 4px 8px;
+    min-width: 110px; /* Increased from 100px */
+    max-width: 150px; /* Increased from 130px */
+    padding: 5px 10px; /* Increased padding for larger container */
+    /* Ensure it doesn't overflow */
+    flex-shrink: 1;
+  }
+  
+  /* Reduce logo margin on mobile for tighter spacing */
+  .navbar-logo {
+    margin-right: 0.15rem; /* Further reduced for tighter spacing */
   }
   
   .date-section {
@@ -2293,8 +2474,16 @@ body.mobile-menu-open {
   }
   
   .navbar-logo {
-    height: 32px;
+    height: 36px;
     margin-right: 0.5rem;
+    flex-shrink: 0;
+    max-width: 170px; /* Larger logo for phone screens */
+    overflow: hidden;
+  }
+  
+  .navbar-logo img {
+    max-height: 36px;
+    max-width: 170px;
   }
   
   .dashboard-main {
@@ -2340,30 +2529,70 @@ body.mobile-menu-open {
 @media (max-width: 360px) {
   .navbar-container {
     padding: 0 0.5rem;
+    /* Even more minimal padding on very small screens */
+    padding: 0 0.4rem;
+    gap: 0.4rem;
+  }
+  
+  .navbar-left {
+    /* Minimal gap - even tighter on very small screens */
+    gap: 0.1rem;
+  }
+  
+  /* Larger market status on very small screens */
+  .market-status-mobile {
+    max-width: 150px; /* Increased from 120px */
+    padding: 0.45rem 0.65rem; /* Increased padding */
+    font-size: 0.65rem; /* Increased from 0.6rem */
+    gap: 0.45rem; /* Increased internal gap */
+  }
+  
+  .market-status-mobile .status-text {
+    font-size: 0.65rem; /* Increased from 0.6rem */
   }
   
   .datetime-container {
-    min-width: 90px;
-    max-width: 120px;
-    padding: 3px 6px;
+    min-width: 100px; /* Increased from 85px */
+    max-width: 130px; /* Increased from 110px */
+    padding: 4px 8px; /* Increased padding */
+  }
+  
+  /* Further reduce logo margin on very small screens */
+  .navbar-logo {
+    margin-right: 0.1rem;
   }
   
   .date-section {
     font-size: 0.65rem;
+    /* Further reduce font size */
+    font-size: 0.6rem;
   }
   
   .time-section {
     font-size: 0.65rem;
+    /* Further reduce font size */
+    font-size: 0.6rem;
   }
   
   .navbar-logo {
-    height: 28px;
-    margin-right: 0.5rem;
+    height: 32px;
+    margin-right: 0.3rem;
+    max-width: 140px; /* Larger logo on very small phones, but still safe */
+    overflow: hidden;
+  }
+  
+  .navbar-logo img {
+    max-height: 32px;
+    max-width: 140px;
   }
   
   .mobile-menu-toggle {
     width: 32px;
     height: 32px;
+    /* Slightly smaller on very small screens */
+    width: 30px;
+    height: 30px;
+    padding: 0.4rem;
   }
   
   /* Dashboard content responsive styles */
