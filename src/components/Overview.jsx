@@ -845,6 +845,7 @@ const Overview = () => {
   const [isPmStatusModalOpen, setIsPmStatusModalOpen] = useState(false);
   const [isPmConvictionModalOpen, setIsPmConvictionModalOpen] = useState(false);
   const [isPmSearchModalOpen, setIsPmSearchModalOpen] = useState(false);
+  const [pmMobileControlsOpen, setPmMobileControlsOpen] = useState(false);
 
   // ============================================
   // PHASE 1: Resizable Grid State Management
@@ -1000,6 +1001,18 @@ const Overview = () => {
       console.warn('⚠️ Failed to save bottom padding:', e);
     }
   }, [bottomPadding]);
+
+  // Lock body scroll when Prediction Markets mobile controls overlay is open (same pattern as Live News)
+  useEffect(() => {
+    if (pmMobileControlsOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [pmMobileControlsOpen]);
 
   // Debug: Log current state on mount and when it changes
   useEffect(() => {
@@ -5481,48 +5494,161 @@ const Overview = () => {
                   tooltipText="Prediction Markets: See what retail and institutional traders are betting on. These markets aggregate crowd wisdom on economic events like Fed decisions, inflation data, and GDP releases. Use this as a sentiment indicator alongside technical analysis."
                   position="bottom"
                 />
-                <div className="prediction-markets-filter-buttons">
+                {/* Inline controls: hidden on mobile, shown on desktop */}
+                <div className="prediction-markets-controls-inline">
+                  <div className="prediction-markets-filter-buttons">
+                    <button 
+                      className={`pm-filter-btn ${pmFilterTopic !== 'all' ? 'active' : ''}`}
+                      onClick={handlePmTopicClick}
+                      title="Filter by Topic"
+                    >
+                      Topic
+                    </button>
+                    <button 
+                      className={`pm-filter-btn ${pmFilterStatus !== 'all' ? 'active' : ''}`}
+                      onClick={handlePmStatusClick}
+                      title="Filter by Status"
+                    >
+                      Status
+                    </button>
+                    <button 
+                      className={`pm-filter-btn ${pmFilterConviction !== 'all' ? 'active' : ''}`}
+                      onClick={handlePmConvictionClick}
+                      title="Filter by Conviction"
+                    >
+                      Conviction
+                    </button>
+                    <button 
+                      className={`pm-filter-btn ${pmSearchQuery ? 'active' : ''}`}
+                      onClick={handlePmSearchClick}
+                      title="Search Markets"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="M21 21l-4.35-4.35"></path>
+                      </svg>
+                    </button>
+                  </div>
                   <button 
-                    className={`pm-filter-btn ${pmFilterTopic !== 'all' ? 'active' : ''}`}
-                    onClick={handlePmTopicClick}
-                    title="Filter by Topic"
-                  >
-                    Topic
-                  </button>
-                  <button 
-                    className={`pm-filter-btn ${pmFilterStatus !== 'all' ? 'active' : ''}`}
-                    onClick={handlePmStatusClick}
-                    title="Filter by Status"
-                  >
-                    Status
-                  </button>
-                  <button 
-                    className={`pm-filter-btn ${pmFilterConviction !== 'all' ? 'active' : ''}`}
-                    onClick={handlePmConvictionClick}
-                    title="Filter by Conviction"
-                  >
-                    Conviction
-                  </button>
-                  <button 
-                    className={`pm-filter-btn ${pmSearchQuery ? 'active' : ''}`}
-                    onClick={handlePmSearchClick}
-                    title="Search Markets"
+                    className={`prediction-markets-refresh-btn ${predictionMarketsLoading ? 'spinning' : ''}`}
+                    onClick={refreshPredictionMarkets}
+                    disabled={predictionMarketsLoading}
+                    title="Refresh Prediction Markets"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="11" cy="11" r="8"></circle>
-                      <path d="M21 21l-4.35-4.35"></path>
+                      <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                     </svg>
                   </button>
                 </div>
-                <button 
-                  className={`prediction-markets-refresh-btn ${predictionMarketsLoading ? 'spinning' : ''}`}
-                  onClick={refreshPredictionMarkets}
-                  disabled={predictionMarketsLoading}
-                  title="Refresh Prediction Markets"
+                {/* Mobile: single Controls button opens overlay */}
+                <button
+                  type="button"
+                  className="prediction-markets-mobile-controls-btn"
+                  onClick={() => setPmMobileControlsOpen(true)}
+                  title="Controls"
+                  aria-label="Open Prediction Markets controls"
                 >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="4" y1="21" x2="4" y2="14"></line>
+                    <line x1="4" y1="10" x2="4" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12" y2="3"></line>
+                    <line x1="20" y1="21" x2="20" y2="16"></line>
+                    <line x1="20" y1="12" x2="20" y2="3"></line>
+                    <line x1="1" y1="14" x2="7" y2="14"></line>
+                    <line x1="9" y1="8" x2="15" y2="8"></line>
+                    <line x1="17" y1="16" x2="23" y2="16"></line>
                   </svg>
+                  <span>Controls</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile controls overlay for Prediction Markets */}
+            <div
+              className={`prediction-markets-mobile-controls-overlay ${pmMobileControlsOpen ? 'active' : ''}`}
+              onClick={(e) => e.target === e.currentTarget && setPmMobileControlsOpen(false)}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Prediction Markets controls"
+            >
+              <div className="prediction-markets-mobile-controls-content" onClick={(e) => e.stopPropagation()}>
+                <div className="prediction-markets-mobile-controls-header">
+                  <h3>Prediction Markets Controls</h3>
+                  <button
+                    type="button"
+                    className="prediction-markets-mobile-controls-close"
+                    onClick={() => setPmMobileControlsOpen(false)}
+                    aria-label="Close"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+                <div className="prediction-markets-mobile-controls-sections">
+                  <div className="prediction-markets-mobile-controls-section">
+                    <h4>Filters</h4>
+                    <div className="prediction-markets-filter-buttons">
+                      <button 
+                        className={`pm-filter-btn ${pmFilterTopic !== 'all' ? 'active' : ''}`}
+                        onClick={() => { handlePmTopicClick(); setPmMobileControlsOpen(false); }}
+                        title="Filter by Topic"
+                      >
+                        Topic
+                      </button>
+                      <button 
+                        className={`pm-filter-btn ${pmFilterStatus !== 'all' ? 'active' : ''}`}
+                        onClick={() => { handlePmStatusClick(); setPmMobileControlsOpen(false); }}
+                        title="Filter by Status"
+                      >
+                        Status
+                      </button>
+                      <button 
+                        className={`pm-filter-btn ${pmFilterConviction !== 'all' ? 'active' : ''}`}
+                        onClick={() => { handlePmConvictionClick(); setPmMobileControlsOpen(false); }}
+                        title="Filter by Conviction"
+                      >
+                        Conviction
+                      </button>
+                      <button 
+                        className={`pm-filter-btn ${pmSearchQuery ? 'active' : ''}`}
+                        onClick={() => { handlePmSearchClick(); setPmMobileControlsOpen(false); }}
+                        title="Search Markets"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <circle cx="11" cy="11" r="8"></circle>
+                          <path d="M21 21l-4.35-4.35"></path>
+                        </svg>
+                        Search
+                      </button>
+                    </div>
+                  </div>
+                  <div className="prediction-markets-mobile-controls-section">
+                    <h4>Refresh</h4>
+                    <button
+                      type="button"
+                      className="prediction-markets-refresh-btn prediction-markets-mobile-refresh-btn"
+                      onClick={() => {
+                        refreshPredictionMarkets();
+                        setPmMobileControlsOpen(false);
+                      }}
+                      disabled={predictionMarketsLoading}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                      </svg>
+                      {predictionMarketsLoading ? 'Refreshing…' : 'Refresh now'}
+                    </button>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="prediction-markets-mobile-controls-done"
+                  onClick={() => setPmMobileControlsOpen(false)}
+                >
+                  Done
                 </button>
               </div>
             </div>

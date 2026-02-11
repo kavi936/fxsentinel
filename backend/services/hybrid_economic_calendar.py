@@ -7387,7 +7387,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.4%',
                 'previous': '0.8%'
             },
@@ -7397,7 +7397,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-1.4%',
                 'forecast': '-1.5%',
                 'previous': '-1.9%'
             },

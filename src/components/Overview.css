@@ -2959,6 +2959,10 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .market-ticker-container {
+    margin-bottom: 30px; /* Increased spacing before grid container */
+  }
+  
   .market-ticker {
     height: auto;
     min-height: 50px;
@@ -3037,6 +3041,7 @@
 @media (max-width: 480px) {
   .market-ticker-container {
     padding: 0;
+    margin-bottom: 25px; /* Increased spacing before grid container */
   }
   
   .market-ticker {
@@ -7023,38 +7028,166 @@
 }
 
 @media (max-width: 768px) {
-  /* Tablet and Mobile: Stack cards vertically */
-  /* Note: JavaScript handles repositioning, but CSS provides fallback styling */
+  /* Mobile: Simple 1×6 CSS Grid with fixed heights */
   .overview-grid-container {
     margin: 5px;
-    /* Height will be calculated dynamically by JavaScript */
-    min-height: auto;
+    margin-top: 30px; /* Increased spacing from market ticker */
+    display: grid !important; /* Override inline style for mobile */
+    grid-template-columns: 1fr; /* Single column */
+    grid-template-rows: repeat(6, auto); /* 6 rows with auto height */
+    gap: 30px; /* Increased gap between cards */
+    position: relative !important; /* Override absolute positioning */
+    height: auto !important; /* Let content determine height */
+    min-height: auto !important;
+    max-height: none !important;
   }
   
-  /* Ensure absolutely positioned cards don't overflow on mobile */
+  /* Override absolute positioning for mobile - use grid instead */
   .grid-card {
-    /* Cards will be repositioned by JavaScript calculations */
-    /* Fallback: ensure cards don't exceed container width */
+    position: relative !important; /* Override absolute positioning */
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box;
+    /* Fixed heights - override base height: 100% */
+    height: auto !important;
+    overflow: visible !important; /* Allow card to show overflow */
   }
   
-  /* MOBILE SCROLL FIX: Disable card internal scrolling on mobile */
-  /* Allow cards to expand naturally and use only page-level scrolling */
+  /* Specific fixed heights for each card on mobile - all ~700px */
+  .grid-card.news-calendar {
+    height: 700px !important; /* Fixed height - Economic Calendar */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 1;
+  }
+  
+  .grid-card.ai-analysis-card {
+    height: 700px !important; /* Fixed height - AI Analysis */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 2;
+  }
+  
+  .grid-card.market-sentiment-card {
+    height: 700px !important; /* Fixed height - Market Sentiment */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 3;
+  }
+  
+  .grid-card.live-news-analysis-card {
+    height: 700px !important; /* Fixed height - Live News */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 4;
+  }
+  
+  .grid-card.prediction-markets-card {
+    height: 700px !important; /* Fixed height - Prediction Markets */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 5;
+  }
+  
+  .grid-card.central-bank-analysis-card {
+    height: 700px !important; /* Fixed height - Central Bank */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 6;
+  }
+  
+  /* Hide resize handles on mobile - not needed for fixed grid */
+  .grid-resize-handle {
+    display: none !important;
+  }
+  
+  /* Economic Calendar card: keep header and controls on one line on mobile */
+  /* Override the generic .calendar-header { flex-direction: column } at 768px */
+  .grid-card.news-calendar .calendar-header {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .grid-card.news-calendar .calendar-header .header-main {
+    min-width: 0; /* Allow title to shrink so controls stay on same line */
+    flex-shrink: 1;
+  }
+  
+  .grid-card.news-calendar .calendar-header .calendar-controls {
+    flex-shrink: 0; /* Keep buttons from shrinking */
+    align-self: center;
+  }
+  
+  /* Live News card: keep header and controls on one line on mobile */
+  /* Override LiveNewsFeed.css .news-header { flex-direction: column } and .news-controls { flex-direction: column } at 768px */
+  .grid-card.live-news-analysis-card .news-header {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  
+  .grid-card.live-news-analysis-card .news-header .header-main {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  
+  .grid-card.live-news-analysis-card .news-header .news-controls {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 8px;
+  }
+  
+  .grid-card.live-news-analysis-card .news-header .tab-controls,
+  .grid-card.live-news-analysis-card .news-header .filter-controls {
+    flex-shrink: 0;
+    flex-wrap: nowrap; /* Keep tab + filter buttons on one line */
+  }
+  
+  /* Prediction Markets card: keep header on one line on mobile; show Controls button, hide inline filters */
+  .grid-card.prediction-markets-card .prediction-markets-header {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+  .grid-card.prediction-markets-card .prediction-markets-header .header-main {
+    min-width: 0;
+    flex-shrink: 1;
+    flex-wrap: nowrap;
+  }
+  .grid-card.prediction-markets-card .prediction-markets-controls-inline {
+    display: none !important;
+  }
+  .grid-card.prediction-markets-card .prediction-markets-mobile-controls-btn {
+    display: flex;
+    flex-shrink: 0;
+  }
+  
+  /* MOBILE SCROLL FIX: Enable card internal scrolling on mobile */
+  /* Cards have fixed heights, so content areas need to scroll */
+  .grid-card {
+    overflow: hidden !important; /* Clip card content */
+  }
+  
   .calendar-content,
   .news-content,
   .ai-content,
   .sentiment-content,
   .prediction-markets-content,
   .central-bank-documents-list {
-    overflow-y: visible !important; /* Disable internal scrolling */
+    overflow-y: auto !important; /* Enable internal scrolling */
     overflow-x: hidden;
-    /* Ensure touch gestures scroll the page, not the card */
+    /* Ensure touch gestures scroll within the card */
     touch-action: pan-y;
-    /* Allow cards to expand to fit content */
-    min-height: auto;
-    max-height: none;
-    height: auto;
+    /* Constrain height to fit within card */
+    height: 100%;
+    max-height: 100%;
   }
   
   .sentiment-content,
@@ -7075,33 +7208,98 @@
 }
 
 @media (max-width: 480px) {
-  /* Small Mobile: Further optimize spacing and sizing */
+  /* Small Mobile: 1×6 Grid with smaller fixed heights */
   .overview-grid-container {
     margin: 5px;
-    /* Reduce min-height on very small screens */
-    min-height: 400px;
+    margin-top: 25px; /* Increased spacing from market ticker */
+    display: grid !important; /* Override inline style for mobile */
+    grid-template-columns: 1fr; /* Single column */
+    grid-template-rows: repeat(6, auto); /* 6 rows */
+    gap: 25px; /* Increased gap between cards */
+    position: relative !important;
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
   }
   
-  /* Ensure cards fit within viewport */
+  /* Smaller fixed heights for small mobile */
   .grid-card {
-    /* Cards should be repositioned by JavaScript for mobile */
-    /* Ensure no horizontal overflow */
-    max-width: calc(100% - 10px) !important;
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
     box-sizing: border-box;
+    height: auto !important;
+    overflow: visible !important;
   }
   
-  /* MOBILE SCROLL FIX: Ensure card scrolling is disabled on small mobile */
+  /* Specific fixed heights for each card on small mobile - all ~700px */
+  .grid-card.news-calendar {
+    height: 700px !important; /* Fixed height - Economic Calendar */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 1;
+  }
+  
+  .grid-card.ai-analysis-card {
+    height: 700px !important; /* Fixed height - AI Analysis */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 2;
+  }
+  
+  .grid-card.market-sentiment-card {
+    height: 700px !important; /* Fixed height - Market Sentiment */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 3;
+  }
+  
+  .grid-card.live-news-analysis-card {
+    height: 700px !important; /* Fixed height - Live News */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 4;
+  }
+  
+  .grid-card.prediction-markets-card {
+    height: 700px !important; /* Fixed height - Prediction Markets */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 5;
+  }
+  
+  .grid-card.central-bank-analysis-card {
+    height: 700px !important; /* Fixed height - Central Bank */
+    min-height: 700px !important;
+    max-height: 700px !important;
+    grid-row: 6;
+  }
+  
+  /* Ensure cards clip content on small mobile */
+  .grid-card {
+    overflow: hidden !important;
+  }
+  
+  /* Hide resize handles on small mobile - not needed for fixed grid */
+  .grid-resize-handle {
+    display: none !important;
+  }
+  
+  /* MOBILE SCROLL FIX: Ensure card scrolling is enabled on small mobile */
+  /* Cards have fixed heights, content areas scroll internally */
   .calendar-content,
   .news-content,
   .ai-content,
   .sentiment-content,
   .prediction-markets-content,
   .central-bank-documents-list {
-    overflow-y: visible !important; /* Disable internal scrolling */
+    overflow-y: auto !important; /* Enable internal scrolling */
     overflow-x: hidden;
-    touch-action: pan-y; /* Ensure page scrolling works */
-    min-height: auto;
-    max-height: none;
+    touch-action: pan-y; /* Enable touch scrolling within cards */
+    height: 100%;
+    max-height: 100%;
   }
   
   .sentiment-content,
@@ -8257,6 +8455,153 @@
 
 .prediction-markets-refresh-btn.spinning:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+/* Inline controls wrapper (desktop): visible by default */
+.prediction-markets-controls-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Mobile Controls button: hidden by default, shown at 768px */
+.prediction-markets-mobile-controls-btn {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.prediction-markets-mobile-controls-btn:hover {
+  background: rgba(59, 130, 246, 0.25);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+.prediction-markets-mobile-controls-btn svg {
+  flex-shrink: 0;
+}
+
+/* Prediction Markets mobile controls overlay (same pattern as Live News) */
+.prediction-markets-mobile-controls-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1100;
+  padding: 20px;
+  overflow-y: auto;
+  align-items: flex-start;
+  justify-content: center;
+}
+.prediction-markets-mobile-controls-overlay.active {
+  display: flex;
+}
+.prediction-markets-mobile-controls-content {
+  background: linear-gradient(180deg, #0a0f1a 0%, #0f172a 60%, #1e3a5f 100%);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 40px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+.prediction-markets-mobile-controls-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+}
+.prediction-markets-mobile-controls-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+.prediction-markets-mobile-controls-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+.prediction-markets-mobile-controls-close:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.prediction-markets-mobile-controls-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.prediction-markets-mobile-controls-section {
+  padding: 16px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.prediction-markets-mobile-controls-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.prediction-markets-mobile-controls-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.prediction-markets-mobile-controls-content .prediction-markets-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.prediction-markets-mobile-controls-content .prediction-markets-mobile-refresh-btn {
+  width: 100%;
+  min-width: 100%;
+  height: auto;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 10px;
+  border-radius: 10px;
+  box-sizing: border-box;
+}
+.prediction-markets-mobile-controls-done {
+  width: 100%;
+  padding: 16px;
+  margin-top: 8px;
+  background: rgba(59, 130, 246, 0.25);
+  border: 1px solid rgba(59, 130, 246, 0.5);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.prediction-markets-mobile-controls-done:hover {
+  background: rgba(59, 130, 246, 0.35);
+  border-color: rgba(59, 130, 246, 0.6);
 }
 
 .prediction-markets-content {

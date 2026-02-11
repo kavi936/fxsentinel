@@ -201,6 +201,19 @@ const LiveNewsFeed = () => {
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [forceRefreshing, setForceRefreshing] = useState(false);
+  const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
+
+  // Prevent body scroll when mobile controls overlay is open
+  useEffect(() => {
+    if (mobileControlsOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileControlsOpen]);
   const { currentUser } = useAuth();
 
   // Debug useEffect to monitor state changes (development only)
@@ -936,58 +949,191 @@ const LiveNewsFeed = () => {
           />
         </div>
         <div className="news-controls">
-          <div className="tab-controls">
-            <button 
-              className={`tab-btn ${activeTab === 'live' ? 'active' : ''}`}
-              onClick={() => handleTabChange('live')}
-              title="Live News"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12,6 12,12 16,14"></polyline>
-              </svg>
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
-              onClick={() => handleTabChange('history')}
-              title="News History"
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 3v18h18"></path>
-                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+          {/* Inline controls: hidden on mobile, shown on desktop */}
+          <div className="news-controls-inline">
+            <div className="tab-controls">
+              <button 
+                className={`tab-btn ${activeTab === 'live' ? 'active' : ''}`}
+                onClick={() => handleTabChange('live')}
+                title="Live News"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12,6 12,12 16,14"></polyline>
+                </svg>
+              </button>
+              <button 
+                className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+                onClick={() => handleTabChange('history')}
+                title="News History"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3v18h18"></path>
+                  <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                </svg>
+              </button>
+            </div>
+            <div className="filter-controls">
+              <button 
+                className={`news-filter-btn news-filter-all ${filter === 'all' ? 'active' : ''}`}
+                onClick={() => setFilter('all')}
+              >
+                All
+              </button>
+              <button 
+                className={`news-filter-btn news-filter-high ${filter === 'high' ? 'active' : ''}`}
+                onClick={() => setFilter('high')}
+              >
+                H
+              </button>
+              <button 
+                className={`news-filter-btn news-filter-medium ${filter === 'medium' ? 'active' : ''}`}
+                onClick={() => setFilter('medium')}
+              >
+                M
+              </button>
+              <button 
+                className={`news-filter-btn news-filter-low ${filter === 'low' ? 'active' : ''}`}
+                onClick={() => setFilter('low')}
+              >
+                L
+              </button>
+            </div>
+            <button className="news-refresh-btn" onClick={activeTab === 'live' ? () => fetchNews(true) : () => fetchNewsHistory()} disabled={loading || historyLoading || forceRefreshing}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
               </svg>
             </button>
           </div>
-          <div className="filter-controls">
-            <button 
-              className={`news-filter-btn news-filter-all ${filter === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter('all')}
-            >
-              All
-            </button>
-            <button 
-              className={`news-filter-btn news-filter-high ${filter === 'high' ? 'active' : ''}`}
-              onClick={() => setFilter('high')}
-            >
-              H
-            </button>
-            <button 
-              className={`news-filter-btn news-filter-medium ${filter === 'medium' ? 'active' : ''}`}
-              onClick={() => setFilter('medium')}
-            >
-              M
-            </button>
-            <button 
-              className={`news-filter-btn news-filter-low ${filter === 'low' ? 'active' : ''}`}
-              onClick={() => setFilter('low')}
-            >
-              L
-            </button>
-          </div>
-          <button className="news-refresh-btn" onClick={activeTab === 'live' ? () => fetchNews(true) : () => fetchNewsHistory()} disabled={loading || historyLoading || forceRefreshing}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+          {/* Mobile: single Controls button opens overlay */}
+          <button
+            type="button"
+            className="news-mobile-controls-btn"
+            onClick={() => setMobileControlsOpen(true)}
+            title="Controls"
+            aria-label="Open Live News controls"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
             </svg>
+            <span>Controls</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile controls overlay: same controls in a popup (mobile/small screens only) */}
+      <div
+        className={`news-mobile-controls-overlay ${mobileControlsOpen ? 'active' : ''}`}
+        onClick={(e) => e.target === e.currentTarget && setMobileControlsOpen(false)}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Live News controls"
+      >
+        <div className="news-mobile-controls-content" onClick={(e) => e.stopPropagation()}>
+          <div className="news-mobile-controls-header">
+            <h3>Live News Controls</h3>
+            <button
+              type="button"
+              className="news-mobile-controls-close"
+              onClick={() => setMobileControlsOpen(false)}
+              aria-label="Close"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          <div className="news-mobile-controls-sections">
+            <div className="news-mobile-controls-section">
+              <h4>Tab</h4>
+              <div className="tab-controls">
+                <button 
+                  className={`tab-btn ${activeTab === 'live' ? 'active' : ''}`}
+                  onClick={() => { handleTabChange('live'); }}
+                  title="Live News"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12,6 12,12 16,14"></polyline>
+                  </svg>
+                  Live
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
+                  onClick={() => { handleTabChange('history'); }}
+                  title="News History"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 3v18h18"></path>
+                    <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                  </svg>
+                  History
+                </button>
+              </div>
+            </div>
+            <div className="news-mobile-controls-section">
+              <h4>Filter by impact</h4>
+              <div className="filter-controls">
+                <button 
+                  className={`news-filter-btn news-filter-all ${filter === 'all' ? 'active' : ''}`}
+                  onClick={() => setFilter('all')}
+                >
+                  All
+                </button>
+                <button 
+                  className={`news-filter-btn news-filter-high ${filter === 'high' ? 'active' : ''}`}
+                  onClick={() => setFilter('high')}
+                >
+                  High
+                </button>
+                <button 
+                  className={`news-filter-btn news-filter-medium ${filter === 'medium' ? 'active' : ''}`}
+                  onClick={() => setFilter('medium')}
+                >
+                  Medium
+                </button>
+                <button 
+                  className={`news-filter-btn news-filter-low ${filter === 'low' ? 'active' : ''}`}
+                  onClick={() => setFilter('low')}
+                >
+                  Low
+                </button>
+              </div>
+            </div>
+            <div className="news-mobile-controls-section">
+              <h4>Refresh</h4>
+              <button
+                type="button"
+                className="news-refresh-btn news-mobile-refresh-btn"
+                onClick={() => {
+                  if (activeTab === 'live') fetchNews(true);
+                  else fetchNewsHistory();
+                  setMobileControlsOpen(false);
+                }}
+                disabled={loading || historyLoading || forceRefreshing}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                </svg>
+                {loading || historyLoading || forceRefreshing ? 'Refreshing…' : 'Refresh now'}
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="news-mobile-controls-done"
+            onClick={() => setMobileControlsOpen(false)}
+          >
+            Done
           </button>
         </div>
       </div>
