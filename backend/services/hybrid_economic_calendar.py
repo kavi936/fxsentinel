@@ -7419,7 +7419,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': '-0.4%',
                 'previous': '1.5%'
             },
@@ -7429,7 +7429,7 @@ class HybridEconomicCalendar:
                 'time': '10:34 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.47|1.6',
                 'forecast': 'N/A',
                 'previous': '3.49|2.4'
             },
@@ -7439,9 +7439,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.8%',
                 'forecast': 'N/A',
-                'previous': '-13.1%'
+                'previous': '-13.2%'
             },
             {
                 'title': 'Average Hourly Earnings m/m',
@@ -7449,9 +7449,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.3%',
-                'previous': '0.3%'
+                'previous': '0.1%'
             },
             {
                 'title': 'Non-Farm Employment Change',
@@ -7459,9 +7459,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '130K',
                 'forecast': '70K',
-                'previous': '50K'
+                'previous': '48K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -7471,7 +7471,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': 'TBD',
                 'forecast': '4.4%',
-                'previous': '4.4%'
+                'previous': '4.3%'
             },
             {
                 'title': 'Crude Oil Inventories',
