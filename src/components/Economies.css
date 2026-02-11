@@ -108,12 +108,33 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: nowrap;
+}
+
+/* Ticker wrapper: on desktop shows one grid; on mobile contains scrolling strip */
+.rates-ticker-wrap {
+  flex: 1;
+  min-width: 0;
+}
+
+.rates-ticker-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+/* Hide duplicate grid on desktop; on mobile both visible for seamless scroll loop */
+.rates-grid-duplicate {
+  display: none;
 }
 
 .rate-item {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .rate-item .flag {
@@ -157,10 +178,18 @@
   margin: 0 4px;
 }
 
+@keyframes economiesTickerScroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .rates-label {
-    min-width: 120px;
     font-size: 0.85rem;
   }
   
@@ -214,37 +243,61 @@
   .economies-header {
     padding: 0 16px;
     flex-wrap: nowrap;
-    overflow-x: auto;
+    overflow: visible;
+    gap: 10px;
   }
-  
+
   .economies-title {
     margin: 0 8px 0 0;
-  }
-  
-  .central-bank-rates {
-    margin: 0 8px;
-  }
-  
-  .economies-last-updated {
-    margin: 0 0 0 8px;
-  }
-  
-  .economies-title {
     font-size: 0.9rem;
+    flex-shrink: 0;
   }
-  
+
+  /* Mobile: hide last updated; keep only title + rates */
+  .economies-last-updated {
+    display: none !important;
+  }
+
   .central-bank-rates {
+    margin: 0;
     padding: 0.5rem 0.6rem;
     gap: 8px;
+    flex: 1;
+    min-width: 0;
   }
-  
-  .economies-last-updated {
-    font-size: 0.65rem;
-    padding: 0.5rem 0.6rem;
+
+  /* Continuous right-to-left scrolling rates ticker on mobile */
+  .rates-ticker-wrap {
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .rates-ticker-inner {
+    width: max-content;
+    animation: economiesTickerScroll 28s linear infinite;
+    gap: 10px;
+  }
+
+  .rates-ticker-inner:hover {
+    animation-play-state: paused;
+  }
+
+  .rates-ticker-inner .rates-grid {
+    flex-shrink: 0;
+  }
+
+  .rates-ticker-inner .rate-item {
+    flex-shrink: 0;
+  }
+
+  .rates-grid-duplicate {
+    display: flex !important;
   }
   
   .rates-label {
     font-size: 0.75rem;
+    flex-shrink: 0;
   }
   
   .rate-item .flag {
@@ -1407,8 +1460,8 @@
   }
   
   .indicator-card {
-    min-height: 300px;
-    max-height: 420px;
+    min-height: 340px;
+    max-height: 460px;
   }
   
   .mini-chart {
@@ -1417,8 +1470,8 @@
 
   .indicator-card.expanded {
     grid-column: span 2;
-    min-height: 480px;
-    max-height: 600px;
+    min-height: 540px;
+    max-height: 660px;
   }
 
   .indicator-expanded-content {
@@ -1461,8 +1514,8 @@
   
   .indicator-card {
     padding: 16px;
-    min-height: 180px;
-    max-height: 360px;
+    min-height: 280px;
+    max-height: 440px;
   }
   
   .indicator-value {
@@ -1477,8 +1530,8 @@
 
   .indicator-card.expanded {
     grid-column: span 1;
-    min-height: 420px;
-    max-height: 560px;
+    min-height: 520px;
+    max-height: 680px;
   }
 
   .indicator-chart.expanded .mini-chart {

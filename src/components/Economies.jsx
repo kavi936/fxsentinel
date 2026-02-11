@@ -2008,24 +2008,45 @@ function Economies() {
           <h1 className="economies-title">ECONOMIC INDICATORS</h1>
           
           <div className="central-bank-rates">
-            <span className="rates-label"><b>Central Bank Rates:</b></span>
-            
-            <div className="rates-grid">
-              {centralBankRates.map((item, index) => (
-                <React.Fragment key={item.country}>
-                  <div className="rate-item">
-                    <span className="flag">{item.flag}</span>
-                    <span className="rate-value">{item.rate.toFixed(2)}%</span>
-                    <span className="bank-name">{item.bankName}</span>
-                    <span className={`rate-trend ${item.trend}`}>
-                      {getTrendArrow(item.trend)}
-                    </span>
-                  </div>
-                  {index < centralBankRates.length - 1 && (
-                    <span className="rate-divider">│</span>
-                  )}
-                </React.Fragment>
-              ))}
+            <span className="rates-label" title="Central Bank Rates"><b>CBR:</b></span>
+            {/* Ticker wrap: on mobile, inner scrolls right-to-left with duplicated content for seamless loop */}
+            <div className="rates-ticker-wrap">
+              <div className="rates-ticker-inner">
+                <div className="rates-grid">
+                  {centralBankRates.map((item, index) => (
+                    <React.Fragment key={`${item.country}-1`}>
+                      <div className="rate-item">
+                        <span className="flag">{item.flag}</span>
+                        <span className="rate-value">{item.rate.toFixed(2)}%</span>
+                        <span className="bank-name">{item.bankName}</span>
+                        <span className={`rate-trend ${item.trend}`}>
+                          {getTrendArrow(item.trend)}
+                        </span>
+                      </div>
+                      {index < centralBankRates.length - 1 && (
+                        <span className="rate-divider">│</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+                <div className="rates-grid rates-grid-duplicate">
+                  {centralBankRates.map((item, index) => (
+                    <React.Fragment key={`${item.country}-2`}>
+                      <div className="rate-item">
+                        <span className="flag">{item.flag}</span>
+                        <span className="rate-value">{item.rate.toFixed(2)}%</span>
+                        <span className="bank-name">{item.bankName}</span>
+                        <span className={`rate-trend ${item.trend}`}>
+                          {getTrendArrow(item.trend)}
+                        </span>
+                      </div>
+                      {index < centralBankRates.length - 1 && (
+                        <span className="rate-divider">│</span>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           
