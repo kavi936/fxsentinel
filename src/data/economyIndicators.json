@@ -240,8 +240,8 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "4.4%",
-        "asOf": "2025-12-01",
+        "currentValue": "4.3%",
+        "asOf": "2026-01-01",
         "chartData": [
           3.7,
           3.9,
@@ -265,7 +265,8 @@
           4.3,
           4.4,
           4.5,
-          4.4
+          4.4,
+          4.3
         ],
         "chartDates": [
           "2024-01-01",
@@ -290,7 +291,8 @@
           "2025-08-01",
           "2025-09-01",
           "2025-11-01",
-          "2025-12-01"
+          "2025-12-01",
+          "2026-01-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -301,8 +303,8 @@
         "description": "unemployment description"
       },
       "nonfarm-payrolls": {
-        "currentValue": "50K",
-        "asOf": "2025-12-01",
+        "currentValue": "130K",
+        "asOf": "2026-01-01",
         "chartData": [
           119.0,
           222.0,
@@ -327,7 +329,8 @@
           108.0,
           -173.0,
           56.0,
-          50.0
+          48.0,
+          130.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -353,7 +356,8 @@
           "2025-09-01",
           "2025-10-01",
           "2025-11-01",
-          "2025-12-01"
+          "2025-12-01",
+          "2026-01-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -1133,7 +1137,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "0.75%",
-        "asOf": "2025-12-19",
+        "asOf": "2026-01-23",
         "chartData": [
           -0.1,
           -0.1,
@@ -1147,18 +1151,18 @@
           0.25,
           0.25,
           0.25,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5,
           0.75,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
-          0.5,
           0.75
         ],
         "chartDates": [
@@ -1174,7 +1178,6 @@
           "2024-10-31",
           "2024-11-30",
           "2024-12-19",
-          "2025-01-23",
           "2025-01-24",
           "2025-02-28",
           "2025-03-19",
@@ -1186,7 +1189,8 @@
           "2025-09-19",
           "2025-10-30",
           "2025-11-30",
-          "2025-12-19"
+          "2025-12-19",
+          "2026-01-23"
         ],
         "source": "Bank of Japan",
         "sourceUrl": "https://www.boj.or.jp/en/mopo/",
@@ -1439,8 +1443,8 @@
         "description": "unemployment description"
       },
       "current-account": {
-        "currentValue": "+¥3.67T",
-        "asOf": "2025-11-01",
+        "currentValue": "+¥2.70T",
+        "asOf": "2025-12-01",
         "chartData": [
           0.33,
           2.74,
@@ -1464,7 +1468,8 @@
           3.7,
           4.48,
           2.83,
-          3.67
+          3.67,
+          2.7
         ],
         "chartDates": [
           "2024-01-01",
@@ -1489,7 +1494,8 @@
           "2025-08-01",
           "2025-09-01",
           "2025-10-01",
-          "2025-11-01"
+          "2025-11-01",
+          "2025-12-01"
         ],
         "source": "Bank of Japan",
         "sourceUrl": "https://www.mof.go.jp/",
