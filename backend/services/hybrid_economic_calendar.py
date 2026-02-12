@@ -7662,7 +7662,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%	',
                 'forecast': 'N/A',
                 'previous': '-0.1%'
             },
@@ -7672,19 +7672,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.91M',
                 'forecast': '4.22M',
                 'previous': '4.35M'
-            },
-            {
-                'title': 'Mortgage Delinquencies',
-                'date': 'Thu, Feb 12',
-                'time': '15:00 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
             },
             {
                 'title': 'CB Leading Index m/m',
@@ -7692,9 +7682,9 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': 'N/A',
-                'previous': '0.2%'
+                'previous': '0.3%'
             },
             {
                 'title': 'Natural Gas Storage',
@@ -7702,7 +7692,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-249B',
                 'forecast': 'N/A',
                 'previous': '-360B'
             },
