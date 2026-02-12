@@ -7561,7 +7561,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.1%',
                 'previous': '0.3%'
             },
@@ -7571,7 +7571,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.2%',
                 'previous': '0.1%'
             },
@@ -7581,9 +7581,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '0.6%',
-                'previous': '-1.3%'
+                'previous': '-0.8%'
             },
             {
                 'title': 'Goods Trade Balance',
@@ -7591,7 +7591,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-22.7B',
                 'forecast': '-22.0B',
                 'previous': '-23.7B'
             },
@@ -7601,7 +7601,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.2%',
                 'previous': '0.2%'
             },
@@ -7611,7 +7611,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.9%',
                 'forecast': '0.0%',
                 'previous': '1.1%'
             },
@@ -7621,7 +7621,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '-0.1%',
                 'previous': '2.1%'
             },
@@ -7631,7 +7631,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.7%',
                 'forecast': '0.2%',
                 'previous': '-0.3%'
             },
