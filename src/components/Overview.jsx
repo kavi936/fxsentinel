@@ -756,6 +756,60 @@ const Overview = () => {
   const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'pending', 'loading', 'event-analysis', 'error'
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
+
+  // Benevolent deception: fake loading progress for long-running AI analysis
+  const [fakeProgress, setFakeProgress] = useState(0); // 0 - 100
+  const fakeProgressRef = useRef(null);
+
+  useEffect(() => {
+    // Cleanup helper
+    const clearFakeInterval = () => {
+      if (fakeProgressRef.current) {
+        clearInterval(fakeProgressRef.current);
+        fakeProgressRef.current = null;
+      }
+    };
+
+    if (aiAnalysisState === 'loading') {
+      // Start simulated progress
+      setFakeProgress(0);
+      clearFakeInterval();
+      fakeProgressRef.current = setInterval(() => {
+        setFakeProgress((prev) => {
+          if (prev >= 98) return prev; // pause near completion until real work finishes
+          let delta = 0;
+          if (prev < 60) {
+            // faster initial progress
+            delta = Math.random() * 7 + 3; // ~3-10
+          } else if (prev < 90) {
+            // steady slower progress
+            delta = Math.random() * 3 + 1; // ~1-4
+          } else {
+            // slow crawl near the end
+            delta = Math.random() * 0.6 + 0.1; // ~0.1-0.7
+          }
+          const next = Math.min(98, +(prev + delta).toFixed(1));
+          return next;
+        });
+      }, 700);
+    } else {
+      // Complete progress and stop simulation when leaving loading state
+      setFakeProgress(100);
+      clearFakeInterval();
+      // Reset after a short delay so the next analysis starts from 0
+      const resetTimer = setTimeout(() => {
+        setFakeProgress(0);
+      }, 900);
+      return () => clearTimeout(resetTimer);
+    }
+
+    return () => {
+      if (fakeProgressRef.current) {
+        clearInterval(fakeProgressRef.current);
+        fakeProgressRef.current = null;
+      }
+    };
+  }, [aiAnalysisState]);
   
   // Calendar state
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -4402,6 +4456,16 @@ const Overview = () => {
                   <div className="loading-spinner"></div>
                   <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
                   <div className="loading-subtext">Processing live market data, economic release forecast, and generating insights. EST: 15-60s. Good things take time.</div>
+                  {/* Fake loading bar for benevolent deception - keeps users engaged during long waits */}
+                  <div className="ai-loading-progress-container">
+                    <div className="ai-loading-progress-bar">
+                      <div 
+                        className="ai-loading-progress-fill" 
+                        style={{ width: `${fakeProgress}%` }}
+                      ></div>
+                    </div>
+                    <div className="ai-loading-progress-text">{Math.round(fakeProgress)}%</div>
+                  </div>
                 </div>
               )}
 
@@ -4415,7 +4479,7 @@ const Overview = () => {
               )}
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
-                <div>
+                <div key={`analysis-${selectedEvent?.id}-${aiAnalysis?.analysis_timestamp || Date.now()}`} className="ai-analysis-content">
                   {/* NEW: Quick-Scan Headline */}
                   <div className="quick-scan-headline">
                     <div className="headline-main">
