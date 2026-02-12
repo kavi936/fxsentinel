@@ -7635,23 +7635,14 @@ class HybridEconomicCalendar:
                 'forecast': '0.2%',
                 'previous': '-0.3%'
             },
-            {
-                'title': 'Italian 10-y Bond Auction',
-                'date': 'Thu, Feb 12',
-                'time': '10:33 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
+            
             {
                 'title': 'Unemployment Claims',
                 'date': 'Thu, Feb 12',
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '227K',
                 'forecast': '222K',
                 'previous': '231K'
             },
