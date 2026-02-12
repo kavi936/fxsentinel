@@ -7509,7 +7509,7 @@ class HybridEconomicCalendar:
                 'time': '19:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-94.6B',
                 'forecast': 'N/A',
                 'previous': '-144.7B'
             },
@@ -7519,7 +7519,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	2.3%',
                 'forecast': '2.3%',
                 'previous': '2.4%'
             },
@@ -7529,7 +7529,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.0%	',
                 'forecast': 'N/A',
                 'previous': '4.6%'
             },
@@ -7539,9 +7539,9 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-10%	',
                 'forecast': '-11%',
-                'previous': '-14%'
+                'previous': '-13%'
             },
             {
                 'title': 'RBA Assist Gov Hunter Speaks',
