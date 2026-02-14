@@ -228,11 +228,22 @@ const LiveNewsFeed = () => {
 
   useEffect(() => {
     fetchNews();
-    // Set up auto-refresh every 5 minutes to check for new news
-    // Backend will fetch new news every 5 minutes and append to persistent cache
-    const interval = setInterval(fetchNews, 5 * 60 * 1000);
+    // Poll every 2 min so when backend/scheduler updates Firebase cache, frontend sees it without manual refresh
+    const POLL_MS = 2 * 60 * 1000;
+    const interval = setInterval(fetchNews, POLL_MS);
     return () => clearInterval(interval);
   }, []);
+
+  // When user returns to the tab, refetch so they see cache updates that happened while the tab was in background
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && activeTab === 'live') {
+        fetchNews();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [activeTab]);
 
   // Listen for timezone changes (event-driven, no polling)
   useEffect(() => {
