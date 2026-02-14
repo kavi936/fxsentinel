@@ -13,6 +13,13 @@ from .firebase_realtime_storage import FirebaseRealtimeStorage
 
 logger = logging.getLogger(__name__)
 
+# Rolling window size for live feed (merge cap)
+MAX_CACHE_ITEMS = 200
+# Keep history for this many days so older events remain available (e.g. for future chart/backtest features)
+HISTORY_RETENTION_DAYS = 30
+# Max history items before count-based trim; high so retention is mainly time-based
+MAX_HISTORY_ITEMS = 5000
+
 class PersistentNewsCache:
     """
     Persistent news cache service that stores state in Firebase Realtime Database
@@ -29,7 +36,8 @@ class PersistentNewsCache:
         """
         self.firebase = FirebaseRealtimeStorage()
         self.max_age_hours = max_age_hours
-        self.max_history_items = 500  # Keep more history than file cache (was 100)
+        self.max_history_items = MAX_HISTORY_ITEMS
+        self.history_retention_days = HISTORY_RETENTION_DAYS
         
         logger.info(f"Persistent News Cache Service initialized (TTL: {max_age_hours}h = {max_age_hours * 60:.0f} minutes)")
     
@@ -111,11 +119,11 @@ class PersistentNewsCache:
                 # Combine: new items first, then existing items (preserving their original added_to_feed_at)
                 merged_news = new_items + existing_news
                 
-                # Limit to reasonable size (keep first 200 items - newest first)
-                if len(merged_news) > 200:
+                # Limit to rolling window (newest first)
+                if len(merged_news) > MAX_CACHE_ITEMS:
                     original_count = len(merged_news)
-                    merged_news = merged_news[:200]
-                    logger.info(f"Limited merged news to 200 items (was {original_count})")
+                    merged_news = merged_news[:MAX_CACHE_ITEMS]
+                    logger.info(f"Limited merged news to {MAX_CACHE_ITEMS} items (was {original_count})")
                 
                 news_items = merged_news
                 logger.info(f"Merged {len(new_items)} new items with {len(existing_news)} existing items = {len(news_items)} total")
@@ -260,8 +268,8 @@ class PersistentNewsCache:
                 existing_ids.add(news_id)
                 new_items_count += 1
             
-            # Cleanup old history items if needed
-            if len(existing_history) + new_items_count > self.max_history_items:
+            # Run cleanup so items older than retention days are removed (and cap by count if needed)
+            if new_items_count > 0:
                 self._cleanup_old_history()
             
             if new_items_count > 0:
@@ -271,27 +279,43 @@ class PersistentNewsCache:
             logger.error(f"Error adding to history: {e}")
     
     def _cleanup_old_history(self):
-        """Remove oldest history items to stay within limit"""
+        """Remove history items older than retention period (time-based); then trim by count if still over cap."""
         try:
             history = self.load_history()
-            
-            if len(history) <= self.max_history_items:
+            if not history:
                 return
-            
-            # Sort by cached_at (oldest first)
-            history.sort(key=lambda x: x.get('cached_at', ''))
-            
-            # Remove oldest items
-            items_to_remove = history[:-self.max_history_items]
-            
-            for item in items_to_remove:
+            cutoff = datetime.now() - timedelta(days=self.history_retention_days)
+            to_remove = []
+            for item in history:
+                cached_at_str = item.get('cached_at', '')
+                if not cached_at_str:
+                    continue
+                try:
+                    cached_at = datetime.fromisoformat(cached_at_str.replace('Z', '+00:00'))
+                    if cached_at.tzinfo:
+                        cached_at = cached_at.replace(tzinfo=None)
+                    if cached_at < cutoff:
+                        to_remove.append(item)
+                except Exception:
+                    pass
+            if not to_remove and len(history) <= self.max_history_items:
+                return
+            if to_remove:
+                for item in to_remove:
+                    news_id = str(item.get('id', ''))
+                    if news_id:
+                        self.firebase._make_request('DELETE', self._get_history_item_path(news_id))
+                logger.info(f"Cleaned up {len(to_remove)} history items older than {self.history_retention_days} days")
+            if len(history) - len(to_remove) <= self.max_history_items:
+                return
+            remaining = [x for x in history if x not in to_remove]
+            remaining.sort(key=lambda x: x.get('cached_at', ''))
+            items_to_remove_by_count = remaining[:-self.max_history_items]
+            for item in items_to_remove_by_count:
                 news_id = str(item.get('id', ''))
                 if news_id:
-                    history_path = self._get_history_item_path(news_id)
-                    self.firebase._make_request('DELETE', history_path)
-            
-            logger.info(f"Cleaned up {len(items_to_remove)} old history items")
-            
+                    self.firebase._make_request('DELETE', self._get_history_item_path(news_id))
+            logger.info(f"Cleaned up {len(items_to_remove_by_count)} oldest history items (over cap {self.max_history_items})")
         except Exception as e:
             logger.error(f"Error cleaning up history: {e}")
     

@@ -270,26 +270,29 @@ const LiveNewsFeed = () => {
       setError(null);
       
       const url = forceRefresh 
-        ? `${config.API_BASE_URL}/api/news?force_refresh=true`
+        ? `${config.API_BASE_URL}/api/news?force_refresh=true&wait_fresh=true`
         : config.endpoints.news;
       
-      console.log(`📡 Fetching news from: ${url}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`📡 Fetching news from: ${url}`);
+      }
       
       let response;
       try {
-        // Add timeout to prevent hanging requests (45 seconds for force refresh, 15 for normal)
-        // Increased force refresh timeout to accommodate parallel fetching and cache operations
-        const timeout = forceRefresh ? 45000 : 15000;
+        // Longer timeout for force refresh (full fetch + merge + cache write can take 60–90s under load)
+        const timeout = forceRefresh ? 120000 : 15000;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
         
         response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
-        console.log(`📡 Response status: ${response.status}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`📡 Response status: ${response.status}`);
+        }
       } catch (fetchError) {
         console.error('❌ Fetch error:', fetchError);
         if (fetchError.name === 'AbortError') {
-          throw new Error(`Request timeout: News fetch took too long. Please try again.`);
+          throw new Error(`Refresh is taking longer than usual. The server may be busy—please try again in a moment.`);
         }
         throw new Error(`Network error: ${fetchError.message}`);
       }
@@ -306,12 +309,14 @@ const LiveNewsFeed = () => {
       }
       
       const data = await response.json();
-      console.log('📦 Raw API response:', {
-        hasNews: !!data.news,
-        newsLength: data.news?.length || 0,
-        cacheStatus: data.cache_status,
-        keys: Object.keys(data)
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📦 Raw API response:', {
+          hasNews: !!data.news,
+          newsLength: data.news?.length || 0,
+          cacheStatus: data.cache_status,
+          keys: Object.keys(data)
+        });
+      }
       
       if (!data.news || !Array.isArray(data.news)) {
         console.error('❌ Invalid response format - news is not an array:', data);
@@ -333,21 +338,14 @@ const LiveNewsFeed = () => {
         return sanitized;
       });
       
-      // Debug logging
-      console.log('📰 News processed:', {
-        total: processedNews.length,
-        telegram: processedNews.filter(item => item.source?.toLowerCase().includes('telegram')).length,
-        sources: [...new Set(processedNews.map(item => item.source))],
-        sample: processedNews.slice(0, 3).map(item => ({ 
-          title: item.title?.substring(0, 50), 
-          source: item.source,
-          hasTitle: !!item.title,
-          hasSummary: !!item.summary
-        }))
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📰 News processed:', {
+          total: processedNews.length,
+          cacheStatus: data.cache_status
+        });
+      }
       
       setNews(processedNews);
-      console.log(`✅ News state set with ${processedNews.length} items`);
       
       // Use current time as fallback if last_updated is not provided or invalid
       const lastUpdatedValue = data.last_updated || new Date().toISOString();
@@ -365,11 +363,10 @@ const LiveNewsFeed = () => {
     } finally {
       setLoading(false);
       setForceRefreshing(false);
-      console.log('✅ Fetch complete, loading set to false');
     }
   };
 
-  const fetchNewsHistory = async (hours = 24) => {
+  const fetchNewsHistory = async (hours = 168) => {
     try {
       setHistoryLoading(true);
       setError(null);
@@ -403,6 +400,7 @@ const LiveNewsFeed = () => {
     try {
       setAnalyzing(true);
       setError(null);
+      setAiAnalysis(null); // Clear previous analysis so we don't show stale content while loading
       
       // Ensure news ID is treated as string to preserve precision
       const newsId = String(newsItem.id);
@@ -436,6 +434,7 @@ const LiveNewsFeed = () => {
     try {
       setAnalyzing(true);
       setError(null);
+      setAiAnalysis(null); // Clear previous analysis so we don't show stale content while the new one loads
       
       // Ensure news ID is treated as string to preserve precision
       const newsId = String(newsItem.id);
@@ -510,6 +509,9 @@ const LiveNewsFeed = () => {
     
     // Network errors
     if (error.name === 'AbortError' || lowerMessage.includes('timeout') || lowerMessage.includes('took too long')) {
+      if (lowerMessage.includes('longer than usual') || lowerMessage.includes('server may be busy')) {
+        return error.message || 'Refresh is taking longer than usual. Please try again in a moment.';
+      }
       return 'Request took too long. Please check your connection and try again.';
     }
     
@@ -999,11 +1001,16 @@ const LiveNewsFeed = () => {
                 L
               </button>
             </div>
-            <button className="news-refresh-btn" onClick={activeTab === 'live' ? () => fetchNews(true) : () => fetchNewsHistory()} disabled={loading || historyLoading || forceRefreshing}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-              </svg>
-            </button>
+            <div className="news-refresh-and-meta">
+              {forceRefreshing && activeTab === 'live' && (
+                <span className="news-refreshing-label">Refreshing…</span>
+              )}
+              <button className="news-refresh-btn" onClick={activeTab === 'live' ? () => fetchNews(true) : () => fetchNewsHistory()} disabled={loading || historyLoading || forceRefreshing} title={activeTab === 'live' ? 'Fetch latest news' : 'Reload history'}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                </svg>
+              </button>
+            </div>
           </div>
           {/* Mobile: single Controls button opens overlay */}
           <button
@@ -1139,7 +1146,7 @@ const LiveNewsFeed = () => {
       </div>
 
       <div className="news-content">
-        {(loading && activeTab === 'live') || (historyLoading && activeTab === 'history') ? (
+        {(loading && activeTab === 'live' && news.length === 0) || (historyLoading && activeTab === 'history' && newsHistory.length === 0) ? (
           <div className="loading-state">
             <div className="loading-spinner"></div>
             <p>Loading {activeTab === 'live' ? 'latest news' : 'news history'}...</p>
@@ -1218,7 +1225,13 @@ const LiveNewsFeed = () => {
             )}
           </div>
         ) : (
-          <div className="news-list">
+          <>
+            {forceRefreshing && activeTab === 'live' && news.length > 0 && (
+              <div className="news-list-refreshing-bar" aria-live="polite">
+                Refreshing feed…
+              </div>
+            )}
+            <div className="news-list">
             {currentNewsList.map((newsItem) => (
               <div 
                 key={newsItem.id}
@@ -1434,6 +1447,7 @@ const LiveNewsFeed = () => {
               </div>
             ))}
           </div>
+          </>
         )}
       </div>
     </div>
