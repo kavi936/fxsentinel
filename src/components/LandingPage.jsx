@@ -21,6 +21,22 @@ import {
   trackFeatureCardInteraction
 } from '../utils/analytics';
 
+/** Renders star rating (4, 4.5, 5) with optional half star for 4.5. */
+const StarRating = ({ rating }) => {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5;
+  return (
+    <div className="testimonial-rating">
+      {[...Array(full)].map((_, i) => (
+        <span key={i} className="star">★</span>
+      ))}
+      {half && (
+        <span className="star star-half" aria-hidden="true">★</span>
+      )}
+    </div>
+  );
+};
+
 const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -578,7 +594,7 @@ const LandingPage = () => {
                 </svg>
               </div>
               <h3>Never Miss Market-Moving Events</h3>
-              <p>Stop losing money because you missed the news. We monitor 100+ sources including premium financial data providers and global news feeds to catch every economic release that moves your trades - from major central bank decisions to key economic indicators.</p>
+              <p>Stop losing money because you missed the news. We monitor 100+ sources so you see the macro-economic releases that move your trades—from central bank decisions and policy signals to key indicators like CPI, NFP, and GDP.</p>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -594,7 +610,7 @@ const LandingPage = () => {
                 </svg>
               </div>
               <h3>Understand the "Why" Behind Every Move</h3>
-              <p>Don't just see the numbers - understand what they mean. Our AI analysis instantly explains how each economic event will impact EUR/USD, USD/JPY, and Gold, giving you the context to make smarter trading decisions.</p>
+              <p>Macro moves markets, but it can feel overwhelming. We're built to help beginner and experienced traders alike: our AI explains how each economic release and central bank decision affects major pairs and Gold in plain language—so you can build your macro intuition and make smarter trades.</p>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -606,8 +622,8 @@ const LandingPage = () => {
                   <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
-              <h3>Get Alerts Before the Market Reacts</h3>
-              <p>While others are still reading the news, you're already positioned. Receive instant Telegram notifications with AI-powered analysis and specific pair reactions within seconds of economic releases.</p>
+              <h3>Get Alerts the Moment the News Drops</h3>
+              <p>While others are still reading the news, you're already positioned. Instant Telegram alerts with AI-powered macro analysis and pair-by-pair impact—delivered within seconds of each economic release.</p>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -622,7 +638,7 @@ const LandingPage = () => {
                 </svg>
               </div>
               <h3>Focus on What Matters to Your Trades</h3>
-              <p>Stop wasting time on irrelevant news. Get targeted analysis for your specific currency pairs and commodities, so you know exactly which instruments will be most affected by each economic event.</p>
+              <p>Cut through the noise. We surface only the macro events that matter to your currency pairs and commodities—so you see which instruments are most affected by each release without wasting time on the rest.</p>
             </div>
           </div>
                       <div className="features-cta">
@@ -651,13 +667,7 @@ const LandingPage = () => {
               className="testimonial-card animate-on-scroll"
               onMouseEnter={() => trackTestimonialView(0)}
             >
-              <div className="testimonial-rating">
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-              </div>
+              <StarRating rating={5} />
               <p className="testimonial-text">
                 "FXSentinel helped me understand why EUR/USD moved 200 pips after the ECB announcement. I was positioned before the move and made my biggest profit of the month. The AI analysis is incredibly accurate."
               </p>
@@ -673,13 +683,7 @@ const LandingPage = () => {
             </div>
 
             <div className="testimonial-card animate-on-scroll">
-              <div className="testimonial-rating">
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-              </div>
+              <StarRating rating={4.5} />
               <p className="testimonial-text">
                 "I used to spend hours reading news and still miss important events. Now I get instant Telegram alerts with analysis that tells me exactly what to expect. This tool has completely changed my trading workflow."
               </p>
@@ -695,13 +699,7 @@ const LandingPage = () => {
             </div>
 
             <div className="testimonial-card animate-on-scroll">
-              <div className="testimonial-rating">
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-              </div>
+              <StarRating rating={5} />
               <p className="testimonial-text">
                 "The AI analysis is incredible. It explains market moves in a way that makes sense, not just technical jargon. I've avoided several bad trades thanks to the insights provided. Worth every penny."
               </p>
@@ -717,13 +715,7 @@ const LandingPage = () => {
             </div>
 
             <div className="testimonial-card animate-on-scroll">
-              <div className="testimonial-rating">
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-              </div>
+              <StarRating rating={4} />
               <p className="testimonial-text">
                 "As someone new to forex trading, FXSentinel's explanations help me understand the 'why' behind market movements. The economic calendar with AI analysis is a game-changer for learning."
               </p>
@@ -739,13 +731,7 @@ const LandingPage = () => {
             </div>
 
             <div className="testimonial-card animate-on-scroll">
-              <div className="testimonial-rating">
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-              </div>
+              <StarRating rating={4.5} />
               <p className="testimonial-text">
                 "The prediction markets feature is brilliant. Seeing how the market is pricing central bank decisions helps me position my trades better. This is the most comprehensive trading tool I've used."
               </p>
@@ -761,13 +747,7 @@ const LandingPage = () => {
             </div>
 
             <div className="testimonial-card animate-on-scroll">
-              <div className="testimonial-rating">
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-                <span className="star">★</span>
-              </div>
+              <StarRating rating={5} />
               <p className="testimonial-text">
                 "I've tried multiple news aggregation tools, but none compare to FXSentinel. The real-time alerts and market sentiment analysis have improved my win rate significantly. Highly recommend!"
               </p>

@@ -1584,6 +1584,13 @@ section.animate-in .section-title.animate-on-scroll,
   line-height: 1;
 }
 
+/* Half star (e.g. 4.5): clip so left half of the star character shows */
+.testimonial-rating .star-half {
+  display: inline-block;
+  width: 0.6em;
+  overflow: hidden;
+}
+
 .testimonial-text {
   color: var(--text-gray);
   font-size: 1rem;
