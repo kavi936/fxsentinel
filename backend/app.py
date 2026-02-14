@@ -11,6 +11,8 @@ import json
 import time
 import asyncio
 import logging
+import threading
+import concurrent.futures
 from datetime import datetime
 from dotenv import load_dotenv
 import stripe
@@ -890,17 +892,139 @@ def get_economic_chart_data(event_name):
             "message": f"Error fetching chart data: {str(e)}"
         }), 500
 
+# Lock so only one background news fetch runs at a time (avoids duplicate work when many users poll)
+_background_news_fetch_lock = threading.Lock()
+
+def _run_background_news_fetch():
+    """Fetch from RSS/alt/Telegram, merge with existing cache, save to Firebase. Safe to run in a background thread."""
+    try:
+        from services.persistent_news_cache import get_persistent_news_cache, MAX_CACHE_ITEMS
+        news_cache = get_persistent_news_cache()
+        cached_news = news_cache.load_news(allow_stale=True) or []
+
+        def _fetch_rss():
+            try:
+                return news_aggregator.get_recent_news(hours=24)
+            except Exception as e:
+                print(f"❌ Background fetch RSS: {e}")
+                return []
+        def _fetch_alt():
+            try:
+                from services.alternative_news_sources import alternative_news_sources
+                return alternative_news_sources.get_alternative_news(hours=24)
+            except Exception as e:
+                print(f"❌ Background fetch alt: {e}")
+                return []
+        def _fetch_telegram():
+            try:
+                from services.telegram_sync_wrapper import telegram_sync
+                return telegram_sync.get_recent_telegram_news(hours=24)
+            except Exception as e:
+                print(f"❌ Background fetch Telegram: {e}")
+                return []
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+            rss_f = executor.submit(_fetch_rss)
+            alt_f = executor.submit(_fetch_alt)
+            tg_f = executor.submit(_fetch_telegram)
+            fresh_news = []
+            try:
+                fresh_news.extend(rss_f.result(timeout=10))
+            except Exception:
+                pass
+            try:
+                fresh_news.extend(alt_f.result(timeout=10))
+            except Exception:
+                pass
+            try:
+                fresh_news.extend(tg_f.result(timeout=15))
+            except Exception:
+                pass
+
+        if not fresh_news:
+            print("📭 Background news fetch: no new articles")
+            return
+
+        seen = {}
+        unique = []
+        for item in fresh_news:
+            key = f"{item.get('title', '')}_{item.get('source', '')}"
+            if key not in seen:
+                seen[key] = item
+                unique.append(item)
+        fresh_news = unique
+        filter_phrase = "Gold rises, according to FXStreet data"
+        fresh_news = [item for item in fresh_news if filter_phrase not in item.get('title', '')]
+        if not fresh_news:
+            return
+
+        current_time = datetime.now().isoformat()
+        cached_items_map = {f"{item.get('title', '')}_{item.get('source', '')}": item for item in cached_news if item.get('title')}
+        for item in fresh_news:
+            key = f"{item.get('title', '')}_{item.get('source', '')}"
+            cached = cached_items_map.get(key)
+            if 'added_to_feed_at' not in item:
+                item['added_to_feed_at'] = (cached.get('added_to_feed_at') if cached else None) or current_time
+
+        fresh_news_to_save = fresh_news[:MAX_CACHE_ITEMS] if len(fresh_news) > MAX_CACHE_ITEMS else fresh_news
+        if news_cache.save_news(fresh_news_to_save, append=True):
+            print(f"✅ Background news fetch: saved {len(fresh_news_to_save)} items to cache")
+            try:
+                from services.unified_alert_processor import get_unified_processor
+                get_unified_processor().check_news_alerts_async(fresh_news)
+            except Exception as e:
+                print(f"⚠️ Background fetch alerts: {e}")
+        else:
+            print("⚠️ Background news fetch: save to cache failed")
+    except Exception as e:
+        print(f"❌ Background news fetch error: {e}")
+
+def _maybe_start_background_news_fetch():
+    """Start a single background thread to fetch and save news if none is running."""
+    if not _background_news_fetch_lock.acquire(blocking=False):
+        return
+    def _run_then_release():
+        try:
+            _run_background_news_fetch()
+        finally:
+            _background_news_fetch_lock.release()
+    t = threading.Thread(target=_run_then_release, daemon=True)
+    t.start()
+    print("🔄 Started background news fetch (stale cache; next poll will get fresh data)")
+
+_NEWS_FETCH_INTERVAL_SECONDS = 300  # 5 minutes
+
+def _news_scheduler_loop():
+    """Run a continuous loop that fetches news every N minutes so the cache stays up to date for all users."""
+    import time
+    while True:
+        time.sleep(_NEWS_FETCH_INTERVAL_SECONDS)
+        try:
+            _maybe_start_background_news_fetch()
+        except Exception as e:
+            print(f"⚠️ News scheduler tick error: {e}")
+
+def _start_news_scheduler():
+    """Start the periodic news fetch scheduler (one daemon thread per process)."""
+    t = threading.Thread(target=_news_scheduler_loop, daemon=True)
+    t.start()
+    print("✅ News scheduler started (fetch every 5 min so cache stays up to date for all users)")
+
+_start_news_scheduler()
+
 @app.route('/api/news')
 def get_news():
     """Get aggregated news from multiple sources with optimized performance and alert triggering"""
     try:
         # Import persistent cache system (survives restarts)
-        from services.persistent_news_cache import get_persistent_news_cache
+        from services.persistent_news_cache import get_persistent_news_cache, MAX_CACHE_ITEMS
         news_cache = get_persistent_news_cache()
         
         # Check if force refresh is requested
         force_refresh = request.args.get('force_refresh', 'false').lower() == 'true'
-        print(f"📡 /api/news endpoint called - Force refresh: {force_refresh}")
+        # When True, wait for fresh fetch to complete and return new data in this request (better UX for traders)
+        wait_fresh = request.args.get('wait_fresh', 'false').lower() == 'true'
+        print(f"📡 /api/news endpoint called - Force refresh: {force_refresh}, wait_fresh: {wait_fresh}")
         print(f"📡 Request origin: {request.headers.get('Origin', 'N/A')}")
         print(f"📡 Request args: {dict(request.args)}")
         
@@ -1018,8 +1142,9 @@ def get_news():
                 print(f"✅ Returning {len(cached_news)} cached news items (cache is fresh)")
                 return jsonify(response_data)
             else:
-                # Cache exists but is stale - return it immediately while fetching fresh in background
-                print(f"⚡ OPTIMIZATION: Returning stale cache immediately ({len(cached_news)} articles) for fast UI, fresh fetch will happen in background")
+                # Cache exists but is stale - return it immediately and start background fetch so next poll gets fresh data
+                _maybe_start_background_news_fetch()
+                print(f"⚡ Returning stale cache immediately ({len(cached_news)} articles); background fetch started for next request")
                 response_data = {
                     "news": cached_news,
                     "last_updated": datetime.now().isoformat(),
@@ -1032,7 +1157,6 @@ def get_news():
                 if DEPLOYMENT_NOTIFICATION["active"]:
                     response_data["deployment_notification"] = DEPLOYMENT_NOTIFICATION
                 
-                print(f"✅ Returning {len(cached_news)} cached news items immediately (stale cache, fresh fetch in background)")
                 return jsonify(response_data)
         
         # Force refresh: Use the same fetch logic as regular 5-minute fetch
@@ -1258,11 +1382,10 @@ def get_news():
             # The save_news function will handle merging with existing cache and preserving added_to_feed_at
             save_success = False
             if cached_news and (should_fetch_new or force_refresh):
-                # OPTIMIZATION: Limit fresh_news to top 200 items to reduce Firebase write time
-                # This prevents saving hundreds of items which can be slow
-                fresh_news_to_save = fresh_news[:200] if len(fresh_news) > 200 else fresh_news
-                if len(fresh_news) > 200:
-                    print(f"📊 Limited fresh news to 200 items for faster cache save (was {len(fresh_news)})")
+                # Limit to cache cap (single source of truth in persistent_news_cache)
+                fresh_news_to_save = fresh_news[:MAX_CACHE_ITEMS] if len(fresh_news) > MAX_CACHE_ITEMS else fresh_news
+                if len(fresh_news) > MAX_CACHE_ITEMS:
+                    print(f"📊 Limited fresh news to {MAX_CACHE_ITEMS} items for cache save (was {len(fresh_news)})")
                 
                 # IMPORTANT: Pass only fresh_news to save_news, not all_news
                 # save_news with append=True will:
@@ -1303,10 +1426,10 @@ def get_news():
                         traceback.print_exc()
             else:
                 # First time saving or no cached news - use append=False to replace cache
-                # OPTIMIZATION: Limit to top 200 items to reduce Firebase write time
-                all_news_to_save = all_news[:200] if len(all_news) > 200 else all_news
-                if len(all_news) > 200:
-                    print(f"📊 Limited all_news to 200 items for faster cache save (was {len(all_news)})")
+                # Limit to cache cap (single source of truth in persistent_news_cache)
+                all_news_to_save = all_news[:MAX_CACHE_ITEMS] if len(all_news) > MAX_CACHE_ITEMS else all_news
+                if len(all_news) > MAX_CACHE_ITEMS:
+                    print(f"📊 Limited all_news to {MAX_CACHE_ITEMS} items for cache save (was {len(all_news)})")
                 
                 # Ensure all items have added_to_feed_at set
                 for item in all_news_to_save:
@@ -1348,9 +1471,9 @@ def get_news():
             # - If cached only: triggered at line 957 (earlier in code)
             # This prevents duplicate alert checks
             
-            # For force refresh, if we have cached news for immediate response, return it now
-            # and let fresh news be saved in background (will be available on next request)
-            if force_refresh and 'cached_news_for_response' in locals() and cached_news_for_response:
+            # For force refresh, optionally return cached immediately (instant but stale).
+            # When wait_fresh=True the client wants fresh data in this request—skip early return.
+            if force_refresh and 'cached_news_for_response' in locals() and cached_news_for_response and not wait_fresh:
                 # Filter and prepare cached news for immediate response
                 cached_news_filtered = remove_duplicate_news(cached_news_for_response)
                 filter_phrase = "Gold rises, according to FXStreet data"
