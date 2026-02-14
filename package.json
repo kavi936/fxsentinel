@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/write-build-version.js && vite build",
     "optimize-images": "npx imagemin public/*.png --out-dir=public --plugin=pngquant && npx imagemin public/*.png --out-dir=public --plugin=webp",
     "lint": "eslint .",
     "preview": "vite preview"

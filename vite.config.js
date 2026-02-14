@@ -1,9 +1,27 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { readFileSync, existsSync } from 'fs'
+import { join } from 'path'
+
+// Read build version written by scripts/write-build-version.js (run before build).
+// Used so the client can compare to /build-version.json and reload when a new deploy is live.
+function getBuildVersion() {
+  const path = join(process.cwd(), 'public', 'build-version.json')
+  if (!existsSync(path)) return 'dev'
+  try {
+    const { version } = JSON.parse(readFileSync(path, 'utf-8'))
+    return version || 'dev'
+  } catch {
+    return 'dev'
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
+  define: {
+    __BUILD_VERSION__: JSON.stringify(getBuildVersion()),
+  },
   build: {
     outDir: 'dist',
     sourcemap: false,
