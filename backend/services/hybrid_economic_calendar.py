@@ -7927,7 +7927,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '-0.1%',
                 'previous': '-0.1%'
             },
@@ -7939,9 +7939,9 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.4%',
                 'forecast': '-1.5%',
-                'previous': '0.7%'
+                'previous': '0.3%'
             },
             {
                 'title': 'Eurogroup Meetings',
@@ -7959,9 +7959,9 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '238K',
                 'forecast': '266K',
-                'previous': '282K'
+                'previous': '281K'
             },
             {
                 'title': 'FOMC Member Bowman Speaks',
@@ -7979,9 +7979,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.5%',
-                'previous': '-1.2%'
+                'previous': '-1.3%'
             },
             {
                 'title': 'German Buba President Nagel Speaks',
