@@ -7887,7 +7887,7 @@ class HybridEconomicCalendar:
                 'time': '21:30 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.9	',
                 'forecast': 'N/A',
                 'previous': '51.5'
             },
@@ -7897,9 +7897,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.4%',
                 'forecast': '3.2%',
-                'previous': '2.8%'
+                'previous': '3.4%'
             },
             {
                 'title': 'Prelim GDP q/q',
@@ -7907,9 +7907,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%	',
                 'forecast': '0.4%',
-                'previous': '-0.4%'
+                'previous': '-0.6%'
             },
             {
                 'title': 'Rightmove HPI m/m',
@@ -7917,7 +7917,7 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%	',
                 'forecast': 'N/A',
                 'previous': '2.8%'
             },
