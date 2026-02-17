@@ -7999,7 +7999,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.5%',
                 'forecast': 'N/A',
                 'previous': '-0.3%'
             },
