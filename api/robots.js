@@ -13,10 +13,11 @@ Allow: /signup
 Allow: /disclaimer
 Allow: /privacy
 
-# Disallow private/dashboard pages
+# Disallow private/dashboard pages (intentional - not for search indexing)
 Disallow: /dashboard
 Disallow: /trial-welcome
 Disallow: /auth-redirect
+Disallow: /forgot-password
 
 # Allow assets
 Allow: /assets/

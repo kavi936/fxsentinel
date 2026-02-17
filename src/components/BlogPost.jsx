@@ -9,6 +9,26 @@ const BlogPost = ({ postData }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  // Set unique document title and meta description for SEO (helps "Crawled - not indexed" for blog posts)
+  useEffect(() => {
+    const prevTitle = document.title;
+    document.title = postData?.title ? `${postData.title} - FXSentinel Blog` : 'FXSentinel Blog';
+    let metaDesc = document.querySelector('meta[name="description"]');
+    const prevContent = metaDesc?.getAttribute('content');
+    if (postData?.excerpt) {
+      if (!metaDesc) {
+        metaDesc = document.createElement('meta');
+        metaDesc.setAttribute('name', 'description');
+        document.head.appendChild(metaDesc);
+      }
+      metaDesc.setAttribute('content', postData.excerpt);
+    }
+    return () => {
+      document.title = prevTitle;
+      if (metaDesc && prevContent !== undefined) metaDesc.setAttribute('content', prevContent);
+    };
+  }, [postData?.title, postData?.excerpt]);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
