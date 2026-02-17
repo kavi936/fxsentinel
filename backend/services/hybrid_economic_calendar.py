@@ -8019,9 +8019,9 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '-0.3%',
-                'previous': '-0.2%'
+                'previous': '-0.4%'
             },
 
             # TUESDAY, FEBRUARY 17
@@ -8031,7 +8031,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.1%',
                 'previous': '0.1%'
             },
@@ -8041,9 +8041,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '28.6K',
                 'forecast': '22.8K',
-                'previous': '17.9K'
+                'previous': '2.7K'
             },
             {
                 'title': 'Average Earnings Index 3m/y',
@@ -8051,9 +8051,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '4.2%',
                 'forecast': '4.6%',
-                'previous': '4.7%'
+                'previous': '4.6%'
             },
             {
                 'title': 'Unemployment Rate',
@@ -8061,7 +8061,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.2%',
                 'forecast': '5.1%',
                 'previous': '5.1%'
             },
