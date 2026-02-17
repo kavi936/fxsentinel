@@ -11,8 +11,8 @@ Allow: /signup
 Allow: /disclaimer
 Allow: /privacy
 
-# Disallow private/dashboard pages (intentional - not for search indexing)
-Disallow: /dashboard
+# Allow /dashboard so it can appear as a sitelink (crawler hits login if not authenticated)
+# Disallow other private/auth flows only
 Disallow: /trial-welcome
 Disallow: /auth-redirect
 Disallow: /forgot-password
