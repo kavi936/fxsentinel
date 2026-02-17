@@ -80,6 +80,12 @@ export default function handler(req, res) {
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
+  <url>
+    <loc>https://fxsentinel.io/terms</loc>
+    <lastmod>2026-02-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
 </urlset>`;
 
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
