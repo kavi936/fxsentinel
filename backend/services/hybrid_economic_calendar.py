@@ -8353,7 +8353,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '3.0%',
                 'previous': '3.4%'
             },
@@ -8363,7 +8363,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.1%',
                 'forecast': '3.0%',
                 'previous': '3.2%'
             },
@@ -8373,9 +8373,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.4%',
-                'previous': '-0.2%'
+                'previous': '-0.5%'
             },
             {
                 'title': 'PPI Output m/m',
@@ -8383,9 +8383,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.2%',
-                'previous': '0.0%'
+                'previous': '-0.1%'
             },
             {
                 'title': 'RPI y/y',
@@ -8393,7 +8393,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.8%',
                 'forecast': '3.8%',
                 'previous': '4.2%'
             },
@@ -8403,7 +8403,7 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.3%',
                 'forecast': '-0.3%',
                 'previous': '-0.3%'
             },
@@ -8413,9 +8413,9 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.4%',
                 'forecast': '2.3%',
-                'previous': '2.5%'
+                'previous': '2.8%'
             },
             {
                 'title': 'German 10-y Bond Auction',
@@ -8423,7 +8423,7 @@ class HybridEconomicCalendar:
                 'time': '10:42 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	2.73|1.5',
                 'forecast': 'N/A',
                 'previous': '2.85|1.7'
             },
