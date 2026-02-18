@@ -8433,9 +8433,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '0.3%',
-                'previous': '0.5%'
+                'previous': '0.4%'
             },
             {
                 'title': 'Durable Goods Orders m/m',
@@ -8443,9 +8443,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-1.4%',
                 'forecast': '-1.8%',
-                'previous': '5.3%'
+                'previous': '5.4%'
             },
             {
                 'title': 'Building Permits',
@@ -8453,7 +8453,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.45M',
                 'forecast': '1.42M',
                 'previous': 'N/A'
             },
@@ -8473,7 +8473,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.40M',
                 'forecast': '1.33M',
                 'previous': 'N/A'
             },
