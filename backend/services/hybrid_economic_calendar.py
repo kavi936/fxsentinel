@@ -8221,7 +8221,7 @@ class HybridEconomicCalendar:
                 'time': '15:50 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.6%',
                 'forecast': 'N/A',
                 'previous': '6.7%'
             },
@@ -8251,7 +8251,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '0.5%',
                 'previous': '0.2%'
             },
@@ -8261,7 +8261,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.7%',
                 'previous': '0.6%'
             },
@@ -8271,7 +8271,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': 'N/A',
                 'previous': '0.1%'
             },
@@ -8281,9 +8281,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.46T',
                 'forecast': '-0.16T',
-                'previous': '-0.21T'
+                'previous': '-0.06T'
             },
             {
                 'title': 'Wage Price Index q/q',
@@ -8291,7 +8291,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.8%',
                 'previous': '0.8%'
             },
@@ -8301,7 +8301,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.25%',
                 'forecast': '2.25%',
                 'previous': '2.25%'
             },
