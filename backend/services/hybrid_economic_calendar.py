@@ -8483,7 +8483,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.45M',
                 'forecast': 'N/A',
                 'previous': '1.41M'
             },
@@ -8493,7 +8493,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.40M',
                 'forecast': 'N/A',
                 'previous': '1.25M'
             },
@@ -8503,9 +8503,9 @@ class HybridEconomicCalendar:
                 'time': '14:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '76.2%',
                 'forecast': '76.4%',
-                'previous': '76.3%'
+                'previous': '75.7%'
             },
             {
                 'title': 'Industrial Production m/m',
@@ -8513,9 +8513,9 @@ class HybridEconomicCalendar:
                 'time': '14:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	0.7%',
                 'forecast': '0.4%',
-                'previous': '0.4%'
+                'previous': '0.2%'
             },
             {
                 'title': 'FOMC Meeting Minutes',
@@ -8533,7 +8533,7 @@ class HybridEconomicCalendar:
                 'time': '21:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '28.0B',
                 'forecast': '125.8B',
                 'previous': '220.2B'
             },
@@ -8553,7 +8553,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '19.1%',
                 'forecast': '5.1%',
                 'previous': '-11.0%'
             },
@@ -8563,9 +8563,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '17.8K',
                 'forecast': '20.1K',
-                'previous': '65.2K'
+                'previous': '68.5K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -8573,7 +8573,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.1%',
                 'forecast': '4.2%',
                 'previous': '4.1%'
             },
