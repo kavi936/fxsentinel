@@ -8585,9 +8585,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '14.6B',
                 'forecast': '9.2B',
-                'previous': '8.6B'
+                'previous': '8.9B'
             },
             {
                 'title': 'ECB Economic Bulletin',
@@ -8605,7 +8605,7 @@ class HybridEconomicCalendar:
                 'time': '10:03 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.17|2.5',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
@@ -8625,7 +8625,7 @@ class HybridEconomicCalendar:
                 'time': '11:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-28',
                 'forecast': '-27',
                 'previous': '-30'
             },
@@ -8645,7 +8645,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': '0.1%',
                 'previous': '-0.2%'
             },
@@ -8655,9 +8655,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.3B',
                 'forecast': '-2.0B',
-                'previous': '-2.2B'
+                'previous': '-2.6B'
             },
             {
                 'title': 'Unemployment Claims',
@@ -8665,9 +8665,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '206K',
                 'forecast': '229K',
-                'previous': '227K'
+                'previous': '229K'
             },
             {
                 'title': 'Philly Fed Manufacturing Index',
@@ -8675,7 +8675,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '16.3',
                 'forecast': '7.8',
                 'previous': '12.6'
             },
@@ -8695,9 +8695,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-98.5B',
                 'forecast': '-85.7B',
-                'previous': '-86.9B'
+                'previous': '-82.8B'
             },
             {
                 'title': 'Prelim Wholesale Inventories m/m',
@@ -8705,7 +8705,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.1%',
                 'previous': '0.2%'
             },
@@ -8715,9 +8715,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-70.3B',
                 'forecast': '-55.2B',
-                'previous': '-56.8B'
+                'previous': '-53.8B'
             },
             {
                 'title': 'FOMC Member Kashkari Speaks',
@@ -8735,7 +8735,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-12',
                 'forecast': '-12',
                 'previous': '-12'
             },
@@ -8745,9 +8745,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-0.8%',
                 'forecast': '2.4%',
-                'previous': '-9.3%'
+                'previous': '-7.4%'
             },
             {
                 'title': 'CB Leading Index m/m',
@@ -8755,7 +8755,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.3%',
                 'previous': '-0.3%'
             },
