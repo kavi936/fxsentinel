@@ -8775,7 +8775,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-144B',
                 'forecast': 'N/A',
                 'previous': '-249B'
             },
@@ -8785,7 +8785,7 @@ class HybridEconomicCalendar:
                 'time': '17:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	-9.0M',
                 'forecast': 'N/A',
                 'previous': '8.5M'
             },
@@ -8795,9 +8795,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-519M',
                 'forecast': '-745M',
-                'previous': '52M'
+                'previous': '-88M'
             },
             {
                 'title': 'Flash Manufacturing PMI',
@@ -8805,9 +8805,9 @@ class HybridEconomicCalendar:
                 'time': '22:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.5',
                 'forecast': 'N/A',
-                'previous': '52.4'
+                'previous': '52.3'
             },
             {
                 'title': 'Flash Services PMI',
@@ -8815,9 +8815,9 @@ class HybridEconomicCalendar:
                 'time': '22:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.2',
                 'forecast': 'N/A',
-                'previous': '56.0'
+                'previous': '56.3'
             },
             {
                 'title': 'RBNZ Gov Breman Speaks',
@@ -8835,7 +8835,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': '2.0%',
                 'previous': '2.4%'
             },
