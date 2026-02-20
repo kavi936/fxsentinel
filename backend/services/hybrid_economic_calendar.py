@@ -8855,7 +8855,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.8',
                 'forecast': '51.3',
                 'previous': '51.5'
             },
@@ -8867,7 +8867,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.6%',
                 'forecast': '0.3%',
                 'previous': '-0.2%'
             },
@@ -8877,7 +8877,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.8%',
                 'forecast': '0.2%',
                 'previous': '0.4%'
             },
@@ -8887,9 +8887,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-30.4B',
                 'forecast': '-23.3B',
-                'previous': '11.6B'
+                'previous': '13.4B'
             },
             {
                 'title': 'French Flash Manufacturing PMI',
@@ -8897,9 +8897,9 @@ class HybridEconomicCalendar:
                 'time': '08:15 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '49.9',
                 'forecast': '51.0',
-                'previous': '51.0'
+                'previous': '51.2'
             },
             {
                 'title': 'French Flash Services PMI',
@@ -8907,9 +8907,9 @@ class HybridEconomicCalendar:
                 'time': '08:15 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '49.6',
                 'forecast': '49.1',
-                'previous': '47.9'
+                'previous': '48.4'
             },
             {
                 'title': 'German Flash Manufacturing PMI',
@@ -8917,9 +8917,9 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'EUR',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '	50.7',
                 'forecast': '49.6',
-                'previous': '48.7'
+                'previous': '49.1'
             },
             {
                 'title': 'German Flash Services PMI',
@@ -8927,9 +8927,9 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'EUR',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '53.4',
                 'forecast': '52.5',
-                'previous': '53.3'
+                'previous': '52.4'
             },
             {
                 'title': 'Flash Manufacturing PMI',
@@ -8937,7 +8937,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.8',
                 'forecast': '50.0',
                 'previous': '49.4'
             },
@@ -8947,7 +8947,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.8',
                 'forecast': '51.9',
                 'previous': '51.9'
             },
@@ -8957,7 +8957,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '52.0',
                 'forecast': '51.5',
                 'previous': '51.6'
             },
@@ -8967,7 +8967,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '53.9',
                 'forecast': '53.4',
                 'previous': '54.3'
             },
