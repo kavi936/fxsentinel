@@ -4487,10 +4487,6 @@ const Overview = () => {
                   {/* NEW: Forward Scenarios */}
                   <div className="forward-scenarios-section">
                     <h3 className="section-header">Forward Scenarios</h3>
-                    {/* DEBUG: Log the actual aiAnalysis state */}
-                    {console.log('🦘🦘🦘 FRONTEND DISPLAY DEBUG - aiAnalysis state 🦘🦘🦘', aiAnalysis)}
-                    {console.log('🦘 Forward Scenarios:', aiAnalysis?.forward_scenarios)}
-                    {/* Positioning Context removed - no longer displayed */}
                     <div className="scenarios-grid">
                       <div className="scenario bullish">
                         <div className="scenario-content">
@@ -4635,10 +4631,10 @@ const Overview = () => {
                   {/* AI Analysis - Expandable Detailed Sections */}
                   <div className="ai-analysis-expandable">
                     {/* Event Summary - Expandable */}
-                    <details className="analysis-details">
+                    <details className="analysis-details" open>
                       <summary className="details-summary">
                         {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Event Summary</span>
+                        <span className="summary-title">Event Data</span>
                         <span className="summary-arrow">▼</span>
                       </summary>
                       <div className="details-content">
@@ -4673,7 +4669,7 @@ const Overview = () => {
                     </details>
 
                     {/* Market Reaction - Expandable */}
-                    <details className="analysis-details">
+                    <details className="analysis-details" open>
                       <summary className="details-summary">
                         {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Market Reaction</span>
@@ -4704,7 +4700,7 @@ const Overview = () => {
                     </details>
 
                     {/* Implications & Takeaways - Expandable */}
-                    <details className="analysis-details">
+                    <details className="analysis-details" open>
                       <summary className="details-summary">
                         {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Implications & Takeaways</span>
@@ -4735,7 +4731,7 @@ const Overview = () => {
                     </details>
 
                     {/* Trading Plan - Expandable */}
-                    <details className="analysis-details">
+                    <details className="analysis-details" open>
                       <summary className="details-summary">
                         {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Trading Plan</span>
@@ -4772,7 +4768,7 @@ const Overview = () => {
                     </details>
 
                     {/* Big Picture - Expandable */}
-                    <details className="analysis-details">
+                    <details className="analysis-details" open>
                       <summary className="details-summary">
                         {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Big Picture</span>
@@ -4803,7 +4799,7 @@ const Overview = () => {
                     </details>
 
                     {/* Next Catalysts - Expandable */}
-                    <details className="analysis-details">
+                    <details className="analysis-details" open>
                       <summary className="details-summary">
                         {/* <span className="summary-icon"></span> */}
                         <span className="summary-title">Next Catalysts</span>

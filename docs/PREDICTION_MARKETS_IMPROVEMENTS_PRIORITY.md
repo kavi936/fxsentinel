@@ -166,3 +166,56 @@ This list merges the earlier evaluation with your feedback. Items are ordered so
 5. **P1-6:** Show “Updated …” in the card header using `predictionMarketsLastUpdate`.
 
 After that, do P0-3 (raise `MAX_FILTERED_MARKETS`) and P1-7, P1-8, P1-9, then P2 and beyond as capacity allows.
+
+---
+
+## Done so far (for reference)
+
+- **P0-1:** Frontend volume filter removed; backend `MIN_VOLUME_THRESHOLD` set to 0.
+- **P0-2:** Conviction-based opacity removed (all rows `opacity: 1`).
+- **P0-3:** `MAX_FILTERED_MARKETS` increased to 150.
+- **P0-4:** Client re-sort removed; API order (relevance, priority, conviction, delta) used.
+- **P0-5 (partial):** Affected pairs shown in the **expanded section only** (below the chart in “Market context”), not in the main row (per your request to remove “Relevant to” from the card). Optional one-liner / calendar link not done.
+- **Chart:** Two lines (Yes/No), hover tooltip “Yes: X.X% / No: X.X%”, taller chart, tooltip position adjusted.
+- **Context section:** Under the chart: affected pairs (badges), price movement, resolves, source, volume.
+
+---
+
+## Remaining improvements summary
+
+Use this list to pick what to do next. Each line is one improvement; details are in the sections above.
+
+### P1 – Trust and clarity
+| # | Improvement | What to do |
+|---|-------------|------------|
+| **6** | Last updated + cache | Show “Updated X min ago” (and optional “Cached”) in the prediction markets card header using `predictionMarketsLastUpdate` / `summary`. |
+| **7** | Explain conviction | Add a tooltip or info icon next to the conviction badge: e.g. “Based on trading volume (high = more volume).” |
+| **8** | Explain missing deltas | When 24h/48h/7d deltas are null, show short copy or tooltip: “Movement data after we’ve tracked prices for 24h.” |
+| **9** | Fix “All” status filter | When Status = “All”, show all markets (including resolved older than 7 days), or add “Resolved (last 30 days)” and make “All” truly all. |
+
+### P2 – Discovery and filtering
+| # | Improvement | What to do |
+|---|-------------|------------|
+| **10** | Inline search | Add a persistent search input in the card (header or above the list) that filters by question/title in real time; reduce or remove modal-only search. |
+| **11** | Single Filters panel | Replace Topic / Status / Conviction / Search modals with one “Filters” control (dropdown or slide-out) and a one-line summary when any filter is active. |
+| **12** | Sort control | Add “Sort by” dropdown: e.g. “Most relevant”, “Resolves soon”, “24h move”, “Volume” (frontend sort on filtered list). |
+
+### P3 – Deeper usefulness
+| # | Improvement | What to do |
+|---|-------------|------------|
+| **13** | Calendar link | Show “Resolves: [date]” and, when backend supports it, “Same day as [event]” with a link to that event in the Economic Calendar. |
+| **14** | Watchlist / pins | Let users pin markets; store in localStorage (or account); show pinned at top or in a “Pinned” section. |
+| **15** | Topic from backend | API returns topic options (and optionally counts); frontend uses that for the Topic filter instead of hardcoded GDP/CPI/Fed/…. |
+
+### P4 – Polish and performance
+| # | Improvement | What to do |
+|---|-------------|------------|
+| **16** | Auto-refresh | In `usePredictionMarkets.js`, add a periodic refresh (e.g. every 10–15 min); optionally show “Updating…” without full list spinner. |
+| **17** | Background refresh UX | On manual refresh, keep showing current list and show “Updating…” in header; full-screen loading only on initial load when there is no data. |
+| **18** | Chart cache invalidation | On prediction-markets refresh, clear or invalidate `pmChartDataCache` so expanded charts refetch fresh history. |
+| **19** | Unify empty states | Single empty message: “No markets match your filters” when filters on, “No active prediction markets right now” when list empty and no filters; remove duplicate `hasMarkets` notice. |
+
+### Optional / already covered
+- **P0-5 (full actionability):** Optional one-line implication or “Relevant to” in the main row (you chose expanded-only; can revisit if desired).
+- **Relevance badge (P0-4 optional):** “Forex-relevant” / “Relevant” badge was added then removed per your request; can re-add if you want.
+- **P4-20:** Conviction opacity already addressed in P0-2.
