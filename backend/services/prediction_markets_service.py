@@ -89,8 +89,8 @@ PAID_TIER_CACHE_EXPIRATION_MINUTES = 10
 PAID_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 5
 
 # Market filtering limits
-MAX_FILTERED_MARKETS = 50  # Maximum markets to return after filtering (increased to show more relevant economic events)
-MIN_VOLUME_THRESHOLD = 5000  # Minimum volume in USD to include market (filters out very low-volume markets)
+MAX_FILTERED_MARKETS = 150  # Maximum markets to return after filtering (increased so card can display more; backend order = relevance + priority + conviction + delta)
+MIN_VOLUME_THRESHOLD = 100 # No minimum: low-volume markets can still be useful; order puts high volume first
 # Note: Frontend will display all returned markets in scrollable container
 FREE_TIER_MAX_PRICE_FETCH_MARKETS = 5  # Max markets to fetch prices for on free tier
 PAID_TIER_MAX_PRICE_FETCH_MARKETS = 20  # Max markets to fetch prices for on paid tier

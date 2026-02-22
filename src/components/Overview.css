@@ -9084,6 +9084,39 @@
   gap: 12px;
 }
 
+/* Expand/collapse button for price history chart - circular */
+.market-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+.market-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.9);
+}
+.market-expand-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+.market-expand-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+.market-expand-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
 .market-question {
   font-size: 13px;
   font-weight: 600;
@@ -9364,18 +9397,13 @@
   color: #9ca3af;
 }
 
-/* Conviction-based Market Item Styling */
-.prediction-market-item.conviction-low {
-  opacity: 0.7;
-}
-
-.prediction-market-item.conviction-medium {
-  opacity: 0.85;
-}
-
+/* Conviction-based Market Item Styling - no opacity shading so low-volume markets are not dimmed */
+.prediction-market-item.conviction-low,
+.prediction-market-item.conviction-medium,
 .prediction-market-item.conviction-high {
   opacity: 1;
 }
+
 
 /* Conviction Score in Meta Value */
 .meta-value.conviction-high {
@@ -9488,8 +9516,57 @@
   color: rgba(255, 68, 68, 0.8);
 }
 
+/* Market chart context section (below chart): affected pairs, movement, resolution, source */
+.market-chart-context {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: baseline;
+}
+
+.market-context-block {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.market-context-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.market-context-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.market-context-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.market-context-pair-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(96, 165, 250, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  color: #93c5fd;
+}
+
 /* Mini Price Chart */
 .mini-price-chart-container {
+  position: relative;
   width: 100%;
   max-width: 100%;
   padding: 12px;
@@ -9497,7 +9574,7 @@
   border-radius: 8px;
   border: 1px solid rgba(59, 130, 246, 0.1);
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .mini-chart-header {
@@ -9517,24 +9594,36 @@
   letter-spacing: 0.5px;
 }
 
+.mini-chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.mini-chart-legend-item.yes { color: #22c55e; }
+.mini-chart-legend-item.no { color: #ef4444; }
+
 .mini-chart-current {
   font-size: 12px;
-  color: #60a5fa;
+  color: rgba(255, 255, 255, 0.85);
   font-weight: 600;
 }
 
 .mini-chart-wrapper {
   position: relative;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .mini-chart-wrapper svg {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 250px;
-  min-height: 180px;
+  max-height: 360px;
+  min-height: 260px;
   max-width: 100%;
   box-sizing: border-box;
 }
@@ -9557,7 +9646,7 @@
   filter: drop-shadow(0 0 4px rgba(96, 165, 250, 0.8));
 }
 
-/* Prediction Market Chart Tooltip */
+/* Prediction Market Chart Tooltip - overlays chart header when near top */
 .pm-chart-tooltip {
   position: absolute;
   background: rgba(0, 0, 0, 0.95);
@@ -9569,6 +9658,9 @@
   min-width: 140px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(10px);
+}
+.pm-chart-tooltip-overlay {
+  z-index: 1010;
 }
 
 .pm-chart-tooltip-top {
@@ -9607,6 +9699,23 @@
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+.pm-chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.95);
+}
+.pm-chart-tooltip-row.pm-chart-tooltip-yes { color: #22c55e; }
+.pm-chart-tooltip-row.pm-chart-tooltip-no { color: #ef4444; margin-top: 2px; }
+.pm-chart-tooltip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .pm-chart-tooltip-trend {
