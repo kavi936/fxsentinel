@@ -9450,7 +9450,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI m/m',
-                'date': 'Tue, Feb 24',
+                'date': 'Wed, Feb 25',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -9460,7 +9460,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI y/y',
-                'date': 'Tue, Feb 24',
+                'date': 'Wed, Feb 25',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -9470,7 +9470,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Trimmed Mean CPI m/m',
-                'date': 'Tue, Feb 24',
+                'date': 'Wed, Feb 25',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -9480,7 +9480,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Construction Work Done q/q',
-                'date': 'Tue, Feb 24',
+                'date': 'Wed, Feb 25',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -9490,7 +9490,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'President Trump Speaks',
-                'date': 'Tue, Feb 24',
+                'date': 'Wed, Feb 25',
                 'time': '02:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
