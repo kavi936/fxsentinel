@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
@@ -50,6 +50,7 @@ function App() {
               <Route path="/auth-redirect" element={<AuthRedirect />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Navigate to="/disclaimer" replace />} />
               <Route path="/feedback" element={<FeedbackForm />} />
               <Route path="/trial-welcome" element={
                 <ProtectedRoute>

@@ -123,19 +123,24 @@ const Signup = () => {
       navigate(planPremium ? '/auth-redirect?plan=premium' : '/auth-redirect');
     } catch (err) {
       // Check if this is the Google OAuth blocked error
-      if (isGoogleOAuthBlockedError(err) || err.code === 'auth/embedded-browser-blocked') {
-        // Show the full error message which includes instructions
+      if (err.code === 'auth/embedded-browser-blocked' || isGoogleOAuthBlockedError(err)) {
         const errorMessage = err.message || 'Google sign-in is not available in this browser. Please open this link in Safari or Chrome.';
         setError(errorMessage);
-        trackError('google_signup_failure_embedded_browser', { 
+        trackError('google_signup_failure_embedded_browser', {
           error: err.code || 'embedded-browser-blocked',
-          browserInfo: err.browserInfo || 'unknown'
+          browserInfo: err.browserInfo || 'unknown',
         });
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Sign-in popup was blocked. Please allow popups for this site and try again.');
+        trackError('google_signup_failure_popup_blocked', { code: err.code });
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled. Please try again if you want to continue with Google.');
+        trackError('google_signup_failure_popup_closed', { code: err.code });
       } else {
         setError('Failed to sign in with Google. Please try again.');
-        trackError('google_signup_failure', { 
+        trackError('google_signup_failure', {
           error: err.message || 'unknown_error',
-          code: err.code || 'unknown'
+          code: err.code || 'unknown',
         });
       }
     } finally {

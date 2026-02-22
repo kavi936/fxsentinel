@@ -139,11 +139,13 @@ const Login = () => {
               await signInWithGoogle();
               navigate('/auth-redirect');
             } catch (err) {
-              // Check if this is the Google OAuth blocked error
-              if (isGoogleOAuthBlockedError(err) || err.code === 'auth/embedded-browser-blocked') {
-                // Show the full error message which includes instructions
+              if (err.code === 'auth/embedded-browser-blocked' || isGoogleOAuthBlockedError(err)) {
                 const errorMessage = err.message || 'Google sign-in is not available in this browser. Please open this link in Safari or Chrome.';
                 setError(errorMessage);
+              } else if (err.code === 'auth/popup-blocked') {
+                setError('Sign-in popup was blocked. Please allow popups for this site and try again.');
+              } else if (err.code === 'auth/popup-closed-by-user') {
+                setError('Sign-in was cancelled. Please try again if you want to continue with Google.');
               } else {
                 setError('Failed to sign in with Google. Please try again.');
               }

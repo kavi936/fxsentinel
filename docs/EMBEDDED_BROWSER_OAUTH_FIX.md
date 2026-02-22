@@ -1,5 +1,24 @@
 # Embedded Browser OAuth Fix
 
+## ⚠️ False-Positive Fix (Feb 2026)
+
+**Problem:** Many users were incorrectly blocked from Google sign-in in **Chrome**, **Safari**, or when opening links from **social media** (which often open in the system browser, not the in-app browser). The warning "Google Sign-In Not Available" appeared for normal browsers.
+
+**Root causes:**
+
+1. **Generic webview detection** — We treated any UA containing `wv` or matching a generic "iOS webview" heuristic as embedded. Chrome for Android and some iOS browsers can match these, so real users were blocked.
+2. **Over-broad error classification** — `auth/popup-blocked` and `auth/popup-closed-by-user` were treated as "embedded browser blocked", so Chrome users who had popups disabled or closed the popup saw "open in Safari or Chrome" instead of "allow popups" or "try again".
+
+**Changes made:**
+
+- **Detection:** We now **only** flag **known in-app browser** UAs: Facebook, Messenger, Instagram, Snapchat, Twitter, LinkedIn, Line (specific pattern), WeChat. **Generic webview / `wv` / iOS heuristics were removed.** Chrome, Safari, and any browser without an explicit app name in the UA are never pre-emptively blocked.
+- **Unknown embedded browsers:** If someone is in an embedded browser we don’t detect, Google will still return `disallowed_useragent`. We show the "open in Safari/Chrome" message only **after** that error (via `isGoogleOAuthBlockedError`).
+- **Error classification:** `isGoogleOAuthBlockedError()` no longer includes `auth/popup-blocked` or `auth/popup-closed-by-user`. Those are handled separately in Signup/Login with messages like "Allow popups" and "Sign-in was cancelled".
+
+**Result:** Standalone Chrome and Safari work. Social links that open in the system browser work. Only real in-app browsers (Instagram/Facebook/Snapchat etc. **in-app** viewer) get the proactive warning and block.
+
+---
+
 ## Problem Summary
 
 Users accessing the app from embedded browsers (Snapchat, Instagram, Facebook, etc.) were encountering **Error 403: disallowed_useragent** when trying to sign in with Google. This is a security restriction imposed by Google that blocks OAuth authentication in embedded webviews.
@@ -29,12 +48,14 @@ We've implemented a comprehensive solution that:
 
 Created a utility that detects embedded browsers by checking user agent strings:
 
-- **Facebook/Messenger**: Detects `fban`, `fbav`, `fbsv`, or `facebook` in user agent
-- **Instagram**: Detects `instagram` in user agent
-- **Snapchat**: Detects `snapchat` in user agent
-- **Twitter**: Detects `twitter` in user agent
-- **LinkedIn**: Detects `linkedinapp` in user agent
-- **Generic Webviews**: Detects `wv`, `webview`, or iOS webview patterns
+- **Facebook/Messenger**: `fban`, `fbav`, `fbsv`, or `facebook`, or `messenger`
+- **Instagram**: `instagram`
+- **Snapchat**: `snapchat`
+- **Twitter**: `twitter`
+- **LinkedIn**: `linkedinapp`
+- **Line**: ` Line/` or `line/\d` (to avoid matching "inline")
+- **WeChat**: `micromessenger`
+- **Generic webviews**: We do **not** detect generic webview/`wv`/iOS heuristics. Only the app names above are used. This avoids blocking Chrome, Safari, or social links that open in the system browser.
 
 ### 2. Enhanced Error Handling (`src/contexts/AuthContext.jsx`)
 
