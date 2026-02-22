@@ -11,48 +11,67 @@ import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
 
-// Mini Price Chart Component
+// Mini Price Chart Component - two lines: Yes and No (Polymarket-style)
+const YES_LINE_COLOR = '#22c55e';   // green
+const NO_LINE_COLOR = '#ef4444';    // red
+
 const MiniPriceChart = ({ data }) => {
   const [chartHover, setChartHover] = useState(null);
 
   if (!data || data.length === 0) return null;
 
-  // Filter and sort data
+  // Filter and sort data; support both yes_price and no_price (derive missing from other)
   const validData = data
-    .filter(point => point && point.yes_price !== null && point.yes_price !== undefined && point.timestamp)
+    .filter(point => {
+      if (!point || !point.timestamp) return false;
+      const yes = point.yes_price;
+      const no = point.no_price;
+      return (yes != null && yes !== undefined) || (no != null && no !== undefined);
+    })
+    .map(point => {
+      let yesPrice = point.yes_price;
+      let noPrice = point.no_price;
+      if (yesPrice == null && noPrice != null) yesPrice = 1 - noPrice;
+      if (noPrice == null && yesPrice != null) noPrice = 1 - yesPrice;
+      if (yesPrice == null) yesPrice = 0.5;
+      if (noPrice == null) noPrice = 0.5;
+      return { ...point, yes_price: yesPrice, no_price: noPrice };
+    })
     .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
   if (validData.length === 0) return null;
 
-  // Chart dimensions (responsive - using viewBox for scaling)
-  // Base dimensions for calculations (will scale via viewBox)
+  // Chart dimensions (responsive - using viewBox for scaling); taller chart
   const baseWidth = 600;
-  const baseHeight = 200;
+  const baseHeight = 300;
   const padding = { top: 20, right: 20, bottom: 30, left: 50 };
   const chartWidth = baseWidth - padding.left - padding.right;
   const chartHeight = baseHeight - padding.top - padding.bottom;
 
-  // Calculate Y scale (0-100% for probabilities)
   const minPrice = 0;
   const maxPrice = 100;
   const priceRange = maxPrice - minPrice;
 
-  // Calculate X positions
   const xStep = chartWidth / (validData.length - 1 || 1);
-  const points = validData.map((point, index) => {
+
+  // Points for Yes line (yes_price %)
+  const pointsYes = validData.map((point, index) => {
     const x = padding.left + (index * xStep);
     const yesPricePercent = point.yes_price * 100;
     const y = padding.top + ((maxPrice - yesPricePercent) / priceRange) * chartHeight;
-    return { ...point, x, y, yesPricePercent };
+    return { ...point, x, y, yesPricePercent, noPricePercent: point.no_price * 100 };
   });
 
-  // Create path for line
-  const linePath = points.map((point, index) => 
-    `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
-  ).join(' ');
+  // Points for No line (no_price %)
+  const pointsNo = validData.map((point, index) => {
+    const x = padding.left + (index * xStep);
+    const noPricePercent = point.no_price * 100;
+    const y = padding.top + ((maxPrice - noPricePercent) / priceRange) * chartHeight;
+    return { x, y, noPricePercent };
+  });
 
-  // Create area path
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${padding.top + chartHeight} L ${points[0].x} ${padding.top + chartHeight} Z`;
+  const linePathYes = pointsYes.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const linePathNo = pointsNo.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
 
   // Format date for X-axis
   const formatDate = (timestamp) => {
@@ -74,76 +93,35 @@ const MiniPriceChart = ({ data }) => {
 
   // Handle chart hover
   const handleChartHover = (event) => {
-    const rect = event.currentTarget.getBoundingClientRect();
     const svgRect = event.currentTarget.querySelector('svg').getBoundingClientRect();
-    
-    // Calculate scale factor (SVG scales to fit container)
     const scaleX = svgRect.width / baseWidth;
-    const scaleY = svgRect.height / baseHeight;
-    
-    // Calculate relative position within SVG
     const relativeX = Math.min(Math.max((event.clientX - svgRect.left - (padding.left * scaleX)) / (chartWidth * scaleX), 0), 1);
     const lastIndex = validData.length - 1;
     const index = Math.round(relativeX * lastIndex);
-    
-    if (index >= 0 && index < validData.length) {
-      const point = validData[index];
+
+    if (index >= 0 && index < pointsYes.length) {
+      const point = pointsYes[index];
       const pointX = padding.left + (index * xStep);
-      const yesPricePercent = point.yes_price * 100;
-      const pointY = padding.top + ((maxPrice - yesPricePercent) / priceRange) * chartHeight;
-      
-      // Calculate percentage positions for tooltip (relative to SVG)
-      const xPercent = ((pointX / baseWidth) * 100);
-      const yPercent = ((pointY / baseHeight) * 100);
-      
-      // Calculate trend (compare with previous value)
-      let trend = null;
-      let changePercent = null;
-      if (index > 0) {
-        const currentValue = point.yes_price;
-        const previousValue = validData[index - 1].yes_price;
-        const change = currentValue - previousValue;
-        changePercent = ((change / previousValue) * 100).toFixed(2);
-        trend = change > 0 ? 'up' : change < 0 ? 'down' : 'neutral';
-      }
-      
-      // Smart tooltip positioning
-      const tooltipWidth = 120;
-      const tooltipHeight = 60;
+      const xPercent = (pointX / baseWidth) * 100;
+      const tooltipWidth = 140;
       const margin = 10;
-      
       let tooltipXPercent = xPercent;
-      let tooltipYPercent = yPercent;
-      let tooltipPosition = 'top';
-      
-      // Adjust horizontal position (relative to SVG dimensions)
       const tooltipX = (xPercent / 100) * svgRect.width;
       if (tooltipX - tooltipWidth / 2 < margin) {
         tooltipXPercent = ((margin + tooltipWidth / 2) / svgRect.width) * 100;
       } else if (tooltipX + tooltipWidth / 2 > svgRect.width - margin) {
         tooltipXPercent = ((svgRect.width - margin - tooltipWidth / 2) / svgRect.width) * 100;
       }
-      
-      // Adjust vertical position (relative to SVG dimensions)
-      const tooltipY = (yPercent / 100) * svgRect.height;
-      if (tooltipY - tooltipHeight - 20 < margin) {
-        tooltipPosition = 'bottom';
-        tooltipYPercent = yPercent + 5;
-      } else {
-        tooltipPosition = 'top';
-        tooltipYPercent = yPercent - 5;
-      }
-      
       setChartHover({
         index,
-        value: yesPricePercent,
+        yesPricePercent: point.yesPricePercent,
+        noPricePercent: point.noPricePercent,
         xPercent: tooltipXPercent,
-        yPercent: tooltipYPercent,
-        xPixel: pointX, // Keep in base coordinates for SVG viewBox
-        yPixel: pointY, // Keep in base coordinates for SVG viewBox
-        trend,
-        changePercent,
-        position: tooltipPosition,
+        yPercent: 48,
+        xPixel: pointX,
+        yPixelYes: point.y,
+        yPixelNo: pointsNo[index].y,
+        position: 'top',
         date: point.timestamp
       });
     }
@@ -168,12 +146,18 @@ const MiniPriceChart = ({ data }) => {
     }
   }
 
+  const lastPoint = pointsYes.length > 0 ? pointsYes[pointsYes.length - 1] : null;
+
   return (
     <div className="mini-price-chart-container">
       <div className="mini-chart-header">
         <span className="mini-chart-title">Price History</span>
+        <span className="mini-chart-legend">
+          <span className="mini-chart-legend-item yes" style={{ color: YES_LINE_COLOR }}>Yes</span>
+          <span className="mini-chart-legend-item no" style={{ color: NO_LINE_COLOR }}>No</span>
+        </span>
         <span className="mini-chart-current">
-          Current: {points.length > 0 ? `${points[points.length - 1].yesPricePercent.toFixed(1)}%` : 'N/A'}
+          {lastPoint ? `Yes ${lastPoint.yesPricePercent.toFixed(1)}% · No ${lastPoint.noPricePercent.toFixed(1)}%` : 'N/A'}
         </span>
       </div>
       <div 
@@ -185,15 +169,8 @@ const MiniPriceChart = ({ data }) => {
         <svg 
           viewBox={`0 0 ${baseWidth} ${baseHeight}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ width: '100%', height: 'auto', maxHeight: '250px', background: 'transparent' }}
+          style={{ width: '100%', height: 'auto', maxHeight: '360px', background: 'transparent' }}
         >
-        <defs>
-          <linearGradient id="mini-chart-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.3)" />
-            <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
-          </linearGradient>
-        </defs>
-
         {/* Grid lines */}
         {yAxisLabels.map((label, idx) => (
           <line
@@ -207,80 +184,43 @@ const MiniPriceChart = ({ data }) => {
           />
         ))}
 
-        {/* Area fill */}
+        {/* Yes line */}
         <path
-          d={areaPath}
-          fill="url(#mini-chart-gradient)"
-        />
-
-        {/* Line */}
-        <path
-          d={linePath}
+          d={linePathYes}
           fill="none"
-          stroke="#3b82f6"
+          stroke={YES_LINE_COLOR}
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
 
-        {/* Crosshair lines */}
+        {/* No line */}
+        <path
+          d={linePathNo}
+          fill="none"
+          stroke={NO_LINE_COLOR}
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+
+        {/* Crosshair and hover points */}
         {chartHover && (
           <>
-            {/* Vertical crosshair line */}
             <line
               x1={chartHover.xPixel}
               y1={padding.top}
               x2={chartHover.xPixel}
               y2={baseHeight - padding.bottom}
-              stroke="rgba(96, 165, 250, 0.5)"
+              stroke="rgba(255, 255, 255, 0.35)"
               strokeWidth="1"
               strokeDasharray="4 4"
               className="pm-chart-crosshair-line pm-chart-crosshair-vertical"
             />
-            {/* Horizontal crosshair line */}
-            <line
-              x1={padding.left}
-              y1={chartHover.yPixel}
-              x2={baseWidth - padding.right}
-              y2={chartHover.yPixel}
-              stroke="rgba(96, 165, 250, 0.5)"
-              strokeWidth="1"
-              strokeDasharray="4 4"
-              className="pm-chart-crosshair-line pm-chart-crosshair-horizontal"
-            />
-            {/* Active point highlight */}
-            <circle
-              cx={chartHover.xPixel}
-              cy={chartHover.yPixel}
-              r="4"
-              fill="#60a5fa"
-              stroke="#ffffff"
-              strokeWidth="2"
-              className="pm-chart-active-point"
-            />
+            <circle cx={chartHover.xPixel} cy={chartHover.yPixelYes} r="3.5" fill={YES_LINE_COLOR} stroke="#fff" strokeWidth="1.5" className="pm-chart-active-point" />
+            <circle cx={chartHover.xPixel} cy={chartHover.yPixelNo} r="3.5" fill={NO_LINE_COLOR} stroke="#fff" strokeWidth="1.5" className="pm-chart-active-point" />
           </>
         )}
-
-        {/* Data points (only show some to avoid clutter) */}
-        {points.map((point, index) => {
-          const isActive = chartHover && chartHover.index === index;
-          // Only show some points to avoid clutter, but always show active one
-          if (!isActive && index % Math.ceil(points.length / 20) !== 0 && index !== points.length - 1) {
-            return null;
-          }
-          return (
-            <circle
-              key={index}
-              cx={point.x}
-              cy={point.y}
-              r={isActive ? "4" : "2"}
-              fill={isActive ? "#ffffff" : "#60a5fa"}
-              stroke={isActive ? "#60a5fa" : "none"}
-              strokeWidth={isActive ? "2" : "0"}
-              style={{ transition: 'all 0.2s ease' }}
-            />
-          );
-        })}
 
         {/* Y-axis labels */}
         {yAxisLabels.map((label, idx) => (
@@ -298,7 +238,7 @@ const MiniPriceChart = ({ data }) => {
 
         {/* X-axis labels */}
         {xAxisLabels.map((label, idx) => {
-          const point = points[label.index];
+          const point = pointsYes[label.index];
           if (!point) return null;
           return (
             <text
@@ -315,29 +255,24 @@ const MiniPriceChart = ({ data }) => {
         })}
         </svg>
         
-        {/* Tooltip */}
+        {/* Tooltip - Yes / No percentages; positioned to overlay chart header when near top */}
         {chartHover && (
           <div
-            className={`pm-chart-tooltip pm-chart-tooltip-${chartHover.position || 'top'}`}
+            className={`pm-chart-tooltip pm-chart-tooltip-overlay pm-chart-tooltip-${chartHover.position || 'top'}`}
             style={{
               left: `${chartHover.xPercent}%`,
               top: `${chartHover.yPercent}%`,
               transform: 'translate(-50%, -100%)'
             }}
           >
-            <div className="pm-chart-tooltip-value">
-              {chartHover.value.toFixed(1)}%
-              {chartHover.trend && (
-                <span className={`pm-chart-tooltip-trend pm-chart-tooltip-trend-${chartHover.trend}`}>
-                  {chartHover.trend === 'up' ? '↑' : chartHover.trend === 'down' ? '↓' : '→'}
-                </span>
-              )}
+            <div className="pm-chart-tooltip-row pm-chart-tooltip-yes">
+              <span className="pm-chart-tooltip-dot" style={{ background: YES_LINE_COLOR }} />
+              Yes: {chartHover.yesPricePercent.toFixed(1)}%
             </div>
-            {chartHover.changePercent && chartHover.trend && (
-              <div className="pm-chart-tooltip-change">
-                {chartHover.trend === 'up' ? '+' : ''}{chartHover.changePercent}%
-              </div>
-            )}
+            <div className="pm-chart-tooltip-row pm-chart-tooltip-no">
+              <span className="pm-chart-tooltip-dot" style={{ background: NO_LINE_COLOR }} />
+              No: {chartHover.noPricePercent.toFixed(1)}%
+            </div>
             <div className="pm-chart-tooltip-date">
               {formatDateFull(chartHover.date)}
             </div>
@@ -5740,11 +5675,7 @@ const Overview = () => {
                       // Apply search and filters
                       const now = new Date();
                       let filteredMarkets = predictionMarkets.filter(m => {
-                        // Minimum volume threshold: Skip markets with very low volume (< $5K)
-                        const volume = m.volume || 0;
-                        if (volume < 5000) {
-                          return false;
-                        }
+                        // No frontend volume filter: show all markets returned by API (low volume can still be useful)
                         
                         // Search filter: Check if question/title matches search query
                         if (pmSearchQuery) {
@@ -5834,32 +5765,10 @@ const Overview = () => {
                         });
                       }
                       
+                      // Use API order (backend already sorts by relevance, priority, conviction, delta); no client re-sort
                       const activeMarkets = filteredMarkets;
                       
-                      // Sort by volume (highest to lowest), then by other factors
-                      const sortedMarkets = [...activeMarkets].sort((a, b) => {
-                        const volumeA = a.volume || 0;
-                        const volumeB = b.volume || 0;
-                        
-                        // Primary sort: volume (highest first)
-                        if (volumeB !== volumeA) {
-                          return volumeB - volumeA;
-                        }
-                        
-                        // Secondary sort: accepting orders first
-                        if (a.accepting_orders !== b.accepting_orders) {
-                          return b.accepting_orders ? 1 : -1;
-                        }
-                        
-                        // Tertiary sort: future markets first
-                        if (a.is_future !== b.is_future) {
-                          return b.is_future ? 1 : -1;
-                        }
-                        
-                        return 0;
-                      });
-                      
-                      return sortedMarkets
+                      return activeMarkets
                         .filter(market => {
                           // Filter out markets with invalid prices (already filtered in backend, but double-check)
                           const yesPrice = market.yes_price;
@@ -5891,8 +5800,8 @@ const Overview = () => {
                           const total = yesPriceValue + noPriceValue;
                           
                           // Normalize to percentages if we have valid prices
-                          const yesPercent = total > 0 ? ((yesPriceValue / total) * 100).toFixed(0) : '0';
-                          const noPercent = total > 0 ? ((noPriceValue / total) * 100).toFixed(0) : '0';
+                          const yesPercent = total > 0 ? ((yesPriceValue / total) * 100).toFixed(1) : '0.0';
+                          const noPercent = total > 0 ? ((noPriceValue / total) * 100).toFixed(1) : '0.0';
                           
                           // Extract delta and conviction data (Phase 4)
                           const delta24h = market.price_delta_24h;
@@ -5937,21 +5846,28 @@ const Overview = () => {
                                       {convictionLevel.toUpperCase()}
                                     </div>
                                   )}
-                                  <svg 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2"
-                                    style={{ 
-                                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                                      transition: 'transform 0.2s ease',
-                                      color: 'rgba(255, 255, 255, 0.6)'
-                                    }}
+                                  <button
+                                    type="button"
+                                    className={`market-expand-btn ${isExpanded ? 'expanded' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); handleMarketToggle(market); }}
+                                    title={isExpanded ? 'Collapse price chart' : 'Expand to see price history chart'}
+                                    aria-expanded={isExpanded}
+                                    aria-label={isExpanded ? 'Collapse chart' : 'Show price history chart'}
                                   >
-                                    <path d="M6 9l6 6 6-6"></path>
-                                  </svg>
+                                    <svg 
+                                      width="14" 
+                                      height="14" 
+                                      viewBox="0 0 24 24" 
+                                      fill="none" 
+                                      stroke="currentColor" 
+                                      strokeWidth="2"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      aria-hidden="true"
+                                    >
+                                      <path d="M6 9l6 6 6-6"></path>
+                                    </svg>
+                                  </button>
                                 </div>
                               </div>
                               
@@ -6111,6 +6027,57 @@ const Overview = () => {
                                       <span>No historical data available</span>
                                     </div>
                                   )}
+                                  {/* Market context section: affected pairs and other source data */}
+                                  <div className="market-chart-context">
+                                    {market.affected_currency_pairs && market.affected_currency_pairs.length > 0 && (
+                                      <div className="market-context-block">
+                                        <span className="market-context-label">Affected pairs</span>
+                                        <div className="market-context-pairs">
+                                          {market.affected_currency_pairs.map((pair) => (
+                                            <span key={pair} className="market-context-pair-badge">{pair}</span>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {(market.price_delta_24h != null || market.price_delta_7d != null) && (
+                                      <div className="market-context-block">
+                                        <span className="market-context-label">Price movement</span>
+                                        <span className="market-context-value">
+                                          {market.price_delta_24h != null && `24h ${market.price_delta_24h >= 0 ? '+' : ''}${market.price_delta_24h.toFixed(1)}%`}
+                                          {market.price_delta_24h != null && market.price_delta_7d != null && ' · '}
+                                          {market.price_delta_7d != null && `7d ${market.price_delta_7d >= 0 ? '+' : ''}${market.price_delta_7d.toFixed(1)}%`}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {market.resolution_date && (
+                                      <div className="market-context-block">
+                                        <span className="market-context-label">Resolves</span>
+                                        <span className="market-context-value">
+                                          {(() => {
+                                            const date = new Date(market.resolution_date);
+                                            const now = new Date();
+                                            const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+                                            if (daysUntil > 0 && daysUntil <= 14) return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                                            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                          })()}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {market.platform && (
+                                      <div className="market-context-block">
+                                        <span className="market-context-label">Source</span>
+                                        <span className="market-context-value">{market.platform === 'kalshi' ? 'Kalshi' : 'Polymarket'}</span>
+                                      </div>
+                                    )}
+                                    {market.volume != null && market.volume > 0 && (
+                                      <div className="market-context-block">
+                                        <span className="market-context-label">Volume</span>
+                                        <span className="market-context-value">
+                                          {market.volume >= 1e6 ? `$${(market.volume / 1e6).toFixed(2)}M` : market.volume >= 1e3 ? `$${(market.volume / 1e3).toFixed(1)}K` : `$${market.volume.toFixed(0)}`}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
