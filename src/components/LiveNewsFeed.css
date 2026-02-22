@@ -2212,8 +2212,16 @@
     padding: 16px 20px;
   }
   
+  /* Mobile only: prevent list and items from shrinking so .news-content scrolls
+     and each news item stays readable (desktop/laptop layout is unchanged). */
+  .news-list {
+    flex-shrink: 0;
+    min-height: min-content;
+  }
+  
   .news-item {
     padding: 16px;
+    flex-shrink: 0;
   }
   
   .news-item-header {

@@ -14,7 +14,10 @@
     <!-- Web App Manifest (Required for Chrome Android) -->
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- Favicon and App Icons -->
+    <!-- Favicon and App Icons - relative URL so local dev uses public/favicon.png, production uses deployed file -->
+    <!-- 48x48 is Google's preferred size for search result favicon (must be multiple of 48px) -->
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
     <!-- Apple Touch Icon (Required for iOS Chrome/Safari) - must come first for iOS -->
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png" />
     <link rel="apple-touch-icon" sizes="192x192" href="/favicon.png" />
@@ -69,7 +72,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     
-    <!-- Canonical URL - Dynamically set by useCanonicalTag hook -->
+    <!-- Canonical URL: default for homepage so crawlers see it before JS; useCanonicalTag updates it per route -->
+    <link rel="canonical" href="https://fxsentinel.io/" />
     
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -161,6 +165,17 @@
       ]
     }
     </script>
+    
+    <!-- BreadcrumbList: helps Google understand site hierarchy (can support sitelink selection over time) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://fxsentinel.io/" }
+      ]
+    }
+    </script>
   </head>
   <body>
     <!-- SEO: Static links for crawlers (sitelink candidates). Visible in HTML without JS so Google always sees them. -->
@@ -172,6 +187,7 @@
       <a href="https://fxsentinel.io/signup">Sign Up</a>
       <a href="https://fxsentinel.io/disclaimer">Disclaimer</a>
       <a href="https://fxsentinel.io/privacy">Privacy Policy</a>
+      <a href="https://fxsentinel.io/terms">Terms of Service</a>
     </nav>
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-M64QPF8Z"

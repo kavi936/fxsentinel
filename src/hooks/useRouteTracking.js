@@ -29,6 +29,7 @@ export const useRouteTracking = () => {
         'dashboard': 'dashboard',
         'disclaimer': 'disclaimer',
         'privacy': 'privacy',
+        'terms': 'terms',
         'feedback': 'feedback',
         'trial-welcome': 'trial_welcome'
       };
