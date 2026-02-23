@@ -9172,7 +9172,7 @@ class HybridEconomicCalendar:
                 'impact': 'low',
                 'actual': '1.0%',
                 'forecast': 'N/A',
-                'previous': '-0.3%'
+                'previous': '-0.2%'
             },
 
             # MONDAY, FEBRUARY 23
@@ -9182,7 +9182,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '0.1%',
                 'previous': '-0.2%'
             },
@@ -9192,7 +9192,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '88.6',
                 'forecast': '88.4',
                 'previous': '87.6'
             },
@@ -9222,7 +9222,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-13.7',
                 'forecast': '-7.5',
                 'previous': '-8.8'
             },
@@ -9232,7 +9232,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.7%',
                 'forecast': '-0.4%',
                 'previous': '2.7%'
             },
