@@ -2268,6 +2268,8 @@ const Overview = () => {
   const [calendarError, setCalendarError] = useState(null);
   const [calendarSource, setCalendarSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
+  // Toggle between two calendar visual styles (e.g. default vs compact/professional)
+  const [calendarStyleMode, setCalendarStyleMode] = useState('default');
 
   // Economic calendar card width for responsive currency pairs display
   // Calculate width directly from columnWidths and containerDimensions (more reliable than ResizeObserver)
@@ -4161,6 +4163,7 @@ const Overview = () => {
                 <div 
                   ref={economicCalendarCardRef}
                   className="news-calendar grid-card"
+                  data-calendar-style={calendarStyleMode}
                   style={{
                     position: 'absolute',
                     left: getPosition('economicCalendar', 'left'),
@@ -4176,6 +4179,19 @@ const Overview = () => {
                 <h2 className="calendar-title">ECONOMIC CALENDAR</h2>
               </div>
               <div className="calendar-controls">
+                <button
+                  className="calendar-style-toggle-btn"
+                  onClick={() => setCalendarStyleMode((prev) => (prev === 'default' ? 'alternate' : 'default'))}
+                  title={calendarStyleMode === 'default' ? 'Switch to alternate style' : 'Switch to default style'}
+                  aria-label="Toggle calendar style"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none" />
+                    <circle cx="16" cy="11" r="1.5" fill="currentColor" stroke="none" />
+                    <circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" />
+                  </svg>
+                </button>
                 <button className="date-select-btn" onClick={handleDatePicker}>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"></path>
@@ -4237,86 +4253,8 @@ const Overview = () => {
                 {calendarLoading && <span className="loading-indicator">Loading...</span>}
                 {isRefreshing && <span className="filter-applying-indicator">Applying filters...</span>}
               </div>
-              <div className="events-list">
-                {getFilteredEvents().length > 0 ? (
-                  getFilteredEvents().map((event, index) => {
-                    return (
-                    <div 
-                      key={`${event.id}-${currentTimezone}-${index}`}
-                      className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
-                      onClick={() => handleEventClick(event)}
-                    >
-                    <div className="event-main-row">
-                      <div className={`event-time impact-${event.impact}`}>
-                        {(() => {
-                          const formatted = formatCalendarTime(event.time, event.date);
-                          return (
-                            <>
-                              <span className="time">{formatted.time}</span>
-                              <span className="date">{formatted.date}</span>
-                            </>
-                          );
-                        })()}
-                      </div>
-                      <div className="event-content">
-                        <div className="event-header-row">
-                          <h3 className="event-title">{event.title}</h3>
-                          <div className="status-box">
-                            <span className="currency-badge">{event.currency}</span>
-                            <span className={`event-status-indicator ${(event.status || 'upcoming').toLowerCase()}`}>{event.status || 'Upcoming'}</span>
-                          </div>
-                        </div>
-                        <div className="event-meta-row">
-                          <span className="event-category">{event.type}</span>
-                          <div className="affected-pairs">
-                            {event.currencyPairs && event.currencyPairs.length > 0 ? (
-                              <>
-                                {event.currencyPairs.slice(0, maxCurrencyPairs).map((pair, pairIndex) => (
-                                  <span key={pairIndex} className="pair-badge">{pair}</span>
-                                ))}
-                                {event.currencyPairs.length > maxCurrencyPairs && (
-                                  <span className="pair-badge pair-count">
-                                    +{event.currencyPairs.length - maxCurrencyPairs} more
-                                  </span>
-                                )}
-                              </>
-                            ) : (
-                              <span className="pair-badge no-pairs">No specific pairs</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="event-data">
-                      <div className="data-point">
-                        <span className="label">Actual:</span>
-                        <span className="value">{event.actual}</span>
-                      </div>
-                      <div className="data-point">
-                        <span className="label">Expected:</span>
-                        <span className="value">{event.expected}</span>
-                      </div>
-                      <div className="data-point">
-                        <span className="label">Previous:</span>
-                        <span className="value">{event.previous}</span>
-                      </div>
-                      {/* Chart button commented out - opens chart popup for historical data points */}
-                      {/* <div className="graph-icon" onClick={(e) => {
-                        e.stopPropagation();
-                        handleChartClick(event);
-                      }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M3 3v18h18"></path>
-                          <path d="M18 17V9"></path>
-                          <path d="M13 17V5"></path>
-                          <path d="M8 17v-3"></path>
-                        </svg>
-                      </div> */}
-                    </div>
-                  </div>
-                    );
-                  })
-                ) : (
+              <div className={`events-list ${calendarStyleMode === 'alternate' ? 'events-list--table' : ''}`}>
+                {getFilteredEvents().length === 0 ? (
                   <div className="no-events-state">
                     <div className="no-events-icon">📅</div>
                     <div className="no-events-text">No events match your current filters</div>
@@ -4325,11 +4263,9 @@ const Overview = () => {
                         const activeImpactLevels = Object.entries(filterImpactLevels)
                           .filter(([level, active]) => active)
                           .map(([level]) => level);
-                        
                         const activeCurrencies = Object.entries(filterCurrencies)
                           .filter(([currency, active]) => active)
                           .map(([currency]) => currency);
-                        
                         if (activeImpactLevels.length === 0) {
                           return "No impact levels selected. Try selecting at least one impact level.";
                         } else if (activeCurrencies.length === 0) {
@@ -4343,6 +4279,110 @@ const Overview = () => {
                       Reset Filters
                     </button>
                   </div>
+                ) : calendarStyleMode === 'alternate' ? (
+                  /* Style 2: single table, Forex Factory style (Date, Time, Currency, Impact, Name, Actual, Forecast, Previous) */
+                  <div className="calendar-table-wrap">
+                    <table className="calendar-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Currency</th>
+                          <th>Impact</th>
+                          <th>Name</th>
+                          <th>Actual</th>
+                          <th>Forecast</th>
+                          <th>Previous</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getFilteredEvents().map((event, index) => {
+                          const formatted = formatCalendarTime(event.time, event.date);
+                          return (
+                            <tr
+                              key={`${event.id}-${currentTimezone}-${index}`}
+                              className={`impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                              onClick={() => handleEventClick(event)}
+                            >
+                              <td>{formatted.date}</td>
+                              <td>{formatted.time}</td>
+                              <td>{event.currency}</td>
+                              <td>{event.impact === 'medium' ? 'Med' : (event.impact ? event.impact.charAt(0).toUpperCase() + event.impact.slice(1).toLowerCase() : '—')}</td>
+                              <td>{event.title}</td>
+                              <td>{event.actual ?? '—'}</td>
+                              <td>{event.expected ?? '—'}</td>
+                              <td>{event.previous ?? '—'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  /* Style 1: default card layout */
+                  getFilteredEvents().map((event, index) => (
+                    <div
+                      key={`${event.id}-${currentTimezone}-${index}`}
+                      className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      onClick={() => handleEventClick(event)}
+                    >
+                      <div className="event-main-row">
+                        <div className={`event-time impact-${event.impact}`}>
+                          {(() => {
+                            const formatted = formatCalendarTime(event.time, event.date);
+                            return (
+                              <>
+                                <span className="time">{formatted.time}</span>
+                                <span className="date">{formatted.date}</span>
+                              </>
+                            );
+                          })()}
+                        </div>
+                        <div className="event-content">
+                          <div className="event-header-row">
+                            <h3 className="event-title">{event.title}</h3>
+                            <div className="status-box">
+                              <span className="currency-badge">{event.currency}</span>
+                              <span className={`event-status-indicator ${(event.status || 'upcoming').toLowerCase()}`}>{event.status || 'Upcoming'}</span>
+                            </div>
+                          </div>
+                          <div className="event-meta-row">
+                            <span className="event-category">{event.type}</span>
+                            <div className="affected-pairs">
+                              {event.currencyPairs && event.currencyPairs.length > 0 ? (
+                                <>
+                                  {event.currencyPairs.slice(0, maxCurrencyPairs).map((pair, pairIndex) => (
+                                    <span key={pairIndex} className="pair-badge">{pair}</span>
+                                  ))}
+                                  {event.currencyPairs.length > maxCurrencyPairs && (
+                                    <span className="pair-badge pair-count">
+                                      +{event.currencyPairs.length - maxCurrencyPairs} more
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="pair-badge no-pairs">No specific pairs</span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="event-data">
+                        <div className="data-point">
+                          <span className="label">Actual:</span>
+                          <span className="value">{event.actual}</span>
+                        </div>
+                        <div className="data-point">
+                          <span className="label">Expected:</span>
+                          <span className="value">{event.expected}</span>
+                        </div>
+                        <div className="data-point">
+                          <span className="label">Previous:</span>
+                          <span className="value">{event.previous}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
