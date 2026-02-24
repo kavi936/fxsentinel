@@ -478,14 +478,17 @@ class MVPNewsAnalyzer:
         trading_implications = self._generate_trading_implications_paragraph(sentiment, news_item)
         print(f"🔍 Free analysis - Trading implications length: {len(trading_implications)}")
         
-        # Get currency pairs
-        currency_pairs = news_item.get('currency_pairs', ['EUR/USD', 'USD/JPY'])
-        
+        # Get affected instruments (primary first, e.g. XAU/USD for gold news)
+        affected_instruments = self._extract_affected_instruments(
+            news_item.get('title', ''), news_item.get('summary', '')
+        )
+        if not affected_instruments:
+            affected_instruments = ['EUR/USD', 'USD/JPY']
         result = MVPAnalysisResult(
             news_impact=news_impact,
             trading_implications=trading_implications,
             immediate_reaction=self._sentiment_to_reaction(sentiment),
-            key_pairs=currency_pairs,
+            key_pairs=affected_instruments,
             volatility="medium",
             timeframe="1-24_hours",
             confidence=int(sentiment['confidence'] * 100),
@@ -554,18 +557,17 @@ class MVPNewsAnalyzer:
             trading_sessions = self._get_trading_sessions()
             sentiment_data = self._get_market_sentiment_data()
             
-            # Extract currency pairs from the news
+            # Extract affected instruments (commodities first when relevant, e.g. XAU/USD for gold news)
             title = news_item.get('title', '')
             summary = news_item.get('summary', '')
             source = news_item.get('source', '')
-            currency_pairs = self._extract_currency_pairs(title, summary)
-            
-            # Get pairs sentiment
-            pairs_sentiment = self._get_pairs_sentiment_data(currency_pairs)
+            affected_instruments = self._extract_affected_instruments(title, summary)
+            # Sentiment service has FX pairs only; pass through and it will skip unknowns like XAU/USD
+            pairs_sentiment = self._get_pairs_sentiment_data(affected_instruments)
             
             # Build enhanced prompt with live market data
             prompt = self._create_enhanced_prompt(
-                news_item, currency_pairs, market_data, trading_sessions, 
+                news_item, affected_instruments, market_data, trading_sessions,
                 sentiment_data, pairs_sentiment
             )
             
@@ -653,7 +655,7 @@ class MVPNewsAnalyzer:
                     news_impact=gpt_result.get('news_impact', ''),
                     trading_implications=gpt_result.get('trading_implications', ''),
                     immediate_reaction=gpt_result.get('immediate_reaction', 'neutral'),
-                    key_pairs=gpt_result.get('key_pairs', currency_pairs[:3] if currency_pairs else ['EUR/USD']),
+                    key_pairs=gpt_result.get('key_pairs', affected_instruments[:4] if affected_instruments else ['EUR/USD']),
                     volatility=gpt_result.get('volatility', 'medium'),
                     timeframe=gpt_result.get('timeframe', '1-24 hours'),
                     confidence=gpt_result.get('confidence', 75),
@@ -691,10 +693,10 @@ class MVPNewsAnalyzer:
             # Fallback to free analysis
             return self._analyze_with_free(news_item)
     
-    def _create_enhanced_prompt(self, news_item: Dict, currency_pairs: List[str], 
+    def _create_enhanced_prompt(self, news_item: Dict, affected_instruments: List[str],
                                 market_data: Dict, trading_sessions: Dict,
                                 sentiment_data: Optional[Dict], pairs_sentiment: List[Dict]) -> str:
-        """Create enhanced prompt with live market data and context"""
+        """Create enhanced prompt with live market data and context. affected_instruments has primary asset first (e.g. XAU/USD for gold news)."""
         title = news_item.get('title', '')
         summary = news_item.get('summary', '')
         source = news_item.get('source', '')
@@ -743,9 +745,9 @@ class MVPNewsAnalyzer:
                 f"({risk.get('percentage', 0)}%) - Safe Havens: {risk.get('safe_havens', 'None')}"
             )
         
-        # Pairs Sentiment (Contextual, not deterministic)
+        # Pairs/instruments sentiment (Contextual; only FX pairs have live sentiment data)
         if pairs_sentiment:
-            additional_context_lines.append("\nRELEVANT FX PAIRS (Contextual, Not Deterministic):")
+            additional_context_lines.append("\nRELEVANT FX INSTRUMENTS (Contextual, Not Deterministic):")
             for pair_data in pairs_sentiment:
                 pair = pair_data['pair']
                 sentiment = pair_data['sentiment'].upper()
@@ -768,7 +770,7 @@ NEWS TO ANALYZE:
 Title: {title}
 Summary: {summary}
 Source: {source}
-Affected Currency Pairs: {currency_pairs}
+Affected instruments (primary first; use these in your analysis): {affected_instruments}
 
 CURRENT MARKET CONTEXT (Live Data):
 {market_context_section}
@@ -780,23 +782,24 @@ ANALYSIS REQUIREMENTS:
 
 1. **Market Impact Analysis** (2-3 sentences, 150-250 words):
    - Explain the specific market implications and sentiment
-   - Focus on which currency pairs are most affected and why
+   - Focus on the PRIMARY AFFECTED INSTRUMENT(S) listed above (e.g. XAU/USD for gold news, not USD/JPY)
+   - When the news is about gold/commodities, center your analysis on XAU/USD (gold) or the listed commodity; only mention FX pairs if directly relevant (e.g. dollar strength vs gold)
    - Include magnitude of expected impact (high/medium/low)
    - Reference current market context, trading sessions, and volatility conditions
    - Consider VIX level and risk appetite when relevant
 
 2. **Trading Intelligence** (2-3 sentences, 150-250 words):
    - Provide actionable market intelligence (NOT trade recommendations)
-   - Identify key levels to watch and market dynamics
-   - Explain what traders should monitor and why
+   - Identify key levels to watch and market dynamics for the PRIMARY instrument(s)
+   - For gold news, refer to XAU/USD and gold levels; do not default to USD/JPY or other FX unless the story is clearly about forex
    - Include timeframe expectations and volatility outlook
    - Reference active trading sessions and liquidity conditions
 
-3. **Currency-Specific Analysis**:
-   - Focus on the most relevant currency pairs from the news
-   - Explain the specific impact on each major pair
-   - Consider cross-market correlations and safe-haven flows
-   - Reference current pair sentiment as contextual information (not deterministic)
+3. **Instrument-Specific Analysis**:
+   - Focus on the first (primary) instrument in the list above (e.g. XAU/USD for gold headlines)
+   - Use standard symbols: XAU/USD = gold, XAG/USD = silver; then any relevant FX pairs
+   - Do not repeatedly reference USD/JPY when the news is about a different asset (e.g. gold)
+   - Consider cross-market correlations and safe-haven flows when relevant
 
 4. **Risk Context**:
    - Identify potential market risks and uncertainties
@@ -805,10 +808,10 @@ ANALYSIS REQUIREMENTS:
    - Reference VIX level and risk appetite when relevant
 
 IMPORTANT GUIDELINES:
-- Be specific about currency pairs and market dynamics
+- Discuss the PRIMARY affected instrument first (e.g. XAU/USD for gold news); do not default to USD/JPY or EUR/USD when the headline is about another asset
+- Be specific about the instruments that match the news (gold → XAU/USD, silver → XAG/USD, forex → pairs)
 - Provide concrete market intelligence, not generic statements
 - Focus on "what to watch" rather than "what to do"
-- Consider current market positioning and sentiment
 - Include specific price levels and timeframes when relevant
 - Avoid generic phrases like "monitor for opportunities"
 - Reference live market data when available (prices, volatility, sentiment)
@@ -822,7 +825,7 @@ RESPONSE FORMAT (JSON ONLY):
     "news_impact": "Specific market impact explanation with currency focus. 2-3 sentences explaining implications, affected pairs, and impact magnitude. Reference current market context and trading sessions.",
     "trading_implications": "Actionable market intelligence and what to watch. 2-3 sentences identifying key levels, timeframes, and monitoring points. Reference volatility expectations and trading sessions.",
     "immediate_reaction": "bullish_usd|bearish_usd|neutral",
-    "key_pairs": ["EUR/USD", "USD/JPY"],
+    "key_pairs": ["primary instrument first, e.g. XAU/USD or EUR/USD"],
     "volatility": "high|medium|low",
     "timeframe": "specific timeframe like 'next 2-4 hours' or 'London session'",
     "confidence": 85
@@ -832,14 +835,25 @@ VALIDATION RULES:
 - immediate_reaction: MUST be exactly "bullish_usd", "bearish_usd", or "neutral"
 - volatility: MUST be exactly "high", "medium", or "low"
 - confidence: Integer between 50-95
-- key_pairs: Array of 1-4 currency pairs in format "XXX/YYY"
-- news_impact: String, 150-250 words, no generic phrases
-- trading_implications: String, 150-250 words, specific and actionable
+- key_pairs: Array of 1-4 instruments; MUST put the primary asset first (e.g. XAU/USD for gold news, not USD/JPY). Use XAU/USD for gold, XAG/USD for silver, then XXX/YYY for forex
+- news_impact: String, 150-250 words, focus on the primary instrument
+- trading_implications: String, 150-250 words, focus on the primary instrument
 
-EXAMPLE RESPONSE:
+EXAMPLE (gold news):
 {{
-    "news_impact": "Fed Chair Powell's hawkish comments suggest potential rate hikes ahead, creating bullish sentiment for USD. EUR/USD and GBP/USD are most affected, with expected downward pressure of 50-100 pips. Current market positioning shows USD strength, amplifying the impact. London-NY session overlap expected to see highest volatility.",
-    "trading_implications": "Monitor EUR/USD support at 1.0800 and GBP/USD at 1.2600 for potential breakdowns. Expect increased volatility during London session (next 2-4 hours) as markets digest the news. Watch for USD/JPY to test 149.00 resistance level. VIX at moderate levels suggests manageable risk environment.",
+    "news_impact": "Goldman Sachs' $5,400 gold forecast reflects strong central bank demand and Fed rate-cut expectations, supporting XAU/USD. Gold (XAU/USD) is the primary focus; upside risk from private diversification and options-driven volatility. Dollar weakness and real yields matter for gold more than USD/JPY in this context.",
+    "trading_implications": "Focus on XAU/USD (gold): watch key resistance levels toward the forecast target and volatility around options expiry. Expect higher volatility as noted in the note. Fed cut expectations and central bank buying are the main drivers; monitor real yields and dollar index for gold direction.",
+    "immediate_reaction": "neutral",
+    "key_pairs": ["XAU/USD"],
+    "volatility": "high",
+    "timeframe": "through 2026 / near-term volatility as options activity rises",
+    "confidence": 78
+}}
+
+EXAMPLE (forex news):
+{{
+    "news_impact": "Fed Chair Powell's hawkish comments suggest potential rate hikes ahead, creating bullish sentiment for USD. EUR/USD and GBP/USD are most affected, with expected downward pressure of 50-100 pips. London-NY session overlap expected to see highest volatility.",
+    "trading_implications": "Monitor EUR/USD support at 1.0800 and GBP/USD at 1.2600 for potential breakdowns. Expect increased volatility during London session (next 2-4 hours). Watch USD/JPY for 149.00 resistance.",
     "immediate_reaction": "bullish_usd",
     "key_pairs": ["EUR/USD", "GBP/USD", "USD/JPY"],
     "volatility": "high",
@@ -851,12 +865,27 @@ Now analyze the news above and respond with ONLY the JSON object:
 """
         return prompt
     
+    def _extract_commodity_instruments(self, title: str, summary: str) -> List[str]:
+        """Extract commodity instruments when news is primarily about commodities (gold, silver).
+        Returns e.g. ['XAU/USD'] for gold-focused news so analysis focuses on the primary asset."""
+        text = f"{title} {summary}".lower()
+        instruments = []
+        # Gold: headline/summary clearly about gold (price, forecast, demand, etc.)
+        gold_primary = ('gold' in text and any(
+            w in text for w in ['forecast', 'price', 'target', 'rally', 'demand', 'central bank', 'bullion', 'xau']
+        )) or 'gold price' in text or 'gold forecast' in text
+        if gold_primary:
+            instruments.append('XAU/USD')
+        # Silver: only if explicitly about silver (and not just gold article mentioning silver)
+        if 'silver' in text and ('price' in text or 'forecast' in text or 'xag' in text):
+            if 'XAG/USD' not in instruments:
+                instruments.append('XAG/USD')
+        return instruments[:2]
+
     def _extract_currency_pairs(self, title: str, summary: str) -> List[str]:
-        """Extract relevant currency pairs from news content"""
+        """Extract relevant currency pairs from news content (forex only)."""
         text = f"{title} {summary}".lower()
         pairs = []
-        
-        # Define currency keywords and their corresponding pairs
         currency_mapping = {
             'euro': 'EUR/USD', 'eur': 'EUR/USD', 'ecb': 'EUR/USD',
             'dollar': 'USD/JPY', 'usd': 'USD/JPY', 'fed': 'USD/JPY',
@@ -867,17 +896,26 @@ Now analyze the news above and respond with ONLY the JSON object:
             'canadian': 'USD/CAD', 'cad': 'USD/CAD', 'boc': 'USD/CAD',
             'new zealand': 'NZD/USD', 'nzd': 'NZD/USD', 'rbnz': 'NZD/USD'
         }
-        
-        # Check for currency mentions
         for keyword, pair in currency_mapping.items():
             if keyword in text and pair not in pairs:
                 pairs.append(pair)
-        
-        # If no specific currencies found, return major pairs
-        if not pairs:
-            pairs = ['EUR/USD', 'USD/JPY']
-        
-        return pairs[:3]  # Limit to top 3 most relevant pairs
+        return pairs
+
+    def _extract_affected_instruments(self, title: str, summary: str) -> List[str]:
+        """Extract affected instruments with primary asset first. For commodity news (e.g. gold),
+        returns XAU/USD first so analysis and UI refer to the correct asset instead of defaulting to USD/JPY."""
+        commodities = self._extract_commodity_instruments(title, summary)
+        fx_pairs = self._extract_currency_pairs(title, summary)
+        if commodities:
+            # Primary asset first; then add up to 2 FX pairs for context (e.g. dollar strength vs gold)
+            seen = list(commodities)
+            for p in fx_pairs:
+                if p not in seen and len(seen) < 4:
+                    seen.append(p)
+            return seen[:4]
+        if not fx_pairs:
+            fx_pairs = ['EUR/USD', 'USD/JPY']
+        return fx_pairs[:3]
     
     def _analyze_sentiment(self, text: str) -> Dict[str, Any]:
         """Analyze sentiment of text"""
@@ -919,10 +957,9 @@ Now analyze the news above and respond with ONLY the JSON object:
     def _generate_news_impact_paragraph(self, title: str, source: str, sentiment: Dict) -> str:
         """Generate news impact paragraph"""
         sentiment_text = sentiment['sentiment']
-        
-        # Extract currency pairs from title
-        currency_pairs = self._extract_currency_pairs(title, "")
-        pairs_text = ', '.join(currency_pairs[:2])  # Focus on top 2 pairs
+        # Use affected instruments (e.g. XAU/USD for gold) so we don't default to FX only
+        instruments = self._extract_affected_instruments(title, "")
+        pairs_text = ', '.join(instruments[:2]) if instruments else 'EUR/USD, USD/JPY'
         
         if sentiment_text == 'positive':
             return f"{title} from {source} creates bullish sentiment for {pairs_text}. This news suggests strengthening fundamentals that may drive currency appreciation. The development increases probability of upward movements as markets price in improved economic conditions. Focus on {pairs_text} for maximum impact during the next trading session."
@@ -934,8 +971,10 @@ Now analyze the news above and respond with ONLY the JSON object:
     def _generate_trading_implications_paragraph(self, sentiment: Dict, news_item: Dict) -> str:
         """Generate trading implications paragraph"""
         sentiment_text = sentiment['sentiment']
-        currency_pairs = self._extract_currency_pairs(news_item.get('title', ''), news_item.get('summary', ''))
-        pairs_text = ', '.join(currency_pairs[:2])
+        instruments = self._extract_affected_instruments(
+            news_item.get('title', ''), news_item.get('summary', '')
+        )
+        pairs_text = ', '.join(instruments[:2]) if instruments else 'EUR/USD, USD/JPY'
         
         if sentiment_text == 'positive':
             return f"Focus on {pairs_text} for bullish momentum opportunities. Monitor key resistance levels and watch for breakout confirmations. Expect increased volatility during the next 2-4 hours as markets digest this news. Key levels to watch: current price +20 pips resistance, -15 pips support. Risk management crucial as sentiment-driven moves can be volatile."
@@ -987,16 +1026,15 @@ Now analyze the news above and respond with ONLY the JSON object:
         """Get fallback analysis when analysis fails"""
         title = news_item.get('title', 'News Event')
         source = news_item.get('source', 'Unknown')
-        
-        # Extract currency pairs from title
-        currency_pairs = self._extract_currency_pairs(title, news_item.get('summary', ''))
-        pairs_text = ', '.join(currency_pairs[:2])
-        
+        instruments = self._extract_affected_instruments(title, news_item.get('summary', ''))
+        if not instruments:
+            instruments = ['EUR/USD', 'USD/JPY']
+        pairs_text = ', '.join(instruments[:2])
         return MVPAnalysisResult(
-            news_impact=f"{title} from {source} has mixed implications for {pairs_text}. This news shows neutral sentiment with conflicting signals for affected currencies. The development maintains probability of sideways movements as markets await clearer directional signals. Monitor {pairs_text} for breakout opportunities during the next trading session.",
+            news_impact=f"{title} from {source} has mixed implications for {pairs_text}. This news shows neutral sentiment with conflicting signals for affected instruments. The development maintains probability of sideways movements as markets await clearer directional signals. Monitor {pairs_text} for breakout opportunities during the next trading session.",
             trading_implications=f"Monitor {pairs_text} for breakout opportunities in either direction. Current neutral sentiment suggests range-bound trading until clearer signals emerge. Expect low to medium volatility during the next 2-4 hours. Key levels to watch: current price ±15 pips for potential breakout zones. Wait for confirmation before taking directional positions.",
             immediate_reaction="neutral",
-            key_pairs=currency_pairs,
+            key_pairs=instruments,
             volatility="low",
             timeframe="next 2-4 hours",
             confidence=50,
