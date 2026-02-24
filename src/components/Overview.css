@@ -8486,6 +8486,14 @@
   border-radius: 0.5px;
 }
 
+.prediction-markets-updating {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  margin-right: 6px;
+  white-space: nowrap;
+}
+
 .prediction-markets-refresh-btn {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
   border: 1px solid rgba(59, 130, 246, 0.3);

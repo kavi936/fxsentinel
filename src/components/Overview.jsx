@@ -795,10 +795,13 @@ const Overview = () => {
     markets: predictionMarkets,
     summary: predictionMarketsSummary,
     loading: predictionMarketsLoading,
+    backgroundRefreshing: predictionMarketsBackgroundRefreshing,
     error: predictionMarketsError,
     lastUpdate: predictionMarketsLastUpdate,
     refresh: refreshPredictionMarkets
-  } = usePredictionMarkets();
+  } = usePredictionMarkets({
+    onDataRefresh: () => setPmChartDataCache({})
+  });
 
   // Central Bank Documents hook
   const {
@@ -5524,9 +5527,15 @@ const Overview = () => {
                       </svg>
                     </button>
                   </div>
+                  {predictionMarketsBackgroundRefreshing && (
+                    <span className="prediction-markets-updating" aria-live="polite">Updating…</span>
+                  )}
                   <button 
                     className={`prediction-markets-refresh-btn ${predictionMarketsLoading ? 'spinning' : ''}`}
-                    onClick={refreshPredictionMarkets}
+                    onClick={() => {
+                      setPmChartDataCache({});
+                      refreshPredictionMarkets();
+                    }}
                     disabled={predictionMarketsLoading}
                     title="Refresh Prediction Markets"
                   >
@@ -5626,6 +5635,7 @@ const Overview = () => {
                       type="button"
                       className="prediction-markets-refresh-btn prediction-markets-mobile-refresh-btn"
                       onClick={() => {
+                        setPmChartDataCache({});
                         refreshPredictionMarkets();
                         setPmMobileControlsOpen(false);
                       }}
