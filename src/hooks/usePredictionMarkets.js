@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { config } from '../config.js';
 
 const fallbackMarkets = {
@@ -10,46 +10,55 @@ const fallbackMarkets = {
   }
 };
 
-export const usePredictionMarkets = () => {
+const AUTO_REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+
+export const usePredictionMarkets = (options = {}) => {
+  const { onDataRefresh } = options;
+  const onDataRefreshRef = useRef(onDataRefresh);
+  onDataRefreshRef.current = onDataRefresh;
+
   const [markets, setMarkets] = useState(fallbackMarkets);
   const [loading, setLoading] = useState(true);
+  const [backgroundRefreshing, setBackgroundRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
 
-  const fetchMarkets = useCallback(async (forceRefresh = false) => {
+  const fetchMarkets = useCallback(async (forceRefresh = false, { background = false } = {}) => {
     try {
-      setLoading(true);
+      if (background) {
+        setBackgroundRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
-      
-      const url = forceRefresh 
+
+      const url = forceRefresh
         ? `${config.endpoints.predictionMarkets}?refresh=true`
         : config.endpoints.predictionMarkets;
-      
+
       console.log('🔍 Fetching prediction markets from:', url);
-      
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      
+
       if (data.status === 'success' && data.data) {
         setMarkets(data.data);
         setLastUpdate(new Date());
         console.log('✅ Prediction markets data received:', data.data.summary);
+        onDataRefreshRef.current?.();
       } else {
         throw new Error(data.error || 'Failed to fetch prediction markets');
       }
-      
     } catch (err) {
       console.error('❌ Error fetching prediction markets:', err);
       setError(err.message);
-      // Use functional update to avoid stale closure
       setMarkets(prevMarkets => {
-        // Keep existing data on error (don't clear on transient errors)
         if (!prevMarkets.markets || prevMarkets.markets.length === 0) {
           return fallbackMarkets;
         }
@@ -57,17 +66,26 @@ export const usePredictionMarkets = () => {
       });
     } finally {
       setLoading(false);
+      setBackgroundRefreshing(false);
     }
-  }, []); // Empty deps is fine now since we use functional updates
+  }, []);
 
   useEffect(() => {
     fetchMarkets();
+  }, [fetchMarkets]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchMarkets(true, { background: true });
+    }, AUTO_REFRESH_INTERVAL_MS);
+    return () => clearInterval(intervalId);
   }, [fetchMarkets]);
 
   return {
     markets: markets.markets || [],
     summary: markets.summary || {},
     loading,
+    backgroundRefreshing,
     error,
     lastUpdate,
     refresh: () => fetchMarkets(true)
