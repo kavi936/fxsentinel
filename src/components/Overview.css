@@ -313,6 +313,7 @@
 .date-select-btn,
 .filter-btn,
 .calendar-refresh-btn,
+.calendar-style-toggle-btn,
 .ai-refresh-btn,
 .sentiment-refresh-btn {
   background: linear-gradient(135deg, rgba(51, 51, 51, 0.8) 0%, rgba(80, 20, 20, 0.6) 50%, rgba(51, 51, 51, 0.8) 100%);
@@ -331,6 +332,7 @@
 .date-select-btn:hover,
 .filter-btn:hover,
 .calendar-refresh-btn:hover,
+.calendar-style-toggle-btn:hover,
 .ai-refresh-btn:hover,
 .sentiment-refresh-btn:hover {
   background: linear-gradient(135deg, rgba(68, 68, 68, 0.9) 0%, rgba(100, 30, 30, 0.7) 50%, rgba(68, 68, 68, 0.9) 100%);
@@ -340,6 +342,7 @@
 .date-select-btn svg,
 .filter-btn svg,
 .calendar-refresh-btn svg,
+.calendar-style-toggle-btn svg,
 .ai-refresh-btn svg,
 .sentiment-refresh-btn svg {
   width: 16px;
@@ -1088,6 +1091,110 @@
 .event-card:last-child {
   border-bottom: none;
   margin-bottom: 0;
+}
+
+/* ============================================
+ * Style 2: Single table (Forex Factory style)
+ * Header: Date | Time | Currency | Impact | Name | Actual | Forecast | Previous
+ * One data row per event underneath
+ * ============================================ */
+.events-list.events-list--table {
+  padding: 0;
+  gap: 0;
+  display: block;
+}
+
+.calendar-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  table-layout: fixed;
+}
+
+.calendar-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(255, 68, 68, 0.15);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.4);
+}
+
+.calendar-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+}
+
+.calendar-table th:nth-child(1) { width: 12%; }   /* Date */
+.calendar-table th:nth-child(2) { width: 10%; }   /* Time */
+.calendar-table th:nth-child(3) { width: 10%; min-width: 64px; }  /* Currency */
+.calendar-table th:nth-child(4) { width: 10%; min-width: 52px; }  /* Impact */
+.calendar-table th:nth-child(5) { width: 26%; } /* Name */
+.calendar-table th:nth-child(6) { width: 11%; }  /* Actual */
+.calendar-table th:nth-child(7) { width: 11%; }  /* Forecast */
+.calendar-table th:nth-child(8) { width: 10%; }  /* Previous */
+
+/* Vertical separators so Currency and Impact don’t merge */
+.calendar-table th:nth-child(3),
+.calendar-table td:nth-child(3) {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding-right: 14px;
+}
+
+.calendar-table th:nth-child(4),
+.calendar-table td:nth-child(4) {
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+.calendar-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.calendar-table td:nth-child(5) {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+.calendar-table tbody tr {
+  cursor: pointer;
+  transition: background 0.12s ease;
+}
+
+.calendar-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.calendar-table tbody tr.selected {
+  background: rgba(255, 68, 68, 0.12);
+}
+
+.calendar-table tbody tr.impact-high td:first-child {
+  border-left: 3px solid rgba(255, 68, 68, 0.7);
+}
+
+.calendar-table tbody tr.impact-medium td:first-child {
+  border-left: 3px solid rgba(255, 165, 0, 0.7);
+}
+
+.calendar-table tbody tr.impact-low td:first-child {
+  border-left: 3px solid rgba(50, 205, 50, 0.6);
 }
 
 .event-main-row {
