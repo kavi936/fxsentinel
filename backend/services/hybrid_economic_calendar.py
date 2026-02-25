@@ -9444,7 +9444,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.6%',
                 'forecast': '2.6%',
                 'previous': '2.6%'
             },
@@ -9454,7 +9454,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': 'N/A',
                 'previous': '1.0%'
             },
@@ -9464,7 +9464,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.8%',
                 'forecast': '3.7%',
                 'previous': '3.8%'
             },
@@ -9474,8 +9474,8 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
-                'forecast': 'N/A',
+                'actual': '0.3%',
+                'forecast': '0.4%',
                 'previous': '0.2%'
             },
             {
@@ -9484,9 +9484,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '1.2%',
-                'previous': '-0.7%'
+                'previous': '0.1%'
             },
             {
                 'title': 'President Trump Speaks',
