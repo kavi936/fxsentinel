@@ -1197,6 +1197,16 @@
   border-left: 3px solid rgba(50, 205, 50, 0.6);
 }
 
+/* Style 2: hide scrollbar in events section (scroll still works) */
+.news-calendar[data-calendar-style="alternate"] .calendar-content {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / Edge */
+}
+
+.news-calendar[data-calendar-style="alternate"] .calendar-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 .event-main-row {
   display: flex;
   gap: 16px;
