@@ -9556,7 +9556,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '9.8',
                 'forecast': 'N/A',
                 'previous': '-4.7'
             },
@@ -9566,7 +9566,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.2%',
                 'forecast': '2.2%',
                 'previous': '2.2%'
             },
@@ -9576,7 +9576,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.7%',
                 'previous': '1.7%'
             },
@@ -9586,7 +9586,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.6%',
                 'forecast': 'N/A',
                 'previous': '7.6%'
             },
@@ -9596,9 +9596,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.3%',
                 'forecast': 'N/A',
-                'previous': '-0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'FOMC Member Barkin Speaks',
