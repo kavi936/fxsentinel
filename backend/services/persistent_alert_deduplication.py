@@ -723,10 +723,10 @@ def should_send_news_alert(news_item: Dict[str, Any], user_id: str) -> bool:
     dedup = get_persistent_deduplication()
     return dedup.should_send_news_alert(news_item, user_id)
 
-def mark_news_alert_sent(news_item: Dict[str, Any], user_id: str) -> bool:
-    """Mark a news alert as sent after successful delivery"""
+def mark_news_alert_sent(news_item: Dict[str, Any], user_id: str, mark_global_hash: bool = False) -> bool:
+    """Mark a news alert as sent after successful delivery. Pass mark_global_hash=True to update global content hash."""
     dedup = get_persistent_deduplication()
-    return dedup.mark_news_alert_sent(news_item, user_id)
+    return dedup.mark_news_alert_sent(news_item, user_id, mark_global_hash=mark_global_hash)
 
 def should_send_economic_alert(event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
     """Check if economic alert should be sent (not a duplicate)"""
