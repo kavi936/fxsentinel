@@ -2654,7 +2654,7 @@ def health_check():
 @app.route('/api/health/alerts')
 @limiter.exempt  # Health endpoints should not be rate limited
 def health_alerts():
-    """Alert system health check"""
+    """Alert system health check. Supports main-app-only (unified processor) and separate worker."""
     try:
         from services.alert_service import get_alert_service
         alert_service = get_alert_service()
@@ -2662,7 +2662,18 @@ def health_alerts():
         # Check if alert service is working
         telegram_bot_working = alert_service.telegram_bot is not None
         
-        # Check background alert worker status
+        # Unified processor (main app): primary path when only main app is deployed (e.g. Railway)
+        unified_processor_running = False
+        unified_processor_status = None
+        try:
+            from services.unified_alert_processor import get_unified_processor
+            proc = get_unified_processor()
+            unified_processor_status = proc.get_status()
+            unified_processor_running = unified_processor_status.get('running', False) and unified_processor_status.get('thread_alive', False)
+        except Exception as e:
+            unified_processor_status = {"error": str(e)}
+        
+        # Legacy: background alert worker (separate process)
         background_worker_status = background_worker.get_status()
         background_worker_running = background_worker_status.get('running', False)
         
@@ -2676,7 +2687,7 @@ def health_alerts():
         except ImportError:
             robust_service_status = {"status": "not_available"}
         
-        # Check subscription cache status
+        # Subscription cache status
         subscription_cache_status = None
         try:
             from services.subscription_cache import get_cache_stats
@@ -2684,7 +2695,7 @@ def health_alerts():
         except ImportError:
             subscription_cache_status = {"status": "not_available"}
         
-        # Check robust Telegram service status
+        # Robust Telegram service status
         telegram_service_status = None
         try:
             from services.robust_telegram_service import get_telegram_service_stats
@@ -2692,25 +2703,37 @@ def health_alerts():
         except ImportError:
             telegram_service_status = {"status": "not_available"}
         
+        # Alerts are "working" if any runner is active: unified processor (main app) OR legacy worker
+        alerts_working = unified_processor_running or background_worker_running or robust_service_running
+        
         # Determine overall status
-        if telegram_bot_working and (background_worker_running or robust_service_running):
+        if telegram_bot_working and alerts_working:
             overall_status = "healthy"
         elif telegram_bot_working:
-            overall_status = "degraded"  # Telegram works but no background service
+            overall_status = "degraded"  # Telegram works but no alert runner
         else:
             overall_status = "unhealthy"
+        
+        if unified_processor_running:
+            message = "Alerts handled by unified processor in main app (news scheduler + /api/news)."
+        elif background_worker_running or robust_service_running:
+            message = "Alerts handled by dedicated background worker."
+        else:
+            message = "No alert runner active. Start main app (unified processor) or background worker."
         
         return jsonify({
             "status": overall_status,
             "timestamp": datetime.now().isoformat(),
             "telegram_bot": "connected" if telegram_bot_working else "disconnected",
             "firebase": "connected" if alert_service.firebase_storage.test_connection() else "disconnected",
+            "unified_processor": unified_processor_status,
+            "unified_processor_running": unified_processor_running,
             "background_worker": background_worker_status,
             "robust_service": robust_service_status,
             "subscription_cache": subscription_cache_status,
             "robust_telegram_service": telegram_service_status,
-            "alerts_working": background_worker_running or robust_service_running,
-            "message": "Alerts handled by dedicated background worker (fxsentinel-background-worker-v2)" if (background_worker_running or robust_service_running) else "Dedicated background worker not running - check fxsentinel-background-worker-v2"
+            "alerts_working": alerts_working,
+            "message": message
         })
     except Exception as e:
         return jsonify({
