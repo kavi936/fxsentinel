@@ -23,7 +23,9 @@ class PersistentAlertDeduplication:
     
     def __init__(self):
         self.firebase = FirebaseRealtimeStorage()
-        self.alert_ttl_hours = 0.5  # How long to remember sent alerts (30 minutes - reduced from 2h to prevent blocking legitimate alerts)
+        # How long to remember sent alerts. Persists in Firebase so survives restarts.
+        # 2h = same story won't be re-sent within 2h even if app restarts or story is re-processed.
+        self.alert_ttl_hours = 2.0
         self.cleanup_interval = 20  # Cleanup every N operations (reduced from 50 for more frequent cleanup)
         self.operations_count = 0
         self.duplicates_prevented = 0
@@ -208,12 +210,14 @@ class PersistentAlertDeduplication:
     def _check_alert_only(self, alert_type: str, content: str, user_id: str) -> bool:
         """
         Check if alert should be sent (no reserve). Returns False if already reserved or sent and not expired.
+        State is in Firebase so this works across app restarts and multiple instances.
         Used for quick-check and double-check; reserve is done separately after lock to prevent duplicates.
         """
         try:
             alert_key = self._generate_alert_key(alert_type, content, user_id)
             alert_path = self._get_alert_path(alert_key)
             existing_alert = self.firebase._make_request('GET', alert_path)
+            # No record or not a dict = allow (first-time send). Firebase state persists across restarts.
             if not existing_alert or not isinstance(existing_alert, dict):
                 return True
             status = existing_alert.get('status', 'sent')

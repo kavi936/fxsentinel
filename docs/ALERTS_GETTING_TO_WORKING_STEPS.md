@@ -248,6 +248,21 @@ The system deduplicates so the same story isn’t sent twice. If **all** news is
 
 ---
 
+## Duplicates and app restarts
+
+**Yes – the app checks for alerts already sent after restart.** Deduplication state is stored in **Firebase** at `alert_deduplication/alerts/{alert_key}` (per user + per story). Every check does a GET to Firebase, so:
+
+- After an app restart, the next run still sees “sent” records and will not resend those alerts.
+- The same applies across multiple app instances (e.g. replicas) as long as they use the same Firebase project.
+
+**Why you might still see the same alert twice:**
+
+1. **TTL** – Each “sent” record expires after **2 hours** (`alert_ttl_hours`). If the same story is still in the feed and gets processed again after 2 hours, it can be sent again. If you want to avoid that, increase `alert_ttl_hours` in `persistent_alert_deduplication.py`.
+2. **Different content key** – The dedup key is built from the story’s `id` when present, otherwise from normalized title + source. If the same story appears with a different `id` (e.g. from another source) or without an `id`, it gets a different key and can be sent again.
+3. **Firebase errors** – If the GET or PUT to Firebase fails occasionally, the code may “fail open” and send, which can cause rare duplicates.
+
+---
+
 ## Phase 5: Optional – monitoring and sanity checks
 
 - **Unified processor**: `GET /api/health/unified-alert-processor` – confirms the alert thread is running and shows basic metrics.
