@@ -2268,8 +2268,15 @@ const Overview = () => {
   const [calendarError, setCalendarError] = useState(null);
   const [calendarSource, setCalendarSource] = useState('loading');
   const [lastUpdated, setLastUpdated] = useState(null);
-  // Toggle between two calendar visual styles (e.g. default vs compact/professional)
-  const [calendarStyleMode, setCalendarStyleMode] = useState('default');
+  // Toggle between two calendar visual styles; persisted in localStorage
+  const [calendarStyleMode, setCalendarStyleMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fxSentinel_calendarStyleMode');
+      return (saved === 'alternate' || saved === 'default') ? saved : 'default';
+    } catch {
+      return 'default';
+    }
+  });
 
   // Economic calendar card width for responsive currency pairs display
   // Calculate width directly from columnWidths and containerDimensions (more reliable than ResizeObserver)
@@ -4181,7 +4188,17 @@ const Overview = () => {
               <div className="calendar-controls">
                 <button
                   className="calendar-style-toggle-btn"
-                  onClick={() => setCalendarStyleMode((prev) => (prev === 'default' ? 'alternate' : 'default'))}
+                  onClick={() => {
+                    setCalendarStyleMode((prev) => {
+                      const next = prev === 'default' ? 'alternate' : 'default';
+                      try {
+                        localStorage.setItem('fxSentinel_calendarStyleMode', next);
+                      } catch (e) {
+                        console.warn('Could not persist calendar style:', e);
+                      }
+                      return next;
+                    });
+                  }}
                   title={calendarStyleMode === 'default' ? 'Switch to alternate style' : 'Switch to default style'}
                   aria-label="Toggle calendar style"
                 >
