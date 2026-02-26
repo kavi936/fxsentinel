@@ -193,6 +193,49 @@ class PersistentAlertDeduplication:
             logger.error(f"CRITICAL: Error marking alert as sent: {e} - duplicate may occur")
             return False
     
+    def _get_news_content_string(self, news_item: Dict[str, Any]) -> str:
+        """Build content string for per-user deduplication (same as used in mark_news_alert_sent)."""
+        news_id = str(news_item.get('id', ''))
+        if news_id:
+            return f"news:{news_id}"
+        title = str(news_item.get('title', '')).strip().lower()
+        source = str(news_item.get('source', '')).strip().lower()
+        import re
+        title_normalized = re.sub(r'\s+', ' ', title)
+        title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
+        return f"news:{title_normalized}|{source}"
+
+    def _check_alert_only(self, alert_type: str, content: str, user_id: str) -> bool:
+        """
+        Check if alert should be sent (no reserve). Returns False if already reserved or sent and not expired.
+        Used for quick-check and double-check; reserve is done separately after lock to prevent duplicates.
+        """
+        try:
+            alert_key = self._generate_alert_key(alert_type, content, user_id)
+            alert_path = self._get_alert_path(alert_key)
+            existing_alert = self.firebase._make_request('GET', alert_path)
+            if not existing_alert or not isinstance(existing_alert, dict):
+                return True
+            status = existing_alert.get('status', 'sent')
+            # Reserved or sent = duplicate; never allow "reserved recently" to avoid double sends
+            if status in ('reserved', 'sent'):
+                expires_at_str = existing_alert.get('expires_at')
+                if expires_at_str:
+                    try:
+                        expires_at = datetime.fromisoformat(expires_at_str)
+                        if datetime.now() < expires_at:
+                            self.duplicates_prevented += 1
+                            logger.debug(f"Duplicate prevented (check-only, status={status}) for user {user_id}: {alert_type}")
+                            return False
+                    except Exception as e:
+                        logger.warning(f"Error parsing expires_at: {e}")
+                else:
+                    return False
+            return True
+        except Exception as e:
+            logger.error(f"Error in check-only: {e}")
+            return True  # Fail open
+
     def _get_news_content_hash(self, news_item: Dict[str, Any]) -> str:
         """Generate content hash for news item (for global deduplication)"""
         try:
@@ -314,24 +357,13 @@ class PersistentAlertDeduplication:
                 else:
                     logger.info(f"✅ Global hash check passed (hint) for user {user_id}: {news_title}")
             
-            # Create content string from news item for per-user check (same logic as mark_news_alert_sent)
-            news_id = str(news_item.get('id', ''))
+            # Build content string for per-user check (same logic as mark_news_alert_sent)
+            content = self._get_news_content_string(news_item)
             
-            if news_id:
-                content = f"news:{news_id}"
-            else:
-                # Use normalized title+source (same as content hash) for consistency
-                title = str(news_item.get('title', '')).strip().lower()
-                source = str(news_item.get('source', '')).strip().lower()
-                import re
-                title_normalized = re.sub(r'\s+', ' ', title)
-                title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
-                content = f"news:{title_normalized}|{source}"
-            
-            # CRITICAL: Atomic check-and-reserve operation (authoritative check)
-            # This prevents race conditions by checking AND reserving in one go
-            # Per-user deduplication is the source of truth
-            return self._check_and_reserve_alert('news', content, user_id)
+            # Check-only (no reserve): prevents duplicates without reserving in quick/double-check.
+            # Reserve happens once in unified_alert_processor after lock, so "reserved recently"
+            # cannot allow a second sender.
+            return self._check_alert_only('news', content, user_id)
             
         except Exception as e:
             logger.error(f"Error checking news alert deduplication: {e}")
@@ -339,14 +371,9 @@ class PersistentAlertDeduplication:
     
     def _check_and_reserve_alert(self, alert_type: str, content: str, user_id: str) -> bool:
         """
-        Atomically check if alert should be sent AND reserve it
-        This is a single operation to prevent race conditions
-        Uses optimistic locking with retry to handle Firebase eventual consistency
-        Returns True if should send and successfully reserved, False otherwise
-        
-        FIXED: Made idempotent - if alert is already reserved recently (within 2 minutes),
-        allows it to proceed. This fixes the issue where double-check after quick-check
-        would block alerts that were just reserved.
+        Atomically check if alert should be sent AND reserve it.
+        Used only when reserving after lock (e.g. reserve_news_alert).
+        Reserved or sent (and not expired) = duplicate, returns False.
         """
         import time
         max_retries = 3
@@ -366,53 +393,25 @@ class PersistentAlertDeduplication:
                 logger.info(f"🔍 Existing alert check result: {existing_alert is not None} for user {user_id}")
                 
                 if existing_alert and isinstance(existing_alert, dict):
-                    # Check status - if reserved or sent, it's a duplicate
-                    status = existing_alert.get('status', 'sent')  # Default to 'sent' for backward compatibility
-                    
-                    # FIX: Handle 'reserved' status specially - if recently reserved (within 2 minutes),
-                    # allow it to proceed (likely our own reservation from quick check)
-                    if status == 'reserved':
-                        reserved_at_str = existing_alert.get('reserved_at')
-                        if reserved_at_str:
-                            try:
-                                reserved_at = datetime.fromisoformat(reserved_at_str)
-                                time_since_reservation = (datetime.now() - reserved_at).total_seconds()
-                                
-                                # If reserved within last 2 minutes, allow it (likely our own reservation)
-                                if time_since_reservation < 120:  # 2 minutes
-                                    logger.info(f"✅ Alert already reserved recently ({time_since_reservation:.1f}s ago) - allowing for user {user_id}: {alert_type}")
-                                    return True  # Allow - it's likely our own reservation from quick check
-                                else:
-                                    # Reserved but old - check expiration
-                                    expires_at_str = existing_alert.get('expires_at')
-                                    if expires_at_str:
-                                        try:
-                                            expires_at = datetime.fromisoformat(expires_at_str)
-                                            if datetime.now() < expires_at:
-                                                # Old reservation still valid - duplicate
-                                                self.duplicates_prevented += 1
-                                                logger.debug(f"Duplicate alert prevented (old reservation, status: {status}) for user {user_id}: {alert_type}")
-                                                return False
-                                        except Exception as e:
-                                            logger.warning(f"Error parsing expires_at: {e}")
-                            except Exception as e:
-                                logger.warning(f"Error parsing reserved_at: {e}")
-                                # If we can't parse, fall through to expiration check
-                    
-                    if status == 'sent':
-                        # Check if expired
+                    # Reserved or sent = duplicate (no "reserved recently - allowing" to prevent double sends)
+                    status = existing_alert.get('status', 'sent')
+                    if status in ('reserved', 'sent'):
                         expires_at_str = existing_alert.get('expires_at')
                         if expires_at_str:
                             try:
                                 expires_at = datetime.fromisoformat(expires_at_str)
                                 if datetime.now() < expires_at:
-                                    # Alert exists and hasn't expired - duplicate
                                     self.duplicates_prevented += 1
                                     logger.debug(f"Duplicate alert prevented (status: {status}) for user {user_id}: {alert_type}")
                                     return False
+                                # Expired - fall through to Step 2 to reserve again
                             except Exception as e:
                                 logger.warning(f"Error parsing expires_at: {e}")
-                                # If we can't parse, assume expired and allow alert
+                        else:
+                            # No expires_at: treat as duplicate
+                            self.duplicates_prevented += 1
+                            logger.debug(f"Duplicate alert prevented (status: {status}, no expires_at) for user {user_id}: {alert_type}")
+                            return False
                 
                 # Step 2: Alert doesn't exist or is expired - try to reserve it
                 # Use a unique timestamp to identify our reservation
@@ -532,6 +531,14 @@ class PersistentAlertDeduplication:
         except Exception as e:
             logger.error(f"Error marking news alert as sent: {e}")
             return False
+    
+    def reserve_news_alert(self, news_item: Dict[str, Any], user_id: str) -> bool:
+        """
+        Atomically reserve a news alert for this user (call after lock, before send).
+        Returns True if we got the reservation, False if already reserved/sent by another thread or run.
+        """
+        content = self._get_news_content_string(news_item)
+        return self._check_and_reserve_alert('news', content, user_id)
     
     def should_send_economic_alert(self, event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
         """Check if economic alert should be sent (not a duplicate)"""
@@ -727,6 +734,11 @@ def mark_news_alert_sent(news_item: Dict[str, Any], user_id: str, mark_global_ha
     """Mark a news alert as sent after successful delivery. Pass mark_global_hash=True to update global content hash."""
     dedup = get_persistent_deduplication()
     return dedup.mark_news_alert_sent(news_item, user_id, mark_global_hash=mark_global_hash)
+
+def reserve_news_alert(news_item: Dict[str, Any], user_id: str) -> bool:
+    """Reserve a news alert for this user (call after lock, before send). Returns True if reservation won."""
+    dedup = get_persistent_deduplication()
+    return dedup.reserve_news_alert(news_item, user_id)
 
 def should_send_economic_alert(event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
     """Check if economic alert should be sent (not a duplicate)"""
