@@ -468,6 +468,10 @@ class EconomicCalendarAlerts:
             logger.error(f"Error processing economic calendar for alerts: {e}")
             return {'error': str(e)}
     
+    def send_pre_event_alert(self, user_data: Dict[str, Any], event: Dict[str, Any], alert_timing: str = None) -> bool:
+        """Public entry: send pre-event alert to a user. alert_timing is optional (recomputed inside)."""
+        return self._send_pre_event_alert(user_data, event)
+
     def _send_pre_event_alert(self, user_data: Dict[str, Any], event: Dict[str, Any]) -> bool:
         """Send pre-event alert to a specific user"""
         try:
@@ -475,9 +479,6 @@ class EconomicCalendarAlerts:
             if not user_id:
                 logger.error("No user_id provided for economic alert")
                 return False
-            
-            # Check deduplication
-            from .alert_deduplication import should_send_economic_alert
             
             # Get alert timing
             event_datetime = self._parse_event_datetime(event)
@@ -490,18 +491,16 @@ class EconomicCalendarAlerts:
             
             # Determine alert timing
             alert_timing = "unknown"
-            if minutes_until_event <= 10 and minutes_until_event >= 8:
+            if minutes_until_event <= 15 and minutes_until_event >= 5:
                 alert_timing = "10min_before"
-            elif minutes_until_event <= 60 and minutes_until_event >= 55:
+            elif minutes_until_event <= 65 and minutes_until_event >= 50:
                 alert_timing = "1h_before"
-            elif minutes_until_event <= 120 and minutes_until_event >= 115:
+            elif minutes_until_event <= 125 and minutes_until_event >= 110:
                 alert_timing = "2h_before"
             
-            # Create event ID for deduplication
-            event_id = f"{event.get('title', '')}_{event.get('time', '')}_{event.get('date', '')}"
-            
-            # Check if this alert should be sent (not a duplicate)
-            if not should_send_economic_alert(event_id, user_id, alert_timing):
+            # Check deduplication (Firebase-backed, survives restarts)
+            from .persistent_alert_deduplication import should_send_economic_alert
+            if not should_send_economic_alert(event, user_id, alert_timing):
                 logger.debug(f"Economic alert duplicate prevented for user {user_id}")
                 return False
             
@@ -521,30 +520,28 @@ class EconomicCalendarAlerts:
             # Get user settings
             user_settings = user_data.get('settings', {})
             
-            # Use alert service to process the alert (includes subscription validation)
+            # Use alert service to process the alert (pass user_data so chat_id is available)
             from .alert_service import get_alert_service
             alert_service = get_alert_service()
             
-            # Process alert with proper async handling (NO nested event loops)
+            # Process alert with proper async handling (pass user_data for chat_id)
             try:
                 import asyncio
-                
-                # Create new event loop for this operation
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                
                 try:
                     success = loop.run_until_complete(
-                        alert_service.process_alert(alert_data, user_settings, user_id)
+                        alert_service.process_alert(alert_data, user_settings, user_id, user_data=user_data)
                     )
                 finally:
                     loop.close()
-                    
             except Exception as e:
                 logger.error(f"Error in async alert processing: {e}")
                 success = False
             
             if success:
+                from .persistent_alert_deduplication import mark_economic_alert_sent
+                mark_economic_alert_sent(event, user_id, alert_timing)
                 logger.info(f"Economic alert sent successfully to user {user_id}")
                 return True
             else:

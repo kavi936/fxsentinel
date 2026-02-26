@@ -625,11 +625,11 @@ class UnifiedAlertProcessor:
                             time_until_event = event_datetime - now
                             minutes_until_event = time_until_event.total_seconds() / 60
                             
-                            # Only send alerts if within timing windows and event is in the future
+                            # Only send alerts if within timing windows (widened so 5-min checks don't miss)
                             if minutes_until_event > 0:
-                                if (8 <= minutes_until_event <= 10 or      # 10min before
-                                    55 <= minutes_until_event <= 60 or    # 1h before
-                                    115 <= minutes_until_event <= 120):   # 2h before
+                                if (5 <= minutes_until_event <= 15 or     # ~10min before
+                                    50 <= minutes_until_event <= 65 or    # ~1h before
+                                    110 <= minutes_until_event <= 125):   # ~2h before
                                     
                                     logger.info(f"Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
                                     self._send_economic_alert(event)
@@ -740,12 +740,12 @@ class UnifiedAlertProcessor:
                     time_until_event = event_datetime - now
                     minutes_until_event = time_until_event.total_seconds() / 60
                     
-                    # Determine alert timing
-                    if 8 <= minutes_until_event <= 10:
+                    # Determine alert timing (same windows as _check_economic_calendar_alerts)
+                    if 5 <= minutes_until_event <= 15:
                         alert_timing = "10min_before"
-                    elif 55 <= minutes_until_event <= 60:
+                    elif 50 <= minutes_until_event <= 65:
                         alert_timing = "1h_before"
-                    elif 115 <= minutes_until_event <= 120:
+                    elif 110 <= minutes_until_event <= 125:
                         alert_timing = "2h_before"
                     else:
                         return False

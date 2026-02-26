@@ -9688,7 +9688,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.3%',
                 'forecast': '2.9%',
                 'previous': '2.8%'
             },
@@ -9698,7 +9698,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '3.1%',
                 'previous': '3.0%'
             },
@@ -9718,7 +9718,7 @@ class HybridEconomicCalendar:
                 'time': '10:33 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.31|1.5',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
@@ -9728,9 +9728,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.7B',
                 'forecast': '-5.4B',
-                'previous': '-9.7B'
+                'previous': '-5.3B'
             },
             {
                 'title': 'Unemployment Claims',
@@ -9738,9 +9738,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '212K',
                 'forecast': '216K',
-                'previous': '206K'
+                'previous': '208K'
             },
             {
                 'title': 'FOMC Member Bowman Speaks',
