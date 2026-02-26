@@ -479,8 +479,10 @@ class UnifiedAlertProcessor:
             
             if success:
                 # Phase 2 improvement: Mark global hash only after successful delivery
-                from services.persistent_alert_deduplication import mark_news_alert_sent
+                from services.persistent_alert_deduplication import mark_news_alert_sent, get_persistent_deduplication
                 mark_news_alert_sent(news_item, user_id, mark_global_hash=True)
+                content_key = get_persistent_deduplication()._get_news_content_string(news_item)
+                logger.info(f"📋 SENT content={content_key[:80]} user={user_id[:16]}... title={news_title[:50]}")
                 logger.info(f"✅ Alert delivery confirmed - global hash marked for user {user_id}")
                 
                 # Alert already marked as reserved above (before sending)

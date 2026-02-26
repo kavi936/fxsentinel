@@ -271,6 +271,51 @@ The system deduplicates so the same story isn’t sent twice. If **all** news is
 
 ---
 
+## Debugging duplicate alerts
+
+Use these log lines (e.g. in Railway logs or exported JSON) to see why a duplicate might have been sent.
+
+### Log prefixes to search for
+
+| Grep / search for | Meaning |
+|-------------------|--------|
+| `📋 DEDUP_ALLOW` | Dedup check passed: no record in Firebase or record expired. Alert is allowed to proceed. |
+| `📋 DEDUP_BLOCK` | Dedup check blocked send: Firebase had a non-expired `reserved` or `sent` record. |
+| `📋 RESERVED` | This process won the reservation for this (user, content). Only one sender should see this per (user, story). |
+| `📋 SENT` | Telegram send succeeded. Log includes `content=...` (dedup key) and `user=...`. |
+
+### How to interpret
+
+1. **Same story sent twice**  
+   Search for `📋 SENT` and the story title or a unique part of it. If you see **two** `📋 SENT` lines with the **same** `content=...` and **same** `user=...`, a duplicate got through. Compare the exact `content=` value in both lines:
+   - If `content=` is **identical**, the bug is in reserve/send or timing (e.g. two processes, or TTL).
+   - If `content=` is **different** for the “same” story, the dedup key is inconsistent (e.g. different `id` or title/source). Fix by making the content key stable for the same article.
+
+2. **Why did it pass dedup?**  
+   For that `content=` and `user=`, look for the previous `📋 DEDUP_ALLOW` or `📋 DEDUP_BLOCK`:
+   - `DEDUP_ALLOW (no record in Firebase)` = first time, or Firebase had no record (e.g. GET failed or path wrong).
+   - `DEDUP_ALLOW (no record or expired)` = record existed but was expired (TTL).
+   - If you see **two** `DEDUP_ALLOW` for the same `content=` and `user=` before two `SENT`, the second check ran before the first send wrote to Firebase, or the key differs slightly.
+
+3. **Reservation**  
+   For each (user, story) you should see at most one `📋 RESERVED` followed by one `📋 SENT`. If you see two `RESERVED` with the same content and user, two processes/threads both thought they won; that’s a bug.
+
+4. **Useful grep examples** (Railway or local logs)  
+   - All dedup decisions: `DEDUP_ALLOW` or `DEDUP_BLOCK`  
+   - All sends: `SENT`  
+   - One user (replace with your user hash prefix): `user=a44dfd290db489ed`  
+   - One story (replace with part of title or id): `content=news:8857318740138943045` or `title=ECB Mustn`
+
+### Firebase check (optional)
+
+In Firebase Realtime Database, open:
+
+`alert_deduplication/alerts`
+
+Each key is a hash of `(news, content, user_id)`. Check whether the same story has **one** record per user (status `sent` or `reserved`) or multiple. If you see two different keys for the same article, the content string is different (e.g. different `id` or title/source).
+
+---
+
 ## Checklist (quick reference)
 
 - [ ] Railway env: `TELEGRAM_BOT_TOKEN`, `FIREBASE_REALTIME_URL` set.
