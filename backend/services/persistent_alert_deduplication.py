@@ -549,33 +549,33 @@ class PersistentAlertDeduplication:
         content = self._get_news_content_string(news_item)
         return self._check_and_reserve_alert('news', content, user_id)
     
+    def _economic_content(self, event: Dict[str, Any], alert_timing: str) -> str:
+        """Build content string for economic alert dedup (same for check and mark)."""
+        title = event.get('title', '')
+        event_time = event.get('time', '')
+        event_date = event.get('date', '')
+        event_id = event.get('id', '')
+        if event_id:
+            return f"economic:{event_id}:{alert_timing}"
+        return f"economic:{title}|{event_time}|{event_date}|{alert_timing}"
+
     def should_send_economic_alert(self, event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
-        """Check if economic alert should be sent (not a duplicate)"""
+        """Check if economic alert should be sent (not a duplicate). Caller must call mark_economic_alert_sent after successful send."""
         try:
-            # Create content string from event
-            title = event.get('title', '')
-            event_time = event.get('time', '')
-            event_date = event.get('date', '')
-            event_id = event.get('id', '')
-            
-            # Include timing in content to allow multiple alerts for same event at different times
-            if event_id:
-                content = f"economic:{event_id}:{alert_timing}"
-            else:
-                content = f"economic:{title}|{event_time}|{event_date}|{alert_timing}"
-            
-            # Check if should send
-            should_send = self.should_send_alert('economic', content, user_id)
-            
-            if should_send:
-                # Mark as sent immediately
-                self.mark_alert_sent('economic', content, user_id)
-            
-            return should_send
-            
+            content = self._economic_content(event, alert_timing)
+            return self.should_send_alert('economic', content, user_id)
         except Exception as e:
             logger.error(f"Error checking economic alert deduplication: {e}")
             return True  # Allow alert if check fails
+
+    def mark_economic_alert_sent(self, event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
+        """Mark economic alert as sent (call after successful Telegram send)."""
+        try:
+            content = self._economic_content(event, alert_timing)
+            return self.mark_alert_sent('economic', content, user_id)
+        except Exception as e:
+            logger.error(f"Error marking economic alert as sent: {e}")
+            return False
     
     def cleanup_expired_alerts(self) -> int:
         """Clean up expired alert records from Firebase (including reserved alerts)"""
@@ -750,9 +750,14 @@ def reserve_news_alert(news_item: Dict[str, Any], user_id: str) -> bool:
     return dedup.reserve_news_alert(news_item, user_id)
 
 def should_send_economic_alert(event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
-    """Check if economic alert should be sent (not a duplicate)"""
+    """Check if economic alert should be sent (not a duplicate). Caller must call mark_economic_alert_sent after send."""
     dedup = get_persistent_deduplication()
     return dedup.should_send_economic_alert(event, user_id, alert_timing)
+
+def mark_economic_alert_sent(event: Dict[str, Any], user_id: str, alert_timing: str) -> bool:
+    """Mark economic alert as sent (call after successful Telegram send)."""
+    dedup = get_persistent_deduplication()
+    return dedup.mark_economic_alert_sent(event, user_id, alert_timing)
 
 def get_deduplication_stats() -> Dict[str, Any]:
     """Get deduplication statistics"""
