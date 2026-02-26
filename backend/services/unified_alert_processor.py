@@ -50,7 +50,7 @@ class UnifiedAlertProcessor:
         # In-memory cache to prevent checking same news item multiple times
         # Key: news_id, Value: last_checked timestamp
         self._recently_checked: Dict[str, datetime] = {}
-        self._check_window_seconds = 30  # Don't check same news within 30 seconds
+        self._check_window_seconds = 300  # Don't check same news within 5 minutes (reduces duplicates from multiple triggers)
         self._recently_checked_lock = threading.Lock()
         
         # Lock dictionary to prevent concurrent processing of same user+news combination
@@ -363,6 +363,12 @@ class UnifiedAlertProcessor:
             
             if not should_send:
                 logger.warning(f"🚫 Duplicate prevented (double-check) for user {user_id}: {news_title}")
+                return False
+            
+            # Reserve only after lock so exactly one sender wins; prevents duplicate sends
+            from services.persistent_alert_deduplication import reserve_news_alert
+            if not reserve_news_alert(news_item, user_id):
+                logger.warning(f"🚫 Reservation lost for user {user_id}: {news_title} (another sender won)")
                 return False
             
             logger.info(f"✅ Alert approved for user {user_id}: {news_title}")
