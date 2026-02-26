@@ -1092,9 +1092,10 @@ def get_news():
             for item in cached_news:
                 if 'id' in item:
                     item['id'] = str(item['id'])
-                # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
+                # Fallback for legacy cached items missing added_to_feed_at: use current time so the UI
+                # shows "when we're showing it" (e.g. Just now) instead of article publish time (e.g. 4 hrs ago).
                 if 'added_to_feed_at' not in item:
-                    item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                    item['added_to_feed_at'] = datetime.now().isoformat()
             
             # Check if cached news contains economic calendar events (Finnhub data)
             # If it does, clear the cache to force fresh news fetch
@@ -1330,7 +1331,8 @@ def get_news():
                         if 'added_to_feed_at' in cached_item:
                             item['added_to_feed_at'] = cached_item['added_to_feed_at']
                         else:
-                            item['added_to_feed_at'] = cached_item.get('published_at', current_time)
+                            # Legacy cached item: use current time so display is not article publish time
+                            item['added_to_feed_at'] = current_time
                     elif 'added_to_feed_at' not in item:
                         # New item - set added_to_feed_at to current time
                         item['added_to_feed_at'] = current_time
@@ -1431,10 +1433,10 @@ def get_news():
                 if len(all_news) > MAX_CACHE_ITEMS:
                     print(f"📊 Limited all_news to {MAX_CACHE_ITEMS} items for cache save (was {len(all_news)})")
                 
-                # Ensure all items have added_to_feed_at set
+                # Ensure all items have added_to_feed_at set (use now so display = "when in feed", not publish time)
                 for item in all_news_to_save:
                     if 'added_to_feed_at' not in item:
-                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                        item['added_to_feed_at'] = datetime.now().isoformat()
                 
                 save_success = news_cache.save_news(all_news_to_save, append=False)
                 if save_success:
@@ -1484,7 +1486,7 @@ def get_news():
                     if 'id' in item:
                         item['id'] = str(item['id'])
                     if 'added_to_feed_at' not in item:
-                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                        item['added_to_feed_at'] = datetime.now().isoformat()
                 
                 print(f"⚡ Force refresh: Returning {len(cached_news_filtered)} cached items immediately, fresh fetch continues in background")
                 response_data = {
@@ -1528,9 +1530,8 @@ def get_news():
                 for item in cached_news:
                     if 'id' in item:
                         item['id'] = str(item['id'])
-                    # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
                     if 'added_to_feed_at' not in item:
-                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                        item['added_to_feed_at'] = datetime.now().isoformat()
                 
                 # SOLUTION 2: Trigger alerts for cached news (top 10 recent items)
                 # This ensures alerts are sent even when no fresh news is fetched
@@ -1594,9 +1595,8 @@ def get_news():
                 for item in cached_news:
                     if 'id' in item:
                         item['id'] = str(item['id'])
-                    # Add added_to_feed_at fallback for old cached items (use published_at as fallback)
                     if 'added_to_feed_at' not in item:
-                        item['added_to_feed_at'] = item.get('published_at', datetime.now().isoformat())
+                        item['added_to_feed_at'] = datetime.now().isoformat()
                 
                 print(f"✅ Error occurred, using cached news ({len(cached_news)} articles)")
                 response_data = {
