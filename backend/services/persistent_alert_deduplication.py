@@ -219,22 +219,26 @@ class PersistentAlertDeduplication:
             existing_alert = self.firebase._make_request('GET', alert_path)
             # No record or not a dict = allow (first-time send). Firebase state persists across restarts.
             if not existing_alert or not isinstance(existing_alert, dict):
+                logger.info(f"📋 DEDUP_ALLOW content={content[:60]}... user={user_id[:16]}... (no record in Firebase)")
                 return True
             status = existing_alert.get('status', 'sent')
+            expires_at_str = existing_alert.get('expires_at', '')
             # Reserved or sent = duplicate; never allow "reserved recently" to avoid double sends
             if status in ('reserved', 'sent'):
-                expires_at_str = existing_alert.get('expires_at')
                 if expires_at_str:
                     try:
                         expires_at = datetime.fromisoformat(expires_at_str)
                         if datetime.now() < expires_at:
                             self.duplicates_prevented += 1
-                            logger.debug(f"Duplicate prevented (check-only, status={status}) for user {user_id}: {alert_type}")
+                            logger.info(f"📋 DEDUP_BLOCK content={content[:60]}... user={user_id[:16]}... status={status} expires_at={expires_at_str[:19]}")
                             return False
+                        # else: expired, allow (fall through)
                     except Exception as e:
                         logger.warning(f"Error parsing expires_at: {e}")
                 else:
+                    logger.info(f"📋 DEDUP_BLOCK content={content[:60]}... user={user_id[:16]}... status={status} no_expires")
                     return False
+            logger.info(f"📋 DEDUP_ALLOW content={content[:60]}... user={user_id[:16]}... (no record or expired)")
             return True
         except Exception as e:
             logger.error(f"Error in check-only: {e}")
@@ -457,6 +461,7 @@ class PersistentAlertDeduplication:
                     
                     # If status is reserved and reserved_at matches ours, we got it
                     if verify_status == 'reserved' and verify_reserved_at == our_reserved_at:
+                        logger.info(f"📋 RESERVED content={content[:60]}... user={user_id[:16]}... (we won)")
                         logger.info(f"✅ Successfully reserved alert for user {user_id}: {alert_type}")
                         return True
                     elif verify_status == 'reserved' and verify_reserved_at != our_reserved_at:
