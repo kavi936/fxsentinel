@@ -9820,7 +9820,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': '-2.0%',
                 'previous': '-1.3%'
             },
@@ -9830,7 +9830,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.1%',
                 'forecast': '0.6%',
                 'previous': '-0.1%'
             },
@@ -9850,9 +9850,9 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
-                'previous': '-0.6%'
+                'previous': '-0.5%'
             },
             {
                 'title': 'French Final Private Payrolls q/q',
@@ -9860,7 +9860,7 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '0.0%',
                 'previous': '-0.1%'
             },
@@ -9870,7 +9870,7 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.5%',
                 'previous': '-0.3%'
             },
@@ -9880,7 +9880,7 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.2%',
                 'previous': '0.2%'
             },
@@ -9890,9 +9890,9 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.2%',
-                'previous': '-0.5%'
+                'previous': '-0.4%'
             },
             {
                 'title': 'KOF Economic Barometer',
@@ -9900,9 +9900,9 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '104.2',
                 'forecast': '102.9',
-                'previous': '102.5'
+                'previous': '103.3'
             },
             {
                 'title': 'Spanish Flash CPI y/y',
@@ -9910,9 +9910,9 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.2%',
-                'previous': '2.4%'
+                'previous': '2.3%'
             },
             {
                 'title': 'German Unemployment Change',
@@ -9920,9 +9920,9 @@ class HybridEconomicCalendar:
                 'time': '08:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '3K',
-                'previous': '0K'
+                'actual': '1K',
+                'forecast': '2K',
+                'previous': '1K'
             },
             {
                 'title': 'MPC Member Pill Speaks',
