@@ -506,8 +506,47 @@ class AlertService:
             logger.error(f"Error checking quiet hours: {e}")
             return False
     
+    def _format_live_news_message(self, alert_data: Dict[str, Any]) -> str:
+        """Format live news alert message for Telegram with clean HTML layout."""
+        title = alert_data.get('title', 'Alert')
+        summary = alert_data.get('content', 'No content available')
+        source = alert_data.get('source', 'Unknown')
+        pairs = alert_data.get('currency_pairs') or []
+        pairs_text = ', '.join(pairs) if pairs else 'Multiple pairs'
+
+        # Prefer event timestamp from alert_data if available
+        event_time = None
+        try:
+            timestamp = alert_data.get('timestamp') or ''
+            if timestamp:
+                from datetime import datetime as _dt
+                dt = _dt.fromisoformat(timestamp.replace('Z', '+00:00'))
+                event_time = dt.strftime('%H:%M UTC')
+        except Exception:
+            event_time = None
+
+        if not event_time:
+            event_time = datetime.now().strftime('%H:%M UTC')
+
+        return f"""
+<b>{title}</b>
+
+<b>Time:</b> {event_time}
+<b>Source:</b> {source}
+<b>Currency Pairs:</b> {pairs_text}
+
+<b>Summary:</b>
+{summary}
+
+Check dashboard for detailed analysis
+        """.strip()
+
     def _format_telegram_message(self, alert_data: Dict[str, Any]) -> str:
-        """Format alert message for Telegram"""
+        """Format alert message for Telegram."""
+        # Use a specialised layout for live news to keep alerts clean and scannable
+        if alert_data.get('type') == 'liveNews':
+            return self._format_live_news_message(alert_data)
+
         return f"""
 <b>{alert_data.get('title', 'Alert')}</b>
 

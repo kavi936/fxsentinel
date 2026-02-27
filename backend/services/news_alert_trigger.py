@@ -607,57 +607,22 @@ class NewsAlertTrigger:
             return "Post-news analysis available on dashboard"
     
     def _create_alert_content(self, news_item: Dict[str, Any], ai_analysis: Optional[Dict[str, Any]] = None) -> str:
-        """Create alert content without HTML formatting"""
+        """Create the core content for a live news alert (summary only).
+
+        The full Telegram layout (title, time, source, pairs, summary block) is handled
+        in AlertService._format_live_news_message so this function focuses on the
+        textual summary that appears under <b>Summary:</b>.
+        """
         try:
-            title = news_item.get('title', 'Unknown Title')
-            source = news_item.get('source', 'Unknown Source')
-            summary = news_item.get('summary', '')
-            
-            # Get currency pairs
-            affected_pairs = self.get_affected_currency_pairs(news_item)
-            if not affected_pairs:
-                affected_pairs = ['EUR/USD', 'USD/JPY', 'GBP/USD']  # Default pairs
-            pairs_text = ', '.join(affected_pairs)
-            
-            # Format timestamp
-            try:
-                from datetime import datetime
-                timestamp = news_item.get('timestamp', '')
-                dt = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
-                formatted_time = dt.strftime('%H:%M UTC')
-            except:
-                formatted_time = datetime.now().strftime('%H:%M UTC')
-            
-            # Create content
-            content = f"BREAKING FOREX NEWS\n\n"
-            content += f"Title: {title}\n"
-            content += f"Time: {formatted_time}\n"
-            content += f"Source: {source}\n"
-            content += f"Currency Pairs: {pairs_text}\n"
-            
-            # Add summary if available
-            if summary:
-                content += f"\nSummary:\n{summary[:200]}"
-                if len(summary) > 200:
-                    content += "..."
-            
-            # Add AI analysis if available
-            if ai_analysis and isinstance(ai_analysis, dict):
-                analysis_text = ai_analysis.get('analysis', '')
-                if analysis_text:
-                    # Truncate analysis if too long
-                    if len(analysis_text) > 300:
-                        analysis_text = analysis_text[:297] + "..."
-                    content += f"\n\nAI Analysis:\n{analysis_text}"
-                else:
-                    content += f"\n\nAI Analysis: Available on dashboard"
-            else:
-                content += f"\n\nMarket Impact: Monitor for price action"
-            
-            content += f"\n\nCheck dashboard for detailed analysis"
-            
-            return content
-            
+            summary = news_item.get('summary', '') or news_item.get('title', 'Breaking forex news')
+
+            # Truncate overly long summaries to keep alerts readable on mobile
+            max_length = 400
+            if len(summary) > max_length:
+                summary = summary[: max_length - 3] + "..."
+
+            return summary
+
         except Exception as e:
             logger.error(f"Error creating alert content: {e}")
             return "Breaking forex news - check dashboard for details"
