@@ -9970,7 +9970,7 @@ class HybridEconomicCalendar:
                 'time': '14:45 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '57.7',
                 'forecast': '52.4',
                 'previous': '54.0'
             },
@@ -9980,9 +9980,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.2%',
-                'previous': 'N/A'
+                'previous': '-0.2%'
             },
             {
                 'title': 'Construction Spending m/m',
@@ -9990,9 +9990,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': 'N/A',
-                'previous': '0.5%'
+                'previous': '-0.1%'
             },
         ]
         
