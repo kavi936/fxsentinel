@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webhook Response</title>
+</head>
+<body>
+    <script>
+        // Return JSON response for webhook
+        const response = {
+            success: true,
+            message: "Webhook received"
+        };
+        
+        // Set content type and return JSON
+        document.write(JSON.stringify(response));
+    </script>
+</body>
+</html>

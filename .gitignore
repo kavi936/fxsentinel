@@ -147,8 +147,11 @@ dist
 public/*
 !public/sitemap.xml
 !public/robots.txt
+!public/manifest.json
 !public/central-bank-documents.json
 !public/og-image.png
+!public/favicon.png
+!public/webhook.html
 !public/documents/
 !public/documents/central-bank/
 !public/documents/central-bank/**/*.pdf

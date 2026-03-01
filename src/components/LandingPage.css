@@ -1484,7 +1484,7 @@ section.animate-in .section-title.animate-on-scroll,
   line-height: 1.6;
 }
 
-.feature-learn-more {
+.feature-read-more {
   display: inline-block;
   margin-top: 0.75rem;
   font-size: 0.9rem;
@@ -1493,7 +1493,7 @@ section.animate-in .section-title.animate-on-scroll,
   text-decoration: none;
   transition: color 0.2s, transform 0.2s;
 }
-.feature-learn-more:hover {
+.feature-read-more:hover {
   color: #ff6666;
   transform: translateX(4px);
 }

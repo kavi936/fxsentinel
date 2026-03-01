@@ -598,7 +598,7 @@ const LandingPage = () => {
               </div>
               <h3>Never Miss Market-Moving Events</h3>
               <p>Stop losing money because you missed the news. We monitor 100+ sources so you see the macro-economic releases that move your trades—from central bank decisions and policy signals to key indicators like CPI, NFP, and GDP.</p>
-              <Link to="/blog/central-bank-decisions-currency-pairs" className="feature-learn-more">Learn more →</Link>
+              <Link to="/blog/central-bank-decisions-currency-pairs" className="feature-read-more">Read more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -615,7 +615,7 @@ const LandingPage = () => {
               </div>
               <h3>Understand the "Why" Behind Every Move</h3>
               <p>Macro moves markets, but it can feel overwhelming. We're built to help beginner and experienced traders alike: our AI explains how each economic release and central bank decision affects major pairs and Gold in plain language—so you can build your macro intuition and make smarter trades.</p>
-              <Link to="/blog/ai-powered-news-analysis-future-of-trading" className="feature-learn-more">Learn more →</Link>
+              <Link to="/blog/ai-powered-news-analysis-future-of-trading" className="feature-read-more">Read more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -629,7 +629,7 @@ const LandingPage = () => {
               </div>
               <h3>Get Alerts the Moment the News Drops</h3>
               <p>While others are still reading the news, you're already positioned. Instant Telegram alerts with AI-powered macro analysis and pair-by-pair impact—delivered within seconds of each economic release.</p>
-              <Link to="/blog/turning-news-actionable-signals" className="feature-learn-more">Learn more →</Link>
+              <Link to="/blog/turning-news-actionable-signals" className="feature-read-more">Read more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -645,7 +645,7 @@ const LandingPage = () => {
               </div>
               <h3>Focus on What Matters to Your Trades</h3>
               <p>Cut through the noise. We surface only the macro events that matter to your currency pairs and commodities—so you see which instruments are most affected by each release without wasting time on the rest.</p>
-              <Link to="/blog/understanding-forex-market-sentiment" className="feature-learn-more">Learn more →</Link>
+              <Link to="/blog/understanding-forex-market-sentiment" className="feature-read-more">Read more →</Link>
             </div>
           </div>
                       <div className="features-cta">
