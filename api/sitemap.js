@@ -10,9 +10,33 @@ export default function handler(req, res) {
   </url>
   <url>
     <loc>https://fxsentinel.io/blog</loc>
-    <lastmod>2025-01-27</lastmod>
+    <lastmod>2025-03-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fxsentinel.io/blog/geopolitical-tensions-forex-trading-2025</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fxsentinel.io/blog/fed-ecb-rate-divergence-currency-markets</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fxsentinel.io/blog/gold-rally-safe-haven-inflation-hedge</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://fxsentinel.io/blog/bitcoin-institutional-adoption-forex-traders</loc>
+    <lastmod>2025-03-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://fxsentinel.io/blog/ai-powered-news-analysis-future-of-trading</loc>

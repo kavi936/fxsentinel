@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useMeta } from '../hooks/useMeta';
 import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
@@ -8,6 +9,7 @@ import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 
 const Login = () => {
+  useMeta('Login - FXSentinel', 'Sign in to your FXSentinel account to access your dashboard, alerts, and AI-powered market analysis.');
   const [formData, setFormData] = useState({
     email: '',
     password: ''

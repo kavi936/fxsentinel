@@ -1,33 +1,60 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import { useMeta } from '../hooks/useMeta';
 import './BlogPost.css';
+
+const BASE_URL = 'https://fxsentinel.io';
+
+/** Parse "August 15, 2025" -> "2025-08-15" for schema datePublished */
+function parseDateToISO(dateStr) {
+  if (!dateStr) return undefined;
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? undefined : d.toISOString().split('T')[0];
+}
 
 const BlogPost = ({ postData }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const schemaScriptId = useRef('blog-posting-schema');
 
-  // Set unique document title and meta description for SEO (helps "Crawled - not indexed" for blog posts)
+  useMeta(
+    postData?.title ? `${postData.title} | FXSentinel Blog` : 'FXSentinel Blog',
+    postData?.excerpt ?? undefined
+  );
+
+  // Inject BlogPosting JSON-LD for rich results and GEO (one script per post, keyed by headline)
   useEffect(() => {
-    const prevTitle = document.title;
-    document.title = postData?.title ? `${postData.title} - FXSentinel Blog` : 'FXSentinel Blog';
-    let metaDesc = document.querySelector('meta[name="description"]');
-    const prevContent = metaDesc?.getAttribute('content');
-    if (postData?.excerpt) {
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.setAttribute('name', 'description');
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.setAttribute('content', postData.excerpt);
-    }
-    return () => {
-      document.title = prevTitle;
-      if (metaDesc && prevContent !== undefined) metaDesc.setAttribute('content', prevContent);
+    if (!postData?.title) return;
+    const url = `${BASE_URL}${location.pathname}`;
+    const datePublished = parseDateToISO(postData.date);
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'BlogPosting',
+      headline: postData.title,
+      description: postData.excerpt || postData.title,
+      datePublished: datePublished || undefined,
+      author: { '@type': 'Organization', name: postData.author || 'FXSentinel Team' },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+      url,
+      articleSection: postData.category || undefined,
+      keywords: ['forex trading', 'economic news', 'AI market analysis', 'FXSentinel', postData.category].filter(Boolean).join(', ')
     };
-  }, [postData?.title, postData?.excerpt]);
+    let script = document.getElementById(schemaScriptId.current);
+    if (script) script.remove();
+    script = document.createElement('script');
+    script.id = schemaScriptId.current;
+    script.type = 'application/ld+json';
+    script.textContent = JSON.stringify(schema);
+    document.head.appendChild(script);
+    return () => {
+      const s = document.getElementById(schemaScriptId.current);
+      if (s) s.remove();
+    };
+  }, [postData?.title, postData?.excerpt, postData?.date, postData?.author, postData?.category, location.pathname]);
 
   useEffect(() => {
     const handleScroll = () => {

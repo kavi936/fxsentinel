@@ -3,19 +3,21 @@ import { Link } from 'react-router-dom';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import analyticsTracker, { trackBlogPostEngagement } from '../utils/analytics';
+import { useMeta } from '../hooks/useMeta';
 import './Blog.css';
 
 const Blog = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  useMeta(
+    'FXSentinel Blog - Forex Trading Insights & Market Analysis',
+    'Expert insights on forex trading, market analysis, and AI-powered trading tools. Learn how to trade economic news, understand market sentiment, and make better trading decisions.'
+  );
+
   useEffect(() => {
-    // Track blog page view
     analyticsTracker.trackPageView('blog');
-    
-    // Update page title and meta for SEO
-    document.title = 'FXSentinel Blog - Forex Trading Insights & Market Analysis';
-    
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
@@ -32,8 +34,52 @@ const Blog = () => {
     setIsMobileMenuOpen(false);
   };
 
-  // Updated blog posts data with the 6 new topics
+  // Blog posts: trending 2025 topics + evergreen content
   const blogPosts = [
+    {
+      id: 7,
+      slug: 'geopolitical-tensions-forex-trading-2025',
+      title: "Navigating Forex Volatility Amid Geopolitical Tensions in 2025",
+      excerpt: "Geopolitical risk has emerged as a dominant theme in forex markets. Learn how trade disputes, safe-haven flows, and political instability affect currency pairs.",
+      author: "FXSentinel Team",
+      date: "March 1, 2025",
+      readTime: "10 min read",
+      category: "Market Analysis",
+      image: logoPng
+    },
+    {
+      id: 8,
+      slug: 'fed-ecb-rate-divergence-currency-markets',
+      title: "Fed vs ECB: Central Bank Divergence and Currency Markets in 2025",
+      excerpt: "The Fed and ECB have diverged sharply on interest rates. Explore how this 150–200 basis point differential is driving EUR/USD and creating trading opportunities.",
+      author: "FXSentinel Team",
+      date: "March 1, 2025",
+      readTime: "9 min read",
+      category: "Market Analysis",
+      image: logoPng
+    },
+    {
+      id: 9,
+      slug: 'gold-rally-safe-haven-inflation-hedge',
+      title: "Gold's Meteoric Rise: Safe Haven and Inflation Hedge for Forex Traders",
+      excerpt: "Gold has shattered records in 2025, surging 50–60% as a debasement hedge. Learn how forex traders can use XAU/USD and gold correlations.",
+      author: "FXSentinel Team",
+      date: "March 1, 2025",
+      readTime: "9 min read",
+      category: "Market Analysis",
+      image: logoPng
+    },
+    {
+      id: 10,
+      slug: 'bitcoin-institutional-adoption-forex-traders',
+      title: "Bitcoin and Forex: Institutional Adoption Reshapes Markets in 2025",
+      excerpt: "Institutions accumulated over 800,000 BTC in 2025. Explore how Bitcoin's mainstream adoption affects forex traders and correlation patterns.",
+      author: "FXSentinel Team",
+      date: "March 1, 2025",
+      readTime: "8 min read",
+      category: "Technology",
+      image: logoPng
+    },
     {
       id: 1,
       slug: 'ai-powered-news-analysis-future-of-trading',

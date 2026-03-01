@@ -11,6 +11,7 @@ import telegramLogo from '../assets/telegram.png';
 import phoneImage from '../assets/IMG_8110-portrait.png';
 import featuresGlanceImage from '../assets/FXSentinelFeaturesGlance.png';
 import LiveTicker from './LiveTicker';
+import { useMeta } from '../hooks/useMeta';
 import { 
   trackLandingPageView, 
   trackSignupClick, 
@@ -41,10 +42,12 @@ const LandingPage = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Track landing page view on component mount
+  useMeta(
+    'FXSentinel - Smarter Market Dashboard | Powered with AI',
+    'Fundamentals and macroeconomics, simplified for retail traders. Get real-time alerts, AI-powered news analysis, and actionable market insights in one place.'
+  );
+
   useEffect(() => {
-    // Set consistent page title for GA4
-    document.title = 'FXSentinel - Smarter Market Dashboard | Powered with AI';
     trackLandingPageView();
   }, []);
 
@@ -424,7 +427,7 @@ const LandingPage = () => {
             <div className="hero-features-image-container">
               <img 
                 src={featuresGlanceImage} 
-                alt="FXSentinel Dashboard - Features Overview" 
+                alt="FXSentinel dashboard with real-time economic calendar, AI analysis, and macro alerts" 
                 className="hero-features-image"
                 loading="lazy"
               />
@@ -595,6 +598,7 @@ const LandingPage = () => {
               </div>
               <h3>Never Miss Market-Moving Events</h3>
               <p>Stop losing money because you missed the news. We monitor 100+ sources so you see the macro-economic releases that move your trades—from central bank decisions and policy signals to key indicators like CPI, NFP, and GDP.</p>
+              <Link to="/blog/central-bank-decisions-currency-pairs" className="feature-learn-more">Learn more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -611,6 +615,7 @@ const LandingPage = () => {
               </div>
               <h3>Understand the "Why" Behind Every Move</h3>
               <p>Macro moves markets, but it can feel overwhelming. We're built to help beginner and experienced traders alike: our AI explains how each economic release and central bank decision affects major pairs and Gold in plain language—so you can build your macro intuition and make smarter trades.</p>
+              <Link to="/blog/ai-powered-news-analysis-future-of-trading" className="feature-learn-more">Learn more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -624,6 +629,7 @@ const LandingPage = () => {
               </div>
               <h3>Get Alerts the Moment the News Drops</h3>
               <p>While others are still reading the news, you're already positioned. Instant Telegram alerts with AI-powered macro analysis and pair-by-pair impact—delivered within seconds of each economic release.</p>
+              <Link to="/blog/turning-news-actionable-signals" className="feature-learn-more">Learn more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -639,6 +645,7 @@ const LandingPage = () => {
               </div>
               <h3>Focus on What Matters to Your Trades</h3>
               <p>Cut through the noise. We surface only the macro events that matter to your currency pairs and commodities—so you see which instruments are most affected by each release without wasting time on the rest.</p>
+              <Link to="/blog/understanding-forex-market-sentiment" className="feature-learn-more">Learn more →</Link>
             </div>
           </div>
                       <div className="features-cta">
@@ -661,7 +668,7 @@ const LandingPage = () => {
       <section id="testimonials" className="testimonials">
         <div className="testimonials-inner">
           <h2 className="section-title animate-on-scroll">Trusted by Traders Worldwide</h2>
-          <p className="testimonials-subtitle animate-on-scroll">See what traders are saying about FXSentinel</p>
+          <p className="testimonials-subtitle animate-on-scroll"></p>
           <div className="testimonials-grid">
             <div 
               className="testimonial-card animate-on-scroll"
@@ -772,7 +779,7 @@ const LandingPage = () => {
             <div className="phone-mockup animate-on-scroll">
               <img 
                 src={phoneImage} 
-                alt="FXSentinel Alerts on iPhone" 
+                alt="FXSentinel instant Telegram alerts with AI analysis on iPhone" 
                 className="phone-image"
                 loading="lazy"
               />
@@ -829,6 +836,35 @@ const LandingPage = () => {
                 <h3 className="counter" data-target="100">0</h3>
                 <p>News Sources</p>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* What is FXSentinel? – canonical definition for SEO and GEO */}
+      <section id="what-is-fxsentinel" className="what-is-section">
+        <div className="what-is-inner">
+          <h2 className="what-is-title animate-on-scroll">What is FXSentinel?</h2>
+          <p className="what-is-lead animate-on-scroll">
+            A <strong>market intelligence platform</strong> for forex traders: <strong>real-time alerts</strong>, <strong>AI-powered news analysis</strong>, and actionable macro insights in one place. We focus on the <strong>fundamentals</strong> behind market moves rather than <strong>technicals</strong>—for traders who want to trade the <strong>real reason markets move</strong>.
+          </p>
+          <div className="what-is-grid animate-on-scroll">
+            <div className="what-is-card what-is-features">
+              <h3 className="what-is-card-title">What you get</h3>
+              <ul className="what-is-list">
+                <li>AI news analysis and macro impact on currency pairs</li>
+                <li>Economic calendar and high-impact event alerts</li>
+                <li>Instant Telegram alerts with pair-by-pair impact</li>
+                <li>Dashboard with live news and prediction-style data</li>
+              </ul>
+            </div>
+            <div className="what-is-card">
+              <h3 className="what-is-card-title">Who it&apos;s for</h3>
+              <p>Beginner to experienced retail forex traders who want to understand the &quot;why&quot; behind market moves without spending hours on news.</p>
+            </div>
+            <div className="what-is-card what-is-not">
+              <h3 className="what-is-card-title">What we&apos;re not</h3>
+              <p>We provide analysis and tools, not trading signals or financial advice. We are not a broker or a copy-trading or signals provider, and we do not guarantee any trading results.</p>
             </div>
           </div>
         </div>
