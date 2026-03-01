@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import analyticsTracker from '../utils/analytics';
+import { useMeta } from '../hooks/useMeta';
 import './Disclaimer.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 const Disclaimer = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  useMeta('Disclaimer - FXSentinel | Forex Trading Platform Terms', 'FXSentinel disclaimer and terms. We provide analysis and tools, not trading signals or financial advice. All trading involves risk.');
 
   useEffect(() => {
-    // Track disclaimer page view
     analyticsTracker.trackPageView('disclaimer');
-    
-    // Update page title and meta for SEO
-    document.title = 'Disclaimer - FXSentinel | Forex Trading Platform Terms';
-    
+
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       setIsScrolled(scrollPosition > 50);

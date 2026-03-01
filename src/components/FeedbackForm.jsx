@@ -6,12 +6,9 @@ import { config } from '../config';
 import './FeedbackForm.css';
 
 const FeedbackForm = () => {
+  useMeta('Feedback - FXSentinel | Help Us Improve', 'Share your feedback to help us improve FXSentinel. We read every message and respond within 24 hours.');
   useEffect(() => {
-    // Track feedback page view
     analyticsTracker.trackPageView('feedback');
-    
-    // Update page title for SEO
-    document.title = 'Feedback - FXSentinel | Help Us Improve';
   }, []);
   const navigate = useNavigate();
   const { currentUser } = useAuth();

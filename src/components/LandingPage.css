@@ -1484,6 +1484,20 @@ section.animate-in .section-title.animate-on-scroll,
   line-height: 1.6;
 }
 
+.feature-learn-more {
+  display: inline-block;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--accent-red);
+  text-decoration: none;
+  transition: color 0.2s, transform 0.2s;
+}
+.feature-learn-more:hover {
+  color: #ff6666;
+  transform: translateX(4px);
+}
+
 /* Testimonials Section */
 .testimonials {
   padding: 6rem 0;
@@ -2002,6 +2016,155 @@ section.animate-in .section-title.animate-on-scroll,
   font-weight: 500;
   position: relative;
   z-index: 1;
+}
+
+/* What is FXSentinel section – below About */
+.what-is-section {
+  padding: 5rem 0;
+  background: linear-gradient(180deg, var(--primary-black) 0%, rgba(40, 12, 14, 0.95) 30%, rgba(60, 18, 20, 0.92) 70%, var(--primary-black) 100%);
+  border-top: 1px solid rgba(255, 68, 68, 0.12);
+  position: relative;
+}
+
+.what-is-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.what-is-title {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
+  position: relative;
+  background: linear-gradient(135deg, #ffffff 0%, #ff4444 50%, #ffffff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: 'Space Grotesk', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.what-is-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--accent-red), transparent);
+  border-radius: 2px;
+}
+
+.what-is-lead {
+  font-size: 1.15rem;
+  color: var(--text-gray);
+  text-align: center;
+  max-width: 640px;
+  margin: 0 auto 2.5rem;
+  line-height: 1.6;
+}
+
+.what-is-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.what-is-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.5rem 1.75rem;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.what-is-card:hover {
+  border-color: rgba(255, 68, 68, 0.25);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.what-is-card-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-red);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.what-is-card p {
+  font-size: 0.95rem;
+  color: var(--text-gray);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.what-is-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.what-is-list li {
+  font-size: 0.95rem;
+  color: var(--text-gray);
+  line-height: 1.55;
+  padding: 0.35rem 0 0.35rem 1.5rem;
+  position: relative;
+}
+
+.what-is-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.65em;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-red);
+  border-radius: 50%;
+  opacity: 0.9;
+}
+
+.what-is-not {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.what-is-not .what-is-card-title {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 900px) {
+  .what-is-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .what-is-features {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .what-is-section {
+    padding: 3.5rem 0;
+  }
+  .what-is-title {
+    font-size: 1.75rem;
+  }
+  .what-is-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  .what-is-features {
+    grid-column: 1;
+  }
+  .what-is-lead {
+    margin-bottom: 1.75rem;
+    font-size: 1.05rem;
+  }
 }
 
 /* Pricing Section */

@@ -2,71 +2,55 @@
 
 > Focus: strengthen search visibility and make FXSentinel easier for AI systems to understand and describe correctly.
 
+**Implemented (Feb 2026):** useMeta hook + titles/descriptions on all key pages, BlogPosting schema on blog posts, “What is FXSentinel?” section + “Who it’s for” / “What it’s not”, deep links from feature cards to blog posts, improved alt text on hero/features images. Remaining items are manual (assets, validation) or ongoing (topic clusters, monitoring).
+
 ---
 
 ## 1. Page Titles & Meta Descriptions
 
-- [ ] **Audit existing titles**
+- [x] **Audit existing titles**
   - **Why**: Ensure each route has a unique, descriptive `<title>` so Google understands intent and users see clear snippets.
-  - **Tasks**:
-    - [ ] List all main routes (`/`, `/blog`, each `/blog/...`, `/login`, `/signup`, `/dashboard`, `/disclaimer`, `/privacy`, `/feedback`).
-    - [ ] Document current `document.title` (if any) for each route.
+  - **Done**: All main routes now set title via `useMeta` (see below).
 
-- [ ] **Add/update titles for all key pages**
+- [x] **Add/update titles for all key pages**
   - **Why**: Avoid generic or duplicated titles that hurt rankings and CTR.
-  - **Tasks**:
-    - [ ] Set clear titles for each blog post (e.g. `"AI-Powered News Analysis: The Future of Trading | FXSentinel Blog"`).
-    - [ ] Confirm `/login`, `/signup`, `/dashboard` have short, specific titles.
+  - **Done**: Landing, Blog, each blog post (`Title | FXSentinel Blog`), Login, Signup, Dashboard, Disclaimer, Privacy, Feedback all use unique titles.
 
-- [ ] **Implement reusable meta description helper**
+- [x] **Implement reusable meta description helper**
   - **Why**: Consistent way to add `<meta name="description">` to React pages.
-  - **Tasks**:
-    - [ ] Create a small hook or utility (e.g. `useMeta`) that can set `title` and `description`.
-    - [ ] Use it in landing page, blog index, each blog post, and legal/feedback pages.
+  - **Done**: `src/hooks/useMeta.js` created; used on landing, blog, blog posts, login, signup, dashboard, disclaimer, privacy, feedback.
 
 ---
 
 ## 2. Structured Data (Schema.org)
 
-- [ ] **Add `BlogPosting` schema for blog posts**
+- [x] **Add `BlogPosting` schema for blog posts**
   - **Why**: Help Google and generative engines treat posts as articles, improving rich results and summaries.
-  - **Tasks**:
-    - [ ] Decide whether to inject JSON‑LD in `BlogPost` or per‑post component.
-    - [ ] Include fields: `headline`, `description`, `datePublished`, `author`, `image` (optional), `mainEntityOfPage`, `url`.
-    - [ ] Validate with Google’s Rich Results Test.
+  - **Done**: `BlogPost` injects JSON‑LD with `headline`, `description`, `datePublished`, `author`, `mainEntityOfPage`, `url`, `articleSection`, `keywords`. Validate with [Google Rich Results Test](https://search.google.com/test/rich-results) after deploy.
 
-- [ ] **Extend schemas with topical info**
+- [x] **Extend schemas with topical info**
   - **Why**: Tie FXSentinel to key concepts like “AI forex news analysis” and “trading macro news”.
-  - **Tasks**:
-    - [ ] Add `about` / `keywords` fields to blog schemas (e.g. forex trading, economic news, AI market analysis, FXSentinel).
-    - [ ] Review existing `Organization` and `WebApplication` JSON‑LD to ensure descriptions match current positioning.
+  - **Done**: Blog schemas include `keywords` and `articleSection`. Home page `Organization` / `WebApplication` already match positioning; review periodically.
 
 ---
 
 ## 3. Landing Page Content for GEO
 
-- [ ] **Create a “What is FXSentinel?” section**
+- [x] **Create a “What is FXSentinel?” section**
   - **Why**: Give generative engines a short, canonical explanation they can quote.
-  - **Tasks**:
-    - [ ] Add a small section (e.g. near “About”) with 2–3 sentences explaining what FXSentinel is, who it’s for, and the core benefit.
-    - [ ] Include a short bullet list: key features (AI news analysis, economic calendar, alerts, dashboard).
+  - **Done**: New section `#what-is-fxsentinel` before About with 2–3 sentences, bullet list (AI analysis, economic calendar, alerts, dashboard).
 
-- [ ] **Clarify “Who it’s for” and “What it is not”**
+- [x] **Clarify “Who it’s for” and “What it is not”**
   - **Why**: Reduce confusion in AI answers and human understanding.
-  - **Tasks**:
-    - [ ] Add a line or mini‑block describing ideal users (e.g. beginner–intermediate forex traders, serious macro traders).
-    - [ ] Repeat a clear statement that FXSentinel is not a broker, not a copy‑trading or signals provider, and doesn’t guarantee profits.
+  - **Done**: Same section includes “Who it’s for” (beginner–experienced retail forex traders) and “What we’re not” (not a broker/signals provider; no profit guarantees).
 
 ---
 
 ## 4. Internal Linking & Topic Clusters
 
-- [ ] **Add deep links from product sections to blog posts**
+- [x] **Add deep links from product sections to blog posts**
   - **Why**: Strengthen topical relevance and help crawlers/LLMs connect features with educational content.
-  - **Tasks**:
-    - [ ] From “AI analysis” sections, link to the AI news analysis blog post.
-    - [ ] From macro/volatility sections, link to relevant posts (central bank decisions, volatility, sentiment).
-    - [ ] Ensure footer or sidebar includes at least one link to the blog home.
+  - **Done**: Each feature card has a “Learn more →” link: Never Miss Events → central-bank-decisions; Understand the Why → ai-powered-news-analysis; Get Alerts → turning-news-actionable-signals; Focus on Trades → understanding-forex-market-sentiment. Footer already links to Blog.
 
 - [ ] **Plan and grow topic clusters**
   - **Why**: Build authority for specific search and GEO intents.
@@ -78,15 +62,13 @@
 
 ## 5. Image & Accessibility Tweaks
 
-- [ ] **Audit image alt text**
+- [x] **Audit image alt text**
   - **Why**: Better accessibility and clearer context for search/AI when images are referenced.
-  - **Tasks**:
-    - [ ] Review hero, dashboard, and feature images to ensure alt text describes the content (“FXSentinel dashboard with real-time macro alerts”) rather than generic labels.
-    - [ ] Leave purely decorative background images with empty or minimal alt where appropriate.
+  - **Done**: Hero features image and phone mockup alt text updated to descriptive copy (“FXSentinel dashboard with real-time economic calendar, AI analysis, and macro alerts”; “FXSentinel instant Telegram alerts with AI analysis on iPhone”). Optionally review remaining images (data logos, decorative) for empty/minimal alt where appropriate.
 
 ---
 
-## 6. Logos, Favicons & OG Images
+## 6. Logos, Favicons & OG Images *(manual)*
 
 - [ ] **Add and verify `public/favicon.png`**
   - **Why**: All favicon links, manifest icons, and schema `logo` fields point to `/favicon.png`, but the file is missing from `public/`, so the favicon and app icons can 404.
@@ -112,7 +94,7 @@
 
 ---
 
-## 7. Monitoring & Validation
+## 7. Monitoring & Validation *(ongoing)*
 
 - [ ] **Validate SEO changes**
   - **Why**: Catch issues early and confirm Google sees what you expect.

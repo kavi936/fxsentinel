@@ -1,20 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import analyticsTracker from '../utils/analytics';
+import { useMeta } from '../hooks/useMeta';
 import './Privacy.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 
 const Privacy = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  useMeta('Privacy Policy - FXSentinel | Data Protection & Privacy', 'How FXSentinel collects, uses, and protects your data. We use bank-level encryption and never store your trading positions or account information.');
 
   useEffect(() => {
-    // Track privacy page view
     analyticsTracker.trackPageView('privacy');
-    
-    // Update page title and meta for SEO
-    document.title = 'Privacy Policy - FXSentinel | Data Protection & Privacy';
-    
+
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       setIsScrolled(scrollPosition > 50);

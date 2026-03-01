@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getAdditionalUserInfo } from 'firebase/auth';
+import { useMeta } from '../hooks/useMeta';
 import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
@@ -10,6 +11,7 @@ import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 
 const Signup = () => {
+  useMeta('Sign Up - FXSentinel', 'Create your FXSentinel account and start trading smarter with AI-powered news analysis, real-time alerts, and an economic calendar.');
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',

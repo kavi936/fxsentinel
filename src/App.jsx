@@ -16,6 +16,10 @@ import ForexMarketSentiment from './components/blog-posts/ForexMarketSentiment';
 import NewsToSignals from './components/blog-posts/NewsToSignals';
 import MarketVolatility from './components/blog-posts/MarketVolatility';
 import AIHiddenPatterns from './components/blog-posts/AIHiddenPatterns';
+import GeopoliticalTensionsForex from './components/blog-posts/GeopoliticalTensionsForex';
+import FedEcbRateDivergence from './components/blog-posts/FedEcbRateDivergence';
+import GoldSafeHavenInflation from './components/blog-posts/GoldSafeHavenInflation';
+import BitcoinInstitutionalAdoption from './components/blog-posts/BitcoinInstitutionalAdoption';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import BannerNotifications from './components/BannerNotifications';
@@ -39,6 +43,10 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/geopolitical-tensions-forex-trading-2025" element={<GeopoliticalTensionsForex />} />
+              <Route path="/blog/fed-ecb-rate-divergence-currency-markets" element={<FedEcbRateDivergence />} />
+              <Route path="/blog/gold-rally-safe-haven-inflation-hedge" element={<GoldSafeHavenInflation />} />
+              <Route path="/blog/bitcoin-institutional-adoption-forex-traders" element={<BitcoinInstitutionalAdoption />} />
               <Route path="/blog/ai-powered-news-analysis-future-of-trading" element={<AIPoweredNewsAnalysis />} />
               <Route path="/blog/central-bank-decisions-currency-pairs" element={<CentralBankDecisions />} />
               <Route path="/blog/understanding-forex-market-sentiment" element={<ForexMarketSentiment />} />
