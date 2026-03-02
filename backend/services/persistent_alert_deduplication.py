@@ -120,41 +120,40 @@ class PersistentAlertDeduplication:
             alert_path = self._get_alert_path(alert_key)
             existing_alert = self.firebase._make_request('GET', alert_path)
             
-            # Handle Firebase connection errors - be more strict
+            # Firebase returns {} on RequestException (error). Fail closed to prevent duplicates.
+            if existing_alert == {}:
+                logger.error(f"Firebase deduplication check failed (empty response) - blocking alert to prevent duplicates")
+                return False
+            
+            # None = path doesn't exist (no record) - allow
             if existing_alert is None:
-                # Firebase connection failed - check if it's a temporary error
-                # Log error but be more conservative (fail closed for duplicates)
-                logger.error(f"Firebase connection failed for deduplication check - this may cause duplicates")
-                # Still allow alert, but log as error (not warning) to track issues
-                # TODO: Consider implementing a local cache fallback for critical deduplication
                 return True
             
-            if existing_alert and isinstance(existing_alert, dict):
-                # Check status - if reserved or sent, it's a duplicate
-                status = existing_alert.get('status', 'sent')  # Default to 'sent' for backward compatibility
-                
-                # Check if alert hasn't expired
+            if isinstance(existing_alert, dict):
+                status = existing_alert.get('status', 'sent')
                 expires_at_str = existing_alert.get('expires_at')
-                if expires_at_str:
-                    try:
-                        expires_at = datetime.fromisoformat(expires_at_str)
-                        if datetime.now() < expires_at:
-                            # Alert exists and hasn't expired
-                            if status in ['sent', 'reserved']:
+                
+                if status in ['sent', 'reserved']:
+                    if expires_at_str:
+                        try:
+                            expires_at = datetime.fromisoformat(expires_at_str)
+                            if datetime.now() < expires_at:
                                 self.duplicates_prevented += 1
                                 logger.debug(f"Duplicate alert prevented for user {user_id}: {alert_type} (status: {status})")
                                 return False
-                    except Exception as e:
-                        logger.warning(f"Error parsing expires_at: {e}")
-                        # If we can't parse, assume it's expired and allow alert
+                        except Exception as e:
+                            logger.warning(f"Error parsing expires_at: {e}")
+                    else:
+                        # Record exists with sent/reserved but no expires_at - treat as duplicate
+                        self.duplicates_prevented += 1
+                        logger.debug(f"Duplicate alert prevented for user {user_id}: {alert_type} (status: {status}, no expires_at)")
+                        return False
             
-            # This is a new alert
             return True
             
         except Exception as e:
             logger.error(f"Error checking alert deduplication: {e}")
-            # On error, allow alert to be sent (fail open)
-            return True
+            return False  # Fail closed to prevent duplicates
     
     def mark_alert_sent(self, alert_type: str, content: str, user_id: str) -> bool:
         """
@@ -217,7 +216,11 @@ class PersistentAlertDeduplication:
             alert_key = self._generate_alert_key(alert_type, content, user_id)
             alert_path = self._get_alert_path(alert_key)
             existing_alert = self.firebase._make_request('GET', alert_path)
-            # No record or not a dict = allow (first-time send). Firebase state persists across restarts.
+            # Firebase returns {} on error - fail closed to prevent duplicates
+            if existing_alert == {}:
+                logger.error(f"Firebase deduplication check failed (empty response) - blocking alert")
+                return False
+            # None = no record - allow
             if not existing_alert or not isinstance(existing_alert, dict):
                 logger.info(f"📋 DEDUP_ALLOW content={content[:60]}... user={user_id[:16]}... (no record in Firebase)")
                 return True
@@ -242,7 +245,7 @@ class PersistentAlertDeduplication:
             return True
         except Exception as e:
             logger.error(f"Error in check-only: {e}")
-            return True  # Fail open
+            return False  # Fail closed to prevent duplicates
 
     def _get_news_content_hash(self, news_item: Dict[str, Any]) -> str:
         """Generate content hash for news item (for global deduplication)"""

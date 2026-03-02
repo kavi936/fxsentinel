@@ -353,12 +353,15 @@ class NewsAlertTrigger:
                 logger.error("No user_id provided for alert")
                 return False
             
-            # PERSISTENT DEDUPLICATION: Use Firebase-backed deduplication
-            # This ensures deduplication survives restarts and works across instances
-            from .persistent_alert_deduplication import should_send_news_alert
+            # PERSISTENT DEDUPLICATION: Same reserve flow as Path 1 (UnifiedAlertProcessor)
+            from .persistent_alert_deduplication import should_send_news_alert, reserve_news_alert
             
             if not should_send_news_alert(news_item, user_id):
                 logger.debug(f"Duplicate news alert prevented for user {user_id}: {news_item.get('title', '')[:30]}...")
+                return False
+            
+            if not reserve_news_alert(news_item, user_id):
+                logger.debug(f"Reservation lost for user {user_id}: {news_item.get('title', '')[:30]}... (another sender won)")
                 return False
             
             # Trigger AI analysis first if needed
@@ -386,9 +389,8 @@ class NewsAlertTrigger:
             from .alert_service import get_alert_service
             alert_service = get_alert_service()
             
-            # Process alert (subscription check removed - alerts available to all users)
-            # This function is async, so we can await directly since we're already in an async context
-            success = await alert_service.process_alert(alert_data, user_settings, user_id)
+            # Process alert (pass user_data so chat_id is available, same as Path 1)
+            success = await alert_service.process_alert(alert_data, user_settings, user_id, user_data=user_data)
             
             if success:
                 logger.info(f"Alert sent successfully to user {user_id}")
