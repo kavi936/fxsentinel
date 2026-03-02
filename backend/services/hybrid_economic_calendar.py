@@ -10189,16 +10189,7 @@ class HybridEconomicCalendar:
                 'forecast': '6.2B',
                 'previous': '6.1B'
             },
-            {
-                'title': 'Foreign Direct Investment ytd/y',
-                'date': 'Mon, Mar 02',
-                'time': '10:02 UTC',
-                'currency': 'CNY',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-9.5%'
-            },
+            
             {
                 'title': 'RBA Assist Gov Hunter Speaks',
                 'date': 'Mon, Mar 02',
@@ -10351,7 +10342,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BRC Shop Price Index y/y',
-                'date': 'Mon, Mar 02',
+                'date': 'Tue, Mar 03',
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
@@ -10361,7 +10352,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Building Approvals m/m',
-                'date': 'Mon, Mar 02',
+                'date': 'Tue, Mar 03',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -10371,7 +10362,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Current Account',
-                'date': 'Mon, Mar 02',
+                'date': 'Tue, Mar 03',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -10381,7 +10372,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': '10-y Bond Auction',
-                'date': 'Mon, Mar 02',
+                'date': 'Tue, Mar 03',
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
@@ -10391,7 +10382,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BOJ Gov Ueda Speaks',
-                'date': 'Mon, Mar 02',
+                'date': 'Tue, Mar 03',
                 'time': '04:00 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
