@@ -9996,7 +9996,7 @@ class HybridEconomicCalendar:
             },
 
              # SUNDAY, MARCH 01
-             
+
             {
                 'title': 'German Buba President Nagel Speaks',
                 'date': 'Sun, Mar 01',
@@ -10013,7 +10013,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': 'N/A',
                 'previous': '0.2%'
             },
@@ -10023,9 +10023,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.2%',
                 'forecast': 'N/A',
-                'previous': '4.4%'
+                'previous': '5.2%'
             },
             {
                 'title': 'Company Operating Profits q/q',
@@ -10033,9 +10033,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	5.8%',
                 'forecast': '1.8%',
-                'previous': '0.0%'
+                'previous': '1.5%'
             },
             {
                 'title': 'Final Manufacturing PMI',
@@ -10043,7 +10043,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '53.0',
                 'forecast': '52.8',
                 'previous': '52.8'
             },
