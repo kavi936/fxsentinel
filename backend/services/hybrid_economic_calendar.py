@@ -10125,7 +10125,7 @@ class HybridEconomicCalendar:
                 'time': '08:50 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.1',
                 'forecast': '49.9',
                 'previous': '49.9'
             },
@@ -10135,7 +10135,7 @@ class HybridEconomicCalendar:
                 'time': '08:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.9',
                 'forecast': '50.7',
                 'previous': '50.7'
             },
@@ -10145,7 +10145,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.8',
                 'forecast': '50.8',
                 'previous': '50.8'
             },
@@ -10155,7 +10155,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.7',
                 'forecast': '52.0',
                 'previous': '52.0'
             },
@@ -10165,9 +10165,9 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%	',
                 'forecast': '0.2%',
-                'previous': '0.3%'
+                'previous': '0.4%'
             },
             {
                 'title': 'Mortgage Approvals',
@@ -10175,7 +10175,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '60K',
                 'forecast': '62K',
                 'previous': '61K'
             },
@@ -10185,7 +10185,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.9B',
                 'forecast': '6.2B',
                 'previous': '6.1B'
             },
