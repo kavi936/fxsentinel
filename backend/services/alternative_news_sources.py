@@ -6,6 +6,7 @@ These sources don't require authentication and are more reliable
 
 import requests
 import feedparser
+import hashlib
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 import logging
@@ -137,14 +138,15 @@ class AlternativeNewsSources:
             # Extract currency pairs
             currency_pairs = self.extract_currency_pairs(title, summary)
             
-            # Generate unique ID
-            article_id = hash(f"{source_name}_{title}_{pub_date.isoformat()}")
+            # Generate unique ID (deterministic - hash() is randomized in Python 3)
+            raw = f"{source_name}_{title}_{pub_date.isoformat()}"
+            article_id = int(hashlib.md5(raw.encode()).hexdigest()[:12], 16)
             
             # Get current time when item is added to feed
             added_to_feed_at = datetime.now().isoformat()
             
             return {
-                'id': abs(article_id),
+                'id': article_id,
                 'title': title,
                 'summary': summary[:800] + '...' if len(summary) > 800 else summary,  # Increased from 200 to 800 characters for more detailed descriptions
                 'source': source_name,
