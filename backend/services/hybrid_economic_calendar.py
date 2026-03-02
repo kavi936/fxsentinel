@@ -10055,9 +10055,9 @@ class HybridEconomicCalendar:
                 'time': '05:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.4%',
                 'forecast': 'N/A',
-                'previous': '2.6%'
+                'previous': '2.8%'
             },
             {
                 'title': 'German Retail Sales m/m',
@@ -10065,9 +10065,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.9%',
                 'forecast': '0.0%',
-                'previous': '0.1%'
+                'previous': '1.2%'
             },
             {
                 'title': 'Nationwide HPI m/m',
@@ -10075,7 +10075,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.2%',
                 'previous': '0.3%'
             },
@@ -10085,9 +10085,9 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.1%',
                 'forecast': '2.7%',
-                'previous': '2.9%'
+                'previous': '2.8%'
             },
             {
                 'title': 'Spanish Manufacturing PMI',
@@ -10095,7 +10095,7 @@ class HybridEconomicCalendar:
                 'time': '08:15 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.0',
                 'forecast': '49.9',
                 'previous': '49.2'
             },
@@ -10105,7 +10105,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '47.4',
                 'forecast': '49.8',
                 'previous': '48.8'
             },
@@ -10115,7 +10115,7 @@ class HybridEconomicCalendar:
                 'time': '08:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.6',
                 'forecast': '49.1',
                 'previous': '48.1'
             },
