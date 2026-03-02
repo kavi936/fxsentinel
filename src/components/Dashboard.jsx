@@ -20,7 +20,7 @@ import { useMeta } from '../hooks/useMeta';
 import { trackEngagement, trackFeatureUsage, trackTrialStart, trackDashboardAccess } from '../utils/analytics';
 
 function Dashboard() {
-  useMeta('Dashboard - FXSentinel', 'Your FXSentinel market dashboard: economic calendar, AI analysis, live news, and Telegram alerts.');
+  useMeta('Market Dashboard – FXSentinel', 'Your FXSentinel market dashboard: economic calendar, AI analysis, live news, and Telegram alerts.');
   const { currentUser, logout } = useAuth();
   const { unreadCount, addSubscriptionNotification } = useNotifications();
   const navigate = useNavigate();
