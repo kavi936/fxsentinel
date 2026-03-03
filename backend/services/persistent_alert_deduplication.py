@@ -195,10 +195,9 @@ class PersistentAlertDeduplication:
             return False
     
     def _get_news_content_string(self, news_item: Dict[str, Any]) -> str:
-        """Build content string for per-user deduplication (same as used in mark_news_alert_sent)."""
-        news_id = str(news_item.get('id', ''))
-        if news_id:
-            return f"news:{news_id}"
+        """Build content string for per-user deduplication. Always use normalized title+source
+        so the same story maps to the same key regardless of path (Unified vs API) or whether
+        the payload has an id (which can differ or be missing and cause duplicate sends)."""
         title = str(news_item.get('title', '')).strip().lower()
         source = str(news_item.get('source', '')).strip().lower()
         import re
@@ -248,25 +247,10 @@ class PersistentAlertDeduplication:
             return False  # Fail closed to prevent duplicates
 
     def _get_news_content_hash(self, news_item: Dict[str, Any]) -> str:
-        """Generate content hash for news item (for global deduplication)"""
+        """Generate content hash for news item (for global deduplication).
+        Must match _get_news_content_string so per-user and global use the same identity."""
         try:
-            # Use news_id if available (most reliable)
-            news_id = str(news_item.get('id', ''))
-            if news_id:
-                return hashlib.md5(f"news:{news_id}".encode()).hexdigest()
-            
-            # Fallback: Use normalized title+source (more stable than including URL)
-            # URL can change (query params, redirects, etc.) but title+source is more stable
-            title = str(news_item.get('title', '')).strip().lower()
-            source = str(news_item.get('source', '')).strip().lower()
-            
-            # Normalize title: remove extra whitespace, special chars that might vary
-            import re
-            title_normalized = re.sub(r'\s+', ' ', title)  # Normalize whitespace
-            title_normalized = re.sub(r'[^\w\s]', '', title_normalized)  # Remove special chars
-            
-            # Use title+source for hash (more stable than including URL)
-            content_str = f"news:{title_normalized}|{source}"
+            content_str = self._get_news_content_string(news_item)
             return hashlib.md5(content_str.encode()).hexdigest()
         except Exception as e:
             logger.error(f"Error generating news content hash: {e}")
@@ -532,20 +516,8 @@ class PersistentAlertDeduplication:
         Updates reserved record to sent status
         """
         try:
-            # Create content string from news item (same as should_send_news_alert)
-            news_id = str(news_item.get('id', ''))
-            
-            if news_id:
-                content = f"news:{news_id}"
-            else:
-                # Use normalized title+source (same as should_send_news_alert) for consistency
-                title = str(news_item.get('title', '')).strip().lower()
-                source = str(news_item.get('source', '')).strip().lower()
-                import re
-                title_normalized = re.sub(r'\s+', ' ', title)
-                title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
-                content = f"news:{title_normalized}|{source}"
-            
+            # Single source of truth: same content string as check/reserve (always title+source)
+            content = self._get_news_content_string(news_item)
             # Mark per-user alert as sent (updates reserved record)
             per_user_success = self.mark_alert_sent('news', content, user_id)
             

@@ -61,3 +61,17 @@
 
 - Trigger a batch that would previously send the same alert twice in a row: confirm only one is sent.
 - Trigger a batch that would previously send 5 alerts to one user at once: confirm they are spaced by about 15 seconds (or your configured value).
+
+---
+
+## Update: Same alert still sent twice (content key fix)
+
+**Observed:** The same live news alert (e.g. "Fed's Kashkari: Too soon to know how Iran war will affect inflation", FXStreet, 17:52 UTC) was still delivered twice in a row.
+
+**Root cause:** The dedup key was built from `news:{id}` when `id` was present, and `news:{normalized_title}|{source}` when `id` was missing. The same story can reach the system via two paths (UnifiedAlertProcessor from main app, and API trigger from background worker) with different payload shapes: one path might have an `id` (e.g. from cache), the other might not (or a different `id`). That produced two different Firebase keys, so both sends were allowed.
+
+**Fix (in `persistent_alert_deduplication.py`):** Use a **content-based key only** for news: always build the content string from **normalized title + source** (never from `id`). So the same story always maps to the same dedup key regardless of path or payload shape.
+
+- `_get_news_content_string()` now always returns `news:{normalized_title}|{source}`.
+- `_get_news_content_hash()` now hashes that same string (no separate id-based branch).
+- `mark_news_alert_sent()` uses `_get_news_content_string()` only (single source of truth).
