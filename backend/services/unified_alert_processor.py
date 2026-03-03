@@ -58,6 +58,12 @@ class UnifiedAlertProcessor:
         self._processing_locks: Dict[Tuple[str, str], threading.Lock] = {}
         self._processing_locks_lock = threading.Lock()  # Lock for the locks dictionary
         
+        # Per-user lock: only one alert in flight per user; plus minimum gap between alerts (UX + dedup)
+        # Prevents same user getting two alerts at once and ensures Firebase "sent" has time to propagate
+        self._user_send_locks: Dict[str, threading.Lock] = {}
+        self._user_send_locks_lock = threading.Lock()
+        self._min_seconds_between_alerts_per_user = 15  # 10-20s gap between consecutive alerts to same user
+        
         logger.info("UnifiedAlertProcessor initialized with caching")
     
     def start(self):
@@ -316,6 +322,8 @@ class UnifiedAlertProcessor:
         Uses direct function calls - no HTTP overhead
         OPTIMIZED: Uses cached user settings
         CRITICAL: Uses per-user+news lock to prevent concurrent processing
+        Per-user lock ensures only one alert in flight per user and a minimum gap between
+        consecutive alerts (UX + gives Firebase time to propagate "sent" state for dedup).
         """
         user_id = user_data.get('user_id')
         news_id = str(news_item.get('id', ''))
@@ -325,32 +333,37 @@ class UnifiedAlertProcessor:
             logger.warning(f"🚫 No user_id provided, skipping alert")
             return False
         
-        # SOLUTION 1: Quick deduplication check BEFORE lock (fast path)
-        # This catches duplicates early without needing to acquire lock
-        from services.persistent_alert_deduplication import should_send_news_alert
-        logger.info(f"🔍 Quick deduplication check for user {user_id}: {news_title}...")
-        
-        quick_check = should_send_news_alert(news_item, user_id)
-        if not quick_check:
-            logger.warning(f"🚫 Duplicate prevented (quick check) for user {user_id}: {news_title}")
-            return False
-        
-        # SOLUTION 2: Use blocking lock to ensure proper serialization
-        # This ensures only one thread processes the same user+news combination at a time
-        lock_key = (user_id, news_id)
-        
-        # Get or create lock for this user+news combination
-        with self._processing_locks_lock:
-            if lock_key not in self._processing_locks:
-                self._processing_locks[lock_key] = threading.Lock()
-            processing_lock = self._processing_locks[lock_key]
-        
-        # Acquire lock with blocking=True to ensure serialization
-        # This ensures only one thread processes this user+news at a time
-        logger.info(f"🔒 Acquiring lock for user {user_id}: {news_title}...")
-        processing_lock.acquire(blocking=True)  # Changed from blocking=False
+        # Per-user lock: serialize sends to the same user so (1) no duplicate in same recheck
+        # cycle, (2) minimum gap between consecutive alerts (no spam of 5 at once)
+        with self._user_send_locks_lock:
+            if user_id not in self._user_send_locks:
+                self._user_send_locks[user_id] = threading.Lock()
+            user_lock = self._user_send_locks[user_id]
+        user_lock.acquire(blocking=True)
+        sent_success = False
+        processing_lock_acquired = False
+        processing_lock = None
         
         try:
+            # SOLUTION 1: Quick deduplication check BEFORE per-news lock (fast path)
+            from services.persistent_alert_deduplication import should_send_news_alert
+            logger.info(f"🔍 Quick deduplication check for user {user_id}: {news_title}...")
+            
+            quick_check = should_send_news_alert(news_item, user_id)
+            if not quick_check:
+                logger.warning(f"🚫 Duplicate prevented (quick check) for user {user_id}: {news_title}")
+                return False
+            
+            # SOLUTION 2: Use blocking lock for same user+news combination
+            lock_key = (user_id, news_id)
+            with self._processing_locks_lock:
+                if lock_key not in self._processing_locks:
+                    self._processing_locks[lock_key] = threading.Lock()
+                processing_lock = self._processing_locks[lock_key]
+            
+            logger.info(f"🔒 Acquiring lock for user {user_id}: {news_title}...")
+            processing_lock.acquire(blocking=True)
+            processing_lock_acquired = True
             # DEBUG: Log entry point
             logger.info(f"🔍 _send_alert_to_user called for user {user_id}: {news_title}...")
             
@@ -426,8 +439,9 @@ class UnifiedAlertProcessor:
             else:
                 logger.info(f"✅ Alert marked as reserved (before delivery) for user {user_id}: {news_title}")
             
-            # Additional delay after marking as sent to ensure Firebase propagation
-            time.sleep(0.2)  # 200ms delay to allow Firebase to propagate "sent" status
+            # Additional delay after marking as sent to ensure Firebase propagation before we send/release lock
+            time.sleep(0.2)  # 200ms
+            time.sleep(1.0)  # 1s so recheck/other instance is more likely to see "sent" before we release lock
             
             # Import services for alert processing
             from services.news_alert_trigger import news_alert_trigger
@@ -478,6 +492,7 @@ class UnifiedAlertProcessor:
                 )
             
             if success:
+                sent_success = True  # So finally can apply per-user delay and release user lock after gap
                 # Phase 2 improvement: Mark global hash only after successful delivery
                 from services.persistent_alert_deduplication import mark_news_alert_sent, get_persistent_deduplication
                 mark_news_alert_sent(news_item, user_id, mark_global_hash=True)
@@ -543,11 +558,16 @@ class UnifiedAlertProcessor:
             logger.error(f"Error sending alert to user {user_id}: {e}", exc_info=True)
             return False
         finally:
-            # Always release the lock
-            processing_lock.release()
-            
-            # Clean up lock if it's been unused (optional optimization)
-            # We'll keep locks for a while to avoid recreating them
+            # Release per-news lock first (so other users aren't blocked)
+            if processing_lock_acquired and processing_lock is not None:
+                processing_lock.release()
+            # If we actually sent, enforce minimum gap before next alert to same user (UX + dedup propagation)
+            if sent_success:
+                delay = self._min_seconds_between_alerts_per_user
+                logger.info(f"⏳ Waiting {delay}s before next alert can be sent to user {user_id} (anti-spam + dedup)")
+                time.sleep(delay)
+            # Always release per-user lock so next alert to this user can proceed (after delay if we sent)
+            user_lock.release()
     
     def _check_economic_calendar_alerts(self):
         """Check for economic calendar alerts (direct function calls)"""

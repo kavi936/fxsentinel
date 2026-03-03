@@ -224,10 +224,10 @@ class BackgroundAlertWorker:
                             # Add detailed logging for debugging
                             logger.debug(f"Event: {event.get('title', 'Unknown')} | Parsed: {event_datetime} | Minutes until: {minutes_until_event:.1f}")
                             
-                            # Only send alerts if within timing windows
-                            if (8 <= minutes_until_event <= 10 or      # 10min before
-                                55 <= minutes_until_event <= 60 or    # 1h before
-                                115 <= minutes_until_event <= 120):   # 2h before
+                            # Only send alerts if within timing windows (match unified_alert_processor windows)
+                            if (5 <= minutes_until_event <= 15 or      # ~10min before
+                                50 <= minutes_until_event <= 65 or    # ~1h before
+                                110 <= minutes_until_event <= 125):   # ~2h before
                                 logger.info(f"🎯 Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
                                 self._send_economic_alert(event)
                             else:
@@ -243,14 +243,16 @@ class BackgroundAlertWorker:
             logger.error(f"Error checking economic calendar alerts: {e}")
     
     def _get_economic_calendar_local(self):
-        """Try to get economic calendar using local function (if running as part of main app)"""
+        """Try to get economic calendar using local function (if running as part of main app).
+        Uses hybrid_economic_calendar (same as main app and API) so high-impact events match."""
         try:
-            # Try to import and use the local economic calendar function
             from flask import current_app
             with current_app.app_context():
-                # Import the finnhub calendar directly
-                from .finnhub_calendar import finnhub_calendar
-                events = finnhub_calendar.get_economic_calendar()
+                from datetime import timedelta
+                from .hybrid_economic_calendar import hybrid_economic_calendar
+                start_date = datetime.now().strftime('%Y-%m-%d')
+                end_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
+                events = hybrid_economic_calendar.get_economic_events(start_date, end_date)
                 return events
         except Exception as e:
             logger.debug(f"Could not get economic calendar locally: {e}")
