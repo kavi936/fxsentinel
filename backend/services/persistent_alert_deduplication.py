@@ -401,7 +401,6 @@ class PersistentAlertDeduplication:
                 # Step 1: Check if already exists (including reserved or sent)
                 existing_alert = self.firebase._make_request('GET', alert_path)
                 logger.info(f"🔍 Existing alert check result: {existing_alert is not None} for user {user_id}")
-                logger.info(f"🔍 Existing alert check result: {existing_alert is not None} for user {user_id}")
                 
                 if existing_alert and isinstance(existing_alert, dict):
                     # Reserved or sent = duplicate (no "reserved recently - allowing" to prevent double sends)
@@ -424,10 +423,30 @@ class PersistentAlertDeduplication:
                             logger.debug(f"Duplicate alert prevented (status: {status}, no expires_at) for user {user_id}: {alert_type}")
                             return False
                 
-                # Step 2: Alert doesn't exist or is expired - try to reserve it
+                # Step 2: Re-check immediately before reserve to avoid overwriting 'sent'
+                # (Another thread may have marked_sent between our Step 1 GET and now - e.g. replication lag)
+                existing_alert = self.firebase._make_request('GET', alert_path)
+                if existing_alert and isinstance(existing_alert, dict):
+                    status = existing_alert.get('status', 'sent')
+                    if status == 'sent':
+                        expires_at_str = existing_alert.get('expires_at')
+                        if expires_at_str:
+                            try:
+                                expires_at = datetime.fromisoformat(expires_at_str)
+                                if datetime.now() < expires_at:
+                                    self.duplicates_prevented += 1
+                                    logger.info(f"📋 DEDUP_BLOCK reserve aborted: record already sent (re-check before PUT) user={user_id[:16]}...")
+                                    return False
+                            except Exception:
+                                pass
+                        else:
+                            self.duplicates_prevented += 1
+                            logger.info(f"📋 DEDUP_BLOCK reserve aborted: record already sent (no expires) user={user_id[:16]}...")
+                            return False
+
+                # Step 3: Alert doesn't exist or is expired - try to reserve it
                 # Use a unique timestamp to identify our reservation
                 # SOLUTION 4: Increased reservation window from 5 to 10 minutes
-                # This gives more time for Firebase propagation and reduces race conditions
                 now = datetime.now()
                 expires_at = now + timedelta(minutes=10)  # Increased from 5 to 10 minutes
                 our_reserved_at = now.isoformat()
@@ -440,7 +459,7 @@ class PersistentAlertDeduplication:
                     'expires_at': expires_at.isoformat()
                 }
                 
-                # Step 3: Try to create reservation (PUT is atomic in Firebase)
+                # Step 4: Try to create reservation (PUT is atomic in Firebase)
                 result = self.firebase._make_request('PUT', alert_path, reserve_record)
                 
                 if result is None:
@@ -452,7 +471,7 @@ class PersistentAlertDeduplication:
                         logger.warning(f"Failed to reserve alert in Firebase after {max_retries} attempts")
                         return True  # Fail open
                 
-                # Step 4: Verify we got the reservation (handle eventual consistency)
+                # Step 5: Verify we got the reservation (handle eventual consistency)
                 # SOLUTION 4: Increased verification delay from 0.2s to 0.5s
                 # This gives Firebase more time to propagate changes globally
                 time.sleep(0.5)  # Increased from 0.2s to 0.5s for better propagation

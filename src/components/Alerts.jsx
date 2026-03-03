@@ -32,13 +32,16 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
 
   const [recentAlerts, setRecentAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
-  const [showEmailSetup, setShowEmailSetup] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   
   // Test alert functionality
   const [testAlertLoading, setTestAlertLoading] = useState(false);
   const [testAlertStatus, setTestAlertStatus] = useState(null);
+
+  // Inline errors (replaces alert() for setup/verify) and disconnect confirmation
+  const [setupError, setSetupError] = useState(null);
+  const [verifyError, setVerifyError] = useState(null);
+  const [showDisconnectConfirm, setShowDisconnectConfirm] = useState(false);
 
   // Alert history functionality
   const [alertHistory, setAlertHistory] = useState([]);
@@ -64,12 +67,12 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
     }
   }, [currentUser]);
 
-  // Load alert history when history tab is active
-  useEffect(() => {
-    if (activeTab === 'history' && currentUser) {
-      loadAlertHistory();
-    }
-  }, [activeTab, currentUser]);
+  // Load alert history when history tab is active (tab commented out for now)
+  // useEffect(() => {
+  //   if (activeTab === 'history' && currentUser) {
+  //     loadAlertHistory();
+  //   }
+  // }, [activeTab, currentUser]);
 
   // Check current Telegram connection status
   const checkTelegramConnection = async () => {
@@ -197,18 +200,20 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
     }
   }, [alertPreferences, currentUser]);
 
-  // Clear test alert status when user changes
+  // Clear test alert status and inline errors when user changes
   useEffect(() => {
     setTestAlertStatus(null);
+    setSetupError(null);
+    setVerifyError(null);
   }, [currentUser]);
 
   // Telegram Bot Setup Flow
   const setupTelegramBot = async () => {
     if (!currentUser) {
-      alert('Please log in to set up Telegram alerts');
+      setSetupError('Please log in to set up Telegram alerts.');
       return;
     }
-    
+    setSetupError(null);
     setTelegramSetup(prev => ({ ...prev, loading: true }));
     try {
       const userId = getUserId();
@@ -217,45 +222,41 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId })
       });
-      
       const data = await response.json();
-      
       if (data.success) {
         setTelegramSetup({
           step: 'verify',
           botUsername: data.botUsername,
           instructions: [
-            '1. Click the link below to start the bot',
-            '2. Send /start to begin setup',
-            '3. Follow the bot instructions to complete setup',
-            '4. Return here and click "Verify Connection"'
+            'Click the link below to open Telegram and start the bot.',
+            'Send /start in the chat to begin.',
+            'Complete the bot’s steps, then return here.',
+            'Click “I’ve completed setup in Telegram” to verify.'
           ],
           botLink: data.botLink,
           loading: false
         });
       } else {
-        // Handle subscription validation error
         if (data.subscription_required) {
-          alert('Subscription Required\n\nYour subscription has expired or you don\'t have access to Telegram alerts. Please renew your subscription to continue using alerts.');
+          setSetupError('Subscription required. Please renew your subscription to use Telegram alerts.');
           setTelegramSetup(prev => ({ ...prev, loading: false }));
           return;
         }
-        
         throw new Error(data.error || 'Failed to setup Telegram bot');
       }
     } catch (error) {
       console.error('Error setting up Telegram bot:', error);
-      alert('Failed to setup Telegram bot. Please try again.');
+      setSetupError(error.message || 'Failed to setup Telegram bot. Please try again.');
       setTelegramSetup(prev => ({ ...prev, loading: false }));
     }
   };
 
   const verifyTelegramConnection = async () => {
     if (!currentUser) {
-      alert('Please log in to verify Telegram connection');
+      setVerifyError('Please log in to verify your connection.');
       return;
     }
-    
+    setVerifyError(null);
     setTelegramSetup(prev => ({ ...prev, loading: true }));
     try {
       const userId = getUserId();
@@ -264,9 +265,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: userId })
       });
-      
       const data = await response.json();
-      
       if (data.success && data.connected) {
         setTelegramSetup({
           step: 'complete',
@@ -274,52 +273,29 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           instructions: [],
           loading: false
         });
-        
-        // Update alert preferences
         setAlertPreferences(prev => ({
           ...prev,
           channels: {
             ...prev.channels,
-            telegram: { 
-              enabled: true, 
-              chatId: data.chatId || '', 
+            telegram: {
+              enabled: true,
+              chatId: data.chatId || '',
               username: data.username || ''
             }
           }
         }));
-        
-        alert('Telegram bot connected successfully! You will now receive alerts on Telegram.');
       } else {
-        // Handle subscription validation error
         if (data.subscription_required) {
-          alert('Subscription Required\n\nYour subscription has expired or you don\'t have access to Telegram alerts. Please renew your subscription to continue using alerts.');
+          setVerifyError('Subscription required. Please renew to use Telegram alerts.');
           setTelegramSetup(prev => ({ ...prev, loading: false }));
           return;
         }
-        
-        throw new Error(data.error || 'Failed to verify Telegram connection');
+        throw new Error(data.error || 'Verification failed. Complete the steps in Telegram and try again.');
       }
     } catch (error) {
       console.error('Error verifying Telegram connection:', error);
-      alert('Failed to verify Telegram connection. Please try again.');
+      setVerifyError(error.message || 'Failed to verify. Complete setup in Telegram and try again.');
       setTelegramSetup(prev => ({ ...prev, loading: false }));
-    }
-  };
-
-  const setupEmailAlerts = () => {
-    if (emailInput && emailInput.includes('@')) {
-      const updatedPreferences = {
-        ...alertPreferences,
-        channels: {
-          ...alertPreferences.channels,
-          email: { enabled: true, address: emailInput }
-        }
-      };
-      setAlertPreferences(updatedPreferences);
-      setShowEmailSetup(false);
-      setEmailInput('');
-      // Save immediately when email is connected
-      saveAlertPreferences(updatedPreferences);
     }
   };
 
@@ -335,8 +311,25 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       }
     };
     setAlertPreferences(updatedPreferences);
-    
-    // Save to backend using the function passed from Dashboard
+    if (updateAlertSettings) {
+      updateAlertSettings('preferences', updatedPreferences.preferences);
+    }
+  };
+
+  const setAllAlertTypes = (checked) => {
+    const updatedPreferences = {
+      ...alertPreferences,
+      preferences: {
+        ...alertPreferences.preferences,
+        alertTypes: {
+          liveNews: checked,
+          preNews: checked,
+          postNews: checked,
+          technicalAnalysis: checked
+        }
+      }
+    };
+    setAlertPreferences(updatedPreferences);
     if (updateAlertSettings) {
       updateAlertSettings('preferences', updatedPreferences.preferences);
     }
@@ -369,15 +362,33 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
       }
     };
     setAlertPreferences(updatedPreferences);
-    
-    // Save to backend
     if (updateAlertSettings) {
       updateAlertSettings('preferences', updatedPreferences.preferences);
     }
   };
 
-  // Disconnect Telegram
+  const CURRENCY_PAIRS_OPTIONS = ['EUR/USD', 'USD/JPY', 'GBP/USD', 'USD/CHF', 'AUD/USD', 'USD/CAD', 'NZD/USD', 'EUR/GBP', 'EUR/JPY', 'GBP/JPY'];
+
+  const setAllCurrencyPairs = (pairs) => {
+    const updatedPreferences = {
+      ...alertPreferences,
+      preferences: {
+        ...alertPreferences.preferences,
+        currencyPairs: pairs
+      }
+    };
+    setAlertPreferences(updatedPreferences);
+    if (updateAlertSettings) {
+      updateAlertSettings('preferences', updatedPreferences.preferences);
+    }
+  };
+
+  const confirmDisconnectTelegram = () => {
+    setShowDisconnectConfirm(true);
+  };
+
   const disconnectTelegram = () => {
+    setShowDisconnectConfirm(false);
     const updatedPreferences = {
       ...alertPreferences,
       channels: {
@@ -387,23 +398,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
     };
     setAlertPreferences(updatedPreferences);
     setTelegramSetup({ step: 'connect', loading: false });
-    // Clear test alert status when disconnecting
     setTestAlertStatus(null);
-    // Save immediately when Telegram is disconnected
-    saveAlertPreferences(updatedPreferences);
-  };
-
-  // Disconnect Email
-  const disconnectEmail = () => {
-    const updatedPreferences = {
-      ...alertPreferences,
-      channels: {
-        ...alertPreferences.channels,
-        email: { enabled: false, address: '' }
-      }
-    };
-    setAlertPreferences(updatedPreferences);
-    // Save immediately when email is disconnected
     saveAlertPreferences(updatedPreferences);
   };
 
@@ -550,12 +545,13 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           >
             Preferences
           </button>
-          <button 
+          {/* History tab – commented out for now; logic kept for potential future use */}
+          {/* <button 
             className={`tab-btn ${activeTab === 'history' ? 'active' : ''}`}
             onClick={() => setActiveTab('history')}
           >
             History
-          </button>
+          </button> */}
         </div>
 
         {/* Settings Save Indicator */}
@@ -571,135 +567,108 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           {/* Setup Tab */}
           {activeTab === 'setup' && (
             <div className="setup-content">
-              <div className="setup-grid">
-                
-                {/* Telegram Setup */}
-                <div className="setup-card">
-                  <h3>Telegram Bot Setup</h3>
-                  <p>Connect your Telegram account to receive instant alerts</p>
-                  
-                  {telegramSetup.step === 'connect' && (
-                    <div className="setup-step">
-                      <div className="setup-info">
-                        <p>• Instant notifications on your phone</p>
-                        <p>• AI-powered market analysis</p>
-                        <p>• Real-time breaking news alerts</p>
-                      </div>
-                      <button 
-                        className="setup-telegram-btn"
-                        onClick={setupTelegramBot}
-                        disabled={telegramSetup.loading}
-                      >
-                        {telegramSetup.loading ? 'Setting up...' : 'Connect Telegram Bot'}
-                      </button>
-                    </div>
-                  )}
-                  
-                  {telegramSetup.step === 'verify' && (
-                    <div className="setup-step">
-                      <div className="bot-instructions">
-                        {telegramSetup.instructions.map((instruction, index) => (
-                          <p key={index}>{instruction}</p>
-                        ))}
-                      </div>
-                      <a 
-                        href={telegramSetup.botLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="bot-link-btn"
-                      >
-                        Start @{telegramSetup.botUsername}
-                      </a>
-                      <button 
-                        className="verify-connection-btn"
-                        onClick={verifyTelegramConnection}
-                        disabled={telegramSetup.loading}
-                      >
-                        {telegramSetup.loading ? 'Verifying...' : 'I\'ve Completed Setup'}
-                      </button>
-                    </div>
-                  )}
-                  
-                  {telegramSetup.step === 'complete' && (
-                    <div className="setup-complete">
-                      <div className="success-icon">✓</div>
-                      <p>Telegram bot connected successfully!</p>
-                      <div className="test-alert-section">
-                        <button 
-                          className="test-alert-btn"
-                          onClick={sendTestAlert}
-                          disabled={testAlertLoading}
-                        >
-                          {testAlertLoading ? 'Sending...' : 'Send Test Alert'}
-                        </button>
-                        {testAlertStatus && (
-                          <p className={`test-alert-status ${testAlertStatus.type}`}>
-                            {testAlertStatus.message}
-                          </p>
+              <div className="setup-grid setup-grid-single">
+                <div className="telegram-card">
+                  <header className="telegram-card-header">
+                    <h2 className="telegram-card-title">Telegram Alerts</h2>
+                    <p className="telegram-card-subtitle">Receive high-impact events and breaking news on your phone</p>
+                  </header>
+                  <div className="telegram-card-body">
+                    {telegramSetup.step === 'connect' && (
+                      <>
+                        <div className="telegram-benefits">
+                          <span className="telegram-benefit">Instant notifications</span>
+                          <span className="telegram-benefit">Pre-news & post-news analysis</span>
+                          <span className="telegram-benefit">NFP, CPI, Fed & major events</span>
+                        </div>
+                        {setupError && (
+                          <div className="telegram-inline-error" role="alert">
+                            {setupError}
+                          </div>
                         )}
-                      </div>
-                      <button 
-                        className="disconnect-btn"
-                        onClick={disconnectTelegram}
-                      >
-                        Disconnect
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Email Setup */}
-                <div className="setup-card email-setup-card">
-                  <div className="coming-soon-overlay">
-                    <div className="coming-soon-content">
-                      <div className="coming-soon-icon"></div>
-                      <h4>Email Alerts</h4>
-                      <p>Email alerts will be available in the next update</p>
-                      <div className="coming-soon-badge">Coming Soon</div>
-                    </div>
-                  </div>
-                  
-                  <h3>Email Alerts Setup</h3>
-                  <p>Receive alerts via email as backup or primary method</p>
-                  
-                  {!alertPreferences.channels.email.enabled ? (
-                    <div className="setup-step">
-                      <div className="setup-info">
-                        <p>• Backup notification method</p>
-                        <p>• Detailed market analysis</p>
-                        <p>• Professional formatting</p>
-                      </div>
-                      <div className="email-input-group">
-                        <input
-                          type="email"
-                          placeholder="Enter your email address"
-                          value={emailInput}
-                          onChange={(e) => setEmailInput(e.target.value)}
-                          className="email-input"
-                          disabled
-                        />
-                        <button 
-                          className="setup-email-btn"
-                          onClick={setupEmailAlerts}
-                          disabled={true}
+                        <button
+                          type="button"
+                          className="telegram-cta-btn"
+                          onClick={setupTelegramBot}
+                          disabled={telegramSetup.loading}
                         >
-                          Coming Soon
+                          {telegramSetup.loading && <span className="telegram-btn-spinner" aria-hidden="true" />}
+                          <span>{telegramSetup.loading ? 'Preparing link…' : 'Connect Telegram'}</span>
                         </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="setup-complete">
-                      <div className="success-icon">✓</div>
-                      <p>Email alerts connected!</p>
-                      <p>Alerts will be sent to: {alertPreferences.channels.email.address}</p>
-                      <button 
-                        className="disconnect-btn"
-                        onClick={disconnectEmail}
-                      >
-                        Disconnect
-                      </button>
-                    </div>
-                  )}
+                      </>
+                    )}
+
+                    {telegramSetup.step === 'verify' && (
+                      <>
+                        <ol className="telegram-steps">
+                          {telegramSetup.instructions.map((instruction, index) => (
+                            <li key={index}>{instruction}</li>
+                          ))}
+                        </ol>
+                        <a
+                          href={telegramSetup.botLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="telegram-open-bot-btn"
+                        >
+                          Open {telegramSetup.botUsername.replace('@', '')} in Telegram
+                        </a>
+                        {verifyError && (
+                          <div className="telegram-inline-error" role="alert">
+                            {verifyError}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          className="telegram-cta-btn telegram-cta-btn-secondary"
+                          onClick={verifyTelegramConnection}
+                          disabled={telegramSetup.loading}
+                        >
+                          {telegramSetup.loading && <span className="telegram-btn-spinner" aria-hidden="true" />}
+                          <span>{telegramSetup.loading ? 'Verifying…' : "I've completed setup in Telegram"}</span>
+                        </button>
+                      </>
+                    )}
+
+                    {telegramSetup.step === 'complete' && (
+                      <>
+                        <div className="telegram-success-block">
+                          <span className="telegram-success-icon" aria-hidden="true">✓</span>
+                          <p className="telegram-success-title">You're connected</p>
+                          <p className="telegram-success-desc">Alerts will be sent for the event types you choose in Preferences.</p>
+                        </div>
+                        <div className="telegram-test-block">
+                          <button
+                            type="button"
+                            className="telegram-test-btn"
+                            onClick={sendTestAlert}
+                            disabled={testAlertLoading}
+                          >
+                            {testAlertLoading && <span className="telegram-btn-spinner telegram-btn-spinner-sm" aria-hidden="true" />}
+                            <span>{testAlertLoading ? 'Sending…' : 'Send test alert'}</span>
+                          </button>
+                          {testAlertStatus && (
+                            <p className={`telegram-test-status telegram-test-status-${testAlertStatus.type}`}>
+                              {testAlertStatus.message}
+                            </p>
+                          )}
+                        </div>
+                        {showDisconnectConfirm ? (
+                          <div className="telegram-disconnect-confirm">
+                            <p>Stop receiving alerts on Telegram?</p>
+                            <div className="telegram-disconnect-actions">
+                              <button type="button" className="telegram-disconnect-cancel" onClick={() => setShowDisconnectConfirm(false)}>Cancel</button>
+                              <button type="button" className="telegram-disconnect-do" onClick={disconnectTelegram}>Disconnect</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" className="telegram-link-btn" onClick={confirmDisconnectTelegram}>
+                            Disconnect Telegram
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -709,196 +678,168 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           {activeTab === 'preferences' && (
             <div className="preferences-content">
               <div className="preferences-grid">
-                
                 {/* Alert Types */}
                 <div className="preference-card">
-                  <h3>Alert Types</h3>
-                  <p>Choose which types of alerts you want to receive</p>
-                  
-                  <div className="preference-group">
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.alertTypes.liveNews}
-                        onChange={(e) => updatePreference('alertTypes', 'liveNews', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">Live Breaking News</span>
-                        <span className="preference-desc">Real-time breaking news with AI analysis</span>
-                      </div>
-                    </label>
-                    
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.alertTypes.preNews}
-                        onChange={(e) => updatePreference('alertTypes', 'preNews', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">Pre-News Alerts</span>
-                        <span className="preference-desc">Upcoming economic events and expectations</span>
-                      </div>
-                    </label>
-                    
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.alertTypes.postNews}
-                        onChange={(e) => updatePreference('alertTypes', 'postNews', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">Post-News Analysis</span>
-                        <span className="preference-desc">AI analysis after news release</span>
-                      </div>
-                    </label>
-                    
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.alertTypes.technicalAnalysis}
-                        onChange={(e) => updatePreference('alertTypes', 'technicalAnalysis', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">Technical Analysis</span>
-                        <span className="preference-desc">Price movements and technical breakouts</span>
-                      </div>
-                    </label>
+                  <header className="preference-card-header preference-card-header-with-actions">
+                    <div className="preference-card-header-text">
+                      <h3 className="preference-card-title">Alert Types</h3>
+                      <p className="preference-card-desc">Which kinds of alerts to receive</p>
+                    </div>
+                    <div className="preference-actions">
+                      <button type="button" className="preference-action-btn" onClick={() => setAllAlertTypes(true)}>Select all</button>
+                      <button type="button" className="preference-action-btn" onClick={() => setAllAlertTypes(false)}>Clear all</button>
+                    </div>
+                  </header>
+                  <div className="preference-card-body">
+                    {Object.keys(alertPreferences.preferences.alertTypes).every(k => !alertPreferences.preferences.alertTypes[k]) && (
+                      <p className="preference-warning" role="status">Enable at least one type to receive alerts.</p>
+                    )}
+                    <div className="preference-group">
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.alertTypes.liveNews} onChange={(e) => updatePreference('alertTypes', 'liveNews', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">Live Breaking News</span>
+                          <span className="preference-desc">Real-time breaking news with AI analysis</span>
+                        </div>
+                      </label>
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.alertTypes.preNews} onChange={(e) => updatePreference('alertTypes', 'preNews', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">Pre-News Alerts</span>
+                          <span className="preference-desc">Upcoming economic events and expectations</span>
+                        </div>
+                      </label>
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.alertTypes.postNews} onChange={(e) => updatePreference('alertTypes', 'postNews', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">Post-News Analysis</span>
+                          <span className="preference-desc">AI analysis after news release</span>
+                        </div>
+                      </label>
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.alertTypes.technicalAnalysis} onChange={(e) => updatePreference('alertTypes', 'technicalAnalysis', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">Technical Analysis</span>
+                          <span className="preference-desc">Price movements and technical breakouts</span>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
                 {/* Impact Levels */}
                 <div className="preference-card">
-                  <h3>Impact Levels</h3>
-                  <p>Select which impact levels you want to be alerted about</p>
-                  
-                  <div className="preference-group">
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.impactLevels.high}
-                        onChange={(e) => updatePreference('impactLevels', 'high', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">🔴 High Impact Events</span>
-                        <span className="preference-desc">CPI, NFP, Fed meetings, major political events</span>
-                      </div>
-                    </label>
-                    
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.impactLevels.medium}
-                        onChange={(e) => updatePreference('impactLevels', 'medium', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">🟡 Medium Impact Events</span>
-                        <span className="preference-desc">Retail sales, manufacturing data, employment</span>
-                      </div>
-                    </label>
-                    
-                    <label className="preference-item">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.impactLevels.low}
-                        onChange={(e) => updatePreference('impactLevels', 'low', e.target.checked)}
-                      />
-                      <div className="preference-info">
-                        <span className="preference-label">🟢 Low Impact Events</span>
-                        <span className="preference-desc">Minor economic indicators and news</span>
-                      </div>
-                    </label>
+                  <header className="preference-card-header">
+                    <h3 className="preference-card-title">Impact Levels</h3>
+                    <p className="preference-card-desc">Which event impacts to be notified about</p>
+                  </header>
+                  <div className="preference-card-body">
+                    <div className="preference-group">
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.impactLevels.high} onChange={(e) => updatePreference('impactLevels', 'high', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">🔴 High Impact</span>
+                          <span className="preference-desc">CPI, NFP, Fed meetings, major political events</span>
+                        </div>
+                      </label>
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.impactLevels.medium} onChange={(e) => updatePreference('impactLevels', 'medium', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">🟡 Medium Impact</span>
+                          <span className="preference-desc">Retail sales, manufacturing data, employment</span>
+                        </div>
+                      </label>
+                      <label className="preference-item">
+                        <input type="checkbox" checked={alertPreferences.preferences.impactLevels.low} onChange={(e) => updatePreference('impactLevels', 'low', e.target.checked)} />
+                        <div className="preference-info">
+                          <span className="preference-label">🟢 Low Impact</span>
+                          <span className="preference-desc">Minor economic indicators and news</span>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
 
                 {/* Currency Pairs */}
                 <div className="preference-card">
-                  <h3>Currency Pairs</h3>
-                  <p>Select which currency pairs you want alerts for</p>
-                  
-                  <div className="currency-pairs-section">
-                    <div className="currency-pairs-list">
-                      {alertPreferences.preferences.currencyPairs.map(pair => (
-                        <div key={pair} className="currency-pair-tag">
-                          <span>{pair}</span>
-                          <button 
-                            className="remove-pair-btn"
-                            onClick={() => removeCurrencyPair(pair)}
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
+                  <header className="preference-card-header preference-card-header-with-actions">
+                    <div className="preference-card-header-text">
+                      <h3 className="preference-card-title">Currency Pairs</h3>
+                      <p className="preference-card-desc">Alerts for these pairs only</p>
                     </div>
-                    
-                    <div className="add-pair-section">
-                      <select 
-                        className="pair-select"
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            addCurrencyPair(e.target.value);
-                            e.target.value = '';
-                          }
-                        }}
-                      >
-                        <option value="">Add currency pair...</option>
-                        <option value="EUR/USD">EUR/USD</option>
-                        <option value="USD/JPY">USD/JPY</option>
-                        <option value="GBP/USD">GBP/USD</option>
-                        <option value="USD/CHF">USD/CHF</option>
-                        <option value="AUD/USD">AUD/USD</option>
-                        <option value="USD/CAD">USD/CAD</option>
-                        <option value="NZD/USD">NZD/USD</option>
-                        <option value="EUR/GBP">EUR/GBP</option>
-                        <option value="EUR/JPY">EUR/JPY</option>
-                        <option value="GBP/JPY">GBP/JPY</option>
-                      </select>
+                    <div className="preference-actions">
+                      <button type="button" className="preference-action-btn" onClick={() => setAllCurrencyPairs(CURRENCY_PAIRS_OPTIONS)}>Select all</button>
+                      <button type="button" className="preference-action-btn" onClick={() => setAllCurrencyPairs([])}>Clear all</button>
+                    </div>
+                  </header>
+                  <div className="preference-card-body">
+                    <div className="currency-pairs-section">
+                      <div className={`currency-pairs-list ${alertPreferences.preferences.currencyPairs.length === 0 ? 'currency-pairs-list-empty' : ''}`}>
+                        {alertPreferences.preferences.currencyPairs.length === 0 ? (
+                          <p className="currency-pairs-empty-hint">Add at least one pair to get alerts for those markets.</p>
+                        ) : (
+                          alertPreferences.preferences.currencyPairs.map(pair => (
+                            <div key={pair} className="currency-pair-tag">
+                              <span>{pair}</span>
+                              <button type="button" className="remove-pair-btn" onClick={() => removeCurrencyPair(pair)} aria-label={`Remove ${pair}`}>×</button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                      <div className="add-pair-section">
+                        <select
+                          className="pair-select"
+                          onChange={(e) => {
+                            if (e.target.value) { addCurrencyPair(e.target.value); e.target.value = ''; }
+                          }}
+                          aria-label="Add currency pair"
+                        >
+                          <option value="">Add currency pair...</option>
+                          {CURRENCY_PAIRS_OPTIONS.map(p => (
+                            <option key={p} value={p}>{p}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Quiet Hours */}
                 <div className="preference-card">
-                  <h3>Quiet Hours</h3>
-                  <p>Set times when you don't want to receive alerts</p>
-                  
-                  <div className="quiet-hours-section">
-                    <label className="quiet-hours-toggle">
-                      <input 
-                        type="checkbox" 
-                        checked={alertPreferences.preferences.quietHours.enabled}
-                        onChange={(e) => updatePreference('quietHours', 'enabled', e.target.checked)}
-                      />
-                      <span>Enable quiet hours</span>
-                    </label>
-                    
-                    {alertPreferences.preferences.quietHours.enabled && (
-                      <div className="quiet-hours-inputs">
-                        <div className="time-input-group">
-                          <label>Start Time:</label>
-                          <input 
-                            type="time" 
-                            value={alertPreferences.preferences.quietHours.start}
-                            onChange={(e) => updatePreference('quietHours', 'start', e.target.value)}
-                          />
-                        </div>
-                        <div className="time-input-group">
-                          <label>End Time:</label>
-                          <input 
-                            type="time" 
-                            value={alertPreferences.preferences.quietHours.end}
-                            onChange={(e) => updatePreference('quietHours', 'end', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    )}
+                  <header className="preference-card-header">
+                    <h3 className="preference-card-title">Quiet Hours</h3>
+                    <p className="preference-card-desc">No alerts during this time range</p>
+                  </header>
+                  <div className="preference-card-body">
+                    <div className="quiet-hours-section">
+                      <label className="quiet-hours-toggle">
+                        <input type="checkbox" checked={alertPreferences.preferences.quietHours.enabled} onChange={(e) => updatePreference('quietHours', 'enabled', e.target.checked)} />
+                        <span>Enable quiet hours</span>
+                      </label>
+                      {alertPreferences.preferences.quietHours.enabled && (
+                        <>
+                          <p className="quiet-hours-timezone-hint">Times in {alertPreferences.preferences.quietHours.timezone || 'UTC'}</p>
+                          <div className="quiet-hours-inputs">
+                            <div className="time-input-group">
+                              <label htmlFor="quiet-start">Start</label>
+                              <input id="quiet-start" type="time" value={alertPreferences.preferences.quietHours.start} onChange={(e) => updatePreference('quietHours', 'start', e.target.value)} />
+                            </div>
+                            <div className="time-input-group">
+                              <label htmlFor="quiet-end">End</label>
+                              <input id="quiet-end" type="time" value={alertPreferences.preferences.quietHours.end} onChange={(e) => updatePreference('quietHours', 'end', e.target.value)} />
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* History Tab */}
-          {activeTab === 'history' && (
+          {/* History Tab – commented out for now; logic kept for potential future use */}
+          {/* {activeTab === 'history' && (
             <div className="history-content">
               <div className="history-header">
                 <h3>Alert History</h3>
@@ -959,7 +900,7 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
                 )}
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>

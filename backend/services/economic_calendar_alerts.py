@@ -42,15 +42,9 @@ class EconomicCalendarAlerts:
     def _validate_event_data(self, event: Dict[str, Any]) -> bool:
         """Validate that event data is legitimate and not historical/mock data"""
         try:
-            # Check for required fields
+            # Check for required fields (date/time are enough; raw_data is optional for hybrid/API events)
             if not event.get('title') or not event.get('time') or not event.get('date'):
                 logger.debug(f"Event missing required fields: {event.get('title', 'Unknown')}")
-                return False
-            
-            # Check data source quality
-            raw_data = event.get('raw_data', {})
-            if not raw_data:
-                logger.debug(f"Event missing raw_data: {event.get('title', 'Unknown')}")
                 return False
             
             # Parse event datetime
@@ -85,9 +79,9 @@ class EconomicCalendarAlerts:
                 logger.debug(f"Weekend event without justification: {event.get('title', 'Unknown')}")
                 return False
             
-            # Check event status
-            status = event.get('status', '').upper()
-            if status not in ['UPCOMING', 'IMMINENT']:
+            # Check event status (if present); treat missing as upcoming so hybrid/API events are not rejected
+            status = (event.get('status') or 'upcoming').strip().upper()
+            if status and status not in ['UPCOMING', 'IMMINENT', 'TODAY']:
                 logger.debug(f"Event status not upcoming: {event.get('title', 'Unknown')} - {status}")
                 return False
             
@@ -301,7 +295,9 @@ class EconomicCalendarAlerts:
             return []
     
     def get_users_to_alert(self, event: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Get list of users who should receive alerts for this event"""
+        """Get list of users who should receive alerts for this event.
+        Uses same user source and preference shape as rest of app (get_all_users_with_alerts, preferences.alertTypes.preNews).
+        """
         try:
             # Get affected currency pairs
             affected_pairs = self.get_affected_currency_pairs(event)
@@ -309,57 +305,70 @@ class EconomicCalendarAlerts:
                 logger.debug(f"No currency pairs found for event: {event.get('title', 'Unknown')}")
                 return []
             
-            # Get all users with economic calendar alerts enabled
+            # Use same user source as UnifiedAlertProcessor and news alerts (fix: get_all_users does not exist)
             from services.firebase_realtime_storage import FirebaseRealtimeStorage
             firebase_storage = FirebaseRealtimeStorage()
-            all_users = firebase_storage.get_all_users()
+            all_users = firebase_storage.get_all_users_with_alerts()
             
             users_to_alert = []
-            
-            for user_id, user_data in all_users.items():
+            for user_data in all_users:
                 try:
+                    user_id = user_data.get('user_id')
                     settings = user_data.get('settings', {})
-                    preferences = settings.get('alerts', {})
-                    
-                    # Check if economic calendar alerts are enabled
-                    if not preferences.get('economicCalendar', {}).get('enabled', False):
+                    # Same preference structure as rest of app (preferences.alertTypes.preNews)
+                    preferences = settings.get('preferences', {})
+                    alert_types = preferences.get('alertTypes', {})
+                    # Economic calendar / pre-news: preNews in alertTypes, or legacy alerts.economicCalendar.enabled
+                    pre_news_enabled = alert_types.get('preNews', True)
+                    if not pre_news_enabled:
+                        alerts_legacy = preferences.get('alerts', settings.get('alerts', {}))
+                        pre_news_enabled = alerts_legacy.get('economicCalendar', {}).get('enabled', False)
+                    if not pre_news_enabled:
                         continue
                     
-                    # Check if user has Telegram enabled
-                    if not preferences.get('channels', {}).get('telegram', {}).get('enabled', False):
+                    # Telegram: same check as unified_alert_processor / news_alert_trigger
+                    telegram_enabled = (
+                        settings.get('telegram_enabled', False) or
+                        settings.get('telegram', False) or
+                        settings.get('channels', {}).get('telegram', {}).get('enabled', False) or
+                        preferences.get('channels', {}).get('telegram', {}).get('enabled', False)
+                    )
+                    if not telegram_enabled:
                         continue
                     
-                    # Check currency pair preferences
-                    user_pairs = preferences.get('currencyPairs', {})
-                    if not any(pair in user_pairs for pair in affected_pairs):
+                    # Currency pairs: support list (canonical) or dict
+                    user_pairs = preferences.get('currencyPairs', [])
+                    if isinstance(user_pairs, dict):
+                        user_pairs = list(user_pairs.keys()) if user_pairs else []
+                    if user_pairs and not any(pair in user_pairs for pair in affected_pairs):
                         continue
                     
-                    # Check impact level
+                    # Impact level
                     impact_levels = preferences.get('impactLevels', {})
-                    if not impact_levels.get('high', True):  # Default to True
+                    if not impact_levels.get('high', True):
                         continue
                     
-                    # Check quiet hours
+                    # Quiet hours
                     quiet_hours = preferences.get('quietHours', {})
                     if self._is_quiet_hours(quiet_hours):
                         continue
                     
-                    # Get the actual chat ID from Firebase
-                    chat_id = firebase_storage.get_telegram_chat_id(user_id)
-                    
+                    chat_id = user_data.get('telegram_chat_id')
+                    if not chat_id:
+                        chat_id = firebase_storage.get_telegram_chat_id(user_id)
                     if not chat_id:
                         logger.warning(f"No chat ID found for user {user_id}")
                         continue
                     
-                    # User should receive this alert
+                    chat_id_str = str(chat_id)
                     users_to_alert.append({
                         'user_id': user_id,
-                        'chat_id': chat_id,
+                        'chat_id': chat_id_str,
+                        'telegram_chat_id': chat_id_str,
                         'settings': settings
                     })
-                
                 except Exception as e:
-                    logger.error(f"Error processing user {user_id}: {e}")
+                    logger.error(f"Error processing user {user_data.get('user_id', 'unknown')}: {e}")
                     continue
             
             return users_to_alert

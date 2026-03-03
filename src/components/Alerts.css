@@ -402,6 +402,369 @@
   color: #ffffff;
 }
 
+/* ----- Telegram Setup Card (professional card UI) ----- */
+.setup-grid-single {
+  grid-template-columns: 1fr;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.telegram-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(218, 0, 18, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.telegram-card:hover {
+  border-color: rgba(218, 0, 18, 0.3);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.telegram-card-header {
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.telegram-card-title {
+  margin: 0 0 6px 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
+}
+
+.telegram-card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #da0012 0%, #ff4757 50%, transparent 100%);
+  border-radius: 1px;
+}
+
+.telegram-card-subtitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.telegram-card-body {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.telegram-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+}
+
+.telegram-benefit {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.telegram-inline-error {
+  padding: 12px 16px;
+  font-size: 0.9rem;
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: 8px;
+  margin: 0;
+}
+
+.telegram-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, #da0012 0%, #b80010 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.telegram-cta-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(218, 0, 18, 0.35);
+}
+
+.telegram-cta-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.telegram-cta-btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(218, 0, 18, 0.4);
+  color: #ffffff;
+}
+
+.telegram-cta-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.telegram-btn-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: telegram-spin 0.7s linear infinite;
+}
+
+.telegram-btn-spinner-sm {
+  width: 14px;
+  height: 14px;
+  border-width: 1.5px;
+}
+
+@keyframes telegram-spin {
+  to { transform: rotate(360deg); }
+}
+
+.telegram-steps {
+  margin: 0 0 8px 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+}
+
+.telegram-steps li {
+  margin-bottom: 8px;
+}
+
+.telegram-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.telegram-open-bot-btn {
+  display: block;
+  text-align: center;
+  padding: 14px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #da0012;
+  background: rgba(218, 0, 18, 0.12);
+  border: 1px solid rgba(218, 0, 18, 0.35);
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.telegram-open-bot-btn:hover {
+  background: rgba(218, 0, 18, 0.2);
+  border-color: rgba(218, 0, 18, 0.5);
+  color: #ff4757;
+}
+
+.telegram-success-block {
+  text-align: center;
+  padding: 20px 16px;
+  background: rgba(0, 204, 68, 0.06);
+  border: 1px solid rgba(0, 204, 68, 0.2);
+  border-radius: 8px;
+}
+
+.telegram-success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #00cc44;
+  background: rgba(0, 204, 68, 0.15);
+  border-radius: 50%;
+  margin-bottom: 12px;
+}
+
+.telegram-success-title {
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.telegram-success-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+}
+
+.telegram-test-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  background: linear-gradient(135deg, rgba(218, 0, 18, 0.12) 0%, rgba(218, 0, 18, 0.06) 50%, rgba(255, 71, 87, 0.08) 100%);
+  border-radius: 10px;
+  border: 1px solid rgba(218, 0, 18, 0.25);
+  box-shadow: 0 2px 12px rgba(218, 0, 18, 0.08);
+}
+
+.telegram-test-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(218, 0, 18, 0.35) 0%, rgba(184, 0, 16, 0.4) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+}
+
+.telegram-test-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(218, 0, 18, 0.5) 0%, rgba(184, 0, 16, 0.55) 100%);
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 4px 16px rgba(218, 0, 18, 0.25);
+}
+
+.telegram-test-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.telegram-test-status {
+  margin: 0;
+  padding: 10px 14px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.telegram-test-status-success {
+  background: rgba(0, 204, 68, 0.15);
+  color: #00cc44;
+  border: 1px solid rgba(0, 204, 68, 0.3);
+}
+
+.telegram-test-status-error {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff8888;
+  border: 1px solid rgba(255, 68, 68, 0.35);
+}
+
+.telegram-disconnect-confirm {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-radius: 8px;
+}
+
+.telegram-disconnect-confirm p {
+  margin: 0 0 14px 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.telegram-disconnect-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.telegram-disconnect-cancel {
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-family: inherit;
+}
+
+.telegram-disconnect-cancel:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.telegram-disconnect-do {
+  padding: 8px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ff4444;
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid rgba(255, 68, 68, 0.35);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.telegram-disconnect-do:hover {
+  background: rgba(255, 68, 68, 0.25);
+  border-color: rgba(255, 68, 68, 0.5);
+}
+
+.telegram-link-btn {
+  padding: 10px 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.6);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+  font-family: inherit;
+}
+
+.telegram-link-btn:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+@media (max-width: 560px) {
+  .telegram-card-header,
+  .telegram-card-body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .telegram-card-title {
+    font-size: 1.2rem;
+  }
+}
+
 .email-input-group {
   display: grid;
   gap: 20px;
@@ -503,69 +866,144 @@
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* Preferences Tab - Simplified */
+/* Preferences Tab */
 .preferences-content {
   display: grid;
-  gap: 40px;
+  gap: 28px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .preferences-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
-  gap: 35px;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 28px;
 }
 
 .preference-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 68, 68, 0.15);
-  padding: 24px;
-  border-radius: 8px;
-  transition: border-color 0.2s ease;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(218, 0, 18, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .preference-card:hover {
-  border-color: rgba(255, 68, 68, 0.25);
+  border-color: rgba(218, 0, 18, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
-.preference-card h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.3rem;
-  color: #ffffff;
+.preference-card-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.preference-card-header-with-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+
+.preference-card-header-text {
+  min-width: 0;
+}
+
+.preference-card-header-with-actions .preference-actions {
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+
+.preference-card-title {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
   font-weight: 700;
+  color: #ffffff;
   letter-spacing: -0.02em;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 6px;
 }
 
-.preference-card p {
-  margin: 0 0 20px 0;
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.95rem;
-  line-height: 1.6;
-  font-weight: 400;
+.preference-card-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #da0012 0%, #ff4757 50%, transparent 100%);
+  border-radius: 1px;
+}
+
+.preference-card-desc {
+  margin: 0;
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.5;
+}
+
+.preference-card-body {
+  padding: 20px 24px 24px;
+}
+
+.preference-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.preference-action-btn {
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(218, 0, 18, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.preference-action-btn:hover {
+  background: rgba(218, 0, 18, 0.12);
+  border-color: rgba(218, 0, 18, 0.4);
+  color: #ffffff;
+}
+
+.preference-warning {
+  margin: 0 0 14px 0;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  color: #ffaa00;
+  background: rgba(255, 170, 0, 0.08);
+  border: 1px solid rgba(255, 170, 0, 0.25);
+  border-radius: 6px;
 }
 
 .preference-group {
   display: grid;
-  gap: 20px;
+  gap: 14px;
 }
 
 .preference-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px;
-  border-radius: 6px;
+  padding: 14px 16px;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 68, 68, 0.1);
+  border: 1px solid rgba(218, 0, 18, 0.12);
 }
 
 .preference-item:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 68, 68, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(218, 0, 18, 0.22);
 }
 
 .preference-item input[type="checkbox"] {
@@ -597,40 +1035,53 @@
   font-weight: 400;
 }
 
-/* Currency Pairs Section - Simplified */
+/* Currency Pairs Section */
 .currency-pairs-section {
   display: grid;
-  gap: 25px;
+  gap: 16px;
 }
 
 .currency-pairs-list {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  min-height: 50px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 68, 68, 0.15);
+  min-height: 52px;
+  padding: 14px 16px;
+  background: rgba(218, 0, 18, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(218, 0, 18, 0.18);
+}
+
+.currency-pairs-list-empty {
+  align-items: center;
+  justify-content: center;
+}
+
+.currency-pairs-empty-hint {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: center;
+  line-height: 1.5;
 }
 
 .currency-pair-tag {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 68, 68, 0.15);
+  background: linear-gradient(135deg, rgba(218, 0, 18, 0.2) 0%, rgba(218, 0, 18, 0.12) 100%);
   color: #ffffff;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 600;
   transition: all 0.2s ease;
-  border: 1px solid rgba(255, 68, 68, 0.3);
+  border: 1px solid rgba(218, 0, 18, 0.3);
 }
 
 .currency-pair-tag:hover {
-  background: rgba(255, 68, 68, 0.25);
-  border-color: rgba(255, 68, 68, 0.4);
+  background: linear-gradient(135deg, rgba(218, 0, 18, 0.28) 0%, rgba(218, 0, 18, 0.18) 100%);
+  border-color: rgba(218, 0, 18, 0.45);
 }
 
 .remove-pair-btn {
@@ -688,10 +1139,10 @@
   font-weight: 500;
 }
 
-/* Quiet Hours Section - Simplified */
+/* Quiet Hours Section */
 .quiet-hours-section {
   display: grid;
-  gap: 25px;
+  gap: 16px;
 }
 
 .quiet-hours-toggle {
@@ -702,22 +1153,28 @@
   font-weight: 600;
   color: #ffffff;
   padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 68, 68, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 8px;
+  border: 1px solid rgba(218, 0, 18, 0.18);
   transition: all 0.2s ease;
 }
 
 .quiet-hours-toggle:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 68, 68, 0.25);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(218, 0, 18, 0.28);
 }
 
 .quiet-hours-toggle input[type="checkbox"] {
   width: 22px;
   height: 22px;
-  accent-color: #ff4444;
+  accent-color: #da0012;
   cursor: pointer;
+}
+
+.quiet-hours-timezone-hint {
+  margin: 0 0 4px 0;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .quiet-hours-inputs {
@@ -725,26 +1182,25 @@
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
-  border: 1px solid rgba(255, 68, 68, 0.15);
+  background: linear-gradient(135deg, rgba(218, 0, 18, 0.08) 0%, rgba(218, 0, 18, 0.04) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(218, 0, 18, 0.2);
 }
 
 .time-input-group {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .time-input-group label {
-  font-size: 1rem;
-  color: #ffffff;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.9);
   font-weight: 600;
-  letter-spacing: -0.2px;
 }
 
 .time-input-group input[type="time"] {
   padding: 10px 14px;
-  border: 1px solid rgba(255, 68, 68, 0.2);
+  border: 1px solid rgba(218, 0, 18, 0.25);
   border-radius: 6px;
   font-size: 0.9rem;
   background: rgba(255, 255, 255, 0.05);
@@ -755,12 +1211,12 @@
 
 .time-input-group input[type="time"]:focus {
   outline: none;
-  border-color: rgba(255, 68, 68, 0.4);
+  border-color: rgba(218, 0, 18, 0.45);
   background: rgba(255, 255, 255, 0.08);
 }
 
 .time-input-group input[type="time"]:hover {
-  border-color: rgba(255, 68, 68, 0.3);
+  border-color: rgba(218, 0, 18, 0.35);
 }
 
 /* History Tab - Simplified */
