@@ -10710,9 +10710,9 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '63K',
                 'forecast': '49K',
-                'previous': '22K'
+                'previous': '11K'
             },
             {
                 'title': 'Labor Productivity q/q',
@@ -10720,9 +10720,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '-0.1%',
-                'previous': '0.9%'
+                'previous': '1.1%'
             },
             {
                 'title': 'Final Services PMI',
