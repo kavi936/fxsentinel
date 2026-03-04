@@ -141,8 +141,14 @@ class NewsAlertTrigger:
             return False
     
     def should_analyze_with_ai(self, news_item: Dict[str, Any]) -> bool:
-        """Determine if news should be analyzed with AI (cost optimization)"""
+        """Determine if news should be analyzed with AI (cost optimization).
+        Set DISABLE_AI_FOR_ALERTS=true in env to never use API credits for alert analysis."""
         try:
+            # Opt-out: do not use AI/OpenAI for alerts (saves API credits)
+            if os.getenv('DISABLE_AI_FOR_ALERTS', '').strip().lower() in ('true', '1', 'yes'):
+                logger.debug("AI analysis for alerts disabled via DISABLE_AI_FOR_ALERTS")
+                return False
+            
             # Only analyze forex high-impact news
             if not self.is_forex_high_impact(news_item):
                 return False
@@ -630,8 +636,13 @@ class NewsAlertTrigger:
             return "Breaking forex news - check dashboard for details"
     
     def _trigger_ai_analysis(self, news_item: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Trigger AI analysis for the news item and return the analysis (non-blocking)"""
+        """Trigger AI analysis for the news item and return the analysis (non-blocking).
+        No-op if DISABLE_AI_FOR_ALERTS is set (avoids calling /api/analysis and using OpenAI)."""
         try:
+            if os.getenv('DISABLE_AI_FOR_ALERTS', '').strip().lower() in ('true', '1', 'yes'):
+                logger.debug("AI analysis for alerts disabled (DISABLE_AI_FOR_ALERTS), skipping API call")
+                return None
+            
             news_id = str(news_item.get('id', ''))
             
             # Skip AI analysis if news_id is missing or empty (non-blocking)
