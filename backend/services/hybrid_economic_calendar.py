@@ -10600,7 +10600,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'CHF',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.5%',
                 'previous': '-0.1%'
             },
@@ -10610,7 +10610,7 @@ class HybridEconomicCalendar:
                 'time': '08:15 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.9',
                 'forecast': '52.9',
                 'previous': '53.5'
             },
@@ -10620,7 +10620,7 @@ class HybridEconomicCalendar:
                 'time': '08:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.3',
                 'forecast': '52.5',
                 'previous': '52.9'
             },
@@ -10630,7 +10630,7 @@ class HybridEconomicCalendar:
                 'time': '08:50 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '49.6',
                 'forecast': '49.6',
                 'previous': '49.6'
             },
@@ -10640,7 +10640,7 @@ class HybridEconomicCalendar:
                 'time': '08:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '53.5',
                 'forecast': '53.4',
                 'previous': '53.4'
             },
@@ -10660,7 +10660,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.9',
                 'forecast': '51.8',
                 'previous': '51.8'
             },
@@ -10670,9 +10670,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.1%',
                 'forecast': '5.6%',
-                'previous': '5.6%'
+                'previous': '5.5%'
             },
             {
                 'title': 'Final Services PMI',
@@ -10680,7 +10680,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '53.9',
                 'forecast': '53.9',
                 'previous': '53.9'
             },
@@ -10690,7 +10690,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.2%',
                 'previous': '-0.3%'
             },
@@ -10700,7 +10700,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.1%',
                 'forecast': '6.2%',
                 'previous': '6.2%'
             },

@@ -94,7 +94,13 @@ class BackgroundAlertWorker:
                 time.sleep(60)  # Wait 1 minute before retrying
     
     def _check_news_alerts(self):
-        """Check for new news alerts"""
+        """Check for new news alerts.
+        Disabled when DISABLE_WORKER_NEWS_ALERTS=true: Unified path (check_news_alerts_async
+        on news save) already sends. Running both caused duplicate alerts.
+        """
+        if os.getenv('DISABLE_WORKER_NEWS_ALERTS', 'true').lower() in ('true', '1', 'yes'):
+            logger.debug("Worker news alerts disabled (Unified path handles news)")
+            return
         try:
             logger.info("Checking for news alerts...")
             
