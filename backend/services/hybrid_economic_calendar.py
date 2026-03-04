@@ -10478,7 +10478,7 @@ class HybridEconomicCalendar:
                 'time': '15:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '15.8M',
                 'forecast': '15.2B',
                 'previous': '14.9M'
             },
@@ -10518,7 +10518,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.7%',
                 'forecast': '-0.2%',
                 'previous': '-2.1%'
             },
@@ -10528,7 +10528,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.2%',
                 'forecast': 'N/A',
                 'previous': '2.0%'
             },
@@ -10538,9 +10538,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.7%',
-                'previous': '0.4%'
+                'previous': '0.5%'
             },
             {
                 'title': 'Manufacturing PMI',
@@ -10548,7 +10548,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '49.0',
                 'forecast': '49.1',
                 'previous': '49.3'
             },
@@ -10558,7 +10558,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '49.5',
                 'forecast': '49.7',
                 'previous': '49.4'
             },
@@ -10568,7 +10568,7 @@ class HybridEconomicCalendar:
                 'time': '01:45 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.1',
                 'forecast': '50.0',
                 'previous': '50.3'
             },
@@ -10578,7 +10578,7 @@ class HybridEconomicCalendar:
                 'time': '01:45 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '56.7',
                 'forecast': '52.4',
                 'previous': '52.3'
             },
@@ -10590,7 +10590,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '40.0',
                 'forecast': '38.1',
                 'previous': '37.9'
             },

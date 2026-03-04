@@ -354,6 +354,8 @@ class PersistentAlertDeduplication:
             
             # Build content string for per-user check (same logic as mark_news_alert_sent)
             content = self._get_news_content_string(news_item)
+            # Diagnostic: log content key so duplicate investigations can verify same key across paths
+            logger.info(f"📋 DEDUP_KEY news content={content[:80]} user={user_id[:16]}...")
             
             # Check-only (no reserve): prevents duplicates without reserving in quick/double-check.
             # Reserve happens once in unified_alert_processor after lock, so "reserved recently"
