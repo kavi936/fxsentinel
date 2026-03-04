@@ -195,15 +195,15 @@ class PersistentAlertDeduplication:
             return False
     
     def _get_news_content_string(self, news_item: Dict[str, Any]) -> str:
-        """Build content string for per-user deduplication. Always use normalized title+source
-        so the same story maps to the same key regardless of path (Unified vs API) or whether
-        the payload has an id (which can differ or be missing and cause duplicate sends)."""
+        """Build content string for per-user deduplication. Use normalized title ONLY (no source)
+        so the same story maps to one key regardless of which source syndicated it (Bloomberg,
+        FXStreet, Reuters, etc.). Logs showed duplicate alerts when same story appeared from
+        multiple sources - each had a different key (title|source) so both were sent."""
         title = str(news_item.get('title', '')).strip().lower()
-        source = str(news_item.get('source', '')).strip().lower()
         import re
         title_normalized = re.sub(r'\s+', ' ', title)
         title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
-        return f"news:{title_normalized}|{source}"
+        return f"news:{title_normalized}"
 
     def _check_alert_only(self, alert_type: str, content: str, user_id: str) -> bool:
         """
