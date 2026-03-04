@@ -8,6 +8,7 @@ Uses Firebase Realtime Database instead of Firestore
 import os
 import asyncio
 import logging
+import threading
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from telegram import Bot
@@ -29,6 +30,11 @@ class AlertService:
         self.telegram_bot = None
         self.telegram_bot_initialized = False
         self.firebase_storage = FirebaseRealtimeStorage()
+        # Per-chat deduplication to prevent duplicate sends when multiple users
+        # share the same Telegram chat_id. Key: (chat_id, content_key)
+        self._recent_chat_sends: Dict[str, datetime] = {}
+        self._recent_chat_sends_ttl_seconds = 600  # 10 minutes
+        self._recent_chat_sends_lock = threading.Lock()
         # Don't initialize Telegram bot during __init__ to avoid build-time token access
         logger.info("AlertService initialized (Telegram bot will be initialized on first use)")
     
@@ -331,6 +337,55 @@ class AlertService:
             logger.error(f"Failed to send email alert: {e}")
             return False
     
+    def _should_send_to_chat(self, chat_id: str, alert_data: Dict[str, Any]) -> bool:
+        """
+        Per-chat deduplication guard.
+        If we've already sent this content_key to this chat_id in the last N minutes, skip.
+        This prevents duplicates when multiple backend users share the same Telegram chat.
+        """
+        try:
+            alert_type = alert_data.get('type', 'news')
+            title = str(alert_data.get('title', '')).strip().lower()
+            if not title or not chat_id:
+                return True
+
+            # Normalize title similarly to news dedup (whitespace + punctuation)
+            import re
+            title_normalized = re.sub(r'\s+', ' ', title)
+            title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
+            content_key = f"{alert_type}:{title_normalized}"
+            key = f"{chat_id}:{content_key}"
+
+            now = datetime.now()
+            cutoff = now - timedelta(seconds=self._recent_chat_sends_ttl_seconds)
+
+            with self._recent_chat_sends_lock:
+                # Clean up old entries
+                if self._recent_chat_sends:
+                    self._recent_chat_sends = {
+                        k: v for k, v in self._recent_chat_sends.items()
+                        if v >= cutoff
+                    }
+
+                last_sent_at = self._recent_chat_sends.get(key)
+                if last_sent_at and last_sent_at >= cutoff:
+                    logger.info(
+                        f"📋 CHAT_DEDUP_SKIP chat_id={chat_id} content_key={content_key[:80]} "
+                        f"(sent_at={last_sent_at.isoformat()})"
+                    )
+                    return False
+
+                # Record new send
+                self._recent_chat_sends[key] = now
+                logger.info(
+                    f"📋 CHAT_DEDUP_ALLOW chat_id={chat_id} content_key={content_key[:80]} "
+                    f"(first send in window)"
+                )
+                return True
+        except Exception as e:
+            logger.error(f"Error in per-chat dedup guard: {e}")
+            return True
+
     async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any], user_id: str = None, user_data: Dict[str, Any] = None) -> bool:
         """Process and send alert to user based on their settings"""
         try:
@@ -377,13 +432,22 @@ class AlertService:
                 telegram_enabled = True
             
             if telegram_enabled and chat_id:
-                telegram_success = await self.send_telegram_alert(
-                    chat_id,
-                    self._format_telegram_message(alert_data),
-                    user_id=user_id,
-                    alert_type=alert_data.get('type', 'news'),
-                    alert_data=alert_data  # Pass full alert data for dead letter queue
-                )
+                # Per-chat deduplication: if this chat_id already received this content_key
+                # recently, skip to avoid duplicates when multiple users share a chat.
+                if not self._should_send_to_chat(chat_id, alert_data):
+                    logger.info(
+                        f"Skipping Telegram send for user {user_id} to chat_id {chat_id} "
+                        f"due to per-chat dedup guard"
+                    )
+                    telegram_success = False
+                else:
+                    telegram_success = await self.send_telegram_alert(
+                        chat_id,
+                        self._format_telegram_message(alert_data),
+                        user_id=user_id,
+                        alert_type=alert_data.get('type', 'news'),
+                        alert_data=alert_data  # Pass full alert data for dead letter queue
+                    )
                 success = success and telegram_success
                 
                 # Log to history if Telegram alert was sent successfully
