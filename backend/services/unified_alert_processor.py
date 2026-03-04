@@ -64,6 +64,11 @@ class UnifiedAlertProcessor:
         self._user_send_locks_lock = threading.Lock()
         self._min_seconds_between_alerts_per_user = 15  # 10-20s gap between consecutive alerts to same user
         
+        # Single-flight: only one news alert check runs at a time. Logs showed two "Checking 10 news items"
+        # at the same second (concurrent API requests both triggering); that caused duplicate processing
+        # and rapid alerts to the same user in one timeframe.
+        self._news_alerts_check_lock = threading.Lock()
+        
         logger.info("UnifiedAlertProcessor initialized with caching")
     
     def start(self):
@@ -148,15 +153,22 @@ class UnifiedAlertProcessor:
         logger.info(f"Triggered async alert check for {len(news_items)} news items (thread started)")
     
     def _check_news_alerts_with_error_handling(self, news_items: List[Dict[str, Any]]):
-        """Wrapper with error handling to ensure logs appear even if thread crashes"""
+        """Wrapper with error handling to ensure logs appear even if thread crashes.
+        Single-flight: only one check runs at a time; concurrent API requests skip if already in progress.
+        """
+        acquired = self._news_alerts_check_lock.acquire(blocking=False)
+        if not acquired:
+            logger.info(f"⏭️ Skipping news alert check ({len(news_items)} items) - already in progress")
+            return
         try:
             logger.info(f"Background thread started for {len(news_items)} news items")
             self._check_news_alerts(news_items)
             logger.info(f"Background thread completed for {len(news_items)} news items")
         except Exception as e:
             logger.error(f"CRITICAL: Error in alert processing thread: {e}", exc_info=True)
-            # Re-raise to ensure error is visible
             raise
+        finally:
+            self._news_alerts_check_lock.release()
     
     def _check_news_alerts(self, news_items: List[Dict[str, Any]]):
         """
