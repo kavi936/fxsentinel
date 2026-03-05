@@ -10813,9 +10813,9 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.4%',
-                'previous': '-0.7%'
+                'previous': '-0.5%'
             },
             {
                 'title': 'Unemployment Rate',
@@ -10823,7 +10823,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '2.9%',
                 'previous': '2.9%'
             },
