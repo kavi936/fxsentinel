@@ -10760,7 +10760,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.5M',
                 'forecast': 'N/A',
                 'previous': '16.0M'
             },
@@ -10780,7 +10780,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.63B',
                 'forecast': '3.89B',
                 'previous': '3.37B'
             },
@@ -10790,9 +10790,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.4%',
-                'previous': '-0.4%'
+                'previous': '-0.5%'
             },
             {
                 'title': '30-y Bond Auction',
