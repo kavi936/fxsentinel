@@ -4170,6 +4170,7 @@ const Overview = () => {
                 <div 
                   ref={economicCalendarCardRef}
                   className="news-calendar grid-card"
+                  data-onboarding="economic-calendar"
                   data-calendar-style={calendarStyleMode}
                   style={{
                     position: 'absolute',
@@ -4408,6 +4409,7 @@ const Overview = () => {
                 {/* AI Analysis Card - Right Column, Row 1 */}
                 <div 
                   className="ai-analysis-card grid-card"
+                  data-onboarding="ai-analysis"
                   style={{
                     position: 'absolute',
                     left: getPosition('aiAnalysis', 'left'),
@@ -4942,6 +4944,7 @@ const Overview = () => {
                 {/* Market Sentiment Card - Left Column, Row 2 */}
                 <div 
                   className="market-sentiment-card grid-card"
+                  data-onboarding="market-sentiment"
                   style={{
                     position: 'absolute',
                     left: getPosition('marketSentiment', 'left'),
@@ -5516,6 +5519,7 @@ const Overview = () => {
                 {/* Live News + Analysis Card - Right Column, Row 2 */}
                 <div 
                   className="live-news-analysis-card grid-card"
+                  data-onboarding="live-news"
                   style={{
                     position: 'absolute',
                     left: getPosition('liveNews', 'left'),
@@ -5532,6 +5536,7 @@ const Overview = () => {
                 {/* Prediction Markets Card - Left Column, Row 3 */}
                 <div 
                   className="prediction-markets-card grid-card"
+                  data-onboarding="prediction-markets"
                   style={{
                     position: 'absolute',
                     left: getPosition('predictionMarkets', 'left'),
@@ -6175,6 +6180,7 @@ const Overview = () => {
                 {/* Central Bank Analysis Card - Right Column, Row 3 */}
                 <div 
                   className="central-bank-analysis-card grid-card"
+                  data-onboarding="central-bank"
                   style={{
                     position: 'absolute',
                     left: getPosition('centralBank', 'left'),

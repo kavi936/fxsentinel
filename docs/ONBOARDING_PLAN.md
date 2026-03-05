@@ -216,12 +216,12 @@ Add `data-onboarding` attributes to key elements so the tour can reliably target
 - [ ] Add `data-onboarding` attributes to Overview, nav, Alerts
 
 ### Phase 2: Core Tour
-- [ ] Remove `MobileWarningBanner` component
-- [ ] Install and wire Driver.js (or equivalent)
-- [ ] Implement `OnboardingTour` component
-- [ ] Implement first-time trigger + localStorage completion
-- [ ] Add "Product tour" link in Profile popup
-- [ ] Add onboarding analytics (Section 9)
+- [x] Remove `MobileWarningBanner` component
+- [x] Install and wire Driver.js
+- [x] Implement `OnboardingTour` component
+- [x] Implement first-time trigger + localStorage completion
+- [x] Add "Product tour" link in Profile popup
+- [x] Add onboarding analytics (Section 9)
 - [ ] Desktop testing
 
 ### Phase 3: Mobile Polish

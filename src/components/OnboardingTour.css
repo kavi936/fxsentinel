@@ -1,0 +1,105 @@
+/* FXSentinel Onboarding - black theme, white/red text */
+
+.driver-popover.fxsentinel-onboarding-popover {
+  background-color: #000 !important;
+  color: #fff;
+  border-radius: 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 1px rgba(255, 68, 68, 0.08), 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-title {
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-description {
+  color: #fff;
+  line-height: 1.5;
+}
+
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-description strong {
+  color: #ff4444;
+}
+
+/* Fix close (×) button: remove border/outline (browser defaults), white/red theme */
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-close-btn {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  appearance: none;
+  -webkit-appearance: none;
+  color: #fff;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+}
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-close-btn:hover,
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-close-btn:focus {
+  color: #ff4444;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Touch-friendly: min 44px tap targets for nav buttons */
+/* Override driver's text-shadow:1px 1px 0 #fff which creates double-text ghost on dark theme */
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-prev-btn,
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-next-btn {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  background-color: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  text-shadow: none !important;
+  cursor: pointer;
+}
+
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-prev-btn:hover,
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-next-btn:hover {
+  background-color: #2a2a2a !important;
+  border-color: rgba(255, 68, 68, 0.5) !important;
+}
+
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-footer {
+  margin-top: 16px;
+  gap: 12px;
+}
+
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-progress-text {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Popover arrow matches black background */
+.driver-popover.fxsentinel-onboarding-popover .driver-popover-arrow {
+  border-color: #000 !important;
+}
+
+/* Override driver's overflow:hidden on parent of highlighted element - prevents navbar splice */
+.dashboard-navbar .navbar-center:has(>.driver-active-element) {
+  overflow: visible !important;
+}
+
+/* Step 8 & 9: Nav tabs - suppress hover box-shadow/border/transform when highlighted (conflicts with spotlight) */
+.driver-active-element[data-onboarding="nav-economies"].nav-tab:hover,
+.driver-active-element[data-onboarding="nav-economies"].nav-tab:focus,
+.driver-active-element[data-onboarding="nav-economies"].mobile-nav-tab:hover,
+.driver-active-element[data-onboarding="nav-economies"].mobile-nav-tab:focus,
+.driver-active-element[data-onboarding="nav-alerts"].nav-tab:hover,
+.driver-active-element[data-onboarding="nav-alerts"].nav-tab:focus,
+.driver-active-element[data-onboarding="nav-alerts"].mobile-nav-tab:hover,
+.driver-active-element[data-onboarding="nav-alerts"].mobile-nav-tab:focus {
+  box-shadow: none !important;
+  transform: none !important;
+  border-color: rgba(255, 255, 255, 0.1) !important; /* prevent red border flash on mobile */
+}
+
+/* Improve spotlight visibility on small nav tab buttons - add extra padding via outline so the cutout reads better */
+.driver-active-element[data-onboarding="nav-economies"],
+.driver-active-element[data-onboarding="nav-alerts"] {
+  outline: 2px solid rgba(255, 68, 68, 0.4);
+  outline-offset: 2px;
+}

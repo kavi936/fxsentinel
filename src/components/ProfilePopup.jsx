@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { config } from '../config';
+import { startOnboardingTour } from './OnboardingTour';
 import './ProfilePopup.css';
 
 const ProfilePopup = ({ isOpen, onClose }) => {
@@ -468,6 +469,20 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                       </button>
                     </div>
                   )}
+                </div>
+
+                <div className="profile-tour-section">
+                  <button 
+                    type="button"
+                    className="product-tour-btn"
+                    onClick={() => {
+                      onClose();
+                      startOnboardingTour();
+                    }}
+                  >
+                    Product tour
+                  </button>
+                  <p className="profile-tour-hint">Replay the dashboard walkthrough</p>
                 </div>
               </div>
             </div>
