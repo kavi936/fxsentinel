@@ -10800,20 +10800,11 @@ class HybridEconomicCalendar:
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.40|3.7',
                 'forecast': 'N/A',
                 'previous': '3.62|3.6'
             },
-            {
-                'title': 'NAB Quarterly Business Confidence',
-                'date': 'Wed, Mar 04',
-                'time': '04:59 UTC',
-                'currency': 'AUD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '2'
-            },
+        
 
             # THURSDAY, MARCH 05
             {
