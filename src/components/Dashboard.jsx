@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import axios from 'axios';
@@ -15,13 +15,14 @@ import NotificationsPopup from './NotificationsPopup';
 import ProfilePopup from './ProfilePopup';
 import MarketStatusPopup from './MarketStatusPopup';
 import ReviewBanner from './ReviewBanner';
-import MobileWarningBanner from './MobileWarningBanner';
+import OnboardingTour from './OnboardingTour';
 import { useMeta } from '../hooks/useMeta';
 import { trackEngagement, trackFeatureUsage, trackTrialStart, trackDashboardAccess } from '../utils/analytics';
 
 function Dashboard() {
   useMeta('Market Dashboard – FXSentinel', 'Your FXSentinel market dashboard: economic calendar, AI analysis, live news, and Telegram alerts.');
   const { currentUser, logout } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { unreadCount, addSubscriptionNotification } = useNotifications();
   const navigate = useNavigate();
   const [news, setNews] = useState([]);
@@ -59,7 +60,6 @@ function Dashboard() {
   const [marketStatusOpen, setMarketStatusOpen] = useState(false);
   const [sessionVerificationStatus, setSessionVerificationStatus] = useState(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const [mobileWarningVisible, setMobileWarningVisible] = useState(false);
   const [navTabsExpanded, setNavTabsExpanded] = useState(false);
 
   // Track dashboard access and first view
@@ -89,6 +89,28 @@ function Dashboard() {
       console.log(`📊 User tier: ${subscriptionStatus.status}`);
     }
   }, [currentUser, subscriptionStatus]);
+
+  // Reset onboarding when ?reset_onboarding=1 (dev: /dashboard?reset_onboarding=1)
+  useEffect(() => {
+    if (searchParams.get('reset_onboarding') === '1') {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k?.startsWith('fxsentinel_onboarding_')) keys.push(k);
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+      searchParams.delete('reset_onboarding');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Expand nav tabs before onboarding runs (prevents step 1 flickering and splice)
+  useEffect(() => {
+    if (!currentUser || activeTab !== 'overview' || loading) return;
+    const completed = localStorage.getItem(`fxsentinel_onboarding_${currentUser.uid}`);
+    if (completed) return;
+    setNavTabsExpanded(true);
+  }, [currentUser, activeTab, loading]);
 
   // Check subscription status on mount
   useEffect(() => {
@@ -765,7 +787,7 @@ function Dashboard() {
   }
 
   return (
-    <div className={`dashboard ${activeTab === 'economies' ? 'economies-active' : ''} ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''} ${mobileWarningVisible ? 'has-mobile-warning' : ''}`}>
+    <div className={`dashboard ${activeTab === 'economies' ? 'economies-active' : ''} ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''}`}>
       {/* Session Verification Status Notification */}
       {sessionVerificationStatus === 'verifying' && (
         <div className="verification-notification verifying">
@@ -840,9 +862,12 @@ function Dashboard() {
           <div 
             className="navbar-center"
             onMouseEnter={() => setNavTabsExpanded(true)}
-            onMouseLeave={() => setNavTabsExpanded(false)}
+            onMouseLeave={() => {
+              if (document.body.classList.contains('driver-active')) return;
+              setNavTabsExpanded(false);
+            }}
           >
-            <div className={`navbar-tabs ${navTabsExpanded ? 'expanded' : 'collapsed'}`}>
+            <div className={`navbar-tabs ${navTabsExpanded ? 'expanded' : 'collapsed'}`} data-onboarding="nav-tabs">
               {!navTabsExpanded ? (
                 <div className="nav-home-icon" title="Navigation">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -855,6 +880,7 @@ function Dashboard() {
                   <button 
                     className={`nav-tab ${activeTab === 'economies' ? 'active' : ''}`}
                     onClick={() => setActiveTab('economies')}
+                    data-onboarding="nav-economies"
                   >
                     Economies
                   </button>
@@ -867,6 +893,7 @@ function Dashboard() {
                   <button 
                     className={`nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
                     onClick={() => setActiveTab('alerts')}
+                    data-onboarding="nav-alerts"
                   >
                     Alerts
                   </button>
@@ -968,6 +995,7 @@ function Dashboard() {
               <button 
                 className={`mobile-nav-tab ${activeTab === 'economies' ? 'active' : ''}`}
                 onClick={() => handleMobileTabChange('economies')}
+                data-onboarding="nav-economies"
               >
                 Economies
               </button>
@@ -980,6 +1008,7 @@ function Dashboard() {
               <button 
                 className={`mobile-nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
                 onClick={() => handleMobileTabChange('alerts')}
+                data-onboarding="nav-alerts"
               >
                 Alerts
               </button>
@@ -1102,8 +1131,14 @@ function Dashboard() {
       {/* Review Banner */}
       <ReviewBanner />
 
-      {/* Mobile Warning Banner */}
-      <MobileWarningBanner onVisibilityChange={setMobileWarningVisible} />
+      {/* Onboarding Tour - auto for first-time, manual from Profile */}
+      <OnboardingTour
+        userId={currentUser?.uid}
+        activeTab={activeTab}
+        isOverviewReady={!loading}
+        onStartTour={() => setNavTabsExpanded(true)}
+        trigger="auto"
+      />
 
   </div>
   );

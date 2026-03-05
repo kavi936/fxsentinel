@@ -848,6 +848,27 @@ export const trackSearchQuery = (query, resultsCount = 0) => {
   analyticsTracker.trackSearchQuery(query, resultsCount);
 };
 
+// Onboarding tour tracking (see docs/ONBOARDING_PLAN.md Section 9)
+export const trackOnboardingStarted = (trigger = 'auto') => {
+  analyticsTracker.trackEngagement('onboarding_tour_started', { trigger, step_index: 0 });
+};
+
+export const trackOnboardingCompleted = (totalSteps = 8) => {
+  analyticsTracker.trackEngagement('onboarding_tour_completed', { total_steps: totalSteps });
+};
+
+export const trackOnboardingSkipped = (stepIndex = 0, totalSteps = 8) => {
+  analyticsTracker.trackEngagement('onboarding_tour_skipped', { step_index: stepIndex, total_steps: totalSteps });
+};
+
+export const trackOnboardingStepViewed = (stepIndex, stepTarget, totalSteps = 8) => {
+  analyticsTracker.trackEngagement('onboarding_step_viewed', {
+    step_index: stepIndex,
+    step_target: stepTarget,
+    total_steps: totalSteps
+  });
+};
+
 // Initialize device tracking on import
 if (typeof window !== 'undefined') {
   analyticsTracker.trackDeviceInfo();
