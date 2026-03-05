@@ -25,7 +25,7 @@ const STEPS = [
     element: '[data-onboarding="economic-calendar"]',
     popover: {
       title: 'Economic Calendar',
-      description: 'Track high-impact economic events here. Click an event to see AI analysis of its market impact.',
+      description: 'Track <strong>nearly all major economic events</strong> here. Click an event to see AI analysis of its market impact on the right.',
       side: 'right',
       align: 'start'
     }
@@ -34,7 +34,7 @@ const STEPS = [
     element: '[data-onboarding="ai-analysis"]',
     popover: {
       title: 'AI Analysis',
-      description: 'AI explains how each release affects major currency pairs. <strong>Trial: 15 AI analyses per month.</strong> Upgrade for more.',
+      description: 'AI that <strong>easily explains</strong> how each release affects major currency pairs. <strong>Trial: 15 AI analyses per month.</strong> Upgrade for more.',
       side: 'left',
       align: 'start'
     }
@@ -43,7 +43,7 @@ const STEPS = [
     element: '[data-onboarding="market-sentiment"]',
     popover: {
       title: 'Market Sentiment',
-      description: 'Market sentiment and volatility metrics help you gauge risk appetite and positioning across major pairs.',
+      description: '<strong>Market sentiment and volatility metrics</strong> help you gauge risk appetite and positioning across major pairs.',
       side: 'right',
       align: 'start'
     }
@@ -52,7 +52,7 @@ const STEPS = [
     element: '[data-onboarding="live-news"]',
     popover: {
       title: 'Live News',
-      description: 'Real-time news with AI analysis. Stay ahead of breaking moves and understand how headlines affect markets.',
+      description: '<strong>Real-time news</strong> with embedded AI analysis. Stay ahead of breaking moves and understand how and which headlines are affecting markets.',
       side: 'left',
       align: 'start'
     }
@@ -61,7 +61,7 @@ const STEPS = [
     element: '[data-onboarding="prediction-markets"]',
     popover: {
       title: 'Prediction Markets',
-      description: 'See how markets price Fed decisions and other macro events—useful for positioning before releases.',
+      description: 'See how markets price <strong>key events such as Fed decisions</strong> and other macro events—useful for positioning before releases.',
       side: 'right',
       align: 'start'
     }
@@ -70,7 +70,7 @@ const STEPS = [
     element: '[data-onboarding="central-bank"]',
     popover: {
       title: 'Central Bank',
-      description: 'Official central bank documents, meeting minutes, and reports for deeper research.',
+      description: 'Official central bank documents, <strong>meeting minutes, COT reports</strong> and other data for deeper research. <strong>AI analysis coming soon.</strong>',
       side: 'left',
       align: 'start'
     }
@@ -79,7 +79,7 @@ const STEPS = [
     element: '[data-onboarding="nav-economies"]',
     popover: {
       title: 'Economies Tab',
-      description: 'View country-level macro data: GDP, inflation, interest rates, and key indicators for each economy.',
+      description: 'View the most important <strong>country-level macro data</strong>: GDP, inflation, interest rates, and key indicators for each economy.',
       side: 'bottom',
       align: 'center',
       popoverOffset: 16
@@ -89,7 +89,7 @@ const STEPS = [
     element: '[data-onboarding="nav-alerts"]',
     popover: {
       title: 'Alerts & Settings',
-      description: 'Set up Telegram alerts here to get notified on high-impact events. <strong>Skip for now</strong> if you prefer. Timezone in nav settings.',
+      description: 'Set up <strong>Telegram alerts</strong> here to get notified on news and events—so you don\'t need to search WHY. <strong>Skip for now</strong> if you prefer. Timezone in nav settings.',
       side: 'bottom',
       align: 'center',
       popoverOffset: 16,
