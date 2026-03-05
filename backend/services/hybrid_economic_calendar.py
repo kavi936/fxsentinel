@@ -10833,9 +10833,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.2%',
-                'previous': '-0.8%'
+                'previous': '-0.7%'
             },
             {
                 'title': 'Construction PMI',
@@ -10843,7 +10843,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '44.5',
                 'forecast': '47.1',
                 'previous': '46.4'
             },
@@ -10863,9 +10863,9 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	-0.1%',
                 'forecast': '0.2%',
-                'previous': '-0.5%'
+                'previous': '0.1%'
             },
             {
                 'title': 'French 10-y Bond Auction',
@@ -10873,7 +10873,7 @@ class HybridEconomicCalendar:
                 'time': '10:18 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.39|2.2',
                 'forecast': 'N/A',
                 'previous': '3.45|2.4'
             },
@@ -10893,7 +10893,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-71.9%',
                 'forecast': 'N/A',
                 'previous': '117.8%'
             },
@@ -10903,9 +10903,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '213K',
                 'forecast': '215K',
-                'previous': '212K'
+                'previous': '213K'
             },
             {
                 'title': 'Import Prices m/m',
@@ -10913,9 +10913,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.2%',
-                'previous': '0.1%'
+                'previous': '0.2%'
             },
             {
                 'title': 'Prelim Nonfarm Productivity q/q',
@@ -10923,9 +10923,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.8%',
                 'forecast': '1.7%',
-                'previous': '4.9%'
+                'previous': '5.2%'
             },
             {
                 'title': 'Prelim Unit Labor Costs q/q',
@@ -10933,9 +10933,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.8%',
                 'forecast': '2.1%',
-                'previous': '-1.9%'
+                'previous': '-1.8%'
             },
             {
                 'title': 'Natural Gas Storage',
@@ -10943,7 +10943,7 @@ class HybridEconomicCalendar:
                 'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-132B',
                 'forecast': 'N/A',
                 'previous': '-52B'
             },
