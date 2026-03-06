@@ -121,8 +121,8 @@ export const AuthProvider = ({ children }) => {
       // Send branded verification email via backend (Resend) instead of Firebase's plain email
       await sendVerificationEmailViaBackend(result.user);
 
-      // Send Zeno-style welcome email (non-blocking; failures don't affect signup)
-      sendWelcomeEmailViaBackend(result.user);
+      // Send welcome email and wait so it isn't cancelled when the page navigates
+      await sendWelcomeEmailViaBackend(result.user);
 
       // Check developer status after signup
       await checkDeveloperStatus(result.user);
