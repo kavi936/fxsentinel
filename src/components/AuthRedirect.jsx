@@ -32,6 +32,13 @@ const AuthRedirect = () => {
       return;
     }
 
+    // Email/password users must verify before dashboard or checkout (Google accounts are already verified)
+    const isEmailProvider = currentUser.providerData?.[0]?.providerId === 'password';
+    if (isEmailProvider && !currentUser.emailVerified) {
+      navigate('/verify-email', { replace: true });
+      return;
+    }
+
     const authMethod = currentUser.providerData?.[0]?.providerId === 'google.com' ? 'google' : 'email';
     trackAuthRedirect(authMethod);
 

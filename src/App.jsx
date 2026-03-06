@@ -6,6 +6,7 @@ import Signup from './components/Signup';
 import TrialWelcomeRoute from './components/TrialWelcomeRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthRedirect from './components/AuthRedirect';
+import VerifyEmail from './components/VerifyEmail';
 import Blog from './components/Blog';
 import Disclaimer from './components/Disclaimer';
 import Privacy from './components/Privacy';
@@ -56,6 +57,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth-redirect" element={<AuthRedirect />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Navigate to="/disclaimer" replace />} />

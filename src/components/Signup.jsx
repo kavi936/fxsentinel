@@ -293,6 +293,9 @@ const Signup = () => {
                   required
                   className="auth-input"
                 />
+                <span className="auth-hint" style={{ display: 'block', marginTop: '6px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                  We&apos;ll send a verification link to this address
+                </span>
               </div>
 
               <div className="form-group">
