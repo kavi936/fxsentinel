@@ -10975,9 +10975,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.4%',
-                'previous': '0.7%'
+                'previous': '0.8%'
             },
             {
                 'title': 'Foreign Currency Reserves',
