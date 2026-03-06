@@ -269,7 +269,7 @@ const LandingPage = () => {
                 style={{ height: '50px', width: 'auto' }}
               />
             </picture>
-            <span className="logo-text">FXSentinel</span>
+        
           </div>
           
           {/* Desktop Navigation Links */}
