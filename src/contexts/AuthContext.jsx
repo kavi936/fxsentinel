@@ -9,7 +9,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  sendEmailVerification
 } from 'firebase/auth';
 import { isGoogleOAuthBlockedError, detectEmbeddedBrowser } from '../utils/browserDetection';
 
@@ -77,21 +78,53 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Sign up function
+  // Continue URL for email verification: after user clicks the link they're sent here (our branded page, not Firebase's)
+  const getEmailVerificationContinueUrl = () => {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return `${window.location.origin}/verify-email`;
+    }
+    return 'https://fxsentinel.io/verify-email';
+  };
+
+  // Sign up function (email/password only; Google accounts are already verified by the provider)
   const signup = async (email, password, firstName, lastName) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(result.user, {
         displayName: `${firstName} ${lastName}`
       });
-      
+      // Send verification email; continue URL sends users to our app after clicking (not Firebase's plain page)
+      await sendEmailVerification(result.user, {
+        url: getEmailVerificationContinueUrl(),
+        handleCodeInApp: false
+      });
+
       // Check developer status after signup
       await checkDeveloperStatus(result.user);
-      
+
       return result;
     } catch (error) {
       throw error;
     }
+  };
+
+  // Resend verification email (for VerifyEmail page; rate-limited by Firebase)
+  const resendVerificationEmail = async () => {
+    const user = auth.currentUser;
+    if (!user) throw new Error('Not signed in');
+    return sendEmailVerification(user, {
+      url: getEmailVerificationContinueUrl(),
+      handleCodeInApp: false
+    });
+  };
+
+  // Reload current user from Firebase (updates emailVerified after they click the link)
+  const reloadUser = async () => {
+    const user = auth.currentUser;
+    if (!user) return null;
+    await user.reload();
+    setCurrentUser({ ...auth.currentUser });
+    return auth.currentUser;
   };
 
   // Login function
@@ -200,7 +233,9 @@ export const AuthProvider = ({ children }) => {
     logout,
     signInWithGoogle,
     resetPassword,
-    updateUserProfile
+    updateUserProfile,
+    resendVerificationEmail,
+    reloadUser
   };
 
   return (

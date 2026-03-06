@@ -269,6 +269,7 @@ const LandingPage = () => {
                 style={{ height: '50px', width: 'auto' }}
               />
             </picture>
+            <span className="logo-text">FXSentinel</span>
           </div>
           
           {/* Desktop Navigation Links */}
@@ -379,7 +380,7 @@ const LandingPage = () => {
             </h1>
             
             <p className="hero-subtitle">
-              We simplify complex trading news, making it accessible
+              FXSentinel simplifies complex trading news, making it accessible
               and usable for every trader
             </p>
             

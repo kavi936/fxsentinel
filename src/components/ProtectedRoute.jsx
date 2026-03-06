@@ -104,6 +104,12 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
+  // Email/password users must verify before accessing protected pages (reduces fake accounts)
+  const isEmailProvider = currentUser.providerData?.[0]?.providerId === 'password';
+  if (isEmailProvider && !currentUser.emailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   // Redirect to login if no valid access
   if (!hasAccess) {
     return <Navigate to="/login" replace />;

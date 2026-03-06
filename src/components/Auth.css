@@ -231,6 +231,21 @@
     0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
+/* Verify-email success state (branded redirect page) */
+.auth-card--success .verify-success-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(76, 175, 80, 0.2);
+  color: #4CAF50;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 auto 0.5rem;
+}
+
 /* Auth Header */
 .auth-header {
   text-align: center;
