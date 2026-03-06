@@ -12,7 +12,7 @@ import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
  * Google signups skip this (provider already verifies).
  */
 const VerifyEmail = () => {
-  useMeta('Verify your email - FXSentinel', 'Check your inbox to verify your email and access your FXSentinel account.');
+  useMeta('Verify your email to continue - FXSentinel', 'Check your inbox to verify your email and access your FXSentinel account.');
   const { currentUser, resendVerificationEmail, reloadUser } = useAuth();
   const navigate = useNavigate();
   const [resendStatus, setResendStatus] = useState('idle');
@@ -134,7 +134,7 @@ const VerifyEmail = () => {
   return (
     <div className="auth-container">
       <div className="auth-background" />
-      <div className="auth-card">
+      <div className="auth-card auth-card--verify-email">
         <div className="auth-header">
           <Link to="/" className="auth-logo">
             <picture>
@@ -142,13 +142,13 @@ const VerifyEmail = () => {
               <img src={logoPng} alt="FXSentinel Logo" style={{ height: '40px', width: 'auto' }} />
             </picture>
           </Link>
-          <h1>Verify your email</h1>
-          <p>We sent a verification link to <strong>{currentUser.email}</strong></p>
+          <h1>Verify your email to continue</h1>
+          <p>We&apos;ve sent a verification link to <strong>{currentUser.email}</strong></p>
         </div>
 
-        <div className="auth-form" style={{ gap: '1rem' }}>
-          <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '0.95rem', margin: 0 }}>
-            Click the link in that email to verify your account. If you don&apos;t see it, check your spam folder.
+        <div className="auth-form verify-email-form">
+          <p className="verify-email-body">
+            Click the link in that email to confirm your address and unlock your FXSentinel dashboard. If you don&apos;t see it, check your spam or promotions folder.
           </p>
 
           {resendError && (
@@ -174,9 +174,9 @@ const VerifyEmail = () => {
             )}
           </button>
 
-          <div style={{ marginTop: '0.5rem' }}>
+          <div className="verify-email-resend-section">
             {resendStatus === 'sent' ? (
-              <p style={{ color: 'rgba(76, 175, 80, 0.9)', fontSize: '0.9rem' }}>
+              <p className="verify-email-resend-success">
                 New email sent. Check your inbox (and spam).
               </p>
             ) : (
@@ -199,9 +199,9 @@ const VerifyEmail = () => {
             )}
           </div>
 
-          <div className="auth-footer" style={{ marginTop: '1rem' }}>
+          <div className="auth-footer verify-email-footer">
             <p>
-              <Link to="/login" className="auth-link">Sign in</Link> with a different account
+              <Link to="/login" className="auth-link">Sign in with a different account</Link>
             </p>
           </div>
         </div>
