@@ -9,8 +9,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
-  sendPasswordResetEmail,
-  sendEmailVerification
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import { isGoogleOAuthBlockedError, detectEmbeddedBrowser } from '../utils/browserDetection';
 
@@ -78,12 +77,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Continue URL for email verification: after user clicks the link they're sent here (our branded page, not Firebase's)
-  const getEmailVerificationContinueUrl = () => {
-    if (typeof window !== 'undefined' && window.location?.origin) {
-      return `${window.location.origin}/verify-email`;
+  // Send branded verification email via backend (Resend + Firebase Admin link generation)
+  const sendVerificationEmailViaBackend = async (user) => {
+    const token = await user.getIdToken();
+    const res = await fetch(`${config.API_BASE_URL}/api/send-verification-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = data?.message || data?.error || `Request failed (${res.status})`;
+      throw new Error(msg);
     }
-    return 'https://fxsentinel.io/verify-email';
+    return data;
   };
 
   // Sign up function (email/password only; Google accounts are already verified by the provider)
@@ -93,11 +102,8 @@ export const AuthProvider = ({ children }) => {
       await updateProfile(result.user, {
         displayName: `${firstName} ${lastName}`
       });
-      // Send verification email; continue URL sends users to our app after clicking (not Firebase's plain page)
-      await sendEmailVerification(result.user, {
-        url: getEmailVerificationContinueUrl(),
-        handleCodeInApp: false
-      });
+      // Send branded verification email via backend (Resend) instead of Firebase's plain email
+      await sendVerificationEmailViaBackend(result.user);
 
       // Check developer status after signup
       await checkDeveloperStatus(result.user);
@@ -108,14 +114,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Resend verification email (for VerifyEmail page; rate-limited by Firebase)
+  // Resend verification email (for VerifyEmail page; uses backend, rate-limited to 3/min)
   const resendVerificationEmail = async () => {
     const user = auth.currentUser;
     if (!user) throw new Error('Not signed in');
-    return sendEmailVerification(user, {
-      url: getEmailVerificationContinueUrl(),
-      handleCodeInApp: false
-    });
+    return sendVerificationEmailViaBackend(user);
   };
 
   // Reload current user from Firebase (updates emailVerified after they click the link)
