@@ -22,7 +22,7 @@ from services.stripe_service import StripeService
 # Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
 load_dotenv()
 from services.coupon_service import CouponService
-from services.email_service import send_verification_email
+from services.email_service import send_verification_email, send_welcome_email
 
 # Optional import for Google Sheets service
 try:
@@ -5748,6 +5748,49 @@ def send_verification_email_endpoint():
 
     except Exception as e:
         logger.exception(f"Error in send_verification_email endpoint: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/send-welcome-email', methods=['POST'])
+@limiter.limit("2 per minute")  # Rate limit: welcome only on signup, but allow retry
+def send_welcome_email_endpoint():
+    """
+    Send Zeno-style welcome email to new signups.
+    Requires Authorization: Bearer <Firebase ID token>.
+    Called by frontend only on signup (not on verification resend).
+    """
+    try:
+        token_user_info = _extract_user_from_token()
+        if not token_user_info:
+            return jsonify({
+                'error': 'Unauthorized',
+                'message': 'Valid Firebase token required'
+            }), 401
+
+        user_email = token_user_info.get('user_email', '')
+        user_name = token_user_info.get('user_name', '')
+
+        if not user_email:
+            return jsonify({
+                'error': 'Bad request',
+                'message': 'User email not found in token'
+            }), 400
+
+        result = send_welcome_email(to_email=user_email, display_name=user_name or None)
+
+        if not result.get('success'):
+            return jsonify({
+                'error': 'Email send failed',
+                'message': result.get('error', 'Could not send welcome email')
+            }), 500
+
+        return jsonify({
+            'success': True,
+            'message': 'Welcome email sent'
+        }), 200
+
+    except Exception as e:
+        logger.exception(f"Error in send_welcome_email endpoint: {e}")
         return jsonify({'error': str(e)}), 500
 
 
