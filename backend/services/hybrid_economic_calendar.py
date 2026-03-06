@@ -11015,7 +11015,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.3%',
                 'previous': '0.4%'
             },
@@ -11025,7 +11025,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.0%',
                 'previous': '0.0%'
             },
@@ -11035,9 +11035,9 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-92K',
                 'forecast': '58K',
-                'previous': '130K'
+                'previous': '126K'
             },
             {
                 'title': 'Retail Sales m/m',
@@ -11045,7 +11045,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.3%',
                 'previous': '0.0%'
             },
@@ -11055,7 +11055,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.4%',
                 'forecast': '4.3%',
                 'previous': '4.3%'
             },
