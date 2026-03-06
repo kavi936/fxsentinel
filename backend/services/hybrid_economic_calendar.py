@@ -11065,7 +11065,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '56.6',
                 'forecast': '51.2',
                 'previous': '50.9'
             },
@@ -11075,9 +11075,9 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.2%',
-                'previous': '0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'FOMC Member Daly Speaks',
