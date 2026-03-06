@@ -22,6 +22,7 @@ from services.stripe_service import StripeService
 # Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
 load_dotenv()
 from services.coupon_service import CouponService
+from services.email_service import send_verification_email
 
 # Optional import for Google Sheets service
 try:
@@ -5667,6 +5668,87 @@ def get_subscription_status(user_id):
             'is_developer': False
         }), 200  # Return 200 instead of 500 to allow frontend to handle gracefully
 
+
+@app.route('/api/send-verification-email', methods=['POST'])
+@limiter.limit("3 per minute")  # Rate limit: 3 verification emails per minute per user
+def send_verification_email_endpoint():
+    """
+    Send branded verification email via Resend.
+    Requires Authorization: Bearer <Firebase ID token>.
+    Only for email/password users who are not yet verified.
+    """
+    try:
+        token_user_info = _extract_user_from_token()
+        if not token_user_info:
+            return jsonify({
+                'error': 'Unauthorized',
+                'message': 'Valid Firebase token required'
+            }), 401
+
+        user_id = token_user_info.get('user_id')
+        user_email = token_user_info.get('user_email', '')
+        user_name = token_user_info.get('user_name', '')
+
+        if not user_email:
+            return jsonify({
+                'error': 'Bad request',
+                'message': 'User email not found in token'
+            }), 400
+
+        # Firebase Admin auth required for generate_email_verification_link
+        if auth is None:
+            return jsonify({
+                'error': 'Service unavailable',
+                'message': 'Email verification service not configured'
+            }), 503
+
+        # Check user record: must be email/password and unverified
+        try:
+            firebase_user = auth.get_user(user_id)
+        except Exception as e:
+            logger.warning(f"Could not get Firebase user {user_id}: {e}")
+            return jsonify({'error': 'User not found'}), 404
+
+        if firebase_user.email_verified:
+            return jsonify({
+                'success': True,
+                'message': 'Email already verified'
+            }), 200
+
+        # OAuth users (e.g. Google) are verified by the provider; no need to send our verification
+        providers = [p.provider_id for p in (firebase_user.provider_data or [])]
+        if 'google.com' in providers or 'oidc.' in str(providers):
+            return jsonify({
+                'success': True,
+                'message': 'OAuth accounts are already verified'
+            }), 200
+
+        # Generate Firebase verification link (continue URL sends user to our branded page)
+        from firebase_admin.auth import ActionCodeSettings
+        action_code_settings = ActionCodeSettings(url='https://fxsentinel.io/verify-email')
+        verification_link = auth.generate_email_verification_link(user_email, action_code_settings)
+
+        # Send via Resend (branded HTML)
+        result = send_verification_email(
+            to_email=user_email,
+            verification_url=verification_link,
+            display_name=user_name or None
+        )
+
+        if not result.get('success'):
+            return jsonify({
+                'error': 'Email send failed',
+                'message': result.get('error', 'Could not send verification email')
+            }), 500
+
+        return jsonify({
+            'success': True,
+            'message': 'Verification email sent'
+        }), 200
+
+    except Exception as e:
+        logger.exception(f"Error in send_verification_email endpoint: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 # REMOVED: Trial eligibility checking not needed in freemium model
