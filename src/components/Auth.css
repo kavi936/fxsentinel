@@ -231,6 +231,104 @@
     0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
+/* Verify-email page: professional styling */
+.auth-card--verify-email {
+  max-width: 480px;
+  padding: 40px 36px;
+}
+
+.auth-card--verify-email .auth-header {
+  margin-bottom: 28px;
+}
+
+.auth-card--verify-email .auth-header h1 {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+
+.auth-card--verify-email .auth-header p {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.5;
+}
+
+.auth-card--verify-email .auth-header p strong {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-top: 8px;
+  word-break: break-all;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.auth-card--verify-email .verify-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.verify-email-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.82);
+  margin: 0;
+}
+
+.auth-card--verify-email .auth-button {
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+.verify-email-resend-section {
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-card--verify-email .auth-form button.auth-link {
+  font-size: 0.9rem;
+  color: rgba(0, 212, 255, 0.95);
+  transition: color 0.2s ease;
+}
+
+.auth-card--verify-email .auth-form button.auth-link:hover:not(:disabled) {
+  color: #00d4ff;
+}
+
+.verify-email-resend-success {
+  margin: 0;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: rgba(76, 175, 80, 0.95);
+}
+
+.verify-email-footer {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.auth-card--verify-email .verify-email-footer p {
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.auth-card--verify-email .verify-email-footer .auth-link {
+  color: rgba(0, 212, 255, 0.9);
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.auth-card--verify-email .verify-email-footer .auth-link:hover {
+  color: #00d4ff;
+}
+
 /* Verify-email success state (branded redirect page) */
 .auth-card--success .verify-success-icon {
   display: inline-flex;
