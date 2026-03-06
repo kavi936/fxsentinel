@@ -95,6 +95,22 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
+  // Send Zeno-style welcome email (only on signup; failures are non-blocking)
+  const sendWelcomeEmailViaBackend = async (user) => {
+    try {
+      const token = await user.getIdToken();
+      await fetch(`${config.API_BASE_URL}/api/send-welcome-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (err) {
+      console.warn('Welcome email failed (non-blocking):', err);
+    }
+  };
+
   // Sign up function (email/password only; Google accounts are already verified by the provider)
   const signup = async (email, password, firstName, lastName) => {
     try {
@@ -104,6 +120,9 @@ export const AuthProvider = ({ children }) => {
       });
       // Send branded verification email via backend (Resend) instead of Firebase's plain email
       await sendVerificationEmailViaBackend(result.user);
+
+      // Send Zeno-style welcome email (non-blocking; failures don't affect signup)
+      sendWelcomeEmailViaBackend(result.user);
 
       // Check developer status after signup
       await checkDeveloperStatus(result.user);
