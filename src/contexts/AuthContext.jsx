@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  // Request welcome email (idempotent: backend sends only once per user, when they first hit dashboard)
+  // Request welcome email for any signed-in user (Google or email/password). Backend sends only once per user on first dashboard visit.
   const requestWelcomeEmail = async () => {
     const user = auth.currentUser;
     if (!user) return;

@@ -22,7 +22,8 @@ from services.stripe_service import StripeService
 # Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
 load_dotenv()
 from services.coupon_service import CouponService
-from services.email_service import send_verification_email, send_welcome_email
+from services import email_service as email_service_module
+from services.email_service import send_verification_email
 
 # Optional import for Google Sheets service
 try:
@@ -5756,6 +5757,7 @@ def send_verification_email_endpoint():
 def send_welcome_email_endpoint():
     """
     Send Zeno-style welcome email the first time the user hits the dashboard.
+    For all sign-in types: Google and email/password. No provider check.
     Requires Authorization: Bearer <Firebase ID token>.
     Idempotent: checks Firestore users/{user_id}.welcome_email_sent and sends only once.
     """
@@ -5792,7 +5794,7 @@ def send_welcome_email_endpoint():
             logger.warning(f"Firestore check for welcome_email_sent failed: {store_err}")
             # Proceed to send; next time we may double-send if store was down
 
-        result = send_welcome_email(to_email=user_email, display_name=user_name or None)
+        result = email_service_module.send_welcome_email(to_email=user_email, display_name=user_name or None)
 
         if not result.get('success'):
             return jsonify({
@@ -6100,10 +6102,10 @@ def dashboard_redirect():
 # REMOVED: Trial welcome page not needed in freemium model
 # New users go directly to dashboard with free tier
 
-@app.route('/api/send-welcome-email', methods=['POST'])
-@limiter.limit("3 per minute")  # Limit email sending
-def send_welcome_email():
-    """Send welcome email with customer portal link"""
+@app.route('/api/get-customer-portal-session', methods=['POST'])
+@limiter.limit("3 per minute")  # Limit portal link requests
+def get_customer_portal_session():
+    """Return Stripe customer portal URL (legacy: was named send-welcome-email)."""
     try:
         data = request.get_json()
         user_id = data.get('user_id')
@@ -6126,12 +6128,10 @@ def send_welcome_email():
                             return_url='https://fxsentinel.io/dashboard',
                         )
                         
-                        # Here you would integrate with your email service
-                        # For now, we'll return the portal URL
                         return jsonify({
                             'success': True,
                             'portal_url': portal_session.url,
-                            'message': 'Welcome email sent with customer portal link'
+                            'message': 'Portal URL created'
                         })
                     else:
                         return jsonify({'error': 'No subscription found for this user'}), 404
@@ -6144,7 +6144,7 @@ def send_welcome_email():
             return jsonify({'error': 'Database not available'}), 500
             
     except Exception as e:
-        print(f"Error sending welcome email: {e}")
+        print(f"Error getting portal session: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/upgrade-subscription', methods=['POST'])

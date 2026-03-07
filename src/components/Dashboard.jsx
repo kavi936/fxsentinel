@@ -70,7 +70,7 @@ function Dashboard() {
     const hasVisitedDashboard = localStorage.getItem(`dashboard_visited_${currentUser.uid}`);
     const isFirstView = !hasVisitedDashboard;
     
-    // Welcome email: request on first dashboard visit (backend sends only once per user via Firestore)
+    // Welcome email for all users (Google or email/password): request on first dashboard visit; backend sends only once per user via Firestore
     if (isFirstView) requestWelcomeEmail();
     
     // Track dashboard access with funnel step

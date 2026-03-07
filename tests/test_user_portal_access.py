@@ -21,7 +21,7 @@ def test_user_portal_access():
     # Test 1: Check if user exists and has subscription
     print("\n1. Checking user subscription status...")
     try:
-        response = requests.post(f"{BASE_URL}/api/send-welcome-email", 
+        response = requests.post(f"{BASE_URL}/api/get-customer-portal-session", 
                                json=test_data, timeout=10)
         
         if response.status_code == 200:
