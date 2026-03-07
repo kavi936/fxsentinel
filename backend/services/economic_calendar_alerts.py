@@ -74,10 +74,11 @@ class EconomicCalendarAlerts:
                 logger.debug(f"Suspicious midnight event: {event.get('title', 'Unknown')}")
                 return False
             
-            # Allow weekend events only for important speeches/meetings
-            if weekday >= 5 and not any(keyword in title for keyword in ['speech', 'meeting', 'conference']):
-                logger.debug(f"Weekend event without justification: {event.get('title', 'Unknown')}")
-                return False
+            # Allow high-impact events on weekends (e.g. some releases); only filter low/medium without justification
+            if weekday >= 5 and event.get('impact', 'medium') != 'high':
+                if not any(keyword in title for keyword in ['speech', 'meeting', 'conference']):
+                    logger.debug(f"Weekend event without justification: {event.get('title', 'Unknown')}")
+                    return False
             
             # Check event status (if present); treat missing as upcoming so hybrid/API events are not rejected
             status = (event.get('status') or 'upcoming').strip().upper()
@@ -92,13 +93,23 @@ class EconomicCalendarAlerts:
             return False
     
     def _parse_event_datetime(self, event: Dict[str, Any]) -> Optional[datetime]:
-        """Parse event datetime from various formats"""
+        """Parse event datetime from various formats. Supports hybrid calendar (YYYY-MM-DD + HH:MM UTC)."""
         try:
             time_str = event.get('time', '')
             date_str = event.get('date', '')
             
             if not time_str or not date_str:
                 return None
+            
+            # Hybrid calendar format first: date "YYYY-MM-DD", time "HH:MM UTC"
+            if '-' in date_str and len(date_str) == 10:
+                try:
+                    event_date = datetime.strptime(date_str, '%Y-%m-%d')
+                    time_part = time_str.replace(' UTC', '').strip()
+                    time_obj = datetime.strptime(time_part, '%H:%M').time()
+                    return datetime.combine(event_date.date(), time_obj)
+                except ValueError:
+                    pass
             
             # Try different datetime formats
             datetime_formats = [

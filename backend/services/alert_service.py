@@ -24,6 +24,9 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Marketing branding appended to all Telegram messages (for sharing to other channels)
+TELEGRAM_BRANDING_TAG = "\n\n@FXSentinelAlertsBot"
+
 class AlertService:
     def __init__(self):
         """Initialize the alert service"""
@@ -241,6 +244,10 @@ class AlertService:
                 return False
             else:
                 logger.debug(f"Circuit breaker state: {cb_stats['state']} - proceeding with alert send")
+            
+            # Append branding tag for marketing (shared messages carry source)
+            if message and not (message.strip().endswith("@FXSentinelAlertsBot")):
+                message = message.strip() + TELEGRAM_BRANDING_TAG
             
             # Attempt to send (robust_telegram_service handles retries internally)
             success, error = await send_telegram_message_async(

@@ -11,7 +11,7 @@ import logging
 import threading
 import asyncio
 import concurrent.futures
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional, Tuple
 
 # Configure logging
@@ -603,8 +603,8 @@ class UnifiedAlertProcessor:
             
             logger.info(f"Found {len(events)} economic calendar events")
             
-            # Process upcoming high-impact events
-            now = datetime.now()
+            # Use UTC so event times ("HH:MM UTC") match server timezone (e.g. Railway)
+            now = datetime.now(timezone.utc)
             alerts_triggered = 0
             
             for event in events:
@@ -650,10 +650,10 @@ class UnifiedAlertProcessor:
                                 logger.warning(f"Could not parse time: {time_str}")
                                 continue
                             
-                            # Combine date and time
-                            event_datetime = datetime.combine(event_date_obj.date(), time_obj)
+                            # Combine date and time; treat as UTC (calendar times are "HH:MM UTC")
+                            event_datetime = datetime.combine(event_date_obj.date(), time_obj, tzinfo=timezone.utc)
                             
-                            # Calculate time until event
+                            # Calculate time until event (both in UTC)
                             time_until_event = event_datetime - now
                             minutes_until_event = time_until_event.total_seconds() / 60
                             
@@ -740,8 +740,8 @@ class UnifiedAlertProcessor:
             # Use economic calendar alerts service (direct function call)
             from services.economic_calendar_alerts import economic_calendar_alerts
             
-            # Determine alert timing
-            now = datetime.now()
+            # Determine alert timing (use UTC to match calendar "HH:MM UTC")
+            now = datetime.now(timezone.utc)
             time_str = event.get('time', '')
             date_str = event.get('date', '')
             
@@ -766,8 +766,8 @@ class UnifiedAlertProcessor:
                     time_part = time_str.replace(' UTC', '').strip()
                     time_obj = datetime.strptime(time_part, '%H:%M').time()
                     
-                    # Combine date and time
-                    event_datetime = datetime.combine(event_date_obj.date(), time_obj)
+                    # Combine date and time as UTC
+                    event_datetime = datetime.combine(event_date_obj.date(), time_obj, tzinfo=timezone.utc)
                     
                     time_until_event = event_datetime - now
                     minutes_until_event = time_until_event.total_seconds() / 60
