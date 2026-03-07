@@ -61,6 +61,7 @@ function App() {
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Navigate to="/disclaimer" replace />} />
+              <Route path="/feedbackform" element={<Navigate to="/feedback" replace />} />
               <Route path="/feedback" element={<FeedbackForm />} />
               <Route path="/trial-welcome" element={
                 <ProtectedRoute>
