@@ -943,6 +943,16 @@ body {
   animation: fadeInUp 1s ease-out 0.3s both;
   letter-spacing: -0.03em;
   text-align: center;
+  color: var(--text-white);
+}
+
+/* Plain hero title text (Where, Turns Into) – force white so .highlight’s transparent fill doesn’t affect siblings */
+.hero-title .hero-title-plain {
+  color: var(--text-white);
+  -webkit-text-fill-color: var(--text-white);
+  background: none;
+  background-clip: unset;
+  -webkit-background-clip: unset;
 }
 
 .hero-subtitle {
@@ -1244,6 +1254,32 @@ section.animate-in .section-title.animate-on-scroll,
   background: var(--accent-red-dark);
   transform: translateY(-2px);
   color: var(--text-white) !important;
+}
+
+/* Hero CTA: red–black gradient, red text, emphasis on FREE */
+.hero-cta-button {
+  background: linear-gradient(135deg, var(--accent-red) 0%, var(--primary-black) 50%, var(--accent-red-dark) 100%);
+  background-size: 200% 200%;
+  color: var(--accent-red);
+  border: 1px solid rgba(255, 68, 68, 0.4);
+}
+
+.hero-cta-button:hover {
+  background-position: 100% 50%;
+  color: var(--accent-red-light);
+  border-color: var(--accent-red);
+}
+
+.hero-cta-button .cta-free {
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--text-white);
+  text-shadow: 0 0 20px rgba(255, 68, 68, 0.5);
+}
+
+.hero-cta-button:hover .cta-free {
+  color: var(--text-white);
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.4);
 }
 
 .secondary-button {

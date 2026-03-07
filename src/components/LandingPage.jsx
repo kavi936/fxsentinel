@@ -371,17 +371,20 @@ const LandingPage = () => {
             <div className="hero-badge-container">
               <div className="hero-badge">
                 <span className="badge-dot"></span>
-                AI-Powered • Real-Time • Built for Traders
+                AI Macro Intelligence • Real-Time Insights • Built for Traders
               </div>
             </div>
             
             <h1 className="hero-title">
-              Turning <span className="highlight">Macro News</span> into <span className="highlight">Market Moves</span>
+              <span className="hero-title-plain">Where</span>{' '}
+              <span className="highlight">Macro Data</span>{' '}
+              <span className="hero-title-plain">Turns Into</span>{' '}
+              <span className="highlight">Market Insights</span>
             </h1>
             
             <p className="hero-subtitle">
-              FXSentinel simplifies complex trading news, making it accessible
-              and usable for every trader
+              <em>FXSentinel</em> aggregates and simplifies all market-moving data, making it accessible
+              and usable for all traders.
             </p>
             
             {/* Live Market Ticker */}
@@ -390,14 +393,14 @@ const LandingPage = () => {
             <div className="hero-buttons">
               <Link 
                 to="/signup" 
-                className="primary-button"
+                className="primary-button hero-cta-button"
                 onClick={() => {
                   trackCTAClick('start_for_free', 'hero_section');
                   trackSignupClick('hero_button');
                   trackEngagement('hero_signup_button_click');
                 }}
               >
-                Start for Free
+                <span>Start for FREE</span>
               </Link>
             </div>
           </div>
