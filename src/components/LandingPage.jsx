@@ -377,14 +377,13 @@ const LandingPage = () => {
             
             <h1 className="hero-title">
               <span className="hero-title-plain">Where</span>{' '}
-              <span className="highlight">Macro Data</span>{' '}
-              <span className="hero-title-plain">Turns Into</span>{' '}
-              <span className="highlight">Market Insights</span>
+              <span className="highlight">Macro News</span>{' '}
+              <span className="hero-title-plain">Becomes</span>{' '}
+              <span className="highlight">Market Insight</span>
             </h1>
             
             <p className="hero-subtitle">
-              <em>FXSentinel</em> aggregates and simplifies all market-moving data, making it accessible
-              and usable for all traders.
+              <em>FXSentinel</em> analyses global macro news in real time, giving traders clear insight into what actually moves the market.
             </p>
             
             {/* Live Market Ticker */}
