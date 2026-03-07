@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useMeta } from '../hooks/useMeta';
 import analyticsTracker from '../utils/analytics';
 import { config } from '../config';
 import './FeedbackForm.css';
@@ -13,12 +14,23 @@ const FeedbackForm = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
-    name: currentUser?.displayName || currentUser?.email?.split('@')[0] || '',
-    email: currentUser?.email || '',
+    name: '',
+    email: '',
     category: 'general',
     message: '',
     rating: null
   });
+
+  // Sync name/email when currentUser loads (auth can resolve after mount)
+  useEffect(() => {
+    if (currentUser) {
+      setFormData(prev => ({
+        ...prev,
+        name: prev.name || currentUser.displayName || currentUser.email?.split('@')[0] || '',
+        email: prev.email || currentUser.email || ''
+      }));
+    }
+  }, [currentUser?.uid, currentUser?.email, currentUser?.displayName]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [errors, setErrors] = useState({});
@@ -88,11 +100,21 @@ const FeedbackForm = () => {
         }),
       });
 
-      const data = await response.json();
+      let data = {};
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (_) {
+          data = { error: 'Invalid response from server' };
+        }
+      } else if (!response.ok) {
+        data = { error: `Request failed (${response.status}). Please try again.` };
+      }
 
       if (response.ok && data.success) {
         setSubmitStatus('success');
-        // Reset form after successful submission
+        // Reset form after successful submission (keep pre-filled name/email if logged in)
         setTimeout(() => {
           setFormData({
             name: currentUser?.displayName || currentUser?.email?.split('@')[0] || '',
