@@ -46,24 +46,37 @@ def send_verification_email(to_email: str, verification_url: str, display_name: 
     name = display_name or 'there'
     logo_url = 'https://fxsentinel.io/favicon.png'
 
-    # Professional, future-style font for header (matches app landing)
+    # Professional, future-style font for header (matches app landing).
+    # Meta + CSS below: pin email to dark theme so Gmail/iOS and other clients don't invert
+    # when device is in dark mode (phone vs laptop can otherwise show different appearances).
     html = f"""
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
     <title>Verify your FXSentinel email</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style type="text/css">
+      :root, html, body {{ color-scheme: dark; background-color: #000000 !important; color: #ffffff !important; }}
+      @media (prefers-color-scheme: light) {{
+        :root, html, body {{ background-color: #000000 !important; color: #ffffff !important; }}
+      }}
+      @media (prefers-color-scheme: dark) {{
+        :root, html, body {{ background-color: #000000 !important; color: #ffffff !important; }}
+      }}
+    </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #000000;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 48px 24px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #000000 !important; color: #ffffff !important;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000 !important; padding: 48px 24px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #0f0f0f; border-radius: 12px; border: 1px solid rgba(255, 68, 68, 0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 68, 68, 0.1);">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #0f0f0f !important; border-radius: 12px; border: 1px solid rgba(255, 68, 68, 0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 68, 68, 0.1);">
                     <!-- Header: Space Grotesk for clean, modern look -->
                     <tr>
-                        <td style="padding: 36px 40px 24px; border-bottom: 1px solid rgba(255, 68, 68, 0.2); background-color: #1a0a0a; background: linear-gradient(180deg, #1a0a0a 0%, #0f0f0f 100%); border-radius: 12px 12px 0 0;">
+                        <td style="padding: 36px 40px 24px; border-bottom: 1px solid rgba(255, 68, 68, 0.2); background-color: #1a0a0a !important; background: linear-gradient(180deg, #1a0a0a 0%, #0f0f0f 100%) !important; border-radius: 12px 12px 0 0;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="vertical-align: middle;">
@@ -104,7 +117,7 @@ def send_verification_email(to_email: str, verification_url: str, display_name: 
                     </tr>
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 24px 40px; border-top: 1px solid rgba(255, 68, 68, 0.15); background: rgba(0, 0, 0, 0.3); border-radius: 0 0 12px 12px;">
+                        <td style="padding: 24px 40px; border-top: 1px solid rgba(255, 68, 68, 0.15); background: rgba(0, 0, 0, 0.3) !important; background-color: #0a0a0a !important; border-radius: 0 0 12px 12px;">
                             <p style="margin: 0; font-size: 12px; color: rgba(255, 255, 255, 0.5);">
                                 If you didn't create an FXSentinel account, you can safely ignore this email.
                             </p>
@@ -166,24 +179,36 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
     logo_url = 'https://fxsentinel.io/favicon.png'
     base_url = 'https://fxsentinel.io'
 
-    # Same header font as verification: Space Grotesk for consistent branding
+    # Same header font as verification: Space Grotesk for consistent branding.
+    # Same dark-theme pinning as verification email so appearance is consistent and not overridden by device dark/light mode.
     html = f"""
 <!DOCTYPE html>
-<html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="supported-color-schemes" content="dark">
     <title>Welcome to FXSentinel</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style type="text/css">
+      :root, html, body {{ color-scheme: dark; background-color: #000000 !important; color: #ffffff !important; }}
+      @media (prefers-color-scheme: light) {{
+        :root, html, body {{ background-color: #000000 !important; color: #ffffff !important; }}
+      }}
+      @media (prefers-color-scheme: dark) {{
+        :root, html, body {{ background-color: #000000 !important; color: #ffffff !important; }}
+      }}
+    </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #000000;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 48px 24px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #000000 !important; color: #ffffff !important;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000 !important; padding: 48px 24px;">
         <tr>
             <td align="center">
-                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #0f0f0f; border-radius: 12px; border: 1px solid rgba(255, 68, 68, 0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 68, 68, 0.1);">
+                <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #0f0f0f !important; border-radius: 12px; border: 1px solid rgba(255, 68, 68, 0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 68, 68, 0.1);">
                     <!-- Header: Space Grotesk for clean, modern look -->
                     <tr>
-                        <td style="padding: 36px 40px 24px; border-bottom: 1px solid rgba(255, 68, 68, 0.2); background-color: #1a0a0a; background: linear-gradient(180deg, #1a0a0a 0%, #0f0f0f 100%); border-radius: 12px 12px 0 0;">
+                        <td style="padding: 36px 40px 24px; border-bottom: 1px solid rgba(255, 68, 68, 0.2); background-color: #1a0a0a !important; background: linear-gradient(180deg, #1a0a0a 0%, #0f0f0f 100%) !important; border-radius: 12px 12px 0 0;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                                 <tr>
                                     <td style="vertical-align: middle;">
@@ -249,7 +274,7 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
                     </tr>
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 24px 40px; border-top: 1px solid rgba(255, 68, 68, 0.15); background: rgba(0, 0, 0, 0.3); border-radius: 0 0 12px 12px;">
+                        <td style="padding: 24px 40px; border-top: 1px solid rgba(255, 68, 68, 0.15); background: rgba(0, 0, 0, 0.3) !important; background-color: #0a0a0a !important; border-radius: 0 0 12px 12px;">
                             <p style="margin: 0; font-size: 12px; color: rgba(255, 255, 255, 0.4);">
                                 © FXSentinel · fxsentinel.io
                             </p>

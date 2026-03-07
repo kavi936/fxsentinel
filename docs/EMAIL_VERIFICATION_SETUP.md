@@ -44,6 +44,8 @@ The branded verification flow is implemented:
 
 **Required env:** `RESEND_API_KEY` in `backend/.env`. Domain `fxsentinel.io` must be verified in Resend with SPF/DKIM/MX records.
 
+**Dark theme consistency:** Verification and welcome emails are designed with a black background. So that the same theme is consistent and not changed by phone/laptop settings (e.g. dark mode), both templates in `email_service.py` pin to a single dark theme using `meta name="color-scheme" content="dark"`, `supported-color-schemes`, and CSS that re-asserts dark backgrounds in both `prefers-color-scheme: light` and `dark`. This reduces (but does not always eliminate) client-driven inversion in Gmail and other clients.
+
 ---
 
 ## 4. Why it might go to spam and what you can do
