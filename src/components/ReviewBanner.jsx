@@ -1,36 +1,59 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import './ReviewBanner.css';
 import tradingViewLogo from '../assets/tradingview-nobg.png';
 import trustpilotLogo from '../assets/trustpilot-removebg-preview.png';
 
+const FEEDBACK_DEFER_DAYS = 2; // Don't show feedback banner until after onboarding or this many days of app use
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 const ReviewBanner = ({ onClose }) => {
+  const { currentUser } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
+    const userId = currentUser?.uid;
+    // Require a logged-in user so we can scope "first visit" and onboarding per user
+    if (!userId) return;
+
+    // Defer feedback banner for new users: show only after onboarding is done OR after they've used the app for a while.
+    // This avoids overwhelming first-time users with both onboarding and feedback at once.
+    const onboardingCompleted = localStorage.getItem(`fxsentinel_onboarding_${userId}`) === 'completed';
+    const firstVisitRaw = localStorage.getItem(`fxsentinel_first_dashboard_visit_${userId}`);
+    const firstVisitTime = firstVisitRaw ? parseInt(firstVisitRaw, 10) : null;
+    const daysSinceFirstVisit = firstVisitTime ? (Date.now() - firstVisitTime) / ONE_DAY_MS : 0;
+    // No timestamp = existing user (before this feature); keep showing. Otherwise require onboarding done or 2+ days.
+    const eligibleAfterDefer =
+      onboardingCompleted ||
+      firstVisitTime == null ||
+      daysSinceFirstVisit >= FEEDBACK_DEFER_DAYS;
+
+    if (!eligibleAfterDefer) return;
+
     // Check if user has seen the banner recently
     const lastShown = localStorage.getItem('reviewBannerLastShown');
     const hasReviewed = localStorage.getItem('userHasReviewed');
     const reminderTime = localStorage.getItem('reviewBannerReminder');
     const currentTime = Date.now();
-    
+
     // Check if reminder time has passed
-    if (reminderTime && currentTime < parseInt(reminderTime)) {
+    if (reminderTime && currentTime < parseInt(reminderTime, 10)) {
       return; // Don't show yet, reminder time hasn't passed
     }
-    
+
     // Show banner if:
     // 1. User hasn't reviewed yet
-    // 2. It's been more than 1 day since last shown (reduced from 7 days for more frequent prompts)
-    // 3. Higher probability (60% chance instead of 30%)
-    if (!hasReviewed && (!lastShown || currentTime - parseInt(lastShown) > 1 * 24 * 60 * 60 * 1000)) {
-      const shouldShow = Math.random() < 0.6; // 60% chance (increased from 30%)
+    // 2. It's been more than 1 day since last shown
+    // 3. 60% chance
+    if (!hasReviewed && (!lastShown || currentTime - parseInt(lastShown, 10) > ONE_DAY_MS)) {
+      const shouldShow = Math.random() < 0.6;
       if (shouldShow) {
         setIsVisible(true);
         localStorage.setItem('reviewBannerLastShown', currentTime.toString());
       }
     }
-  }, []);
+  }, [currentUser?.uid]);
 
   const handleReviewClick = (platform) => {
     setHasInteracted(true);

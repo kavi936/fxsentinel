@@ -10,8 +10,9 @@ import {
 import './OnboardingTour.css';
 
 const TOTAL_STEPS = 9;
+const MOBILE_BREAKPOINT = 768; // Match Dashboard.css – nav tabs hide behind hamburger below this width
 
-const STEPS = [
+const STEPS_DESKTOP = [
   {
     element: '[data-onboarding="nav-tabs"]',
     popover: {
@@ -98,6 +99,44 @@ const STEPS = [
   }
 ];
 
+/** On mobile, step 1 highlights the hamburger; steps 8–9 target the sidebar tabs (menu is opened before step 8). */
+function getSteps(isMobile) {
+  if (!isMobile) return STEPS_DESKTOP;
+  return [
+    {
+      element: '[data-onboarding="mobile-menu-toggle"]',
+      popover: {
+        title: 'Welcome to FXSentinel',
+        description: 'Your dashboard has three main areas: <strong>Overview</strong>, <strong>Economies</strong>, and <strong>Alerts</strong>. Tap the <strong>menu icon</strong> here to switch between them.',
+        side: 'bottom',
+        align: 'center'
+      }
+    },
+    ...STEPS_DESKTOP.slice(1, 7),
+    {
+      element: '.mobile-menu-content [data-onboarding="nav-economies"]',
+      popover: {
+        title: 'Economies Tab',
+        description: 'View the most important <strong>country-level macro data</strong>: GDP, inflation, interest rates, and key indicators for each economy.',
+        side: 'right',
+        align: 'start',
+        popoverOffset: 16
+      }
+    },
+    {
+      element: '.mobile-menu-content [data-onboarding="nav-alerts"]',
+      popover: {
+        title: 'Alerts & Settings',
+        description: 'Set up <strong>Telegram alerts</strong> here to get notified on news and events—so you don\'t need to search WHY. <strong>Skip for now</strong> if you prefer. Timezone in nav settings.',
+        side: 'right',
+        align: 'start',
+        popoverOffset: 16,
+        doneBtnText: "You're all set"
+      }
+    }
+  ];
+}
+
 /**
  * OnboardingTour - Product tour for FXSentinel Dashboard
  * Uses Driver.js. Triggers on first Dashboard Overview load (unless completed) or manual "Product tour" from Profile.
@@ -108,6 +147,7 @@ const OnboardingTour = ({
   activeTab,
   isOverviewReady,
   onStartTour,
+  onOpenMobileMenu,
   trigger = 'manual'
 }) => {
   const driverRef = useRef(null);
@@ -118,8 +158,10 @@ const OnboardingTour = ({
   const startTour = useCallback((triggerOverride = null) => {
     if (!userId) return;
     const effectiveTrigger = triggerOverride ?? trigger;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < MOBILE_BREAKPOINT;
+    const steps = getSteps(isMobile);
 
-    // Expand nav tabs so step 1 and 8 targets are visible (Dashboard does this for auto; ensure for manual)
+    // Desktop: expand nav tabs so step 1 and 8 targets are visible. Mobile: hamburger is always visible.
     onStartTour?.();
 
     const performDestroy = (opts) => {
@@ -137,12 +179,15 @@ const OnboardingTour = ({
       overlayColor: 'rgba(0, 0, 0, 0.75)',
       popoverClass: 'fxsentinel-onboarding-popover',
       stagePadding: 12,
-      steps: STEPS,
+      steps,
       onHighlightStarted: (element, step, opts) => {
         const index = opts.state?.activeIndex ?? 0;
-        const target = STEPS[index]?.element || 'unknown';
-        // Ensure nav is expanded for Economies/Alerts steps (8 & 9)—targets are hidden when collapsed.
-        if ((index === 7 || index === 8) && onStartTour) onStartTour();
+        const target = steps[index]?.element || 'unknown';
+        // Desktop: expand nav for Economies/Alerts. Mobile: open sidebar before steps 8–9 so targets are visible.
+        if (isMobile && (index === 6 || index === 7 || index === 8) && onOpenMobileMenu) {
+          onOpenMobileMenu();
+        }
+        if (!isMobile && (index === 7 || index === 8) && onStartTour) onStartTour();
         if (index === 0 && !hasTrackedStart.current) {
           trackOnboardingStarted(effectiveTrigger);
           hasTrackedStart.current = true;
@@ -179,7 +224,7 @@ const OnboardingTour = ({
         driverObj.drive();
       });
     });
-  }, [userId, trigger, onStartTour]);
+  }, [userId, trigger, onStartTour, onOpenMobileMenu]);
 
   startTourRef.current = startTour;
 

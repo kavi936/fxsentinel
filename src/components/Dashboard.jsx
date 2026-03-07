@@ -79,6 +79,15 @@ function Dashboard() {
     // Mark dashboard as visited
     if (isFirstView) {
       localStorage.setItem(`dashboard_visited_${currentUser.uid}`, 'true');
+      // Record first visit timestamp so ReviewBanner can defer feedback until after onboarding or 2 days of use
+      try {
+        const key = `fxsentinel_first_dashboard_visit_${currentUser.uid}`;
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, Date.now().toString());
+        }
+      } catch (e) {
+        console.warn('Dashboard: first visit timestamp set failed', e);
+      }
     }
     
     // Also track engagement for backward compatibility
@@ -973,11 +982,12 @@ function Dashboard() {
             </Link>
           </div>
           
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Toggle - targeted by onboarding on mobile for step 1 */}
           <button 
             className="mobile-menu-toggle" 
             onClick={toggleMobileMenu}
             title="Menu"
+            data-onboarding="mobile-menu-toggle"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="3" y1="6" x2="21" y2="6"/>
@@ -1140,6 +1150,7 @@ function Dashboard() {
         activeTab={activeTab}
         isOverviewReady={!loading}
         onStartTour={() => setNavTabsExpanded(true)}
+        onOpenMobileMenu={() => setMobileMenuOpen(true)}
         trigger="auto"
       />
 
