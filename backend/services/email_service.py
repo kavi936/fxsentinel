@@ -201,13 +201,16 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
                     <tr>
                         <td style="padding: 36px 40px 40px;">
                             <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.7; color: rgba(255, 255, 255, 0.95);">
-                                Hey {first_name},
+                                Hey there,
                             </p>
                             <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.7; color: rgba(255, 255, 255, 0.9);">
-                                We built FXSentinel because we wanted a better way for retail traders to stay on top of market-moving news—without the noise.
+                                My name is Kavi — I'm the founder of FXSentinel.
                             </p>
                             <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.7; color: rgba(255, 255, 255, 0.9);">
-                                Real-time alerts, AI-powered analysis, and actionable macro insights—all in one place.
+                                We started FXSentinel because we wanted a better way of breaking down fundamentals and information for trading.
+                            </p>
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.7; color: rgba(255, 255, 255, 0.9);">
+                                A simple way to get real-time alerts, AI-powered analysis, and macro insights — all in one place.
                             </p>
                             <p style="margin: 0 0 28px; font-size: 16px; line-height: 1.7; color: rgba(255, 255, 255, 0.9);">
                                 Here are 3 tips to get started:
@@ -215,20 +218,20 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin: 0 0 28px;">
                                 <tr>
                                     <td style="padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
-                                        <a href="{base_url}/verify-email" style="color: #ff4444; text-decoration: none; font-weight: 600; font-size: 15px;">1. Verify your email</a>
-                                        <p style="margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">Check your inbox and click the link to unlock your dashboard.</p>
+                                        <a href="{base_url}/dashboard" style="color: #ff4444; text-decoration: none; font-weight: 600; font-size: 15px;">1. Go through our onboarding process</a>
+                                        <p style="margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">We understand our app may be confusing to first-time users or beginners, so we've simplified it for you.</p>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
                                         <a href="{base_url}/dashboard" style="color: #ff4444; text-decoration: none; font-weight: 600; font-size: 15px;">2. Explore your dashboard</a>
-                                        <p style="margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">Live news, economic calendar, and AI analysis at your fingertips.</p>
+                                        <p style="margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">Live news, economic calendar, AI analysis and more at your fingertips.</p>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td style="padding: 12px 0;">
                                         <a href="{base_url}/dashboard" style="color: #ff4444; text-decoration: none; font-weight: 600; font-size: 15px;">3. Set up alerts</a>
-                                        <p style="margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">Get Telegram alerts for high-impact events so you never miss a move.</p>
+                                        <p style="margin: 4px 0 0; font-size: 14px; color: rgba(255, 255, 255, 0.6);">Never miss the "why" behind moves in the markets. Get Telegram alerts for high-impact events so you never miss a move.</p>
                                     </td>
                                 </tr>
                             </table>
@@ -240,7 +243,7 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
                             </p>
                             <p style="margin: 0; font-size: 16px; color: rgba(255, 255, 255, 0.95);">
                                 Cheers,<br />
-                                The FXSentinel Team
+                                Kavi &amp; the FXSentinel Team
                             </p>
                         </td>
                     </tr>
