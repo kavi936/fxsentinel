@@ -46,7 +46,7 @@ def send_verification_email(to_email: str, verification_url: str, display_name: 
     name = display_name or 'there'
     logo_url = 'https://fxsentinel.io/favicon.png'
 
-    # Cursive font for header branding (fallback to cursive for Outlook)
+    # Professional, future-style font for header (matches app landing)
     html = f"""
 <!DOCTYPE html>
 <html>
@@ -54,14 +54,14 @@ def send_verification_email(to_email: str, verification_url: str, display_name: 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Verify your FXSentinel email</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #000000;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 48px 24px;">
         <tr>
             <td align="center">
                 <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #0f0f0f; border-radius: 12px; border: 1px solid rgba(255, 68, 68, 0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 68, 68, 0.1);">
-                    <!-- Header with logo and branding (cursive font for distinct look) -->
+                    <!-- Header: Space Grotesk for clean, modern look -->
                     <tr>
                         <td style="padding: 36px 40px 24px; border-bottom: 1px solid rgba(255, 68, 68, 0.2); background-color: #1a0a0a; background: linear-gradient(180deg, #1a0a0a 0%, #0f0f0f 100%); border-radius: 12px 12px 0 0;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -70,8 +70,8 @@ def send_verification_email(to_email: str, verification_url: str, display_name: 
                                         <img src="{logo_url}" alt="FXSentinel" width="48" height="48" style="display: block; width: 48px; height: 48px; border-radius: 10px;" />
                                     </td>
                                     <td style="vertical-align: middle; padding-left: 16px;">
-                                        <h1 style="margin: 0 0 4px; font-family: 'Dancing Script', cursive; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">FXSentinel</h1>
-                                        <p style="margin: 0; font-family: 'Dancing Script', cursive; font-size: 14px; color: rgba(255, 255, 255, 0.7); letter-spacing: 0.5px;">Market Intelligence Platform</p>
+                                        <h1 style="margin: 0 0 4px; font-family: 'Space Grotesk', -apple-system, sans-serif; font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: -0.02em;">FXSentinel</h1>
+                                        <p style="margin: 0; font-family: 'Space Grotesk', -apple-system, sans-serif; font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.65); letter-spacing: 0.08em; text-transform: uppercase;">Market Intelligence Platform</p>
                                     </td>
                                 </tr>
                             </table>
@@ -166,7 +166,7 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
     logo_url = 'https://fxsentinel.io/favicon.png'
     base_url = 'https://fxsentinel.io'
 
-    # Same cursive header as verification email for consistent branding
+    # Same header font as verification: Space Grotesk for consistent branding
     html = f"""
 <!DOCTYPE html>
 <html>
@@ -174,14 +174,14 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to FXSentinel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #000000;">
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #000000; padding: 48px 24px;">
         <tr>
             <td align="center">
                 <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background-color: #0f0f0f; border-radius: 12px; border: 1px solid rgba(255, 68, 68, 0.25); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 68, 68, 0.1);">
-                    <!-- Header (cursive font for distinct look) -->
+                    <!-- Header: Space Grotesk for clean, modern look -->
                     <tr>
                         <td style="padding: 36px 40px 24px; border-bottom: 1px solid rgba(255, 68, 68, 0.2); background-color: #1a0a0a; background: linear-gradient(180deg, #1a0a0a 0%, #0f0f0f 100%); border-radius: 12px 12px 0 0;">
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
@@ -190,8 +190,8 @@ def send_welcome_email(to_email: str, display_name: str = None) -> dict:
                                         <img src="{logo_url}" alt="FXSentinel" width="48" height="48" style="display: block; width: 48px; height: 48px; border-radius: 10px;" />
                                     </td>
                                     <td style="vertical-align: middle; padding-left: 16px;">
-                                        <h1 style="margin: 0 0 4px; font-family: 'Dancing Script', cursive; font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 0.5px;">FXSentinel</h1>
-                                        <p style="margin: 0; font-family: 'Dancing Script', cursive; font-size: 14px; color: rgba(255, 255, 255, 0.7); letter-spacing: 0.5px;">Market Intelligence Platform</p>
+                                        <h1 style="margin: 0 0 4px; font-family: 'Space Grotesk', -apple-system, sans-serif; font-size: 26px; font-weight: 700; color: #ffffff; letter-spacing: -0.02em;">FXSentinel</h1>
+                                        <p style="margin: 0; font-family: 'Space Grotesk', -apple-system, sans-serif; font-size: 12px; font-weight: 500; color: rgba(255, 255, 255, 0.65); letter-spacing: 0.08em; text-transform: uppercase;">Market Intelligence Platform</p>
                                     </td>
                                 </tr>
                             </table>

@@ -21,7 +21,7 @@ import { trackEngagement, trackFeatureUsage, trackTrialStart, trackDashboardAcce
 
 function Dashboard() {
   useMeta('Market Dashboard – FXSentinel', 'Your FXSentinel market dashboard: economic calendar, AI analysis, live news, and Telegram alerts.');
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, requestWelcomeEmail } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const { unreadCount, addSubscriptionNotification } = useNotifications();
   const navigate = useNavigate();
@@ -62,13 +62,16 @@ function Dashboard() {
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
   const [navTabsExpanded, setNavTabsExpanded] = useState(false);
 
-  // Track dashboard access and first view
+  // Track dashboard access and first view; send welcome email on first dashboard visit
   useEffect(() => {
     if (!currentUser) return;
     
     // Check if this is the first time user is viewing dashboard
     const hasVisitedDashboard = localStorage.getItem(`dashboard_visited_${currentUser.uid}`);
     const isFirstView = !hasVisitedDashboard;
+    
+    // Welcome email: request on first dashboard visit (backend sends only once per user via Firestore)
+    if (isFirstView) requestWelcomeEmail();
     
     // Track dashboard access with funnel step
     trackDashboardAccess(isFirstView, subscriptionStatus?.status || 'unknown');

@@ -5752,12 +5752,12 @@ def send_verification_email_endpoint():
 
 
 @app.route('/api/send-welcome-email', methods=['POST'])
-@limiter.limit("2 per minute")  # Rate limit: welcome only on signup, but allow retry
+@limiter.limit("5 per minute")  # Allow dashboard to call; backend sends only once per user
 def send_welcome_email_endpoint():
     """
-    Send Zeno-style welcome email to new signups.
+    Send Zeno-style welcome email the first time the user hits the dashboard.
     Requires Authorization: Bearer <Firebase ID token>.
-    Called by frontend only on signup (not on verification resend).
+    Idempotent: checks Firestore users/{user_id}.welcome_email_sent and sends only once.
     """
     try:
         token_user_info = _extract_user_from_token()
@@ -5767,14 +5767,30 @@ def send_welcome_email_endpoint():
                 'message': 'Valid Firebase token required'
             }), 401
 
+        user_id = token_user_info.get('user_id')
         user_email = token_user_info.get('user_email', '')
         user_name = token_user_info.get('user_name', '')
 
-        if not user_email:
+        if not user_id or not user_email:
             return jsonify({
                 'error': 'Bad request',
                 'message': 'User email not found in token'
             }), 400
+
+        # Only send once per user: check Firestore users/{user_id}.welcome_email_sent
+        try:
+            from firebase_admin import firestore
+            db = firestore.client()
+            user_ref = db.collection('users').document(user_id)
+            user_doc = user_ref.get()
+            if user_doc.exists and user_doc.to_dict().get('welcome_email_sent'):
+                return jsonify({
+                    'success': True,
+                    'message': 'Already sent'
+                }), 200
+        except Exception as store_err:
+            logger.warning(f"Firestore check for welcome_email_sent failed: {store_err}")
+            # Proceed to send; next time we may double-send if store was down
 
         result = send_welcome_email(to_email=user_email, display_name=user_name or None)
 
@@ -5783,6 +5799,12 @@ def send_welcome_email_endpoint():
                 'error': 'Email send failed',
                 'message': result.get('error', 'Could not send welcome email')
             }), 500
+
+        # Record that we sent so we never send again for this user
+        try:
+            user_ref.set({'welcome_email_sent': True}, merge=True)
+        except Exception as set_err:
+            logger.warning(f"Could not set welcome_email_sent in Firestore: {set_err}")
 
         return jsonify({
             'success': True,

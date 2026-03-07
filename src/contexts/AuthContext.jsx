@@ -95,8 +95,10 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  // Send Zeno-style welcome email (only on signup; failures are non-blocking)
-  const sendWelcomeEmailViaBackend = async (user) => {
+  // Request welcome email (idempotent: backend sends only once per user, when they first hit dashboard)
+  const requestWelcomeEmail = async () => {
+    const user = auth.currentUser;
+    if (!user) return;
     try {
       const token = await user.getIdToken();
       await fetch(`${config.API_BASE_URL}/api/send-welcome-email`, {
@@ -107,7 +109,7 @@ export const AuthProvider = ({ children }) => {
         }
       });
     } catch (err) {
-      console.warn('Welcome email failed (non-blocking):', err);
+      console.warn('Welcome email request failed (non-blocking):', err);
     }
   };
 
@@ -121,8 +123,7 @@ export const AuthProvider = ({ children }) => {
       // Send branded verification email via backend (Resend) instead of Firebase's plain email
       await sendVerificationEmailViaBackend(result.user);
 
-      // Send welcome email and wait so it isn't cancelled when the page navigates
-      await sendWelcomeEmailViaBackend(result.user);
+      // Welcome email is sent when they first land on /dashboard (not here)
 
       // Check developer status after signup
       await checkDeveloperStatus(result.user);
@@ -257,7 +258,8 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     updateUserProfile,
     resendVerificationEmail,
-    reloadUser
+    reloadUser,
+    requestWelcomeEmail
   };
 
   return (
