@@ -64,6 +64,57 @@ class PersistentAlertDeduplication:
         """Get Firebase path for content hash"""
         return f"alert_deduplication/content_hashes/{content_hash}"
     
+    def _get_chat_send_path(self, chat_id: str, content_key: str) -> str:
+        """Firebase path for per-chat send dedup (shared across replicas)."""
+        key_str = f"{chat_id}:{content_key}"
+        key_hash = hashlib.md5(key_str.encode()).hexdigest()
+        return f"alert_deduplication/chat_sends/{key_hash}"
+    
+    def should_send_to_chat(self, chat_id: str, content_key: str) -> bool:
+        """
+        Check if we already sent this content_key to this chat_id recently (Firebase).
+        Used so all replicas share state; prevents duplicate to same Telegram chat when
+        multiple users share the chat or when the same story is re-triggered.
+        Returns False if already sent (and not expired), True if OK to send.
+        """
+        try:
+            if not chat_id or not content_key:
+                return True
+            path = self._get_chat_send_path(chat_id, content_key)
+            record = self.firebase._make_request('GET', path)
+            if not record or not isinstance(record, dict):
+                return True
+            expires_at_str = record.get('expires_at', '')
+            if not expires_at_str:
+                return True
+            expires_at = datetime.fromisoformat(expires_at_str)
+            if datetime.now() < expires_at:
+                logger.info(f"📋 CHAT_DEDUP_SKIP (Firebase) chat_id={chat_id} content_key={content_key[:50]}...")
+                return False
+            return True
+        except Exception as e:
+            logger.error(f"Error checking chat send dedup: {e}")
+            return True
+    
+    def mark_chat_sent(self, chat_id: str, content_key: str) -> bool:
+        """Record that we sent this content_key to this chat_id (Firebase). TTL 2h."""
+        try:
+            if not chat_id or not content_key:
+                return False
+            now = datetime.now()
+            expires_at = now + timedelta(hours=self.alert_ttl_hours)
+            path = self._get_chat_send_path(chat_id, content_key)
+            self.firebase._make_request('PUT', path, {
+                'chat_id': str(chat_id),
+                'content_key': content_key[:80],
+                'sent_at': now.isoformat(),
+                'expires_at': expires_at.isoformat(),
+            })
+            return True
+        except Exception as e:
+            logger.error(f"Error marking chat send: {e}")
+            return False
+    
     def _clear_expired_cache_on_startup(self):
         """Clear expired entries from in-memory cache on startup"""
         try:
