@@ -3612,8 +3612,7 @@ def setup_telegram_bot():
         
         # Generate unique, time-limited token for this user
         setup_token = _generate_setup_token(user_id)
-        print(f"🔧 DEBUG: Generated token for user {user_id}: {setup_token}")
-        print(f"🔧 DEBUG: Token length: {len(setup_token)}")
+        print(f"🔧 Setup token generated for user {user_id} (len={len(setup_token)})")
         
         return jsonify({
             "success": True,
@@ -6505,8 +6504,10 @@ def telegram_webhook():
         if not update_data:
             return jsonify({'status': 'error', 'message': 'No update data'}), 400
         
-        # Log the incoming update
-        print(f"📨 Received Telegram update: {update_data}")
+        # Log incoming update (redact message text to avoid logging start token in production)
+        _msg = update_data.get('message', {})
+        _chat = _msg.get('chat', {}).get('id') if _msg else None
+        print(f"📨 Telegram webhook: chat_id={_chat}, has_text={bool(_msg.get('text'))}")
         
         # Extract message information
         message = update_data.get('message', {})
@@ -6516,57 +6517,76 @@ def telegram_webhook():
         user_id = user.get('id')
         username = user.get('username', 'Unknown')
         
-        print(f"📝 Message: {text}")
-        print(f"💬 Chat ID: {chat_id}")
-        print(f"👤 User: @{username} (ID: {user_id})")
+        print(f"💬 Chat ID: {chat_id}, command: {(text.split(None, 1)[:1] or ['none'])[0]}")
         
-        # Handle /start command
-        if text == '/start':
+        # Handle /start command (including deep link: /start TOKEN from t.me/Bot?start=TOKEN)
+        if text and text.startswith('/start'):
             try:
-                # Send welcome message
                 bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
-                if bot_token and chat_id:
-                    welcome_message = {
-                        "chat_id": chat_id,
-                        "text": "Welcome to FXSentinel Alerts\n\nI'm your personal market alert assistant. I'll send you real-time notifications about:\n• Breaking forex news\n• Economic data releases\n• High-impact market events\n\nTo get started, visit the FXSentinel app and click 'Connect Telegram Bot'.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands\n\n@FXSentinelAlertsBot",
-                        "parse_mode": "HTML"
-                    }
-                    
-                    response = requests.post(
-                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
-                        json=welcome_message,
-                        timeout=10
-                    )
-                    
-                    if response.status_code == 200:
-                        print(f"✅ Welcome message sent to chat {chat_id}")
-                        return jsonify({'status': 'ok', 'message': 'Welcome message sent'})
-                    else:
-                        print(f"❌ Failed to send welcome message: {response.status_code}")
-                        # Send fallback message
-                        fallback_message = {
-                            "chat_id": chat_id,
-                            "text": "Welcome to FXSentinel Alerts\n\nI'm your personal market alert assistant.\n\nCommands:\n/status - Check your alert settings\n/test - Send a test alert\n/help - Show all commands\n\n@FXSentinelAlertsBot",
-                            "parse_mode": "HTML"
-                        }
-                        requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=fallback_message, timeout=10)
-                        return jsonify({'status': 'ok', 'message': 'Fallback welcome message sent'})
-                else:
+                if not bot_token or not chat_id:
                     print(f"❌ Bot token or chat_id missing: token={bool(bot_token)}, chat_id={chat_id}")
                     return jsonify({'status': 'error', 'message': 'Bot configuration error'}), 500
-                
+
+                # Parse payload: "/start" or "/start TOKEN" (Telegram sends payload after space when user opens link)
+                parts = text.split(None, 1)
+                setup_token = parts[1].strip() if len(parts) > 1 else None
+                user_id = None
+                if setup_token:
+                    user_id = _decode_setup_token(setup_token)
+                    if user_id:
+                        print(f"📎 Deep link: decoded token -> user_id={user_id}")
+
+                if user_id and _verify_user_access(user_id):
+                    # Save chat_id so dashboard verify and /status show Connected; alerts can be sent
+                    try:
+                        from services.firebase_realtime_storage import FirebaseRealtimeStorage
+                        firebase = FirebaseRealtimeStorage()
+                        if firebase.save_telegram_chat_id(user_id, str(chat_id)):
+                            mapping_path = f"telegram_mappings/{chat_id}"
+                            firebase._make_request('PUT', mapping_path, {
+                                'user_id': user_id,
+                                'chat_id': str(chat_id),
+                                'created_at': datetime.now().isoformat()
+                            })
+                            print(f"✅ Saved chat_id {chat_id} for user {user_id} (deep link)")
+                    except Exception as save_err:
+                        print(f"❌ Error saving chat_id: {save_err}")
+
+                    welcome_message = {
+                        "chat_id": chat_id,
+                        "text": "✅ <b>Welcome to FXSentinel Alerts</b>\n\nYou're connected. You'll get real-time notifications for:\n• Breaking forex news\n• Economic data releases\n• High-impact market events\n\n<b>Commands:</b>\n/status – Check your settings\n/test – Send a test alert\n/help – Show all commands\n\nReturn to the app and click <b>\"I've completed setup in Telegram\"</b> to finish.\n\n@FXSentinelAlertsBot",
+                        "parse_mode": "HTML"
+                    }
+                else:
+                    # No token, invalid token, or user not verified: generic welcome
+                    welcome_message = {
+                        "chat_id": chat_id,
+                        "text": "Welcome to FXSentinel Alerts\n\nI'm your personal market alert assistant. To connect:\n1. Visit the FXSentinel app\n2. Go to Alerts tab\n3. Click 'Connect Telegram Bot' and open the link\n\nCommands:\n/status – Check settings\n/test – Test alert\n/help – Help\n\n@FXSentinelAlertsBot",
+                        "parse_mode": "HTML"
+                    }
+
+                response = requests.post(
+                    f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                    json=welcome_message,
+                    timeout=10
+                )
+                if response.status_code == 200:
+                    print(f"✅ Welcome message sent to chat {chat_id}")
+                    return jsonify({'status': 'ok', 'message': 'Welcome message sent'})
+                else:
+                    print(f"❌ Failed to send welcome message: {response.status_code}")
+                    return jsonify({'status': 'error', 'message': f'Failed to send: {response.status_code}'}), 500
+
             except Exception as e:
-                print(f"❌ Error sending welcome message: {e}")
-                # Try to send a simple fallback message
+                print(f"❌ Error in /start handler: {e}")
                 try:
-                    if bot_token and chat_id:
-                        simple_message = {
-                            "chat_id": chat_id,
-                            "text": "Welcome to FXSentinel Alerts\n\nCommands:\n/status - Check settings\n/test - Test alert\n/help - Help\n\n@FXSentinelAlertsBot",
-                            "parse_mode": "HTML"
-                        }
-                        requests.post(f"https://api.telegram.org/bot{bot_token}/sendMessage", json=simple_message, timeout=5)
-                except:
+                    if os.getenv('TELEGRAM_BOT_TOKEN') and chat_id:
+                        requests.post(
+                            f"https://api.telegram.org/bot{os.getenv('TELEGRAM_BOT_TOKEN')}/sendMessage",
+                            json={"chat_id": chat_id, "text": "Welcome to FXSentinel Alerts.\n\nCommands: /status /test /help\n\n@FXSentinelAlertsBot", "parse_mode": "HTML"},
+                            timeout=5
+                        )
+                except Exception:
                     pass
                 return jsonify({'status': 'error', 'message': str(e)}), 500
         
