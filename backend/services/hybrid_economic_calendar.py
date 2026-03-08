@@ -11163,7 +11163,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI y/y',
-                'date': 'Sun, Mar 08',
+                'date': 'Mon, Mar 09',
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'medium',
@@ -11173,7 +11173,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'PPI y/y',
-                'date': 'Sun, Mar 08',
+                'date': 'Mon, Mar 09',
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'medium',
