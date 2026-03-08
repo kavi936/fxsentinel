@@ -347,9 +347,8 @@ class AlertService:
     
     def _should_send_to_chat(self, chat_id: str, alert_data: Dict[str, Any]) -> bool:
         """
-        Per-chat deduplication guard.
-        If we've already sent this content_key to this chat_id in the last N minutes, skip.
-        This prevents duplicates when multiple backend users share the same Telegram chat.
+        Per-chat deduplication: in-memory + Firebase (shared across replicas).
+        Uses truncated title (first 60 chars) so slight headline variations map to one key.
         """
         try:
             alert_type = alert_data.get('type', 'news')
@@ -357,24 +356,32 @@ class AlertService:
             if not title or not chat_id:
                 return True
 
-            # Normalize title similarly to news dedup (whitespace + punctuation)
             import re
             title_normalized = re.sub(r'\s+', ' ', title)
             title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
-            content_key = f"{alert_type}:{title_normalized}"
+            # Truncate so "slightly different" same-story titles collapse (e.g. says vs said at end)
+            title_truncated = title_normalized[:60]
+            content_key = f"{alert_type}:{title_truncated}"
             key = f"{chat_id}:{content_key}"
 
+            # 1) Firebase check (shared across replicas)
+            try:
+                from .persistent_alert_deduplication import get_persistent_deduplication
+                if not get_persistent_deduplication().should_send_to_chat(chat_id, content_key):
+                    return False
+            except Exception as e:
+                logger.debug(f"Firebase chat dedup check failed: {e}")
+
+            # 2) In-memory check (fast path, same replica)
             now = datetime.now()
             cutoff = now - timedelta(seconds=self._recent_chat_sends_ttl_seconds)
 
             with self._recent_chat_sends_lock:
-                # Clean up old entries
                 if self._recent_chat_sends:
                     self._recent_chat_sends = {
                         k: v for k, v in self._recent_chat_sends.items()
                         if v >= cutoff
                     }
-
                 last_sent_at = self._recent_chat_sends.get(key)
                 if last_sent_at and last_sent_at >= cutoff:
                     logger.info(
@@ -382,8 +389,6 @@ class AlertService:
                         f"(sent_at={last_sent_at.isoformat()})"
                     )
                     return False
-
-                # Record new send
                 self._recent_chat_sends[key] = now
                 logger.info(
                     f"📋 CHAT_DEDUP_ALLOW chat_id={chat_id} content_key={content_key[:80]} "
@@ -393,6 +398,15 @@ class AlertService:
         except Exception as e:
             logger.error(f"Error in per-chat dedup guard: {e}")
             return True
+
+    def _get_chat_content_key(self, alert_data: Dict[str, Any]) -> str:
+        """Same key as _should_send_to_chat (truncated title) for mark_chat_sent."""
+        import re
+        alert_type = alert_data.get('type', 'news')
+        title = str(alert_data.get('title', '')).strip().lower()
+        title_normalized = re.sub(r'\s+', ' ', title)
+        title_normalized = re.sub(r'[^\w\s]', '', title_normalized)
+        return f"{alert_type}:{title_normalized[:60]}"
 
     async def process_alert(self, alert_data: Dict[str, Any], user_settings: Dict[str, Any], user_id: str = None, user_data: Dict[str, Any] = None) -> bool:
         """Process and send alert to user based on their settings"""
@@ -465,6 +479,12 @@ class AlertService:
                     except Exception as e:
                         logger.error(f"Error logging alert history: {e}")
                         # Don't fail the alert send if history logging fails
+                    # Persist per-chat send so other replicas / users with same chat skip
+                    try:
+                        from .persistent_alert_deduplication import get_persistent_deduplication
+                        get_persistent_deduplication().mark_chat_sent(chat_id, self._get_chat_content_key(alert_data))
+                    except Exception as e:
+                        logger.debug(f"mark_chat_sent failed: {e}")
                 
                 logger.info(f"Telegram alert sent to chat_id {chat_id}")
             elif telegram_enabled and not chat_id:
