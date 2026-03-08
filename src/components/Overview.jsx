@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Fragment, useRef, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useForexPrices } from '../hooks/useForexPrices';
 import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
 import { usePredictionMarkets } from '../hooks/usePredictionMarkets.js';
@@ -691,6 +692,12 @@ const Overview = () => {
   const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'pending', 'loading', 'event-analysis', 'error'
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
+  // Recent analyses (session history) for dropdown - max 15, newest first
+  const [recentAnalyses, setRecentAnalyses] = useState([]);
+  const [recentAnalysesDropdownOpen, setRecentAnalysesDropdownOpen] = useState(false);
+  const [recentDropdownPanelPosition, setRecentDropdownPanelPosition] = useState({ top: 0, right: 0 });
+  const recentAnalysesDropdownRef = useRef(null);
+  const recentAnalysesPanelRef = useRef(null);
 
   // Benevolent deception: fake loading progress for long-running AI analysis
   const [fakeProgress, setFakeProgress] = useState(0); // 0 - 100
@@ -3106,6 +3113,12 @@ const Overview = () => {
       const analysis = await generateEventAnalysis(selectedEvent);
       setAiAnalysis(analysis);
       setAiAnalysisState('event-analysis');
+      // Add to recent analyses (prepend, cap at 15) so dropdown can show history
+      setRecentAnalyses((prev) => {
+        const entry = { event: selectedEvent, analysis, id: `${selectedEvent?.id ?? 'e'}-${Date.now()}` };
+        const next = [entry, ...prev.filter((r) => r.event?.id !== selectedEvent?.id || r.id !== entry.id)];
+        return next.slice(0, 15);
+      });
     } catch (error) {
       console.error('❌ Error generating AI analysis:', error);
       setAiAnalysisState('error');
@@ -3117,6 +3130,41 @@ const Overview = () => {
     setAiAnalysis(null);
     setAiAnalysisState('default');
   };
+
+  // Select a past analysis from the recent dropdown (restore event + analysis and show it)
+  const handleSelectRecentAnalysis = (item) => {
+    setSelectedEvent(item.event);
+    setAiAnalysis(item.analysis);
+    setAiAnalysisState('event-analysis');
+    // Close dropdown after state updates so the analysis view is shown and click isn't lost
+    requestAnimationFrame(() => {
+      setRecentAnalysesDropdownOpen(false);
+    });
+  };
+
+  // Position and close recent analyses dropdown (panel is portaled so it isn't clipped by card overflow)
+  useEffect(() => {
+    if (!recentAnalysesDropdownOpen || !recentAnalysesDropdownRef.current) return;
+    const el = recentAnalysesDropdownRef.current;
+    const rect = el.getBoundingClientRect();
+    setRecentDropdownPanelPosition({
+      top: rect.bottom + 6,
+      right: typeof window !== 'undefined' ? window.innerWidth - rect.right : 0
+    });
+  }, [recentAnalysesDropdownOpen]);
+
+  useEffect(() => {
+    if (!recentAnalysesDropdownOpen) return;
+    const handleClickOutside = (e) => {
+      const inToggle = recentAnalysesDropdownRef.current?.contains(e.target);
+      const inPanel =
+        recentAnalysesPanelRef.current?.contains(e.target) ||
+        e.target.closest?.('[data-recent-analyses-panel]');
+      if (!inToggle && !inPanel) setRecentAnalysesDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [recentAnalysesDropdownOpen]);
 
   const generateEventAnalysis = async (event) => {
     console.log('🦒🦒🦒 FRONTEND: generateEventAnalysis function called 🦒🦒🦒');
@@ -4360,7 +4408,7 @@ const Overview = () => {
                             {rowsWithMeta.map((row, index) => (
                               <tr
                                 key={`${row.event.id}-${currentTimezone}-${index}`}
-                                className={`impact-${row.event.impact} ${selectedEvent?.id === row.event.id ? 'selected' : ''}`}
+                                className={`impact-${row.event.impact} ${selectedEvent === row.event ? 'selected' : ''}`}
                                 onClick={() => handleEventClick(row.event)}
                               >
                                 {row.dateRowSpan > 0 ? <td rowSpan={row.dateRowSpan} className="calendar-table-date-cell calendar-col-date">{row.date}</td> : null}
@@ -4388,7 +4436,7 @@ const Overview = () => {
                   getFilteredEvents().map((event, index) => (
                     <div
                       key={`${event.id}-${currentTimezone}-${index}`}
-                      className={`event-card impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
+                      className={`event-card impact-${event.impact} ${selectedEvent === event ? 'selected' : ''}`}
                       onClick={() => handleEventClick(event)}
                     >
                       <div className="event-main-row">
@@ -4485,30 +4533,75 @@ const Overview = () => {
                   </div>
                 )}
               </div>
-              {/* AI Refresh button - commented out as it's not needed */}
-              {/* <div className="ai-controls">
-                <button className="ai-refresh-btn" onClick={handleRefreshAI}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+              {/* Recent analyses dropdown - panel rendered in portal so it stays on top and isn't clipped */}
+              <div className="ai-recent-dropdown" ref={recentAnalysesDropdownRef}>
+                <button
+                  type="button"
+                  className="ai-recent-dropdown-toggle"
+                  onClick={() => setRecentAnalysesDropdownOpen((o) => !o)}
+                  title="Recent analyses"
+                  aria-expanded={recentAnalysesDropdownOpen}
+                  aria-haspopup="true"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
                   </svg>
+                  <span>Recent</span>
+                  {recentAnalyses.length > 0 && (
+                    <span className="ai-recent-dropdown-badge">{recentAnalyses.length}</span>
+                  )}
                 </button>
-              </div> */}
+                {recentAnalysesDropdownOpen && createPortal(
+                  <div
+                    ref={recentAnalysesPanelRef}
+                    data-recent-analyses-panel
+                    className="ai-recent-dropdown-panel"
+                    style={{ position: 'fixed', top: recentDropdownPanelPosition.top, right: recentDropdownPanelPosition.right }}
+                  >
+                    <div className="ai-recent-dropdown-title">Recent analyses</div>
+                    {recentAnalyses.length === 0 ? (
+                      <div className="ai-recent-dropdown-empty">No analyses yet. Click an event and confirm to add one.</div>
+                    ) : (
+                      <ul className="ai-recent-dropdown-list">
+                        {recentAnalyses.map((item) => (
+                          <li key={item.id}>
+                            <button
+                              type="button"
+                              className="ai-recent-dropdown-item"
+                              onClick={() => handleSelectRecentAnalysis(item)}
+                            >
+                              <span className="ai-recent-dropdown-item-title">{item.event?.title || 'Event'}</span>
+                              <span className="ai-recent-dropdown-item-meta">
+                                {item.event?.currency && <span className="ai-recent-dropdown-item-currency">{item.event.currency}</span>}
+                                {item.analysis?.analysis_timestamp && (
+                                  <span className="ai-recent-dropdown-item-time">
+                                    {formatLastUpdated(new Date(item.analysis.analysis_timestamp).getTime())}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>,
+                  document.body
+                )}
+              </div>
             </div>
             <div className="ai-content">
               {aiAnalysisState === 'loading' && (
                 <div className="ai-loading-state">
-                  <div className="loading-spinner"></div>
-                  <div className="loading-text">Analyzing {selectedEvent?.title}...</div>
-                  <div className="loading-subtext">Processing live market data, economic release forecast, and generating insights. EST: 15-60s. Good things take time.</div>
-                  {/* Fake loading bar for benevolent deception - keeps users engaged during long waits */}
-                  <div className="ai-loading-progress-container">
-                    <div className="ai-loading-progress-bar">
-                      <div 
-                        className="ai-loading-progress-fill" 
-                        style={{ width: `${fakeProgress}%` }}
-                      ></div>
+                  <div className="ai-loading-spinner" aria-hidden="true" />
+                  <p className="ai-loading-label">Analysis in progress</p>
+                  <h3 className="ai-loading-title">Analyzing {selectedEvent?.title}</h3>
+                  <p className="ai-loading-subtext">Processing market data and generating insights. Typically 15–60 seconds.</p>
+                  <div className="ai-loading-progress-wrap">
+                    <div className="ai-loading-progress-track" role="progressbar" aria-valuenow={Math.round(fakeProgress)} aria-valuemin={0} aria-valuemax={100}>
+                      <div className="ai-loading-progress-fill" style={{ width: `${fakeProgress}%` }} />
                     </div>
-                    <div className="ai-loading-progress-text">{Math.round(fakeProgress)}%</div>
+                    <span className="ai-loading-progress-label">{Math.round(fakeProgress)}%</span>
                   </div>
                 </div>
               )}
@@ -4936,52 +5029,56 @@ const Overview = () => {
 
               {aiAnalysisState === 'default' && (
                 <div className="ai-default-message">
-                  <div className="default-icon"></div>
-                  <div className="default-text">Click on any economic event to get AI analysis</div>
-                  <div className="default-subtext">Get specific insights and trading opportunities</div>
+                  <div className="default-icon" aria-hidden="true">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.937a2 2 0 0 0 1.437-1.437l1.582-6.135a.5.5 0 0 1 .963 0l1.582 6.135a2 2 0 0 0 1.437 1.437l6.135 1.582a.5.5 0 0 1 0 .963l-6.135 1.582a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0L9.937 15.5Z" />
+                      <path d="M15 6.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Z" />
+                      <path d="M4 16a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2A.5.5 0 0 1 4 18v-2Z" />
+                    </svg>
+                  </div>
+                  <div className="default-text">Click on any economic calendar event to get a comprehensive AI analysis</div>
+                  <div className="default-subtext">Get relevant insights and trading opportunities</div>
                 </div>
               )}
 
               {aiAnalysisState === 'pending' && selectedEvent && (
                 <div className="ai-pending-message">
-                  <div className="default-icon"></div>
-                  <div className="pending-text">
-                    <div className="pending-event-title">{selectedEvent.title}</div>
-                    <div className="pending-event-details">
-                      {selectedEvent.date && selectedEvent.time && (
-                        <div className="pending-detail-item">
-                          <span className="pending-detail-label">Date & Time:</span>
-                          <span className="pending-detail-value">
-                            {(() => {
-                              const formatted = formatCalendarTime(selectedEvent.time, selectedEvent.date);
-                              return formatted.date && formatted.time 
-                                ? `${formatted.date} at ${formatted.time}`
-                                : selectedEvent.date && selectedEvent.time
+                  <p className="pending-label">Selected event</p>
+                  <h3 className="pending-event-title">{selectedEvent.title}</h3>
+                  <div className="pending-event-details" role="list">
+                    {selectedEvent.date && selectedEvent.time && (
+                      <div className="pending-detail-row" role="listitem">
+                        <span className="pending-detail-label">Time</span>
+                        <span className="pending-detail-value">
+                          {(() => {
+                            const formatted = formatCalendarTime(selectedEvent.time, selectedEvent.date);
+                            return formatted.date && formatted.time
+                              ? `${formatted.date} at ${formatted.time}`
+                              : selectedEvent.date && selectedEvent.time
                                 ? `${selectedEvent.date} ${selectedEvent.time}`
-                                : selectedEvent.date || selectedEvent.time || 'TBD';
-                            })()}
-                          </span>
-                        </div>
-                      )}
-                      {selectedEvent.impact && (
-                        <div className="pending-detail-item">
-                          <span className="pending-detail-label">Impact:</span>
-                          <span className={`pending-detail-value impact-${selectedEvent.impact.toLowerCase()}`}>
-                            {selectedEvent.impact.charAt(0).toUpperCase() + selectedEvent.impact.slice(1)}
-                          </span>
-                        </div>
-                      )}
-                      {selectedEvent.currency && (
-                        <div className="pending-detail-item">
-                          <span className="pending-detail-label">Currency:</span>
-                          <span className="pending-detail-value">{selectedEvent.currency}</span>
-                        </div>
-                      )}
-                    </div>
+                                : selectedEvent.date || selectedEvent.time || '—';
+                          })()}
+                        </span>
+                      </div>
+                    )}
+                    {selectedEvent.impact && (
+                      <div className="pending-detail-row" role="listitem">
+                        <span className="pending-detail-label">Impact</span>
+                        <span className={`pending-detail-value impact-${selectedEvent.impact.toLowerCase()}`}>
+                          {selectedEvent.impact.charAt(0).toUpperCase() + selectedEvent.impact.slice(1)}
+                        </span>
+                      </div>
+                    )}
+                    {selectedEvent.currency && (
+                      <div className="pending-detail-row" role="listitem">
+                        <span className="pending-detail-label">Currency</span>
+                        <span className="pending-detail-value">{selectedEvent.currency}</span>
+                      </div>
+                    )}
                   </div>
-                  <div className="default-subtext">Get specific insights and trading opportunities</div>
-                  <button className="confirm-analysis-btn" onClick={handleConfirmAnalysis}>
-                    Confirm
+                  <p className="pending-subtext">Run AI analysis for market impact and trading implications.</p>
+                  <button type="button" className="confirm-analysis-btn" onClick={handleConfirmAnalysis}>
+                    Run analysis
                   </button>
                 </div>
               )}
