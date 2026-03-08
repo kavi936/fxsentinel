@@ -386,7 +386,12 @@ class PersistentAlertDeduplication:
                 
                 # Step 1: Check if already exists (including reserved or sent)
                 existing_alert = self.firebase._make_request('GET', alert_path)
-                logger.info(f"🔍 Existing alert check result: {existing_alert is not None} for user {user_id}")
+                has_blocking_record = (
+                    existing_alert and isinstance(existing_alert, dict)
+                    and existing_alert.get('status') in ('reserved', 'sent')
+                )
+                status = existing_alert.get('status', 'n/a') if isinstance(existing_alert, dict) else 'n/a'
+                logger.info(f"🔍 Existing alert check: has_blocking_record={has_blocking_record} status={status} for user {user_id[:16]}...")
                 
                 if existing_alert and isinstance(existing_alert, dict):
                     # Reserved or sent = duplicate (no "reserved recently - allowing" to prevent double sends)

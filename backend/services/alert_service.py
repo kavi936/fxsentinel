@@ -34,9 +34,10 @@ class AlertService:
         self.telegram_bot_initialized = False
         self.firebase_storage = FirebaseRealtimeStorage()
         # Per-chat deduplication to prevent duplicate sends when multiple users
-        # share the same Telegram chat_id. Key: (chat_id, content_key)
+        # share the same Telegram chat_id, or when the same story is re-triggered later.
+        # Key: (chat_id, content_key). TTL must cover re-sends (e.g. 09:46 and 10:01).
         self._recent_chat_sends: Dict[str, datetime] = {}
-        self._recent_chat_sends_ttl_seconds = 600  # 10 minutes
+        self._recent_chat_sends_ttl_seconds = 7200  # 2 hours (match Firebase alert_ttl)
         self._recent_chat_sends_lock = threading.Lock()
         # Don't initialize Telegram bot during __init__ to avoid build-time token access
         logger.info("AlertService initialized (Telegram bot will be initialized on first use)")
