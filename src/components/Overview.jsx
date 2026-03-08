@@ -2237,6 +2237,14 @@ const Overview = () => {
     }
   };
 
+  // Display empty for N/A, TBD, and similar placeholders so the calendar looks cleaner
+  const formatCalendarValue = (v) => {
+    if (v == null || v === '') return '';
+    const s = String(v).trim().toUpperCase();
+    if (s === 'N/A' || s === 'TBD' || s === '—' || s === '-' || s === '--') return '';
+    return v;
+  };
+
   // Listen for timezone changes
   useEffect(() => {
     const checkTimezone = () => {
@@ -2272,9 +2280,9 @@ const Overview = () => {
   const [calendarStyleMode, setCalendarStyleMode] = useState(() => {
     try {
       const saved = localStorage.getItem('fxSentinel_calendarStyleMode');
-      return (saved === 'alternate' || saved === 'default') ? saved : 'default';
+      return (saved === 'alternate' || saved === 'default') ? saved : 'alternate';
     } catch {
-      return 'default';
+      return 'alternate';
     }
   });
 
@@ -4298,44 +4306,83 @@ const Overview = () => {
                     </button>
                   </div>
                 ) : calendarStyleMode === 'alternate' ? (
-                  /* Style 2: single table, Forex Factory style (Date, Time, Currency, Impact, Name, Actual, Forecast, Previous) */
-                  <div className="calendar-table-wrap">
-                    <table className="calendar-table">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Time</th>
-                          <th>Currency</th>
-                          <th>Impact</th>
-                          <th>Name</th>
-                          <th>Actual</th>
-                          <th>Forecast</th>
-                          <th>Previous</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {getFilteredEvents().map((event, index) => {
-                          const formatted = formatCalendarTime(event.time, event.date);
-                          return (
-                            <tr
-                              key={`${event.id}-${currentTimezone}-${index}`}
-                              className={`impact-${event.impact} ${selectedEvent?.id === event.id ? 'selected' : ''}`}
-                              onClick={() => handleEventClick(event)}
-                            >
-                              <td>{formatted.date}</td>
-                              <td>{formatted.time}</td>
-                              <td>{event.currency}</td>
-                              <td>{event.impact === 'medium' ? 'Med' : (event.impact ? event.impact.charAt(0).toUpperCase() + event.impact.slice(1).toLowerCase() : '—')}</td>
-                              <td>{event.title}</td>
-                              <td>{event.actual ?? '—'}</td>
-                              <td>{event.expected ?? '—'}</td>
-                              <td>{event.previous ?? '—'}</td>
+                  /* Style 2: Date and Time columns merged (one cell per day, one per release time) */
+                  (() => {
+                    const events = getFilteredEvents();
+                    const rowsWithMeta = [];
+                    let currentDateGroup = null;
+                    let currentTimeGroup = null;
+                    events.forEach((event) => {
+                      const formatted = formatCalendarTime(event.time, event.date);
+                      const dateKey = formatted.date;
+                      const dateTimeKey = `${dateKey}\t${formatted.time}`;
+                      if (!currentDateGroup || currentDateGroup.dateKey !== dateKey) {
+                        if (currentDateGroup) {
+                          rowsWithMeta[currentDateGroup.startIndex].dateRowSpan = currentDateGroup.count;
+                        }
+                        currentDateGroup = { dateKey, date: formatted.date, startIndex: rowsWithMeta.length, count: 1 };
+                        rowsWithMeta.push({ event, date: formatted.date, time: formatted.time, dateRowSpan: 0, timeRowSpan: 0 });
+                      } else {
+                        currentDateGroup.count += 1;
+                        rowsWithMeta.push({ event, date: formatted.date, time: formatted.time, dateRowSpan: 0, timeRowSpan: 0 });
+                      }
+                      if (!currentTimeGroup || currentTimeGroup.dateTimeKey !== dateTimeKey) {
+                        if (currentTimeGroup) {
+                          rowsWithMeta[currentTimeGroup.startIndex].timeRowSpan = currentTimeGroup.count;
+                        }
+                        currentTimeGroup = { dateTimeKey, startIndex: rowsWithMeta.length - 1, count: 1 };
+                      } else {
+                        currentTimeGroup.count += 1;
+                      }
+                    });
+                    if (currentDateGroup) {
+                      rowsWithMeta[currentDateGroup.startIndex].dateRowSpan = currentDateGroup.count;
+                    }
+                    if (currentTimeGroup) {
+                      rowsWithMeta[currentTimeGroup.startIndex].timeRowSpan = currentTimeGroup.count;
+                    }
+                    return (
+                      <div className="calendar-table-wrap">
+                        <table className="calendar-table">
+                          <thead>
+                            <tr>
+                              <th>Date</th>
+                              <th>Time</th>
+                              <th>Currency</th>
+                              <th>Impact</th>
+                              <th>Name</th>
+                              <th>Actual</th>
+                              <th>Forecast</th>
+                              <th>Previous</th>
                             </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                          </thead>
+                          <tbody>
+                            {rowsWithMeta.map((row, index) => (
+                              <tr
+                                key={`${row.event.id}-${currentTimezone}-${index}`}
+                                className={`impact-${row.event.impact} ${selectedEvent?.id === row.event.id ? 'selected' : ''}`}
+                                onClick={() => handleEventClick(row.event)}
+                              >
+                                {row.dateRowSpan > 0 ? <td rowSpan={row.dateRowSpan} className="calendar-table-date-cell calendar-col-date">{row.date}</td> : null}
+                                {row.timeRowSpan > 0 ? <td rowSpan={row.timeRowSpan} className="calendar-col-time">{row.time}</td> : null}
+                                <td className="calendar-col-currency">{row.event.currency}</td>
+                                <td className="calendar-col-impact">
+                                  <span className="impact-cell">
+                                    <span className={`impact-dot impact-${row.event.impact || 'low'}`} aria-hidden />
+                                    {row.event.impact === 'medium' ? 'Med' : (row.event.impact ? row.event.impact.charAt(0).toUpperCase() + row.event.impact.slice(1).toLowerCase() : '—')}
+                                  </span>
+                                </td>
+                                <td className="calendar-col-name">{row.event.title}</td>
+                                <td className="calendar-col-actual">{formatCalendarValue(row.event.actual)}</td>
+                                <td className="calendar-col-forecast">{formatCalendarValue(row.event.expected)}</td>
+                                <td className="calendar-col-previous">{formatCalendarValue(row.event.previous)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()
                 ) : (
                   /* Style 1: default card layout */
                   getFilteredEvents().map((event, index) => (
@@ -4388,15 +4435,15 @@ const Overview = () => {
                       <div className="event-data">
                         <div className="data-point">
                           <span className="label">Actual:</span>
-                          <span className="value">{event.actual}</span>
+                          <span className="value">{formatCalendarValue(event.actual)}</span>
                         </div>
                         <div className="data-point">
                           <span className="label">Expected:</span>
-                          <span className="value">{event.expected}</span>
+                          <span className="value">{formatCalendarValue(event.expected)}</span>
                         </div>
                         <div className="data-point">
                           <span className="label">Previous:</span>
-                          <span className="value">{event.previous}</span>
+                          <span className="value">{formatCalendarValue(event.previous)}</span>
                         </div>
                       </div>
                     </div>

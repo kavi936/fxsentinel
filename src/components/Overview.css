@@ -1095,8 +1095,7 @@
 
 /* ============================================
  * Style 2: Single table (Forex Factory style)
- * Header: Date | Time | Currency | Impact | Name | Actual | Forecast | Previous
- * One data row per event underneath
+ * Structure and spacing tuned for easy reading
  * ============================================ */
 .events-list.events-list--table {
   padding: 0;
@@ -1107,94 +1106,144 @@
 .calendar-table-wrap {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* Smooth horizontal scroll on phones */
 }
 
+/* Fixed min width so columns stay readable on small screens; horizontal scroll when needed */
 .calendar-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
   table-layout: fixed;
+  line-height: 1.4;
+  border-spacing: 0;
 }
 
 .calendar-table thead {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 2;
   background: rgba(255, 68, 68, 0.15);
-  border-bottom: 1px solid rgba(255, 68, 68, 0.4);
+  border-bottom: 2px solid rgba(255, 68, 68, 0.35);
 }
 
 .calendar-table th {
-  padding: 10px 12px;
+  padding: 12px 16px;
   text-align: left;
   font-weight: 700;
-  font-size: 10px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.06em;
   color: rgba(255, 255, 255, 0.95);
   white-space: nowrap;
 }
 
-.calendar-table th:nth-child(1) { width: 12%; }   /* Date */
-.calendar-table th:nth-child(2) { width: 10%; }   /* Time */
-.calendar-table th:nth-child(3) { width: 10%; min-width: 64px; }  /* Currency */
-.calendar-table th:nth-child(4) { width: 10%; min-width: 52px; }  /* Impact */
-.calendar-table th:nth-child(5) { width: 26%; } /* Name */
-.calendar-table th:nth-child(6) { width: 11%; }  /* Actual */
-.calendar-table th:nth-child(7) { width: 11%; }  /* Forecast */
-.calendar-table th:nth-child(8) { width: 10%; }  /* Previous */
+.calendar-table th:nth-child(1) { width: 11%; padding-left: 16px; }   /* Date */
+.calendar-table th:nth-child(2) { width: 9%; }   /* Time */
+.calendar-table th:nth-child(3) { width: 9%; min-width: 56px; }  /* Currency */
+.calendar-table th:nth-child(4) { width: 8%; min-width: 56px; }  /* Impact */
+.calendar-table th:nth-child(5) { width: 28%; } /* Name */
+.calendar-table th:nth-child(6) { width: 12%; text-align: center; }  /* Actual */
+.calendar-table th:nth-child(7) { width: 12%; text-align: center; }  /* Forecast */
+.calendar-table th:nth-child(8) { width: 11%; text-align: center; }  /* Previous */
 
-/* Vertical separators so Currency and Impact don’t merge */
-.calendar-table th:nth-child(3),
-.calendar-table td:nth-child(3) {
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  padding-right: 14px;
-}
-
-.calendar-table th:nth-child(4),
-.calendar-table td:nth-child(4) {
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  padding-left: 14px;
-  padding-right: 14px;
-}
-
+/* Body cells: consistent spacing and clear separation between columns */
 .calendar-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  color: rgba(255, 255, 255, 0.9);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.92);
   overflow: hidden;
   text-overflow: ellipsis;
+  vertical-align: top;
+  line-height: 1.4;
 }
 
-.calendar-table td:nth-child(5) {
+/* Column styling by class (not nth-child) so merged Date/Time rowspan doesn’t misapply styles */
+.calendar-table td.calendar-col-date { padding-left: 16px; }
+.calendar-table td.calendar-col-time,
+.calendar-table td.calendar-col-currency,
+.calendar-table td.calendar-col-impact {
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* Name column: wrap and line height for multi-line titles */
+.calendar-table td.calendar-col-name {
   white-space: normal;
   word-break: break-word;
-  line-height: 1.25;
+  line-height: 1.45;
+  padding-right: 20px;
+}
+
+/* Actual, Forecast, Previous: always centered and tabular so the column lines up every row */
+.calendar-table td.calendar-col-actual,
+.calendar-table td.calendar-col-forecast,
+.calendar-table td.calendar-col-previous {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* Sticky date cell: stays visible when scrolling */
+.calendar-table-date-cell {
+  position: sticky;
+  top: 45px;
+  z-index: 1;
+  background: #0f0f0f;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+  padding-left: 16px !important;
+  padding-right: 16px !important;
 }
 
 .calendar-table tbody tr {
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  background: transparent;
 }
 
 .calendar-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .calendar-table tbody tr.selected {
-  background: rgba(255, 68, 68, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
-.calendar-table tbody tr.impact-high td:first-child {
-  border-left: 3px solid rgba(255, 68, 68, 0.7);
+.calendar-table tbody tr.selected:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-.calendar-table tbody tr.impact-medium td:first-child {
-  border-left: 3px solid rgba(255, 165, 0, 0.7);
+/* Impact column: colored dot for quick scanning (Forex Factory-style) */
+.calendar-table td .impact-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.calendar-table tbody tr.impact-low td:first-child {
-  border-left: 3px solid rgba(50, 205, 50, 0.6);
+.calendar-table td .impact-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.calendar-table td .impact-dot.impact-high {
+  background: rgba(255, 68, 68, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 68, 68, 0.4);
+}
+
+.calendar-table td .impact-dot.impact-medium {
+  background: rgba(255, 165, 0, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 165, 0, 0.4);
+}
+
+.calendar-table td .impact-dot.impact-low {
+  background: rgba(50, 205, 50, 0.8);
+  box-shadow: 0 0 0 1px rgba(50, 205, 50, 0.4);
 }
 
 /* Style 2: hide scrollbar in events section (scroll still works) */
