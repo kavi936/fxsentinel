@@ -22,6 +22,18 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+def _decode_setup_token(token: str) -> Optional[str]:
+    """Decode setup token from link (?start=TOKEN) back to Firebase user_id. Same scheme as backend app._decode_setup_token."""
+    import base64
+    try:
+        decoded = base64.urlsafe_b64decode(token.encode()).decode()
+        user_id = decoded.rsplit('_', 1)[0]
+        return user_id
+    except Exception:
+        return None
+
+
 class TelegramBotSetup:
     def __init__(self):
         """Initialize the Telegram bot setup"""
@@ -76,52 +88,58 @@ class TelegramBotSetup:
             }
     
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Handle /start command"""
+        """Handle /start command. With deep-link token (?start=TOKEN): decode to user_id, save chat_id, show connected."""
         try:
             user = update.effective_user
             chat_id = update.effective_chat.id
-            
-            # Check if this is a setup link (contains user_id)
+
             if context.args:
-                user_id = context.args[0]
-                logger.info(f"User {user_id} starting bot setup via link")
-                
-                # REMOVED: Subscription check - alerts are now available to all users (paid, developer, freemium, etc.)
-                # All users can set up and use Telegram alerts regardless of subscription status
+                raw_arg = context.args[0]
+                # Token from dashboard link is base64(user_id_timestamp); decode to real Firebase user_id
+                user_id = _decode_setup_token(raw_arg)
+                if not user_id:
+                    user_id = raw_arg  # Legacy: treat as raw user_id
+                    logger.info(f"User {raw_arg} starting bot setup (raw id)")
+                else:
+                    logger.info(f"User {user_id} starting bot setup via link (decoded token)")
+
                 subscription_check = await self._check_subscription_status(
-                    user_id, 
+                    user_id,
                     user.username or user.first_name
                 )
-                # Note: subscription_check is still retrieved for display purposes, but access is not blocked
-                
-                # Store temporary setup data
-                context.user_data['setup_user_id'] = user_id
-                context.user_data['setup_step'] = 'waiting_confirmation'
-                
-                await update.message.reply_text(
-                    f"Welcome to FXSentinel Alerts\n\n"
-                    f"I'm here to help you set up real-time market alerts.\n\n"
-                    f"Your user ID: {user_id}\n"
-                    f"Your Telegram: @{user.username or 'Unknown'}\n"
-                    f"Subscription Status: {subscription_check['status'].title()}\n\n"
-                    f"To complete setup, please send: /connect {user_id}\n\n"
-                    f"Or type /help for more commands."
-                )
+
+                # Persist chat_id immediately so /status and dashboard "Verify" show Connected (seamless onboarding)
+                stored = await self._store_chat_id_mapping(str(chat_id), user_id)
+                if stored:
+                    context.user_data['setup_user_id'] = user_id
+                    await update.message.reply_text(
+                        "✅ Welcome to FXSentinel Alerts\n\n"
+                        "You're connected. You'll get real-time notifications for:\n"
+                        "• Breaking forex news\n"
+                        "• Economic data releases\n"
+                        "• High-impact market events\n\n"
+                        f"Subscription: {subscription_check['status'].title()}\n\n"
+                        "Commands: /status – Check settings | /test – Test alert | /help – Help\n\n"
+                        "Return to the app and click \"I've completed setup in Telegram\" to finish."
+                    )
+                    await asyncio.sleep(2)
+                    await self.send_welcome_alert(user_id, str(chat_id))
+                else:
+                    await update.message.reply_text(
+                        f"Welcome to FXSentinel Alerts\n\n"
+                        f"Setup could not be saved. Please try: /connect {raw_arg}\n\n"
+                        f"Or visit the app and generate a new link."
+                    )
             else:
-                # Regular start command
                 await update.message.reply_text(
                     "Welcome to FXSentinel Alerts\n\n"
-                    "I'm your personal market alert assistant. I'll send you real-time notifications about:\n"
-                    "• Breaking forex news\n"
-                    "• Economic data releases\n"
-                    "• High-impact market events\n\n"
-                    "To get started, visit the FXSentinel app and click 'Connect Telegram Bot'.\n\n"
-                    "Commands:\n"
-                    "/status - Check your alert settings\n"
-                    "/test - Send a test alert\n"
-                    "/help - Show all commands"
+                    "I'm your personal market alert assistant. To connect:\n"
+                    "1. Visit the FXSentinel app\n"
+                    "2. Go to Alerts tab\n"
+                    "3. Click 'Connect Telegram Bot' and open the link\n\n"
+                    "Commands: /status | /test | /help"
                 )
-                
+
         except Exception as e:
             logger.error(f"Error in start command: {e}")
             await update.message.reply_text("Sorry, there was an error. Please try again.")
@@ -141,28 +159,21 @@ class TelegramBotSetup:
                 )
                 return
             
-            user_id = context.args[0]
+            raw_arg = context.args[0]
+            # Decode token from link if present; otherwise use as raw user_id (legacy)
+            user_id = _decode_setup_token(raw_arg) or raw_arg
             logger.info(f"User {user_id} attempting to connect Telegram account")
-            
-            # Check subscription status before allowing connection
-            # REMOVED: Subscription check - alerts are now available to all users
+
             subscription_check = await self._check_subscription_status(
-                user_id, 
+                user_id,
                 user.username or user.first_name
             )
-            # Note: subscription_check is still retrieved for display purposes, but access is not blocked
-            
-            # Verify the connection
-            result = await self.alert_service.verify_telegram_connection(
-                user_id=user_id,
-                chat_id=str(chat_id),
-                username=user.username or user.first_name
-            )
-            
-            if result.get('success'):
-                # Store the chat_id to user_id mapping for future lookups
-                await self._store_chat_id_mapping(str(chat_id), user_id)
-                
+
+            # Persist first so dashboard verify and /status show Connected (verify_telegram_connection only reads)
+            stored = await self._store_chat_id_mapping(str(chat_id), user_id)
+            result = await self.alert_service.verify_telegram_connection(user_id)
+
+            if stored or result.get('connected'):
                 await update.message.reply_text(
                     "Connection successful\n\n"
                     "Your Telegram account is now connected to FXSentinel Alerts.\n\n"
@@ -177,7 +188,7 @@ class TelegramBotSetup:
                 
                 # Send test alert
                 await asyncio.sleep(2)
-                await self.send_welcome_alert(user_id, chat_id)
+                await self.send_welcome_alert(user_id, str(chat_id))
                 
             else:
                 await update.message.reply_text(

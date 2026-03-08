@@ -228,10 +228,9 @@ function Alerts({ alerts, alertStats, alertSettings, updateAlertSettings }) {
           step: 'verify',
           botUsername: data.botUsername,
           instructions: [
-            'Click the link below to open Telegram and start the bot.',
-            'Send /start in the chat to begin.',
-            'Complete the bot’s steps, then return here.',
-            'Click “I’ve completed setup in Telegram” to verify.'
+            'Click the link below to open Telegram (or "Open in app" if on mobile).',
+            "You'll be connected automatically—no need to type anything.",
+            "Return here and click \"I've completed setup in Telegram\" to finish."
           ],
           botLink: data.botLink,
           loading: false
