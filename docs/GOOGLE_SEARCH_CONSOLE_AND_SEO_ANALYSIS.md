@@ -10,7 +10,7 @@ This doc summarizes how the project supports **Google Search Console (GSC)** and
 
 | Item | Location | Purpose |
 |------|----------|--------|
-| **Sitemap** | `public/sitemap.xml` | 20 URLs (home, blog, blog posts, dashboard, login, signup, disclaimer, privacy, feedback, terms). Used by GSC to discover and prioritize URLs. |
+| **Sitemap** | `public/sitemap.xml` | 19 URLs (home, blog, blog posts, dashboard, login, signup, disclaimer, privacy, feedback). `/terms` omitted because it redirects to `/disclaimer`. Used by GSC to discover and prioritize URLs. |
 | **robots.txt** | `public/robots.txt` | `Allow: /`, `Disallow` for `/trial-welcome`, `/auth-redirect`, `/forgot-password`. Points to `Sitemap: https://fxsentinel.io/sitemap.xml`. |
 | **Vercel** | `vercel.json` | Correct `Content-Type` and cache headers for `/sitemap.xml`, `/robots.txt`, `/og-image.png`, `/favicon.png`. |
 
@@ -119,18 +119,52 @@ If the property is already verified (e.g. via DNS), you don’t need to add the 
 
 ---
 
-## 5. Gaps and maintenance
+## 5. “Why pages aren’t indexed” – the three reasons you see
+
+GSC shows **Reason**, **Source**, and **Pages** for each issue. Here’s what each means and what to do.
+
+### Blocked by robots.txt (1 page) — *Source: Website*
+
+**Meaning:** Google found a URL (e.g. from a link on your site), tried to crawl it, and your `robots.txt` disallows it.
+
+**Your setup:** You disallow only `/trial-welcome`, `/auth-redirect`, and `/forgot-password`. So the 1 page is almost certainly one of those (e.g. Login links to `/forgot-password`, so Google discovers it and is then blocked).
+
+**Action:** **None.** You want those URLs blocked from indexing. No sitemap or code change.
+
+---
+
+### Discovered – currently not indexed (5 pages) — *Source: Google systems*
+
+**Meaning:** Google knows the URL (sitemap or links) but hasn’t crawled it yet, or hasn’t decided to index it. Common for newer or lower-priority URLs.
+
+**Action:** No code fix. In GSC use **URL Inspection** for the URLs you care about (e.g. homepage, blog, key posts) and click **Request indexing**. Over time more may get crawled and indexed.
+
+---
+
+### Crawled – currently not indexed (4 pages) — *Source: Google systems*
+
+**Meaning:** Google crawled the page but chose not to add it to the index (e.g. thin/duplicate content, or lower value in their view).
+
+**Action:** No sitemap change. Ensure those pages have unique titles and meta descriptions (you already use `useMeta`). Use **Request indexing** for important ones; for the rest, improving content and internal links can help over time.
+
+---
+
+**Summary:** The 1 “Blocked by robots.txt” is intentional. The 5 “Discovered” and 4 “Crawled” are Google’s normal behavior; request indexing for priority URLs and keep content strong.
+
+---
+
+## 6. Gaps and maintenance
 
 | Gap | Action |
 |-----|--------|
 | **GSC verification** | Add `<meta name="google-site-verification" content="…">` in `index.html` if you use HTML tag method; otherwise ensure DNS/GA is set. |
-| **api/sitemap.js out of sync** | `public/sitemap.xml` has `/dashboard` and newer `lastmod`; `api/sitemap.js` does not. If you ever serve sitemap via API, sync it with `public/sitemap.xml`. For now, static sitemap is what GSC uses. |
+| **api/sitemap.js** | Kept in sync with `public/sitemap.xml` (same URLs, no `/terms`, same `lastmod`). Static `public/sitemap.xml` is what GSC uses unless you rewrite to the API. |
 | **Sitelinks** | Sitelinks are chosen by Google; you can’t force them in GSC. You already have BreadcrumbList and good internal links; keep structure clear and wait for recrawls. |
 | **favicon / og-image** | Ensure `public/favicon.png` and `public/og-image.png` exist and load at `https://fxsentinel.io/...` (see `docs/2026_SEO_and _GEO to-do.md`). |
 
 ---
 
-## 6. File reference
+## 7. File reference
 
 | Purpose | Files |
 |--------|--------|
@@ -143,7 +177,7 @@ If the property is already verified (e.g. via DNS), you don’t need to add the 
 
 ---
 
-## 7. Quick GSC checklist
+## 8. Quick GSC checklist
 
 - [ ] Property verified (HTML tag, DNS, or GA).
 - [ ] Sitemap submitted: `https://fxsentinel.io/sitemap.xml`.

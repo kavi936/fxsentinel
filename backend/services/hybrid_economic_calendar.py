@@ -11137,7 +11137,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '2.5%',
                 'previous': '2.4%'
             },
@@ -11147,9 +11147,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.5%',
                 'forecast': '4.4%',
-                'previous': '4.5%'
+                'previous': '4.4%'
             },
             {
                 'title': 'Current Account',
@@ -11157,7 +11157,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.15T',
                 'forecast': '3.19T',
                 'previous': '2.70T'
             },
@@ -11167,7 +11167,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': '0.9%',
                 'previous': '0.2%'
             },
@@ -11177,7 +11177,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-0.9%',
                 'forecast': '-1.1%',
                 'previous': '-1.4%'
             },
@@ -11189,9 +11189,9 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '112.4%',
                 'forecast': '113.0%',
-                'previous': '110.2%'
+                'previous': '111.0%'
             },
             {
                 'title': 'Economy Watchers Sentiment',
@@ -11199,7 +11199,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '48.9',
                 'forecast': '48.1',
                 'previous': '47.6'
             },
