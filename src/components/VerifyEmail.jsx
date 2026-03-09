@@ -5,6 +5,7 @@ import { useMeta } from '../hooks/useMeta';
 import './Auth.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
+import { BackgroundBeams } from './BackgroundBeams';
 
 /**
  * Shown after email/password signup until the user verifies their email.
@@ -70,7 +71,9 @@ const VerifyEmail = () => {
   if (showVerifiedSuccess && currentUser) {
     return (
       <div className="auth-container">
-        <div className="auth-background" />
+        <div className="auth-background">
+          <BackgroundBeams />
+        </div>
         <div className="auth-card auth-card--success">
           <div className="auth-header">
             <Link to="/" className="auth-logo">
@@ -95,7 +98,9 @@ const VerifyEmail = () => {
   if (!currentUser) {
     return (
       <div className="auth-container">
-        <div className="auth-background" />
+        <div className="auth-background">
+          <BackgroundBeams />
+        </div>
         <div className="auth-card auth-card--success">
           <div className="auth-header">
             <Link to="/" className="auth-logo">
@@ -122,7 +127,9 @@ const VerifyEmail = () => {
   if (!needsVerification) {
     return (
       <div className="auth-container">
-        <div className="auth-background" />
+        <div className="auth-background">
+          <BackgroundBeams />
+        </div>
         <div className="auth-card" style={{ textAlign: 'center' }}>
           <div className="spinner" style={{ margin: '0 auto 1rem' }} />
           <p>Loading...</p>
@@ -133,7 +140,9 @@ const VerifyEmail = () => {
 
   return (
     <div className="auth-container">
-      <div className="auth-background" />
+      <div className="auth-background">
+        <BackgroundBeams />
+      </div>
       <div className="auth-card auth-card--verify-email">
         <div className="auth-header">
           <Link to="/" className="auth-logo">

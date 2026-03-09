@@ -9,6 +9,7 @@ import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import { trackSignupCompletion, trackError, trackEngagement } from '../utils/analytics';
 import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
+import { BackgroundBeams } from './BackgroundBeams';
 
 const Signup = () => {
   useMeta('Sign Up - FXSentinel', 'Create your FXSentinel account and start trading smarter with AI-powered news analysis, real-time alerts, and an economic calendar.');
@@ -154,7 +155,7 @@ const Signup = () => {
     <div className="auth-container">
       <EmbeddedBrowserWarning />
       <div className="auth-background">
-        {/* Data stream background effect */}
+        <BackgroundBeams />
       </div>
       
       <div className="auth-card">
