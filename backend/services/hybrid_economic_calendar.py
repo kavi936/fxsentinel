@@ -11209,9 +11209,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-11.1%',
                 'forecast': '-4.2%',
-                'previous': '7.8%'
+                'previous': '6.4%'
             },
             {
                 'title': 'German Industrial Production m/m',
@@ -11219,9 +11219,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '1.0%',
-                'previous': '-1.9%'
+                'previous': '-1.0%'
             },
             {
                 'title': 'SECO Consumer Climate',
@@ -11229,7 +11229,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-30',
                 'forecast': '-29',
                 'previous': '-30'
             },
@@ -11239,7 +11239,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.1',
                 'forecast': '-3.1',
                 'previous': '4.2'
             },

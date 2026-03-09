@@ -7,6 +7,7 @@ import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
+import { BackgroundBeams } from './BackgroundBeams';
 
 const Login = () => {
   useMeta('Login - FXSentinel', 'Sign in to your FXSentinel account to access your dashboard, alerts, and AI-powered market analysis.');
@@ -46,7 +47,7 @@ const Login = () => {
     <div className="auth-container">
       <EmbeddedBrowserWarning />
       <div className="auth-background">
-        {/* Data stream background effect */}
+        <BackgroundBeams />
       </div>
       
       <div className="auth-card">
@@ -118,10 +119,7 @@ const Login = () => {
             disabled={isLoading}
           >
             {isLoading ? (
-              <>
-                <span className="spinner"></span>
-                Signing in...
-              </>
+              <span className="spinner" aria-label="Signing in" />
             ) : (
               'Sign In'
             )}
@@ -157,10 +155,7 @@ const Login = () => {
           }}
         >
           {isLoading ? (
-            <>
-              <span className="spinner"></span>
-              Signing in...
-            </>
+            <span className="spinner" aria-label="Signing in with Google" />
           ) : (
             <>
               <img src="https://www.google.com/favicon.ico" alt="Google" />
