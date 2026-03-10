@@ -11259,7 +11259,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': 'N/A',
                 'previous': '-2.6%'
             },
@@ -11269,7 +11269,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.0%',
                 'forecast': '2.3%',
                 'previous': '-2.6%'
             },
@@ -11279,7 +11279,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.4%',
                 'forecast': '3.4%',
                 'previous': '3.4%'
             },
@@ -11289,7 +11289,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.3%',
                 'previous': '0.1%'
             },
@@ -11299,7 +11299,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.5%',
                 'previous': '1.6%'
             },
@@ -11309,7 +11309,7 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '2.1%',
                 'previous': '2.3%'
             },
@@ -11319,9 +11319,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1',
                 'forecast': 'N/A',
-                'previous': '3'
+                'previous': '4'
             },
             {
                 'title': 'Trade Balance',
@@ -11329,7 +11329,7 @@ class HybridEconomicCalendar:
                 'time': '03:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1503B',
                 'forecast': '950B',
                 'previous': '809B'
             },
@@ -11339,7 +11339,7 @@ class HybridEconomicCalendar:
                 'time': '03:04 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '213.6B',
                 'forecast': '175.0B',
                 'previous': '114.1B'
             },
@@ -11351,7 +11351,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	24.2%',
                 'forecast': 'N/A',
                 'previous': '25.3%'
             },
