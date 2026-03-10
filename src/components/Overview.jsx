@@ -4688,7 +4688,7 @@ const Overview = () => {
 
                   {/* NEW: Forward Scenarios */}
                   <div className="forward-scenarios-section">
-                    <h3 className="section-header">Forward Scenarios</h3>
+                    <h3 className="section-header">Probability Scenarios</h3>
                     <div className="scenarios-grid">
                       <div className="scenario bullish">
                         <div className="scenario-content">
