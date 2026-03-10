@@ -11361,9 +11361,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '21.2B',
                 'forecast': '15.6B',
-                'previous': '17.1B'
+                'previous': '17.4B'
             },
             {
                 'title': 'French Trade Balance',
@@ -11371,9 +11371,9 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.8B',
                 'forecast': '-4.6B',
-                'previous': '-4.8B'
+                'previous': '-4.3B'
             },
             {
                 'title': 'M2 Money Supply y/y',
@@ -11387,7 +11387,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'New Loans',
-                'date': 'Tue, Mar 10',
+                'date': 'Wed, Mar 11',
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
@@ -11411,7 +11411,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '98.8',
                 'forecast': '99.8',
                 'previous': '99.3'
             },
@@ -11421,7 +11421,7 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '15.5K',
                 'forecast': 'N/A',
                 'previous': '12.8K'
             },
