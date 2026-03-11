@@ -11431,9 +11431,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.09M',
                 'forecast': '3.89M',
-                'previous': '3.91M'
+                'previous': '4.02M'
             },
             {
                 'title': 'API Weekly Statistical Bulletin',
@@ -11451,7 +11451,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': '2.2%',
                 'previous': '2.3%'
             },
