@@ -1,5 +1,10 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* App font tokens (loaded in index.html) */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  --font-serif: 'Gelasio', Georgia, 'Times New Roman', Times, serif;
+
+  font-family: var(--font-sans);
   line-height: 1.5;
   font-weight: 400;
 

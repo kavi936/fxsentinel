@@ -4637,9 +4637,11 @@ const Overview = () => {
                   {/* AI Overview */}
                   <div className="ai-overview">
                     <div className="ai-indicator">
-                      <div className="ai-label">Analysis Confidence</div>
-                      <div className={`ai-value ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
-                        {aiAnalysis.confidence_score ? `${aiAnalysis.confidence_score}%` : '85%'}
+                      <div className="ai-indicator-row">
+                        <div className="ai-label">Analysis Confidence</div>
+                        <div className={`ai-value ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
+                          {aiAnalysis.confidence_score ? `${aiAnalysis.confidence_score}%` : '85%'}
+                        </div>
                       </div>
                       <div className="ai-bar">
                         <div className={`ai-fill ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`} 
@@ -4696,16 +4698,16 @@ const Overview = () => {
                           <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bullish) || 'Above key resistance: potential move higher on positive data surprise'}</p>
                         </div>
                       </div>
-                      <div className="scenario bearish">
-                        <div className="scenario-content">
-                          <h4>Bearish</h4>
-                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bearish) || 'Below key support: potential move lower on negative data surprise'}</p>
-                        </div>
-                      </div>
                       <div className="scenario neutral">
                         <div className="scenario-content">
                           <h4>Neutral</h4>
                           <p>{safeRenderValue(aiAnalysis.forward_scenarios?.neutral) || 'Range likely between key support and resistance if no breakout'}</p>
+                        </div>
+                      </div>
+                      <div className="scenario bearish">
+                        <div className="scenario-content">
+                          <h4>Bearish</h4>
+                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bearish) || 'Below key support: potential move lower on negative data surprise'}</p>
                         </div>
                       </div>
                     </div>
@@ -4830,199 +4832,164 @@ const Overview = () => {
                     </div>
                   </div> */}
 
-                  {/* AI Analysis - Expandable Detailed Sections */}
-                  <div className="ai-analysis-expandable">
-                    {/* Event Summary - Expandable */}
-                    <details className="analysis-details" open>
-                      <summary className="details-summary">
-                        {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Event Data</span>
-                        <span className="summary-arrow">▼</span>
-                      </summary>
-                      <div className="details-content">
-                        <div className="event-summary-content">
-                          <div className="event-summary-header">
-                            <div className="event-summary-label">Event</div>
-                            <div className="event-summary-value">{aiAnalysis.eventSummary?.release || 'Economic event analysis'}</div>
-                          </div>
-                          {aiAnalysis.eventSummary?.outcome && 
-                           aiAnalysis.eventSummary.outcome !== 'Analysis based on expected vs previous data' && (
-                            <div className="event-summary-header">
-                              <div className="event-summary-label">Outcome</div>
-                              <div className="event-summary-value">{aiAnalysis.eventSummary.outcome}</div>
-                            </div>
+                  {/* In-depth analysis (single card; no expandables) */}
+                  <div className="in-depth-analysis-section">
+                    <h3 className="section-header">In-depth analysis</h3>
+                    <div className="in-depth-analysis-content">
+                      {/* Event data */}
+                      <div className="in-depth-block">
+                       
+                        <p className="in-depth-text">
+                          <span className="in-depth-label">Release:</span>{' '}
+                          <strong className="in-depth-strong">{aiAnalysis.eventSummary?.release || 'Economic event analysis'}</strong>
+                        </p>
+                        {aiAnalysis.eventSummary?.outcome &&
+                          aiAnalysis.eventSummary.outcome !== 'Analysis based on expected vs previous data' && (
+                            <p className="in-depth-text">
+                              <span className="in-depth-label">Outcome:</span>{' '}
+                              {safeRenderValue(aiAnalysis.eventSummary.outcome)}
+                            </p>
                           )}
-                          <div className="event-metrics-grid">
-                            <div className="event-metric">
-                              <div className="event-metric-label">Actual</div>
-                              <div className="event-metric-value">{aiAnalysis.eventSummary?.actual || 'N/A'}</div>
-                            </div>
-                            <div className="event-metric">
-                              <div className="event-metric-label">Expected</div>
-                              <div className="event-metric-value">{aiAnalysis.eventSummary?.expected || 'N/A'}</div>
-                            </div>
-                            <div className="event-metric">
-                              <div className="event-metric-label">Previous</div>
-                              <div className="event-metric-value">{aiAnalysis.eventSummary?.previous || 'N/A'}</div>
-                            </div>
+                        <div className="in-depth-metrics">
+                          <div className="in-depth-metric">
+                            <span className="in-depth-metric-label">Actual</span>
+                            <span className="in-depth-metric-value">{aiAnalysis.eventSummary?.actual || 'N/A'}</span>
+                          </div>
+                          <div className="in-depth-metric">
+                            <span className="in-depth-metric-label">Expected</span>
+                            <span className="in-depth-metric-value">{aiAnalysis.eventSummary?.expected || 'N/A'}</span>
+                          </div>
+                          <div className="in-depth-metric">
+                            <span className="in-depth-metric-label">Previous</span>
+                            <span className="in-depth-metric-value">{aiAnalysis.eventSummary?.previous || 'N/A'}</span>
                           </div>
                         </div>
                       </div>
-                    </details>
 
-                    {/* Market Reaction - Expandable */}
-                    <details className="analysis-details" open>
-                      <summary className="details-summary">
-                        {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Market Reaction</span>
-                        <span className="summary-arrow">▼</span>
-                      </summary>
-                      <div className="details-content">
-                        <div className="market-reaction-content">
-                          {aiAnalysis.market_reaction?.price_action && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Price Action</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.market_reaction.price_action)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.market_reaction?.volatility && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Volatility</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.market_reaction.volatility)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.market_reaction?.reason && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Reason</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.market_reaction.reason)}</div>
-                            </div>
-                          )}
+                      {/* Market reaction */}
+                      <div className="in-depth-block">
+                        <h4 className="in-depth-title">Market reaction</h4>
+                        {aiAnalysis.market_reaction?.price_action && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Price action:</span>{' '}
+                            {safeRenderValue(aiAnalysis.market_reaction.price_action)}
+                          </p>
+                        )}
+                        {aiAnalysis.market_reaction?.volatility && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Volatility:</span>{' '}
+                            {safeRenderValue(aiAnalysis.market_reaction.volatility)}
+                          </p>
+                        )}
+                        {aiAnalysis.market_reaction?.reason && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Why:</span>{' '}
+                            {safeRenderValue(aiAnalysis.market_reaction.reason)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Implications */}
+                      <div className="in-depth-block">
+                        <h4 className="in-depth-title">Implications</h4>
+                        {aiAnalysis.implications_takeaways?.economic_context && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Economic context:</span>{' '}
+                            {safeRenderValue(aiAnalysis.implications_takeaways.economic_context)}
+                          </p>
+                        )}
+                        {aiAnalysis.implications_takeaways?.policy_implications && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Policy implications:</span>{' '}
+                            {safeRenderValue(aiAnalysis.implications_takeaways.policy_implications)}
+                          </p>
+                        )}
+                        {aiAnalysis.implications_takeaways?.event_bias && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Market bias:</span>{' '}
+                            {safeRenderValue(aiAnalysis.implications_takeaways.event_bias)}
+                          </p>
+                        )}
+                        {aiAnalysis.implications_takeaways?.risk_level && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Risk level:</span>{' '}
+                            {safeRenderValue(aiAnalysis.implications_takeaways.risk_level)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Trading plan */}
+                      <div className="in-depth-block">
+                        <h4 className="in-depth-title">Trading plan</h4>
+                        {aiAnalysis.trading_plan?.best_approach && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Best approach:</span>{' '}
+                            {safeRenderValue(aiAnalysis.trading_plan.best_approach)}
+                          </p>
+                        )}
+                        {aiAnalysis.trading_plan?.avoid_strategies && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Avoid:</span>{' '}
+                            {safeRenderValue(aiAnalysis.trading_plan.avoid_strategies)}
+                          </p>
+                        )}
+                        {aiAnalysis.trading_plan?.key_levels && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Key levels:</span>{' '}
+                            {safeRenderValue(aiAnalysis.trading_plan.key_levels)}
+                          </p>
+                        )}
+                        {(aiAnalysis.trading_plan?.position_sizing_risk || aiAnalysis.trading_plan?.position_sizing) && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Position sizing:</span>{' '}
+                            {safeRenderValue(aiAnalysis.trading_plan.position_sizing_risk || aiAnalysis.trading_plan.position_sizing)}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Big picture + catalysts */}
+                      <div className="in-depth-block">
+                        <h4 className="in-depth-title">Big picture</h4>
+                        {aiAnalysis.big_picture?.economic_outlook && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Economic outlook:</span>{' '}
+                            {safeRenderValue(aiAnalysis.big_picture.economic_outlook)}
+                          </p>
+                        )}
+                        {aiAnalysis.big_picture?.medium_term_direction && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Medium-term direction:</span>{' '}
+                            {safeRenderValue(aiAnalysis.big_picture.medium_term_direction)}
+                          </p>
+                        )}
+                        {aiAnalysis.big_picture?.policy_trajectory && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Policy trajectory:</span>{' '}
+                            {safeRenderValue(aiAnalysis.big_picture.policy_trajectory)}
+                          </p>
+                        )}
+                        {aiAnalysis.big_picture?.forward_focus && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Forward focus:</span>{' '}
+                            {safeRenderValue(aiAnalysis.big_picture.forward_focus)}
+                          </p>
+                        )}
+
+                        <div className="in-depth-catalysts">
+                          <div className="in-depth-label">Next catalysts:</div>
+                          <ul className="in-depth-catalyst-list">
+                            {(aiAnalysis.next_catalysts && aiAnalysis.next_catalysts.length > 0
+                              ? aiAnalysis.next_catalysts
+                              : ['Central bank meetings and CPI releases']
+                            ).map((catalyst, index) => (
+                              <li key={index} className="in-depth-catalyst-item">
+                                {catalyst}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
-                    </details>
-
-                    {/* Implications & Takeaways - Expandable */}
-                    <details className="analysis-details" open>
-                      <summary className="details-summary">
-                        {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Implications & Takeaways</span>
-                        <span className="summary-arrow">▼</span>
-                      </summary>
-                      <div className="details-content">
-                        <div className="market-reaction-content">
-                          {aiAnalysis.implications_takeaways?.economic_context && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Economic Context</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.implications_takeaways.economic_context)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.implications_takeaways?.event_bias && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Market Bias</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.implications_takeaways.event_bias)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.implications_takeaways?.risk_level && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Risk Level</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.implications_takeaways.risk_level)}</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </details>
-
-                    {/* Trading Plan - Expandable */}
-                    <details className="analysis-details" open>
-                      <summary className="details-summary">
-                        {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Trading Plan</span>
-                        <span className="summary-arrow">▼</span>
-                      </summary>
-                      <div className="details-content">
-                        <div className="market-reaction-content">
-                          {aiAnalysis.trading_plan?.best_approach && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Strategy</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.best_approach)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.trading_plan?.avoid_strategies && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Risk Management</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.avoid_strategies)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.trading_plan?.key_levels && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Key Levels</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.key_levels)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.trading_plan?.position_sizing_risk && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Position Sizing</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.trading_plan.position_sizing_risk)}</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </details>
-
-                    {/* Big Picture - Expandable */}
-                    <details className="analysis-details" open>
-                      <summary className="details-summary">
-                        {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Big Picture</span>
-                        <span className="summary-arrow">▼</span>
-                      </summary>
-                      <div className="details-content">
-                        <div className="market-reaction-content">
-                          {aiAnalysis.big_picture?.economic_outlook && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Economic Outlook</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.big_picture.economic_outlook)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.big_picture?.medium_term_direction && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Medium-term Direction</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.big_picture.medium_term_direction)}</div>
-                            </div>
-                          )}
-                          {aiAnalysis.big_picture?.forward_focus && (
-                            <div className="market-reaction-item">
-                              <div className="market-reaction-label">Forward Focus</div>
-                              <div className="market-reaction-value">{safeRenderValue(aiAnalysis.big_picture.forward_focus)}</div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </details>
-
-                    {/* Next Catalysts - Expandable */}
-                    <details className="analysis-details" open>
-                      <summary className="details-summary">
-                        {/* <span className="summary-icon"></span> */}
-                        <span className="summary-title">Next Catalysts</span>
-                        <span className="summary-arrow">▼</span>
-                      </summary>
-                      <div className="details-content">
-                        <div className="catalysts-list">
-                          {aiAnalysis.next_catalysts?.map((catalyst, index) => (
-                            <div key={index} className="catalyst-item">
-                              <span className="catalyst-icon"></span>
-                              <span className="catalyst-text">{catalyst}</span>
-                            </div>
-                          )) || (
-                            <div className="catalyst-item">
-                              <span className="catalyst-icon"></span>
-                              <span className="catalyst-text">Central bank meetings and CPI releases</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </details>
+                    </div>
                   </div>
                 </div>
               )}
