@@ -11595,9 +11595,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.6%',
                 'forecast': '6.1%',
-                'previous': '6.1%'
+                'previous': '6.0%'
             },
             {
                 'title': 'BOE Gov Bailey Speaks',
