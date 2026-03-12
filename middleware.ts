@@ -21,9 +21,11 @@ export default async function middleware(request: Request): Promise<Response | v
   const isBot = BOT_UA_REGEX.test(ua);
   const isGet = request.method === 'GET';
   const isHtmlLike = !IGNORE_EXT_REGEX.test(url.pathname);
+  const hasPrerenderHeader = request.headers.get('x-prerender') === '1';
 
   // For normal users or non-HTML requests, do nothing – Vercel serves your SPA as usual.
-  if (!isBot || !isGet || !isHtmlLike) {
+  // Also allow Prerender's own verification (x-prerender: 1) to force prerendering.
+  if (!hasPrerenderHeader && (!isBot || !isGet || !isHtmlLike)) {
     return;
   }
 
