@@ -11609,25 +11609,16 @@ class HybridEconomicCalendar:
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
-            {
-                'title': 'Italian 10-y Bond Auction',
-                'date': 'Thu, Mar 12',
-                'time': '10:33 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
+            
             {
                 'title': 'Building Permits m/m',
                 'date': 'Thu, Mar 12',
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.8%',
                 'forecast': '-0.6%',
-                'previous': '6.8%'
+                'previous': '6.1%'
             },
             {
                 'title': 'Trade Balance',
@@ -11635,7 +11626,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.6B',
                 'forecast': '-1.2B',
                 'previous': '-1.3B'
             },
@@ -11645,9 +11636,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.0%',
                 'forecast': '-0.6%',
-                'previous': '2.0%'
+                'previous': '1.8%'
             },
             {
                 'title': 'Unemployment Claims',
@@ -11655,9 +11646,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '213K',
                 'forecast': '216K',
-                'previous': '213K'
+                'previous': '214K'
             },
             {
                 'title': 'Building Permits',
@@ -11665,9 +11656,19 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.38M',
                 'forecast': '1.41M',
                 'previous': '1.45M'
+            },
+            {
+                'title': 'Goods Trade Balance',
+                'date': 'Thu, Mar 12',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': '-80.8B',
+                'forecast': 'N/A',
+                'previous': '-98.5B'
             },
             {
                 'title': 'Housing Starts',
@@ -11675,9 +11676,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.49M',
                 'forecast': '1.34M',
-                'previous': '1.40M'
+                'previous': '1.39M'
             },
             {
                 'title': 'Trade Balance',
@@ -11685,9 +11686,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-54.5B',
                 'forecast': '-66.1B',
-                'previous': '-70.3B'
+                'previous': '-72.9B'
             },
             {
                 'title': 'CB Leading Index m/m',
@@ -11695,7 +11696,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': 'N/A',
                 'previous': '0.0%'
             },
@@ -11705,7 +11706,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-38B',
                 'forecast': 'N/A',
                 'previous': '-132B'
             },
