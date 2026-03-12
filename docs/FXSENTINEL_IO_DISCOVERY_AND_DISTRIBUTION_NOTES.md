@@ -176,3 +176,70 @@ Future edits should:
 - Add links to new assets as they go live (e.g. Product Hunt page, Trustpilot profile, YouTube demo).
 - Note major changes to rendering (e.g. migration to SSR/SSG) and resulting Search Console / indexing improvements.
 
+---
+
+## 8. Next Steps by Priority (Action Plan)
+
+### Priority 0 (Blockers): get indexed reliably
+
+- **Confirm what Googlebot sees right now**
+  - Use Google Search Console → **URL Inspection** → **Test Live URL** on:
+    - `/`
+    - `/blog`
+    - one blog post URL
+  - If the rendered HTML is mostly empty, indexing will remain inconsistent/slow.
+  - Why: you need evidence of whether the issue is “Google can’t render” vs “Google can render but won’t index”.
+
+- **Make key public routes ship real HTML (SSR/SSG/prerender)**
+  - Minimum routes to prerender:
+    - `/`
+    - `/blog`
+    - every `/blog/<slug>`
+    - `/privacy`, `/disclaimer`, `/terms` (or real `/terms`)
+  - Why: with CSR-only SPAs, Google often has nothing meaningful to index at crawl time.
+
+- **Canonical cleanup**
+  - Ensure canonical URLs **do not include tracking params** (e.g. `utm_*`, `gclid`, `fbclid`).
+  - Why: without this, SEO signals get split across duplicate URLs.
+
+- **Validate sitemap + robots in production**
+  - Confirm `https://fxsentinel.io/robots.txt` and `https://fxsentinel.io/sitemap.xml` are reachable, correct, and kept in sync.
+  - Why: crawlers use these as the map and the rules; mismatches can slow discovery.
+
+### Priority 1 (Fast wins): improve appearance + CTR
+
+- **Ensure every major page has unique `<title>` and meta description**
+  - Landing, blog index, each blog post, legal pages.
+  - Why: improves relevance signals and click-through rate on search results.
+
+- **Ship OpenGraph/Twitter meta per page**
+  - Especially for blog posts.
+  - Why: link previews directly affect distribution and engagement.
+
+### Priority 2 (Trust + conversion foundations)
+
+- **Add “About / Why FXSentinel” and credibility signals**
+  - Founder/story, what the tool is and is not, data sources, disclaimers.
+  - Why: fintech users need trust before they sign up.
+
+- **Add proof elements**
+  - Screenshots, demo video, early testimonials.
+  - Why: reduces perceived risk and improves conversion from any traffic source.
+
+### Priority 3 (Distribution engine): create off-site signals
+
+- **Product Hunt launch**
+- **Review presence**
+  - Trustpilot first; later optional: G2/Capterra.
+- **YouTube demo + short clips**
+- **Community participation**
+  - Add value in forex/trading communities; avoid promo-only posting.
+
+### Priority 4 (Scale SEO): blog as an acquisition channel
+
+- **Publish 5–10 evergreen “pillar” posts**
+- **Internal linking strategy**
+  - Homepage → pillars → supporting articles; “related posts” blocks.
+- **Automate sitemap generation**
+  - So new posts/routes aren’t forgotten.
+
