@@ -12,7 +12,7 @@ const Blog = () => {
 
   useMeta(
     'FXSentinel Blog - Trading Insights & Market Analysis',
-    'Expert insights on forex trading, market analysis, and AI-powered trading tools. Learn how to trade economic news, understand market sentiment, and make better trading decisions.'
+    'Expert insights on forex trading, market analysis, and AI-powered trading tools.'
   );
 
   useEffect(() => {
