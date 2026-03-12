@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Basic viewport -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- %TITLE% will be replaced by vite-plugin-prerender-static based on route tags -->
+    <title>%TITLE%</title>
+
+    <!-- %LINKS% will be replaced with generated SEO tags (og:, twitter:, canonical, etc.) -->
+    %LINKS%
+  </head>
+  <body>
+    <!-- %APP% will contain the static HTML snippet we return from renderStaticHtml(path) -->
+    <div id="root">
+      %APP%
+    </div>
+  </body>
+</html>
+
