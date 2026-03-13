@@ -5205,12 +5205,12 @@ const Overview = () => {
                   </div>
                 ) : (
                   <React.Fragment>
-                    {/* VIX Fear Indicator Section */}
+                    {/* Fear Indicators Section: VIX + Crypto Fear & Greed */}
                         <div className="vix-section">
                           <div className="vix-header">
-                            <h4 className="vix-title">VIX Fear Indicator</h4>
+                            <h4 className="vix-title">Fear Indicators</h4>
                             <InfoIcon 
-                          tooltipText="The VIX measures implied volatility of S&P 500 options, reflecting US equity market fear and demand for downside protection. Use it as a macro confirmation tool for FX and Gold trading."
+                          tooltipText="VIX: implied volatility of S&P 500 options (US equity fear). Crypto Fear & Greed: Bitcoin-based sentiment (0–100). Both are used as macro risk proxies—when crypto is in extreme fear, risk-off sentiment often bleeds into forex too."
                               position="bottom"
                             />
                           </div>
@@ -5379,6 +5379,77 @@ const Overview = () => {
                                                 </div>
                                               );
                         })()}
+                        {/* Crypto Fear & Greed - same structure as VIX */}
+                        {sentiment.fng != null ? (() => {
+                          const fngValue = Math.max(0, Math.min(100, sentiment.fng.value));
+                          const fngLevel = fngValue >= 75 ? 'high' : fngValue >= 25 ? 'medium' : 'low';
+                          const fngColor = getSentimentColor(fngLevel);
+                          const barPct = fngValue; // 0-100
+                          return (
+                          <div className="fng-display">
+                            <div className="vix-display">
+                              <div className="vix-main-display">
+                                <div className="vix-value-wrapper">
+                                  <span className="vix-label">Crypto Fear & Greed</span>
+                                  <div className="vix-number-row">
+                                    <span className="vix-number" style={{ color: fngColor }}>
+                                      {fngValue}
+                                    </span>
+                                    <div className="vix-level-badge" style={{
+                                      backgroundColor: `${fngColor}20`,
+                                      borderColor: fngColor,
+                                      color: fngColor
+                                    }}>
+                                      {sentiment.fng.classification}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="vix-bar-container">
+                                <div className="vix-bar-wrapper">
+                                  <div className="vix-bar-background">
+                                    <div className="vix-bar-markers">
+                                      <span className="vix-marker" style={{ left: '0%' }}>0</span>
+                                      <span className="vix-marker" style={{ left: '25%' }}>25</span>
+                                      <span className="vix-marker" style={{ left: '50%' }}>50</span>
+                                      <span className="vix-marker" style={{ left: '75%' }}>75</span>
+                                      <span className="vix-marker" style={{ left: '100%' }}>100</span>
+                                    </div>
+                                    <div
+                                      className="vix-bar-fill"
+                                      style={{
+                                        width: `${barPct}%`,
+                                        background: `linear-gradient(90deg, ${fngColor} 0%, ${fngColor}80 100%)`,
+                                        boxShadow: `0 0 15px ${fngColor}40`
+                                      }}
+                                    />
+                                    <div
+                                      className="vix-bar-indicator"
+                                      style={{
+                                        left: `${barPct}%`,
+                                        backgroundColor: fngColor,
+                                        borderColor: fngColor
+                                      }}
+                                    >
+                                      <div className="vix-indicator-dot" />
+                                    </div>
+                                  </div>
+                                  <div className="vix-bar-labels">
+                                    <span className="vix-range-label" style={{ color: '#ff4757' }}>Fear</span>
+                                    <span className="vix-range-label" style={{ color: '#ffa500' }}>Neutral</span>
+                                    <span className="vix-range-label" style={{ color: '#00ff88' }}>Greed</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          );
+                        })() : (
+                          <div className="fng-display fng-loading">
+                            <span className="vix-label">Crypto Fear & Greed</span>
+                            <span className="fng-unavailable">—</span>
+                          </div>
+                        )}
                                           </div>
                                           
                       {/* Use in Context Expandable Section */}
@@ -5406,7 +5477,7 @@ const Overview = () => {
                         
                         {isVixContextExpanded && (
                           <div className="vix-context-content">
-                            {/* What VIX Measures */}
+                            {/* What these indicators measure */}
                             <div className="vix-context-item">
                               <div className="vix-context-item-header">
                                 <svg 
@@ -5424,22 +5495,17 @@ const Overview = () => {
                                   <path d="M2 17l10 5 10-5"></path>
                                   <path d="M2 12l10 5 10-5"></path>
                                 </svg>
-                                <h5 className="vix-context-item-title">What VIX Actually Measures</h5>
+                                <h5 className="vix-context-item-title">What These Indicators Measure</h5>
                                             </div>
                               <p className="vix-context-text">
-                                VIX = implied volatility of S&P 500 options
+                                <strong>VIX</strong> = implied volatility of S&P 500 options (US equity fear, demand for downside protection).
                               </p>
                               <p className="vix-context-text">
-                                So it reflects:
+                                <strong>Crypto Fear & Greed</strong> = Bitcoin-based sentiment (0–100). Crypto-specific but widely used as a macro risk proxy—when crypto is in extreme fear, risk-off sentiment often bleeds into forex too.
                               </p>
-                              <ul className="vix-context-list">
-                                <li>US equity market fear</li>
-                                <li>Demand for downside protection in stocks</li>
-                                <li>US-centric risk perception</li>
-                              </ul>
                                           </div>
                                           
-                            {/* When VIX Matters */}
+                            {/* When they matter for FX */}
                             <div className="vix-context-item">
                               <div className="vix-context-item-header">
                                 <svg 
@@ -5457,14 +5523,14 @@ const Overview = () => {
                                   <line x1="12" y1="8" x2="12" y2="12"></line>
                                   <line x1="12" y1="16" x2="12.01" y2="16"></line>
                                 </svg>
-                                <h5 className="vix-context-item-title">When VIX Matters for FX & Gold</h5>
+                                <h5 className="vix-context-item-title">When They Matter for FX & Gold</h5>
                                           </div>
                               <p className="vix-context-text">
-                                VIX is useful indirectly when:
+                                Use both indirectly when:
                               </p>
                               <ul className="vix-context-list">
-                                <li>There is global risk-off</li>
-                                <li>US equities drive global flows</li>
+                                <li>Global risk-off (VIX spike + Crypto Extreme Fear often align)</li>
+                                <li>US equities and/or crypto drive flows into safe havens (USD, JPY, CHF)</li>
                               </ul>
                                         </div>
                                         
@@ -5544,6 +5610,25 @@ const Overview = () => {
                                     <strong>VIX ↑</strong> → Gold ↑ (but not always)
                                   </span>
                                             </div>
+                                <div className="vix-correlation-item">
+                                  <svg 
+                                    width="16" 
+                                    height="16" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    className="vix-correlation-icon up"
+                                  >
+                                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                    <polyline points="17 6 23 6 23 12"></polyline>
+                                  </svg>
+                                  <span className="vix-correlation-text">
+                                    <strong>Crypto Extreme Fear</strong> → risk-off often bleeds into FX (JPY, CHF bid)
+                                  </span>
+                                </div>
                                         </div>
                                       </div>
                                 </div>
@@ -5560,7 +5645,11 @@ const Overview = () => {
                       </div>
                 
                 <div className="conditions-grid">
-                  {sentiment.market_conditions.map((condition, index) => (
+                  {sentiment.market_conditions.map((condition, index) => {
+                    const pct = condition.percentage != null ? Number(condition.percentage) : 50;
+                    const pctClamped = Math.max(0, Math.min(100, pct));
+                    const pctDisplay = pctClamped.toFixed(1);
+                    return (
                     <div key={index} className="condition-item">
                       <div className="condition-label-row">
                         <div className="condition-label">{condition.name}</div>
@@ -5572,22 +5661,25 @@ const Overview = () => {
                         )}
                       </div>
                       <div className={`condition-value ${condition.value}`}>
-                        {condition.name === 'Volatility Environment' ? `${capitalizeSentiment(condition.value)} Volatility` : 
-                         condition.name === 'Risk Appetite' ? capitalizeSentiment(condition.value) : 
-                         capitalizeSentiment(condition.value)}
+                        {condition.name === 'Volatility Environment'
+                          ? `${capitalizeSentiment(condition.value)} Volatility (${pctDisplay}%)`
+                          : condition.name === 'Risk Appetite'
+                            ? `${capitalizeSentiment(condition.value)} (${pctDisplay}%)`
+                            : `${capitalizeSentiment(condition.value)} (${pctDisplay}%)`}
                       </div>
                       <div className="condition-bar">
                         <div 
                           className="bar-fill" 
                           style={{
-                            width: `${condition.percentage}%`,
+                            width: `${pctClamped}%`,
                             background: `linear-gradient(90deg, ${getSentimentColor(condition.value)} 0%, ${getSentimentColor(condition.value)}80 100%)`
                           }}
                         ></div>
                       </div>
                       <div className="condition-detail">{condition.detail}</div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               

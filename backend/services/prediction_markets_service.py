@@ -903,6 +903,42 @@ class PredictionMarketsService:
         logger.info(f"Total markets fetched from CLOB API: {len(markets)}")
         return markets
     
+    def _get_gamma_economic_tag_ids(self) -> List[str]:
+        """Resolve economic tag IDs from Gamma GET /tags so we use current taxonomy (avoids 422 from stale IDs).
+        
+        Filters tags by label/slug containing macro, economy, employment, rates, debt, etc.
+        Fallback: known-good IDs that return events (102000 = Macro Indicators, 102973 = macro).
+        """
+        fallback_ids = ["102000", "102973"]  # Macro Indicators, macro (verified 2026-03)
+        try:
+            import requests
+            r = requests.get("https://gamma-api.polymarket.com/tags", timeout=10)
+            if r.status_code != 200:
+                return fallback_ids
+            data = r.json()
+            if not isinstance(data, list):
+                return fallback_ids
+            keywords = (
+                "macro", "economy", "monetary", "rate", "rates", "employment", "gdp", "cpi",
+                "inflation", "debt", "jobless", "indicator", "policy", "finance", "interest",
+                "global rate", "bank", "economic"
+            )
+            seen = set()
+            ids = []
+            for t in data:
+                lab = (t.get("label") or "").lower()
+                slug = (t.get("slug") or "").lower()
+                if any(k in lab or k in slug for k in keywords):
+                    tid = str(t.get("id", ""))
+                    if tid and tid not in seen:
+                        seen.add(tid)
+                        ids.append(tid)
+            if ids:
+                return ids
+        except Exception as e:
+            logger.debug(f"Gamma tags fetch failed, using fallback tag IDs: {e}")
+        return fallback_ids
+    
     def _fetch_polymarket_gamma_api(self, early_stop_threshold: int = None) -> List[Dict]:
         """Fetch markets from Polymarket using Gamma API (correct approach)
         
@@ -923,22 +959,11 @@ class PredictionMarketsService:
         import requests
         import json
         
-        # Economic tag IDs discovered from tags API
-        # These are tags relevant to forex/economic markets
-        # NOTE: Removed tag_id=2 (Politics) as it includes too many entertainment/personality markets
-        # Focus on actual economic/financial tags only
-        economic_tag_ids = [
-            "370",      # GDP
-            "132",      # monetary policy
-            "130",      # economy1
-            "996",      # employment rate
-            "103167",   # Bank of Canada
-            "103168",   # Bank of Japan
-            "103176",   # Global Rates
-            # Removed "2" (Politics) - too many non-economic markets
-        ]
+        # Economic tag IDs: use current Gamma API tags (GET /tags). Old IDs 370, 132, 130, 996, 103167, 103168, 103176 return 422.
+        # Discover from Gamma /tags when possible; fallback to known-good IDs for macro/economic events.
+        economic_tag_ids = self._get_gamma_economic_tag_ids()
         
-        logger.info(f"Fetching Polymarket markets from Gamma API (max {self.max_pages_polymarket} pages per tag)")
+        logger.info(f"Fetching Polymarket markets from Gamma API (tags: {economic_tag_ids}, max {self.max_pages_polymarket} pages per tag)")
         
         try:
             # Fetch events for each economic tag

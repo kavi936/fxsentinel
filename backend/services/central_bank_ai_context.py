@@ -3,6 +3,7 @@ Central Bank Documents AI Context - Injection-friendly summaries for AI models.
 
 Loads backend/data/central_bank_documents_ai_context.json (not exposed to frontend).
 Use get_context_for_currency() or get_context_for_prompt() to enrich AI prompts.
+Optionally includes prediction market expectations (Polymarket) via prediction_markets_context.
 """
 import json
 from pathlib import Path
@@ -21,6 +22,18 @@ _CURRENCY_TO_BANK = {
     "CAD": "BOC",
     "AUD": "RBA",
     "NZD": "RBNZ",
+}
+
+# Map document bank ID to prediction_markets_context central_bank name
+_BANK_TO_PREDICTION_MARKET_BANK = {
+    "FED": "Fed",
+    "ECB": "ECB",
+    "BOE": "BOE",
+    "BOJ": "BOJ",
+    "SNB": "SNB",
+    "BOC": "BOC",
+    "RBA": "RBA",
+    "RBNZ": "RBNZ",
 }
 
 # Document metadata: need centralBank and date for filtering (loaded from main docs or we keep a minimal map)
@@ -64,10 +77,37 @@ def _get_context() -> Dict:
     return _AI_CONTEXT
 
 
+def get_prediction_markets_context_for_currency(
+    currency: str,
+    max_markets: int = 5,
+    horizon_days: int = 120,
+) -> str:
+    """
+    Get prediction market expectations for the central bank of the given currency.
+    Use alongside get_context_for_currency() to enrich AI prompts with market-implied expectations.
+    """
+    bank = _CURRENCY_TO_BANK.get(currency.upper())
+    if not bank:
+        return ""
+    pm_bank = _BANK_TO_PREDICTION_MARKET_BANK.get(bank)
+    if not pm_bank:
+        return ""
+    try:
+        from services.prediction_markets_context import (
+            get_central_bank_context,
+            format_central_bank_context_for_prompt,
+        )
+        payload = get_central_bank_context(pm_bank, horizon_days=horizon_days, max_markets=max_markets)
+        return format_central_bank_context_for_prompt(payload)
+    except Exception:
+        return ""
+
+
 def get_context_for_currency(
     currency: str,
     max_docs: int = 3,
     max_notes_per_doc: int = 5,
+    include_prediction_markets: bool = True,
 ) -> str:
     """
     Get central bank document summaries relevant to a currency, formatted for prompt injection.
@@ -76,6 +116,7 @@ def get_context_for_currency(
         currency: Currency code (USD, EUR, GBP, JPY, etc.)
         max_docs: Max number of documents to include
         max_notes_per_doc: Max aiNotes per document to limit token usage
+        include_prediction_markets: If True, append prediction market expectations for this currency's central bank
 
     Returns:
         Formatted string ready to inject into an AI prompt.
@@ -101,9 +142,14 @@ def get_context_for_currency(
         lines.append(f"- {bank} ({doc_id}):\n  Summary: {summary}")
         if notes:
             lines.append("  Notes: " + "; ".join(notes))
-    if not lines:
-        return ""
-    return "CENTRAL BANK DOCUMENT CONTEXT:\n" + "\n".join(lines)
+    out = ""
+    if lines:
+        out = "CENTRAL BANK DOCUMENT CONTEXT:\n" + "\n".join(lines)
+    if include_prediction_markets:
+        pm_str = get_prediction_markets_context_for_currency(currency)
+        if pm_str:
+            out = (out + "\n\n" + pm_str) if out else pm_str
+    return out
 
 
 def get_context_for_prompt(
@@ -111,6 +157,7 @@ def get_context_for_prompt(
     topics: Optional[List[str]] = None,
     max_docs: int = 5,
     max_notes_per_doc: int = 5,
+    include_prediction_markets: bool = True,
 ) -> str:
     """
     Get central bank document context for AI prompt injection.
@@ -120,6 +167,7 @@ def get_context_for_prompt(
         topics: Filter docs containing these topics (e.g. ["inflation", "policy_normalization"]). If None, no topic filter.
         max_docs: Maximum documents to include
         max_notes_per_doc: Maximum aiNotes per document
+        include_prediction_markets: If True, append prediction market expectations for relevant central banks
 
     Returns:
         Formatted string for prompt injection.
@@ -148,12 +196,38 @@ def get_context_for_prompt(
         lines.append(f"- {bank} ({doc_id}):\n  Summary: {summary}")
         if notes:
             lines.append("  Notes: " + "; ".join(notes))
-    if not lines:
-        return ""
-    return "CENTRAL BANK DOCUMENT CONTEXT:\n" + "\n".join(lines)
+    out = ""
+    if lines:
+        out = "CENTRAL BANK DOCUMENT CONTEXT:\n" + "\n".join(lines)
+    if include_prediction_markets:
+        # Add prediction markets for each distinct bank in the matching set
+        banks_included = list({_DOC_ID_TO_BANK.get(doc_id) for doc_id, _ in matching if _DOC_ID_TO_BANK.get(doc_id)})
+        for bank in banks_included[:3]:  # Limit to 3 banks to avoid token overflow
+            currency = next((c for c, b in _CURRENCY_TO_BANK.items() if b == bank), None)
+            if currency:
+                pm_str = get_prediction_markets_context_for_currency(currency, max_markets=3)
+                if pm_str:
+                    out = (out + "\n\n" + pm_str) if out else pm_str
+    return out
 
 
 def reload_context() -> None:
     """Force reload of AI context (e.g. after file update)."""
     global _AI_CONTEXT
     _AI_CONTEXT = None
+
+
+# --- Sample prompt usage (when using get_context_for_currency or get_context_for_prompt with include_prediction_markets=True) ---
+# The injected string will look like:
+#
+# CENTRAL BANK DOCUMENT CONTEXT:
+# - FED (fed-2026-01-28-fomc-statement):
+#   Summary: ...
+#   Notes: ...
+#
+# Prediction market expectations (Polymarket, as of 2026-03-13T...):
+# - Fed:
+#   - Will the Fed cut rates by ≥25 bps at the March 2026 meeting? 63% yes, 24h: +4.2% (high)
+#   - ...
+#
+# Instruct the model to use prediction markets as one input among others and to state when it relies on them.

@@ -145,6 +145,43 @@
   - **Expectation**:
     - This data should be surfaced explicitly in the prompt as **market‑implied odds**, not hidden.
 
+Summary of what was implemented:
+1. backend/services/prediction_markets_context.py (new)
+get_central_bank_context(central_bank, horizon_days=120, max_markets=5)
+Uses prediction_markets_service.cached_markets.
+Keeps Polymarket markets whose question/event_title/event_slug match the bank’s keywords (e.g. Fed: fed, federal reserve, fomc, powell).
+Keeps markets with resolution_date within the horizon (future and last 30 days).
+Sorts by active first, then volume and conviction; returns top max_markets.
+Returns:
+{ "provider": "prediction_markets", "as_of": "<iso>", "central_bank": "Fed", "markets": [ { "id", "question", "yes_probability", "price_delta_24h", "volume", "resolution_date", "conviction_level" }, ... ] }.
+get_event_context(event_type, country, date=None, max_markets=3)
+Filters by event_type (CPI, NFP, GDP, RATE_DECISION) and optional country.
+Returns the same kind of structured payload for macro events.
+get_fx_pair_context(pair, max_markets=7)
+Maps pair (e.g. EURUSD, GBPUSD) to central banks (Fed, ECB, BOE, BOJ, SNB, BOC, RBA, RBNZ), calls get_central_bank_context for each, merges and dedupes by market id.
+format_central_bank_context_for_prompt(payload)
+Turns a get_central_bank_context result into a short text block for prompt injection (e.g. “Prediction market expectations (Polymarket, as of …): Fed: …”).
+Central banks supported: Fed, ECB, BOE, BOJ, RBNZ, BOC, RBA, SNB.
+2. backend/services/central_bank_ai_context.py (updated)
+get_prediction_markets_context_for_currency(currency, max_markets=5, horizon_days=120)
+Maps currency (USD, EUR, …) to bank (FED, ECB, …), then to prediction_markets bank name (Fed, ECB, …), calls get_central_bank_context and format_central_bank_context_for_prompt, returns the string.
+get_context_for_currency(..., include_prediction_markets=True)
+When include_prediction_markets is True (default), appends the prediction-markets string to the central bank document context. So a single call returns both document summaries and Polymarket expectations for that currency.
+get_context_for_prompt(..., include_prediction_markets=True)
+When True (default), for each distinct bank in the matched documents (up to 3), appends that bank’s prediction market block so multi-currency prompts get Fed/ECB/BOE etc. expectations.
+Sample prompt usage
+Added a short comment at the bottom of the file showing how the injected text looks and that the model should use prediction markets as one input and state when it relies on them.
+3. Usage
+Single currency (e.g. USD):
+get_context_for_currency("USD", include_prediction_markets=True) → document context + Polymarket Fed expectations.
+Multi-currency / general prompt:
+get_context_for_prompt(currencies=["USD","EUR"], include_prediction_markets=True) → document context + Fed and ECB prediction market blocks.
+Structured only (e.g. for your own prompt):
+from services.prediction_markets_context import get_central_bank_context, get_event_context, get_fx_pair_context
+Then call get_central_bank_context("Fed"), get_event_context("CPI","US"), or get_fx_pair_context("EURUSD") and use the returned dict in your pipeline or serialize it yourself.
+All of this uses the existing cached markets from the prediction markets service; no extra API calls. If the cache is empty, the prediction-market section is empty and the rest of the context is unchanged.
+    
+
 - **Central Bank Analysis**
   - **Source**: The existing Central Bank Analysis feature (summaries of recent speeches, decisions, guidance).
   - **Usage**:
