@@ -11377,21 +11377,21 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'M2 Money Supply y/y',
-                'date': 'Tue, Mar 10',
-                'time': '08:03 UTC',
+                'date': 'Fri, Mar 13',
+                'time': '08:02 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '9.0%',
                 'forecast': '8.9%',
                 'previous': '9.0%'
             },
             {
                 'title': 'New Loans',
-                'date': 'Wed, Mar 11',
+                'date': 'Fri, Mar 13',
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '900B',
                 'forecast': '890B',
                 'previous': '4710B'
             },
@@ -11849,7 +11849,7 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.2%',
                 'forecast': 'N/A',
                 'previous': '3.5%'
             },
@@ -11859,9 +11859,9 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.5%',
                 'forecast': '0.5%',
-                'previous': '-1.4%'
+                'previous': '-0.5%'
             },
             {
                 'title': 'Employment Change',
