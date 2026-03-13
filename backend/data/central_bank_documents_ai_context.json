@@ -107,6 +107,26 @@
         "GDP and inflation projections; risks to outlook"
       ],
       "topics": ["boe", "mpc", "bank_rate", "inflation", "economic_outlook", "labor_market", "gdp", "economic_projections"]
+    },
+    "cftc-2026-03-03-cot-long-metals": {
+      "shortSummary": "CFTC COT Long Report for metals (March 3, 2026): net long positions from commercial, non-commercial, and non-reportable traders in gold, silver, copper, and other metals futures. Useful for speculative positioning analysis.",
+      "aiNotes": [
+        "COT data shows net long/short positioning in metals futures",
+        "Commercial vs non-commercial vs non-reportable breakdown",
+        "Relevant for gold, silver, copper positioning sentiment",
+        "Extreme positioning can signal contrarian or trend-following setups"
+      ],
+      "topics": ["cftc", "cot_report", "metals", "positioning", "speculators", "gold", "silver", "futures", "market_data"]
+    },
+    "cftc-2026-03-03-cot-short-forex": {
+      "shortSummary": "CFTC COT Short Report for forex & financial (March 3, 2026): net short positions in major currency futures. Financial traders positioning across EUR, GBP, JPY, and other pairs. Key for institutional forex sentiment.",
+      "aiNotes": [
+        "COT data shows net positioning in forex futures",
+        "Financial traders (leveraged funds, asset managers) positions",
+        "Relevant for EUR, GBP, JPY, CHF, CAD, AUD crosses",
+        "Extreme net long/short can indicate crowded trades or reversal setups"
+      ],
+      "topics": ["cftc", "cot_report", "forex", "positioning", "financial_traders", "eur", "gbp", "jpy", "futures", "market_data"]
     }
   }
 }

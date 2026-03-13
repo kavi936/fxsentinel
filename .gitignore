@@ -156,6 +156,7 @@ public/*
 !public/documents/
 !public/documents/central-bank/
 !public/documents/central-bank/**/*.pdf
+!public/documents/central-bank/cot-reports/**/*.html
 
 # Storybook build outputs
 .out

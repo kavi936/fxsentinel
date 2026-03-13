@@ -36,6 +36,8 @@ _DOC_ID_TO_BANK = {
     "fed-2026-01-28-fomc-statement": "FED",
     "ecb-2026-02-06-monetary-statement": "ECB",
     "boe-2026-02-01-monetary-policy-report": "BOE",
+    "cftc-2026-03-03-cot-long-metals": "FED",
+    "cftc-2026-03-03-cot-short-forex": "FED",
 }
 
 
