@@ -5976,6 +5976,32 @@
   }
 }
 
+/* Crypto Fear & Greed - same layout as VIX, wrapper for separation */
+.fng-display {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 68, 68, 0.25);
+}
+.fng-display .vix-display {
+  margin-bottom: 0;
+}
+.fng-display.fng-loading {
+  border-top: 1px solid rgba(255, 68, 68, 0.2);
+  padding-top: 16px;
+  margin-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fng-display.fng-loading .vix-label {
+  margin-bottom: 0;
+}
+.fng-unavailable {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 14px;
+  font-weight: 500;
+}
+
 /* VIX Context Expandable Section */
 .vix-context-section {
   margin-top: 20px;

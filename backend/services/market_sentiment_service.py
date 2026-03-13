@@ -217,6 +217,24 @@ class MarketSentimentService:
         
         return False
     
+    def _fetch_fear_greed_index(self) -> Optional[Dict[str, Any]]:
+        """Fetch Crypto Fear & Greed Index from Alternative.me (no API key). Used as macro risk proxy."""
+        try:
+            resp = requests.get("https://api.alternative.me/fng/?limit=1", timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+            if not data or "data" not in data or not data["data"]:
+                return None
+            item = data["data"][0]
+            value = int(item.get("value", 0))
+            classification = item.get("value_classification", "Unknown")
+            result = {"value": max(0, min(100, value)), "classification": classification}
+            logger.info(f"✅ Crypto Fear & Greed: {result['value']} ({result['classification']})")
+            return result
+        except Exception as e:
+            logger.warning(f"⚠️ Fear & Greed index fetch failed: {e}")
+            return None
+    
     def get_market_sentiment(self) -> Dict[str, Any]:
         """Get current market sentiment data"""
         try:
@@ -250,8 +268,10 @@ class MarketSentimentService:
             else:
                 logger.info(f"Using cached sentiment data (age: {(datetime.now(timezone.utc) - self.sentiment_timestamp).total_seconds() / 60:.1f} minutes)")
             
-            # Return formatted data for frontend
-            return self._format_for_frontend(self.current_sentiment)
+            # Return formatted data for frontend and attach Fear & Greed index
+            result = self._format_for_frontend(self.current_sentiment)
+            result["fng"] = self._fetch_fear_greed_index()
+            return result
             
         except Exception as e:
             logger.error(f"Error getting market sentiment: {e}")
@@ -260,8 +280,12 @@ class MarketSentimentService:
             # Try to use cached data if available
             if self.current_sentiment:
                 logger.warning("⚠️ Using cached sentiment data due to error (better than defaults)")
-                return self._format_for_frontend(self.current_sentiment)
-            return self._get_fallback_sentiment()
+                result = self._format_for_frontend(self.current_sentiment)
+                result["fng"] = self._fetch_fear_greed_index()
+                return result
+            fallback = self._get_fallback_sentiment()
+            fallback["fng"] = self._fetch_fear_greed_index()
+            return fallback
     
     def _calculate_market_sentiment(self) -> MarketSentiment:
         """Calculate comprehensive market sentiment"""
@@ -621,16 +645,16 @@ class MarketSentimentService:
                 vix_change = vix_data['change']
                 print(f"✅ DEBUG: Using real VIX data - Value: {vix_value}, Change: {vix_change}")
                 
-                # Determine volatility level based on real VIX
-                if vix_value >= 25:
+                # Continuous volatility percentage (0-100): VIX 0 → 0%, VIX 50 → 100%, linear scale
+                VIX_SCALE = 50.0
+                percentage = float(np.clip((vix_value / VIX_SCALE) * 100.0, 0, 100))
+                # Derive level from percentage for display/color
+                if percentage >= 66:
                     level = 'high'
-                    percentage = 75
-                elif vix_value >= 15:
+                elif percentage >= 33:
                     level = 'medium'
-                    percentage = 50
                 else:
                     level = 'low'
-                    percentage = 25
                 
                 # Determine trend
                 if vix_change > 1.0:
@@ -660,20 +684,16 @@ class MarketSentimentService:
                 return {'level': 'medium', 'percentage': 50, 'vix': 15.0, 'change': 0.0, 'trend': 'stable'}
             
             avg_volatility = np.mean(volatilities)
-            
-            # Determine volatility level
-            if avg_volatility > 0.15:
+            # Map forex-based volatility to approximate VIX scale (e.g. 0.2 daily % → ~20 VIX) for percentage
+            vix_approx = min(50, avg_volatility * 100)  # daily % to rough VIX scale
+            vix = max(10.0, min(30.0, 10.0 + vix_approx))
+            percentage = float(np.clip((vix / 50.0) * 100.0, 0, 100))
+            if percentage >= 66:
                 level = 'high'
-                percentage = 75
-                vix = 20.0
-            elif avg_volatility > 0.08:
+            elif percentage >= 33:
                 level = 'medium'
-                percentage = 50
-                vix = 15.0
             else:
                 level = 'low'
-                percentage = 25
-                vix = 10.0
             
             return {
                 'level': level,
@@ -774,24 +794,26 @@ class MarketSentimentService:
             avg_safe_haven_movement = np.mean(safe_haven_percentages)
             logger.debug(f"🔍 DEBUG: Average safe haven movement: {avg_safe_haven_movement:.4f}%")
             
-            # Determine risk appetite based on safe haven movement
-            # Higher safe haven movement = lower risk appetite (more fear)
-            # Thresholds adjusted for realistic daily forex movements (typically 0.1-1% daily)
-            if avg_safe_haven_movement > 0.3:  # Strong safe haven movement (>0.3%)
-                level = 'low'
-                percentage = 25
-                safe_havens_str = ', '.join(set(active_safe_havens)) if active_safe_havens else 'JPY, CHF'
-                logger.info(f"✅ Risk Appetite: LOW (25%) - Strong safe haven movement: {avg_safe_haven_movement:.4f}%")
-            elif avg_safe_haven_movement > 0.1:  # Moderate safe haven movement (0.1-0.3%)
-                level = 'medium'
-                percentage = 50
-                safe_havens_str = ', '.join(set(active_safe_havens)) if active_safe_havens else 'JPY, CHF'
-                logger.info(f"✅ Risk Appetite: MEDIUM (50%) - Moderate safe haven movement: {avg_safe_haven_movement:.4f}%")
-            else:  # Low safe haven movement (<0.1%)
+            # Continuous risk appetite percentage (0-100): 0% safe-haven movement = 100% risk appetite,
+            # high safe-haven movement = low risk appetite. Scale: 0.5% movement → 0%, 0% → 100%.
+            RISK_OFF_THRESHOLD = 0.5  # avg movement >= 0.5% treated as full risk-off (0% appetite)
+            raw_pct = 100.0 - (avg_safe_haven_movement / RISK_OFF_THRESHOLD) * 100.0
+            percentage = float(np.clip(raw_pct, 0, 100))
+            
+            # Derive level from continuous percentage for display/color (same buckets, now from accurate %)
+            if percentage >= 66:
                 level = 'high'
-                percentage = 75
+            elif percentage >= 33:
+                level = 'medium'
+            else:
+                level = 'low'
+            
+            safe_havens_str = ', '.join(set(active_safe_havens)) if active_safe_havens else 'JPY, CHF'
+            if not safe_havens_str and percentage < 80:
+                safe_havens_str = 'JPY, CHF'
+            if level == 'high' and not active_safe_havens:
                 safe_havens_str = 'None'
-                logger.info(f"✅ Risk Appetite: HIGH (75%) - Low safe haven movement: {avg_safe_haven_movement:.4f}%")
+            logger.info(f"✅ Risk Appetite: {level.upper()} ({percentage:.1f}%) - Safe haven movement: {avg_safe_haven_movement:.4f}%")
             
             result = {
                 'level': level,
@@ -1147,7 +1169,8 @@ class MarketSentimentService:
             'data_sources': sentiment.data_sources,
             'is_market_closed': sentiment.is_market_closed,
             'market_status': sentiment.market_status,
-            'vix': vix_data  # Add VIX as separate field for easier access
+            'vix': vix_data,  # Add VIX as separate field for easier access
+            'fng': None  # Filled in get_market_sentiment() from _fetch_fear_greed_index()
         }
     
     def _get_default_market_conditions(self) -> List[MarketCondition]:
@@ -1186,7 +1209,8 @@ class MarketSentimentService:
             'confidence_score': 0.5,
             'data_sources': ['Fallback'],
             'is_market_closed': False,
-            'market_status': 'open'
+            'market_status': 'open',
+            'fng': None
         }
     
     def _get_market_closed_sentiment(self) -> Dict[str, Any]:
@@ -1267,7 +1291,8 @@ class MarketSentimentService:
             'confidence_score': 1.0,
             'data_sources': ['System Status'],
             'is_market_closed': True,
-            'market_status': market_status['market_status']
+            'market_status': market_status['market_status'],
+            'fng': self._fetch_fear_greed_index()
         }
 
 # Global instance
