@@ -11869,7 +11869,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-83.9K',
                 'forecast': '11.1K',
                 'previous': '-24.8K'
             },
@@ -11879,7 +11879,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '6.7%',
                 'forecast': '6.6%',
                 'previous': '6.5%'
             },
@@ -11889,9 +11889,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '78.5%',
                 'forecast': '78.4%',
-                'previous': '78.5%'
+                'previous': '78.9%'
             },
             {
                 'title': 'Manufacturing Sales m/m',
@@ -11899,9 +11899,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.0%',
                 'forecast': '-3.2%',
-                'previous': '0.6%'
+                'previous': '0.4%'
             },
             {
                 'title': 'Core PCE Price Index m/m',
@@ -11909,7 +11909,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.4%',
                 'previous': '0.4%'
             },
@@ -11919,7 +11919,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '1.4%',
                 'previous': '1.4%'
             },
@@ -11929,9 +11929,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.4%',
-                'previous': '0.9%'
+                'previous': '1.0%'
             },
             {
                 'title': 'Durable Goods Orders m/m',
@@ -11939,9 +11939,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.5%',
-                'previous': '-1.4%'
+                'previous': '-0.9%'
             },
             {
                 'title': 'Prelim GDP Price Index q/q',
@@ -11949,7 +11949,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '3.8%',
                 'forecast': '3.6%',
                 'previous': '3.6%'
             },
@@ -11959,7 +11959,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.4%',
                 'previous': '0.3%'
             },
@@ -11969,7 +11969,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.3%',
                 'previous': '0.4%'
             },
