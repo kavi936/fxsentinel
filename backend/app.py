@@ -836,6 +836,18 @@ def get_economic_calendar():
         print(f"✅ Currency pairs limited to max 4 per event")
         print(f"✅ Returning {len(events)} events to frontend")
         
+        # Trigger economic calendar alerts asynchronously in the live app backend
+        # (no background worker required). This uses the unified alert processor,
+        # which fetches from the same hybrid calendar and relies on Firebase
+        # deduplication to avoid duplicates.
+        try:
+            from services.unified_alert_processor import get_unified_processor
+            unified_processor = get_unified_processor()
+            unified_processor.check_economic_calendar_alerts_async()
+            print("✅ Triggered economic calendar alert check (async)")
+        except Exception as e:
+            print(f"⚠️ Error triggering economic calendar alerts: {e}")
+        
         return jsonify({
             "events": events,
             "source": source,

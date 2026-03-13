@@ -11979,9 +11979,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '6.95M',
                 'forecast': '6.84M',
-                'previous': '6.54M'
+                'previous': '6.55M'
             },
             {
                 'title': 'Prelim UoM Consumer Sentiment',
@@ -11989,9 +11989,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '55.5',
                 'forecast': '55.9',
-                'previous': '57.3'
+                'previous': '56.6'
             },
             {
                 'title': 'Prelim UoM Inflation Expectations',
@@ -11999,9 +11999,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '3.4%',
                 'forecast': 'N/A',
-                'previous': '3.5%'
+                'previous': '3.4%'
             },
         ]
         

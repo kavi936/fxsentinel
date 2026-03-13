@@ -68,6 +68,7 @@ test_session.session*
 !src/data/economyIndicators.json
 !src/data/economyIndicators.template.json
 !src/data/central-bank-documents.json
+!backend/data/central_bank_documents_ai_context.json
 analysis_history.json
 news_cache.json
 news_history.json
