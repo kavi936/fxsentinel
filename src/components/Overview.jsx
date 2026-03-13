@@ -4623,15 +4623,6 @@ const Overview = () => {
                   </div>
                 )}
               </div>
-              {aiAnalysisState === 'loading' && (
-                <div className="ai-header-default-icon" aria-hidden="true">
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.937a2 2 0 0 0 1.437-1.437l1.582-6.135a.5.5 0 0 1 .963 0l1.582 6.135a2 2 0 0 0 1.437 1.437l6.135 1.582a.5.5 0 0 1 0 .963l-6.135 1.582a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0L9.937 15.5Z" />
-                    <path d="M15 6.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Z" />
-                    <path d="M4 16a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2A.5.5 0 0 1 4 18v-2Z" />
-                  </svg>
-                </div>
-              )}
               {/* Recent analyses dropdown - panel rendered in portal so it stays on top and isn't clipped */}
               <div className="ai-recent-dropdown" ref={recentAnalysesDropdownRef}>
                 <button
