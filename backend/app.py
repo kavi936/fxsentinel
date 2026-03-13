@@ -2366,17 +2366,11 @@ def get_enhanced_analysis(news_id):
             # GPTMarketContext expects string volatility values, so keep them as strings
             raw_volatility = live_market_data.get('recent_volatility', {})
             
-            # Use None for inaccurate/estimated data instead of fallback values
-            # Only use real data from live_market_data, set None if not available
+            # Use None for missing price data instead of injecting synthetic defaults.
+            # This keeps price inputs honest: either we have real prices from live_market_data,
+            # or the analyzer sees that prices are unavailable.
             gpt_market_context = GPTMarketContext(
-                current_prices=live_market_data.get('current_prices') or {
-                    'EUR/USD': 1.0850,
-                    'USD/JPY': 148.50,
-                    'GBP/USD': 1.2650,
-                    'USD/CHF': 0.8650,
-                    'AUD/USD': 0.6650,
-                    'USD/CAD': 1.3550
-                },
+                current_prices=live_market_data.get('current_prices') or None,
                 recent_volatility=raw_volatility or {},
                 market_sentiment=live_market_data.get('market_sentiment') or {
                     'EUR/USD': 'neutral',
@@ -2537,6 +2531,20 @@ def get_enhanced_analysis(news_id):
             'validation_status': gpt_analysis.validation_status,
             'market_data_source': gpt_analysis.market_data_source
         }
+
+        # Persist a per-user snapshot of this calendar analysis so the frontend
+        # can show it in "Recent" across sessions without re-running GPT.
+        try:
+            if user_info:
+                from services.calendar_analysis_store import calendar_analysis_store
+                calendar_analysis_store.save_calendar_analysis(
+                    user_info=user_info,
+                    event=validated_event,
+                    enhanced_analysis=enhanced_analysis,
+                    analysis_type=analysis_type,
+                )
+        except Exception as history_err:
+            print(f"⚠️ Calendar analysis persistence failed (non-critical): {history_err}")
         
         return jsonify(enhanced_analysis)
         
@@ -5334,6 +5342,46 @@ def remove_filtered_news():
         return jsonify({
             "success": False,
             "error": str(e)
+        }), 500
+
+
+@app.route('/api/calendar-analysis-history', methods=['GET'])
+@limiter.limit("20 per minute")
+def get_calendar_analysis_history():
+    """
+    Get recent calendar AI analyses for the currently authenticated user.
+
+    This allows the frontend to populate the "Recent" dropdown in the AI
+    Analysis card across sessions without re-running GPT.
+    """
+    try:
+        # Require Firebase authentication
+        token_user_info = _extract_user_from_token()
+        if not token_user_info:
+            return jsonify({
+                "error": "Unauthorized",
+                "message": "Firebase authentication required"
+            }), 401
+
+        limit = request.args.get('limit', 15, type=int)
+
+        from services.calendar_analysis_store import calendar_analysis_store
+        analyses = calendar_analysis_store.get_recent_calendar_analyses(
+            user_info=token_user_info,
+            limit=limit
+        )
+
+        return jsonify({
+            "analyses": analyses,
+            "limit": limit
+        })
+    except Exception as e:
+        print(f"Error getting calendar analysis history: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": "Failed to retrieve calendar analysis history",
+            "message": str(e)
         }), 500
 
 @app.route('/api/clear-analysis-history', methods=['POST'])
