@@ -692,6 +692,7 @@ const Overview = () => {
   const [aiAnalysisState, setAiAnalysisState] = useState('default'); // 'default', 'pending', 'loading', 'event-analysis', 'error'
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [aiErrorInfo, setAiErrorInfo] = useState(null); // { type, title, message }
   // Recent analyses (session history) for dropdown - max 15, newest first
   const [recentAnalyses, setRecentAnalyses] = useState([]);
   const [recentAnalysesDropdownOpen, setRecentAnalysesDropdownOpen] = useState(false);
@@ -3106,6 +3107,7 @@ const Overview = () => {
     if (!selectedEvent) return;
     
     console.log(`✅ User confirmed analysis for: ${selectedEvent.title}`);
+    setAiErrorInfo(null);
     setAiAnalysisState('loading');
     
     try {
@@ -3128,6 +3130,7 @@ const Overview = () => {
   const handleClearAnalysis = () => {
     setSelectedEvent(null);
     setAiAnalysis(null);
+    setAiErrorInfo(null);
     setAiAnalysisState('default');
   };
 
@@ -3152,6 +3155,54 @@ const Overview = () => {
       right: typeof window !== 'undefined' ? window.innerWidth - rect.right : 0
     });
   }, [recentAnalysesDropdownOpen]);
+
+  // Load persisted recent calendar analyses for the logged-in user
+  useEffect(() => {
+    const loadPersistedAnalyses = async () => {
+      try {
+        // Only load when a user is present; history is per-user
+        if (!currentUser) {
+          setRecentAnalyses([]);
+          return;
+        }
+
+        const authToken = await currentUser.getIdToken();
+        const response = await fetch(`${config.endpoints.backend}/api/calendar-analysis-history?limit=15`, {
+          headers: {
+            Authorization: `Bearer ${authToken}`
+          }
+        });
+
+        if (!response.ok) {
+          console.warn('⚠️ Failed to load calendar analysis history', response.status);
+          return;
+        }
+
+        const data = await response.json();
+        const items = Array.isArray(data.analyses) ? data.analyses : [];
+
+        // Map backend docs into the same shape we use locally: { event, analysis, id }
+        const mapped = items.map((doc) => ({
+          id: doc.id || `${doc.event_id}-${doc.analysis_type}-${doc.created_at || Date.now()}`,
+          event: {
+            id: doc.event_id,
+            title: doc.event_title,
+            currency: doc.event_currency,
+            date: doc.event_date,
+            time: doc.event_time,
+            impact: doc.impact
+          },
+          analysis: doc.analysis_snapshot
+        }));
+
+        setRecentAnalyses(mapped);
+      } catch (err) {
+        console.warn('⚠️ Error loading calendar analysis history', err);
+      }
+    };
+
+    loadPersistedAnalyses();
+  }, [currentUser]);
 
   useEffect(() => {
     if (!recentAnalysesDropdownOpen) return;
@@ -3229,8 +3280,46 @@ const Overview = () => {
       if (!response.ok) {
         console.log('🦒🦒🦒 FRONTEND: HTTP error occurred 🦒🦒🦒');
         console.log('🦒 Error status:', response.status);
-        const errorText = await response.text();
-        console.log('🦒 Error text:', errorText);
+
+        let errorJson = null;
+        try {
+          errorJson = await response.json();
+          console.log('🦒 Parsed error JSON:', errorJson);
+        } catch (parseError) {
+          const errorText = await response.text();
+          console.log('🦒 Error text (non-JSON):', errorText);
+        }
+
+        let type = 'generic';
+        let title = 'Analysis failed';
+        let message = 'Unable to generate AI analysis. Please try again.';
+
+        if (response.status === 429 && errorJson?.error === 'analysis_limit_reached') {
+          type = 'quota';
+          title = 'Analysis limit reached';
+          message =
+            errorJson.message ||
+            'You have reached your AI analysis limit for your current plan. Please wait or upgrade to continue.';
+        } else if (
+          response.status === 400 &&
+          ((errorJson?.error && String(errorJson.error).toLowerCase().includes('validation')) ||
+            (errorJson?.message && String(errorJson.message).toLowerCase().includes('validation')))
+        ) {
+          type = 'validation';
+          title = 'Event data issue';
+          message =
+            errorJson.recommendation ||
+            'This event has incomplete or inconsistent data, so AI analysis is not available.';
+        } else if (response.status === 503 && errorJson?.error === 'AI Analysis service unavailable') {
+          type = 'service';
+          title = 'AI service unavailable';
+          message =
+            errorJson.message ||
+            'The AI analysis service is temporarily unavailable. Please try again in a few minutes.';
+        }
+
+        setAiErrorInfo({ type, title, message });
+        setAiAnalysisState('error');
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
@@ -3520,6 +3609,7 @@ const Overview = () => {
 
   const handleRefreshAI = async () => {
     if (selectedEvent) {
+      setAiErrorInfo(null);
       setAiAnalysisState('loading');
       try {
         const analysis = await generateEventAnalysis(selectedEvent);
@@ -4533,6 +4623,15 @@ const Overview = () => {
                   </div>
                 )}
               </div>
+              {aiAnalysisState === 'loading' && (
+                <div className="ai-header-default-icon" aria-hidden="true">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.937a2 2 0 0 0 1.437-1.437l1.582-6.135a.5.5 0 0 1 .963 0l1.582 6.135a2 2 0 0 0 1.437 1.437l6.135 1.582a.5.5 0 0 1 0 .963l-6.135 1.582a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0L9.937 15.5Z" />
+                    <path d="M15 6.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1-.5-.5v-2Z" />
+                    <path d="M4 16a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5h-2A.5.5 0 0 1 4 18v-2Z" />
+                  </svg>
+                </div>
+              )}
               {/* Recent analyses dropdown - panel rendered in portal so it stays on top and isn't clipped */}
               <div className="ai-recent-dropdown" ref={recentAnalysesDropdownRef}>
                 <button
@@ -4608,10 +4707,16 @@ const Overview = () => {
 
               {aiAnalysisState === 'error' && (
                 <div className="ai-error-state">
-                  <div className="error-icon"></div>
-                  <div className="error-text">Analysis failed</div>
-                  <div className="error-subtext">Unable to generate AI analysis. Please try again.</div>
-                  <button className="retry-btn" onClick={handleRefreshAI}>Retry Analysis</button>
+                  <div className="error-icon">
+                    {aiErrorInfo?.type === 'quota' ? '⏳' : aiErrorInfo?.type === 'service' ? '⚙️' : '⚠️'}
+                  </div>
+                  <div className="error-text">{aiErrorInfo?.title || 'Analysis failed'}</div>
+                  <div className="error-subtext">
+                    {aiErrorInfo?.message || 'Unable to generate AI analysis. Please try again.'}
+                  </div>
+                  <button className="retry-btn" onClick={handleRefreshAI}>
+                    {aiErrorInfo?.type === 'quota' ? 'Try Again Later' : 'Retry Analysis'}
+                  </button>
                 </div>
               )}
 
