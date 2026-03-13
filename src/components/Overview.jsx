@@ -4082,6 +4082,8 @@ const Overview = () => {
     let filePath = doc.filePath.startsWith('/') 
       ? doc.filePath 
       : `/${doc.filePath}`;
+    // Encode path for URLs (handles spaces in filenames, e.g. COT reports)
+    const encodedPath = encodeURI(filePath);
     
     // In production, ensure we're using the correct base URL
     // For static files, we should use relative paths from the root
@@ -4090,7 +4092,7 @@ const Overview = () => {
     // Verify file exists by attempting a fetch
     // This helps catch 404 errors before trying to open
     try {
-      const response = await fetch(filePath, { 
+      const response = await fetch(encodedPath, { 
         method: 'HEAD',
         cache: 'no-cache'
       });
@@ -4098,14 +4100,14 @@ const Overview = () => {
       if (!response.ok && response.status === 404) {
         // Try with base URL if we're in a subdirectory
         const baseUrl = window.location.origin;
-        const fullUrl = `${baseUrl}${filePath}`;
+        const fullUrl = `${baseUrl}${encodedPath}`;
         console.log('⚠️ File not found at relative path, trying full URL:', fullUrl);
         
         const fullResponse = await fetch(fullUrl, { method: 'HEAD' });
         if (fullResponse.ok) {
           filePath = fullUrl;
         } else {
-          throw new Error(`File not found: ${filePath} (Status: ${response.status})`);
+          throw new Error(`File not found: ${encodedPath} (Status: ${response.status})`);
         }
       }
     } catch (fetchError) {
@@ -4114,16 +4116,18 @@ const Overview = () => {
       console.warn('⚠️ Could not verify file existence:', fetchError);
     }
     
-    // Use window.open() to view PDF in browser
-    // This works better than forcing download and allows browser PDF viewer
+    // Use window.open() to view PDF/HTML in browser
+    // This works better than forcing download and allows browser viewer
+    // Use encodedPath for URLs with spaces (e.g. COT report filenames)
+    const openUrl = filePath.startsWith('http') ? filePath : encodedPath;
     try {
-      const newWindow = window.open(filePath, '_blank', 'noopener,noreferrer');
+      const newWindow = window.open(openUrl, '_blank', 'noopener,noreferrer');
       
       // Check if popup was blocked
       if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
         // Popup was blocked, use link method instead
         const link = document.createElement('a');
-        link.href = filePath;
+        link.href = openUrl;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         // Don't use download attribute - let browser decide whether to view or download
@@ -4138,7 +4142,7 @@ const Overview = () => {
       // Fallback: try direct link method
       try {
         const link = document.createElement('a');
-        link.href = filePath;
+        link.href = openUrl;
         link.target = '_blank';
         link.rel = 'noopener noreferrer';
         document.body.appendChild(link);

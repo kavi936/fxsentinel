@@ -77,7 +77,13 @@ if not DOME_SDK_AVAILABLE:
 
 # Configuration constants for free tier optimization
 FREE_TIER_MAX_PAGES_PER_PLATFORM = 2  # Reduced from 5/3 to 2/2 to stay within 10 queries per 10 seconds
-FREE_TIER_EARLY_STOP_THRESHOLD = 2000  # Increased from 400 to fetch more markets (economic markets may be deeper in results)
+# IMPORTANT: This threshold controls how many markets we are willing to inspect
+# across all sources (PolyRouter + Polymarket CLOB + Kalshi). When Gamma tag
+# filtering is unavailable or failing, economic markets can sit deeper in the
+# CLOB result set. If we stop too early (e.g. at 2000), we may only see
+# crypto/sports markets and never reach the economic section, which leads to
+# 0 markets passing _filter_economic_markets even though relevant markets exist.
+FREE_TIER_EARLY_STOP_THRESHOLD = 3200  # Increased to cover full CLOB (3 pages = 3000) plus PolyRouter/Kalshi buffer
 FREE_TIER_CACHE_EXPIRATION_MINUTES = 30  # Increased from 10 to reduce refresh frequency
 FREE_TIER_BACKGROUND_REFRESH_INTERVAL_MINUTES = 20  # Refresh every 20 minutes in background
 
@@ -242,6 +248,22 @@ class PredictionMarketsService:
         self.economic_tags = [
             "politics", "geopolitics", "economics", "finance", "policy",
             "elections", "presidential"
+        ]
+        
+        # Strong whitelist for central bank / interest-rate markets.
+        # These are used in addition to general economic tags/keywords so that
+        # crucial policy-path markets (e.g. FOMC rate cuts/hikes by meeting)
+        # are always treated as economically relevant even if tagging is weak.
+        self.central_bank_keywords = [
+            "fed", "federal reserve", "fomc", "policy meeting",
+            "interest rate", "interest-rate", "policy rate", "target rate",
+            "rate cut", "rate cuts", "cut rates", "cut in rates",
+            "rate hike", "rate hikes", "hike rates",
+            "basis points", "bp", "bps",
+            "ecb", "european central bank",
+            "bank of england", "boe",
+            "bank of japan", "boj",
+            "central bank", "monetary policy"
         ]
         
         # Keywords to exclude (reduce false positives)
@@ -925,7 +947,7 @@ class PredictionMarketsService:
                     logger.info(f"Early stopping: have {len(markets)} markets (threshold: {early_stop_threshold})")
                     break
                 
-                # Fetch events with this tag
+                # Fetch events with this tag (no order/ascending - Gamma can return 422 with those + tag_id)
                 url = "https://gamma-api.polymarket.com/events"
                 params = {
                     "tag_id": tag_id,
@@ -1021,6 +1043,75 @@ class PredictionMarketsService:
                     import traceback
                     traceback.print_exc()
                     continue
+            
+            # Fallback: if tag-based requests returned 0 markets (e.g. all 422 or empty),
+            # fetch events without tag_id so we get a broad set; economic filter will keep only relevant ones.
+            if len(markets) == 0:
+                logger.info("Gamma tag-based fetch returned 0 markets; trying fallback: events without tag_id")
+                url = "https://gamma-api.polymarket.com/events"
+                max_fallback_pages = 20  # 20 * 100 = 2000 events max
+                for page in range(max_fallback_pages):
+                    offset = page * 100
+                    params = {
+                        "active": "true",
+                        "closed": "false",
+                        "limit": 100,
+                        "offset": offset
+                    }
+                    try:
+                        response = requests.get(url, params=params, timeout=15)
+                        if response.status_code == 429:
+                            logger.warning("Gamma fallback rate limited, stopping")
+                            break
+                        if response.status_code != 200:
+                            logger.warning(f"Gamma fallback error: {response.status_code}, stopping")
+                            break
+                        events = response.json()
+                        if not isinstance(events, list) or len(events) == 0:
+                            break
+                        for event in events:
+                            if len(markets) >= early_stop_threshold:
+                                break
+                            if not event.get("active", False) or event.get("closed", False):
+                                continue
+                            event_markets = event.get("markets", [])
+                            for market in event_markets:
+                                if market.get("closed", False):
+                                    continue
+                                market["platform"] = "polymarket"
+                                market["_source"] = "gamma"
+                                market["event_id"] = event.get("id")
+                                market["event_slug"] = event.get("slug")
+                                market["event_title"] = event.get("title")
+                                market["event_tags"] = event.get("tags", [])
+                                outcome_prices_str = market.get("outcomePrices")
+                                if outcome_prices_str:
+                                    try:
+                                        outcome_prices = json.loads(outcome_prices_str)
+                                        outcomes_str = market.get("outcomes", "[]")
+                                        outcomes = json.loads(outcomes_str) if outcomes_str else []
+                                        if len(outcome_prices) >= 2 and len(outcomes) >= 2:
+                                            yes_idx = 0 if "yes" in outcomes[0].lower() else 1
+                                            no_idx = 1 - yes_idx
+                                            yes_price = float(outcome_prices[yes_idx])
+                                            no_price = float(outcome_prices[no_idx])
+                                            if (yes_price == 0 and no_price == 1) or (yes_price == 1 and no_price == 0):
+                                                market["_is_resolved"] = True
+                                            market["yes_price"] = yes_price
+                                            market["no_price"] = no_price
+                                            market["_prices_parsed"] = True
+                                    except (json.JSONDecodeError, ValueError, IndexError):
+                                        pass
+                                markets.append(market)
+                        logger.info(f"Gamma fallback page {page + 1}: got {len(events)} events, total markets so far: {len(markets)}")
+                        if len(events) < 100:
+                            break
+                        time.sleep(0.3)
+                    except Exception as e:
+                        logger.warning(f"Gamma fallback page {page + 1} failed: {e}")
+                        break
+                if markets:
+                    logger.info(f"Gamma fallback collected {len(markets)} markets (will be filtered for economic relevance)")
             
             logger.info(f"Total markets fetched from Gamma API: {len(markets)}")
             return markets
@@ -1507,10 +1598,16 @@ class PredictionMarketsService:
             if not tags_list:
                 tags_list = []
             tags = [tag.lower() if isinstance(tag, str) else str(tag).lower() for tag in tags_list]
-            text = f"{title} {' '.join(tags)}"
+            # Include event_title/event_slug/event_tags for Gamma-sourced markets so economic terms in event count
+            event_title = (_safe_get(market, "event_title") or "").lower()
+            event_slug = (_safe_get(market, "event_slug") or "").lower()
+            event_tags_list = _safe_get(market, "event_tags", []) or []
+            event_tags_str = " ".join(t.lower() if isinstance(t, str) else str(t).lower() for t in event_tags_list)
+            text = f"{title} {' '.join(tags)} {event_title} {event_slug} {event_tags_str}"
             
-            # Check if market has economic tags
-            has_economic_tag = any(econ_tag in tags for econ_tag in self.economic_tags)
+            # Check if market (or Gamma event) has economic tags
+            tags_for_econ = tags + ([t.lower() if isinstance(t, str) else str(t).lower() for t in event_tags_list])
+            has_economic_tag = any(econ_tag in tags_for_econ for econ_tag in self.economic_tags)
             
             # Status field - handle both CLOB (booleans/strings) and DOME (status string)
             if is_clob_structure:
@@ -1850,6 +1947,15 @@ class PredictionMarketsService:
                     elif relevance == "low":
                         relevance = "medium"  # Default to medium for other economic keywords
             
+            # Strong whitelist: central bank / interest-rate markets are always relevant,
+            # even if they don't hit our more general economic keyword lists.
+            has_central_bank_keyword = any(
+                cb_kw in text_lower for cb_kw in self.central_bank_keywords
+            )
+            if has_central_bank_keyword and not matched_keywords:
+                relevance = "high"
+                matched_keywords = ["central_bank"]
+            
             # DEBUG: Sample markets that reached keyword checking (passed closed/resolved checks)
             markets_past_closed_checks = total_checked - skipped_closed
             if len(debug_sample_markets) < 10 and markets_past_closed_checks > 0:
@@ -1863,8 +1969,8 @@ class PredictionMarketsService:
                         "has_economic_tag": has_economic_tag if 'has_economic_tag' in locals() else None
                     })
             
-            # Only include markets that match economic keywords OR have economic tags
-            # More lenient: Allow markets with economic tags OR general economic terms
+            # Only include markets that match economic keywords / central bank keywords
+            # OR have economic tags. More lenient: also allow general economic terms.
             if not matched_keywords:
                 # Check for general economic terms that might not be in keyword list
                 general_economic_terms = [
@@ -2235,27 +2341,47 @@ class PredictionMarketsService:
                 topic_groups[topic_key] = []
             topic_groups[topic_key].append(market)
         
-        # For each topic group, keep only the best market
+        # Helper: scoring function reused for both "best" and "top N" selection
+        def market_score(m: Dict[str, Any]):
+            return (
+                # Prioritize active markets
+                not m.get("is_resolved", False) and not m.get("closed", False),
+                m.get("accepting_orders", False),
+                # Then by volume (higher is better)
+                safe_float(m.get("volume"), 0),
+                # Then by conviction score
+                safe_float(m.get("conviction_score"), 0),
+                # Then by how "balanced" the probabilities are (not 0%/100% or 100%/0%)
+                # Balanced markets (50/50) are more interesting than extreme ones
+                -abs(0.5 - (safe_float(m.get("yes_price"), 0.5))),
+            )
+        
+        # For each topic group, keep the best market, with a softer deduplication
+        # rule for central bank / rate markets where multiple structures matter.
+        CENTRAL_BANK_MAX_MARKETS_PER_TOPIC = 4
+        
         deduplicated = []
         for topic_key, group_markets in topic_groups.items():
             if len(group_markets) == 1:
                 # Only one market in this topic - keep it
                 deduplicated.append(group_markets[0])
+                continue
+            
+            # Detect central bank / rate topics from the extracted topic key
+            is_central_bank_topic = any(
+                cb in topic_key
+                for cb in (" Fed", " ECB", " BOE", " BOJ")
+            )
+            
+            if is_central_bank_topic:
+                # For central bank topics (e.g. FOMC meetings), keep the top N
+                # markets instead of collapsing to a single one. This preserves
+                # distinct rate-cut / rate-hike scenarios for the same meeting.
+                sorted_group = sorted(group_markets, key=market_score, reverse=True)
+                deduplicated.extend(sorted_group[:CENTRAL_BANK_MAX_MARKETS_PER_TOPIC])
             else:
-                # Multiple markets for same topic - keep the best one
-                # Score each market and pick the highest scoring one
-                best_market = max(group_markets, key=lambda m: (
-                    # Prioritize active markets
-                    not m.get("is_resolved", False) and not m.get("closed", False),
-                    m.get("accepting_orders", False),
-                    # Then by volume (higher is better)
-                    safe_float(m.get("volume"), 0),
-                    # Then by conviction score
-                    safe_float(m.get("conviction_score"), 0),
-                    # Then by how "balanced" the probabilities are (not 0%/100% or 100%/0%)
-                    # Balanced markets (50/50) are more interesting than extreme ones
-                    -abs(0.5 - (safe_float(m.get("yes_price"), 0.5))),
-                ))
+                # For non-central-bank topics, keep only the single best market
+                best_market = max(group_markets, key=market_score)
                 deduplicated.append(best_market)
         
         # Re-sort deduplicated markets using the same logic as before

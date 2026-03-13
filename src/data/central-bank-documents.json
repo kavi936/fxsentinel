@@ -181,6 +181,42 @@
       "tags": ["report", "monetary_policy", "inflation", "bank_rate", "economic_outlook", "cpi", "labor_market", "gdp", "mpc", "price_stability", "economic_projections"],
       "aiAnalysis": null,
       "sentiment": null
+    },
+    {
+      "id": "cftc-2026-03-03-cot-long-metals",
+      "title": "CFTC Commitments of Traders - Long Report (Metals) - March 3, 2026",
+      "type": "cot_report",
+      "centralBank": "FED",
+      "date": "2026-03-03",
+      "category": "market_data",
+      "impact": "medium",
+      "affectedCurrencies": ["USD"],
+      "description": "CFTC Commitments of Traders Long Report for Other (Combined) - Metals. Shows net long positions held by commercial, non-commercial, and non-reportable traders in metals futures. Useful for understanding speculative positioning in gold, silver, copper, and other metals.",
+      "fileName": "CFTC Commitments of Traders Long Report - Other (Combined) - Metals - March 3rd 2026.html",
+      "filePath": "/documents/central-bank/cot-reports/CFTC Commitments of Traders Long Report - Other (Combined) - Metals - March 3rd 2026.html",
+      "fileSize": "123 KB",
+      "fileFormat": "HTML",
+      "tags": ["cot_report", "cftc", "metals", "positioning", "speculators", "commercial", "gold", "silver", "futures"],
+      "aiAnalysis": null,
+      "sentiment": null
+    },
+    {
+      "id": "cftc-2026-03-03-cot-short-forex",
+      "title": "CFTC Commitments of Traders - Short Report (Forex & Financial) - March 3, 2026",
+      "type": "cot_report",
+      "centralBank": "FED",
+      "date": "2026-03-03",
+      "category": "market_data",
+      "impact": "medium",
+      "affectedCurrencies": ["USD", "EUR", "GBP", "JPY", "CHF", "CAD", "AUD"],
+      "description": "CFTC Commitments of Traders Short Report for Financial Traders in Markets (combined) - Forex & Financial. Shows net short positions in major currency futures including EUR, GBP, JPY, and other pairs. Key for understanding institutional forex positioning.",
+      "fileName": "CFTC Commitments of Traders Short Report - Financial Traders in Markets (combined) - Forex & Finacial - March 3rd 2026.html",
+      "filePath": "/documents/central-bank/cot-reports/CFTC Commitments of Traders Short Report - Financial Traders in Markets (combined) - Forex & Finacial - March 3rd 2026.html",
+      "fileSize": "191 KB",
+      "fileFormat": "HTML",
+      "tags": ["cot_report", "cftc", "forex", "positioning", "financial_traders", "eur", "gbp", "jpy", "futures"],
+      "aiAnalysis": null,
+      "sentiment": null
     }
   ]
 }
