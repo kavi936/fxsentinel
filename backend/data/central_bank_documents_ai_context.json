@@ -1,0 +1,112 @@
+{
+  "version": "1.0.0",
+  "description": "AI-injection-only data. Not exposed to frontend. Load in backend services to enrich prompts with central bank document summaries.",
+  "lastUpdated": "2026-01-17",
+  "documents": {
+    "boj-2025-12-29-summary-opinions": {
+      "shortSummary": "BOJ December 2025 summary of opinions: members discussed raising policy rates and adjusting monetary accommodation to achieve the price stability target. Mixed views on timing and pace of policy normalization.",
+      "aiNotes": [
+        "BOJ members acknowledged need to adjust monetary accommodation as inflation approaches target",
+        "Views differed on urgency and pace of policy rate increases",
+        "Wage-price dynamics and CPI trajectory central to policy discussions",
+        "Some members emphasized risks of moving too quickly versus falling behind the curve"
+      ],
+      "topics": ["boj", "monetary_policy", "policy_normalization", "interest_rates", "cpi", "wages", "price_stability"]
+    },
+    "boj-2025-10-31-outlook-report": {
+      "shortSummary": "BOJ October 2025 outlook: Japan economy on moderate growth path. CPI inflation trends, wage dynamics, and labor market conditions key to monetary policy outlook. Detailed analysis of wage-price pass-through.",
+      "aiNotes": [
+        "BOJ projects Japan economy to continue moderate expansion",
+        "Wage-price pass-through mechanisms under close scrutiny",
+        "Labor market tightness supporting wage growth",
+        "Risks to outlook include overseas demand and financial conditions"
+      ],
+      "topics": ["boj", "economic_outlook", "inflation", "wages", "labor_market", "gdp", "price_stability"]
+    },
+    "fed-2026-01-16-bowman-speech": {
+      "shortSummary": "Fed Vice Chair Bowman: economic outlook, monetary policy path, labor market fragility, and inflation trajectory. Emphasizes data-dependence and supervisory priorities.",
+      "aiNotes": [
+        "Bowman highlighted labor market fragility as key concern",
+        "Inflation trajectory remains core to rate path decisions",
+        "Emphasized evidence-based, data-dependent approach to policy",
+        "Discussed evolution of Committee views on appropriate policy stance"
+      ],
+      "topics": ["fed", "fomc", "monetary_policy", "labor_market", "inflation", "economic_outlook", "forward_guidance"]
+    },
+    "fed-2026-01-11-powell-statement": {
+      "shortSummary": "Chair Powell statement on DOJ subpoenas: reaffirms Fed independence, commitment to evidence-based monetary policy, and resistance to political pressure on interest rate decisions.",
+      "aiNotes": [
+        "Powell emphasized Fed independence from political pressure",
+        "Commitment to data-driven interest rate decisions",
+        "Statement addresses governance and institutional integrity",
+        "Relevant for understanding Fed's operational independence context"
+      ],
+      "topics": ["fed", "governance", "fed_independence", "monetary_policy", "political_pressure"]
+    },
+    "boe-2025-11-05-monetary-policy-report": {
+      "shortSummary": "BOE November 2025: MPC voted 5-4 to hold Bank Rate at 4%. CPI at 3.8% in September. Inflation projected to return toward 2% target. Risks around inflation persistence and weaker demand.",
+      "aiNotes": [
+        "MPC vote 5-4 to maintain Bank Rate at 4%",
+        "CPI inflation at 3.8% in September, above 2% target",
+        "Wage and price pressures remain elevated",
+        "Projections show inflation gradually returning to target",
+        "Downside risks from weaker demand; upside from inflation persistence"
+      ],
+      "topics": ["boe", "mpc", "bank_rate", "inflation", "cpi", "economic_outlook", "labor_market", "gdp", "wages"]
+    },
+    "boj-2026-01-23-outlook-report": {
+      "shortSummary": "BOJ January 2026 outlook: economy to grow moderately; CPI to dip below 2% in H1 2026 then move toward target. Policy rate normalization path; risks from trade policies and financial conditions.",
+      "aiNotes": [
+        "BOJ projects CPI inflation to decelerate below 2% in early 2026",
+        "Inflation expected to gradually converge to price stability target thereafter",
+        "Scope for continued policy rate increases if inflation proves sticky",
+        "GDP growth projections for FY 2025-2027 indicate moderate expansion",
+        "Risks: trade policies, overseas activity, financial market developments"
+      ],
+      "topics": ["boj", "economic_outlook", "inflation_path", "policy_normalization", "gdp_growth", "trade_policies", "financial_conditions"]
+    },
+    "boj-2026-01-28-meeting-minutes": {
+      "shortSummary": "BOJ January 28, 2026 minutes: Policy Board discussions on rate decisions, economic and financial conditions, price developments, and outlook. Views on policy stance and forward direction.",
+      "aiNotes": [
+        "Policy Board assessed economic and financial conditions",
+        "Price developments and inflation outlook discussed in detail",
+        "Views on appropriate policy stance and future rate path",
+        "Minutes reveal nuances in member views on timing and magnitude of moves"
+      ],
+      "topics": ["boj", "meeting_minutes", "policy_decision", "interest_rates", "economic_assessment", "price_developments"]
+    },
+    "fed-2026-01-28-fomc-statement": {
+      "shortSummary": "FOMC January 28, 2026 statement: Committee decision on federal funds rate target range, assessment of activity, labor market, inflation, and forward guidance on monetary policy.",
+      "aiNotes": [
+        "FOMC set target range for federal funds rate",
+        "Committee assessment of economic activity and labor market conditions",
+        "Inflation developments and outlook key to rate path",
+        "Forward guidance on likely future policy moves",
+        "Balance of risks to employment and inflation discussed"
+      ],
+      "topics": ["fed", "fomc", "federal_funds_rate", "monetary_policy", "inflation", "labor_market", "forward_guidance"]
+    },
+    "ecb-2026-02-06-monetary-statement": {
+      "shortSummary": "ECB February 2026 statement: Governing Council decision on key ECB rates, assessment of euro area economy and inflation, forward guidance on policy. Price stability mandate and projections.",
+      "aiNotes": [
+        "Governing Council set main ECB policy rates",
+        "Assessment of economic and monetary developments in euro area",
+        "Inflation outlook and projections for HICP",
+        "Forward guidance on policy path and data dependence",
+        "Relevant for EUR crosses and euro area financial conditions"
+      ],
+      "topics": ["ecb", "euro_area", "monetary_policy", "interest_rates", "inflation", "economic_outlook", "price_stability"]
+    },
+    "boe-2026-02-01-monetary-policy-report": {
+      "shortSummary": "BOE February 2026 report: MPC assessment of economic developments, inflation trends, labor market, Bank Rate decision. Projections for inflation and GDP; risks to outlook.",
+      "aiNotes": [
+        "MPC assessment of UK economic developments",
+        "Inflation trends and path toward 2% target",
+        "Labor market conditions and wage growth",
+        "Bank Rate decision and rationale",
+        "GDP and inflation projections; risks to outlook"
+      ],
+      "topics": ["boe", "mpc", "bank_rate", "inflation", "economic_outlook", "labor_market", "gdp", "economic_projections"]
+    }
+  }
+}

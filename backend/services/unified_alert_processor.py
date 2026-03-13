@@ -152,6 +152,27 @@ class UnifiedAlertProcessor:
         thread.start()
         logger.info(f"Triggered async alert check for {len(news_items)} news items (thread started)")
     
+    def check_economic_calendar_alerts_async(self):
+        """
+        Trigger economic calendar alerts asynchronously (non-blocking).
+        Runs inside the main app process (no external worker required).
+        """
+        # Run in background thread to avoid blocking the HTTP request
+        thread = threading.Thread(
+            target=self._check_economic_calendar_alerts_with_error_handling,
+            daemon=False
+        )
+        thread.start()
+        logger.info("Triggered async economic calendar alert check (thread started)")
+    
+    def _check_economic_calendar_alerts_with_error_handling(self):
+        """Wrapper for economic calendar alerts with error handling."""
+        try:
+            self._check_economic_calendar_alerts()
+        except Exception as e:
+            logger.error(f"CRITICAL: Error in economic calendar alert processing thread: {e}", exc_info=True)
+            raise
+    
     def _check_news_alerts_with_error_handling(self, news_items: List[Dict[str, Any]]):
         """Wrapper with error handling to ensure logs appear even if thread crashes.
         Single-flight: only one check runs at a time; concurrent API requests skip if already in progress.

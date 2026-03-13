@@ -158,3 +158,28 @@
     - Notes should come from your structured Central Bank Analysis data (not from GPT guessing).
     - Prompt should clearly label these as “central bank communication context” and require GPT to reconcile event outcomes with that stance.
 
+Here’s what’s in place:
+1. Location (backend only, not user-facing)
+Item	Path
+AI context data	backend/data/central_bank_documents_ai_context.json
+Python helper	backend/services/central_bank_ai_context.py
+Docs	docs/CENTRAL_BANK_AI_CONTEXT.md
+The AI context file is not in public/ or src/, so it is not bundled or served to the frontend and is only used by the backend.
+2. Structure of central_bank_documents_ai_context.json
+Per document:
+shortSummary: 1–2 sentence summary for prompts
+aiNotes: list of short, factual statements
+topics: topic tags for filtering (e.g. inflation, policy_normalization, fomc)
+All 11 existing central bank documents are populated with these fields.
+3. Using it in your AI code
+from backend.services.central_bank_ai_context import (    get_context_for_currency,    get_context_for_prompt,)# For a USD event (e.g. NFP):ctx = get_context_for_currency("USD", max_docs=3, max_notes_per_doc=5)# → "CENTRAL BANK DOCUMENT CONTEXT:\n- FED (fed-2026-01-28-fomc-statement):\n  Summary: ...\n  Notes: ..."# For multi-currency or topic-based filtering:ctx = get_context_for_prompt(    currencies=["JPY", "EUR"],    topics=["inflation", "policy_normalization"],    max_docs=5,)
+Then append ctx to the system or user prompt where you call the model.
+4. Wiring it into your analyzers
+gpt_ai_analysis.py: In _create_analysis_prompt, after economy_context_section, add:
+  central_bank_docs = get_context_for_currency(currency, max_docs=3)  if central_bank_docs:      economy_context_section += f"\n\n{central_bank_docs}"
+enhanced_ai_analysis.py and enhanced_trader_analysis.py: Add a similar section where you build the prompt.
+5. Adding new documents
+When you add a document to public/central-bank-documents.json:
+Add an entry for that document’s id in backend/data/central_bank_documents_ai_context.json (inside the documents object).
+Add its doc_id and bank to _DOC_ID_TO_BANK in central_bank_ai_context.py.
+docs/CENTRAL_BANK_AI_CONTEXT.md has full details and a full integration example.
