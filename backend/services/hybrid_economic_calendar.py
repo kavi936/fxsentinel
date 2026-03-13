@@ -11726,7 +11726,7 @@ class HybridEconomicCalendar:
                 'time': '17:01 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.87|2.5',
                 'forecast': 'N/A',
                 'previous': '4.75|2.7'
             },
@@ -11736,9 +11736,9 @@ class HybridEconomicCalendar:
                 'time': '21:30 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '55.0',
                 'forecast': 'N/A',
-                'previous': '55.2'
+                'previous': '55.1'
             },
             {
                 'title': 'Visitor Arrivals m/m',
@@ -11746,9 +11746,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': 'N/A',
-                'previous': '1.7%'
+                'previous': '1.6%'
             },
             {
                 'title': 'NAB Quarterly Business Confidence',
