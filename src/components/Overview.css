@@ -4148,19 +4148,6 @@
   backdrop-filter: blur(10px);
 }
 
-.ai-header-default-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-left: 8px;
-  color: rgba(199, 210, 254, 0.9);
-  opacity: 0.85;
-}
-
-.ai-header-default-icon svg {
-  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.4));
-}
-
 .header-main {
   display: flex;
   flex-direction: row;
