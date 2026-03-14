@@ -19,6 +19,7 @@ import re
 from services.data_validator import economic_data_validator
 from services.live_market_data import live_market_data_service
 from services.economy_context_service import economy_context_service
+from services.central_bank_ai_context import get_context_for_currency
 
 try:
     import redis
@@ -30,7 +31,12 @@ import pickle
 
 logger = logging.getLogger(__name__)
 
-# Event type mapping for indicator filtering (Approach 4)
+# Bump this when prompt logic/output conventions change (e.g., bold emphasis, new injected context).
+# This ensures cached analyses don't mask prompt updates during testing.
+PROMPT_VERSION = "2026-03-14-context-and-emphasis-v1"
+
+# Event type mapping for indicator filtering (Approach 4) - legacy, title-only.
+# Kept for test script and fallback; currency-aware mapping uses TITLE_KEYWORD_TO_CONCEPT + CONCEPT_TO_INDICATORS_BY_CURRENCY.
 EVENT_TYPE_MAPPING = {
     'employment': ['unemployment', 'nonfarm-payrolls'],
     'inflation': ['inflation-YoY', 'core-inflation-YoY'],
@@ -40,7 +46,69 @@ EVENT_TYPE_MAPPING = {
     'cpi': ['inflation-YoY', 'core-inflation-YoY'],
     'nfp': ['unemployment', 'nonfarm-payrolls'],
     'adp': ['unemployment', 'nonfarm-payrolls'],
-    'payrolls': ['unemployment', 'nonfarm-payrolls']
+    'payrolls': ['unemployment', 'nonfarm-payrolls'],
+    'fund rate': ['interest-rate'],
+    'refinancing rate': ['interest-rate'],
+    'rate decision': ['interest-rate'],
+    'fomc': ['interest-rate'],
+    'ecb main': ['interest-rate'],
+    'boe rate': ['interest-rate'],
+    'boj rate': ['interest-rate'],
+}
+
+# Currency-aware mapping: event title keywords -> concept; then concept -> indicator IDs per economy.
+# Indicator IDs must match src/data/economyIndicators.json per economy (US: inflation-YoY, EUR/GBP/JPY: inflation; US: nonfarm-payrolls, others no NFP).
+# Order: longer phrases first so "nonfarm payrolls" matches before "payrolls".
+TITLE_KEYWORD_TO_CONCEPT = [
+    ('nonfarm payrolls', 'employment'), ('nonfarm payroll', 'employment'),
+    ('core cpi', 'inflation'), ('core inflation', 'inflation'),
+    ('federal funds rate', 'rate'), ('refinancing rate', 'rate'), ('fund rate', 'rate'),
+    ('rate decision', 'rate'), ('rate statement', 'rate'), ('official cash rate', 'rate'), ('cash rate', 'rate'), ('overnight rate', 'rate'),
+    ('ecb main', 'rate'), ('ecb president', 'rate'), ('fomc', 'rate'), ('fed chair', 'rate'), ('fomc member', 'rate'),
+    ('boe rate', 'rate'), ('boe gov', 'rate'), ('boj rate', 'rate'), ('boj gov', 'rate'),
+    ('current account', 'current_account'), ('trade balance', 'current_account'),
+    ('average earnings', 'wage_growth'), ('earnings index', 'wage_growth'), ('wage growth', 'wage_growth'), ('wage ', 'wage_growth'),
+    ('claimant count', 'employment'), ('employment change', 'employment'), ('employment cost', 'employment'),
+    ('unemployment rate', 'employment'), ('unemployment claims', 'employment'), ('unemployment', 'employment'),
+    ('payrolls', 'employment'), ('payroll', 'employment'), ('adp', 'employment'), ('jolts', 'employment'), ('employment', 'employment'),
+    ('inflation', 'inflation'), ('cpi', 'inflation'),
+    ('gdp growth', 'gdp'), ('gdp m/m', 'gdp'), ('gdp q/q', 'gdp'), ('prelim gdp', 'gdp'), ('gdp', 'gdp'),
+]
+
+# Per-economy indicator IDs (from economyIndicators.json). Only these 4 economies have AI economy context.
+CONCEPT_TO_INDICATORS_BY_CURRENCY = {
+    'US': {
+        'inflation': ['inflation-YoY', 'core-inflation-YoY'],
+        'employment': ['unemployment', 'nonfarm-payrolls'],
+        'gdp': ['gdp-growth'],
+        'rate': ['interest-rate'],
+        'current_account': [],
+        'wage_growth': [],
+    },
+    'EUR': {
+        'inflation': ['inflation', 'core-inflation-YoY'],
+        'employment': ['unemployment'],
+        'gdp': ['gdp-growth'],
+        'rate': ['interest-rate'],
+        'current_account': ['current-account'],
+        'wage_growth': [],
+    },
+    'GBP': {
+        'inflation': ['inflation', 'core-inflation-YoY'],
+        'employment': ['unemployment'],
+        'gdp': ['gdp-growth'],
+        'rate': ['interest-rate'],
+        'current_account': [],
+        'wage_growth': ['wage-growth'],
+    },
+    'JPY': {
+        'inflation': ['inflation', 'core-inflation-YoY'],
+        'employment': ['unemployment'],
+        'gdp': ['gdp-growth'],
+        'rate': ['interest-rate'],
+        'current_account': ['current-account'],
+        'wage_growth': [],
+    },
 }
 
 # Policy targets for central banks (Approach 6)
@@ -218,7 +286,7 @@ class GPTAIAnalyzer:
             
             # Step 4: Check cache
             cache_key = self._generate_cache_key(validated_event, analysis_type)
-            cached_result = self._get_cached_analysis(cache_key)
+            cached_result = self._get_cached_analysis(cache_key, analysis_type)
             
             if cached_result:
                 # Track user even for cached results (for internal analytics)
@@ -266,7 +334,7 @@ class GPTAIAnalyzer:
             analysis_result.market_data_source = live_market_data.get('data_source', 'unknown')
             
             # Step 9: Cache the result
-            self._cache_analysis(cache_key, analysis_result)
+            self._cache_analysis(cache_key, analysis_result, analysis_type)
             
             # Step 10: Track usage for analytics
             if user_info:
@@ -403,12 +471,18 @@ class GPTAIAnalyzer:
     
     def _generate_cache_key(self, event: Dict, analysis_type: str) -> str:
         """Generate cache key for analysis"""
-        event_data = f"{event.get('id', '')}_{event.get('title', '')}_{analysis_type}"
+        # Include PROMPT_VERSION so prompt changes invalidate cached analyses.
+        event_data = f"{PROMPT_VERSION}_{event.get('id', '')}_{event.get('title', '')}_{analysis_type}"
         return hashlib.md5(event_data.encode()).hexdigest()
     
-    def _get_cached_analysis(self, cache_key: str) -> Optional[GPTAnalysisResult]:
+    def _get_cached_analysis(self, cache_key: str, analysis_type: str) -> Optional[GPTAnalysisResult]:
         """Get cached analysis if available"""
         try:
+            # Cache for 1 hour for pre-event, 24 hours for post-event
+            analysis_type_norm = (analysis_type or "").lower().replace("-", "_")
+            is_pre_event = analysis_type_norm.startswith("pre")
+            cache_duration = 3600 if is_pre_event else 86400
+
             if self.redis_client:
                 cached_data = self.redis_client.get(f"gpt_analysis:{cache_key}")
                 if cached_data:
@@ -417,20 +491,20 @@ class GPTAIAnalyzer:
                 # In-memory cache
                 if cache_key in self.memory_cache:
                     timestamp = self.cache_timestamps.get(cache_key, 0)
-                    # Cache for 1 hour for pre-event, 24 hours for post-event
-                    cache_duration = 3600 if 'pre_event' in cache_key else 86400
                     if time.time() - timestamp < cache_duration:
                         return self.memory_cache[cache_key]
         except Exception as e:
             logger.warning(f"Cache retrieval failed: {e}")
         return None
     
-    def _cache_analysis(self, cache_key: str, analysis: GPTAnalysisResult):
+    def _cache_analysis(self, cache_key: str, analysis: GPTAnalysisResult, analysis_type: str):
         """Cache analysis result"""
         try:
+            analysis_type_norm = (analysis_type or "").lower().replace("-", "_")
+            is_pre_event = analysis_type_norm.startswith("pre")
+            cache_duration = 3600 if is_pre_event else 86400
+
             if self.redis_client:
-                # Cache for 1 hour for pre-event, 24 hours for post-event
-                cache_duration = 3600 if 'pre_event' in cache_key else 86400
                 self.redis_client.setex(
                     f"gpt_analysis:{cache_key}",
                     cache_duration,
@@ -1499,44 +1573,51 @@ class GPTAIAnalyzer:
             logger.warning(f"Error fetching market sentiment data: {e}")
             return None
     
-    def _get_relevant_indicators(self, event_title: str) -> List[str]:
+    def _get_relevant_indicators(self, event_title: str, currency: Optional[str] = None) -> List[str]:
         """
-        Get relevant indicator IDs based on event title (Approach 4)
+        Get relevant indicator IDs based on event title and event currency (Approach 4).
+        Uses currency-aware mapping so e.g. EUR inflation event -> 'inflation' (EUR), US -> 'inflation-YoY'.
+        Only economies with context (USD, EUR, GBP, JPY) get indicators; others return [].
         
         Args:
-            event_title: Title of the economic event
+            event_title: Title of the economic event (e.g. "CPI YoY", "Unemployment Rate")
+            currency: Event currency (USD, EUR, GBP, JPY). If provided, mapping is per-economy.
         
         Returns:
-            List of relevant indicator IDs, or empty list if no match found
-            (Only includes 'interest-rate' if event matches a known type)
+            List of indicator IDs that exist for that economy, or empty list if no match or unsupported currency.
         """
         event_title_lower = event_title.lower()
-        relevant_indicators = []
+        currency_key = (currency or '').upper()
+        if currency_key in ('USD', 'EUR', 'GBP', 'JPY'):
+            country = {'USD': 'US', 'EUR': 'EUR', 'GBP': 'GBP', 'JPY': 'JPY'}[currency_key]
+            if country not in CONCEPT_TO_INDICATORS_BY_CURRENCY:
+                return []
+            by_currency = CONCEPT_TO_INDICATORS_BY_CURRENCY[country]
+            concepts = set()
+            for keyword, concept in TITLE_KEYWORD_TO_CONCEPT:
+                if keyword in event_title_lower:
+                    concepts.add(concept)
+                    # Don't break: allow multiple concepts (e.g. "CPI and unemployment")
+            relevant_indicators = []
+            for c in concepts:
+                relevant_indicators.extend(by_currency.get(c, []))
+            seen = set()
+            unique = []
+            for ind in relevant_indicators:
+                if ind not in seen:
+                    seen.add(ind)
+                    unique.append(ind)
+            return unique
         
-        # Match event title to event types
-        matched = False
+        # Fallback: no currency or unsupported currency - use legacy title-only mapping
+        # (caller will still filter by economy_context_service so invalid IDs for that currency are dropped)
         for event_type, indicator_ids in EVENT_TYPE_MAPPING.items():
             if event_type in event_title_lower:
-                relevant_indicators.extend(indicator_ids)
-                # Always include interest-rate for policy context when we have a match
-                if 'interest-rate' not in relevant_indicators:
-                    relevant_indicators.append('interest-rate')
-                matched = True
-                break
-        
-        # If no match found, return empty list (no economy context will be included)
-        if not matched:
-            return []
-        
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_indicators = []
-        for ind in relevant_indicators:
-            if ind not in seen:
-                seen.add(ind)
-                unique_indicators.append(ind)
-        
-        return unique_indicators
+                out = list(indicator_ids)
+                if 'interest-rate' not in out:
+                    out.append('interest-rate')
+                return out
+        return []
     
     def _get_economy_context(self, currency: str, relevant_indicator_ids: Optional[List[str]] = None) -> Optional[Dict]:
         """
@@ -1980,9 +2061,9 @@ class GPTAIAnalyzer:
         
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "None available"
         
-        # Get economy context (Approach 1, 4, 6)
-        relevant_indicator_ids = self._get_relevant_indicators(event_title)
-        
+        # Get economy context (Approach 1, 4, 6) - use event currency so EUR gets 'inflation', US gets 'inflation-YoY', etc.
+        relevant_indicator_ids = self._get_relevant_indicators(event_title, currency)
+
         # Only include economy context if we have relevant indicators (not for unmapped events)
         economy_context_section = ""
         if relevant_indicator_ids:  # Only proceed if event maps to indicators
@@ -1996,6 +2077,26 @@ class GPTAIAnalyzer:
                 policy_context = self._add_policy_context_to_prompt(currency, economy_context, event_title)
                 if policy_context:
                     economy_context_section += f"\n\n{policy_context}"
+        
+        # Central bank document summaries + prediction market expectations for this currency's central bank
+        central_bank_pm_section = get_context_for_currency(
+            currency, max_docs=3, max_notes_per_doc=5, include_prediction_markets=True
+        )
+        central_bank_pm_block = ""
+        if central_bank_pm_section and central_bank_pm_section.strip():
+            central_bank_pm_block = (
+                "\n\nCENTRAL BANK & PREDICTION MARKET CONTEXT (use for policy stance and market-implied expectations):\n"
+                + central_bank_pm_section.strip()
+            )
+        
+        # Instructions for using central bank docs + prediction markets (only when we injected that section)
+        central_bank_pm_instructions = ""
+        if central_bank_pm_block:
+            central_bank_pm_instructions = """
+2. CENTRAL BANK & PREDICTION MARKET CONTEXT (when present above):
+   - Central bank document context: Use the central bank document summaries and notes to inform policy stance, recent communication, and key themes (e.g. data-dependent, inflation focus). Reconcile the event outcome (or expected outcome) with this stance (e.g. "in line with recent FOMC guidance", "contrasts with ECB's emphasis on …").
+   - Prediction market expectations: Use prediction market expectations as one input among others (economic context, document context, market context). When you rely on them, say so (e.g. "Market-implied probability of a cut is X%; this supports …"). Do not present market-implied probabilities as your own forecast; label them as market expectations.
+"""
         
         # Build economy context usage instructions (consolidated into PRIMARY requirements)
         economy_context_instructions = ""
@@ -2046,6 +2147,7 @@ EVENT DETAILS:
 - Analysis Type: {analysis_type}
 
 {economy_context_section}
+{central_bank_pm_block}
 
 MARKET CONTEXT:
 {market_context_section}
@@ -2057,23 +2159,24 @@ PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
 
 1. ECONOMIC CONTEXT INTEGRATION (Mandatory):
 {economy_context_instructions}
+{central_bank_pm_instructions}
 
-2. FORWARD SCENARIO CONSTRUCTION:
+3. FORWARD SCENARIO CONSTRUCTION:
    - Provide three scenarios with probability estimates that approximately sum to 100%
    - Scenario naming (FX-specific): {currency}_strength_scenario, {currency}_weakness_scenario, range_or_indecision_scenario
    - For each scenario: assign probability range (not false precision), reference macro driver, policy implication, expected FX reaction
    - Use price levels only if key levels are provided in MARKET CONTEXT, OR clearly state assumptions
 
-3. VOLATILITY ASSESSMENT:
+4. VOLATILITY ASSESSMENT:
    - Must consider: trading sessions, event impact level, VIX regime, risk appetite
    - If markets are closed or liquidity is thin, explicitly state that volatility realization may be delayed
 
-4. POLICY IMPLICATIONS:
+5. POLICY IMPLICATIONS:
    - Explain how the event influences policy trajectory
    - Whether current data reinforces, challenges, or complicates existing policy pressure
    - Avoid generic terms - use numbers and targets from ECONOMIC CONTEXT
 
-5. TRADING INTELLIGENCE (Macro-First):
+6. TRADING INTELLIGENCE (Macro-First):
    - FX pairs most exposed to the macro outcome
    - Risk management considerations
    - Position sizing guidance relative to volatility
@@ -2139,12 +2242,30 @@ OUTPUT FORMAT (JSON):
     ]
 }}
 
+REFERENCE THE CONTEXT YOU ARE GIVEN:
+- When you make a point, tie it to the data provided. For example: cite the actual **ECONOMIC CONTEXT** numbers (e.g. "with unemployment at 3.8% and the Fed target at 4.0%"), refer to **CENTRAL BANK & PREDICTION MARKET CONTEXT** when discussing policy (e.g. "consistent with the FOMC's data-dependent stance" or "markets price a 65% chance of a cut"), and mention **MARKET CONTEXT** or **ADDITIONAL MARKET CONTEXT** when relevant (e.g. "with VIX at 15 and risk appetite high", "EUR/USD currently bullish on the day"). Do not write generic analysis that could apply to any event; anchor at least one or two concrete references per section to the context above.
+
 SECONDARY QUALITY STANDARDS (GUIDANCE):
 - Use quantitative language wherever possible, but do not fabricate precision when data is missing
 - Avoid repeated phrasing across sections (market_bias, medium_term_direction, big_picture should be distinct)
 - Do not over-weight RSI or short-term price action - prioritize macro → policy → FX transmission
 - If certainty is low, state it explicitly in assumptions or analysis_confidence
 - FX pair sentiment should inform bias, not override macroeconomic drivers
+
+EMPHASIS (READABILITY):
+- Wrap important short phrases in **double asterisks** so they render as bold for the reader. Use for: key levels (e.g. **1.0850**), surprise outcomes (**above consensus**), risk terms (**elevated volatility**), policy takeaways (**data-dependent**), and critical numbers or outcomes. One to three bold phrases per paragraph is enough; do not overuse.
+- Example: "A print **above 3.2%** would reinforce **hawkish expectations** and likely lift the dollar."
+- All text fields in the JSON (headline, key_takeaway, forward_scenarios, event_summary.outcome, market_reaction, implications_takeaways, trading_plan, big_picture) may contain ** for emphasis. Do not use other markdown or HTML.
+
+HIGHLIGHTING REQUIREMENT (ENFORCED):
+- You MUST include **bold emphasis** in the output (using **double asterisks**). If you do not, the output will be rejected.
+- Minimum: include at least **10** bolded phrases across the whole JSON.
+- Coverage: include at least **1** bolded phrase in each of these fields: `key_takeaway`, each `forward_scenarios` entry, `market_reaction.reason`, `implications_takeaways.policy_implications`, and `trading_plan.best_approach`.
+
+CONTEXT-ANCHORING REQUIREMENT (ENFORCED):
+- In each major section, explicitly cite at least one concrete input from the context above (a number, a named central bank stance/theme from the documents, a market-implied probability from prediction markets, or a market condition like VIX/risk appetite/pair move).
+- At minimum, include concrete context references in: `event_summary.outcome`, `market_reaction.reason`, and `implications_takeaways.policy_implications`.
+- If a required context item is missing (e.g. prediction markets not available), state that explicitly (e.g. \"Prediction markets unavailable\"), and anchor to other available context instead.
 """
         return prompt
     

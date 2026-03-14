@@ -4693,6 +4693,14 @@
   text-align: right;
 }
 
+.ai-loading-step {
+  margin: 12px 0 0 0;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+  min-height: 1.2em;
+}
+
 /* AI Analysis Content Fade-In Animation */
 .ai-analysis-content {
   animation: aiContentFadeIn 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -8053,6 +8061,12 @@
   border-left: 2px solid rgba(255, 255, 255, 0.12);
   margin-top: 0;
   font-family: var(--font-serif);
+}
+
+/* Bold phrases in analysis text: inherit card font for compatibility (Gelasio/Inter) */
+.ai-analysis-card strong {
+  font-family: inherit;
+  font-weight: 600;
 }
 
 /* Forward Scenarios */

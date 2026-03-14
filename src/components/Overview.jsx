@@ -369,6 +369,17 @@ const Overview = () => {
     return safeRenderValue(value);
   };
 
+  // Renders analysis text with **bold** phrases as <strong>. Uses safeRenderValue for non-strings.
+  const renderAnalysisText = (value) => {
+    const str = safeRenderValue(value);
+    if (str === '') return '';
+    const parts = str.split('**');
+    if (parts.length === 1) return str;
+    return parts.map((segment, i) =>
+      i % 2 === 1 ? <strong key={`bold-${i}`}>{segment}</strong> : segment
+    );
+  };
+
   // Helper function to parse numeric values from strings (handles "55.2", "55.2%", "-2.5K", etc.)
   const parseNumericValue = (value) => {
     if (!value || value === 'N/A' || value === '' || value === null || value === undefined) {
@@ -704,6 +715,17 @@ const Overview = () => {
   const [fakeProgress, setFakeProgress] = useState(0); // 0 - 100
   const fakeProgressRef = useRef(null);
 
+  // Cycling loading step text (below progress bar)
+  const AI_LOADING_STEPS = [
+    'Loading data...',
+    'Uploading event...',
+    'Context injection...',
+    'Processing market data...',
+    'Generating insights...'
+  ];
+  const [loadingStepIndex, setLoadingStepIndex] = useState(0);
+  const loadingStepRef = useRef(null);
+
   useEffect(() => {
     // Cleanup helper
     const clearFakeInterval = () => {
@@ -714,9 +736,17 @@ const Overview = () => {
     };
 
     if (aiAnalysisState === 'loading') {
-      // Start simulated progress
+      // Start simulated progress and step text
       setFakeProgress(0);
+      setLoadingStepIndex(0);
       clearFakeInterval();
+      if (loadingStepRef.current) {
+        clearInterval(loadingStepRef.current);
+        loadingStepRef.current = null;
+      }
+      loadingStepRef.current = setInterval(() => {
+        setLoadingStepIndex((i) => (i + 1) % AI_LOADING_STEPS.length);
+      }, 2800);
       fakeProgressRef.current = setInterval(() => {
         setFakeProgress((prev) => {
           if (prev >= 98) return prev; // pause near completion until real work finishes
@@ -736,12 +766,17 @@ const Overview = () => {
         });
       }, 700);
     } else {
-      // Complete progress and stop simulation when leaving loading state
+      // Complete progress and stop step rotation when leaving loading state
       setFakeProgress(100);
       clearFakeInterval();
+      if (loadingStepRef.current) {
+        clearInterval(loadingStepRef.current);
+        loadingStepRef.current = null;
+      }
       // Reset after a short delay so the next analysis starts from 0
       const resetTimer = setTimeout(() => {
         setFakeProgress(0);
+        setLoadingStepIndex(0);
       }, 900);
       return () => clearTimeout(resetTimer);
     }
@@ -750,6 +785,10 @@ const Overview = () => {
       if (fakeProgressRef.current) {
         clearInterval(fakeProgressRef.current);
         fakeProgressRef.current = null;
+      }
+      if (loadingStepRef.current) {
+        clearInterval(loadingStepRef.current);
+        loadingStepRef.current = null;
       }
     };
   }, [aiAnalysisState]);
@@ -4697,6 +4736,7 @@ const Overview = () => {
                     </div>
                     <span className="ai-loading-progress-label">{Math.round(fakeProgress)}%</span>
                   </div>
+                  <p className="ai-loading-step">{AI_LOADING_STEPS[loadingStepIndex]}</p>
                 </div>
               )}
 
@@ -4721,7 +4761,7 @@ const Overview = () => {
                   <div className="quick-scan-headline">
                     <div className="headline-main">
                       <div className="headline-header-row">
-                        <h3 className="headline-text">{aiAnalysis.headline || 'Economic Event Analysis'}</h3>
+                        <h3 className="headline-text">{renderAnalysisText(aiAnalysis.headline) || 'Economic Event Analysis'}</h3>
                         {selectedEvent?.currency && (
                           <div className="currency-bubble">
                             {selectedEvent.currency}
@@ -4730,7 +4770,7 @@ const Overview = () => {
                       </div>
                     </div>
                     <div className="key-takeaway">
-                      {aiAnalysis.key_takeaway || 'Analysis based on current market conditions.'}
+                      {renderAnalysisText(aiAnalysis.key_takeaway) || 'Analysis based on current market conditions.'}
                     </div>
                   </div>
 
@@ -4795,19 +4835,19 @@ const Overview = () => {
                       <div className="scenario bullish">
                         <div className="scenario-content">
                           <h4>Bullish</h4>
-                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bullish) || 'Above key resistance: potential move higher on positive data surprise'}</p>
+                          <p>{renderAnalysisText(aiAnalysis.forward_scenarios?.bullish) || 'Above key resistance: potential move higher on positive data surprise'}</p>
                         </div>
                       </div>
                       <div className="scenario neutral">
                         <div className="scenario-content">
                           <h4>Neutral</h4>
-                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.neutral) || 'Range likely between key support and resistance if no breakout'}</p>
+                          <p>{renderAnalysisText(aiAnalysis.forward_scenarios?.neutral) || 'Range likely between key support and resistance if no breakout'}</p>
                         </div>
                       </div>
                       <div className="scenario bearish">
                         <div className="scenario-content">
                           <h4>Bearish</h4>
-                          <p>{safeRenderValue(aiAnalysis.forward_scenarios?.bearish) || 'Below key support: potential move lower on negative data surprise'}</p>
+                          <p>{renderAnalysisText(aiAnalysis.forward_scenarios?.bearish) || 'Below key support: potential move lower on negative data surprise'}</p>
                         </div>
                       </div>
                     </div>
@@ -4919,15 +4959,15 @@ const Overview = () => {
                     <div className="positioning-grid">
                       <div className="positioning-item">
                         <h4>Retail Sentiment</h4>
-                        <p>{safePositioningValue(aiAnalysis.positioning_context?.retail_sentiment) || 'Retail positioning analysis based on current market conditions'}</p>
+                        <p>{renderAnalysisText(aiAnalysis.positioning_context?.retail_sentiment) || 'Retail positioning analysis based on current market conditions'}</p>
                       </div>
                       <div className="positioning-item">
                         <h4>Institutional Flow</h4>
-                        <p>{safePositioningValue(aiAnalysis.positioning_context?.institutional_flow) || 'Institutional money flow analysis'}</p>
+                        <p>{renderAnalysisText(aiAnalysis.positioning_context?.institutional_flow) || 'Institutional money flow analysis'}</p>
                       </div>
                       <div className="positioning-item">
                         <h4>Market Bias</h4>
-                        <p>{safePositioningValue(aiAnalysis.positioning_context?.market_bias) || 'Overall market bias based on positioning'}</p>
+                        <p>{renderAnalysisText(aiAnalysis.positioning_context?.market_bias) || 'Overall market bias based on positioning'}</p>
                       </div>
                     </div>
                   </div> */}
@@ -4947,7 +4987,7 @@ const Overview = () => {
                           aiAnalysis.eventSummary.outcome !== 'Analysis based on expected vs previous data' && (
                             <p className="in-depth-text">
                               <span className="in-depth-label">Outcome:</span>{' '}
-                              {safeRenderValue(aiAnalysis.eventSummary.outcome)}
+                              {renderAnalysisText(aiAnalysis.eventSummary.outcome)}
                             </p>
                           )}
                         <div className="in-depth-metrics">
@@ -4972,19 +5012,19 @@ const Overview = () => {
                         {aiAnalysis.market_reaction?.price_action && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Price action:</span>{' '}
-                            {safeRenderValue(aiAnalysis.market_reaction.price_action)}
+                            {renderAnalysisText(aiAnalysis.market_reaction.price_action)}
                           </p>
                         )}
                         {aiAnalysis.market_reaction?.volatility && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Volatility:</span>{' '}
-                            {safeRenderValue(aiAnalysis.market_reaction.volatility)}
+                            {renderAnalysisText(aiAnalysis.market_reaction.volatility)}
                           </p>
                         )}
                         {aiAnalysis.market_reaction?.reason && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Why:</span>{' '}
-                            {safeRenderValue(aiAnalysis.market_reaction.reason)}
+                            {renderAnalysisText(aiAnalysis.market_reaction.reason)}
                           </p>
                         )}
                       </div>
@@ -4995,25 +5035,25 @@ const Overview = () => {
                         {aiAnalysis.implications_takeaways?.economic_context && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Economic context:</span>{' '}
-                            {safeRenderValue(aiAnalysis.implications_takeaways.economic_context)}
+                            {renderAnalysisText(aiAnalysis.implications_takeaways.economic_context)}
                           </p>
                         )}
                         {aiAnalysis.implications_takeaways?.policy_implications && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Policy implications:</span>{' '}
-                            {safeRenderValue(aiAnalysis.implications_takeaways.policy_implications)}
+                            {renderAnalysisText(aiAnalysis.implications_takeaways.policy_implications)}
                           </p>
                         )}
                         {aiAnalysis.implications_takeaways?.event_bias && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Market bias:</span>{' '}
-                            {safeRenderValue(aiAnalysis.implications_takeaways.event_bias)}
+                            {renderAnalysisText(aiAnalysis.implications_takeaways.event_bias)}
                           </p>
                         )}
                         {aiAnalysis.implications_takeaways?.risk_level && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Risk level:</span>{' '}
-                            {safeRenderValue(aiAnalysis.implications_takeaways.risk_level)}
+                            {renderAnalysisText(aiAnalysis.implications_takeaways.risk_level)}
                           </p>
                         )}
                       </div>
@@ -5024,25 +5064,25 @@ const Overview = () => {
                         {aiAnalysis.trading_plan?.best_approach && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Best approach:</span>{' '}
-                            {safeRenderValue(aiAnalysis.trading_plan.best_approach)}
+                            {renderAnalysisText(aiAnalysis.trading_plan.best_approach)}
                           </p>
                         )}
                         {aiAnalysis.trading_plan?.avoid_strategies && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Avoid:</span>{' '}
-                            {safeRenderValue(aiAnalysis.trading_plan.avoid_strategies)}
+                            {renderAnalysisText(aiAnalysis.trading_plan.avoid_strategies)}
                           </p>
                         )}
                         {aiAnalysis.trading_plan?.key_levels && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Key levels:</span>{' '}
-                            {safeRenderValue(aiAnalysis.trading_plan.key_levels)}
+                            {renderAnalysisText(aiAnalysis.trading_plan.key_levels)}
                           </p>
                         )}
                         {(aiAnalysis.trading_plan?.position_sizing_risk || aiAnalysis.trading_plan?.position_sizing) && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Position sizing:</span>{' '}
-                            {safeRenderValue(aiAnalysis.trading_plan.position_sizing_risk || aiAnalysis.trading_plan.position_sizing)}
+                            {renderAnalysisText(aiAnalysis.trading_plan.position_sizing_risk || aiAnalysis.trading_plan.position_sizing)}
                           </p>
                         )}
                       </div>
@@ -5053,25 +5093,25 @@ const Overview = () => {
                         {aiAnalysis.big_picture?.economic_outlook && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Economic outlook:</span>{' '}
-                            {safeRenderValue(aiAnalysis.big_picture.economic_outlook)}
+                            {renderAnalysisText(aiAnalysis.big_picture.economic_outlook)}
                           </p>
                         )}
                         {aiAnalysis.big_picture?.medium_term_direction && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Medium-term direction:</span>{' '}
-                            {safeRenderValue(aiAnalysis.big_picture.medium_term_direction)}
+                            {renderAnalysisText(aiAnalysis.big_picture.medium_term_direction)}
                           </p>
                         )}
                         {aiAnalysis.big_picture?.policy_trajectory && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Policy trajectory:</span>{' '}
-                            {safeRenderValue(aiAnalysis.big_picture.policy_trajectory)}
+                            {renderAnalysisText(aiAnalysis.big_picture.policy_trajectory)}
                           </p>
                         )}
                         {aiAnalysis.big_picture?.forward_focus && (
                           <p className="in-depth-text">
                             <span className="in-depth-label">Forward focus:</span>{' '}
-                            {safeRenderValue(aiAnalysis.big_picture.forward_focus)}
+                            {renderAnalysisText(aiAnalysis.big_picture.forward_focus)}
                           </p>
                         )}
 
