@@ -12011,9 +12011,9 @@ class HybridEconomicCalendar:
                 'time': '21:30 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '48.0',
                 'forecast': 'N/A',
-                'previous': '50.9'
+                'previous': '50.7'
             },
             {
                 'title': 'Rightmove HPI m/m',
@@ -12021,7 +12021,7 @@ class HybridEconomicCalendar:
                 'time': '00:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '	0.8%',
                 'forecast': 'N/A',
                 'previous': '0.0%'
             },
@@ -12031,7 +12031,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.28%',
                 'forecast': 'N/A',
                 'previous': '-0.37%'
             },
@@ -12041,7 +12041,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.8%',
                 'forecast': '-5.0%',
                 'previous': '-3.8%'
             },
@@ -12051,7 +12051,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.3%',
                 'forecast': '5.3%',
                 'previous': '5.2%'
             },
@@ -12071,7 +12071,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.8%',
                 'forecast': '2.6%',
                 'previous': '0.9%'
             },
@@ -12081,7 +12081,7 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.3%',
                 'forecast': '5.1%',
                 'previous': '5.1%'
             },
