@@ -12583,7 +12583,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Employment Change',
-                'date': 'Wed, Mar 18',
+                'date': 'Thu, Mar 19',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -12593,7 +12593,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Unemployment Rate',
-                'date': 'Wed, Mar 18',
+                'date': 'Thu, Mar 19',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
