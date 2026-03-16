@@ -12199,7 +12199,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Cash Rate',
-                'date': 'Mon, Mar 16',
+                'date': 'Tue, Mar 17',
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -12209,7 +12209,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBA Rate Statement',
-                'date': 'Mon, Mar 16',
+                'date': 'Tue, Mar 17',
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
