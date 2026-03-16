@@ -12133,7 +12133,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.4%',
                 'forecast': '2.6%',
                 'previous': '2.7%'
             },
