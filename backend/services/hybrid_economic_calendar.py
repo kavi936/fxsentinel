@@ -12603,7 +12603,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBA Financial Stability Review',
-                'date': 'Wed, Mar 18',
+                'date': 'Thu, Mar 19',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -12613,7 +12613,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BOJ Policy Rate',
-                'date': 'Wed, Mar 18',
+                'date': 'Thu, Mar 19',
                 'time': '02:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
@@ -12623,7 +12623,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Monetary Policy Statement',
-                'date': 'Wed, Mar 18',
+                'date': 'Thu, Mar 19',
                 'time': '02:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
