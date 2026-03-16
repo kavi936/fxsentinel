@@ -12163,9 +12163,9 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '76.3%',
                 'forecast': '76.2%',
-                'previous': '76.2%'
+                'previous': '76.3%'
             },
             {
                 'title': 'Industrial Production m/m',
@@ -12173,7 +12173,7 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.1%',
                 'previous': '0.7%'
             },
@@ -12183,9 +12183,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '38',
                 'forecast': '37',
-                'previous': '36'
+                'previous': '37'
             },
             {
                 'title': 'FPI m/m',
