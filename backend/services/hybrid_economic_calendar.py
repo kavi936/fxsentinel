@@ -12093,9 +12093,9 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '251K',
                 'forecast': '243K',
-                'previous': '238K'
+                'previous': '240K'
             },
             {
                 'title': 'CPI m/m',
@@ -12103,7 +12103,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.7%',
                 'previous': '0.0%'
             },
@@ -12113,7 +12113,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.4%',
                 'previous': '2.5%'
             },
@@ -12123,7 +12123,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.4%',
                 'previous': '2.4%'
             },
@@ -12153,7 +12153,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-0.2',
                 'forecast': '4.0',
                 'previous': '7.1'
             },
