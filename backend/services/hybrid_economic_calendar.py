@@ -12295,9 +12295,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.8%',
                 'forecast': '-1.2%',
-                'previous': '-0.8%'
+                'previous': '-1.0%'
             },
             {
                 'title': 'CB Leading Index m/m',
@@ -12305,7 +12305,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': 'N/A',
                 'previous': '-0.2%'
             },
@@ -12325,7 +12325,7 @@ class HybridEconomicCalendar:
                 'time': '14:50 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': 'N/A',
                 'previous': '5.7%'
             },
