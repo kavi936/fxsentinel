@@ -12265,7 +12265,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5',
                 'forecast': '38.9',
                 'previous': '58.3'
             },
@@ -12275,7 +12275,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-8.5',
                 'forecast': '24.0',
                 'previous': '39.4'
             },
@@ -12285,9 +12285,9 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '9.0K',
                 'forecast': 'N/A',
-                'previous': '15.5K'
+                'previous': '14.8K'
             },
             {
                 'title': 'Pending Home Sales m/m',
