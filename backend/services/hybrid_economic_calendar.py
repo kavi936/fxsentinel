@@ -12193,7 +12193,7 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': 'N/A',
                 'previous': '2.5%'
             },
@@ -12203,7 +12203,7 @@ class HybridEconomicCalendar:
                 'time': '03:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.10%',
                 'forecast': '4.10%',
                 'previous': '3.85%'
             },
@@ -12245,9 +12245,9 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '0.8%',
-                'previous': '-0.5%'
+                'previous': '-0.8%'
             },
             {
                 'title': 'PPI m/m',
