@@ -12255,7 +12255,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.3%',
                 'forecast': '0.0%',
                 'previous': '-0.2%'
             },
