@@ -12301,7 +12301,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CB Leading Index m/m',
-                'date': 'Tue, Mar 17',
+                'date': 'Thu, Mar 19',
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
@@ -12312,10 +12312,10 @@ class HybridEconomicCalendar:
             {
                 'title': 'CB Leading Index m/m',
                 'date': 'Tue, Mar 17',
-                'time': '14:30 UTC',
+                'time': '14:25 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': 'N/A',
                 'previous': '0.3%'
             },
