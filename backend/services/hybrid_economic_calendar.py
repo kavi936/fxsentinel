@@ -12397,7 +12397,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.4%',
                 'forecast': '2.4%',
                 'previous': '2.4%'
             },
@@ -12407,7 +12407,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.9%',
                 'forecast': '1.9%',
                 'previous': '1.9%'
             },
@@ -12417,7 +12417,7 @@ class HybridEconomicCalendar:
                 'time': '10:34 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.45|1.7',
                 'forecast': 'N/A',
                 'previous': '3.47|1.6'
             },
@@ -12427,9 +12427,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '46.73B',
                 'forecast': 'N/A',
-                'previous': '-5.57B'
+                'previous': '-5.84B'
             },
             {
                 'title': 'Core PPI m/m',
@@ -12437,7 +12437,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
                 'previous': '0.8%'
             },
@@ -12447,7 +12447,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.3%',
                 'previous': '0.5%'
             },
