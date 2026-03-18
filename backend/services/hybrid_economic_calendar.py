@@ -12355,9 +12355,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-5.98B',
                 'forecast': '-4.75B',
-                'previous': '-8.37B'
+                'previous': '-8.36B'
             },
             {
                 'title': 'MI Leading Index m/m',
@@ -12365,9 +12365,9 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': 'N/A',
-                'previous': '-0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'Trade Balance',
@@ -12375,9 +12375,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.37T',
                 'forecast': '-0.63T',
-                'previous': '0.46T'
+                'previous': '0.50T'
             },
 
             # WEDNESDAY, MARCH 18
