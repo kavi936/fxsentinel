@@ -12547,19 +12547,19 @@ class HybridEconomicCalendar:
                 'time': '20:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '15.5B',
                 'forecast': '71.6B',
-                'previous': '28.0B'
+                'previous': '96.5B'
             },
             {
                 'title': 'Westpac Consumer Sentiment',
-                'date': 'Wed, Mar 18',
-                'time': '20:00 UTC',
+                'date': 'Tue, Mar 17',
+                'time': '19:05 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '94.7',
                 'forecast': 'N/A',
-                'previous': 'N/A'
+                'previous': '96.5'
             },
             {
                 'title': 'GDP q/q',
@@ -12567,9 +12567,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.4%',
-                'previous': '1.1%'
+                'previous': '0.9%'
             },
             {
                 'title': 'Core Machinery Orders m/m',
@@ -12577,7 +12577,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-5.5%',
                 'forecast': '-9.5%',
                 'previous': '19.1%'
             },
@@ -12587,9 +12587,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '48.9K',
                 'forecast': '20.3K',
-                'previous': '17.8K'
+                'previous': '26.1K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -12597,7 +12597,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.3%',
                 'forecast': '4.1%',
                 'previous': '4.1%'
             },
@@ -12614,17 +12614,17 @@ class HybridEconomicCalendar:
             {
                 'title': 'BOJ Policy Rate',
                 'date': 'Thu, Mar 19',
-                'time': '02:30 UTC',
+                'time': '02:46 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '<0.75%',
                 'forecast': '<0.75%',
                 'previous': '<0.75%'
             },
             {
                 'title': 'Monetary Policy Statement',
                 'date': 'Thu, Mar 19',
-                'time': '02:30 UTC',
+                'time': '02:46 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
                 'actual': 'TBD',
@@ -12639,7 +12639,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.3%',
                 'forecast': '2.2%',
                 'previous': '2.2%'
             },
