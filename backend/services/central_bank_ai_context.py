@@ -51,6 +51,10 @@ _DOC_ID_TO_BANK = {
     "boe-2026-02-01-monetary-policy-report": "BOE",
     "cftc-2026-03-03-cot-long-metals": "FED",
     "cftc-2026-03-03-cot-short-forex": "FED",
+    "fed-2026-03-18-fomc-press-conference": "FED",
+    "fed-2026-03-18-fomc-projections-tables": "FED",
+    "fed-2026-03-18-fomc-policy-statement-supplement": "FED",
+    "boj-2026-03-19-rate-statement": "BOJ",
 }
 
 

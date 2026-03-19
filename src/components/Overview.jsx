@@ -369,6 +369,23 @@ const Overview = () => {
     return safeRenderValue(value);
   };
 
+  // Normalize AI analysis payloads (backend snake_case vs frontend camelCase) so
+  // old persisted analyses and fresh analyses render consistently.
+  const normalizeAiAnalysis = (analysis = {}, event = {}) => {
+    const resolvedEventSummary = analysis.eventSummary || analysis.event_summary || {
+      release: event.title || analysis.event?.title || 'Economic event analysis',
+      previous: event.previous || analysis.event?.previous || 'N/A',
+      expected: event.expected || analysis.event?.expected || 'N/A',
+      actual: event.actual || analysis.event?.actual || 'N/A',
+      outcome: 'Analysis based on expected vs previous data'
+    };
+
+    return {
+      ...analysis,
+      eventSummary: resolvedEventSummary
+    };
+  };
+
   // Renders analysis text with **bold** phrases as <strong>. Uses safeRenderValue for non-strings.
   const renderAnalysisText = (value) => {
     const str = safeRenderValue(value);
@@ -3176,7 +3193,7 @@ const Overview = () => {
   // Select a past analysis from the recent dropdown (restore event + analysis and show it)
   const handleSelectRecentAnalysis = (item) => {
     setSelectedEvent(item.event);
-    setAiAnalysis(item.analysis);
+    setAiAnalysis(normalizeAiAnalysis(item.analysis, item.event));
     setAiAnalysisState('event-analysis');
     // Close dropdown after state updates so the analysis view is shown and click isn't lost
     requestAnimationFrame(() => {
@@ -3231,7 +3248,14 @@ const Overview = () => {
             time: doc.event_time,
             impact: doc.impact
           },
-          analysis: doc.analysis_snapshot
+          analysis: normalizeAiAnalysis(doc.analysis_snapshot, {
+            id: doc.event_id,
+            title: doc.event_title,
+            currency: doc.event_currency,
+            date: doc.event_date,
+            time: doc.event_time,
+            impact: doc.impact
+          })
         }));
 
         setRecentAnalyses(mapped);
@@ -3385,12 +3409,12 @@ const Overview = () => {
       console.log('🐨 Sample Key Takeaway:', analysis.key_takeaway || 'No content');
       
       // Transform the backend response to work with new enhanced structure
-      return {
+      const transformed = {
         event: event,
         analysisType: isPostEvent ? 'post-event' : 'pre-event',
         
         // Event Summary - New detailed structure
-        eventSummary: analysis.eventSummary || {
+        eventSummary: analysis.eventSummary || analysis.event_summary || {
           release: event.title,
           date_time: (() => {
             // Handle different date/time formats from news items
@@ -3489,6 +3513,7 @@ const Overview = () => {
         model_used: analysis.model_used || 'gpt_ai_analyzer',
         cache_hit: analysis.cache_hit || false
       };
+      return normalizeAiAnalysis(transformed, event);
       
       // Debug: Log the transformed data structure
       console.log('🔍 Frontend Debug - Transformed Data Structure:');

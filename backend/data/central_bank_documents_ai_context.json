@@ -11,7 +11,15 @@
         "Wage-price dynamics and CPI trajectory central to policy discussions",
         "Some members emphasized risks of moving too quickly versus falling behind the curve"
       ],
-      "topics": ["boj", "monetary_policy", "policy_normalization", "interest_rates", "cpi", "wages", "price_stability"]
+      "topics": [
+        "boj",
+        "monetary_policy",
+        "policy_normalization",
+        "interest_rates",
+        "cpi",
+        "wages",
+        "price_stability"
+      ]
     },
     "boj-2025-10-31-outlook-report": {
       "shortSummary": "BOJ October 2025 outlook: Japan economy on moderate growth path. CPI inflation trends, wage dynamics, and labor market conditions key to monetary policy outlook. Detailed analysis of wage-price pass-through.",
@@ -21,7 +29,15 @@
         "Labor market tightness supporting wage growth",
         "Risks to outlook include overseas demand and financial conditions"
       ],
-      "topics": ["boj", "economic_outlook", "inflation", "wages", "labor_market", "gdp", "price_stability"]
+      "topics": [
+        "boj",
+        "economic_outlook",
+        "inflation",
+        "wages",
+        "labor_market",
+        "gdp",
+        "price_stability"
+      ]
     },
     "fed-2026-01-16-bowman-speech": {
       "shortSummary": "Fed Vice Chair Bowman: economic outlook, monetary policy path, labor market fragility, and inflation trajectory. Emphasizes data-dependence and supervisory priorities.",
@@ -31,7 +47,15 @@
         "Emphasized evidence-based, data-dependent approach to policy",
         "Discussed evolution of Committee views on appropriate policy stance"
       ],
-      "topics": ["fed", "fomc", "monetary_policy", "labor_market", "inflation", "economic_outlook", "forward_guidance"]
+      "topics": [
+        "fed",
+        "fomc",
+        "monetary_policy",
+        "labor_market",
+        "inflation",
+        "economic_outlook",
+        "forward_guidance"
+      ]
     },
     "fed-2026-01-11-powell-statement": {
       "shortSummary": "Chair Powell statement on DOJ subpoenas: reaffirms Fed independence, commitment to evidence-based monetary policy, and resistance to political pressure on interest rate decisions.",
@@ -41,7 +65,13 @@
         "Statement addresses governance and institutional integrity",
         "Relevant for understanding Fed's operational independence context"
       ],
-      "topics": ["fed", "governance", "fed_independence", "monetary_policy", "political_pressure"]
+      "topics": [
+        "fed",
+        "governance",
+        "fed_independence",
+        "monetary_policy",
+        "political_pressure"
+      ]
     },
     "boe-2025-11-05-monetary-policy-report": {
       "shortSummary": "BOE November 2025: MPC voted 5-4 to hold Bank Rate at 4%. CPI at 3.8% in September. Inflation projected to return toward 2% target. Risks around inflation persistence and weaker demand.",
@@ -52,7 +82,17 @@
         "Projections show inflation gradually returning to target",
         "Downside risks from weaker demand; upside from inflation persistence"
       ],
-      "topics": ["boe", "mpc", "bank_rate", "inflation", "cpi", "economic_outlook", "labor_market", "gdp", "wages"]
+      "topics": [
+        "boe",
+        "mpc",
+        "bank_rate",
+        "inflation",
+        "cpi",
+        "economic_outlook",
+        "labor_market",
+        "gdp",
+        "wages"
+      ]
     },
     "boj-2026-01-23-outlook-report": {
       "shortSummary": "BOJ January 2026 outlook: economy to grow moderately; CPI to dip below 2% in H1 2026 then move toward target. Policy rate normalization path; risks from trade policies and financial conditions.",
@@ -63,7 +103,15 @@
         "GDP growth projections for FY 2025-2027 indicate moderate expansion",
         "Risks: trade policies, overseas activity, financial market developments"
       ],
-      "topics": ["boj", "economic_outlook", "inflation_path", "policy_normalization", "gdp_growth", "trade_policies", "financial_conditions"]
+      "topics": [
+        "boj",
+        "economic_outlook",
+        "inflation_path",
+        "policy_normalization",
+        "gdp_growth",
+        "trade_policies",
+        "financial_conditions"
+      ]
     },
     "boj-2026-01-28-meeting-minutes": {
       "shortSummary": "BOJ January 28, 2026 minutes: Policy Board discussions on rate decisions, economic and financial conditions, price developments, and outlook. Views on policy stance and forward direction.",
@@ -73,7 +121,14 @@
         "Views on appropriate policy stance and future rate path",
         "Minutes reveal nuances in member views on timing and magnitude of moves"
       ],
-      "topics": ["boj", "meeting_minutes", "policy_decision", "interest_rates", "economic_assessment", "price_developments"]
+      "topics": [
+        "boj",
+        "meeting_minutes",
+        "policy_decision",
+        "interest_rates",
+        "economic_assessment",
+        "price_developments"
+      ]
     },
     "fed-2026-01-28-fomc-statement": {
       "shortSummary": "FOMC January 28, 2026 statement: Committee decision on federal funds rate target range, assessment of activity, labor market, inflation, and forward guidance on monetary policy.",
@@ -84,7 +139,15 @@
         "Forward guidance on likely future policy moves",
         "Balance of risks to employment and inflation discussed"
       ],
-      "topics": ["fed", "fomc", "federal_funds_rate", "monetary_policy", "inflation", "labor_market", "forward_guidance"]
+      "topics": [
+        "fed",
+        "fomc",
+        "federal_funds_rate",
+        "monetary_policy",
+        "inflation",
+        "labor_market",
+        "forward_guidance"
+      ]
     },
     "ecb-2026-02-06-monetary-statement": {
       "shortSummary": "ECB February 2026 statement: Governing Council decision on key ECB rates, assessment of euro area economy and inflation, forward guidance on policy. Price stability mandate and projections.",
@@ -95,7 +158,15 @@
         "Forward guidance on policy path and data dependence",
         "Relevant for EUR crosses and euro area financial conditions"
       ],
-      "topics": ["ecb", "euro_area", "monetary_policy", "interest_rates", "inflation", "economic_outlook", "price_stability"]
+      "topics": [
+        "ecb",
+        "euro_area",
+        "monetary_policy",
+        "interest_rates",
+        "inflation",
+        "economic_outlook",
+        "price_stability"
+      ]
     },
     "boe-2026-02-01-monetary-policy-report": {
       "shortSummary": "BOE February 2026 report: MPC assessment of economic developments, inflation trends, labor market, Bank Rate decision. Projections for inflation and GDP; risks to outlook.",
@@ -106,7 +177,16 @@
         "Bank Rate decision and rationale",
         "GDP and inflation projections; risks to outlook"
       ],
-      "topics": ["boe", "mpc", "bank_rate", "inflation", "economic_outlook", "labor_market", "gdp", "economic_projections"]
+      "topics": [
+        "boe",
+        "mpc",
+        "bank_rate",
+        "inflation",
+        "economic_outlook",
+        "labor_market",
+        "gdp",
+        "economic_projections"
+      ]
     },
     "cftc-2026-03-03-cot-long-metals": {
       "shortSummary": "CFTC COT Long Report for metals (March 3, 2026): net long positions from commercial, non-commercial, and non-reportable traders in gold, silver, copper, and other metals futures. Useful for speculative positioning analysis.",
@@ -116,7 +196,17 @@
         "Relevant for gold, silver, copper positioning sentiment",
         "Extreme positioning can signal contrarian or trend-following setups"
       ],
-      "topics": ["cftc", "cot_report", "metals", "positioning", "speculators", "gold", "silver", "futures", "market_data"]
+      "topics": [
+        "cftc",
+        "cot_report",
+        "metals",
+        "positioning",
+        "speculators",
+        "gold",
+        "silver",
+        "futures",
+        "market_data"
+      ]
     },
     "cftc-2026-03-03-cot-short-forex": {
       "shortSummary": "CFTC COT Short Report for forex & financial (March 3, 2026): net short positions in major currency futures. Financial traders positioning across EUR, GBP, JPY, and other pairs. Key for institutional forex sentiment.",
@@ -126,7 +216,91 @@
         "Relevant for EUR, GBP, JPY, CHF, CAD, AUD crosses",
         "Extreme net long/short can indicate crowded trades or reversal setups"
       ],
-      "topics": ["cftc", "cot_report", "forex", "positioning", "financial_traders", "eur", "gbp", "jpy", "futures", "market_data"]
+      "topics": [
+        "cftc",
+        "cot_report",
+        "forex",
+        "positioning",
+        "financial_traders",
+        "eur",
+        "gbp",
+        "jpy",
+        "futures",
+        "market_data"
+      ]
+    },
+    "fed-2026-03-18-fomc-press-conference": {
+      "shortSummary": "FOMC press conference (Mar 18, 2026): Chair commentary explains policy decision, inflation progress, labor-market conditions, and forward guidance signals for the rate path.",
+      "aiNotes": [
+        "Chair emphasized data dependence for subsequent meetings",
+        "Inflation trajectory and labor-market cooling were key policy inputs",
+        "Conference language shaped market expectations for cuts/holds in upcoming meetings",
+        "Tone assessment (hawkish/dovish/neutral) is critical for USD reaction"
+      ],
+      "topics": [
+        "fed",
+        "fomc",
+        "press_conference",
+        "forward_guidance",
+        "inflation",
+        "labor_market",
+        "monetary_policy"
+      ]
+    },
+    "fed-2026-03-18-fomc-projections-tables": {
+      "shortSummary": "FOMC SEP projection tables (Mar 18, 2026): updated forecasts for growth, unemployment, inflation, and policy-rate path (dot plot), informing medium-term policy expectations.",
+      "aiNotes": [
+        "Dot plot distribution indicates committee bias for policy path",
+        "Median projections for inflation and unemployment frame reaction function",
+        "Changes versus prior SEP matter more than absolute levels",
+        "Markets reprice front-end rates when SEP path shifts materially"
+      ],
+      "topics": [
+        "fed",
+        "fomc",
+        "sep",
+        "dot_plot",
+        "projections",
+        "inflation",
+        "unemployment",
+        "policy_rate",
+        "economic_outlook"
+      ]
+    },
+    "fed-2026-03-18-fomc-policy-statement-supplement": {
+      "shortSummary": "Fed monetary policy materials (A1) from Mar 18, 2026: supplemental statement context on policy stance, macro conditions, and implications for the future rate trajectory.",
+      "aiNotes": [
+        "Statement wording changes can signal incremental stance shifts",
+        "Balance-of-risks language influences terminal-rate expectations",
+        "Guidance tone interacts with press-conference interpretation",
+        "Useful for cross-checking consistency across Fed communication channels"
+      ],
+      "topics": [
+        "fed",
+        "statement",
+        "monetary_policy",
+        "policy_stance",
+        "forward_guidance",
+        "rates"
+      ]
+    },
+    "boj-2026-03-19-rate-statement": {
+      "shortSummary": "BOJ rate statement (Mar 19, 2026): policy decision with updated inflation/economy assessment and guidance on future normalization pace.",
+      "aiNotes": [
+        "BOJ communication anchors JPY sensitivity to policy normalization",
+        "Language around inflation sustainability and wage dynamics is pivotal",
+        "Any shift in accommodation guidance impacts global rates and carry trades",
+        "Statement tone helps estimate near-term JPY volatility direction"
+      ],
+      "topics": [
+        "boj",
+        "rate_statement",
+        "monetary_policy",
+        "inflation",
+        "wages",
+        "policy_normalization",
+        "jpy"
+      ]
     }
   }
 }
