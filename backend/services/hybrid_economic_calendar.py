@@ -12305,7 +12305,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': '0.2%',
+                'actual': '-0.1%',
                 'forecast': 'N/A',
                 'previous': '-0.2%'
             },
@@ -12779,7 +12779,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '205K',
                 'forecast': '215K',
                 'previous': '213K'
             },
@@ -12789,7 +12789,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '18.1',
                 'forecast': '17.5',
                 'previous': '16.3'
             },
@@ -12799,7 +12799,7 @@ class HybridEconomicCalendar:
                 'time': '13:15 UTC',
                 'currency': 'EUR',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.15%',
                 'forecast': '2.15%',
                 'previous': '2.15%'
             },
@@ -12829,9 +12829,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '587K',
                 'forecast': '723K',
-                'previous': '745K'
+                'previous': '712K'
             },
             {
                 'title': 'Final Wholesale Inventories m/m',
@@ -12839,7 +12839,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '0.2%',
                 'previous': '0.2%'
             },
@@ -12849,7 +12849,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '35B',
                 'forecast': 'N/A',
                 'previous': '-38B'
             },
