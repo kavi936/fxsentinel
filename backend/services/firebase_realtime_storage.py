@@ -23,6 +23,10 @@ class FirebaseRealtimeStorage:
     def __init__(self):
         self.project_id = os.getenv('FIREBASE_PROJECT_ID', 'fxsentinel')
         self.database_url = os.getenv('FIREBASE_REALTIME_URL', f"https://{self.project_id}-default-rtdb.firebaseio.com")
+        # Short TTL cache to reduce repeated full-user scans in hot alert loops.
+        self._users_with_alerts_cache: Optional[List[Dict[str, Any]]] = None
+        self._users_with_alerts_cache_ts: Optional[datetime] = None
+        self._users_with_alerts_cache_ttl_seconds = int(os.getenv('USERS_WITH_ALERTS_CACHE_TTL_SECONDS', '60'))
         
         # For Realtime Database, we don't need service account credentials
         # The database is accessed via REST API with simple authentication
@@ -180,21 +184,29 @@ class FirebaseRealtimeStorage:
         CONSOLIDATED: Uses single source of truth for chat_id (telegram_chat_id at top level)
         """
         try:
+            # Fast path: serve cached list to avoid repeated Firebase reads.
+            if self._users_with_alerts_cache is not None and self._users_with_alerts_cache_ts is not None:
+                age_seconds = (datetime.now() - self._users_with_alerts_cache_ts).total_seconds()
+                if age_seconds < self._users_with_alerts_cache_ttl_seconds:
+                    return self._users_with_alerts_cache
+
             path = "alerts/users"
             result = self._make_request('GET', path)
             
             if not result:
+                self._users_with_alerts_cache = []
+                self._users_with_alerts_cache_ts = datetime.now()
                 return []
             
             users = []
             for safe_user_id, user_data in result.items():
                 if isinstance(user_data, dict) and 'settings' in user_data:
-                    # CONSOLIDATED: Get chat_id from single location only
-                    # Location: alerts/users/{safe_user_id}/telegram_chat_id
-                    chat_id_path = f"alerts/users/{safe_user_id}/telegram_chat_id"
-                    chat_id = self._make_request('GET', chat_id_path)
-                    
-                    # Convert to string if found
+                    # Primary source: inline top-level chat ID from the same user record.
+                    # Fallback to path read only when missing, to avoid N+1 reads.
+                    chat_id = user_data.get('telegram_chat_id')
+                    if not chat_id:
+                        chat_id_path = f"alerts/users/{safe_user_id}/telegram_chat_id"
+                        chat_id = self._make_request('GET', chat_id_path)
                     if chat_id:
                         chat_id = str(chat_id)
                     
@@ -204,6 +216,8 @@ class FirebaseRealtimeStorage:
                         'telegram_chat_id': chat_id  # Single source of truth
                     })
             
+            self._users_with_alerts_cache = users
+            self._users_with_alerts_cache_ts = datetime.now()
             logger.info(f"Retrieved {len(users)} users with alert settings")
             return users
             
