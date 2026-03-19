@@ -7702,18 +7702,23 @@ if __name__ == '__main__':
         traceback.print_exc()
         print("   Alerts will not work!")
     
-    # Start robust alert service for production (keep for backward compatibility)
-    try:
-        from services.robust_alert_service import start_robust_alert_service
-        import threading
-        
-        # Start robust alert service in a separate thread
-        alert_thread = threading.Thread(target=start_robust_alert_service, daemon=True)
-        alert_thread.start()
-        print("✅ Robust alert service started in background")
-    except Exception as e:
-        print(f"⚠️ Could not start robust alert service: {e}")
-        print("   Alerts will not work for online users!")
+    # Optional legacy worker path.
+    # Default OFF to avoid duplicate alert loops and extra Firebase usage.
+    robust_enabled = os.getenv('ENABLE_ROBUST_ALERT_SERVICE', 'false').strip().lower() in ('1', 'true', 'yes')
+    if robust_enabled:
+        try:
+            from services.robust_alert_service import start_robust_alert_service
+            import threading
+            
+            # Start robust alert service in a separate thread
+            alert_thread = threading.Thread(target=start_robust_alert_service, daemon=True)
+            alert_thread.start()
+            print("✅ Robust alert service started in background")
+        except Exception as e:
+            print(f"⚠️ Could not start robust alert service: {e}")
+            print("   Unified alert processor remains active.")
+    else:
+        print("ℹ️ Robust alert service disabled (ENABLE_ROBUST_ALERT_SERVICE=false)")
     
     # Start cost-optimized monitor
     try:
@@ -7725,6 +7730,6 @@ if __name__ == '__main__':
     
     print(f"🚀 Starting Flask server on port {port}, debug={debug_mode}")
     print("📊 Unified alert processor enabled - immediate alerts on news fetch")
-    print("📊 Robust alert service enabled - alerts will work for online users")
+    print(f"📊 Robust alert service {'enabled' if robust_enabled else 'disabled'}")
     print("📊 Cost-optimized monitoring enabled - reduced API calls and logging")
     app.run(debug=debug_mode, host='0.0.0.0', port=port) 

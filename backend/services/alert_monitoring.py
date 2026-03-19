@@ -5,6 +5,7 @@ Tracks alert success/failure rates and provides metrics
 """
 
 import logging
+import os
 import threading
 from datetime import datetime, timedelta
 from typing import Dict, Any, List
@@ -22,6 +23,9 @@ class AlertMonitoring:
     def __init__(self):
         self.firebase = FirebaseRealtimeStorage()
         self._lock = threading.Lock()
+        self._last_persist_at: datetime = datetime.min
+        self._metrics_dirty: bool = False
+        self._persist_interval_seconds = int(os.getenv('ALERT_MONITORING_PERSIST_INTERVAL_SECONDS', '60'))
         
         # In-memory metrics (for fast access)
         self._metrics = {
@@ -54,8 +58,8 @@ class AlertMonitoring:
                 self._metrics['by_user'][user_id]['sent'] += 1
                 self._metrics['by_type'][alert_type]['sent'] += 1
                 
-                # Persist to Firebase (async, non-blocking)
-                self._persist_metrics_async()
+                self._metrics_dirty = True
+                self._persist_metrics_if_due()
                 
         except Exception as e:
             logger.error(f"Error recording alert success: {e}")
@@ -80,26 +84,33 @@ class AlertMonitoring:
                 if len(self._metrics['recent_failures']) > 100:
                     self._metrics['recent_failures'].pop(0)
                 
-                # Persist to Firebase (async, non-blocking)
-                self._persist_metrics_async()
+                self._metrics_dirty = True
+                self._persist_metrics_if_due()
                 
                 logger.warning(f"Alert failure recorded: user={user_id}, type={alert_type}, error={error}")
                 
         except Exception as e:
             logger.error(f"Error recording alert failure: {e}")
     
-    def _persist_metrics_async(self):
-        """Persist metrics to Firebase (non-blocking)"""
+    def _persist_metrics_if_due(self):
+        """Persist summary metrics at a controlled cadence to reduce Firebase writes."""
         try:
+            now = datetime.now()
+            if not self._metrics_dirty:
+                return
+            if (now - self._last_persist_at).total_seconds() < self._persist_interval_seconds:
+                return
             # Store summary metrics
             metrics_path = "alert_monitoring/metrics"
             summary = {
                 'total_sent': self._metrics['total_sent'],
                 'total_failed': self._metrics['total_failed'],
                 'success_rate': self._get_success_rate(),
-                'last_updated': datetime.now().isoformat()
+                'last_updated': now.isoformat()
             }
             self.firebase._make_request('PUT', metrics_path, summary)
+            self._last_persist_at = now
+            self._metrics_dirty = False
             
         except Exception as e:
             logger.debug(f"Error persisting metrics (non-critical): {e}")

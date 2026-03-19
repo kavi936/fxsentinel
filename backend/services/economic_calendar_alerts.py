@@ -7,7 +7,7 @@ Sends pre-event alerts for upcoming economic events
 import os
 import logging
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 import re # Added for date/time parsing
@@ -54,7 +54,7 @@ class EconomicCalendarAlerts:
                 return False
             
             # Check if event is in the future (not historical)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             if event_datetime <= now:
                 logger.debug(f"Event is in the past: {event.get('title', 'Unknown')} at {event_datetime}")
                 return False
@@ -93,7 +93,7 @@ class EconomicCalendarAlerts:
             return False
     
     def _parse_event_datetime(self, event: Dict[str, Any]) -> Optional[datetime]:
-        """Parse event datetime from various formats. Supports hybrid calendar (YYYY-MM-DD + HH:MM UTC)."""
+        """Parse event datetime from various formats as a UTC-aware datetime."""
         try:
             time_str = event.get('time', '')
             date_str = event.get('date', '')
@@ -107,7 +107,7 @@ class EconomicCalendarAlerts:
                     event_date = datetime.strptime(date_str, '%Y-%m-%d')
                     time_part = time_str.replace(' UTC', '').strip()
                     time_obj = datetime.strptime(time_part, '%H:%M').time()
-                    return datetime.combine(event_date.date(), time_obj)
+                    return datetime.combine(event_date.date(), time_obj, tzinfo=timezone.utc)
                 except ValueError:
                     pass
             
@@ -128,9 +128,11 @@ class EconomicCalendarAlerts:
                     if '%Y' not in fmt:
                         current_year = datetime.now().year
                         datetime_str_with_year = f"{current_year} {datetime_str}"
-                        return datetime.strptime(datetime_str_with_year, f"%Y {fmt}")
+                        parsed = datetime.strptime(datetime_str_with_year, f"%Y {fmt}")
+                        return parsed.replace(tzinfo=timezone.utc)
                     else:
-                        return datetime.strptime(datetime_str, fmt)
+                        parsed = datetime.strptime(datetime_str, fmt)
+                        return parsed.replace(tzinfo=timezone.utc)
                 except ValueError:
                     continue
             
@@ -158,7 +160,7 @@ class EconomicCalendarAlerts:
                         month = month_map.get(month_name.lower(), 1)
                         current_year = datetime.now().year
                         
-                        return datetime(current_year, month, day, hour, minute)
+                        return datetime(current_year, month, day, hour, minute, tzinfo=timezone.utc)
             except:
                 pass
             
@@ -246,7 +248,7 @@ class EconomicCalendarAlerts:
                 return False
             
             # Check if we're within alert timing windows
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             time_until_event = event_datetime - now
             minutes_until_event = time_until_event.total_seconds() / 60
             
@@ -276,7 +278,7 @@ class EconomicCalendarAlerts:
             if not event_datetime:
                 return []
             
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             alert_timings = []
             
             # Check hour-based alerts (2h and 1h before)
@@ -505,7 +507,7 @@ class EconomicCalendarAlerts:
             if not event_datetime:
                 return False
             
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             time_until_event = event_datetime - now
             minutes_until_event = time_until_event.total_seconds() / 60
             
@@ -600,7 +602,8 @@ class EconomicCalendarAlerts:
             content += f"<b>{title}</b>\n"
             content += f"<b>{timing_msg}</b>\n\n"
             content += f"<b>Event Details:</b>\n"
-            content += f"• Time: {event_time} UTC\n"
+            event_time_display = event_time if "UTC" in event_time else f"{event_time} UTC"
+            content += f"• Time: {event_time_display}\n"
             content += f"• Date: {event_date}\n"
             content += f"• Currency: {currency}\n"
             content += f"• Impact: {impact.upper()}\n"
