@@ -8063,10 +8063,13 @@
   font-family: var(--font-serif);
 }
 
-/* Bold phrases in analysis text: inherit card font for compatibility (Gelasio/Inter) */
+/* Highlighted phrases in analysis text */
 .ai-analysis-card strong {
   font-family: inherit;
   font-weight: 600;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0 10px rgba(218, 0, 18, 0.18);
 }
 
 /* Forward Scenarios */
