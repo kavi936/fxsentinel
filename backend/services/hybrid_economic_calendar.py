@@ -12921,7 +12921,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '37.9B',
                 'forecast': '17.2B',
                 'previous': '14.6B'
             },
@@ -12931,7 +12931,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.09B',
                 'forecast': '5.65B',
                 'previous': '6.04B'
             },
@@ -12941,7 +12941,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '12.1B',
                 'forecast': '12.8B',
                 'previous': '11.6B'
             },
@@ -12951,13 +12951,13 @@ class HybridEconomicCalendar:
                 'time': '11:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-27',
                 'forecast': '-29',
                 'previous': '-28'
             },
             {
                 'title': 'Euro Summit',
-                'date': 'Fri, Mar 20',
+                'date': 'Thu, Mar 19',
                 'time': '11:15 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
@@ -12971,9 +12971,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '1.2%',
-                'previous': '0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'Retail Sales m/m',
@@ -12981,7 +12981,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.1%',
                 'forecast': '1.4%',
                 'previous': '-0.4%'
             },
@@ -12991,9 +12991,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.6%',
-                'previous': '2.7%'
+                'previous': '2.8%'
             },
             {
                 'title': 'NHPI m/m',
@@ -13001,7 +13001,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '-0.3%',
                 'previous': '-0.4%'
             },
@@ -13011,7 +13011,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.8%',
                 'previous': '7.7%'
             },
