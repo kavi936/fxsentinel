@@ -12901,7 +12901,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '0.3%',
                 'previous': '-0.6%'
             },
@@ -12911,9 +12911,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '14.3B',
                 'forecast': '8.7B',
-                'previous': '-30.4B'
+                'previous': '-31.9B'
             },
             {
                 'title': 'Current Account',
