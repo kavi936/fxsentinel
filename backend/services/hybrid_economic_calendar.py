@@ -12859,9 +12859,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-257M',
                 'forecast': '-470M',
-                'previous': '-519M'
+                'previous': '-627M'
             },
             {
                 'title': '1-y Loan Prime Rate',
@@ -12869,7 +12869,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.00%',
                 'forecast': '3.00%',
                 'previous': '3.00%'
             },
@@ -12879,7 +12879,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.50%',
                 'forecast': '3.50%',
                 'previous': '3.50%'
             },
@@ -12889,9 +12889,9 @@ class HybridEconomicCalendar:
                 'time': '02:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.1%',
                 'forecast': 'N/A',
-                'previous': '1.0%'
+                'previous': '0.9%'
             },
 
             # FRIDAY, MARCH 20
