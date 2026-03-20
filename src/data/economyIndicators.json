@@ -395,7 +395,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "2.15%",
-        "asOf": "2026-02-05",
+        "asOf": "2026-03-19",
         "chartData": [
           4.5,
           4.5,
@@ -414,6 +414,7 @@
           2.65,
           2.4,
           2.4,
+          2.15,
           2.15,
           2.15,
           2.15,
@@ -450,7 +451,8 @@
           "2025-11-30",
           "2025-12-18",
           "2026-01-31",
-          "2026-02-05"
+          "2026-02-05",
+          "2026-03-19"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
@@ -789,7 +791,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
-        "asOf": "2026-02-05",
+        "asOf": "2026-03-19",
         "chartData": [
           5.25,
           5.25,
@@ -814,6 +816,7 @@
           4.0,
           4.0,
           4.0,
+          3.75,
           3.75,
           3.75,
           3.75
@@ -844,7 +847,8 @@
           "2025-11-06",
           "2025-12-18",
           "2026-01-31",
-          "2026-02-05"
+          "2026-02-05",
+          "2026-03-19"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate",

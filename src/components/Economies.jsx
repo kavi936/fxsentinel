@@ -1,7 +1,81 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import './Economies.css';
 import economyIndicatorsData from '../data/economyIndicators.json';
 import { config } from '../config';
+
+const YIELD_MARKETS = [
+  { symbol: 'OANDA:UK10YBGBP', label: 'UK 10Y', economy: 'GBP', title: 'UK 10Y Bond Yield (OANDA)' },
+  { symbol: 'OANDA:USB10YUSD', label: 'US 10Y', economy: 'US', title: 'US 10Y T-Note (OANDA)' },
+  { symbol: 'OANDA:USB02YUSD', label: 'US 2Y', economy: 'US', title: 'US 2Y T-Note (OANDA)' },
+  { symbol: 'OANDA:DE10YBEUR', label: 'DE 10Y', economy: 'EUR', title: 'Bund (OANDA)' },
+  { symbol: 'OANDA:USB30YUSD', label: 'US 30Y', economy: 'US', title: 'US T-Bond (OANDA)' },
+  { symbol: 'OANDA:USB05YUSD', label: 'US 5Y', economy: 'US', title: 'US 5Y T-Note (OANDA)' }
+];
+
+function TradingViewYieldWidget({ symbol }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.type = 'text/javascript';
+    script.async = true;
+    script.innerHTML = `
+      {
+        "allow_symbol_change": true,
+        "calendar": false,
+        "details": false,
+        "hide_side_toolbar": true,
+        "hide_top_toolbar": false,
+        "hide_legend": false,
+        "hide_volume": false,
+        "hotlist": false,
+        "interval": "D",
+        "locale": "en",
+        "save_image": true,
+        "style": "1",
+        "symbol": "${symbol}",
+        "theme": "dark",
+        "timezone": "Etc/UTC",
+        "backgroundColor": "#0F0F0F",
+        "gridColor": "rgba(242, 242, 242, 0.06)",
+        "watchlist": [],
+        "withdateranges": false,
+        "compareSymbols": [],
+        "studies": [],
+        "autosize": true
+      }`;
+    container.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [symbol]);
+
+  const symbolPath = symbol.replace(':', '-');
+
+  return (
+    <div
+      className="tradingview-widget-container yield-single-widget"
+      ref={containerRef}
+      style={{ height: '100%', width: '100%' }}
+    >
+      <div
+        className="tradingview-widget-container__widget"
+        style={{ height: 'calc(100% - 32px)', width: '100%' }}
+      />
+      <div className="tradingview-widget-copyright">
+        <a href={`https://www.tradingview.com/symbols/${symbolPath}/`} rel="noopener nofollow" target="_blank">
+          <span className="blue-text">{symbol} chart</span>
+        </a>
+        <span className="trademark"> by TradingView</span>
+      </div>
+    </div>
+  );
+}
 
 const indicatorDetails = {
   'interest-rate': {
@@ -2095,6 +2169,32 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const [loadingIndicatorId, setLoadingIndicatorId] = useState(null);
   const [chartHover, setChartHover] = useState(null);
   const [error, setError] = useState(null);
+  const [activeYieldSymbol, setActiveYieldSymbol] = useState('TVC:US10Y');
+
+  useEffect(() => {
+    const defaultByEconomy = {
+      US: 'TVC:US10Y',
+      EUR: 'TVC:DE10Y',
+      GBP: 'TVC:GB10Y',
+      JPY: 'TVC:JP10Y'
+    };
+    const symbol = defaultByEconomy[selectedEconomy] || 'TVC:US10Y';
+    setActiveYieldSymbol(symbol);
+  }, [selectedEconomy]);
+
+  const activeYieldIndex = useMemo(
+    () => Math.max(0, YIELD_MARKETS.findIndex((market) => market.symbol === activeYieldSymbol)),
+    [activeYieldSymbol]
+  );
+
+  const activeYield = YIELD_MARKETS[activeYieldIndex] || YIELD_MARKETS[0];
+
+  const handleYieldWheel = (event) => {
+    event.preventDefault();
+    const direction = event.deltaY > 0 ? 1 : -1;
+    const nextIndex = (activeYieldIndex + direction + YIELD_MARKETS.length) % YIELD_MARKETS.length;
+    setActiveYieldSymbol(YIELD_MARKETS[nextIndex].symbol);
+  };
 
   // Log for debugging
   React.useEffect(() => {
@@ -4336,9 +4436,25 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         </div>
 
         <div className="yield-indicators-section">
-          <h2 className="analysis-title">Yield Indicators</h2>
-          <p className="analysis-placeholder">Coming soon</p>
-          <p className="yield-subtext">US10Y, US30Y, and other key yield curves</p>
+          <h2 className="analysis-title">Bond Indicators - More Coming Soon</h2>
+          <p className="yield-subtext">Pick a bond/yield indicator from the list below.</p>
+          <div className="yield-symbol-scroll" role="tablist" aria-label="Yield symbols">
+            {YIELD_MARKETS.map((item) => (
+              <button
+                key={item.symbol}
+                type="button"
+                className={`yield-symbol-chip ${activeYieldSymbol === item.symbol ? 'active' : ''}`}
+                onClick={() => setActiveYieldSymbol(item.symbol)}
+                aria-selected={activeYieldSymbol === item.symbol}
+              >
+                <span className="yield-chip-economy">{item.economy}</span>
+                <span className="yield-chip-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="yield-widget-card-single" onWheel={handleYieldWheel}>
+            <TradingViewYieldWidget key={activeYield.symbol} symbol={activeYield.symbol} />
+          </div>
         </div>
       </div>
     </div>
