@@ -3,13 +3,16 @@ import './Economies.css';
 import economyIndicatorsData from '../data/economyIndicators.json';
 import { config } from '../config';
 
+/** Display order: US (by maturity 2Y→30Y), then EUR, then GBP. Wheel cycles this flat list. */
+const YIELD_ECONOMY_ORDER = ['US', 'EUR', 'GBP'];
+
 const YIELD_MARKETS = [
-  { symbol: 'OANDA:UK10YBGBP', label: 'UK 10Y', economy: 'GBP', title: 'UK 10Y Bond Yield (OANDA)' },
-  { symbol: 'OANDA:USB10YUSD', label: 'US 10Y', economy: 'US', title: 'US 10Y T-Note (OANDA)' },
   { symbol: 'OANDA:USB02YUSD', label: 'US 2Y', economy: 'US', title: 'US 2Y T-Note (OANDA)' },
-  { symbol: 'OANDA:DE10YBEUR', label: 'DE 10Y', economy: 'EUR', title: 'Bund (OANDA)' },
+  { symbol: 'OANDA:USB05YUSD', label: 'US 5Y', economy: 'US', title: 'US 5Y T-Note (OANDA)' },
+  { symbol: 'OANDA:USB10YUSD', label: 'US 10Y', economy: 'US', title: 'US 10Y T-Note (OANDA)' },
   { symbol: 'OANDA:USB30YUSD', label: 'US 30Y', economy: 'US', title: 'US T-Bond (OANDA)' },
-  { symbol: 'OANDA:USB05YUSD', label: 'US 5Y', economy: 'US', title: 'US 5Y T-Note (OANDA)' }
+  { symbol: 'OANDA:DE10YBEUR', label: 'DE 10Y', economy: 'EUR', title: 'Bund (OANDA)' },
+  { symbol: 'OANDA:UK10YBGBP', label: 'UK 10Y', economy: 'GBP', title: 'UK 10Y Bond Yield (OANDA)' }
 ];
 
 function TradingViewYieldWidget({ symbol }) {
@@ -2172,16 +2175,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const [loadingIndicatorId, setLoadingIndicatorId] = useState(null);
   const [chartHover, setChartHover] = useState(null);
   const [error, setError] = useState(null);
-  const [activeYieldSymbol, setActiveYieldSymbol] = useState('TVC:US10Y');
+  const [activeYieldSymbol, setActiveYieldSymbol] = useState('OANDA:USB10YUSD');
 
   useEffect(() => {
     const defaultByEconomy = {
-      US: 'TVC:US10Y',
-      EUR: 'TVC:DE10Y',
-      GBP: 'TVC:GB10Y',
-      JPY: 'TVC:JP10Y'
+      US: 'OANDA:USB10YUSD',
+      EUR: 'OANDA:DE10YBEUR',
+      GBP: 'OANDA:UK10YBGBP',
+      JPY: 'OANDA:USB10YUSD'
     };
-    const symbol = defaultByEconomy[selectedEconomy] || 'TVC:US10Y';
+    const symbol = defaultByEconomy[selectedEconomy] || 'OANDA:USB10YUSD';
     setActiveYieldSymbol(symbol);
   }, [selectedEconomy]);
 
@@ -4441,19 +4444,30 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         <div className="yield-indicators-section">
           <h2 className="analysis-title">Bond Indicators - More Coming Soon</h2>
           <p className="yield-subtext">Pick a bond/yield indicator from the list below.</p>
-          <div className="yield-symbol-scroll" role="tablist" aria-label="Yield symbols">
-            {YIELD_MARKETS.map((item) => (
-              <button
-                key={item.symbol}
-                type="button"
-                className={`yield-symbol-chip ${activeYieldSymbol === item.symbol ? 'active' : ''}`}
-                onClick={() => setActiveYieldSymbol(item.symbol)}
-                aria-selected={activeYieldSymbol === item.symbol}
-              >
-                <span className="yield-chip-economy">{item.economy}</span>
-                <span className="yield-chip-label">{item.label}</span>
-              </button>
-            ))}
+          <div className="yield-symbol-scroll" role="tablist" aria-label="Yield symbols by economy">
+            {YIELD_ECONOMY_ORDER.map((economyCode) => {
+              const group = YIELD_MARKETS.filter((m) => m.economy === economyCode);
+              if (group.length === 0) return null;
+              return (
+                <div key={economyCode} className="yield-symbol-group" role="presentation">
+                  <span className="yield-symbol-group-label" aria-hidden="true">
+                    {economyCode}
+                  </span>
+                  {group.map((item) => (
+                    <button
+                      key={item.symbol}
+                      type="button"
+                      className={`yield-symbol-chip ${activeYieldSymbol === item.symbol ? 'active' : ''}`}
+                      onClick={() => setActiveYieldSymbol(item.symbol)}
+                      aria-selected={activeYieldSymbol === item.symbol}
+                    >
+                      <span className="yield-chip-economy">{item.economy}</span>
+                      <span className="yield-chip-label">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
           </div>
           <div className="yield-widget-card-single" onWheel={handleYieldWheel}>
             <TradingViewYieldWidget key={activeYield.symbol} symbol={activeYield.symbol} />
