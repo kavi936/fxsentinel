@@ -12,6 +12,52 @@ import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
 
+/** Fallback catalog when API has not yet returned `instruments` (matches backend `tradingview_instruments`). */
+const TICKER_CATEGORY_ORDER = ['forex', 'crypto', 'commodities', 'bonds', 'indices'];
+const TICKER_CATEGORY_LABELS = {
+  forex: 'Forex',
+  crypto: 'Crypto',
+  commodities: 'Commodities',
+  bonds: 'Bond yields',
+  indices: 'Indices'
+};
+const DEFAULT_TICKER_INSTRUMENTS = [
+  { id: 'EURUSD', label: 'EUR/USD', category: 'forex', decimals: 5 },
+  { id: 'GBPUSD', label: 'GBP/USD', category: 'forex', decimals: 5 },
+  { id: 'USDJPY', label: 'USD/JPY', category: 'forex', decimals: 3 },
+  { id: 'USDCHF', label: 'USD/CHF', category: 'forex', decimals: 5 },
+  { id: 'AUDUSD', label: 'AUD/USD', category: 'forex', decimals: 5 },
+  { id: 'USDCAD', label: 'USD/CAD', category: 'forex', decimals: 5 },
+  { id: 'NZDUSD', label: 'NZD/USD', category: 'forex', decimals: 5 },
+  { id: 'EURGBP', label: 'EUR/GBP', category: 'forex', decimals: 5 },
+  { id: 'EURJPY', label: 'EUR/JPY', category: 'forex', decimals: 3 },
+  { id: 'GBPJPY', label: 'GBP/JPY', category: 'forex', decimals: 3 },
+  { id: 'USDSEK', label: 'USD/SEK', category: 'forex', decimals: 5 },
+  { id: 'USDNOK', label: 'USD/NOK', category: 'forex', decimals: 5 },
+  { id: 'USDHKD', label: 'USD/HKD', category: 'forex', decimals: 5 },
+  { id: 'EURCHF', label: 'EUR/CHF', category: 'forex', decimals: 5 },
+  { id: 'GBPCHF', label: 'GBP/CHF', category: 'forex', decimals: 5 },
+  { id: 'BTCUSDT', label: 'BTC/USDT', category: 'crypto', decimals: 2 },
+  { id: 'ETHUSDT', label: 'ETH/USDT', category: 'crypto', decimals: 2 },
+  { id: 'GOLD', label: 'Gold (GC)', category: 'commodities', decimals: 2 },
+  { id: 'SILVER', label: 'Silver (SI)', category: 'commodities', decimals: 3 },
+  { id: 'USOIL', label: 'WTI Crude', category: 'commodities', decimals: 2 },
+  { id: 'US02Y', label: 'US 2Y', category: 'bonds', decimals: 3 },
+  { id: 'US10Y', label: 'US 10Y', category: 'bonds', decimals: 3 },
+  { id: 'US30Y', label: 'US 30Y', category: 'bonds', decimals: 3 },
+  { id: 'DE10Y', label: 'DE 10Y', category: 'bonds', decimals: 3 },
+  { id: 'GB10Y', label: 'UK 10Y', category: 'bonds', decimals: 3 },
+  { id: 'JP10Y', label: 'JP 10Y', category: 'bonds', decimals: 3 },
+  { id: 'EU10Y', label: 'EU 10Y', category: 'bonds', decimals: 3 },
+  { id: 'AU10Y', label: 'AU 10Y', category: 'bonds', decimals: 3 },
+  { id: 'CA10Y', label: 'CA 10Y', category: 'bonds', decimals: 3 },
+  { id: 'IT10Y', label: 'IT 10Y', category: 'bonds', decimals: 3 },
+  { id: 'SPX', label: 'S&P 500', category: 'indices', decimals: 2 },
+  { id: 'DJI', label: 'Dow Jones', category: 'indices', decimals: 2 },
+  { id: 'IXIC', label: 'Nasdaq Comp', category: 'indices', decimals: 2 },
+  { id: 'VIX', label: 'VIX', category: 'indices', decimals: 2 }
+];
+
 // Mini Price Chart Component - two lines: Yes and No (Polymarket-style)
 const YES_LINE_COLOR = '#22c55e';   // green
 const NO_LINE_COLOR = '#ef4444';    // red
@@ -840,7 +886,19 @@ const Overview = () => {
   });
   
   const { currentUser } = useAuth();
-  const { prices, loading, error } = useForexPrices();
+  const { prices, loading, error, instruments: tickerInstrumentsFromApi } = useForexPrices();
+
+  const tickerInstrumentCatalog = useMemo(() => {
+    if (tickerInstrumentsFromApi && tickerInstrumentsFromApi.length > 0) {
+      return tickerInstrumentsFromApi.map((i) => ({
+        id: i.id,
+        label: i.label,
+        category: i.category,
+        decimals: i.decimals ?? 4
+      }));
+    }
+    return DEFAULT_TICKER_INSTRUMENTS;
+  }, [tickerInstrumentsFromApi]);
   const { 
     sentiment, 
     loading: sentimentLoading, 
@@ -3950,28 +4008,9 @@ const Overview = () => {
   // Currently displayed pairs (max 5) - ordered by selection order
   const currencyPairs = allPairs.filter(pair => selectedPairs.includes(pair.key));
 
-  // All available forex pairs for ticker
-  const allTickerPairs = [
-    { key: 'EURUSD', label: 'EUR/USD' },
-    { key: 'GBPUSD', label: 'GBP/USD' },
-    { key: 'USDJPY', label: 'USD/JPY' },
-    { key: 'USDCHF', label: 'USD/CHF' },
-    { key: 'AUDUSD', label: 'AUD/USD' },
-    { key: 'USDCAD', label: 'USD/CAD' },
-    { key: 'NZDUSD', label: 'NZD/USD' },
-    { key: 'EURGBP', label: 'EUR/GBP' },
-    { key: 'EURJPY', label: 'EUR/JPY' },
-    { key: 'GBPJPY', label: 'GBP/JPY' },
-    { key: 'USDSEK', label: 'USD/SEK' },
-    { key: 'USDNOK', label: 'USD/NOK' },
-    { key: 'USDHKD', label: 'USD/HKD' },
-    { key: 'EURCHF', label: 'EUR/CHF' },
-    { key: 'GBPCHF', label: 'GBP/CHF' }
-  ];
-
-  // Currently displayed ticker pairs - ordered by selection order
-  const tickerPairs = selectedTickerPairs.map(pairKey => 
-    allTickerPairs.find(pair => pair.key === pairKey)
+  // Currently displayed ticker instruments - ordered by selection order
+  const tickerPairs = selectedTickerPairs.map((pairId) =>
+    tickerInstrumentCatalog.find((pair) => pair.id === pairId)
   ).filter(Boolean);
 
   const handleEditClick = () => {
@@ -4066,6 +4105,19 @@ const Overview = () => {
     const num = parseFloat(change);
     const percent = (num / parseFloat(price)) * 100;
     return (percent >= 0 ? '+' : '') + percent.toFixed(2) + '%';
+  };
+
+  const formatTickerPrice = (price, decimals = 4) => {
+    if (price == null || price === '') return Number(0).toFixed(decimals);
+    const n = parseFloat(price);
+    if (Number.isNaN(n)) return Number(0).toFixed(decimals);
+    return n.toFixed(decimals);
+  };
+
+  const formatTickerChange = (change, decimals = 4) => {
+    const n = parseFloat(change);
+    if (Number.isNaN(n)) return '+' + Number(0).toFixed(decimals);
+    return (n >= 0 ? '+' : '') + n.toFixed(decimals);
   };
 
   const getChangeColor = (change) => {
@@ -4258,20 +4310,21 @@ const Overview = () => {
                 <>
                   {/* Original content */}
                   {tickerPairs.map((pair, index) => {
-                    const priceData = prices[pair.key];
-                    const price = priceData?.price || '0.0000';
-                    const change = priceData?.change || '0.0000';
+                    const priceData = prices[pair.id];
+                    const price = priceData?.price ?? '0.0000';
+                    const change = priceData?.change ?? '0.0000';
+                    const decimals = priceData?.decimals ?? pair.decimals ?? 4;
                     const isUp = parseFloat(change) >= 0;
 
                     return (
-                      <React.Fragment key={pair.key}>
+                      <React.Fragment key={pair.id}>
                         <div className="ticker-pair-inline">
                           <span className="pair-label-inline">{pair.label}</span>
                           <span className={`pair-rate-inline ${isUp ? 'positive' : 'negative'}`}>
-                            {formatPrice(price)}
+                            {formatTickerPrice(price, decimals)}
                           </span>
                           <span className={`pair-change-inline ${isUp ? 'positive' : 'negative'}`}>
-                            {formatChange(change)}
+                            {formatTickerChange(change, decimals)}
                           </span>
                           <span className={`pair-percentage-inline ${isUp ? 'positive' : 'negative'}`}>
                             {formatPercentage(change, price)}
@@ -4288,20 +4341,21 @@ const Overview = () => {
                     <>
                       <span className="pair-separator-inline">|</span>
                           {tickerPairs.map((pair, index) => {
-                            const priceData = prices[pair.key];
-                            const price = priceData?.price || '0.0000';
-                            const change = priceData?.change || '0.0000';
+                            const priceData = prices[pair.id];
+                            const price = priceData?.price ?? '0.0000';
+                            const change = priceData?.change ?? '0.0000';
+                            const decimals = priceData?.decimals ?? pair.decimals ?? 4;
                             const isUp = parseFloat(change) >= 0;
 
                             return (
-                              <React.Fragment key={`duplicate-${pair.key}`}>
+                              <React.Fragment key={`duplicate-${pair.id}`}>
                                 <div className="ticker-pair-inline">
                                   <span className="pair-label-inline">{pair.label}</span>
                                   <span className={`pair-rate-inline ${isUp ? 'positive' : 'negative'}`}>
-                                    {formatPrice(price)}
+                                    {formatTickerPrice(price, decimals)}
                                   </span>
                                   <span className={`pair-change-inline ${isUp ? 'positive' : 'negative'}`}>
-                                    {formatChange(change)}
+                                    {formatTickerChange(change, decimals)}
                                   </span>
                                   <span className={`pair-percentage-inline ${isUp ? 'positive' : 'negative'}`}>
                                     {formatPercentage(change, price)}
@@ -6858,9 +6912,9 @@ const Overview = () => {
                         </svg>
                       )}
                     </div>
-                    <span className="pair-label">{pair.label}</span>
+                    <span className="pair-label" title={pair.label}>{pair.label}</span>
                     {isSelected && (
-                      <div className="pair-order-badge">
+                      <div className="pair-order-badge" aria-label={`Order ${selectedIndex + 1}`}>
                         {selectedIndex + 1}
                       </div>
                     )}
@@ -6893,7 +6947,7 @@ const Overview = () => {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             {/* Modal Header */}
             <div className="modal-header">
-              <h2>Select Ticker Pairs</h2>
+              <h2>Select ticker instruments</h2>
               <button className="modal-close-btn" onClick={handleCloseTickerModal}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -6903,33 +6957,43 @@ const Overview = () => {
 
             {/* Modal Instructions */}
             <div className="modal-instructions">
-              <p>Choose which forex pairs to display in the live market ticker. The order you select them will be the order they appear.</p>
+              <p>Choose instruments for the live ticker: forex, crypto, commodities, sovereign bond yields, and indices (no single-name equities). Selection order is display order.</p>
             </div>
 
-            {/* Ticker Pairs Grid */}
-            <div className="pairs-grid">
-              {allTickerPairs.map((pair) => {
-                const isSelected = selectedTickerPairs.includes(pair.key);
-                const selectedIndex = selectedTickerPairs.indexOf(pair.key);
+            <div className="ticker-modal-sections">
+              {TICKER_CATEGORY_ORDER.map((category) => {
+                const items = tickerInstrumentCatalog.filter((p) => p.category === category);
+                if (items.length === 0) return null;
                 return (
-                  <div
-                    key={pair.key}
-                    className={`pair-option ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleTickerPairToggle(pair.key)}
-                  >
-                    <div className="pair-checkbox">
-                      {isSelected && (
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
+                  <div key={category} className="ticker-modal-section">
+                    <h3 className="ticker-modal-section-title">{TICKER_CATEGORY_LABELS[category]}</h3>
+                    <div className="pairs-grid ticker-modal-pairs-grid">
+                      {items.map((pair) => {
+                        const isSelected = selectedTickerPairs.includes(pair.id);
+                        const selectedIndex = selectedTickerPairs.indexOf(pair.id);
+                        return (
+                          <div
+                            key={pair.id}
+                            className={`pair-option ${isSelected ? 'selected' : ''}`}
+                            onClick={() => handleTickerPairToggle(pair.id)}
+                          >
+                            <div className="pair-checkbox">
+                              {isSelected && (
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M20 6L9 17L4 12" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </div>
+                            <span className="pair-label" title={pair.label}>{pair.label}</span>
+                            {isSelected && (
+                              <div className="pair-order-badge" aria-label={`Order ${selectedIndex + 1}`}>
+                                {selectedIndex + 1}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <span className="pair-label">{pair.label}</span>
-                    {isSelected && (
-                      <div className="pair-order-badge">
-                        {selectedIndex + 1}
-                      </div>
-                    )}
                   </div>
                 );
               })}

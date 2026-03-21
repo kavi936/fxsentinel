@@ -3937,7 +3937,7 @@ def verify_telegram_connection_legacy():
 @app.route('/api/forex-prices', methods=['GET', 'OPTIONS'])
 @limiter.limit("100 per minute")  # Allow frequent polling for live ticker (frontend polls every 5 seconds = 12/min)
 def get_forex_prices():
-    """Get real-time forex prices from TradingView API only"""
+    """Live market quotes (forex, crypto, commodities, indices) via TradingView scanners."""
     # Handle CORS preflight requests
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
@@ -3947,11 +3947,12 @@ def get_forex_prices():
         return response
     
     try:
+        from services.tradingview_instruments import INSTRUMENTS as tv_instrument_catalog
         print("🔍 Starting TradingView API call...")
         tradingview_prices = get_tradingview_prices()
         
         if tradingview_prices:
-            print(f"✅ Successfully fetched data from TradingView: {len(tradingview_prices)} pairs")
+            print(f"✅ Successfully fetched data from TradingView: {len(tradingview_prices)} instruments")
             
             # Add data freshness information
             for pair in tradingview_prices:
@@ -3977,6 +3978,15 @@ def get_forex_prices():
             
             return jsonify({
                 'prices': tradingview_prices,
+                'instruments': [
+                    {
+                        'id': i['id'],
+                        'label': i['label'],
+                        'category': i.get('category', 'forex'),
+                        'decimals': i.get('decimals', 4),
+                    }
+                    for i in tv_instrument_catalog
+                ],
                 'dataSource': 'TradingView',
                 'timestamp': datetime.now().isoformat(),
                 'dataQuality': {
@@ -4738,105 +4748,15 @@ def get_exchange_rate_prices():
     return None
 
 def get_tradingview_prices():
-    """Get real-time forex prices from TradingView API for all supported pairs"""
+    """Real-time quotes from TradingView (forex, crypto, futures, indices — see services/tradingview_instruments)."""
     try:
-        url = "https://scanner.tradingview.com/forex/scan"
-        headers = {
-            "Content-Type": "application/json"
-        }
-        
-        # All 15 forex pairs we support - using pairs that are actually available on TradingView
-        all_pairs = [
-            "FX:EURUSD", "FX:GBPUSD", "FX:USDJPY", "FX:USDCHF", "FX:AUDUSD",
-            "FX:USDCAD", "FX:NZDUSD", "FX:EURGBP", "FX:EURJPY", "FX:GBPJPY",
-            "FX:USDSEK", "FX:USDNOK", "FX:USDHKD", "FX:EURCHF", "FX:GBPCHF"
-        ]
-        
-        data = {
-            "symbols": {
-                "tickers": all_pairs
-            },
-            "columns": ["close", "change", "change_abs"]
-        }
-        
-        response = requests.post(url, headers=headers, json=data, timeout=5)
-        
-        # Check for rate limiting from TradingView
-        if response.status_code == 429:
-            print(f"⚠️ TradingView API rate limit hit (429). Status: {response.status_code}")
-            # Return None to trigger fallback data
-            return None
-        
-        response.raise_for_status()
-        
-        result = response.json()
-        
-        if 'data' in result and result['data']:
-            prices = {}
-            
-            for item in result['data']:
-                symbol = item['s']
-                values = item['d']
-                
-                if len(values) >= 3:
-                    price = values[0]  # close price
-                    change_percent = values[1]  # change percentage
-                    change_abs = values[2]  # absolute change
-                    
-                    # Map TradingView symbols to our internal format
-                    pair_mapping = {
-                        "FX:EURUSD": "EURUSD",
-                        "FX:GBPUSD": "GBPUSD", 
-                        "FX:USDJPY": "USDJPY",
-                        "FX:USDCHF": "USDCHF",
-                        "FX:AUDUSD": "AUDUSD",
-                        "FX:USDCAD": "USDCAD",
-                        "FX:NZDUSD": "NZDUSD",
-                        "FX:EURGBP": "EURGBP",
-                        "FX:EURJPY": "EURJPY",
-                        "FX:GBPJPY": "GBPJPY",
-                        "FX:USDSEK": "USDSEK",
-                        "FX:USDNOK": "USDNOK",
-                        "FX:USDHKD": "USDHKD",  # Replaced USDDKK with USDHKD
-                        "FX:EURCHF": "EURCHF",
-                        "FX:GBPCHF": "GBPCHF"
-                    }
-                    
-                    if symbol in pair_mapping:
-                        pair_key = pair_mapping[symbol]
-                        prices[pair_key] = {
-                            'price': price,
-                            'change': change_abs,
-                            'changePercent': change_percent,
-                            'lastUpdate': datetime.now().isoformat(),
-                            'source': 'TradingView'
-                        }
-            
-            if prices:
-                print(f"✅ Successfully fetched data from TradingView")
-                print(f"   Fetched {len(prices)} pairs: {list(prices.keys())}")
-                
-                # Check if we got all expected pairs
-                expected_pairs = ["EURUSD", "GBPUSD", "USDJPY", "USDCHF", "AUDUSD", 
-                                "USDCAD", "NZDUSD", "EURGBP", "EURJPY", "GBPJPY", 
-                                "USDSEK", "USDNOK", "USDHKD", "EURCHF", "GBPCHF"]
-                missing_pairs = [pair for pair in expected_pairs if pair not in prices]
-                if missing_pairs:
-                    print(f"⚠️ TradingView missing pairs: {missing_pairs}")
-                
-                return prices
-                
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 429:
-            print(f"⚠️ TradingView API rate limit exceeded (429): {e}")
-        else:
-            print(f"❌ TradingView API HTTP error ({e.response.status_code}): {e}")
-    except requests.exceptions.RequestException as e:
-        print(f"❌ TradingView API request error: {e}")
+        from services.tradingview_market_data import fetch_tradingview_quotes
+        return fetch_tradingview_quotes()
     except Exception as e:
-        print(f"❌ Error fetching from TradingView: {e}")
-    
-    return None
+        print(f"❌ Error fetching TradingView quotes: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
 
 @app.route('/api/dashboard-data')
 def get_dashboard_data():
