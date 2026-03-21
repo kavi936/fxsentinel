@@ -608,6 +608,17 @@
   height: 100%;
 }
 
+/* TradingView embed footer link (matches official embed pattern) */
+.yield-single-widget .tradingview-widget-copyright {
+  font-size: 0.65rem;
+  padding: 4px 8px 8px;
+  color: #9a9a9a;
+}
+
+.yield-single-widget .tradingview-widget-copyright .blue-text {
+  color: #2962ff;
+}
+
 .economic-indicators-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
