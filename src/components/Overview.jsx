@@ -2576,10 +2576,93 @@ const Overview = () => {
     cleanupOldCache();
   }, []);
 
+  // Stable fetch that always uses the latest selectedDateRange (fixes stale closure on 5‑min auto-refresh)
+  const fetchEconomicCalendar = useCallback(async () => {
+    try {
+      // Format dates for API request
+      const startDate = selectedDateRange.start.toISOString().split('T')[0];
+      const endDate = selectedDateRange.end.toISOString().split('T')[0];
+      const cacheKey = `economic_calendar_${startDate}_${endDate}`;
+
+      // Check localStorage cache first
+      const cachedData = localStorage.getItem(cacheKey);
+      if (cachedData) {
+        try {
+          const parsed = JSON.parse(cachedData);
+          const cacheAge = Date.now() - parsed.timestamp;
+          const maxCacheAge = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
+
+          if (cacheAge < maxCacheAge) {
+            console.log(`📋 Using cached calendar data (age: ${(cacheAge / 3600000).toFixed(1)}h)`);
+            setEconomicEvents(parsed.events);
+            setCalendarSource(parsed.source + ' (cached)');
+            setLastUpdated(new Date(parsed.timestamp));
+            setCalendarLoading(false);
+            setCalendarError(null);
+            // Continue to fetch fresh data in background
+          } else {
+            console.log(`⚠️ Cache expired (age: ${(cacheAge / 3600000).toFixed(1)}h)`);
+          }
+        } catch (e) {
+          console.warn('⚠️ Failed to parse cached data:', e);
+        }
+      }
+
+      // Always fetch fresh data
+      setCalendarLoading(true);
+      setCalendarError(null);
+
+      const url = `${config.endpoints.economicCalendar}?start_date=${startDate}&end_date=${endDate}`;
+      console.log(`📅 Fetching fresh calendar data for ${startDate} to ${endDate}`);
+
+      const response = await fetch(url);
+      const data = await response.json();
+
+      if (response.ok && data.events) {
+        setEconomicEvents(data.events);
+        setCalendarSource(data.source || 'API');
+
+        // Cache the fresh data in localStorage
+        try {
+          const cacheData = {
+            events: data.events,
+            source: data.source,
+            timestamp: Date.now()
+          };
+          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+          console.log(`💾 Cached ${data.events.length} events to localStorage`);
+        } catch (e) {
+          console.warn('⚠️ Failed to cache data to localStorage:', e);
+        }
+
+        // Debug logging
+        console.log(`📊 Received ${data.events.length} events from ${data.source}`);
+
+        if (data.demo_api_limitations) {
+          console.warn('⚠️ Demo API limitations detected');
+        }
+        if (data.historical_events_filtered > 0) {
+          console.warn(`⚠️ ${data.historical_events_filtered} historical events filtered`);
+        }
+
+        console.log(`✅ Fetched ${data.events.length} economic events from ${data.source}`);
+        setLastUpdated(new Date());
+      } else {
+        throw new Error(data.message || 'Failed to fetch economic calendar');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching economic calendar:', error);
+      setCalendarError(error.message);
+      setCalendarSource('error');
+    } finally {
+      setCalendarLoading(false);
+    }
+  }, [selectedDateRange]);
+
   // Fetch economic calendar data
   useEffect(() => {
     fetchEconomicCalendar();
-  }, [selectedDateRange]);
+  }, [fetchEconomicCalendar]);
 
   // Auto-refresh calendar data every 5 minutes to get updated status and new events
   useEffect(() => {
@@ -2588,9 +2671,8 @@ const Overview = () => {
       fetchEconomicCalendar();
     }, 5 * 60 * 1000); // 5 minutes
 
-    // Cleanup interval on unmount
     return () => clearInterval(autoRefreshInterval);
-  }, []);
+  }, [fetchEconomicCalendar]);
 
   // Real-time status updates every minute (for events that are about to become imminent/completed)
   useEffect(() => {
@@ -2612,88 +2694,6 @@ const Overview = () => {
       }, 2000); // 2 second delay
     }
   }, [calendarSource, isRefreshing]);
-
-  const fetchEconomicCalendar = async () => {
-    try {
-      // Format dates for API request
-      const startDate = selectedDateRange.start.toISOString().split('T')[0];
-      const endDate = selectedDateRange.end.toISOString().split('T')[0];
-      const cacheKey = `economic_calendar_${startDate}_${endDate}`;
-      
-      // Check localStorage cache first
-      const cachedData = localStorage.getItem(cacheKey);
-      if (cachedData) {
-        try {
-          const parsed = JSON.parse(cachedData);
-          const cacheAge = Date.now() - parsed.timestamp;
-          const maxCacheAge = 6 * 60 * 60 * 1000; // 6 hours in milliseconds
-          
-          if (cacheAge < maxCacheAge) {
-            console.log(`📋 Using cached calendar data (age: ${(cacheAge / 3600000).toFixed(1)}h)`);
-            setEconomicEvents(parsed.events);
-            setCalendarSource(parsed.source + ' (cached)');
-            setLastUpdated(new Date(parsed.timestamp));
-            setCalendarLoading(false);
-            setCalendarError(null);
-            // Continue to fetch fresh data in background
-          } else {
-            console.log(`⚠️ Cache expired (age: ${(cacheAge / 3600000).toFixed(1)}h)`);
-          }
-        } catch (e) {
-          console.warn('⚠️ Failed to parse cached data:', e);
-        }
-      }
-      
-      // Always fetch fresh data
-      setCalendarLoading(true);
-      setCalendarError(null);
-      
-      const url = `${config.endpoints.economicCalendar}?start_date=${startDate}&end_date=${endDate}`;
-      console.log(`📅 Fetching fresh calendar data for ${startDate} to ${endDate}`);
-      
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (response.ok && data.events) {
-        setEconomicEvents(data.events);
-        setCalendarSource(data.source || 'API');
-        
-        // Cache the fresh data in localStorage
-        try {
-          const cacheData = {
-            events: data.events,
-            source: data.source,
-            timestamp: Date.now()
-          };
-          localStorage.setItem(cacheKey, JSON.stringify(cacheData));
-          console.log(`💾 Cached ${data.events.length} events to localStorage`);
-        } catch (e) {
-          console.warn('⚠️ Failed to cache data to localStorage:', e);
-        }
-        
-        // Debug logging
-        console.log(`📊 Received ${data.events.length} events from ${data.source}`);
-        
-        if (data.demo_api_limitations) {
-          console.warn('⚠️ Demo API limitations detected');
-        }
-        if (data.historical_events_filtered > 0) {
-          console.warn(`⚠️ ${data.historical_events_filtered} historical events filtered`);
-        }
-        
-        console.log(`✅ Fetched ${data.events.length} economic events from ${data.source}`);
-        setLastUpdated(new Date());
-      } else {
-        throw new Error(data.message || 'Failed to fetch economic calendar');
-      }
-    } catch (error) {
-      console.error('❌ Error fetching economic calendar:', error);
-      setCalendarError(error.message);
-      setCalendarSource('error');
-    } finally {
-      setCalendarLoading(false);
-    }
-  };
 
   // Filter economic events based on current filter settings
   const getFilteredEvents = () => {
