@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useRef } from 'react';
 import './Economies.css';
 import economyIndicatorsData from '../data/economyIndicators.json';
 import { config } from '../config';
+import { useAuth } from '../contexts/AuthContext';
 
 /** Display order: US (by maturity 2Y→30Y), then EUR, then GBP. Wheel cycles this flat list. */
 const YIELD_ECONOMY_ORDER = ['US', 'EUR', 'GBP'];
@@ -1897,6 +1898,7 @@ const indicatorDetails = {
 };
 
 function Economies() {
+  const { currentUser } = useAuth();
   const [selectedEconomy, setSelectedEconomy] = useState('US');
   const [apiIndicatorsData, setApiIndicatorsData] = useState({});
   const [apiDataLoading, setApiDataLoading] = useState(false);
@@ -2147,7 +2149,7 @@ function Economies() {
             </select>
             </div>
             <button type="button" className="holistic-scan-button" onClick={handleScrollToAnalysis}>
-              Hollistic Scan
+              Holistic Scan
             </button>
           </div>
           
@@ -2158,6 +2160,7 @@ function Economies() {
                 analysisRef={analysisRef}
                 apiIndicatorsData={apiIndicatorsData}
                 useApiData={useApiData}
+                currentUser={currentUser}
               />
           </div>
         </div>
@@ -2169,13 +2172,16 @@ function Economies() {
 export default Economies;
 
 
-function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useApiData }) {
+function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useApiData, currentUser }) {
   const [isLoading, setIsLoading] = useState(false);
   const [expandedIndicatorId, setExpandedIndicatorId] = useState(null);
   const [loadingIndicatorId, setLoadingIndicatorId] = useState(null);
   const [chartHover, setChartHover] = useState(null);
   const [error, setError] = useState(null);
   const [activeYieldSymbol, setActiveYieldSymbol] = useState('OANDA:USB10YUSD');
+  const [holisticScan, setHolisticScan] = useState(null);
+  const [scanState, setScanState] = useState('default'); // default | loading | ready | error
+  const [scanError, setScanError] = useState(null);
 
   useEffect(() => {
     const defaultByEconomy = {
@@ -2194,6 +2200,69 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   );
 
   const activeYield = YIELD_MARKETS[activeYieldIndex] || YIELD_MARKETS[0];
+
+  useEffect(() => {
+    // Reset to explicit user-trigger mode when the economy changes.
+    setHolisticScan(null);
+    setScanState('default');
+    setScanError(null);
+  }, [selectedEconomy]);
+
+  const runHolisticScan = async () => {
+    setScanState('loading');
+    setScanError(null);
+    try {
+      let authToken = null;
+      if (currentUser) {
+        authToken = await currentUser.getIdToken();
+      }
+
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (authToken) {
+        headers.Authorization = `Bearer ${authToken}`;
+      }
+
+      const response = await fetch(config.endpoints.economyScan(selectedEconomy), {
+        method: 'POST',
+        headers
+      });
+
+      if (!response.ok) {
+        let errorJson = null;
+        try {
+          errorJson = await response.json();
+        } catch (parseError) {
+          // Keep fallback below if backend error is non-JSON.
+        }
+
+        if (response.status === 429 && errorJson?.error === 'analysis_limit_reached') {
+          throw new Error(errorJson.message || 'Analysis limit reached for your plan.');
+        }
+        if (response.status === 401) {
+          throw new Error('Authentication required. Please sign in again.');
+        }
+        throw new Error(errorJson?.message || `HTTP ${response.status}`);
+      }
+
+      const payload = await response.json();
+      if (!payload?.scan) {
+        throw new Error('No scan payload');
+      }
+      setHolisticScan(payload.scan);
+      setScanState('ready');
+    } catch (err) {
+      setScanError(err.message || 'Failed to fetch scan');
+      setScanState('error');
+    }
+  };
+
+  const getBiasClass = (bias) => {
+    if (bias === 'bullish') return 'scan-bullish';
+    if (bias === 'bearish') return 'scan-bearish';
+    return 'scan-neutral';
+  };
 
   const handleYieldWheel = (event) => {
     event.preventDefault();
@@ -4437,8 +4506,67 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
 
       <div className="analysis-sections-container">
         <div className="economy-analysis" ref={analysisRef}>
-          <h2 className="analysis-title">Hollistic Scan</h2>
-          <p className="analysis-placeholder">Coming soon</p>
+          <h2 className="analysis-title">Holistic Scan</h2>
+          <div className="scan-action-row">
+            <button type="button" className="scan-run-button" onClick={runHolisticScan} disabled={scanState === 'loading'}>
+              {scanState === 'loading' ? 'Running Scan...' : 'Run Holistic Scan'}
+            </button>
+            <span className="scan-usage-note">Uses 1 analysis credit from your plan.</span>
+          </div>
+          {scanState === 'default' && (
+            <p className="analysis-placeholder">Press "Run Holistic Scan" to generate the latest macro outlook.</p>
+          )}
+          {scanState === 'loading' && <p className="analysis-placeholder">Loading scan...</p>}
+          {scanState === 'error' && (
+            <p className="analysis-placeholder">Scan unavailable right now ({scanError || 'unknown error'})</p>
+          )}
+          {scanState === 'ready' && holisticScan && (
+            <div className="holistic-scan-content">
+              <div className="scan-grid">
+                <div className="scan-card">
+                  <div className="scan-card-label">Short-Term (2-6 weeks)</div>
+                  <div className={`scan-bias ${getBiasClass(holisticScan.short_term?.bias)}`}>
+                    {(holisticScan.short_term?.bias || 'neutral').toUpperCase()}
+                  </div>
+                  <div className="scan-meta">
+                    Score: {holisticScan.short_term?.score ?? 'N/A'} | Confidence: {holisticScan.short_term?.confidence ?? 'N/A'}
+                  </div>
+                </div>
+                <div className="scan-card">
+                  <div className="scan-card-label">Long-Term (3-12 months)</div>
+                  <div className={`scan-bias ${getBiasClass(holisticScan.long_term?.bias)}`}>
+                    {(holisticScan.long_term?.bias || 'neutral').toUpperCase()}
+                  </div>
+                  <div className="scan-meta">
+                    Score: {holisticScan.long_term?.score ?? 'N/A'} | Confidence: {holisticScan.long_term?.confidence ?? 'N/A'}
+                  </div>
+                </div>
+              </div>
+
+              <div className="scan-section">
+                <div className="scan-section-title">Top Drivers</div>
+                {(holisticScan.short_term?.drivers || []).slice(0, 3).map((driver) => (
+                  <div key={driver.name} className="scan-driver-row">
+                    <span>{driver.name}</span>
+                    <span className={getBiasClass(driver.direction === 'positive' ? 'bullish' : driver.direction === 'negative' ? 'bearish' : 'neutral')}>
+                      {driver.direction}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="scan-section">
+                <div className="scan-section-title">Correlated Pairs</div>
+                <div className="scan-pairs">
+                  {(holisticScan.fx_pairs || []).slice(0, 4).map((p) => (
+                    <div key={p.pair} className="scan-pair-chip">
+                      {p.pair} - {p.bias}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="yield-indicators-section">

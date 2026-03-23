@@ -727,6 +727,7 @@ from services.hybrid_economic_calendar import hybrid_economic_calendar
 # NOTE: Only using hybrid_economic_calendar now - no fallbacks to prevent bugs
 # Import the Finnhub historical service
 from services.finnhub_historical import finnhub_historical
+from services.economy_holistic_scan_service import economy_holistic_scan_service
 
 @app.route('/api/economy-indicators/<country_code>', methods=['GET'])
 def get_economy_indicators(country_code):
@@ -868,6 +869,130 @@ def get_economic_calendar():
             "status": "error",
             "error": str(e),
             "message": "Failed to fetch economic calendar data. Please try again later."
+        }), 500
+
+
+@app.route('/api/economy-scan/<country_code>', methods=['POST'])
+@limiter.limit("10 per minute")
+def get_economy_scan(country_code):
+    """
+    Build a deterministic macro scan for the selected economy.
+
+    Query Parameters:
+        refresh: If 'true', bypasses indicator cache when possible
+    """
+    try:
+        country_code = (country_code or "").upper()
+        force_refresh = request.args.get('refresh', 'false').lower() == 'true'
+        token_user_info = _extract_user_from_token()
+
+        # Holistic scan is an on-demand premium action and should count toward
+        # the same plan usage pool as other analysis actions.
+        if not token_user_info:
+            return jsonify({
+                "status": "error",
+                "error": "Unauthorized",
+                "message": "Firebase authentication required"
+            }), 401
+
+        permission = stripe_service.can_perform_analysis(
+            token_user_info.get('user_id'),
+            token_user_info.get('user_email')
+        )
+        if not permission.get('can_perform'):
+            return jsonify({
+                'error': 'analysis_limit_reached',
+                'message': 'Analysis limit reached for your plan.',
+                'daily_usage': permission.get('daily_usage'),
+                'monthly_usage': permission.get('monthly_usage'),
+                'daily_limit': permission.get('daily_limit'),
+                'monthly_limit': permission.get('monthly_limit'),
+                'status': permission.get('status')
+            }), 429
+
+        if country_code not in economy_holistic_scan_service.SUPPORTED_COUNTRIES:
+            return jsonify({
+                "status": "error",
+                "message": f"Unsupported country code: {country_code}",
+                "supported_countries": sorted(list(economy_holistic_scan_service.SUPPORTED_COUNTRIES)),
+            }), 400
+
+        def _load_fallback_indicators_from_json(ccy):
+            """
+            Fallback source for scans when live indicator data is unavailable.
+            Uses the same static economies dataset as the frontend.
+            """
+            try:
+                base_dir = os.path.dirname(__file__)
+                fallback_path = os.path.join(base_dir, '..', 'src', 'data', 'economyIndicators.json')
+                with open(fallback_path, 'r', encoding='utf-8') as f:
+                    payload = json.load(f)
+                return (payload.get(ccy) or {}).get('indicators') or {}
+            except Exception as fallback_err:
+                logger.warning(f"Fallback indicator JSON unavailable: {fallback_err}")
+                return {}
+
+        indicators = {}
+        indicator_source = "fallback_json"
+        if google_sheets_service and google_sheets_service.is_available():
+            try:
+                if force_refresh:
+                    cache_key = f"indicators_{country_code}"
+                    if hasattr(google_sheets_service, 'cache') and cache_key in google_sheets_service.cache:
+                        del google_sheets_service.cache[cache_key]
+                    if hasattr(google_sheets_service, 'cache_timestamps') and cache_key in google_sheets_service.cache_timestamps:
+                        del google_sheets_service.cache_timestamps[cache_key]
+                indicators = google_sheets_service.get_economy_indicators(country_code) or {}
+                if indicators:
+                    indicator_source = "google_sheets"
+            except Exception as sheets_err:
+                logger.warning(f"Google Sheets indicators unavailable for scan: {sheets_err}")
+
+        # Ensure we always have a non-crashing indicator source for scan scoring.
+        if not indicators:
+            indicators = _load_fallback_indicators_from_json(country_code)
+            indicator_source = "fallback_json"
+
+        # Keep event window narrow for short-term risk in scan.
+        start_date = datetime.now().strftime("%Y-%m-%d")
+        end_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        events = hybrid_economic_calendar.get_economic_events(start_date, end_date) or []
+
+        scan = economy_holistic_scan_service.build_scan(
+            country_code=country_code,
+            indicators=indicators,
+            events=events,
+        )
+
+        # Count usage only after successful scan generation.
+        try:
+            stripe_service.increment_analysis_count(
+                token_user_info.get('user_id'),
+                token_user_info.get('user_email')
+            )
+        except Exception as billing_err:
+            logger.debug(f"Holistic scan billing increment failed (non-critical): {billing_err}")
+
+        return jsonify({
+            "status": "success",
+            "scan": scan,
+            "inputs": {
+                "indicator_source": indicator_source,
+                "event_source": "hybrid_calendar",
+                "events_considered": len(events),
+            }
+        }), 200
+    except ValueError as ve:
+        return jsonify({
+            "status": "error",
+            "message": str(ve),
+        }), 400
+    except Exception as e:
+        logger.error(f"Error in economy-scan endpoint: {e}")
+        return jsonify({
+            "status": "error",
+            "message": "Failed to build economy scan",
+            "error": str(e),
         }), 500
 
 @app.route('/api/economic-chart/<event_name>')

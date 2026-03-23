@@ -541,6 +541,125 @@
   letter-spacing: 0.3px;
 }
 
+.holistic-scan-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scan-action-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  flex-wrap: wrap;
+}
+
+.scan-run-button {
+  border: 1px solid rgba(218, 0, 18, 0.7);
+  background: rgba(218, 0, 18, 0.2);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.scan-run-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.scan-usage-note {
+  color: #9a9a9a;
+  font-size: 0.66rem;
+  letter-spacing: 0.2px;
+}
+
+.scan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.scan-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.scan-card-label {
+  font-size: 0.66rem;
+  color: #9a9a9a;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.scan-bias {
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.scan-meta {
+  margin-top: 4px;
+  color: #bdbdbd;
+  font-size: 0.68rem;
+}
+
+.scan-section {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.scan-section-title {
+  font-size: 0.7rem;
+  color: #d0d0d0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.scan-driver-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.72rem;
+  color: #e2e2e2;
+  padding: 3px 0;
+}
+
+.scan-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.scan-pair-chip {
+  font-size: 0.68rem;
+  color: #f0f0f0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.scan-bullish {
+  color: #3fd08a;
+}
+
+.scan-bearish {
+  color: #ff6868;
+}
+
+.scan-neutral {
+  color: #bcbcbc;
+}
+
 .yield-subtext {
   color: #666666;
   font-size: 0.7rem;
