@@ -13089,7 +13089,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Flash Manufacturing PMI',
-                'date': 'Mon, Mar 23',
+                'date': 'Tue, Mar 23',
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
