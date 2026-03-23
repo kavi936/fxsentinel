@@ -13033,9 +13033,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.3%',
                 'forecast': '0.1%',
-                'previous': '0.3%'
+                'previous': '0.8%'
             },
             {
                 'title': 'Consumer Confidence',
@@ -13043,7 +13043,7 @@ class HybridEconomicCalendar:
                 'time': '15:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-16',
                 'forecast': '-15',
                 'previous': '-12'
             },
