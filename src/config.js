@@ -46,6 +46,8 @@ export const config = {
     submitFeedback: `${API_BASE_URL}/api/submit-feedback`,
     // Economy indicators endpoint (Google Sheets integration)
     economyIndicators: (countryCode) => `${API_BASE_URL}/api/economy-indicators/${countryCode}`,
+    // Economy holistic scan endpoint
+    economyScan: (countryCode) => `${API_BASE_URL}/api/economy-scan/${countryCode}`,
     // Base URL for direct API calls
     baseUrl: API_BASE_URL
   }
