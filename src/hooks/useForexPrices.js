@@ -30,13 +30,27 @@ const fallbackPrices = {
   US02Y: { price: 3.91, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   US10Y: { price: 4.38, change: 0.02, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   US30Y: { price: 4.95, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  DE02Y: { price: 2.65, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   DE10Y: { price: 3.05, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  DE30Y: { price: 3.49, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  GB02Y: { price: 4.46, change: -0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   GB10Y: { price: 5.0, change: -0.02, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  GB30Y: { price: 5.56, change: -0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  JP02Y: { price: 1.3, change: 0.0, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   JP10Y: { price: 2.26, change: 0.0, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  JP30Y: { price: 3.55, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  EU02Y: { price: 2.65, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   EU10Y: { price: 3.05, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  EU30Y: { price: 3.49, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  AU02Y: { price: 4.68, change: -0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   AU10Y: { price: 5.07, change: -0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  AU30Y: { price: 5.45, change: -0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  CA02Y: { price: 2.94, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
   CA10Y: { price: 3.56, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
-  IT10Y: { price: 3.96, change: 0.02, lastUpdate: new Date(), decimals: 3, category: 'bonds' }
+  CA30Y: { price: 3.95, change: 0.01, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  IT02Y: { price: 2.97, change: 0.02, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  IT10Y: { price: 3.96, change: 0.02, lastUpdate: new Date(), decimals: 3, category: 'bonds' },
+  IT30Y: { price: 4.65, change: 0.02, lastUpdate: new Date(), decimals: 3, category: 'bonds' }
 };
 
 export const useForexPrices = () => {
