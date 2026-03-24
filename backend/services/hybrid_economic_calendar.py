@@ -13063,9 +13063,9 @@ class HybridEconomicCalendar:
                 'time': '22:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.1',
                 'forecast': 'N/A',
-                'previous': '51.5'
+                'previous': '51.0'
             },
             {
                 'title': 'Flash Services PMI',
@@ -13073,9 +13073,9 @@ class HybridEconomicCalendar:
                 'time': '22:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '46.6',
                 'forecast': 'N/A',
-                'previous': '52.2'
+                'previous': '52.8'
             },
             {
                 'title': 'National Core CPI y/y',
@@ -13083,7 +13083,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.6%',
                 'forecast': '1.7%',
                 'previous': '2.0%'
             },
@@ -13093,9 +13093,9 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.4',
                 'forecast': '52.9',
-                'previous': '52.8'
+                'previous': '53.0'
             },
 
             # TUESDAY, MARCH 24
@@ -13117,7 +13117,7 @@ class HybridEconomicCalendar:
                 'impact': 'medium',
                 'actual': 'TBD',
                 'forecast': '49.0',
-                'previous': '49.9'
+                'previous': '50.1'
             },
             {
                 'title': 'French Flash Services PMI',
@@ -13137,7 +13137,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': 'TBD',
                 'forecast': '49.8',
-                'previous': '50.7'
+                'previous': '50.9'
             },
             {
                 'title': 'German Flash Services PMI',
@@ -13147,7 +13147,7 @@ class HybridEconomicCalendar:
                 'impact': 'high',
                 'actual': 'TBD',
                 'forecast': '52.5',
-                'previous': '53.4'
+                'previous': '53.5'
             },
             {
                 'title': 'Flash Manufacturing PMI',
