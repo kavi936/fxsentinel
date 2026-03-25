@@ -2264,6 +2264,18 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     return 'scan-neutral';
   };
 
+  const economyNameMap = {
+    US: 'United States',
+    EUR: 'Euro Area',
+    GBP: 'United Kingdom',
+    JPY: 'Japan'
+  };
+
+  const selectedEconomyName = economyNameMap[selectedEconomy] || selectedEconomy;
+  const scanTimestamp = holisticScan?.timestamp ? new Date(holisticScan.timestamp).toLocaleString() : null;
+  const formatYield = (value) => (typeof value === 'number' ? `${value.toFixed(2)}%` : 'N/A');
+  const formatChange = (value) => (typeof value === 'number' ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}` : 'N/A');
+
   const handleYieldWheel = (event) => {
     event.preventDefault();
     const direction = event.deltaY > 0 ? 1 : -1;
@@ -4506,22 +4518,71 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
 
       <div className="analysis-sections-container">
         <div className="economy-analysis" ref={analysisRef}>
-          <h2 className="analysis-title">Holistic Scan</h2>
-          <div className="scan-action-row">
-            <button type="button" className="scan-run-button" onClick={runHolisticScan} disabled={scanState === 'loading'}>
-              {scanState === 'loading' ? 'Running Scan...' : 'Run Holistic Scan'}
-            </button>
-            <span className="scan-usage-note">Uses 1 analysis credit from your plan.</span>
+          <div className="holistic-scan-heading">
+            <div className="scan-title-row">
+              <h2 className="analysis-title scan-main-title">
+                <span className="scan-title-prefix">Holistic Scan</span>
+                <span className="scan-title-separator"> - </span>
+                <span className="scan-title-economy">{selectedEconomyName}</span>
+              </h2>
+              <div className="scan-header-actions">
+                <button type="button" className="scan-run-button" onClick={runHolisticScan} disabled={scanState === 'loading'}>
+                  {scanState === 'loading' ? 'Running Scan...' : 'Run Holistic Scan'}
+                </button>
+              </div>
+            </div>
+            <p className="yield-subtext">
+              Run Holistic Scan to load macro bias, yield snapshot, and narratives for this economy.
+            </p>
           </div>
-          {scanState === 'default' && (
-            <p className="analysis-placeholder">Press "Run Holistic Scan" to generate the latest macro outlook.</p>
-          )}
           {scanState === 'loading' && <p className="analysis-placeholder">Loading scan...</p>}
           {scanState === 'error' && (
             <p className="analysis-placeholder">Scan unavailable right now ({scanError || 'unknown error'})</p>
           )}
           {scanState === 'ready' && holisticScan && (
             <div className="holistic-scan-content">
+              <p className="scan-overview-line">
+                <span>Economy: {holisticScan.economy || selectedEconomyName}</span>
+                <span className="scan-overview-sep" aria-hidden="true">
+                  {' '}
+                  ·{' '}
+                </span>
+                <span>Data quality: {(holisticScan.data_quality?.status || 'unknown').toUpperCase()}</span>
+                {scanTimestamp && (
+                  <>
+                    <span className="scan-overview-sep" aria-hidden="true">
+                      {' '}
+                      ·{' '}
+                    </span>
+                    <span>Scanned: {scanTimestamp}</span>
+                  </>
+                )}
+              </p>
+
+              <div className="scan-yield-strip">
+                <div className="scan-yield-item">
+                  <span className="scan-yield-label">2Y Yield</span>
+                  <span className="scan-yield-value">{formatYield(holisticScan.yield_context?.['2Y']?.value)}</span>
+                  <span className={getBiasClass((holisticScan.yield_context?.['2Y']?.change ?? 0) > 0 ? 'bullish' : (holisticScan.yield_context?.['2Y']?.change ?? 0) < 0 ? 'bearish' : 'neutral')}>
+                    {formatChange(holisticScan.yield_context?.['2Y']?.change)}
+                  </span>
+                </div>
+                <div className="scan-yield-item">
+                  <span className="scan-yield-label">10Y Yield</span>
+                  <span className="scan-yield-value">{formatYield(holisticScan.yield_context?.['10Y']?.value)}</span>
+                  <span className={getBiasClass((holisticScan.yield_context?.['10Y']?.change ?? 0) > 0 ? 'bullish' : (holisticScan.yield_context?.['10Y']?.change ?? 0) < 0 ? 'bearish' : 'neutral')}>
+                    {formatChange(holisticScan.yield_context?.['10Y']?.change)}
+                  </span>
+                </div>
+                <div className="scan-yield-item">
+                  <span className="scan-yield-label">30Y Yield</span>
+                  <span className="scan-yield-value">{formatYield(holisticScan.yield_context?.['30Y']?.value)}</span>
+                  <span className={getBiasClass((holisticScan.yield_context?.['30Y']?.change ?? 0) > 0 ? 'bullish' : (holisticScan.yield_context?.['30Y']?.change ?? 0) < 0 ? 'bearish' : 'neutral')}>
+                    {formatChange(holisticScan.yield_context?.['30Y']?.change)}
+                  </span>
+                </div>
+              </div>
+
               <div className="scan-grid">
                 <div className="scan-card">
                   <div className="scan-card-label">Short-Term (2-6 weeks)</div>
@@ -4543,11 +4604,88 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 </div>
               </div>
 
+              {Array.isArray(holisticScan.highlights?.items) && holisticScan.highlights.items.length > 0 && (
+                <div className="scan-section scan-highlights-section">
+                  <div className="scan-section-title">Key takeaways</div>
+                  {holisticScan.highlights.rules?.minimum_items != null && (
+                    <p className="scan-highlights-rules">
+                      At least <strong>{holisticScan.highlights.rules.minimum_items}</strong> highlighted points per scan;{' '}
+                      <strong>labels</strong> name the theme, <span className="scan-highlight-emphasis-inline">emphasis</span> shows the headline read.
+                    </p>
+                  )}
+                  <ul className="scan-highlights-list" role="list">
+                    {holisticScan.highlights.items.map((item) => (
+                      <li key={item.id} className="scan-highlight-item">
+                        <div className="scan-highlight-line">
+                          <strong className="scan-highlight-label">{item.label}</strong>
+                          <span className="scan-highlight-emphasis">{item.emphasis}</span>
+                        </div>
+                        <p className="scan-highlight-detail">{item.detail}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <div className="scan-section">
-                <div className="scan-section-title">Top Drivers</div>
+                <div className="scan-section-title">Comprehensive Context</div>
+                <p className="scan-paragraph">{holisticScan.narrative?.short_term || 'Short-term narrative unavailable.'}</p>
+                {holisticScan.narrative?.geopolitical_energy && (
+                  <p className="scan-paragraph scan-paragraph-accent">{holisticScan.narrative.geopolitical_energy}</p>
+                )}
+                {holisticScan.narrative?.central_bank_context && (
+                  <p className="scan-paragraph">{holisticScan.narrative.central_bank_context}</p>
+                )}
+                <p className="scan-paragraph">{holisticScan.narrative?.long_term || 'Long-term narrative unavailable.'}</p>
+                <p className="scan-paragraph">{holisticScan.narrative?.fx || 'FX narrative unavailable.'}</p>
+                {holisticScan.context_sources && (
+                  <p className="scan-paragraph scan-paragraph-metadata">
+                    Context layers: curated geopolitical / energy overlay
+                    {holisticScan.context_sources.macro_overlay?.lastUpdated
+                      ? ` (updated ${holisticScan.context_sources.macro_overlay.lastUpdated})`
+                      : ''}{' '}
+                    and {holisticScan.context_sources.central_bank_documents?.bank || 'central bank'} policy excerpts from the same document catalog as Overview&apos;s Central Bank Analysis
+                    {holisticScan.context_sources.central_bank_documents?.documents_sampled != null
+                      ? ` (${holisticScan.context_sources.central_bank_documents.documents_sampled} recent entries sampled).`
+                      : '.'}
+                  </p>
+                )}
+              </div>
+
+              <div className="scan-grid">
+                <div className="scan-card">
+                  <div className="scan-card-label">Short-Term Trading Range View</div>
+                  <div className="scan-meta-large">{holisticScan.trading_ranges?.short_term || 'N/A'}</div>
+                </div>
+                <div className="scan-card">
+                  <div className="scan-card-label">Long-Term Trading Range View</div>
+                  <div className="scan-meta-large">{holisticScan.trading_ranges?.long_term || 'N/A'}</div>
+                </div>
+              </div>
+
+              <div className="scan-section">
+                <div className="scan-section-title">Short-Term Drivers</div>
                 {(holisticScan.short_term?.drivers || []).slice(0, 3).map((driver) => (
                   <div key={driver.name} className="scan-driver-row">
-                    <span>{driver.name}</span>
+                    <span>
+                      {driver.name}
+                      {driver.note ? <span className="scan-driver-note"> - {driver.note}</span> : null}
+                    </span>
+                    <span className={getBiasClass(driver.direction === 'positive' ? 'bullish' : driver.direction === 'negative' ? 'bearish' : 'neutral')}>
+                      {driver.direction}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="scan-section">
+                <div className="scan-section-title">Long-Term Drivers</div>
+                {(holisticScan.long_term?.drivers || []).slice(0, 4).map((driver) => (
+                  <div key={`long-${driver.name}`} className="scan-driver-row">
+                    <span>
+                      {driver.name}
+                      {driver.note ? <span className="scan-driver-note"> - {driver.note}</span> : null}
+                    </span>
                     <span className={getBiasClass(driver.direction === 'positive' ? 'bullish' : driver.direction === 'negative' ? 'bearish' : 'neutral')}>
                       {driver.direction}
                     </span>
@@ -4560,9 +4698,24 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className="scan-pairs">
                   {(holisticScan.fx_pairs || []).slice(0, 4).map((p) => (
                     <div key={p.pair} className="scan-pair-chip">
-                      {p.pair} - {p.bias}
+                      {p.pair} - {p.bias} ({p.strength})
                     </div>
                   ))}
+                </div>
+              </div>
+
+              <div className="scan-section">
+                <div className="scan-section-title">Missing Signals</div>
+                <div className="scan-pairs">
+                  {(holisticScan.data_quality?.missing_signals || []).length === 0 ? (
+                    <div className="scan-pair-chip">None</div>
+                  ) : (
+                    (holisticScan.data_quality?.missing_signals || []).map((signal) => (
+                      <div key={signal} className="scan-pair-chip">
+                        {signal}
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>

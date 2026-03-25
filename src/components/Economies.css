@@ -544,25 +544,83 @@
 .holistic-scan-content {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
-.scan-action-row {
+.scan-overview-line {
+  margin: 0 0 2px 0;
+  font-size: 0.7rem;
+  color: #666666;
+  letter-spacing: 0.2px;
+  line-height: 1.45;
+}
+
+.scan-overview-sep {
+  color: #555555;
+}
+
+/* Heading row only — no bordered box (aligned with bond yields section layout) */
+.holistic-scan-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scan-title-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 4px;
+  justify-content: space-between;
+  gap: 16px;
   flex-wrap: wrap;
+}
+
+.scan-main-title {
+  font-size: 1.02rem;
+  letter-spacing: 0.7px;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: min(100%, 220px);
+}
+
+.scan-title-prefix {
+  color: #ffffff;
+}
+
+.scan-title-separator {
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+
+.scan-title-economy {
+  color: #da0012;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.scan-header-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex: 0 0 auto;
 }
 
 .scan-run-button {
   border: 1px solid rgba(218, 0, 18, 0.7);
-  background: rgba(218, 0, 18, 0.2);
+  background: linear-gradient(180deg, rgba(218, 0, 18, 0.35), rgba(218, 0, 18, 0.2));
   color: #ffffff;
-  border-radius: 8px;
-  padding: 6px 10px;
-  font-size: 0.72rem;
+  border-radius: 10px;
+  padding: 9px 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
   cursor: pointer;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.scan-run-button:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255, 86, 86, 0.85);
+  background: linear-gradient(180deg, rgba(218, 0, 18, 0.42), rgba(218, 0, 18, 0.25));
 }
 
 .scan-run-button:disabled {
@@ -570,57 +628,77 @@
   cursor: not-allowed;
 }
 
-.scan-usage-note {
-  color: #9a9a9a;
-  font-size: 0.66rem;
-  letter-spacing: 0.2px;
-}
-
 .scan-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: 12px 20px;
 }
 
 .scan-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  background: none;
 }
 
 .scan-card-label {
-  font-size: 0.66rem;
-  color: #9a9a9a;
-  margin-bottom: 6px;
+  font-size: 0.7rem;
+  color: #666666;
+  margin-bottom: 4px;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.2px;
 }
 
 .scan-bias {
-  font-size: 0.82rem;
+  font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
 
 .scan-meta {
-  margin-top: 4px;
-  color: #bdbdbd;
-  font-size: 0.68rem;
+  margin-top: 6px;
+  color: #888888;
+  font-size: 0.82rem;
+}
+
+.scan-meta-large {
+  color: #d8d8d8;
+  font-size: 0.92rem;
+  line-height: 1.6;
 }
 
 .scan-section {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 10px;
+  border: none;
+  border-radius: 0;
+  padding: 10px 0 0 0;
+  margin: 0;
+  background: none;
+}
+
+.holistic-scan-content > .scan-yield-strip + .scan-grid {
+  border-top: 1px solid rgba(218, 0, 18, 0.12);
+  margin-top: 4px;
+  padding-top: 10px;
+}
+
+.holistic-scan-content > .scan-section + .scan-section,
+.holistic-scan-content > .scan-grid + .scan-section {
+  border-top: 1px solid rgba(218, 0, 18, 0.12);
+  margin-top: 4px;
+}
+
+.holistic-scan-content > .scan-section + .scan-grid {
+  border-top: 1px solid rgba(218, 0, 18, 0.12);
+  margin-top: 4px;
+  padding-top: 10px;
 }
 
 .scan-section-title {
   font-size: 0.7rem;
-  color: #d0d0d0;
-  margin-bottom: 8px;
+  color: #666666;
+  margin-bottom: 6px;
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.2px;
 }
 
 .scan-driver-row {
@@ -628,9 +706,14 @@
   justify-content: space-between;
   align-items: center;
   gap: 12px;
-  font-size: 0.72rem;
+  font-size: 0.9rem;
   color: #e2e2e2;
-  padding: 3px 0;
+  padding: 6px 0;
+}
+
+.scan-driver-note {
+  color: #9e9e9e;
+  font-size: 0.8rem;
 }
 
 .scan-pairs {
@@ -640,12 +723,134 @@
 }
 
 .scan-pair-chip {
-  font-size: 0.68rem;
+  font-size: 0.84rem;
   color: #f0f0f0;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 999px;
-  padding: 4px 8px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.04);
+}
+
+.scan-yield-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px 12px;
+}
+
+.scan-yield-item {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.scan-yield-label {
+  color: #888888;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.scan-yield-value {
+  color: #ffffff;
+  font-size: 1.02rem;
+  font-weight: 700;
+}
+
+.scan-paragraph {
+  color: #888888;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  margin: 0 0 8px 0;
+}
+
+.scan-paragraph-accent {
+  border-left: none;
+  padding-left: 0;
+  color: #c8c8c8;
+}
+
+.scan-paragraph-metadata {
+  font-size: 0.82rem;
+  color: #9a9a9a;
+  line-height: 1.55;
+  margin-top: 4px;
+}
+
+.scan-highlights-section {
+  background: none;
+  border: none;
+}
+
+.scan-highlights-rules {
+  color: #c4c4c4;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  margin: 0 0 14px 0;
+}
+
+.scan-highlights-rules strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.scan-highlight-emphasis-inline {
+  color: #da0012;
+  font-weight: 700;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.scan-highlights-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scan-highlight-item {
+  border-left: none;
+  padding: 0;
+}
+
+.scan-highlight-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.scan-highlight-label {
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.scan-highlight-emphasis {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #da0012;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.scan-highlight-detail {
+  margin: 0;
+  color: #c8c8c8;
+  font-size: 0.9rem;
+  line-height: 1.65;
 }
 
 .scan-bullish {
