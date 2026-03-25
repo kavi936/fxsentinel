@@ -13427,7 +13427,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-35.0',
                 'forecast': 'N/A',
                 'previous': '9.8'
             },
@@ -13437,7 +13437,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '86.4',
                 'forecast': '86.3',
                 'previous': '88.6'
             },
@@ -13447,9 +13447,9 @@ class HybridEconomicCalendar:
                 'time': '09:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': '2.5%',
-                'previous': '2.4%'
+                'previous': '1.9%'
             },
             {
                 'title': 'MPC Member Greene Speaks',
