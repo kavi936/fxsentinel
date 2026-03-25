@@ -13467,9 +13467,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-191B',
                 'forecast': 'N/A',
-                'previous': '-226B'
+                'previous': '-239B'
             },
             {
                 'title': 'Import Prices m/m',
@@ -13487,9 +13487,9 @@ class HybridEconomicCalendar:
                 'time': '13:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': 'N/A',
-                'previous': '-0.3%'
+                'previous': '0.6%'
             },
             {
                 'title': 'SNB Quarterly Bulletin',
@@ -13507,7 +13507,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-13.7',
                 'forecast': '-14.1',
                 'previous': '-13.7'
             },
