@@ -860,7 +860,7 @@
       },
       "inflation": {
         "currentValue": "3.0%",
-        "asOf": "2026-01-01",
+        "asOf": "2026-02-01",
         "chartData": [
           4.0,
           3.4,
@@ -886,6 +886,7 @@
           3.6,
           3.2,
           3.4,
+          3.0,
           3.0
         ],
         "chartDates": [
@@ -913,7 +914,8 @@
           "2025-10-01",
           "2025-11-01",
           "2025-12-01",
-          "2026-01-01"
+          "2026-01-01",
+          "2026-02-01"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.ons.gov.uk/economy/inflationandpriceindices",
@@ -924,8 +926,8 @@
         "description": "Consumer Price Index (CPI) Year-over-Year - The official measure of inflation for the United Kingdom."
       },
       "core-inflation-YoY": {
-        "currentValue": "3.1%",
-        "asOf": "2026-01-01",
+        "currentValue": "3.2%",
+        "asOf": "2026-02-01",
         "chartData": [
           5.1,
           4.5,
@@ -951,7 +953,8 @@
           3.4,
           3.2,
           3.2,
-          3.1
+          3.1,
+          3.2
         ],
         "chartDates": [
           "2024-01-01",
@@ -978,7 +981,8 @@
           "2025-10-01",
           "2025-11-01",
           "2025-12-01",
-          "2026-01-01"
+          "2026-01-01",
+          "2026-02-01"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.ons.gov.uk/economy/inflationandpriceindices",
