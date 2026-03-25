@@ -13331,7 +13331,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI y/y',
-                'date': 'Tue, Mar 24',
+                'date': 'Wed, Mar 25',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -13341,7 +13341,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Trimmed Mean CPI m/m',
-                'date': 'Tue, Mar 24',
+                'date': 'Wed, Mar 25',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -13351,7 +13351,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBA Assist Gov Jones Speaks',
-                'date': 'Tue, Mar 24',
+                'date': 'Wed, Mar 25',
                 'time': '02:40 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
