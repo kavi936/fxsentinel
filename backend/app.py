@@ -953,6 +953,27 @@ def get_economy_scan(country_code):
             indicators = _load_fallback_indicators_from_json(country_code)
             indicator_source = "fallback_json"
 
+        # Pull the same live ticker source used by Overview (/api/forex-prices).
+        # We use it here so yield context in Holistic Scan stays aligned with the
+        # market ticker users already see.
+        live_quotes = get_tradingview_prices() or {}
+        if not live_quotes:
+            # Fallback subset mirrors frontend hook defaults for key sovereign yields.
+            live_quotes = {
+                'US02Y': {'price': 3.91, 'change': 0.01, 'source': 'fallback'},
+                'US10Y': {'price': 4.38, 'change': 0.02, 'source': 'fallback'},
+                'US30Y': {'price': 4.95, 'change': 0.01, 'source': 'fallback'},
+                'EU02Y': {'price': 2.65, 'change': 0.01, 'source': 'fallback'},
+                'EU10Y': {'price': 3.05, 'change': 0.01, 'source': 'fallback'},
+                'EU30Y': {'price': 3.49, 'change': 0.01, 'source': 'fallback'},
+                'GB02Y': {'price': 4.46, 'change': -0.01, 'source': 'fallback'},
+                'GB10Y': {'price': 5.00, 'change': -0.02, 'source': 'fallback'},
+                'GB30Y': {'price': 5.56, 'change': -0.01, 'source': 'fallback'},
+                'JP02Y': {'price': 1.30, 'change': 0.00, 'source': 'fallback'},
+                'JP10Y': {'price': 2.26, 'change': 0.00, 'source': 'fallback'},
+                'JP30Y': {'price': 3.55, 'change': 0.01, 'source': 'fallback'},
+            }
+
         # Keep event window narrow for short-term risk in scan.
         start_date = datetime.now().strftime("%Y-%m-%d")
         end_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
@@ -962,6 +983,7 @@ def get_economy_scan(country_code):
             country_code=country_code,
             indicators=indicators,
             events=events,
+            yields=live_quotes,
         )
 
         # Count usage only after successful scan generation.
@@ -980,6 +1002,7 @@ def get_economy_scan(country_code):
                 "indicator_source": indicator_source,
                 "event_source": "hybrid_calendar",
                 "events_considered": len(events),
+                "yield_source": scan.get("yield_context", {}).get("source", "unknown"),
             }
         }), 200
     except ValueError as ve:
