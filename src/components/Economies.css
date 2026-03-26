@@ -541,22 +541,74 @@
   letter-spacing: 0.3px;
 }
 
+.scan-loading-center {
+  min-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scan-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #888888;
+  font-size: 0.75rem;
+  letter-spacing: 0.3px;
+}
+
+.scan-loading-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #da0012;
+  box-shadow: 0 0 0 0 rgba(218, 0, 18, 0.55);
+  animation: scanPulse 1.3s ease-in-out infinite;
+}
+
+.scan-loading-text {
+  color: #9d9d9d;
+}
+
+@keyframes scanPulse {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(218, 0, 18, 0.55);
+    opacity: 0.65;
+  }
+  60% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 6px rgba(218, 0, 18, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(218, 0, 18, 0);
+    opacity: 0.7;
+  }
+}
+
 .holistic-scan-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.scan-overview-line {
+.scan-overview-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0 0 2px 0;
-  font-size: 0.7rem;
-  color: #666666;
-  letter-spacing: 0.2px;
-  line-height: 1.45;
 }
 
-.scan-overview-sep {
-  color: #555555;
+.scan-overview-item {
+  font-size: 0.72rem;
+  color: #cfcfcf;
+  letter-spacing: 0.2px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* Heading row only — no bordered box (aligned with bond yields section layout) */
@@ -564,6 +616,10 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding-top: 8px;
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .scan-title-row {
@@ -631,14 +687,14 @@
 .scan-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
+  gap: 12px;
 }
 
 .scan-card {
-  border: none;
-  border-radius: 0;
-  padding: 0;
-  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .scan-card-label {
@@ -659,6 +715,11 @@
   margin-top: 6px;
   color: #888888;
   font-size: 0.82rem;
+}
+
+.scan-meta-sep {
+  color: #555555;
+  padding: 0 4px;
 }
 
 .scan-meta-large {
@@ -734,17 +795,17 @@
 .scan-yield-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px 12px;
+  gap: 10px;
 }
 
 .scan-yield-item {
-  border: none;
-  border-radius: 0;
-  background: none;
-  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 8px 10px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .scan-yield-label {
@@ -785,33 +846,13 @@
   border: none;
 }
 
-.scan-highlights-rules {
-  color: #c4c4c4;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  margin: 0 0 14px 0;
-}
-
-.scan-highlights-rules strong {
-  color: #ffffff;
-  font-weight: 700;
-}
-
-.scan-highlight-emphasis-inline {
-  color: #da0012;
-  font-weight: 700;
-  padding: 0;
-  border-radius: 0;
-  background: none;
-}
-
 .scan-highlights-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 24px;
 }
 
 .scan-highlight-item {
@@ -961,6 +1002,101 @@
 
 .yield-single-widget .tradingview-widget-copyright .blue-text {
   color: #2962ff;
+}
+
+.yield-bond-guide {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.yield-bond-guide-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #e8e8e8;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.25px;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.yield-bond-guide-toggle:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(218, 0, 18, 0.35);
+}
+
+.yield-bond-guide-toggle:focus {
+  outline: none;
+}
+
+.yield-bond-guide-toggle:focus-visible {
+  box-shadow: 0 0 0 2px rgba(218, 0, 18, 0.45);
+}
+
+.yield-bond-guide-toggle-text {
+  flex: 1;
+  line-height: 1.45;
+}
+
+.yield-bond-guide-chevron {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: #9a9a9a;
+}
+
+.yield-bond-guide-panel {
+  margin-top: 8px;
+  padding: 12px 14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.yield-bond-guide-section + .yield-bond-guide-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.yield-bond-guide-section-title {
+  margin: 0 0 8px 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: #c8c8c8;
+}
+
+.yield-bond-guide-paragraph {
+  margin: 0 0 10px 0;
+  font-size: 0.78rem;
+  line-height: 1.65;
+  color: #a8a8a8;
+}
+
+.yield-bond-guide-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.yield-bond-guide-section .yield-bond-guide-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.yield-bond-guide-em {
+  color: #e4e4e4;
+  font-weight: 600;
 }
 
 .economic-indicators-grid {
