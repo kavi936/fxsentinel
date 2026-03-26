@@ -13569,9 +13569,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-28.0',
                 'forecast': '-28.6',
-                'previous': '-24.7'
+                'previous': '-24.8'
             },
             {
                 'title': 'M3 Money Supply y/y',
@@ -13579,9 +13579,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '3.2%',
-                'previous': '3.3%'
+                'previous': '3.2%'
             },
             {
                 'title': 'Private Loans y/y',
@@ -13589,7 +13589,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '3.1%',
                 'previous': '3.0%'
             },
