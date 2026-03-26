@@ -16,6 +16,44 @@ const YIELD_MARKETS = [
   { symbol: 'OANDA:UK10YBGBP', label: 'UK 10Y', economy: 'GBP', title: 'UK 10Y Bond Yield (OANDA)' }
 ];
 
+/** Static copy for the expandable guide under the bond chart (education only, not financial advice). */
+const BOND_YIELD_GUIDE = {
+  toggleLabel: 'Why bond yields matter — what this is & how traders use it',
+  sections: [
+    {
+      title: 'What you are looking at',
+      body: [
+        'A **sovereign bond yield** is the annual return the market demands to lend to a government for a specific maturity (for example 2-year, 10-year, or 30-year debt). It reflects what investors expect from interest rates, inflation, and growth over that horizon.',
+        '**Price and yield move opposite ways**: when yields rise, existing bond prices typically fall, and vice versa. The chart shows how that benchmark yield changes over time — not a trading recommendation.'
+      ]
+    },
+    {
+      title: 'How traders use these yields',
+      body: [
+        '**FX and carry**: All else equal, a higher yield versus another country can attract capital and **support that currency**; traders often watch *yield spreads* (e.g. U.S. vs German 10-year) alongside the pair.',
+        '**Policy expectations**: Short-dated yields (like 2-year) tend to move quickly with **expected central bank** moves; longer maturities (10-year, 30-year) lean more toward **growth, inflation, and term premium**.',
+        '**The yield curve**: Comparing maturities (e.g. 2Y vs 10Y) shows whether the curve is **steepening** or **flattening**, which markets interpret as clues about recession risk, policy path, and risk appetite.',
+        '**Cross-asset context**: Sharp moves in yields can tighten or ease **financial conditions**, affecting equities, credit, and commodities (for example gold is often discussed alongside **real yields**).'
+      ]
+    },
+    {
+      title: 'Why it matters for markets',
+      body: [
+        'Government yields anchor **discount rates** used to value assets and set borrowing costs across the economy. They bundle expectations about **inflation**, **central bank policy**, and **growth** into one set of prices that updates continuously.',
+        'Major data (CPI, jobs) and central bank events often **reprice yields first**; FX and other markets frequently react to that repricing. That is why macro and FX traders keep yield charts in their workflow.'
+      ]
+    },
+    {
+      title: 'Key notes',
+      body: [
+        '**Symbols differ by region** (e.g. U.S. curve vs German bund vs UK gilt): compare like-for-like maturities when thinking about spreads.',
+        '**Intraday noise vs trend**: Intraday moves can be noisy; many traders focus on levels and multi-day/week context around catalysts.',
+        'This panel is **educational** and not investment, tax, or legal advice; always do your own research and consider your risk tolerance.'
+      ]
+    }
+  ]
+};
+
 function TradingViewYieldWidget({ symbol }) {
   const containerRef = useRef(null);
 
@@ -2179,6 +2217,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const [chartHover, setChartHover] = useState(null);
   const [error, setError] = useState(null);
   const [activeYieldSymbol, setActiveYieldSymbol] = useState('OANDA:USB10YUSD');
+  const [bondYieldGuideOpen, setBondYieldGuideOpen] = useState(false);
   const [holisticScan, setHolisticScan] = useState(null);
   const [scanState, setScanState] = useState('default'); // default | loading | ready | error
   const [scanError, setScanError] = useState(null);
@@ -4535,29 +4574,24 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               Run Holistic Scan to load macro bias, yield snapshot, and narratives for this economy.
             </p>
           </div>
-          {scanState === 'loading' && <p className="analysis-placeholder">Loading scan...</p>}
+          {scanState === 'loading' && (
+            <div className="scan-loading-center">
+              <div className="scan-loading" role="status" aria-live="polite">
+                <span className="scan-loading-dot" aria-hidden="true" />
+                <span className="scan-loading-text">Running holistic scan</span>
+              </div>
+            </div>
+          )}
           {scanState === 'error' && (
             <p className="analysis-placeholder">Scan unavailable right now ({scanError || 'unknown error'})</p>
           )}
           {scanState === 'ready' && holisticScan && (
             <div className="holistic-scan-content">
-              <p className="scan-overview-line">
-                <span>Economy: {holisticScan.economy || selectedEconomyName}</span>
-                <span className="scan-overview-sep" aria-hidden="true">
-                  {' '}
-                  ·{' '}
-                </span>
-                <span>Data quality: {(holisticScan.data_quality?.status || 'unknown').toUpperCase()}</span>
-                {scanTimestamp && (
-                  <>
-                    <span className="scan-overview-sep" aria-hidden="true">
-                      {' '}
-                      ·{' '}
-                    </span>
-                    <span>Scanned: {scanTimestamp}</span>
-                  </>
-                )}
-              </p>
+              <div className="scan-overview-bar">
+                <span className="scan-overview-item">Economy: {holisticScan.economy || selectedEconomyName}</span>
+                <span className="scan-overview-item">Data quality: {(holisticScan.data_quality?.status || 'unknown').toUpperCase()}</span>
+                {scanTimestamp && <span className="scan-overview-item">Scanned: {scanTimestamp}</span>}
+              </div>
 
               <div className="scan-yield-strip">
                 <div className="scan-yield-item">
@@ -4590,7 +4624,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     {(holisticScan.short_term?.bias || 'neutral').toUpperCase()}
                   </div>
                   <div className="scan-meta">
-                    Score: {holisticScan.short_term?.score ?? 'N/A'} | Confidence: {holisticScan.short_term?.confidence ?? 'N/A'}
+                    Score: {holisticScan.short_term?.score ?? 'N/A'}
+                    <span className="scan-meta-sep" aria-hidden="true">
+                      |
+                    </span>
+                    Confidence: {holisticScan.short_term?.confidence ?? 'N/A'}
                   </div>
                 </div>
                 <div className="scan-card">
@@ -4599,7 +4637,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     {(holisticScan.long_term?.bias || 'neutral').toUpperCase()}
                   </div>
                   <div className="scan-meta">
-                    Score: {holisticScan.long_term?.score ?? 'N/A'} | Confidence: {holisticScan.long_term?.confidence ?? 'N/A'}
+                    Score: {holisticScan.long_term?.score ?? 'N/A'}
+                    <span className="scan-meta-sep" aria-hidden="true">
+                      |
+                    </span>
+                    Confidence: {holisticScan.long_term?.confidence ?? 'N/A'}
                   </div>
                 </div>
               </div>
@@ -4607,12 +4649,6 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               {Array.isArray(holisticScan.highlights?.items) && holisticScan.highlights.items.length > 0 && (
                 <div className="scan-section scan-highlights-section">
                   <div className="scan-section-title">Key takeaways</div>
-                  {holisticScan.highlights.rules?.minimum_items != null && (
-                    <p className="scan-highlights-rules">
-                      At least <strong>{holisticScan.highlights.rules.minimum_items}</strong> highlighted points per scan;{' '}
-                      <strong>labels</strong> name the theme, <span className="scan-highlight-emphasis-inline">emphasis</span> shows the headline read.
-                    </p>
-                  )}
                   <ul className="scan-highlights-list" role="list">
                     {holisticScan.highlights.items.map((item) => (
                       <li key={item.id} className="scan-highlight-item">
@@ -4752,6 +4788,50 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           </div>
           <div className="yield-widget-card-single" onWheel={handleYieldWheel}>
             <TradingViewYieldWidget key={activeYield.symbol} symbol={activeYield.symbol} />
+          </div>
+
+          <div className="yield-bond-guide">
+            <button
+              type="button"
+              className="yield-bond-guide-toggle"
+              onClick={() => setBondYieldGuideOpen((open) => !open)}
+              aria-expanded={bondYieldGuideOpen}
+              aria-controls="yield-bond-guide-panel"
+              id="yield-bond-guide-toggle"
+            >
+              <span className="yield-bond-guide-toggle-text">{BOND_YIELD_GUIDE.toggleLabel}</span>
+              <span className="yield-bond-guide-chevron" aria-hidden>
+                {bondYieldGuideOpen ? '▴' : '▾'}
+              </span>
+            </button>
+            {bondYieldGuideOpen && (
+              <div
+                className="yield-bond-guide-panel"
+                id="yield-bond-guide-panel"
+                role="region"
+                aria-labelledby="yield-bond-guide-toggle"
+              >
+                {BOND_YIELD_GUIDE.sections.map((section) => (
+                  <section key={section.title} className="yield-bond-guide-section">
+                    <h3 className="yield-bond-guide-section-title">{section.title}</h3>
+                    {section.body.map((paragraph, i) => (
+                      <p key={i} className="yield-bond-guide-paragraph">
+                        {paragraph.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
+                          if (part.startsWith('**') && part.endsWith('**')) {
+                            return (
+                              <strong key={j} className="yield-bond-guide-em">
+                                {part.slice(2, -2)}
+                              </strong>
+                            );
+                          }
+                          return part;
+                        })}
+                      </p>
+                    ))}
+                  </section>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
