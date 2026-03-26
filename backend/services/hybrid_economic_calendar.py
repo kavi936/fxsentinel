@@ -13537,7 +13537,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.7%',
                 'forecast': '2.6%',
                 'previous': '2.6%'
             },
@@ -13555,11 +13555,11 @@ class HybridEconomicCalendar:
             # THURSDAY, MARCH 26
             {
                 'title': 'BOJ Core CPI y/y',
-                'date': 'Thu, Mar 26',
+                'date': 'Fri, Mar 27',
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': 'N/A',
                 'previous': '1.7%'
             },
