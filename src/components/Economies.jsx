@@ -1,4 +1,5 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import './Economies.css';
 import economyIndicatorsData from '../data/economyIndicators.json';
 import { config } from '../config';
@@ -2209,6 +2210,76 @@ function Economies() {
 
 export default Economies;
 
+/**
+ * Holistic Scan copy supports lightweight markup from GPT / rules:
+ * - **double asterisks** → semantic bold
+ * - [[double brackets]] → inline emphasis (same convention as static economy blurbs)
+ * Paragraphs: split on blank lines (\n\n+); single newlines inside a block become <br />.
+ */
+function renderInlineScanFormatting(text) {
+  const str = text == null ? '' : String(text);
+  const nodes = [];
+  let pos = 0;
+  const re = /\*\*(.+?)\*\*|\[\[([^\]]+)\]\]/g;
+  let m;
+  let key = 0;
+  while ((m = re.exec(str)) !== null) {
+    if (m.index > pos) {
+      nodes.push(<span key={`t-${key++}`}>{str.slice(pos, m.index)}</span>);
+    }
+    if (m[1] !== undefined) {
+      nodes.push(<strong key={`b-${key++}`} className="scan-text-strong">{m[1]}</strong>);
+    } else {
+      nodes.push(<span key={`e-${key++}`} className="scan-inline-emphasis">{m[2]}</span>);
+    }
+    pos = m.index + m[0].length;
+  }
+  if (pos < str.length) {
+    nodes.push(<span key={`t-${key++}`}>{str.slice(pos)}</span>);
+  }
+  return nodes.length > 0 ? nodes : [<span key="empty">{str}</span>];
+}
+
+function renderBlockWithNewlines(block) {
+  const lines = String(block).split('\n');
+  return lines.flatMap((line, i) => {
+    const n = renderInlineScanFormatting(line);
+    if (i === 0) return n;
+    return [<br key={`nl-${i}`} />, ...n];
+  });
+}
+
+function FormattedScanParagraph({ text, className }) {
+  const raw = String(text ?? '');
+  if (!raw.trim()) return null;
+  const blocks = raw.split(/\n\n+/).filter((b) => b.trim());
+  if (blocks.length === 0) return null;
+  return (
+    <>
+      {blocks.map((block, i) => (
+        <p key={i} className={className}>
+          {renderBlockWithNewlines(block)}
+        </p>
+      ))}
+    </>
+  );
+}
+
+function FormattedScanBlock({ text, className, as: Component = 'div' }) {
+  const raw = String(text ?? '');
+  if (!raw.trim()) return null;
+  const blocks = raw.split(/\n\n+/).filter((b) => b.trim());
+  if (blocks.length === 0) return null;
+  return (
+    <>
+      {blocks.map((block, i) => (
+        <Component key={i} className={className}>
+          {renderBlockWithNewlines(block)}
+        </Component>
+      ))}
+    </>
+  );
+}
 
 function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useApiData, currentUser }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -2221,6 +2292,36 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const [holisticScan, setHolisticScan] = useState(null);
   const [scanState, setScanState] = useState('default'); // default | loading | ready | error
   const [scanError, setScanError] = useState(null);
+  const [recentHolisticScans, setRecentHolisticScans] = useState([]);
+  const [recentHolisticDropdownOpen, setRecentHolisticDropdownOpen] = useState(false);
+  const [recentHolisticPanelPosition, setRecentHolisticPanelPosition] = useState({ top: 0, right: 0 });
+  const recentHolisticDropdownRef = useRef(null);
+  const recentHolisticPanelRef = useRef(null);
+
+  const holisticScanLocalKey =
+    currentUser?.uid != null ? `fxSentinel_holisticScan_${currentUser.uid}_${selectedEconomy}` : null;
+
+  const loadRecentHolisticScans = useCallback(async () => {
+    if (!currentUser) {
+      setRecentHolisticScans([]);
+      return;
+    }
+    try {
+      const authToken = await currentUser.getIdToken();
+      const qs = new URLSearchParams({ limit: '15', country: selectedEconomy });
+      const response = await fetch(`${config.endpoints.economyScanHistory}?${qs}`, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      if (!response.ok) {
+        console.warn('Holistic scan history request failed', response.status);
+        return;
+      }
+      const data = await response.json();
+      setRecentHolisticScans(Array.isArray(data.scans) ? data.scans : []);
+    } catch (err) {
+      console.warn('Holistic scan history load error', err);
+    }
+  }, [currentUser, selectedEconomy]);
 
   useEffect(() => {
     const defaultByEconomy = {
@@ -2241,11 +2342,78 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const activeYield = YIELD_MARKETS[activeYieldIndex] || YIELD_MARKETS[0];
 
   useEffect(() => {
-    // Reset to explicit user-trigger mode when the economy changes.
+    setScanError(null);
     setHolisticScan(null);
     setScanState('default');
+    if (holisticScanLocalKey) {
+      try {
+        const raw = localStorage.getItem(holisticScanLocalKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.scan) {
+            setHolisticScan(parsed.scan);
+            setScanState('ready');
+          }
+        }
+      } catch (e) {
+        console.warn('Holistic scan local cache read failed', e);
+      }
+    }
+  }, [selectedEconomy, holisticScanLocalKey]);
+
+  useEffect(() => {
+    loadRecentHolisticScans();
+  }, [loadRecentHolisticScans]);
+
+  useEffect(() => {
+    if (!recentHolisticDropdownOpen || !recentHolisticDropdownRef.current) return;
+    const el = recentHolisticDropdownRef.current;
+    const rect = el.getBoundingClientRect();
+    setRecentHolisticPanelPosition({
+      top: rect.bottom + 6,
+      right: typeof window !== 'undefined' ? window.innerWidth - rect.right : 0,
+    });
+  }, [recentHolisticDropdownOpen]);
+
+  useEffect(() => {
+    if (!recentHolisticDropdownOpen) return;
+    const handleClickOutside = (e) => {
+      const inToggle = recentHolisticDropdownRef.current?.contains(e.target);
+      const inPanel =
+        recentHolisticPanelRef.current?.contains(e.target) ||
+        e.target.closest?.('[data-holistic-recent-panel]');
+      if (!inToggle && !inPanel) setRecentHolisticDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [recentHolisticDropdownOpen]);
+
+  const handleSelectRecentHolisticScan = (item) => {
+    const snap = item?.scan_snapshot;
+    if (!snap) return;
+    setHolisticScan(snap);
+    setScanState('ready');
     setScanError(null);
-  }, [selectedEconomy]);
+    if (holisticScanLocalKey) {
+      try {
+        localStorage.setItem(holisticScanLocalKey, JSON.stringify({ scan: snap, at: Date.now() }));
+      } catch (e) {
+        console.warn('Holistic scan local cache write failed', e);
+      }
+    }
+    requestAnimationFrame(() => setRecentHolisticDropdownOpen(false));
+  };
+
+  const formatHolisticScanTime = (createdAt) => {
+    if (createdAt == null || createdAt === '') return '';
+    try {
+      const d = new Date(createdAt);
+      if (Number.isNaN(d.getTime())) return String(createdAt);
+      return d.toLocaleString();
+    } catch {
+      return String(createdAt);
+    }
+  };
 
   const runHolisticScan = async () => {
     setScanState('loading');
@@ -2291,6 +2459,17 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       }
       setHolisticScan(payload.scan);
       setScanState('ready');
+      if (holisticScanLocalKey) {
+        try {
+          localStorage.setItem(
+            holisticScanLocalKey,
+            JSON.stringify({ scan: payload.scan, at: Date.now() })
+          );
+        } catch (cacheErr) {
+          console.warn('Holistic scan local cache write failed', cacheErr);
+        }
+      }
+      loadRecentHolisticScans();
     } catch (err) {
       setScanError(err.message || 'Failed to fetch scan');
       setScanState('error');
@@ -2301,6 +2480,14 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     if (bias === 'bullish') return 'scan-bullish';
     if (bias === 'bearish') return 'scan-bearish';
     return 'scan-neutral';
+  };
+
+  /** positive / negative / neutral → Positive / Negative / Neutral for driver rows */
+  const formatDriverDirectionLabel = (direction) => {
+    if (direction == null || direction === '') return '';
+    const s = String(direction).trim();
+    if (!s) return '';
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
   };
 
   const economyNameMap = {
@@ -4570,9 +4757,82 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 </button>
               </div>
             </div>
-            <p className="yield-subtext">
-              Run Holistic Scan to load macro bias, yield snapshot, and narratives for this economy.
-            </p>
+            <div className="holistic-scan-subrow">
+              <p className="yield-subtext holistic-scan-help-text">
+                Run Holistic Scan to load macro bias, yield snapshot, and narratives for this economy.
+              </p>
+              {currentUser && (
+                <div className="holistic-recent-dropdown" ref={recentHolisticDropdownRef}>
+                  <button
+                    type="button"
+                    className="holistic-recent-dropdown-toggle"
+                    onClick={() => setRecentHolisticDropdownOpen((o) => !o)}
+                    title="Saved scans for this economy"
+                    aria-expanded={recentHolisticDropdownOpen}
+                    aria-haspopup="true"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span>Recent</span>
+                    {recentHolisticScans.length > 0 && (
+                      <span className="holistic-recent-dropdown-badge">{recentHolisticScans.length}</span>
+                    )}
+                  </button>
+                  {recentHolisticDropdownOpen &&
+                    createPortal(
+                      <div
+                        ref={recentHolisticPanelRef}
+                        data-holistic-recent-panel
+                        className="holistic-recent-dropdown-panel"
+                        style={{
+                          position: 'fixed',
+                          top: recentHolisticPanelPosition.top,
+                          right: recentHolisticPanelPosition.right,
+                        }}
+                      >
+                        <div className="holistic-recent-dropdown-title">Saved holistic scans</div>
+                        {recentHolisticScans.length === 0 ? (
+                          <div className="holistic-recent-dropdown-empty">
+                            No saved scans yet for this economy. Run Holistic Scan to store one.
+                          </div>
+                        ) : (
+                          <ul className="holistic-recent-dropdown-list">
+                            {recentHolisticScans.map((item) => (
+                              <li key={item.id}>
+                                <button
+                                  type="button"
+                                  className="holistic-recent-dropdown-item"
+                                  onClick={() => handleSelectRecentHolisticScan(item)}
+                                >
+                                  <span className="holistic-recent-dropdown-item-title">
+                                    {item.economy_label || item.country_code}{' '}
+                                    {(item.scan_snapshot?.short_term?.bias || '').toUpperCase()
+                                      ? ` · ${(item.scan_snapshot.short_term.bias || '').toUpperCase()}`
+                                      : ''}
+                                  </span>
+                                  <span className="holistic-recent-dropdown-item-meta">
+                                    {item.country_code && (
+                                      <span className="holistic-recent-dropdown-item-tag">{item.country_code}</span>
+                                    )}
+                                    {item.created_at && (
+                                      <span className="holistic-recent-dropdown-item-time">
+                                        {formatHolisticScanTime(item.created_at)}
+                                      </span>
+                                    )}
+                                  </span>
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>,
+                      document.body
+                    )}
+                </div>
+              )}
+            </div>
           </div>
           {scanState === 'loading' && (
             <div className="scan-loading-center">
@@ -4653,29 +4913,65 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     {holisticScan.highlights.items.map((item) => (
                       <li key={item.id} className="scan-highlight-item">
                         <div className="scan-highlight-line">
-                          <strong className="scan-highlight-label">{item.label}</strong>
-                          <span className="scan-highlight-emphasis">{item.emphasis}</span>
+                          <span className="scan-highlight-label">{renderInlineScanFormatting(item.label)}</span>
+                          <span className="scan-highlight-emphasis">{renderInlineScanFormatting(item.emphasis)}</span>
                         </div>
-                        <p className="scan-highlight-detail">{item.detail}</p>
+                        <FormattedScanParagraph text={item.detail} className="scan-highlight-detail" />
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
 
-              <div className="scan-section">
+              <div className="scan-section scan-highlights-section">
                 <div className="scan-section-title">Comprehensive Context</div>
-                <p className="scan-paragraph">{holisticScan.narrative?.short_term || 'Short-term narrative unavailable.'}</p>
-                {holisticScan.narrative?.geopolitical_energy && (
-                  <p className="scan-paragraph scan-paragraph-accent">{holisticScan.narrative.geopolitical_energy}</p>
-                )}
-                {holisticScan.narrative?.central_bank_context && (
-                  <p className="scan-paragraph">{holisticScan.narrative.central_bank_context}</p>
-                )}
-                <p className="scan-paragraph">{holisticScan.narrative?.long_term || 'Long-term narrative unavailable.'}</p>
-                <p className="scan-paragraph">{holisticScan.narrative?.fx || 'FX narrative unavailable.'}</p>
+                <ul className="scan-highlights-list" role="list">
+                  <li className="scan-highlight-item">
+                    <div className="scan-highlight-line">
+                      <span className="scan-highlight-label">Short-term macro</span>
+                    </div>
+                    <FormattedScanParagraph
+                      text={holisticScan.narrative?.short_term || 'Short-term narrative unavailable.'}
+                      className="scan-highlight-detail"
+                    />
+                  </li>
+                  {holisticScan.narrative?.geopolitical_energy && (
+                    <li className="scan-highlight-item">
+                      <div className="scan-highlight-line">
+                        <span className="scan-highlight-label">Geopolitical &amp; energy</span>
+                      </div>
+                      <FormattedScanParagraph text={holisticScan.narrative.geopolitical_energy} className="scan-highlight-detail" />
+                    </li>
+                  )}
+                  {holisticScan.narrative?.central_bank_context && (
+                    <li className="scan-highlight-item">
+                      <div className="scan-highlight-line">
+                        <span className="scan-highlight-label">Policy communications</span>
+                      </div>
+                      <FormattedScanParagraph
+                        text={holisticScan.narrative.central_bank_context}
+                        className="scan-highlight-detail"
+                      />
+                    </li>
+                  )}
+                  <li className="scan-highlight-item">
+                    <div className="scan-highlight-line">
+                      <span className="scan-highlight-label">Long-term regime</span>
+                    </div>
+                    <FormattedScanParagraph
+                      text={holisticScan.narrative?.long_term || 'Long-term narrative unavailable.'}
+                      className="scan-highlight-detail"
+                    />
+                  </li>
+                  <li className="scan-highlight-item">
+                    <div className="scan-highlight-line">
+                      <span className="scan-highlight-label">FX mapping</span>
+                    </div>
+                    <FormattedScanParagraph text={holisticScan.narrative?.fx || 'FX narrative unavailable.'} className="scan-highlight-detail" />
+                  </li>
+                </ul>
                 {holisticScan.context_sources && (
-                  <p className="scan-paragraph scan-paragraph-metadata">
+                  <p className="scan-paragraph scan-paragraph-metadata scan-context-metadata">
                     Context layers: curated geopolitical / energy overlay
                     {holisticScan.context_sources.macro_overlay?.lastUpdated
                       ? ` (updated ${holisticScan.context_sources.macro_overlay.lastUpdated})`
@@ -4691,11 +4987,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               <div className="scan-grid">
                 <div className="scan-card">
                   <div className="scan-card-label">Short-Term Trading Range View</div>
-                  <div className="scan-meta-large">{holisticScan.trading_ranges?.short_term || 'N/A'}</div>
+                  <FormattedScanBlock text={holisticScan.trading_ranges?.short_term || 'N/A'} className="scan-meta-large" />
                 </div>
                 <div className="scan-card">
                   <div className="scan-card-label">Long-Term Trading Range View</div>
-                  <div className="scan-meta-large">{holisticScan.trading_ranges?.long_term || 'N/A'}</div>
+                  <FormattedScanBlock text={holisticScan.trading_ranges?.long_term || 'N/A'} className="scan-meta-large" />
                 </div>
               </div>
 
@@ -4704,11 +5000,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 {(holisticScan.short_term?.drivers || []).slice(0, 3).map((driver) => (
                   <div key={driver.name} className="scan-driver-row">
                     <span>
-                      {driver.name}
-                      {driver.note ? <span className="scan-driver-note"> - {driver.note}</span> : null}
+                      {renderInlineScanFormatting(driver.name)}
+                      {driver.note ? (
+                        <span className="scan-driver-note">
+                          {' '}
+                          - {renderInlineScanFormatting(driver.note)}
+                        </span>
+                      ) : null}
                     </span>
                     <span className={getBiasClass(driver.direction === 'positive' ? 'bullish' : driver.direction === 'negative' ? 'bearish' : 'neutral')}>
-                      {driver.direction}
+                      {formatDriverDirectionLabel(driver.direction)}
                     </span>
                   </div>
                 ))}
@@ -4719,11 +5020,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 {(holisticScan.long_term?.drivers || []).slice(0, 4).map((driver) => (
                   <div key={`long-${driver.name}`} className="scan-driver-row">
                     <span>
-                      {driver.name}
-                      {driver.note ? <span className="scan-driver-note"> - {driver.note}</span> : null}
+                      {renderInlineScanFormatting(driver.name)}
+                      {driver.note ? (
+                        <span className="scan-driver-note">
+                          {' '}
+                          - {renderInlineScanFormatting(driver.note)}
+                        </span>
+                      ) : null}
                     </span>
                     <span className={getBiasClass(driver.direction === 'positive' ? 'bullish' : driver.direction === 'negative' ? 'bearish' : 'neutral')}>
-                      {driver.direction}
+                      {formatDriverDirectionLabel(driver.direction)}
                     </span>
                   </div>
                 ))}

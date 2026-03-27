@@ -591,14 +591,14 @@
 .holistic-scan-content {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 18px;
 }
 
 .scan-overview-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 2px 0;
+  margin: 0 0 6px 0;
 }
 
 .scan-overview-item {
@@ -620,6 +620,26 @@
   padding-bottom: 12px;
   margin-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Help line + Recent: subtext left, Recent right (under Run column) */
+.holistic-scan-subrow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 16px;
+  flex-wrap: wrap;
+}
+
+.holistic-scan-help-text {
+  flex: 1 1 0;
+  min-width: min(100%, 220px);
+  margin: 0;
+}
+
+.holistic-scan-subrow .holistic-recent-dropdown {
+  flex: 0 0 auto;
+  align-self: flex-start;
 }
 
 .scan-title-row {
@@ -657,8 +677,143 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  justify-content: flex-start;
+  gap: 0;
   flex: 0 0 auto;
+}
+
+/* Recent scans dropdown (mirrors Overview AI “Recent”, themed for Holistic Scan) */
+.holistic-recent-dropdown {
+  position: relative;
+}
+
+.holistic-recent-dropdown-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: rgba(218, 0, 18, 0.12);
+  border: 1px solid rgba(218, 0, 18, 0.45);
+  border-radius: 8px;
+  color: #f0c4c8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  outline: none;
+}
+
+.holistic-recent-dropdown-toggle:hover {
+  background: rgba(218, 0, 18, 0.22);
+  border-color: rgba(255, 86, 86, 0.65);
+}
+
+.holistic-recent-dropdown-toggle:focus,
+.holistic-recent-dropdown-toggle:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.holistic-recent-dropdown-toggle svg {
+  flex-shrink: 0;
+}
+
+.holistic-recent-dropdown-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(218, 0, 18, 0.45);
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.holistic-recent-dropdown-panel {
+  position: fixed;
+  min-width: 260px;
+  max-width: 340px;
+  max-height: 320px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: rgba(18, 12, 12, 0.98);
+  border: 1px solid rgba(218, 0, 18, 0.35);
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  z-index: 10000;
+}
+
+.holistic-recent-dropdown-title {
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.holistic-recent-dropdown-empty {
+  padding: 16px 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.45;
+}
+
+.holistic-recent-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+}
+
+.holistic-recent-dropdown-item {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #e8e8e8;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background 0.15s;
+}
+
+.holistic-recent-dropdown-item:hover {
+  background: rgba(218, 0, 18, 0.12);
+}
+
+.holistic-recent-dropdown-item-title {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.holistic-recent-dropdown-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.holistic-recent-dropdown-item-tag {
+  padding: 2px 6px;
+  background: rgba(218, 0, 18, 0.2);
+  border-radius: 4px;
+  color: #ffb4b4;
+}
+
+.holistic-recent-dropdown-item-time {
+  flex-shrink: 0;
 }
 
 .scan-run-button {
@@ -687,20 +842,20 @@
 .scan-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 14px 16px;
 }
 
 .scan-card {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: rgba(255, 255, 255, 0.03);
 }
 
 .scan-card-label {
   font-size: 0.7rem;
   color: #666666;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 0.2px;
 }
@@ -712,7 +867,7 @@
 }
 
 .scan-meta {
-  margin-top: 6px;
+  margin-top: 10px;
   color: #888888;
   font-size: 0.82rem;
 }
@@ -726,6 +881,7 @@
   color: #d8d8d8;
   font-size: 0.92rem;
   line-height: 1.6;
+  font-weight: 400;
 }
 
 .scan-section {
@@ -738,28 +894,40 @@
 
 .holistic-scan-content > .scan-yield-strip + .scan-grid {
   border-top: 1px solid rgba(218, 0, 18, 0.12);
-  margin-top: 4px;
-  padding-top: 10px;
+  margin-top: 6px;
+  padding-top: 18px;
 }
 
 .holistic-scan-content > .scan-section + .scan-section,
 .holistic-scan-content > .scan-grid + .scan-section {
   border-top: 1px solid rgba(218, 0, 18, 0.12);
-  margin-top: 4px;
+  margin-top: 8px;
+  padding-top: 4px;
 }
 
 .holistic-scan-content > .scan-section + .scan-grid {
   border-top: 1px solid rgba(218, 0, 18, 0.12);
-  margin-top: 4px;
-  padding-top: 10px;
+  margin-top: 8px;
+  padding-top: 18px;
 }
 
 .scan-section-title {
-  font-size: 0.7rem;
-  color: #666666;
-  margin-bottom: 6px;
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #c8c8c8;
+  margin: 0 0 16px 0;
+  padding-bottom: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.55px;
+  line-height: 1.35;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scan-context-metadata {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .scan-driver-row {
@@ -795,17 +963,17 @@
 .scan-yield-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px 14px;
 }
 
 .scan-yield-item {
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.03);
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .scan-yield-label {
@@ -819,6 +987,33 @@
   color: #ffffff;
   font-size: 1.02rem;
   font-weight: 700;
+}
+
+/* **bold** and [[emphasis]] from scan / GPT payloads */
+.scan-text-strong {
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.scan-inline-emphasis {
+  font-weight: 600;
+  color: #e6e6e6;
+}
+
+.scan-paragraph .scan-text-strong,
+.scan-paragraph-accent .scan-text-strong,
+.scan-highlight-detail .scan-text-strong,
+.scan-meta-large .scan-text-strong,
+.scan-driver-row .scan-text-strong {
+  color: #f2f2f2;
+}
+
+.scan-highlight-label .scan-text-strong {
+  color: #ffffff;
+}
+
+.scan-highlight-emphasis .scan-text-strong {
+  color: #ffb4b4;
 }
 
 .scan-paragraph {

@@ -48,6 +48,8 @@ export const config = {
     economyIndicators: (countryCode) => `${API_BASE_URL}/api/economy-indicators/${countryCode}`,
     // Economy holistic scan endpoint
     economyScan: (countryCode) => `${API_BASE_URL}/api/economy-scan/${countryCode}`,
+    // Saved holistic scans (Firestore, same pattern as calendar analysis history)
+    economyScanHistory: `${API_BASE_URL}/api/economy-scan-history`,
     // Base URL for direct API calls
     baseUrl: API_BASE_URL
   }

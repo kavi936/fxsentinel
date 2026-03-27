@@ -995,6 +995,17 @@ def get_economy_scan(country_code):
         except Exception as billing_err:
             logger.debug(f"Holistic scan billing increment failed (non-critical): {billing_err}")
 
+        # Persist snapshot for "Recent scans" (same idea as calendar AI analyses).
+        try:
+            from services.economy_holistic_scan_store import economy_holistic_scan_store
+            economy_holistic_scan_store.save_holistic_scan(
+                user_info=token_user_info,
+                country_code=country_code,
+                scan_snapshot=scan,
+            )
+        except Exception as persist_err:
+            logger.debug(f"Holistic scan persistence failed (non-critical): {persist_err}")
+
         return jsonify({
             "status": "success",
             "scan": scan,
@@ -1017,6 +1028,46 @@ def get_economy_scan(country_code):
             "message": "Failed to build economy scan",
             "error": str(e),
         }), 500
+
+
+@app.route('/api/economy-scan-history', methods=['GET'])
+@limiter.limit("30 per minute")
+def get_economy_scan_history():
+    """
+    Recent Holistic Scan snapshots for the authenticated user (Firestore).
+    Optional query: country=US to prefer scans for that economy (filtered server-side).
+    """
+    try:
+        token_user_info = _extract_user_from_token()
+        if not token_user_info:
+            return jsonify({
+                "error": "Unauthorized",
+                "message": "Firebase authentication required",
+            }), 401
+
+        limit = request.args.get("limit", 15, type=int)
+        limit = max(1, min(limit, 50))
+        country = request.args.get("country", type=str)
+        if country:
+            country = country.strip().upper()
+
+        from services.economy_holistic_scan_store import economy_holistic_scan_store
+        scans = economy_holistic_scan_store.get_recent_holistic_scans(
+            user_info=token_user_info,
+            limit=limit,
+            country_code=country or None,
+        )
+
+        return jsonify({"scans": scans, "limit": limit})
+    except Exception as e:
+        logger.error(f"Error in economy-scan-history: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "error": "Failed to retrieve economy scan history",
+            "message": str(e),
+        }), 500
+
 
 @app.route('/api/economic-chart/<event_name>')
 def get_economic_chart_data(event_name):
