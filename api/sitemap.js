@@ -75,12 +75,6 @@ export default function handler(req, res) {
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://fxsentinel.io/dashboard</loc>
-    <lastmod>2026-03-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://fxsentinel.io/login</loc>
     <lastmod>2026-03-09</lastmod>
     <changefreq>monthly</changefreq>

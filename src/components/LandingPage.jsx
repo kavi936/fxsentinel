@@ -43,8 +43,8 @@ const LandingPage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useMeta(
-    'FXSentinel - Smarter Market Dashboard | Powered with AI',
-    'Fundamentals and macroeconomics, simplified for retail traders. Get real-time alerts, AI-powered news analysis, and actionable market insights in one place.'
+    'FXSentinel | Macro Dashboard & AI News Context for Forex Traders',
+    'Retail forex macro intelligence in one place: live economic calendar, AI-assisted news context for major pairs and gold, and Telegram alerts. Tools and education—we are not a broker.'
   );
 
   useEffect(() => {

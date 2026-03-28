@@ -10,7 +10,10 @@ import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 import { BackgroundBeams } from './BackgroundBeams';
 
 const Login = () => {
-  useMeta('Login - FXSentinel', 'Sign in to your FXSentinel account to access your dashboard, alerts, and AI-powered market analysis.');
+  useMeta(
+    'Sign In to Your Account | FXSentinel',
+    'Secure sign-in for returning FXSentinel members: your economic calendar, AI news breakdowns, alert settings, and Telegram notifications. New? Create a free account to start.'
+  );
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -49,7 +52,8 @@ const Login = () => {
       <div className="auth-background">
         <BackgroundBeams />
       </div>
-      
+
+      <div className="auth-main-stack">
       <div className="auth-card">
         <div className="auth-header">
           <Link to="/" className="auth-logo">
@@ -62,8 +66,8 @@ const Login = () => {
               />
             </picture>
           </Link>
-          <h1>Welcome Back</h1>
-          <p>Sign in to your FXSentinel account</p>
+          <h1>Sign in to FXSentinel</h1>
+          <p>Welcome back—access your macro dashboard, alerts, and AI-assisted news context.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
@@ -172,6 +176,23 @@ const Login = () => {
             </Link>
           </p>
         </div>
+      </div>
+
+      <section className="auth-page-copy" aria-labelledby="login-page-info-heading">
+        <h2 id="login-page-info-heading" className="auth-page-copy-heading">
+          About your FXSentinel account
+        </h2>
+        <p>
+          Signing in connects you to the same macro toolkit described on our homepage: a live economic calendar,
+          AI-generated context on market-moving headlines, optional Telegram notifications, and dashboards built for
+          fundamentals-first research rather than price-only charts.
+        </p>
+        <p>
+          FXSentinel does not execute trades, hold client funds, or sell trade-by-trade instructions.
+          We provide software, alerts, and educational analysis so you can make your own decisions. If you are new,
+          create an account from the sign-up page to explore the free tier before upgrading.
+        </p>
+      </section>
       </div>
     </div>
   );
