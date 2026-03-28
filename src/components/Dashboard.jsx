@@ -20,7 +20,11 @@ import { useMeta } from '../hooks/useMeta';
 import { trackEngagement, trackFeatureUsage, trackTrialStart, trackDashboardAccess } from '../utils/analytics';
 
 function Dashboard() {
-  useMeta('Market Dashboard – FXSentinel', 'Your FXSentinel market dashboard: economic calendar, AI analysis, live news, and Telegram alerts.');
+  useMeta(
+    'Member Dashboard | FXSentinel',
+    'Your private FXSentinel workspace after sign-in: markets overview, economic calendar, alerts, macro data, and settings. Login required. We provide analysis tools—not brokerage or trade execution.',
+    { robots: 'noindex, follow' }
+  );
   const { currentUser, logout, requestWelcomeEmail } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const { unreadCount, addSubscriptionNotification } = useNotifications();

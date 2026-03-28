@@ -12,7 +12,10 @@ import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 import { BackgroundBeams } from './BackgroundBeams';
 
 const Signup = () => {
-  useMeta('Sign Up - FXSentinel', 'Create your FXSentinel account and start trading smarter with AI-powered news analysis, real-time alerts, and an economic calendar.');
+  useMeta(
+    'Create Free Account | FXSentinel',
+    'Join FXSentinel for a macro-focused forex workspace: economic calendar, AI news context for majors and gold, and alerts by Telegram or email. Analysis and tools only—we are not a broker.'
+  );
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',

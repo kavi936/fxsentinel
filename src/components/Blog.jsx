@@ -11,8 +11,8 @@ const Blog = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useMeta(
-    'FXSentinel Blog - Trading Insights & Market Analysis',
-    'Expert insights on forex trading, market analysis, and AI-powered trading tools.'
+    'Forex & Macro Education | FXSentinel Blog',
+    'In-depth articles on central banks, FX volatility, safe-haven flows, gold and EUR/USD themes, and how AI helps interpret headlines. For retail traders seeking context—not financial advice.'
   );
 
   useEffect(() => {
@@ -215,10 +215,14 @@ const Blog = () => {
       {/* Blog Header */}
       <section className="blog-header">
         <div className="blog-header-inner">
-          <h1 className="blog-title">FXSentinel Blog</h1>
+          <h1 className="blog-title">FXSentinel Blog — macro &amp; FX education</h1>
           <p className="blog-subtitle">
-            Expert insights on forex trading, market analysis, and AI-powered trading tools. 
-            Learn how to trade economic news, understand market sentiment, and make better trading decisions.
+            Long-form guides on central bank policy, cross-border risk, volatility, and how headlines move major pairs and gold.
+            We focus on context and mechanics so you can build your own view—FXSentinel is not a broker and does not provide personalised financial advice.
+          </p>
+          <p className="blog-subtitle blog-subtitle-secondary">
+            Browse articles below on geopolitical risk, Fed–ECB divergence, safe havens, institutional flows into digital assets,
+            and practical ways to read economic releases alongside an AI-assisted research workflow.
           </p>
         </div>
       </section>

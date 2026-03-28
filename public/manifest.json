@@ -1,7 +1,7 @@
 {
   "name": "FXSentinel - Smarter Market Dashboard",
   "short_name": "FXSentinel",
-  "description": "Fundamentals and macroeconomics, simplified for retail traders. Get real-time alerts, AI-powered news analysis, and actionable market insights in one place.",
+  "description": "Retail forex macro intelligence: economic calendar, AI-assisted news context for major pairs and gold, Telegram alerts. Tools and education—we are not a broker.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
