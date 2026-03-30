@@ -13795,9 +13795,9 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '96.1',
                 'forecast': '101.1',
-                'previous': '104.2'
+                'previous': '103.8'
             },
             {
                 'title': 'M4 Money Supply m/m',
@@ -13805,7 +13805,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.1%',
                 'previous': '-0.1%'
             },
@@ -13815,7 +13815,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '63K',
                 'forecast': '61K',
                 'previous': '60K'
             },
@@ -13825,9 +13825,9 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.8B',
                 'forecast': '5.6B',
-                'previous': '5.9B'
+                'previous': '6.0B'
             },
             {
                 'title': 'Fed Chair Powell Speaks',
