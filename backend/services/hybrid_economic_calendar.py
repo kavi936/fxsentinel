@@ -13855,7 +13855,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '1.3%',
                 'previous': '1.1%'
             },
@@ -13865,7 +13865,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.8%',
                 'previous': '1.8%'
             },
@@ -13875,7 +13875,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.6%',
                 'forecast': '2.7%',
                 'previous': '2.7%'
             },
@@ -13885,9 +13885,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.1%',
                 'forecast': '-2.0%',
-                'previous': '2.2%'
+                'previous': '4.3%'
             },
             {
                 'title': 'Retail Sales y/y',
@@ -13895,7 +13895,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '0.9%',
                 'previous': '1.8%'
             },
@@ -13905,7 +13905,7 @@ class HybridEconomicCalendar:
                 'time': '00:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '32.5',
                 'forecast': 'N/A',
                 'previous': '59.2'
             },
@@ -13925,7 +13925,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.6%',
                 'previous': '0.5%'
             },
@@ -13935,7 +13935,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.4',
                 'forecast': '50.2',
                 'previous': '49.0'
             },
@@ -13945,7 +13945,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.1',
                 'forecast': '49.9',
                 'previous': '49.5'
             },
@@ -13957,7 +13957,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-4.9%',
                 'forecast': '-4.6%',
                 'previous': '-0.4%'
             },
@@ -13967,7 +13967,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.2%',
                 'previous': '1.1%'
             },
@@ -13977,7 +13977,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.6%',
                 'forecast': '0.3%',
                 'previous': '-0.9%'
             },
@@ -13987,7 +13987,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-18.4B',
                 'forecast': '-23.9B',
                 'previous': '-12.1B'
             },
@@ -13997,7 +13997,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.1%',
                 'previous': '0.1%'
             },
@@ -14007,7 +14007,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '0.0%',
                 'previous': '0.3%'
             },
@@ -14017,7 +14017,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.5%',
                 'forecast': '-2.6%',
                 'previous': '-2.7%'
             },
@@ -14027,9 +14027,9 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.4%',
                 'forecast': '-0.4%',
-                'previous': '0.5%'
+                'previous': '0.4%'
             },
             {
                 'title': 'French Prelim CPI m/m',
@@ -14037,9 +14037,9 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '0.8%',
-                'previous': '0.7%'
+                'previous': '0.6%'
             },
             {
                 'title': 'German Unemployment Change',
@@ -14047,7 +14047,7 @@ class HybridEconomicCalendar:
                 'time': '07:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0K',
                 'forecast': '2K',
                 'previous': '1K'
             },
@@ -14057,7 +14057,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.4%',
                 'previous': '2.4%'
             },
@@ -14067,7 +14067,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.5%',
                 'forecast': '2.5%',
                 'previous': '1.9%'
             },
@@ -14077,7 +14077,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.6%',
                 'previous': '0.8%'
             },
@@ -14087,7 +14087,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.0%',
                 'previous': '0.2%'
             },
@@ -14097,7 +14097,7 @@ class HybridEconomicCalendar:
                 'time': '13:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.1%',
                 'previous': '0.1%'
             },
@@ -14107,7 +14107,7 @@ class HybridEconomicCalendar:
                 'time': '13:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '1.4%',
                 'previous': '1.4%'
             },
@@ -14117,7 +14117,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.8',
                 'forecast': '54.5',
                 'previous': '57.7'
             },
@@ -14127,9 +14127,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '6.88M',
                 'forecast': '6.90M',
-                'previous': '6.95M'
+                'previous': '7.24M'
             },
             {
                 'title': 'CB Consumer Confidence',
@@ -14137,9 +14137,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '91.8',
                 'forecast': '88.0',
-                'previous': '91.2'
+                'previous': '91.0'
             },
             {
                 'title': 'FOMC Member Goolsbee Speaks',
