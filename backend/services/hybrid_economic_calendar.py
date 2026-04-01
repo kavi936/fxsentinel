@@ -14309,7 +14309,7 @@ class HybridEconomicCalendar:
                 'time': '07:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.2',
                 'forecast': '51.7',
                 'previous': '51.7'
             },
@@ -14319,7 +14319,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.0',
                 'forecast': '51.4',
                 'previous': '51.4'
             },
@@ -14349,7 +14349,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.2%',
                 'forecast': '6.1%',
                 'previous': '6.1%'
             },
@@ -14379,9 +14379,9 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '62K',
                 'forecast': '42K',
-                'previous': '63K'
+                'previous': '66K'
             },
             {
                 'title': 'Core Retail Sales m/m',
@@ -14389,7 +14389,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
                 'previous': '0.0%'
             },
@@ -14399,7 +14399,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.4%',
                 'previous': '-0.2%'
             },
