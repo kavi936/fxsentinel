@@ -14187,9 +14187,9 @@ class HybridEconomicCalendar:
                 'time': '21:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.7%',
                 'forecast': 'N/A',
-                'previous': '1.9%'
+                'previous': '2.0%'
             },
             {
                 'title': 'Tankan Manufacturing Index',
@@ -14197,7 +14197,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '17',
                 'forecast': '16',
                 'previous': '15'
             },
@@ -14207,7 +14207,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '36',
                 'forecast': '33',
                 'previous': '34'
             },
@@ -14217,7 +14217,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '29.7%',
                 'forecast': '6.1%',
                 'previous': '-7.2%'
             },
@@ -14227,7 +14227,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.6',
                 'forecast': '51.4',
                 'previous': '51.4'
             },
@@ -14237,7 +14237,7 @@ class HybridEconomicCalendar:
                 'time': '01:45 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.8',
                 'forecast': '51.8',
                 'previous': '52.1'
             },
@@ -14249,7 +14249,7 @@ class HybridEconomicCalendar:
                 'time': '05:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '12.8%',
                 'forecast': 'N/A',
                 'previous': '3.4%'
             },
@@ -14259,9 +14259,9 @@ class HybridEconomicCalendar:
                 'time': '06:30 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '1.3%',
-                'previous': '-1.1%'
+                'previous': '-0.6%'
             },
             {
                 'title': 'Spanish Manufacturing PMI',
@@ -14269,7 +14269,7 @@ class HybridEconomicCalendar:
                 'time': '07:15 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '48.7',
                 'forecast': '50.5',
                 'previous': '50.0'
             },
@@ -14279,7 +14279,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '53.3',
                 'forecast': '47.1',
                 'previous': '47.4'
             },
@@ -14289,7 +14289,7 @@ class HybridEconomicCalendar:
                 'time': '07:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.3',
                 'forecast': '50.9',
                 'previous': '50.6'
             },
@@ -14299,7 +14299,7 @@ class HybridEconomicCalendar:
                 'time': '07:50 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.0',
                 'forecast': '50.2',
                 'previous': '50.2'
             },
