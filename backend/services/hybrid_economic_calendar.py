@@ -14429,7 +14429,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.0',
                 'forecast': 'N/A',
                 'previous': '51.0'
             },
@@ -14439,7 +14439,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.3',
                 'forecast': '52.3',
                 'previous': '52.4'
             },
@@ -14449,7 +14449,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '52.7',
                 'forecast': '52.3',
                 'previous': '52.4'
             },
@@ -14459,7 +14459,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '78.3',
                 'forecast': '73.6',
                 'previous': '70.5'
             },
@@ -14469,9 +14469,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '0.1%',
-                'previous': '0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'Wards Total Vehicle Sales',
@@ -14479,7 +14479,7 @@ class HybridEconomicCalendar:
                 'time': '14:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '16.3M',
                 'forecast': '15.8M',
                 'previous': '15.8M'
             },
@@ -14489,7 +14489,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.5M',
                 'forecast': 'N/A',
                 'previous': '6.9M'
             },
@@ -14509,7 +14509,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-11.6%',
                 'forecast': '-10.4%',
                 'previous': '-10.6%'
             },
@@ -14519,7 +14519,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.69B',
                 'forecast': '2.58B',
                 'previous': '2.63B'
             },
@@ -14529,7 +14529,7 @@ class HybridEconomicCalendar:
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.35|2.6',
                 'forecast': 'N/A',
                 'previous': '2.12|3.3'
             },
@@ -14551,7 +14551,7 @@ class HybridEconomicCalendar:
                 'time': '06:30 UTC',
                 'currency': 'CHF',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.5%',
                 'previous': '0.6%'
             },
@@ -14561,7 +14561,7 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-32.1B',
                 'forecast': 'N/A',
                 'previous': '-9.7B'
             },
@@ -14581,7 +14581,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.4%',
                 'previous': '0.6%'
             },
@@ -14591,7 +14591,7 @@ class HybridEconomicCalendar:
                 'time': '09:18 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.73|1.9',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
@@ -14601,7 +14601,7 @@ class HybridEconomicCalendar:
                 'time': '11:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-78.0%',
                 'forecast': 'N/A',
                 'previous': '-71.9%'
             },
@@ -14611,9 +14611,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-5.7B',
                 'forecast': '-1.9B',
-                'previous': '-3.6B'
+                'previous': '-4.2B'
             },
             {
                 'title': 'Unemployment Claims',
@@ -14621,9 +14621,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '202K',
                 'forecast': '212K',
-                'previous': '210K'
+                'previous': '211K'
             },
             {
                 'title': 'Trade Balance',
@@ -14631,9 +14631,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-57.3B',
                 'forecast': '-59.8B',
-                'previous': '-54.5B'
+                'previous': '-54.7B'
             },
             {
                 'title': 'Natural Gas Storage',
