@@ -14673,7 +14673,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.3%',
                 'previous': '0.4%'
             },
@@ -14683,9 +14683,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '178K',
                 'forecast': '56K',
-                'previous': '-92K'
+                'previous': '-133K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -14693,7 +14693,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.3%',
                 'forecast': '4.4%',
                 'previous': '4.4%'
             },
