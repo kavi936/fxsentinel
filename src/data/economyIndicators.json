@@ -252,8 +252,8 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "4.4%",
-        "asOf": "2026-02-01",
+        "currentValue": "4.3%",
+        "asOf": "2026-03-01",
         "chartData": [
           3.7,
           3.9,
@@ -279,7 +279,8 @@
           4.5,
           4.4,
           4.3,
-          4.4
+          4.4,
+          4.3
         ],
         "chartDates": [
           "2024-01-01",
@@ -306,7 +307,8 @@
           "2025-11-01",
           "2025-12-01",
           "2026-01-01",
-          "2026-02-01"
+          "2026-02-01",
+          "2026-03-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -317,8 +319,8 @@
         "description": "unemployment description"
       },
       "nonfarm-payrolls": {
-        "currentValue": "-92K",
-        "asOf": "2026-02-01",
+        "currentValue": "178K",
+        "asOf": "2026-03-01",
         "chartData": [
           119.0,
           222.0,
@@ -345,7 +347,8 @@
           56.0,
           48.0,
           126.0,
-          -92.0
+          -133.0,
+          178.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -373,7 +376,8 @@
           "2025-11-01",
           "2025-12-01",
           "2026-01-01",
-          "2026-02-01"
+          "2026-02-01",
+          "2026-03-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
