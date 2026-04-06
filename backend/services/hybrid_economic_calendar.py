@@ -14753,7 +14753,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'MI Inflation Gauge m/m',
-                'date': 'Mon, Apr 06',
+                'date': 'Tue, Apr 07',
                 'time': '01:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -14763,7 +14763,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'ANZ Commodity Prices m/m',
-                'date': 'Mon, Apr 06',
+                'date': 'Tue, Apr 07',
                 'time': '01:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
@@ -14773,7 +14773,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'ANZ Job Advertisements m/m',
-                'date': 'Mon, Apr 06',
+                'date': 'Tue, Apr 07',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -14783,7 +14783,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Household Spending m/m',
-                'date': 'Mon, Apr 06',
+                'date': 'Tue, Apr 07',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -14793,7 +14793,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': '30-y Bond Auction',
-                'date': 'Mon, Apr 06',
+                'date': 'Tue, Apr 07',
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
