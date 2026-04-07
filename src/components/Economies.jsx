@@ -2068,47 +2068,18 @@ function Economies() {
     fetchIndicators();
   }, [selectedEconomy]); // Only depend on selectedEconomy
 
-  // Central bank rates data (will move to backend later)
+  // G10 headline policy rates (one benchmark per jurisdiction), high → low. Fed uses midpoint of the FFR target band.
+  // Replace with API when available; verify after each major central-bank meeting.
   const centralBankRates = [
-    {
-      flag: '🇺🇸',
-      country: 'USA',
-      rate: 3.75,
-      bankName: 'Fed',
-      trend: 'down',
-      nextMeeting: 'null'
-    },
-    {
-      flag: '🇬🇧',
-      country: 'UK',
-      rate: 3.75,
-      bankName: 'BOE',
-      trend: 'stable',
-      nextMeeting: 'null'
-    },
-    {
-      flag: '🇪🇺',
-      country: 'EU',
-      rate: 2.15,
-      bankName: 'ECB',
-      trend: 'stable',
-      nextMeeting: 'null'
-    },
-    {
-      flag: '🇯🇵',
-      country: 'Japan',
-      rate: 0.75,
-      bankName: 'BOJ',
-      trend: 'stable',
-      nextMeeting: 'null'
-    }
+    { flag: '🇦🇺', country: 'Australia', rate: 4.1, bankName: 'RBA' },
+    { flag: '🇬🇧', country: 'UK', rate: 3.75, bankName: 'BOE' },
+    { flag: '🇺🇸', country: 'USA', rate: 3.625, bankName: 'Fed' },
+    { flag: '🇨🇦', country: 'Canada', rate: 2.25, bankName: 'BoC' },
+    { flag: '🇳🇿', country: 'New Zealand', rate: 2.25, bankName: 'RBNZ' },
+    { flag: '🇪🇺', country: 'EU', rate: 2.15, bankName: 'ECB' },
+    { flag: '🇯🇵', country: 'Japan', rate: 0.75, bankName: 'BOJ' },
+    { flag: '🇨🇭', country: 'Switzerland', rate: 0, bankName: 'SNB' }
   ];
-
-  const getTrendArrow = (trend) => {
-    if (trend === 'up') return '↑';
-    if (trend === 'down') return '↓';
-    return '→';
-  };
 
   const formatLastUpdated = () => {
     // Hardcoded for now - will be dynamic later
@@ -2126,47 +2097,24 @@ function Economies() {
       <div className="economies-content">
         {/* Header with Central Bank Rates */}
         <div className="economies-header">
-          <h1 className="economies-title">ECONOMIC INDICATORS</h1>
-          
           <div className="central-bank-rates">
-            <span className="rates-label" title="Central Bank Rates"><b>CBR:</b></span>
-            {/* Ticker wrap: on mobile, inner scrolls right-to-left with duplicated content for seamless loop */}
+            <span className="rates-label" title="Policy rates set by each major central bank">
+              Central Bank Rates:
+            </span>
             <div className="rates-ticker-wrap">
-              <div className="rates-ticker-inner">
-                <div className="rates-grid">
-                  {centralBankRates.map((item, index) => (
-                    <React.Fragment key={`${item.country}-1`}>
-                      <div className="rate-item">
-                        <span className="flag">{item.flag}</span>
-                        <span className="rate-value">{item.rate.toFixed(2)}%</span>
-                        <span className="bank-name">{item.bankName}</span>
-                        <span className={`rate-trend ${item.trend}`}>
-                          {getTrendArrow(item.trend)}
-                        </span>
-                      </div>
-                      {index < centralBankRates.length - 1 && (
-                        <span className="rate-divider">│</span>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div className="rates-grid rates-grid-duplicate">
-                  {centralBankRates.map((item, index) => (
-                    <React.Fragment key={`${item.country}-2`}>
-                      <div className="rate-item">
-                        <span className="flag">{item.flag}</span>
-                        <span className="rate-value">{item.rate.toFixed(2)}%</span>
-                        <span className="bank-name">{item.bankName}</span>
-                        <span className={`rate-trend ${item.trend}`}>
-                          {getTrendArrow(item.trend)}
-                        </span>
-                      </div>
-                      {index < centralBankRates.length - 1 && (
-                        <span className="rate-divider">│</span>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
+              <div className="rates-grid">
+                {centralBankRates.map((item, index) => (
+                  <React.Fragment key={item.country}>
+                    <div className="rate-item">
+                      <span className="flag">{item.flag}</span>
+                      <span className="rate-value">{item.rate.toFixed(2)}%</span>
+                      <span className="bank-name">{item.bankName}</span>
+                    </div>
+                    {index < centralBankRates.length - 1 && (
+                      <span className="rate-divider">│</span>
+                    )}
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           </div>
@@ -2298,9 +2246,6 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const recentHolisticDropdownRef = useRef(null);
   const recentHolisticPanelRef = useRef(null);
 
-  const holisticScanLocalKey =
-    currentUser?.uid != null ? `fxSentinel_holisticScan_${currentUser.uid}_${selectedEconomy}` : null;
-
   const loadRecentHolisticScans = useCallback(async () => {
     if (!currentUser) {
       setRecentHolisticScans([]);
@@ -2341,25 +2286,13 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
 
   const activeYield = YIELD_MARKETS[activeYieldIndex] || YIELD_MARKETS[0];
 
+  // Reset scan UI when switching economy. Do not restore from localStorage — after a full reload
+  // the panel stays empty until the user runs a new scan or opens one from Recents (Firestore).
   useEffect(() => {
     setScanError(null);
     setHolisticScan(null);
     setScanState('default');
-    if (holisticScanLocalKey) {
-      try {
-        const raw = localStorage.getItem(holisticScanLocalKey);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (parsed?.scan) {
-            setHolisticScan(parsed.scan);
-            setScanState('ready');
-          }
-        }
-      } catch (e) {
-        console.warn('Holistic scan local cache read failed', e);
-      }
-    }
-  }, [selectedEconomy, holisticScanLocalKey]);
+  }, [selectedEconomy]);
 
   useEffect(() => {
     loadRecentHolisticScans();
@@ -2394,13 +2327,6 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     setHolisticScan(snap);
     setScanState('ready');
     setScanError(null);
-    if (holisticScanLocalKey) {
-      try {
-        localStorage.setItem(holisticScanLocalKey, JSON.stringify({ scan: snap, at: Date.now() }));
-      } catch (e) {
-        console.warn('Holistic scan local cache write failed', e);
-      }
-    }
     requestAnimationFrame(() => setRecentHolisticDropdownOpen(false));
   };
 
@@ -2459,16 +2385,6 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
       }
       setHolisticScan(payload.scan);
       setScanState('ready');
-      if (holisticScanLocalKey) {
-        try {
-          localStorage.setItem(
-            holisticScanLocalKey,
-            JSON.stringify({ scan: payload.scan, at: Date.now() })
-          );
-        } catch (cacheErr) {
-          console.warn('Holistic scan local cache write failed', cacheErr);
-        }
-      }
       loadRecentHolisticScans();
     } catch (err) {
       setScanError(err.message || 'Failed to fetch scan');
@@ -2501,6 +2417,13 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const scanTimestamp = holisticScan?.timestamp ? new Date(holisticScan.timestamp).toLocaleString() : null;
   const formatYield = (value) => (typeof value === 'number' ? `${value.toFixed(2)}%` : 'N/A');
   const formatChange = (value) => (typeof value === 'number' ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}` : 'N/A');
+  const formatStaleness = (seconds) => {
+    if (typeof seconds !== 'number' || seconds < 0) return 'N/A';
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
+  };
 
   const handleYieldWheel = (event) => {
     event.preventDefault();
@@ -4852,6 +4775,22 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <span className="scan-overview-item">Data quality: {(holisticScan.data_quality?.status || 'unknown').toUpperCase()}</span>
                 {scanTimestamp && <span className="scan-overview-item">Scanned: {scanTimestamp}</span>}
               </div>
+              <div className="scan-section scan-trader-brief">
+                <div className="scan-section-title">Regime Strip</div>
+                <div className="scan-meta-large">
+                  <div>{holisticScan.trader_brief?.short_term_line || 'Short-term regime unavailable.'}</div>
+                  <div>{holisticScan.trader_brief?.long_term_line || 'Long-term regime unavailable.'}</div>
+                  <div>
+                    Top pair bias: {holisticScan.trader_brief?.top_pair_bias || 'N/A'} | Calendar stress:{' '}
+                    {holisticScan.event_flags?.calendar_stress_score ?? 'N/A'}/100
+                  </div>
+                  {(holisticScan.trader_brief?.warnings || []).map((warning, idx) => (
+                    <div key={`trader-warning-${idx}`} className="scan-trader-warning">
+                      {warning}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
               <div className="scan-yield-strip">
                 <div className="scan-yield-item">
@@ -4881,7 +4820,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className="scan-card">
                   <div className="scan-card-label">Short-Term (2-6 weeks)</div>
                   <div className={`scan-bias ${getBiasClass(holisticScan.short_term?.bias)}`}>
-                    {(holisticScan.short_term?.bias || 'neutral').toUpperCase()}
+                    {(holisticScan.short_term?.display_bias || holisticScan.short_term?.bias || 'neutral').toUpperCase()}
                   </div>
                   <div className="scan-meta">
                     Score: {holisticScan.short_term?.score ?? 'N/A'}
@@ -4894,7 +4833,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className="scan-card">
                   <div className="scan-card-label">Long-Term (3-12 months)</div>
                   <div className={`scan-bias ${getBiasClass(holisticScan.long_term?.bias)}`}>
-                    {(holisticScan.long_term?.bias || 'neutral').toUpperCase()}
+                    {(holisticScan.long_term?.display_bias || holisticScan.long_term?.bias || 'neutral').toUpperCase()}
                   </div>
                   <div className="scan-meta">
                     Score: {holisticScan.long_term?.score ?? 'N/A'}
@@ -4970,17 +4909,49 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     <FormattedScanParagraph text={holisticScan.narrative?.fx || 'FX narrative unavailable.'} className="scan-highlight-detail" />
                   </li>
                 </ul>
-                {holisticScan.context_sources && (
-                  <p className="scan-paragraph scan-paragraph-metadata scan-context-metadata">
-                    Context layers: curated geopolitical / energy overlay
-                    {holisticScan.context_sources.macro_overlay?.lastUpdated
-                      ? ` (updated ${holisticScan.context_sources.macro_overlay.lastUpdated})`
-                      : ''}{' '}
-                    and {holisticScan.context_sources.central_bank_documents?.bank || 'central bank'} policy excerpts from the same document catalog as Overview&apos;s Central Bank Analysis
-                    {holisticScan.context_sources.central_bank_documents?.documents_sampled != null
-                      ? ` (${holisticScan.context_sources.central_bank_documents.documents_sampled} recent entries sampled).`
-                      : '.'}
-                  </p>
+                {(holisticScan.context_sources || holisticScan.yield_context?.source || holisticScan.model_version) && (
+                  <div className="scan-context-metadata">
+                    <div className="scan-section-title">Source references</div>
+                    <ul className="scan-highlights-list" role="list">
+                      <li className="scan-highlight-item">
+                        <div className="scan-highlight-line">
+                          <span className="scan-highlight-label">Overlay context</span>
+                          <span className="scan-highlight-emphasis">
+                            {holisticScan.context_sources?.macro_overlay?.version || 'N/A'}
+                          </span>
+                        </div>
+                        <p className="scan-paragraph scan-paragraph-metadata">
+                          File: {holisticScan.context_sources?.macro_overlay?.file || 'N/A'}; last updated:{' '}
+                          {holisticScan.context_sources?.macro_overlay?.lastUpdated || 'N/A'}
+                        </p>
+                      </li>
+                      <li className="scan-highlight-item">
+                        <div className="scan-highlight-line">
+                          <span className="scan-highlight-label">Central bank documents</span>
+                          <span className="scan-highlight-emphasis">
+                            {(holisticScan.context_sources?.central_bank_documents?.bank || 'N/A').toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="scan-paragraph scan-paragraph-metadata">
+                          File: {holisticScan.context_sources?.central_bank_documents?.file || 'N/A'}; catalog version:{' '}
+                          {holisticScan.context_sources?.central_bank_documents?.catalog_version || 'N/A'}; sampled:{' '}
+                          {holisticScan.context_sources?.central_bank_documents?.documents_sampled ?? 'N/A'} docs
+                        </p>
+                      </li>
+                      <li className="scan-highlight-item">
+                        <div className="scan-highlight-line">
+                          <span className="scan-highlight-label">Live market inputs</span>
+                          <span className="scan-highlight-emphasis">
+                            {(holisticScan.yield_context?.source || 'N/A').toUpperCase()}
+                          </span>
+                        </div>
+                        <p className="scan-paragraph scan-paragraph-metadata">
+                          Staleness: {formatStaleness(holisticScan.data_quality?.staleness_seconds)}; scan model:{' '}
+                          {holisticScan.model_version || 'N/A'}; generated UTC: {holisticScan.timestamp || 'N/A'}
+                        </p>
+                      </li>
+                    </ul>
+                  </div>
                 )}
               </div>
 
@@ -5036,18 +5007,42 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               </div>
 
               <div className="scan-section">
-                <div className="scan-section-title">Correlated Pairs</div>
-                <div className="scan-pairs">
-                  {(holisticScan.fx_pairs || []).slice(0, 4).map((p) => (
-                    <div key={p.pair} className="scan-pair-chip">
-                      {p.pair} - {p.bias} ({p.strength})
-                    </div>
-                  ))}
-                </div>
+                <div className="scan-section-title">Top Pair Biases</div>
+                {((holisticScan.pair_setups && holisticScan.pair_setups.length > 0)
+                  ? holisticScan.pair_setups
+                  : (holisticScan.fx_pairs || []).map((p) => ({
+                      pair: p.pair,
+                      bias: p.bias,
+                      strength: p.strength,
+                      driver: p.reason,
+                      invalidation: 'Invalidated if macro/yield direction materially flips.',
+                      conviction_note: '',
+                      key_risk: '',
+                    }))
+                ).slice(0, 4).map((p) => (
+                  <div key={p.pair} className="scan-driver-row">
+                    <span>
+                      <strong>{p.pair}</strong> - {(p.bias || 'neutral').toUpperCase()} ({p.strength || 'light'})
+                      {p.driver ? <span className="scan-driver-note"> - {p.driver}</span> : null}
+                      {p.conviction_note ? <span className="scan-driver-note"> - {p.conviction_note}</span> : null}
+                    </span>
+                    <span className="scan-paragraph-metadata">{p.invalidation || 'N/A'}</span>
+                  </div>
+                ))}
               </div>
 
-              <div className="scan-section">
-                <div className="scan-section-title">Missing Signals</div>
+              <details className="scan-section">
+                <summary className="scan-section-title">Reliability & Missing Signals</summary>
+                {holisticScan.data_quality?.indicator_keys_used && (
+                  <p className="scan-paragraph scan-paragraph-metadata scan-indicator-resolution">
+                    <strong>Dataset keys used for scan math:</strong> inflation →{' '}
+                    {holisticScan.data_quality.indicator_keys_used.inflation || 'not found'}; interest →{' '}
+                    {holisticScan.data_quality.indicator_keys_used.interest_rate || 'not found'}; growth →{' '}
+                    {holisticScan.data_quality.indicator_keys_used.growth || 'not found'}; labor →{' '}
+                    {holisticScan.data_quality.indicator_keys_used.unemployment || 'not found'}. (Older snapshots may omit
+                    this block.)
+                  </p>
+                )}
                 <div className="scan-pairs">
                   {(holisticScan.data_quality?.missing_signals || []).length === 0 ? (
                     <div className="scan-pair-chip">None</div>
@@ -5059,7 +5054,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     ))
                   )}
                 </div>
-              </div>
+              </details>
             </div>
           )}
         </div>
