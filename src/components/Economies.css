@@ -136,10 +136,25 @@
   font-size: 1rem;
 }
 
+/* Rate figure only: colour encodes recent policy stance (not per-bank branding) */
 .rate-value {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #ffffff;
+}
+
+/* Tightening bias / active hikes */
+.rate-value--hiking {
+  color: #fb923c;
+}
+
+/* Pause / steady policy at last major decision */
+.rate-value--holding {
+  color: #cbd5e1;
+}
+
+/* Easing bias / recent cuts */
+.rate-value--cutting {
+  color: #4ade80;
 }
 
 .bank-name {

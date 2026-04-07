@@ -2068,18 +2068,25 @@ function Economies() {
     fetchIndicators();
   }, [selectedEconomy]); // Only depend on selectedEconomy
 
-  // G10 headline policy rates (one benchmark per jurisdiction), high → low. Fed uses midpoint of the FFR target band.
-  // Replace with API when available; verify after each major central-bank meeting.
+  // G10 policy benchmarks, high → low. Rates are static until wired to an API.
+  // stance = recent policy direction for UI tint only: 'hiking' | 'holding' | 'cutting'
+  // (Feb–Mar 2026: RBA delivered consecutive hikes; peers broadly on hold at last major decisions.)
   const centralBankRates = [
-    { flag: '🇦🇺', country: 'Australia', rate: 4.1, bankName: 'RBA' },
-    { flag: '🇬🇧', country: 'UK', rate: 3.75, bankName: 'BOE' },
-    { flag: '🇺🇸', country: 'USA', rate: 3.625, bankName: 'Fed' },
-    { flag: '🇨🇦', country: 'Canada', rate: 2.25, bankName: 'BoC' },
-    { flag: '🇳🇿', country: 'New Zealand', rate: 2.25, bankName: 'RBNZ' },
-    { flag: '🇪🇺', country: 'EU', rate: 2.15, bankName: 'ECB' },
-    { flag: '🇯🇵', country: 'Japan', rate: 0.75, bankName: 'BOJ' },
-    { flag: '🇨🇭', country: 'Switzerland', rate: 0, bankName: 'SNB' }
+    { flag: '🇦🇺', country: 'Australia', rate: 4.1, bankName: 'RBA', stance: 'hiking' },
+    { flag: '🇬🇧', country: 'UK', rate: 3.75, bankName: 'BOE', stance: 'holding' },
+    { flag: '🇺🇸', country: 'USA', rate: 3.75, bankName: 'Fed', stance: 'holding' },
+    { flag: '🇨🇦', country: 'Canada', rate: 2.25, bankName: 'BoC', stance: 'holding' },
+    { flag: '🇳🇿', country: 'New Zealand', rate: 2.25, bankName: 'RBNZ', stance: 'holding' },
+    { flag: '🇪🇺', country: 'EU', rate: 2.15, bankName: 'ECB', stance: 'holding' },
+    { flag: '🇯🇵', country: 'Japan', rate: 0.75, bankName: 'BOJ', stance: 'holding' },
+    { flag: '🇨🇭', country: 'Switzerland', rate: 0, bankName: 'SNB', stance: 'holding' }
   ];
+
+  const stanceTitle = {
+    hiking: 'Recent policy: tightening (e.g. rate increase at last decision(s))',
+    holding: 'Recent policy: on hold / pause at last major decision',
+    cutting: 'Recent policy: easing (e.g. rate cut at last decision(s))'
+  };
 
   const formatLastUpdated = () => {
     // Hardcoded for now - will be dynamic later
@@ -2107,7 +2114,12 @@ function Economies() {
                   <React.Fragment key={item.country}>
                     <div className="rate-item">
                       <span className="flag">{item.flag}</span>
-                      <span className="rate-value">{item.rate.toFixed(2)}%</span>
+                      <span
+                        className={`rate-value rate-value--${item.stance || 'holding'}`}
+                        title={stanceTitle[item.stance] || stanceTitle.holding}
+                      >
+                        {item.rate.toFixed(2)}%
+                      </span>
                       <span className="bank-name">{item.bankName}</span>
                     </div>
                     {index < centralBankRates.length - 1 && (
