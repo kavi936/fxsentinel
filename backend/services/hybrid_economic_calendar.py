@@ -14737,7 +14737,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '54.0',
                 'forecast': '54.8',
                 'previous': '56.1'
             },
@@ -14747,7 +14747,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.8%',
                 'forecast': '-0.7%',
                 'previous': '-1.0%'
             },
@@ -14757,7 +14757,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': 'N/A',
                 'previous': '-0.2%'
             },
@@ -14767,7 +14767,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.1%',
                 'forecast': 'N/A',
                 'previous': '4.2%'
             },
@@ -14777,7 +14777,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.1%',
                 'forecast': 'N/A',
                 'previous': '3.2%'
             },
@@ -14787,7 +14787,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.2%',
                 'previous': '0.3%'
             },
@@ -14797,7 +14797,7 @@ class HybridEconomicCalendar:
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.70|3.1',
                 'forecast': 'N/A',
                 'previous': '3.40|3.7'
             },
