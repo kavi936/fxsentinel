@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 class EconomyHolisticScanService:
     """Build a deterministic short/long macro scan for one economy."""
 
-    VERSION = "economy_scan_v1"
+    VERSION = "economy_scan_v1.1"
     SUPPORTED_COUNTRIES = {"US", "EUR", "GBP", "JPY"}
 
     COUNTRY_PAIRS = {
@@ -114,6 +114,8 @@ class EconomyHolisticScanService:
         calendar_events = events or []
         yield_map = yields or {}
 
+        indicator_keys_used = self._resolve_indicator_keys(country, indicator_map)
+
         yield_context = self._build_yield_context(country, yield_map)
         short_components = self._build_short_components(country, indicator_map, calendar_events, yield_context)
         long_components = self._build_long_components(country, indicator_map, yield_context)
@@ -124,30 +126,52 @@ class EconomyHolisticScanService:
         missing_signals = self._collect_missing_signals(short_components, long_components)
         staleness_seconds = self._estimate_staleness_seconds(indicator_map)
         event_risk = self._event_risk(country, calendar_events)
+        quality_status = self._quality_status(missing_signals, staleness_seconds)
+        quality_overrides = self._build_quality_overrides(missing_signals, staleness_seconds)
 
         short_term_payload = {
                 "bias": self._score_to_bias(short_total),
                 "score": short_total,
                 "confidence": self._confidence(short_components, missing_signals, staleness_seconds),
                 "drivers": short_components,
+                "display_bias": self._regime_display_label(self._score_to_bias(short_total), quality_overrides.get("incomplete", False)),
             }
         long_term_payload = {
                 "bias": self._score_to_bias(long_total),
                 "score": long_total,
                 "confidence": self._confidence(long_components, missing_signals, staleness_seconds),
                 "drivers": long_components,
+                "display_bias": self._regime_display_label(self._score_to_bias(long_total), quality_overrides.get("incomplete", False)),
             }
 
         fx_pairs = self._map_fx_pairs(country, short_total)
         macro_overlay = self._load_holistic_overlay()
         central_bank_context = self._load_central_bank_snippets(country)
+        pair_setups = self._build_pair_setups(
+            country=country,
+            fx_pairs=fx_pairs,
+            short_bias=short_term_payload.get("bias", "neutral"),
+            event_risk_score=event_risk,
+            missing_signals=missing_signals,
+            sentiment=yield_context.get("investor_sentiment"),
+            macro_overlay=macro_overlay,
+            quality_overrides=quality_overrides,
+        )
+        event_flags = self._build_event_flags(event_risk)
+        trader_brief = self._build_trader_brief(
+            short_term=short_term_payload,
+            long_term=long_term_payload,
+            pair_setups=pair_setups,
+            event_flags=event_flags,
+            quality_overrides=quality_overrides,
+        )
         highlights = self._build_highlights(
             country=country,
             short_term=short_term_payload,
             long_term=long_term_payload,
             yield_context=yield_context,
             fx_pairs=fx_pairs,
-            data_quality_status=self._quality_status(missing_signals, staleness_seconds),
+            data_quality_status=quality_status,
             missing_signals=missing_signals,
             staleness_seconds=staleness_seconds,
             event_risk_score=event_risk,
@@ -165,6 +189,10 @@ class EconomyHolisticScanService:
             "long_term": {
                 **long_term_payload,
             },
+            "trader_brief": trader_brief,
+            "pair_setups": pair_setups,
+            "quality_overrides": quality_overrides,
+            "event_flags": event_flags,
             "highlights": highlights,
             "yield_context": yield_context,
             "trading_ranges": self._build_trading_ranges(short_total, long_total, yield_context),
@@ -186,11 +214,53 @@ class EconomyHolisticScanService:
             },
             "fx_pairs": fx_pairs,
             "data_quality": {
-                "status": self._quality_status(missing_signals, staleness_seconds),
+                "status": quality_status,
                 "missing_signals": missing_signals,
                 "staleness_seconds": staleness_seconds,
+                "indicator_keys_used": indicator_keys_used,
             },
             "model_version": self.VERSION,
+        }
+
+    def _interest_rate_keys(self, country: str) -> tuple[str, ...]:
+        """Sheets/JSON use `interest-rate`; some builds may namespace by economy."""
+        extra = {
+            "EUR": ("interest-rate-EUR",),
+            "GBP": ("interest-rate-GBP",),
+            "JPY": ("interest-rate-JPY",),
+            "US": ("interest-rate-US",),
+        }.get(country, ())
+        return ("interest-rate",) + extra
+
+    def _first_indicator_payload(self, indicators: Dict[str, Any], *keys: str) -> Optional[Dict[str, Any]]:
+        """Return the first indicator dict that exists (same keys as frontend / Sheets)."""
+        for key in keys:
+            payload = indicators.get(key)
+            if isinstance(payload, dict) and payload:
+                return payload
+        return None
+
+    def _which_indicator_key(self, indicators: Dict[str, Any], *keys: str) -> Optional[str]:
+        for key in keys:
+            payload = indicators.get(key)
+            if isinstance(payload, dict) and payload:
+                return key
+        return None
+
+    def _resolve_indicator_keys(self, country: str, indicators: Dict[str, Any]) -> Dict[str, Optional[str]]:
+        """
+        Explains which dataset keys fed the scan. Holistic scan historically looked for
+        `gdp-qoq` / `unemployment-rate`, while `economyIndicators.json` and Google Sheets
+        emit `gdp-growth` / `unemployment`. EUR-area inflation is often `inflation` not `inflation-YoY`.
+        """
+        inflation_keys = ("inflation-YoY", "inflation")
+        growth_keys = ("gdp-qoq", "gdp-growth")
+        labor_keys = ("unemployment-rate", "unemployment")
+        return {
+            "inflation": self._which_indicator_key(indicators, *inflation_keys),
+            "interest_rate": self._which_indicator_key(indicators, *self._interest_rate_keys(country)),
+            "growth": self._which_indicator_key(indicators, *growth_keys),
+            "unemployment": self._which_indicator_key(indicators, *labor_keys),
         }
 
     def _build_short_components(
@@ -200,9 +270,12 @@ class EconomyHolisticScanService:
         events: List[Dict[str, Any]],
         yield_context: Dict[str, Any],
     ) -> List[Dict[str, Any]]:
-        inflation = self._momentum(indicators.get("inflation-YoY"))
-        rates = self._momentum(indicators.get("interest-rate"))
-        growth = self._momentum(indicators.get("gdp-qoq"))
+        inflation_payload = self._first_indicator_payload(indicators, "inflation-YoY", "inflation")
+        rates_payload = self._first_indicator_payload(indicators, *self._interest_rate_keys(country))
+        growth_payload = self._first_indicator_payload(indicators, "gdp-qoq", "gdp-growth")
+        inflation = self._momentum(inflation_payload)
+        rates = self._momentum(rates_payload)
+        growth = self._momentum(growth_payload)
         risk = self._event_risk(country, events)
         daily_change_signal = yield_context.get("short_term_signal")
 
@@ -215,10 +288,14 @@ class EconomyHolisticScanService:
         ]
 
     def _build_long_components(self, country: str, indicators: Dict[str, Any], yield_context: Dict[str, Any]) -> List[Dict[str, Any]]:
-        inflation = self._momentum(indicators.get("inflation-YoY"))
-        rates = self._momentum(indicators.get("interest-rate"))
-        unemployment = self._momentum(indicators.get("unemployment-rate"))
-        growth = self._momentum(indicators.get("gdp-qoq"))
+        inflation_payload = self._first_indicator_payload(indicators, "inflation-YoY", "inflation")
+        rates_payload = self._first_indicator_payload(indicators, *self._interest_rate_keys(country))
+        unemployment_payload = self._first_indicator_payload(indicators, "unemployment-rate", "unemployment")
+        growth_payload = self._first_indicator_payload(indicators, "gdp-qoq", "gdp-growth")
+        inflation = self._momentum(inflation_payload)
+        rates = self._momentum(rates_payload)
+        unemployment = self._momentum(unemployment_payload)
+        growth = self._momentum(growth_payload)
         curve_signal = yield_context.get("long_term_signal")
 
         # Keep these derived signals nullable so missing inputs never crash scan generation.
@@ -319,6 +396,119 @@ class EconomyHolisticScanService:
                 }
             )
         return results
+
+    def _regime_display_label(self, bias: str, incomplete: bool) -> str:
+        base = (bias or "neutral").capitalize()
+        return f"{base} (incomplete)" if incomplete else base
+
+    def _build_quality_overrides(self, missing_signals: List[str], staleness_seconds: int) -> Dict[str, Any]:
+        incomplete = len(missing_signals) >= 2
+        stale = staleness_seconds > 60 * 60 * 24 * 21
+        language_mode = "directional_lean" if incomplete or stale else "full_conviction"
+        return {
+            "incomplete": incomplete,
+            "stale": stale,
+            "language_mode": language_mode,
+        }
+
+    def _build_event_flags(self, event_risk_score: float) -> Dict[str, Any]:
+        high_repricing_risk = event_risk_score >= 80.0
+        warning = (
+            "High event density — regime signal may reprice sharply. Size accordingly."
+            if high_repricing_risk
+            else "Event density is manageable; still monitor catalysts around scheduled releases."
+        )
+        return {
+            "calendar_stress_score": int(round(min(max(event_risk_score, 0.0), 100.0))),
+            "high_repricing_risk": high_repricing_risk,
+            "warning": warning,
+        }
+
+    def _build_pair_setups(
+        self,
+        country: str,
+        fx_pairs: List[Dict[str, Any]],
+        short_bias: str,
+        event_risk_score: float,
+        missing_signals: List[str],
+        sentiment: Optional[str],
+        macro_overlay: Dict[str, Any],
+        quality_overrides: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        sentiment_label = (sentiment or "balanced").replace("_", " ")
+        geo_title = ""
+        if macro_overlay.get("global_themes"):
+            geo_title = ((macro_overlay.get("global_themes") or [{}])[0].get("title") or "").strip()
+        top_geo_driver = geo_title or "geopolitical and energy risk"
+        conviction_note = (
+            f"Conviction reduced — missing signal families: {', '.join(missing_signals[:3])}."
+            if quality_overrides.get("incomplete")
+            else ("Conviction reduced — inputs are stale." if quality_overrides.get("stale") else "Conviction normal on available signal set.")
+        )
+
+        setups: List[Dict[str, Any]] = []
+        for row in fx_pairs[:4]:
+            pair = row.get("pair", "N/A")
+            bias = row.get("bias", "neutral")
+            strength = row.get("strength", "light")
+            invalidation = (
+                "Invalidated if oil/geopolitical stress triggers USD safe-haven bid and reverses current rate impulse."
+                if event_risk_score >= 80
+                else "Invalidated if yield-impulse direction flips for 2Y/10Y and macro bias shifts across consecutive updates."
+            )
+            if short_bias == "neutral":
+                driver = f"Range conditions; monitor {sentiment_label} curve and event-driven breaks."
+            else:
+                driver = f"{country} short-term {short_bias} regime with {sentiment_label} yield backdrop."
+            setups.append(
+                {
+                    "pair": pair,
+                    "bias": bias,
+                    "strength": strength,
+                    "driver": driver,
+                    "invalidation": invalidation,
+                    "key_risk": top_geo_driver,
+                    "conviction_note": conviction_note,
+                }
+            )
+        return setups
+
+    def _build_trader_brief(
+        self,
+        short_term: Dict[str, Any],
+        long_term: Dict[str, Any],
+        pair_setups: List[Dict[str, Any]],
+        event_flags: Dict[str, Any],
+        quality_overrides: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        top_pair = pair_setups[0] if pair_setups else {}
+        short_bias = short_term.get("bias", "neutral")
+        long_bias = long_term.get("bias", "neutral")
+        short_line = (
+            f"{self._regime_display_label(short_bias, quality_overrides.get('incomplete', False))} · "
+            f"Score {short_term.get('score')} · {short_term.get('confidence')}% confidence"
+        )
+        long_line = (
+            f"{self._regime_display_label(long_bias, quality_overrides.get('incomplete', False))} · "
+            f"Score {long_term.get('score')} · {long_term.get('confidence')}% confidence"
+        )
+        warnings: List[str] = []
+        if event_flags.get("high_repricing_risk"):
+            warnings.append(event_flags.get("warning"))
+        if quality_overrides.get("incomplete"):
+            warnings.append("Directional lean only — coverage is incomplete due to missing signal families.")
+        if quality_overrides.get("stale"):
+            warnings.append("Inputs are stale relative to UTC; reduce conviction and refresh frequently.")
+
+        return {
+            "short_term_line": short_line,
+            "long_term_line": long_line,
+            "top_pair_bias": (
+                f"{top_pair.get('pair', 'N/A')} → {(top_pair.get('bias') or 'neutral').upper()} ({top_pair.get('strength', 'light')})"
+            ),
+            "key_risk": top_pair.get("key_risk") or "macro event repricing",
+            "warnings": warnings,
+        }
 
     def _sum_weighted(self, components: List[Dict[str, Any]]) -> float:
         return round(sum(c.get("contribution", 0.0) for c in components), 2)
@@ -422,20 +612,23 @@ class EconomyHolisticScanService:
         sentiment_phrase = sentiment.replace("_", " ")
 
         short_text = (
-            f"{self._country_label(country)} short-term macro conditions currently screen as {short_bias}. "
-            f"Sovereign benchmark yields for this economy are at 2Y / 10Y / 30Y of "
-            f"{self._fmt(y2)} / {self._fmt(y10)} / {self._fmt(y30)}, with session moves of "
-            f"{self._fmt_signed(c2)} / {self._fmt_signed(c10)} / {self._fmt_signed(c30)}. "
-            f"Together that reads as a {sentiment_phrase} rate backdrop—markets are repricing near-term policy and growth expectations, which is the main bridge from rates into FX here."
+            f"[[{self._country_label(country)}]] short-term macro conditions currently screen as **{short_bias.upper()}**. "
+            f"[[Sovereign benchmark yields]] for this economy are at [[2Y / 10Y / 30Y]] of "
+            f"**{self._fmt(y2)} / {self._fmt(y10)} / {self._fmt(y30)}**, with [[session moves]] of "
+            f"**{self._fmt_signed(c2)} / {self._fmt_signed(c10)} / {self._fmt_signed(c30)}**. "
+            f"Together that reads as a [[{sentiment_phrase}]] rate backdrop; markets are repricing near-term policy and growth expectations, "
+            f"which is the main bridge from rates into FX."
         )
         long_text = (
-            f"On a longer horizon, the regime reads {long_bias}. The indicator composite and yield-curve shape are blended to estimate whether policy is moving toward "
-            f"tightening persistence, neutral stabilization, or easing repricing. This keeps long-term direction anchored to macro structure instead of one-off event noise."
+            f"On a longer horizon, the regime reads **{long_bias.upper()}**. "
+            f"The [[indicator composite]] and [[yield-curve shape]] are blended to estimate whether policy is moving toward "
+            f"[[tightening persistence]], [[neutral stabilization]], or [[easing repricing]]. "
+            f"This keeps long-term direction anchored to macro structure instead of one-off event noise."
         )
         fx_text = (
-            f"FX implications are mapped into correlated pairs using base/quote orientation. "
-            f"When {self._country_label(country)} has a stronger yield and policy profile, pairs where this economy's currency is the base tend to inherit bullish bias, "
-            f"while quote-side exposure tends to inherit bearish bias; the reverse applies when the scan weakens."
+            f"[[FX implications]] are mapped into correlated pairs using [[base/quote orientation]]. "
+            f"When [[{self._country_label(country)}]] has a stronger yield and policy profile, pairs where this economy's currency is the base tend to inherit [[bullish]] bias, "
+            f"while quote-side exposure tends to inherit [[bearish]] bias; the reverse applies when the scan weakens."
         )
 
         theme = (macro_overlay.get("global_themes") or [{}])[0] if macro_overlay.get("global_themes") else {}
@@ -453,9 +646,9 @@ class EconomyHolisticScanService:
         if cb_snippets:
             first = cb_snippets[0]
             central_bank_text = (
-                f"Policy communication context ({bank}, from the same document catalog as Overview’s Central Bank Analysis): "
+                f"[[Policy communication context]] ({bank}, from the same document catalog as Overview’s Central Bank Analysis): "
                 f"“{first.get('description', '')}” "
-                f"(see {first.get('title', 'latest release')} dated {first.get('date', 'n/a')})."
+                f"(see **{first.get('title', 'latest release')}** dated [[{first.get('date', 'n/a')}]])."
             )
         else:
             central_bank_text = (
@@ -534,13 +727,13 @@ class EconomyHolisticScanService:
                 "id": "short_term_regime",
                 "label": "Short-term regime",
                 "emphasis": st_bias,
-                "detail": f"Composite score {st_score} with {st_conf}% confidence on a 2–6 week horizon.",
+                "detail": f"Composite score **{st_score}** with **{st_conf}% confidence** on a [[2–6 week]] horizon.",
             },
             {
                 "id": "long_term_regime",
                 "label": "Long-term regime",
                 "emphasis": lt_bias,
-                "detail": f"Composite score {lt_score} with {lt_conf}% confidence on a 3–12 month horizon.",
+                "detail": f"Composite score **{lt_score}** with **{lt_conf}% confidence** on a [[3–12 month]] horizon.",
             },
             {
                 "id": "geopolitical_energy",
@@ -552,15 +745,15 @@ class EconomyHolisticScanService:
                 "id": "central_bank_catalog",
                 "label": "Central bank document context",
                 "emphasis": cb_emphasis,
-                "detail": cb_detail or f"Same JSON catalog as Overview: `src/data/central-bank-documents.json` ({cb_bank}).",
+                "detail": cb_detail or f"Same JSON catalog as Overview: [[src/data/central-bank-documents.json]] ({cb_bank}).",
             },
             {
                 "id": "yield_tape",
                 "label": "Live sovereign yields",
                 "emphasis": sentiment,
                 "detail": (
-                    f"2Y / 10Y / 30Y: {self._fmt(y2)} / {self._fmt(y10)} / {self._fmt(y30)}. "
-                    f"Session change (Δ): {self._fmt_signed(c2)} / {self._fmt_signed(c10)} / {self._fmt_signed(c30)}."
+                    f"[[2Y / 10Y / 30Y]]: **{self._fmt(y2)} / {self._fmt(y10)} / {self._fmt(y30)}**. "
+                    f"Session change (Δ): **{self._fmt_signed(c2)} / {self._fmt_signed(c10)} / {self._fmt_signed(c30)}**."
                 ),
             },
             {
@@ -570,7 +763,7 @@ class EconomyHolisticScanService:
                     f"2s10s {curve:+.2f} pp" if curve is not None else "2s10s N/A"
                 ),
                 "detail": (
-                    f"10s30s {curve_10s30s:+.2f} pp. "
+                    f"[[10s30s]] **{curve_10s30s:+.2f} pp**. "
                     f"Steepening often ties to growth/reflation; flat/inverted warns late-cycle or recession pricing."
                     if curve_10s30s is not None
                     else "Use 2s10s with daily yield moves to infer near-term rate repricing vs long-run growth."
@@ -580,19 +773,19 @@ class EconomyHolisticScanService:
                 "id": "fx_lead",
                 "label": "FX map (correlated pairs)",
                 "emphasis": pair_line,
-                "detail": "Bias uses base/quote orientation vs this economy’s currency; strength label reflects composite short-term score.",
+                "detail": "Bias uses [[base/quote orientation]] vs this economy’s currency; strength label reflects [[composite short-term score]].",
             },
             {
                 "id": "event_risk",
                 "label": "Calendar stress (14 days)",
                 "emphasis": f"{int(round(min(event_risk_score, 100)))} / 100",
-                "detail": "Higher = more high/medium-impact events for this currency in the next two weeks; raises volatility of interpretation.",
+                "detail": "Higher = more [[high/medium-impact events]] for this currency in the next two weeks; raises volatility of interpretation.",
             },
             {
                 "id": "data_quality",
                 "label": "Scan reliability",
                 "emphasis": data_quality_status.upper(),
-                "detail": f"{stale_note}. Missing signal families: {len(missing_signals)} ({', '.join(missing_signals[:4])}{'…' if len(missing_signals) > 4 else ''}).",
+                "detail": f"{stale_note}. Missing signal families: **{len(missing_signals)}** ({', '.join(missing_signals[:4])}{'…' if len(missing_signals) > 4 else ''}).",
             },
         ]
 

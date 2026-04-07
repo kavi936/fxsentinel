@@ -27,30 +27,6 @@
   justify-content: space-between;
 }
 
-.economies-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 10px 0 0;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  position: relative;
-  z-index: 1;
-  padding-bottom: 4px;
-}
-
-.economies-title::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, #da0012 0%, #ff4757 30%, #ff6b7a 60%, transparent 100%);
-  border-radius: 0.5px;
-  box-shadow: 0 1px 4px rgba(218, 0, 18, 0.4);
-}
-
 .economies-last-updated {
   font-size: 0.7rem;
   color: #cccccc;
@@ -75,7 +51,7 @@
   border-color: rgba(255, 0, 0, 0.3);
 }
 
-/* Central Bank Rates Bar */
+/* Central Bank Rates Bar — bounded width; rates scroll horizontally inside */
 .central-bank-rates {
   display: flex;
   align-items: center;
@@ -89,6 +65,16 @@
   backdrop-filter: blur(10px);
   transition: all 0.3s ease;
   margin: 0 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+  /* Title removed from header — allow a wider strip; still capped vs viewport + “Updated” pill */
+  max-width: min(1200px, calc(100vw - 220px));
+}
+
+@media (min-width: 1600px) {
+  .central-bank-rates {
+    max-width: min(1320px, calc(100vw - 240px));
+  }
 }
 
 .central-bank-rates:hover {
@@ -100,7 +86,8 @@
 .rates-label {
   color: #cccccc;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -109,24 +96,32 @@
   align-items: center;
   gap: 10px;
   flex-wrap: nowrap;
+  width: max-content;
+  min-width: min-content;
 }
 
-/* Ticker wrapper: on desktop shows one grid; on mobile contains scrolling strip */
 .rates-ticker-wrap {
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
 }
 
-.rates-ticker-inner {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: nowrap;
+.rates-ticker-wrap::-webkit-scrollbar {
+  height: 4px;
 }
 
-/* Hide duplicate grid on desktop; on mobile both visible for seamless scroll loop */
-.rates-grid-duplicate {
-  display: none;
+.rates-ticker-wrap::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 2px;
+}
+
+.rates-ticker-wrap::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .rate-item {
@@ -154,37 +149,10 @@
   letter-spacing: 0.3px;
 }
 
-.rate-trend {
-  font-size: 1.2rem;
-  font-weight: bold;
-  transition: all 0.3s ease;
-}
-
-.rate-trend.up { 
-  color: #00cc44;
-}
-
-.rate-trend.down { 
-  color: #ff4444;
-}
-
-.rate-trend.stable { 
-  color: #ffaa00;
-}
-
 .rate-divider {
   color: rgba(255, 255, 255, 0.2);
   font-size: 1.2rem;
   margin: 0 4px;
-}
-
-@keyframes economiesTickerScroll {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
-  }
 }
 
 /* Responsive Design */
@@ -213,12 +181,9 @@
     overflow-x: auto;
   }
   
-  .economies-title {
-    font-size: 1rem;
-  }
-  
   .central-bank-rates {
     padding: 0.6rem 0.8rem;
+    max-width: min(920px, calc(100vw - 200px));
   }
   
   .economies-last-updated {
@@ -247,13 +212,7 @@
     gap: 10px;
   }
 
-  .economies-title {
-    margin: 0 8px 0 0;
-    font-size: 0.9rem;
-    flex-shrink: 0;
-  }
-
-  /* Mobile: hide last updated; keep only title + rates */
+  /* Mobile: hide last updated; rates bar can use nearly full width */
   .economies-last-updated {
     display: none !important;
   }
@@ -264,40 +223,15 @@
     gap: 8px;
     flex: 1;
     min-width: 0;
+    max-width: min(1200px, calc(100vw - 32px));
   }
 
-  /* Continuous right-to-left scrolling rates ticker on mobile */
-  .rates-ticker-wrap {
-    overflow: hidden;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .rates-ticker-inner {
-    width: max-content;
-    animation: economiesTickerScroll 28s linear infinite;
-    gap: 10px;
-  }
-
-  .rates-ticker-inner:hover {
-    animation-play-state: paused;
-  }
-
-  .rates-ticker-inner .rates-grid {
-    flex-shrink: 0;
-  }
-
-  .rates-ticker-inner .rate-item {
-    flex-shrink: 0;
-  }
-
-  .rates-grid-duplicate {
-    display: flex !important;
-  }
-  
   .rates-label {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     flex-shrink: 0;
+    max-width: 9.5rem;
+    line-height: 1.25;
+    white-space: normal;
   }
   
   .rate-item .flag {
@@ -310,10 +244,6 @@
   
   .bank-name {
     font-size: 0.6rem;
-  }
-  
-  .rate-trend {
-    font-size: 1rem;
   }
   
   .rate-divider {
@@ -524,7 +454,11 @@
   flex-direction: column;
   gap: 8px;
   padding-left: 24px;
-  min-height: 680px;
+  /* Make the whole right rail move with page scroll, then pin near top. */
+  position: sticky;
+  top: 12px;
+  align-self: start;
+  overflow: visible;
 }
 
 .analysis-title {
@@ -930,6 +864,21 @@
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.scan-trader-brief {
+  border-top: 1px solid rgba(218, 0, 18, 0.15);
+  padding-top: 10px;
+}
+
+.scan-trader-warning {
+  color: #ffb3b3;
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+
+.scan-indicator-resolution {
+  margin: 0 0 12px 0;
+}
+
 .scan-driver-row {
   display: flex;
   justify-content: space-between;
@@ -1013,7 +962,8 @@
 }
 
 .scan-highlight-emphasis .scan-text-strong {
-  color: #ffb4b4;
+  color: #ffe8ea;
+  font-weight: 800;
 }
 
 .scan-paragraph {
@@ -1071,15 +1021,33 @@
   letter-spacing: 0.02em;
 }
 
+/* Emphasis tokens (scores, regime tags): red glass chip — not flat fill */
 .scan-highlight-emphasis {
-  font-size: 0.88rem;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+  font-size: 0.82rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #da0012;
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: 0;
+  letter-spacing: 0.05em;
+  line-height: 1.25;
+  color: #ffc8cc;
+  text-shadow: 0 0 20px rgba(218, 0, 18, 0.35);
+  background: linear-gradient(
+    145deg,
+    rgba(218, 0, 18, 0.18) 0%,
+    rgba(90, 8, 16, 0.42) 55%,
+    rgba(40, 4, 8, 0.38) 100%
+  );
+  border: 1px solid rgba(218, 0, 18, 0.42);
+  border-radius: 8px;
+  padding: 5px 11px;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.35) inset,
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 4px 14px rgba(218, 0, 18, 0.12),
+    0 0 24px rgba(218, 0, 18, 0.08);
 }
 
 .scan-highlight-detail {
@@ -2252,6 +2220,10 @@
   .yield-indicators-section {
     padding-left: 0;
     min-height: 560px;
+    position: static;
+    align-self: stretch;
+    max-height: none;
+    overflow-y: visible;
   }
 
   .yield-single-widget {
