@@ -15101,7 +15101,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '45.6',
                 'forecast': '43.6',
                 'previous': '44.5'
             },
@@ -15111,7 +15111,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-13.8B',
                 'forecast': 'N/A',
                 'previous': '-10.9B'
             },
@@ -15121,9 +15121,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.7%',
                 'forecast': '-0.5%',
-                'previous': '0.7%'
+                'previous': '0.8%'
             },
             {
                 'title': 'Retail Sales m/m',
@@ -15131,9 +15131,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.2%',
-                'previous': '-0.1%'
+                'previous': '0.0%'
             },
             {
                 'title': 'German 10-y Bond Auction',
@@ -15141,7 +15141,7 @@ class HybridEconomicCalendar:
                 'time': '09:42 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.92|1.2',
                 'forecast': 'N/A',
                 'previous': '2.89|1.2'
             },
