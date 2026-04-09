@@ -15323,7 +15323,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '-0.5%',
                 'previous': '-0.5%'
             },
@@ -15333,7 +15333,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50B',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },

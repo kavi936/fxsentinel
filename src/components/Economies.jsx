@@ -4958,8 +4958,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                           </span>
                         </div>
                         <p className="scan-paragraph scan-paragraph-metadata">
-                          Staleness: {formatStaleness(holisticScan.data_quality?.staleness_seconds)}; scan model:{' '}
-                          {holisticScan.model_version || 'N/A'}; generated UTC: {holisticScan.timestamp || 'N/A'}
+                          Indicator staleness:{' '}
+                          {formatStaleness(
+                            holisticScan.data_quality?.source_staleness_seconds?.indicators ??
+                              holisticScan.data_quality?.staleness_seconds
+                          )}
+                          ; yield staleness:{' '}
+                          {formatStaleness(holisticScan.data_quality?.source_staleness_seconds?.yields)}
+                          ; calendar staleness:{' '}
+                          {formatStaleness(holisticScan.data_quality?.source_staleness_seconds?.calendar)}
+                          ; scan model: {holisticScan.model_version || 'N/A'}; generated UTC: {holisticScan.timestamp || 'N/A'}
                         </p>
                       </li>
                     </ul>
