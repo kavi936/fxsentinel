@@ -9,7 +9,7 @@ Why this exists:
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 class EconomyHolisticScanService:
     """Build a deterministic short/long macro scan for one economy."""
 
-    VERSION = "economy_scan_v1.1"
+    VERSION = "economy_scan_v1.2"
     SUPPORTED_COUNTRIES = {"US", "EUR", "GBP", "JPY"}
 
     COUNTRY_PAIRS = {
@@ -125,6 +125,8 @@ class EconomyHolisticScanService:
 
         missing_signals = self._collect_missing_signals(short_components, long_components)
         staleness_seconds = self._estimate_staleness_seconds(indicator_map)
+        yield_staleness_seconds = self._estimate_yield_staleness_seconds(country, yield_map)
+        calendar_staleness_seconds = self._estimate_calendar_staleness_seconds(calendar_events)
         event_risk = self._event_risk(country, calendar_events)
         quality_status = self._quality_status(missing_signals, staleness_seconds)
         quality_overrides = self._build_quality_overrides(missing_signals, staleness_seconds)
@@ -217,6 +219,11 @@ class EconomyHolisticScanService:
                 "status": quality_status,
                 "missing_signals": missing_signals,
                 "staleness_seconds": staleness_seconds,
+                "source_staleness_seconds": {
+                    "indicators": staleness_seconds,
+                    "yields": yield_staleness_seconds,
+                    "calendar": calendar_staleness_seconds,
+                },
                 "indicator_keys_used": indicator_keys_used,
             },
             "model_version": self.VERSION,
@@ -850,6 +857,70 @@ class EconomyHolisticScanService:
             return -1
         return int(max((datetime.utcnow() - newest).total_seconds(), 0))
 
+    def _parse_maybe_datetime(self, raw_value: Any) -> Optional[datetime]:
+        if not raw_value or not isinstance(raw_value, str):
+            return None
+        value = raw_value.strip()
+        if not value:
+            return None
+        try:
+            normalized = value.replace("Z", "+00:00")
+            parsed = datetime.fromisoformat(normalized)
+            if parsed.tzinfo is not None:
+                return parsed.astimezone(timezone.utc).replace(tzinfo=None)
+            return parsed
+        except Exception:
+            return None
+
+    def _estimate_yield_staleness_seconds(self, country: str, yields: Dict[str, Any]) -> int:
+        ticker_map = {
+            "US": ("US02Y", "US10Y", "US30Y"),
+            "EUR": ("EU02Y", "EU10Y", "EU30Y"),
+            "GBP": ("GB02Y", "GB10Y", "GB30Y"),
+            "JPY": ("JP02Y", "JP10Y", "JP30Y"),
+        }
+        fallback_map = {
+            "EUR": ("DE02Y", "DE10Y", "DE30Y"),
+        }
+
+        keys = ticker_map.get(country, ("US02Y", "US10Y", "US30Y"))
+        fallback_keys = fallback_map.get(country, ("", "", ""))
+        merged_keys = [k for k in [*keys, *fallback_keys] if k]
+
+        newest: Optional[datetime] = None
+        for key in merged_keys:
+            row = yields.get(key)
+            if not isinstance(row, dict):
+                continue
+            dt = self._parse_maybe_datetime(row.get("lastUpdate"))
+            if dt is None:
+                continue
+            if newest is None or dt > newest:
+                newest = dt
+
+        if newest is None:
+            return -1
+        return int(max((datetime.utcnow() - newest).total_seconds(), 0))
+
+    def _estimate_calendar_staleness_seconds(self, events: List[Dict[str, Any]]) -> int:
+        newest: Optional[datetime] = None
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+            dt = None
+            for key in ("fetched_at", "lastUpdate", "updated_at", "timestamp", "asOf"):
+                dt = self._parse_maybe_datetime(event.get(key))
+                if dt is not None:
+                    break
+            if dt is None:
+                continue
+            if newest is None or dt > newest:
+                newest = dt
+
+        if newest is None:
+            return -1
+        return int(max((datetime.utcnow() - newest).total_seconds(), 0))
+
     def _confidence(self, components: List[Dict[str, Any]], missing: List[str], staleness_seconds: int) -> int:
         available = sum(1 for c in components if c.get("available", True))
         total = max(len(components), 1)
@@ -860,14 +931,21 @@ class EconomyHolisticScanService:
             base -= 10
         if missing:
             base -= min(len(missing) * 5, 20)
-        return max(min(base, 95), 20)
+        hard_cap = 95
+        if staleness_seconds > 60 * 60 * 24 * 21:
+            hard_cap = 60
+        elif staleness_seconds > 60 * 60 * 24 * 14:
+            hard_cap = 70
+        elif staleness_seconds > 60 * 60 * 24 * 7:
+            hard_cap = 80
+        return max(min(base, hard_cap), 20)
 
     def _quality_status(self, missing: List[str], staleness_seconds: int) -> str:
         if staleness_seconds == -1:
-            return "limited"
-        if staleness_seconds > 60 * 60 * 24 * 45 or len(missing) >= 3:
-            return "limited"
-        if staleness_seconds > 60 * 60 * 24 * 21 or len(missing) >= 1:
+            return "poor"
+        if staleness_seconds > 60 * 60 * 24 * 14 or len(missing) >= 2:
+            return "poor"
+        if staleness_seconds > 60 * 60 * 24 * 7 or len(missing) >= 1:
             return "fair"
         return "good"
 

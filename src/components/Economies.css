@@ -600,26 +600,38 @@
 }
 
 .scan-main-title {
-  font-size: 1.02rem;
-  letter-spacing: 0.7px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 1.08rem;
+  line-height: 1.3;
+  letter-spacing: 0.35px;
+  font-weight: 700;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.25);
   margin: 0;
   flex: 1 1 auto;
   min-width: min(100%, 220px);
 }
 
 .scan-title-prefix {
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.88);
+  text-transform: uppercase;
+  font-size: 0.84em;
+  letter-spacing: 0.08em;
+  font-weight: 700;
 }
 
 .scan-title-separator {
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.32);
   font-weight: 600;
 }
 
 .scan-title-economy {
-  color: #da0012;
+  color: #ff5f6b;
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 0 12px rgba(218, 0, 18, 0.22);
 }
 
 .scan-header-actions {
@@ -827,10 +839,13 @@
 }
 
 .scan-meta-large {
-  color: #d8d8d8;
-  font-size: 0.92rem;
-  line-height: 1.6;
-  font-weight: 400;
+  color: #e2e2e2;
+  font-size: clamp(0.95rem, 0.89rem + 0.15vw, 1.02rem);
+  line-height: 1.72;
+  font-weight: 420;
+  letter-spacing: 0.01em;
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
 }
 
 .scan-section {
