@@ -15485,9 +15485,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '47.6',
                 'forecast': '52.1',
-                'previous': '55.5'
+                'previous': '53.3'
             },
             {
                 'title': 'Prelim UoM Inflation Expectations',
@@ -15495,9 +15495,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '4.8%',
                 'forecast': 'N/A',
-                'previous': '3.4%'
+                'previous': '3.8%'
             },
             {
                 'title': 'Factory Orders m/m',
@@ -15505,7 +15505,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '-0.2%',
                 'previous': '0.1%'
             },
