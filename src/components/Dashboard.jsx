@@ -8,6 +8,7 @@ import './Dashboard.css';
 import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import Overview from './Overview';
+import Markets from './Markets';
 import Alerts from './Alerts';
 import Economies from './Economies';
 import TimezoneSettings from './TimezoneSettings';
@@ -803,7 +804,7 @@ function Dashboard() {
   }
 
   return (
-    <div className={`dashboard ${activeTab === 'economies' ? 'economies-active' : ''} ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''}`}>
+    <div className={`dashboard ${activeTab === 'economies' ? 'economies-active' : ''} ${activeTab === 'overview' ? 'overview-active' : ''} ${activeTab === 'markets' ? 'markets-active' : ''} ${activeTab === 'alerts' ? 'alerts-active' : ''}`}>
       {/* Session Verification Status Notification */}
       {sessionVerificationStatus === 'verifying' && (
         <div className="verification-notification verifying">
@@ -905,6 +906,12 @@ function Dashboard() {
                     onClick={() => setActiveTab('overview')}
                   >
                     Overview
+                  </button>
+                  <button 
+                    className={`nav-tab ${activeTab === 'markets' ? 'active' : ''}`}
+                    onClick={() => setActiveTab('markets')}
+                  >
+                    Markets
                   </button>
                   <button 
                     className={`nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
@@ -1023,6 +1030,12 @@ function Dashboard() {
                 Overview
               </button>
               <button 
+                className={`mobile-nav-tab ${activeTab === 'markets' ? 'active' : ''}`}
+                onClick={() => handleMobileTabChange('markets')}
+              >
+                Markets
+              </button>
+              <button 
                 className={`mobile-nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
                 onClick={() => handleMobileTabChange('alerts')}
                 data-onboarding="nav-alerts"
@@ -1107,6 +1120,10 @@ function Dashboard() {
       {/* Overview Tab - Rendered outside dashboard-main for full screen */}
       {activeTab === 'overview' && (
         <Overview />
+      )}
+
+      {activeTab === 'markets' && (
+        <Markets />
       )}
 
       {/* Alerts Tab - Rendered outside dashboard-main for full screen */}
