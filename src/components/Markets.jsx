@@ -1,99 +1,32 @@
 import React from 'react';
 import './Markets.css';
 
-function Markets({ tradingData, aiInsights, getSentimentColor }) {
+/**
+ * Markets tab — coming soon: focused market analysis (macro, fundamentals, intraday & longer horizon)
+ * using FXSentinel data. Replace overlay when features ship.
+ */
+function Markets() {
   return (
-    <div className="markets-section">
-      <div className="markets-overview">
-        <h2>📈 Live Market Data</h2>
-        <p>Real-time forex prices and market analysis</p>
+    <div className="markets-tab">
+      <div className="markets-coming-bg" aria-hidden="true">
+        <div className="markets-coming-gradient" />
+        <div className="markets-coming-orb markets-coming-orb--a" />
+        <div className="markets-coming-orb markets-coming-orb--b" />
+        <div className="markets-coming-orb markets-coming-orb--c" />
+        <div className="markets-coming-grid" />
       </div>
-      
-      <div className="markets-grid">
-        <div className="market-sentiment">
-          <h3>🎯 Market Sentiment</h3>
-          <div className="sentiment-indicator">
-            <div className="sentiment-bar">
-              <div 
-                className="sentiment-fill"
-                style={{ 
-                  width: '50%',
-                  backgroundColor: getSentimentColor(tradingData.marketSentiment)
-                }}
-              ></div>
-            </div>
-            <span className="sentiment-label">{tradingData.marketSentiment}</span>
-          </div>
-          <div className="volatility-info">
-            <span>Volatility Index: {tradingData.volatilityIndex}</span>
-          </div>
-        </div>
 
-        <div className="currency-pairs">
-          <h3>💱 Key Currency Pairs</h3>
-          <div className="pairs-grid">
-            <div className="pair-card">
-              <div className="pair-header">
-                <h4>EUR/USD</h4>
-                <span className="pair-price">{tradingData.eurUsd?.price}</span>
-              </div>
-              <div className="pair-change">
-                <span className={`change ${tradingData.eurUsd?.change > 0 ? 'positive' : 'negative'}`}>
-                  {tradingData.eurUsd?.change > 0 ? '+' : ''}{tradingData.eurUsd?.change}%
-                </span>
-                <span className="sentiment" style={{color: getSentimentColor(tradingData.eurUsd?.sentiment)}}>
-                  {tradingData.eurUsd?.sentiment}
-                </span>
-              </div>
-            </div>
-
-            <div className="pair-card">
-              <div className="pair-header">
-                <h4>USD/JPY</h4>
-                <span className="pair-price">{tradingData.usdJpy?.price}</span>
-              </div>
-              <div className="pair-change">
-                <span className={`change ${tradingData.usdJpy?.change > 0 ? 'positive' : 'negative'}`}>
-                  {tradingData.usdJpy?.change > 0 ? '+' : ''}{tradingData.usdJpy?.change}%
-                </span>
-                <span className="sentiment" style={{color: getSentimentColor(tradingData.usdJpy?.sentiment)}}>
-                  {tradingData.usdJpy?.sentiment}
-                </span>
-              </div>
-            </div>
-
-            <div className="pair-card">
-              <div className="pair-header">
-                <h4>Gold</h4>
-                <span className="pair-price">${tradingData.gold?.price}</span>
-              </div>
-              <div className="pair-change">
-                <span className={`change ${tradingData.gold?.change > 0 ? 'positive' : 'negative'}`}>
-                  {tradingData.gold?.change > 0 ? '+' : ''}{tradingData.gold?.change}%
-                </span>
-                <span className="sentiment" style={{color: getSentimentColor(tradingData.gold?.sentiment)}}>
-                  {tradingData.gold?.sentiment}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="ai-insights">
-          <h3>🤖 AI Trading Insights</h3>
-          <div className="insights-content">
-            {aiInsights.map((insight, index) => (
-              <div key={index} className="insight-card">
-                <h4>📊 {insight.title}</h4>
-                <p>{insight.description}</p>
-                <div className="insight-meta">
-                  <span className="confidence">Confidence: {insight.confidence}%</span>
-                  <span className="timeframe">{insight.timeframe}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="markets-coming-inner">
+        <p className="markets-coming-badge">Coming soon</p>
+        <h1 className="markets-coming-title">Markets</h1>
+        <p className="markets-coming-lead">
+          Deep, market-specific analysis powered by the same macro and fundamental data that drives
+          FXSentinel — built for both intraday reactions and longer-term positioning.
+        </p>
+        <p className="markets-coming-sub">
+          Expect targeted breakdowns that tie together economics, policy, and cross-asset context so
+          you can see how the narrative lines up with price — not generic commentary.
+        </p>
       </div>
     </div>
   );

@@ -125,6 +125,11 @@
   background: transparent;
 }
 
+/* When Markets tab is active, make dashboard background transparent */
+.dashboard.markets-active {
+  background: transparent;
+}
+
 /* Compact Static Navbar */
 .dashboard-navbar {
   background: #000000;
@@ -328,10 +333,10 @@
   justify-content: center;
 }
 
-/* Expanded state - shows full tabs */
+/* Expanded state - shows full tabs (four tabs: Economies, Overview, Markets, Alerts) */
 .navbar-tabs.expanded {
-  min-width: 480px;
-  max-width: 580px;
+  min-width: 580px;
+  max-width: 680px;
   margin: 0 auto;
   transition: all 0.3s ease;
   z-index: 3;
@@ -1727,8 +1732,8 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs.expanded {
-    min-width: 320px;
-    max-width: 380px;
+    min-width: 420px;
+    max-width: 500px;
     padding: 4px 6px;
     height: auto;
     width: auto;
@@ -1826,8 +1831,8 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs.expanded {
-    min-width: 300px;
-    max-width: 360px;
+    min-width: 400px;
+    max-width: 460px;
     padding: 3px 5px;
     height: auto;
     width: auto;
@@ -1940,8 +1945,8 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs.expanded {
-    min-width: 280px;
-    max-width: 340px;
+    min-width: 380px;
+    max-width: 440px;
     padding: 2px 4px;
     height: auto;
     width: auto;
@@ -2133,8 +2138,8 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs.expanded {
-    min-width: 360px;
-    max-width: 420px;
+    min-width: 440px;
+    max-width: 520px;
   }
   
   .navbar-tabs.collapsed {
@@ -2146,8 +2151,8 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs.expanded {
-    min-width: 260px;
-    max-width: 320px;
+    min-width: 340px;
+    max-width: 400px;
     padding: 2px 3px;
     height: auto;
     width: auto;
@@ -2304,8 +2309,8 @@ body.mobile-menu-open {
   
   /* Further reduce expanded tabs */
   .navbar-tabs.expanded {
-    min-width: 300px;
-    max-width: 360px;
+    min-width: 380px;
+    max-width: 440px;
   }
   
   .navbar-tabs.collapsed {
@@ -2317,8 +2322,8 @@ body.mobile-menu-open {
   }
   
   .navbar-tabs.expanded {
-    min-width: 240px;
-    max-width: 300px;
+    min-width: 300px;
+    max-width: 360px;
     padding: 1px 2px;
     height: auto;
     width: auto;
