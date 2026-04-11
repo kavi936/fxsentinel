@@ -7,6 +7,8 @@ import TrialWelcomeRoute from './components/TrialWelcomeRoute';
 import ProtectedRoute from './components/ProtectedRoute';
 import AuthRedirect from './components/AuthRedirect';
 import VerifyEmail from './components/VerifyEmail';
+import OnboardingSurvey from './components/OnboardingSurvey';
+import TraderProfileGate from './components/TraderProfileGate';
 import Blog from './components/Blog';
 import Disclaimer from './components/Disclaimer';
 import Privacy from './components/Privacy';
@@ -68,9 +70,16 @@ function App() {
                   <TrialWelcomeRoute />
                 </ProtectedRoute>
               } />
+              <Route path="/onboarding-survey" element={
+                <ProtectedRoute>
+                  <OnboardingSurvey />
+                </ProtectedRoute>
+              } />
               <Route path="/dashboard" element={
                 <ProtectedRoute>
-                  <Dashboard />
+                  <TraderProfileGate>
+                    <Dashboard />
+                  </TraderProfileGate>
                 </ProtectedRoute>
               } />
             </Routes>

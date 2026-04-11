@@ -2193,3 +2193,148 @@ input:checked + .toggle-slider:before {
     font-size: 16px;
   }
 }
+
+/* Trading preferences (Firestore trader_profile) */
+.profile-trader-prefs {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-trader-prefs-title {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: rgba(245, 245, 245, 0.95);
+}
+
+.profile-trader-prefs-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  color: rgba(245, 245, 245, 0.55);
+  line-height: 1.45;
+}
+
+.profile-trader-prefs-loading {
+  font-size: 0.875rem;
+  color: rgba(245, 245, 245, 0.6);
+  margin: 0;
+}
+
+.profile-trader-prefs-error {
+  font-size: 0.8125rem;
+  color: #f48fb1;
+  margin: 0 0 0.5rem;
+}
+
+.profile-trader-prefs-saved {
+  font-size: 0.8125rem;
+  color: #81c784;
+  margin: 0 0 0.5rem;
+}
+
+.profile-trader-pair-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2px 4px 2px 2px;
+  margin-top: 0.35rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.2);
+  scrollbar-color: rgba(255, 68, 68, 0.4) rgba(255, 255, 255, 0.06);
+  scrollbar-width: thin;
+}
+
+.profile-trader-pair-scroll .profile-trader-pair-grid {
+  margin-top: 0;
+  padding: 0.35rem;
+}
+
+.profile-trader-pair-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.profile-trader-custom-label {
+  margin: 0.65rem 0 0.35rem;
+  font-size: 0.75rem;
+  color: rgba(245, 245, 245, 0.55);
+}
+
+.profile-trader-pair-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.75rem;
+  color: rgba(245, 245, 245, 0.9);
+  cursor: pointer;
+}
+
+.profile-trader-pair-tile input {
+  accent-color: #ff4444;
+}
+
+.profile-trader-custom-pair {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.profile-trader-custom-pair input {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.25);
+  color: #f5f5f5;
+  font-size: 0.8125rem;
+}
+
+.profile-trader-marketing {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  font-size: 0.8125rem;
+  color: rgba(245, 245, 245, 0.65);
+  margin: 0.65rem 0 0;
+  line-height: 1.4;
+}
+
+.profile-trader-marketing input {
+  margin-top: 0.15rem;
+  accent-color: #ff4444;
+}
+
+.profile-trader-prefs-unsaved {
+  font-size: 0.8125rem;
+  color: rgba(255, 200, 120, 0.95);
+  margin: 0 0 0.65rem;
+  padding: 0.4rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(255, 160, 60, 0.12);
+  border: 1px solid rgba(255, 180, 80, 0.25);
+}
+
+.profile-trader-prefs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.profile-trader-prefs-actions .save-btn {
+  margin-top: 0;
+}
+
+.profile-trader-discard-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

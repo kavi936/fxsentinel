@@ -72,11 +72,11 @@ const AuthRedirect = () => {
     }
 
     if (isDeveloper) {
-      console.log('🔧 Developer detected, going to dashboard');
+      console.log('🔧 Developer detected, going to onboarding survey');
     } else {
-      console.log('👤 Free tier user, going to dashboard');
+      console.log('👤 Free tier user, going to onboarding survey');
     }
-    navigate('/dashboard');
+    navigate('/onboarding-survey', { replace: true });
   }, [currentUser, isDeveloper, hasCheckedDeveloperStatus, planPremium, navigate]);
 
   if (!hasCheckedDeveloperStatus) {
