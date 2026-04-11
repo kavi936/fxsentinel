@@ -1,9 +1,44 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { config } from '../config';
+import { PRESET_MARKET_INSTRUMENTS } from '../constants/forexPairs';
+import { PRIMARY_GOALS, REFERRAL_SOURCES } from '../constants/onboardingSurveyOptions';
+import { parseInstrumentSymbol } from '../utils/instrumentInput';
 import { startOnboardingTour } from './OnboardingTour';
 import './ProfilePopup.css';
+
+/** Matches backend MAX_PAIRS in user_trader_profile.py */
+const MAX_TRADER_MARKETS = 24;
+
+function buildTraderPrefsFromApi(tp) {
+  const pairs =
+    Array.isArray(tp?.primary_pairs) && tp.primary_pairs.length ? [...tp.primary_pairs] : ['EUR/USD'];
+  return {
+    trading_style: tp?.trading_style || 'day',
+    experience_level: tp?.experience_level || 'intermediate',
+    primary_pairs: pairs,
+    marketing_opt_in: !!tp?.marketing_opt_in,
+    primary_goal: tp?.primary_goal || 'stay_informed',
+    referral_source: tp?.referral_source || 'prefer_not_say'
+  };
+}
+
+function traderPrefsEqual(a, b) {
+  if (!a || !b) return false;
+  if (
+    a.trading_style !== b.trading_style ||
+    a.experience_level !== b.experience_level ||
+    a.primary_goal !== b.primary_goal ||
+    a.referral_source !== b.referral_source ||
+    a.marketing_opt_in !== b.marketing_opt_in
+  ) {
+    return false;
+  }
+  const sa = [...(a.primary_pairs || [])].sort().join('\0');
+  const sb = [...(b.primary_pairs || [])].sort().join('\0');
+  return sa === sb;
+}
 
 const ProfilePopup = ({ isOpen, onClose }) => {
   const { currentUser, logout } = useAuth();
@@ -30,6 +65,26 @@ const ProfilePopup = ({ isOpen, onClose }) => {
       push: false
     }
   });
+  const [traderPrefs, setTraderPrefs] = useState({
+    trading_style: 'day',
+    experience_level: 'intermediate',
+    primary_pairs: ['EUR/USD'],
+    marketing_opt_in: false,
+    primary_goal: 'stay_informed',
+    referral_source: 'prefer_not_say'
+  });
+  const [traderPrefsLoading, setTraderPrefsLoading] = useState(false);
+  const [traderPrefsSaving, setTraderPrefsSaving] = useState(false);
+  const [traderPrefsError, setTraderPrefsError] = useState('');
+  const [traderPrefsSavedOk, setTraderPrefsSavedOk] = useState(false);
+  /** Last saved server state; used for dirty detection and Discard */
+  const [traderPrefsBaseline, setTraderPrefsBaseline] = useState(null);
+  const [traderCustomPair, setTraderCustomPair] = useState('');
+
+  const traderPrefsDirty = useMemo(() => {
+    if (traderPrefsLoading || !traderPrefsBaseline) return false;
+    return !traderPrefsEqual(traderPrefs, traderPrefsBaseline);
+  }, [traderPrefs, traderPrefsBaseline, traderPrefsLoading]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -226,12 +281,156 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     }
   };
 
+  const fetchTraderPrefs = async () => {
+    if (!currentUser) return;
+    setTraderPrefsLoading(true);
+    setTraderPrefsError('');
+    setTraderPrefsSavedOk(false);
+    try {
+      const token = await currentUser.getIdToken();
+      const res = await fetch(`${config.API_BASE_URL}/api/user/trader-profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || 'Failed to load trading preferences');
+      const tp = data.trader_profile || {};
+      const next = buildTraderPrefsFromApi(tp);
+      setTraderPrefs(next);
+      setTraderPrefsBaseline(next);
+    } catch (e) {
+      setTraderPrefsError(e.message || 'Could not load trading preferences');
+      setTraderPrefsBaseline(null);
+    } finally {
+      setTraderPrefsLoading(false);
+    }
+  };
+
+  const discardTraderPrefs = useCallback(() => {
+    if (!traderPrefsBaseline) return;
+    setTraderPrefs({
+      ...traderPrefsBaseline,
+      primary_pairs: [...traderPrefsBaseline.primary_pairs]
+    });
+    setTraderCustomPair('');
+    setTraderPrefsError('');
+    setTraderPrefsSavedOk(false);
+  }, [traderPrefsBaseline]);
+
+  const toggleTraderPair = (pair) => {
+    setTraderPrefs((prev) => {
+      const had = prev.primary_pairs.includes(pair);
+      if (had) {
+        if (prev.primary_pairs.length <= 1) {
+          setTimeout(
+            () => setTraderPrefsError('Keep at least one market selected.'),
+            0
+          );
+          return prev;
+        }
+        setTimeout(() => setTraderPrefsError(''), 0);
+        return {
+          ...prev,
+          primary_pairs: prev.primary_pairs.filter((x) => x !== pair)
+        };
+      }
+      if (prev.primary_pairs.length >= MAX_TRADER_MARKETS) {
+        setTimeout(
+          () =>
+            setTraderPrefsError(
+              `You can select at most ${MAX_TRADER_MARKETS} markets. Remove one to add another.`
+            ),
+          0
+        );
+        return prev;
+      }
+      setTimeout(() => setTraderPrefsError(''), 0);
+      return { ...prev, primary_pairs: [...prev.primary_pairs, pair] };
+    });
+  };
+
+  const addTraderCustomPair = () => {
+    const p = parseInstrumentSymbol(traderCustomPair);
+    if (!p) {
+      setTraderPrefsError('Use BASE/QUOTE (e.g. EUR/USD, US500/USD, XAU/USD).');
+      return;
+    }
+    setTraderPrefs((prev) => {
+      if (prev.primary_pairs.includes(p)) {
+        setTimeout(
+          () => setTraderPrefsError('That market is already in your list.'),
+          0
+        );
+        return prev;
+      }
+      if (prev.primary_pairs.length >= MAX_TRADER_MARKETS) {
+        setTimeout(
+          () =>
+            setTraderPrefsError(
+              `At most ${MAX_TRADER_MARKETS} markets. Remove one before adding another.`
+            ),
+          0
+        );
+        return prev;
+      }
+      setTimeout(() => setTraderPrefsError(''), 0);
+      return { ...prev, primary_pairs: [...prev.primary_pairs, p] };
+    });
+    setTraderCustomPair('');
+  };
+
+  const saveTraderPrefs = async () => {
+    if (!currentUser) return;
+    if (!traderPrefs.primary_pairs?.length) {
+      setTraderPrefsError('Select at least one market.');
+      return;
+    }
+    if (traderPrefs.primary_pairs.length > MAX_TRADER_MARKETS) {
+      setTraderPrefsError(`Reduce to ${MAX_TRADER_MARKETS} markets or fewer before saving.`);
+      return;
+    }
+    setTraderPrefsSaving(true);
+    setTraderPrefsError('');
+    setTraderPrefsSavedOk(false);
+    try {
+      const token = await currentUser.getIdToken();
+      const res = await fetch(`${config.API_BASE_URL}/api/user/trader-profile`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          skipped: false,
+          trading_style: traderPrefs.trading_style,
+          experience_level: traderPrefs.experience_level,
+          primary_pairs: traderPrefs.primary_pairs,
+          marketing_opt_in: traderPrefs.marketing_opt_in,
+          primary_goal: traderPrefs.primary_goal,
+          referral_source: traderPrefs.referral_source
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || data.error || 'Save failed');
+      const tp = data.trader_profile || {};
+      const saved = buildTraderPrefsFromApi(tp);
+      setTraderPrefs(saved);
+      setTraderPrefsBaseline(saved);
+      setTraderPrefsSavedOk(true);
+      setTimeout(() => setTraderPrefsSavedOk(false), 4000);
+    } catch (e) {
+      setTraderPrefsError(e.message || 'Could not save trading preferences');
+    } finally {
+      setTraderPrefsSaving(false);
+    }
+  };
+
   // Fetch subscription status and usage data when component mounts or user changes
   useEffect(() => {
     if (isOpen && currentUser) {
       setUpgradeError(null);
       fetchSubscriptionStatus();
       fetchUsageData();
+      fetchTraderPrefs();
     }
   }, [isOpen, currentUser]);
 
@@ -443,6 +642,167 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                     <option value="GMT">GMT</option>
                     <option value="CET">Central European Time</option>
                   </select>
+                </div>
+
+                <div className="profile-trader-prefs">
+                  <h4 className="profile-trader-prefs-title">Trading preferences</h4>
+                  <p className="profile-trader-prefs-hint">
+                    FX, commodities, indices, crypto — macro-focused, not individual stocks. Same fields as the
+                    post-signup survey.
+                  </p>
+                  {traderPrefsLoading ? (
+                    <p className="profile-trader-prefs-loading">Loading…</p>
+                  ) : (
+                    <>
+                      {traderPrefsError && (
+                        <p className="profile-trader-prefs-error" role="alert">
+                          {traderPrefsError}
+                        </p>
+                      )}
+                      {traderPrefsSavedOk && (
+                        <p className="profile-trader-prefs-saved">Trading preferences saved.</p>
+                      )}
+                      {traderPrefsBaseline && traderPrefsDirty && (
+                        <p className="profile-trader-prefs-unsaved" role="status">
+                          You have unsaved changes to trading preferences.
+                        </p>
+                      )}
+                      <div className="form-group">
+                        <label>Trading style</label>
+                        <select
+                          value={traderPrefs.trading_style}
+                          disabled={traderPrefsSaving}
+                          onChange={(e) =>
+                            setTraderPrefs((p) => ({ ...p, trading_style: e.target.value }))
+                          }
+                        >
+                          <option value="day">Day trading</option>
+                          <option value="swing">Swing trading</option>
+                          <option value="both">Both</option>
+                          <option value="unsure">Not sure yet</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Experience level</label>
+                        <select
+                          value={traderPrefs.experience_level}
+                          disabled={traderPrefsSaving}
+                          onChange={(e) =>
+                            setTraderPrefs((p) => ({ ...p, experience_level: e.target.value }))
+                          }
+                        >
+                          <option value="beginner">Beginner</option>
+                          <option value="intermediate">Intermediate</option>
+                          <option value="advanced">Advanced</option>
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Primary goal</label>
+                        <select
+                          value={traderPrefs.primary_goal}
+                          disabled={traderPrefsSaving}
+                          onChange={(e) =>
+                            setTraderPrefs((p) => ({ ...p, primary_goal: e.target.value }))
+                          }
+                        >
+                          {PRIMARY_GOALS.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>How you found us</label>
+                        <select
+                          value={traderPrefs.referral_source}
+                          disabled={traderPrefsSaving}
+                          onChange={(e) =>
+                            setTraderPrefs((p) => ({ ...p, referral_source: e.target.value }))
+                          }
+                        >
+                          {REFERRAL_SOURCES.map((o) => (
+                            <option key={o.value} value={o.value}>
+                              {o.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>Markets you follow</label>
+                        <div className="profile-trader-pair-scroll">
+                          <div className="profile-trader-pair-grid">
+                            {PRESET_MARKET_INSTRUMENTS.map((pair) => (
+                              <label key={pair} className="profile-trader-pair-tile">
+                                <input
+                                  type="checkbox"
+                                  disabled={traderPrefsSaving}
+                                  checked={traderPrefs.primary_pairs.includes(pair)}
+                                  onChange={() => toggleTraderPair(pair)}
+                                />
+                                <span>{pair}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="profile-trader-custom-label">Not in the list? Add BASE/QUOTE (e.g. US500/USD)</p>
+                        <div className="profile-trader-custom-pair">
+                          <input
+                            type="text"
+                            placeholder="e.g. GER40/EUR"
+                            value={traderCustomPair}
+                            disabled={traderPrefsSaving}
+                            onChange={(e) => setTraderCustomPair(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === 'Enter' && (e.preventDefault(), addTraderCustomPair())
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="secondary-btn"
+                            disabled={traderPrefsSaving}
+                            onClick={addTraderCustomPair}
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
+                      <label className="profile-trader-marketing">
+                        <input
+                          type="checkbox"
+                          disabled={traderPrefsSaving}
+                          checked={traderPrefs.marketing_opt_in}
+                          onChange={(e) =>
+                            setTraderPrefs((p) => ({ ...p, marketing_opt_in: e.target.checked }))
+                          }
+                        />
+                        <span>Product tips & occasional offers by email</span>
+                      </label>
+                      <div className="profile-trader-prefs-actions">
+                        <button
+                          type="button"
+                          className="cancel-btn profile-trader-discard-btn"
+                          disabled={
+                            !traderPrefsBaseline || !traderPrefsDirty || traderPrefsSaving
+                          }
+                          onClick={discardTraderPrefs}
+                        >
+                          Discard changes
+                        </button>
+                        <button
+                          type="button"
+                          className="save-btn"
+                          disabled={
+                            traderPrefsSaving ||
+                            (traderPrefsBaseline !== null && !traderPrefsDirty)
+                          }
+                          onClick={saveTraderPrefs}
+                        >
+                          {traderPrefsSaving ? 'Saving…' : 'Save trading preferences'}
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="profile-actions">

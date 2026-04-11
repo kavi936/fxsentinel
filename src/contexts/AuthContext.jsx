@@ -146,7 +146,8 @@ export const AuthProvider = ({ children }) => {
     const user = auth.currentUser;
     if (!user) return null;
     await user.reload();
-    setCurrentUser({ ...auth.currentUser });
+    // Must keep the real Firebase User instance — spreading loses getIdToken and other methods.
+    setCurrentUser(auth.currentUser);
     return auth.currentUser;
   };
 

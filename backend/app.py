@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 import stripe
 from firebase_admin import credentials, firestore, initialize_app, auth
 from services.stripe_service import StripeService
+from services.user_trader_profile import user_trader_profile_store, validate_trader_payload
 
 # Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
 load_dotenv()
@@ -5848,6 +5849,39 @@ def get_subscription_status(user_id):
             'stripe_customer_id': None,
             'is_developer': False
         }), 200  # Return 200 instead of 500 to allow frontend to handle gracefully
+
+
+@app.route('/api/user/trader-profile', methods=['GET', 'PUT'])
+@limiter.limit("120 per minute")
+def api_user_trader_profile():
+    """
+    Trader onboarding / preferences on Firestore users/{uid}.trader_profile.
+    GET: returns needs_survey, trader_profile, timestamps.
+    PUT: complete survey, skip, or update preferences (same validation when not skipped).
+    Requires Authorization: Bearer <Firebase ID token>.
+    """
+    token_user_info = _extract_user_from_token()
+    if not token_user_info:
+        return jsonify({'error': 'Unauthorized', 'message': 'Valid Firebase token required'}), 401
+
+    user_id = token_user_info.get('user_id')
+    user_email = token_user_info.get('user_email') or ''
+
+    if request.method == 'GET':
+        data = user_trader_profile_store.get_profile(user_id)
+        return jsonify(data), 200
+
+    body = request.get_json(silent=True) or {}
+    ok, err, normalized = validate_trader_payload(body, allow_skip=True)
+    if not ok:
+        return jsonify({'error': 'Validation error', 'message': err}), 400
+
+    success, err_msg = user_trader_profile_store.put_profile(user_id, user_email or None, normalized)
+    if not success:
+        return jsonify({'error': 'Save failed', 'message': err_msg or 'Unknown error'}), 500
+
+    out = user_trader_profile_store.get_profile(user_id)
+    return jsonify({'success': True, **out}), 200
 
 
 @app.route('/api/send-verification-email', methods=['POST'])
