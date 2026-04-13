@@ -15549,7 +15549,7 @@ class HybridEconomicCalendar:
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '8.5%',
                 'forecast': '8.9%',
                 'previous': '9.0%'
             },
@@ -15559,7 +15559,7 @@ class HybridEconomicCalendar:
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2990B',
                 'forecast': '3465B',
                 'previous': '900B'
             },
@@ -15569,9 +15569,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-8.4%',
                 'forecast': '-0.4%',
-                'previous': '4.8%'
+                'previous': '3.5%'
             },
             {
                 'title': 'Existing Home Sales',
@@ -15635,7 +15635,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Westpac Consumer Sentiment',
-                'date': 'Mon, Apr 13',
+                'date': 'Tue, Apr 14',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -15645,7 +15645,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'NAB Business Confidence',
-                'date': 'Mon, Apr 13',
+                'date': 'Tue, Apr 14',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -15655,7 +15655,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Trade Balance',
-                'date': 'Mon, Apr 13',
+                'date': 'Tue, Apr 14',
                 'time': '02:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
@@ -15665,7 +15665,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'USD-Denominated Trade Balance',
-                'date': 'Mon, Apr 13',
+                'date': 'Tue, Apr 14',
                 'time': '02:04 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
