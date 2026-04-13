@@ -28,29 +28,18 @@
   gap: 1.5rem;
 }
 
-.auth-page-copy {
-  width: 100%;
-  padding: 0 4px 24px;
-  font-size: 0.875rem;
-  line-height: 1.55;
-  color: rgba(245, 245, 245, 0.72);
-  text-align: center;
-}
-
-.auth-page-copy-heading {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: rgba(245, 245, 245, 0.88);
-  margin: 0 0 0.65rem;
-  letter-spacing: 0.02em;
-}
-
-.auth-page-copy p {
-  margin: 0 0 0.75rem;
-}
-
-.auth-page-copy p:last-child {
-  margin-bottom: 0;
+/* Login: extra copy stays in the DOM for crawlers; not shown in the UI (see Login.jsx). */
+.auth-page-copy--seo-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* Animated Background container – plain black, beams rendered via SVG component */
@@ -106,6 +95,115 @@
 .auth-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.85);
+}
+
+/* Signup — email/password step: tighter rhythm so the card fits more viewports */
+.auth-card--signup-form {
+  padding: 22px 24px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.auth-card--signup-form .auth-header {
+  margin-bottom: 16px;
+}
+
+.auth-card--signup-form .auth-logo {
+  margin-bottom: 12px;
+}
+
+.auth-card--signup-form .auth-logo img {
+  height: 36px !important;
+  width: auto !important;
+}
+
+.auth-card--signup-form .auth-header h1 {
+  font-size: 22px;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.4px;
+}
+
+.auth-card--signup-form .auth-header p {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.auth-card--signup-form .auth-form {
+  margin-bottom: 8px;
+}
+
+.auth-card--signup-form .auth-error {
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.auth-card--signup-form .form-row {
+  gap: 12px;
+}
+
+.auth-card--signup-form .form-group {
+  margin-bottom: 14px;
+}
+
+.auth-card--signup-form .form-group label {
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.auth-card--signup-form .auth-input {
+  padding: 11px 14px;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+.auth-card--signup-form .auth-hint {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.auth-card--signup-form .password-strength {
+  margin-top: 6px;
+  padding: 3px 6px;
+  font-size: 11px;
+}
+
+.auth-card--signup-form .password-requirements {
+  margin-top: 6px;
+  row-gap: 4px;
+  column-gap: 12px;
+  font-size: 11px;
+  line-height: 1.32;
+}
+
+.auth-card--signup-form .password-requirement {
+  gap: 6px;
+}
+
+.auth-card--signup-form .form-options {
+  margin-bottom: 14px;
+  gap: 8px;
+}
+
+.auth-card--signup-form .checkbox-container {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.auth-card--signup-form .auth-button {
+  padding: 13px 20px;
+  min-height: 44px;
+  margin-bottom: 4px;
+}
+
+.auth-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Verify-email page: professional styling */
@@ -374,6 +472,43 @@
 .password-strength.strong {
   background: rgba(52, 199, 89, 0.1);
   color: #34c759;
+}
+
+.password-requirements {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.55);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 6px;
+  align-items: start;
+}
+
+.password-requirement {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.password-requirement.met {
+  color: rgba(52, 199, 89, 0.95);
+}
+
+.password-requirement.unmet {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.password-requirement-icon {
+  flex-shrink: 0;
+  width: 1em;
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.9;
 }
 
 /* Form Options */
@@ -808,6 +943,24 @@
     margin: 20px 0;
     border-radius: 20px;
   }
+
+  .auth-card.auth-card--signup-form {
+    padding: 18px 16px;
+    margin: 12px 0;
+  }
+
+  .auth-card--signup-form .auth-header {
+    margin-bottom: 12px;
+  }
+
+  .auth-card--signup-form .form-group {
+    margin-bottom: 12px;
+  }
+
+  .auth-card--signup-form .password-requirements {
+    margin-top: 4px;
+    font-size: 10px;
+  }
   
   .auth-header {
     margin-bottom: 20px;
@@ -915,6 +1068,17 @@
   .password-strength {
     font-size: 11px;
     padding: 3px 6px;
+  }
+
+  /* Long labels (e.g. special-char hint) read better in one column on narrow cards */
+  .password-requirements {
+    grid-template-columns: 1fr;
+    column-gap: 0;
+  }
+
+  .password-requirements,
+  .password-requirement {
+    font-size: 11px;
   }
 }
 

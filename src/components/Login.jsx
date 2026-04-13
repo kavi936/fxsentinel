@@ -178,10 +178,11 @@ const Login = () => {
         </div>
       </div>
 
-      <section className="auth-page-copy" aria-labelledby="login-page-info-heading">
-        <h2 id="login-page-info-heading" className="auth-page-copy-heading">
-          About your FXSentinel account
-        </h2>
+      <section
+        className="auth-page-copy--seo-only"
+        aria-hidden="true"
+      >
+        <h2>About your FXSentinel account</h2>
         <p>
           Signing in connects you to the same macro toolkit described on our homepage: a live economic calendar,
           AI-generated context on market-moving headlines, optional Telegram notifications, and dashboards built for
