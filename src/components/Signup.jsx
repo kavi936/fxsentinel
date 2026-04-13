@@ -10,6 +10,12 @@ import { trackSignupCompletion, trackError, trackEngagement } from '../utils/ana
 import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 import { BackgroundBeams } from './BackgroundBeams';
+import {
+  getPasswordRuleStatus,
+  getPasswordStrengthTier,
+  isPasswordCompliant,
+  PASSWORD_MIN_LENGTH,
+} from '../utils/passwordPolicy';
 
 const Signup = () => {
   useMeta(
@@ -45,18 +51,10 @@ const Signup = () => {
     });
     setError(''); // Clear error when user starts typing
 
-    // Check password strength
+    // Live strength + requirement checklist (rules live in ../utils/passwordPolicy.js)
     if (name === 'password') {
-      const strength = checkPasswordStrength(value);
-      setPasswordStrength(strength);
+      setPasswordStrength(getPasswordStrengthTier(value));
     }
-  };
-
-  const checkPasswordStrength = (password) => {
-    if (password.length === 0) return '';
-    if (password.length < 8) return 'weak';
-    if (password.length < 12) return 'medium';
-    return 'strong';
   };
 
   const handleSubmit = async (e) => {
@@ -79,9 +77,11 @@ const Signup = () => {
       return;
     }
 
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      trackError('signup_validation_error', { error: 'password_too_short' });
+    if (!isPasswordCompliant(formData.password)) {
+      setError(
+        `Password must meet every requirement below (at least ${PASSWORD_MIN_LENGTH} characters, upper and lower case, a number, and a special character).`
+      );
+      trackError('signup_validation_error', { error: 'password_requirements_not_met' });
       setIsLoading(false);
       return;
     }
@@ -104,6 +104,21 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
+
+  const passwordRuleRows = (() => {
+    const rules = getPasswordRuleStatus(formData.password);
+    return [
+      { key: 'minLength', met: rules.minLength, label: `At least ${PASSWORD_MIN_LENGTH} characters` },
+      { key: 'hasUpper', met: rules.hasUpper, label: 'One uppercase letter' },
+      { key: 'hasLower', met: rules.hasLower, label: 'One lowercase letter' },
+      { key: 'hasDigit', met: rules.hasDigit, label: 'One number' },
+      {
+        key: 'hasSpecial',
+        met: rules.hasSpecial,
+        label: 'One symbol (!@#$…)',
+      },
+    ];
+  })();
 
   const handleGoogleSignIn = async () => {
     try {
@@ -161,7 +176,7 @@ const Signup = () => {
         <BackgroundBeams />
       </div>
       
-      <div className="auth-card">
+      <div className={`auth-card${showForm ? ' auth-card--signup-form' : ''}`}>
         <div className="auth-header">
           {showForm && (
             <button 
@@ -297,7 +312,7 @@ const Signup = () => {
                   required
                   className="auth-input"
                 />
-                <span className="auth-hint" style={{ display: 'block', marginTop: '6px', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
+                <span className="auth-hint">
                   We&apos;ll send a verification link to this address
                 </span>
               </div>
@@ -313,12 +328,23 @@ const Signup = () => {
                   placeholder="Create a strong password"
                   required
                   className="auth-input"
+                  autoComplete="new-password"
                 />
                 {passwordStrength && (
                   <div className={`password-strength ${passwordStrength}`}>
                     Password strength: {passwordStrength}
                   </div>
                 )}
+                <ul className="password-requirements" aria-label="Password requirements">
+                  {passwordRuleRows.map(({ key, met, label }) => (
+                    <li key={key} className={`password-requirement ${met ? 'met' : 'unmet'}`}>
+                      <span className="password-requirement-icon" aria-hidden="true">
+                        {met ? '✓' : '○'}
+                      </span>
+                      {label}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               <div className="form-group">
