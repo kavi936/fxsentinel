@@ -15861,7 +15861,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '13.6%',
                 'forecast': '-0.8%',
                 'previous': '-5.5%'
             },
@@ -15873,7 +15873,7 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': '0.9%',
                 'previous': '0.9%'
             },
@@ -15883,9 +15883,9 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.1%',
-                'previous': '-1.5%'
+                'previous': '-0.8%'
             },
             {
                 'title': 'German 30-y Bond Auction',
@@ -15893,7 +15893,7 @@ class HybridEconomicCalendar:
                 'time': '09:34 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.58|1.4',
                 'forecast': 'N/A',
                 'previous': '3.45|1.7'
             },
@@ -15903,7 +15903,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.6%',
                 'forecast': '3.8%',
                 'previous': '-3.0%'
             },
@@ -15913,7 +15913,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': '0.2%',
                 'previous': '-1.0%'
             },
@@ -15923,7 +15923,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '11.0',
                 'forecast': '0.6',
                 'previous': '-0.2'
             },
@@ -15943,7 +15943,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.8%',
                 'previous': '1.3%'
             },
@@ -15953,7 +15953,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '34',
                 'forecast': '37',
                 'previous': '38'
             },
