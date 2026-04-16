@@ -19,6 +19,7 @@ import stripe
 from firebase_admin import credentials, firestore, initialize_app, auth
 from services.stripe_service import StripeService
 from services.user_trader_profile import user_trader_profile_store, validate_trader_payload
+from services.analysis_personalization import get_user_personalization
 
 # Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
 load_dotenv()
@@ -985,6 +986,7 @@ def get_economy_scan(country_code):
             indicators=indicators,
             events=events,
             yields=live_quotes,
+            personalization=get_user_personalization(token_user_info.get('user_id')),
         )
 
         # Count usage only after successful scan generation.
@@ -2208,7 +2210,12 @@ def get_analysis(news_id):
         # If we have a news item, generate news-specific analysis
         if news_item:
             print(f"🦊 BACKEND - Generating news analysis for: {news_item.get('title', 'No title')}")
-            analysis = generate_news_analysis(news_item)
+            personalization = get_user_personalization(token_user_info.get('user_id') if token_user_info else None)
+            analysis = generate_news_analysis(
+                news_item,
+                token_user_info=token_user_info,
+                personalization=personalization,
+            )
             # Billing: increment usage so profile popup shows correct count (token_user_info from earlier in this handler)
             if token_user_info and analysis and analysis.get('analysis_type') != 'error':
                 try:
@@ -2258,14 +2265,13 @@ def get_analysis(news_id):
         print(f"🦊 BACKEND - ❌ Returning error fallback analysis to frontend")
         return jsonify(fallback_analysis)
 
-def generate_news_analysis(news_item):
+def generate_news_analysis(news_item, token_user_info=None, personalization=None):
     """Generate AI analysis for RSS news articles using MVP analyzer"""
     try:
         print(f"🔍 Starting MVP news analysis for: {news_item.get('title', 'No title')}")
         
-        # Extract user information from Firebase token for OpenAI usage tracking
-        token_user_info = _extract_user_from_token()
-        print(f"🔍 DEBUG: Token user info extracted in generate_news_analysis: {token_user_info}")
+        # Use route-provided user info to avoid duplicate token extraction
+        print(f"🔍 DEBUG: Token user info in generate_news_analysis: {token_user_info}")
         
         # Import MVP analyzer and analysis history
         from services.mvp_news_analyzer import mvp_news_analyzer
@@ -2286,7 +2292,12 @@ def generate_news_analysis(news_item):
         else:
             print(f"❌❌❌ NO USER INFO FOR MVP ANALYZER ❌❌❌")
         
-        mvp_result = mvp_news_analyzer.analyze_news(news_item, market_context, user_info=token_user_info)
+        mvp_result = mvp_news_analyzer.analyze_news(
+            news_item,
+            market_context,
+            user_info=token_user_info,
+            personalization=personalization,
+        )
         
         print(f"🔍 MVP analysis completed: {mvp_result.immediate_reaction}")
         print(f"🔍 MVP analysis news_impact length: {len(mvp_result.news_impact) if mvp_result.news_impact else 0}")
@@ -2649,6 +2660,7 @@ def get_enhanced_analysis(news_id):
             'user_email': user_email,
             'user_name': user_name
         } if user_id or user_email else None
+        personalization = get_user_personalization(user_id)
         
         if user_info:
             print(f"👤👤👤 PASSING USER INFO TO ANALYZER: {user_info} 👤👤👤")
@@ -2658,7 +2670,13 @@ def get_enhanced_analysis(news_id):
             print(f"❌ user_id: {user_id}, user_email: {user_email}, user_name: {user_name}")
             print(f"❌ token_user_info: {token_user_info if 'token_user_info' in locals() else 'Not extracted'}")
         
-        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(validated_event, gpt_market_context, analysis_type, user_info=user_info)
+        gpt_analysis = gpt_ai_analyzer.analyze_macro_event(
+            validated_event,
+            gpt_market_context,
+            analysis_type,
+            user_info=user_info,
+            personalization=personalization,
+        )
         print(f"🔍 DEBUG: GPT Tier 1 analysis completed successfully!")
         
         # Debug: Log what we're getting from GPT

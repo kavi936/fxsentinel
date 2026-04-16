@@ -152,3 +152,302 @@ These are intentional integration points — implement when you prioritize them:
 ## Related docs
 
 - `docs/FIRESTORE_AND_AUTH_USER_SYNC.md` — how `users/{uid}` relates to Auth and billing.
+
+---
+
+## Personalization playbook from onboarding data
+
+This section translates each onboarding field into concrete product behavior so onboarding data is not only stored, but actively used to improve experience quality.
+
+### 1) `trading_style` (`day`, `swing`, `both`, `unsure`)
+
+What it signals:
+
+- Preferred trading horizon and analysis cadence.
+
+How to use it:
+
+- AI Analysis:
+  - `day`: prioritize intraday catalysts, session timing, and short-term invalidation cues.
+  - `swing`: prioritize multi-day structure, macro themes, and follow-through risk.
+  - `both`: provide two-lens output (intraday + swing).
+  - `unsure`: use lighter educational guidance and explain both horizons.
+- Calendar ranking:
+  - Up-rank immediate event timing for day traders.
+  - Up-rank trend-shaping macro events for swing traders.
+- Alert defaults:
+  - Day users get tighter, time-sensitive defaults.
+  - Swing users get broader thesis-level defaults.
+
+Why this improves UX:
+
+- Analysis style aligns with the user's decision horizon instead of forcing one generic format.
+
+### 2) `experience_level` (`beginner`, `intermediate`, `advanced`)
+
+What it signals:
+
+- How much complexity and jargon the user can absorb without friction.
+
+How to use it:
+
+- AI Analysis:
+  - `beginner`: define terms, add context, explain why each event matters.
+  - `intermediate`: balanced detail and interpretation.
+  - `advanced`: concise, dense signal-first analysis.
+- UI and education:
+  - Beginner-facing tooltips and guided hints.
+  - Advanced-facing compact UI copy with fewer interrupts.
+- Risk communication:
+  - Stronger explicit risk reminders for beginners near high-volatility events.
+
+Why this improves UX:
+
+- Reduces cognitive overload for new users while avoiding shallow output for experienced users.
+
+### 3) `primary_pairs` (`array<string>`, max 24)
+
+What it signals:
+
+- Markets the user actually tracks and acts on.
+
+How to use it:
+
+- AI Analysis:
+  - Prioritize commentary and examples for selected instruments first.
+- Calendar and news:
+  - Rank and highlight events most likely to impact the selected pairs.
+- Alerts and defaults:
+  - Prefill watchlists and suggested alert instruments from this list.
+
+Why this improves UX:
+
+- Improves relevance immediately and removes broad-market noise.
+
+### 4) `marketing_opt_in` (`boolean`)
+
+What it signals:
+
+- Email communication consent.
+
+How to use it:
+
+- Communication systems:
+  - Segment lifecycle tips, education, and optional campaign messaging.
+- Compliance:
+  - Use strictly for consented communication purposes.
+
+Why this improves UX:
+
+- Supports trust-preserving outreach without overreaching into product inference.
+
+### 5) `primary_goal` (`stay_informed`, `analysis_workflow`, `alerts`, `learning`, `other`)
+
+What it signals:
+
+- The primary "job to be done" the user expects from the product.
+
+How to use it:
+
+- AI Analysis format:
+  - `stay_informed`: concise summary-first briefs.
+  - `analysis_workflow`: structured scenario and level-driven output.
+  - `alerts`: trigger-oriented, monitoring-focused summaries.
+  - `learning`: educational and explanatory output.
+- Product emphasis:
+  - First-run highlights and nudges should map to the user's goal.
+
+Why this improves UX:
+
+- Aligns product behavior with intent, increasing perceived value and retention.
+
+### 6) `referral_source` (allowed backend slug)
+
+What it signals:
+
+- Acquisition channel origin.
+
+How to use it:
+
+- Analytics and operations:
+  - Attribution and channel-quality cohort reporting.
+- UX refinement:
+  - Detect channel-specific onboarding friction and improve copy/flow per cohort.
+
+Why this improves UX:
+
+- Improves onboarding quality indirectly by revealing where users struggle.
+
+### Survey-state fields that matter operationally
+
+These are not preference traits, but they determine onboarding behavior quality over time:
+
+- `onboarding_survey_completed_at`: confirms full completion.
+- `onboarding_survey_skipped_at`: confirms explicit skip.
+- `onboarding_survey_version`: enables safe survey evolution and re-prompt strategy.
+- `trader_profile.updated_at`: indicates data freshness.
+
+Use cases:
+
+- Keep onboarding gate logic reliable.
+- Re-prompt stale profiles only when needed.
+- Compare completion vs skip cohorts.
+
+### Highest-value fields for in-app personalization
+
+For direct UX quality, prioritize these fields in this order:
+
+1. `primary_pairs`
+2. `experience_level`
+3. `trading_style`
+4. `primary_goal`
+
+`referral_source` is strongest for attribution/cohorts, while `marketing_opt_in` is primarily a consent control for messaging.
+
+### Recommended implementation pattern
+
+Instead of having each subsystem reinterpret raw survey values, derive one internal personalization object and reuse it across AI, calendar, and alerts. Example shape:
+
+- `analysis_tone`
+- `analysis_depth`
+- `time_horizon_bias`
+- `priority_instruments`
+- `default_feature_emphasis`
+- `education_mode`
+
+Why this approach:
+
+- Keeps personalization consistent across surfaces.
+- Simplifies future changes to onboarding schema.
+- Prevents drift between AI prompts, ranking logic, and UI defaults.
+
+---
+
+## AI analysis personalization implementation plan
+
+This section turns the personalization playbook into an implementation path for the three core analysis surfaces:
+
+- Economic calendar analysis (`AI Analysis` card)
+- Live news analysis (`Live News` card)
+- Economies (`Holistic Scan`)
+
+### Current state (what is already in place)
+
+- Onboarding preferences are saved and validated in Firestore under `users/{uid}.trader_profile`.
+- AI analysis endpoints already extract authenticated user context from Firebase tokens.
+- Calendar and Live News analysis pipelines already pass `user_info` through core analyzer code paths for usage tracking.
+- Holistic Scan has a deterministic backend service with centralized output construction.
+
+What is missing today:
+
+- `trader_profile` is not yet systematically injected into AI prompts, instrument ranking, or deterministic narrative shaping.
+
+### Architecture recommendation
+
+Add a shared backend personalization adapter, then wire each analysis surface to it.
+
+Proposed service:
+
+- `backend/services/analysis_personalization.py`
+
+Proposed responsibilities:
+
+- Read and normalize onboarding profile (with safe defaults if missing/unavailable).
+- Build compact prompt-context blocks for GPT surfaces.
+- Re-rank instrument/pair lists with user preference priority.
+- Map `experience_level`, `trading_style`, and `primary_goal` into stable UX behavior flags.
+
+Suggested normalized object:
+
+- `analysis_tone`
+- `analysis_depth`
+- `time_horizon_bias`
+- `priority_instruments`
+- `default_feature_emphasis`
+- `education_mode`
+
+### Surface-by-surface implementation
+
+#### 1) Economic calendar analysis (`AI Analysis` card)
+
+Primary files:
+
+- `backend/app.py` (`/api/enhanced-analysis/<news_id>`)
+- `backend/services/gpt_ai_analysis.py`
+
+Implementation:
+
+- Fetch user personalization after token extraction in the route.
+- Pass personalization into `gpt_ai_analyzer.analyze_macro_event(...)`.
+- Extend prompt-building in `GPTAIAnalyzer._create_analysis_prompt(...)` with a concise user-personalization block.
+- Apply style/depth/horizon guidance from:
+  - `experience_level`
+  - `trading_style`
+  - `primary_goal`
+  - `primary_pairs` (where relevant to event/pair discussion)
+
+Expected UX impact:
+
+- Better analysis framing (intraday vs swing, dense vs explanatory) while keeping existing market-context rigor.
+
+#### 2) Live News analysis (`Live News` card)
+
+Primary files:
+
+- `backend/app.py` (`/api/analysis/<news_id>`, `generate_news_analysis(...)`)
+- `backend/services/mvp_news_analyzer.py`
+
+Implementation:
+
+- Resolve personalization once in the route and pass it through `generate_news_analysis(...)` into analyzer calls.
+- Extend `MVPNewsAnalyzer` prompt assembly with the same normalized personalization context.
+- Re-rank `key_pairs` output so `primary_pairs` are prioritized when relevant.
+
+Expected UX impact:
+
+- News commentary and pair focus become visibly more relevant to what each user actually trades.
+
+#### 3) Economies (`Holistic Scan`)
+
+Primary files:
+
+- `backend/app.py` (`/api/economy-scan/<country_code>`)
+- `backend/services/economy_holistic_scan_service.py`
+
+Implementation:
+
+- Keep core deterministic scoring unchanged initially.
+- Apply personalization to presentation and ordering:
+  - Prioritize user-relevant pairs in `fx_pairs` / `pair_setups`.
+  - Shift emphasis in `trader_brief` and highlights based on `trading_style` (short-term vs long-term focus).
+  - Adjust clarity layer based on `experience_level` (education-first vs concise framing).
+
+Expected UX impact:
+
+- Preserves scan stability while making output feel tailored to user intent and skill level.
+
+### Rollout plan
+
+#### Phase 1 (high impact / low risk)
+
+- Implement shared personalization service.
+- Wire into Calendar and Live News GPT prompts.
+- Add pair prioritization in those two surfaces.
+
+#### Phase 2
+
+- Add Holistic Scan ordering/emphasis personalization (no scoring changes).
+
+#### Phase 3
+
+- Add personalization telemetry and quality checks:
+  - personalization applied flag
+  - profile completeness
+  - engagement/retention deltas by profile segment
+
+### Reliability and fallback rules (required)
+
+- Never block analysis generation if profile fetch fails.
+- If profile data is missing/stale/invalid, use neutral defaults.
+- Keep billing/usage and analysis routes functional even when personalization is unavailable.
+- Treat personalization as an additive layer, not a hard dependency.

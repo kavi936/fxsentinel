@@ -20,6 +20,7 @@ from services.data_validator import economic_data_validator
 from services.live_market_data import live_market_data_service
 from services.economy_context_service import economy_context_service
 from services.central_bank_ai_context import get_context_for_currency
+from services.analysis_personalization import build_prompt_personalization_block
 
 try:
     import redis
@@ -255,8 +256,14 @@ class GPTAIAnalyzer:
         self.economic_indicators_cache = {}
         # Note: _load_economic_indicators_cache method removed - cache will be populated on demand
     
-    def analyze_macro_event(self, event: Dict, market_context: MarketContext, 
-                          analysis_type: str = "pre_event", user_info: Dict = None) -> GPTAnalysisResult:
+    def analyze_macro_event(
+        self,
+        event: Dict,
+        market_context: MarketContext,
+        analysis_type: str = "pre_event",
+        user_info: Dict = None,
+        personalization: Dict = None,
+    ) -> GPTAnalysisResult:
         """
         Generate comprehensive GPT analysis for macro events with data validation
         
@@ -325,7 +332,12 @@ class GPTAIAnalyzer:
             
             # Step 7: Generate analysis with validated data and live market context
             analysis_result = self._generate_enhanced_gpt_analysis(
-                validated_event, enhanced_market_context, analysis_type, model, user_info=user_info
+                validated_event,
+                enhanced_market_context,
+                analysis_type,
+                model,
+                user_info=user_info,
+                personalization=personalization,
             )
             
             # Step 8: Add data quality information
@@ -1286,8 +1298,15 @@ class GPTAIAnalyzer:
         """Generate fallback analysis when GPT API fails"""
         return self._get_fallback_analysis(event, analysis_type)
     
-    def _generate_enhanced_gpt_analysis(self, event: Dict, market_context: MarketContext, 
-                                      analysis_type: str, model: str, user_info: Dict = None) -> GPTAnalysisResult:
+    def _generate_enhanced_gpt_analysis(
+        self,
+        event: Dict,
+        market_context: MarketContext,
+        analysis_type: str,
+        model: str,
+        user_info: Dict = None,
+        personalization: Dict = None,
+    ) -> GPTAnalysisResult:
         """Generate enhanced GPT analysis with real API calls"""
         try:
             if not self.client:
@@ -1295,7 +1314,12 @@ class GPTAIAnalyzer:
                 return self._get_fallback_analysis(event, analysis_type)
             
             # Prepare the prompt for GPT
-            prompt = self._create_analysis_prompt(event, market_context, analysis_type)
+            prompt = self._create_analysis_prompt(
+                event,
+                market_context,
+                analysis_type,
+                personalization=personalization,
+            )
             
             # Prepare user identifier for OpenAI usage tracking
             # Use email if available, otherwise user_id, otherwise None
@@ -1964,7 +1988,13 @@ class GPTAIAnalyzer:
             logger.warning(f"Error adding policy context to prompt: {e}")
             return ""
     
-    def _create_analysis_prompt(self, event: Dict, market_context: MarketContext, analysis_type: str) -> str:
+    def _create_analysis_prompt(
+        self,
+        event: Dict,
+        market_context: MarketContext,
+        analysis_type: str,
+        personalization: Dict = None,
+    ) -> str:
         """Create a comprehensive prompt for GPT analysis - only includes real, accurate data"""
         event_title = event.get('title', 'Unknown Event')
         currency = event.get('currency', 'USD')
@@ -2132,6 +2162,8 @@ POST-EVENT ANALYSIS:
 - Explain how the actual result relates to current economic indicators and policy targets
 """
 
+        personalization_block = build_prompt_personalization_block(personalization, surface="economic_calendar")
+
         prompt = f"""
 You are a senior macroeconomic analyst specializing in foreign exchange markets, with deep expertise in economic indicators, central bank policy, and macro-to-FX transmission mechanisms.
 
@@ -2154,6 +2186,8 @@ MARKET CONTEXT:
 
 ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
+
+{personalization_block}
 
 PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
 
