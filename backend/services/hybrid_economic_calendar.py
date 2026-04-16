@@ -16185,9 +16185,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.1%',
-                'previous': '0.0%'
+                'previous': '0.1%'
             },
             {
                 'title': 'Construction Output m/m',
@@ -16195,7 +16195,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': '-0.4%',
                 'previous': '0.2%'
             },
@@ -16205,9 +16205,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-18.8B',
                 'forecast': '-20.3B',
-                'previous': '-14.4B'
+                'previous': '-15.1B'
             },
             {
                 'title': 'Index of Services 3m/3m',
@@ -16215,9 +16215,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
-                'previous': '0.2%'
+                'previous': '0.3%'
             },
             {
                 'title': 'Industrial Production m/m',
@@ -16225,7 +16225,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.2%',
                 'previous': '-0.1%'
             },
@@ -16235,9 +16235,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '0.3%',
-                'previous': '0.1%'
+                'previous': '0.2%'
             },
             {
                 'title': 'PPI m/m',
