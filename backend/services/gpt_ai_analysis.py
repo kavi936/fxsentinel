@@ -21,6 +21,7 @@ from services.live_market_data import live_market_data_service
 from services.economy_context_service import economy_context_service
 from services.central_bank_ai_context import get_context_for_currency
 from services.analysis_personalization import build_prompt_personalization_block
+from services.relevant_market_context import build_relevant_market_context_block
 
 try:
     import redis
@@ -2090,6 +2091,17 @@ class GPTAIAnalyzer:
             additional_context_lines.append("\nNote: FX pair sentiment should inform bias, not override macroeconomic drivers.")
         
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "None available"
+        preferred_instruments = []
+        if personalization and isinstance(personalization, dict):
+            preferred_instruments = personalization.get("primary_pairs") or []
+        relevant_market_snapshot = build_relevant_market_context_block(
+            currency=currency,
+            text=event_title,
+            focus_instruments=self._get_top_3_pairs_for_currency(currency, event),
+            preferred_instruments=preferred_instruments,
+            limit=10,
+            surface="calendar",
+        )
         
         # Get economy context (Approach 1, 4, 6) - use event currency so EUR gets 'inflation', US gets 'inflation-YoY', etc.
         relevant_indicator_ids = self._get_relevant_indicators(event_title, currency)
@@ -2186,6 +2198,8 @@ MARKET CONTEXT:
 
 ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
+
+{relevant_market_snapshot}
 
 {personalization_block}
 

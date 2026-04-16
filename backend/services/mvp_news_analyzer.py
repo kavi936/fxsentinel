@@ -18,6 +18,7 @@ from services.analysis_personalization import (
     build_prompt_personalization_block,
     prioritize_instruments,
 )
+from services.relevant_market_context import build_relevant_market_context_block
 
 @dataclass
 class MVPAnalysisResult:
@@ -798,6 +799,17 @@ class MVPNewsAnalyzer:
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "Limited additional context available"
         
         personalization_block = build_prompt_personalization_block(personalization, surface="live_news")
+        preferred_instruments = []
+        if personalization and isinstance(personalization, dict):
+            preferred_instruments = personalization.get("primary_pairs") or []
+        relevant_market_snapshot = build_relevant_market_context_block(
+            currency="USD",
+            text=f"{title} {summary}",
+            focus_instruments=affected_instruments,
+            preferred_instruments=preferred_instruments,
+            limit=10,
+            surface="news",
+        )
 
         prompt = f"""
 You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
@@ -813,6 +825,8 @@ CURRENT MARKET CONTEXT (Live Data):
 
 ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
+
+{relevant_market_snapshot}
 
 {personalization_block}
 

@@ -451,3 +451,153 @@ Expected UX impact:
 - If profile data is missing/stale/invalid, use neutral defaults.
 - Keep billing/usage and analysis routes functional even when personalization is unavailable.
 - Treat personalization as an additive layer, not a hard dependency.
+
+---
+
+## Implementation log (current state)
+
+This section records what has been implemented so far across onboarding-based personalization and market-context relevance. Use it as the source of truth when revisiting or refining behavior.
+
+### Scope completed
+
+- Phase 1 completed: personalization integrated into Calendar AI Analysis and Live News prompts.
+- Phase 2 completed: personalization integrated into Holistic Scan presentation/order (without changing deterministic scoring).
+- Market context relevance upgrade completed: analyzers now consume expanded ticker universe via a relevance-ranked snapshot (not legacy major-FX only).
+
+### New backend services added
+
+#### `backend/services/analysis_personalization.py`
+
+Purpose:
+
+- Centralize onboarding-profile normalization for analysis surfaces.
+
+What it provides:
+
+- `get_user_personalization(user_id)`:
+  - Reads `users/{uid}.trader_profile`
+  - Returns normalized fields and behavior flags with safe defaults
+- `build_prompt_personalization_block(...)`:
+  - Prompt-ready personalization context block
+- `prioritize_instruments(...)`:
+  - Reorders instruments so user-preferred assets are prioritized
+
+Why added:
+
+- Prevent duplicated or drifting personalization logic across calendar/news/holistic systems.
+
+#### `backend/services/relevant_market_context.py`
+
+Purpose:
+
+- Build compact, relevant price/change snapshots from the expanded TradingView instrument catalog for AI prompts.
+
+What it provides:
+
+- Relevance-based selection using:
+  - event currency mapping
+  - keyword/topic mapping
+  - focus instruments
+  - user preferred instruments
+  - top movers fallback
+- Weighted ranking model:
+  - Event relevance
+  - Market regime relevance
+  - User preference relevance
+  - Freshness/quality
+
+Surface-specific weight profiles:
+
+- Calendar (`surface="calendar"`): event-led  
+  `event=0.60, regime=0.20, preference=0.15, freshness=0.05`
+- News (`surface="news"`): more personalized  
+  `event=0.45, regime=0.20, preference=0.30, freshness=0.05`
+- Generic fallback  
+  `event=0.50, regime=0.20, preference=0.25, freshness=0.05`
+
+Why added:
+
+- Live ticker expanded beyond major FX, but AI context was still mostly legacy FX-centric.
+- This service bridges expanded ticker coverage into analysis context while controlling prompt noise.
+
+### Files changed and integration points
+
+#### `backend/app.py`
+
+Changes:
+
+- Imports `get_user_personalization`.
+- `/api/enhanced-analysis/<news_id>`:
+  - Builds personalization from authenticated user and passes into GPT analyzer.
+- `/api/analysis/<news_id>`:
+  - Builds personalization and passes it into `generate_news_analysis(...)`.
+- `generate_news_analysis(...)`:
+  - Updated signature to accept route-provided `token_user_info` and `personalization`.
+  - Removed duplicate token extraction in helper path.
+- `/api/economy-scan/<country_code>`:
+  - Passes personalization into deterministic scan builder.
+
+#### `backend/services/gpt_ai_analysis.py`
+
+Changes:
+
+- Accepts `personalization` in:
+  - `analyze_macro_event(...)`
+  - `_generate_enhanced_gpt_analysis(...)`
+  - `_create_analysis_prompt(...)`
+- Injects:
+  - `USER PERSONALIZATION CONTEXT`
+  - `RELEVANT LIVE MARKET SNAPSHOT` (expanded ticker, relevance-ranked)
+- Calls snapshot builder with `surface="calendar"`.
+
+#### `backend/services/mvp_news_analyzer.py`
+
+Changes:
+
+- Accepts `personalization` in:
+  - `analyze_news(...)`
+  - `_analyze_with_gpt(...)`
+  - `_create_enhanced_prompt(...)`
+- Uses `prioritize_instruments(...)` to rank affected instruments and `key_pairs`.
+- Injects:
+  - `USER PERSONALIZATION CONTEXT`
+  - `RELEVANT LIVE MARKET SNAPSHOT`
+- Calls snapshot builder with `surface="news"`.
+
+#### `backend/services/economy_holistic_scan_service.py`
+
+Changes:
+
+- `build_scan(...)` accepts `personalization`.
+- Pair ordering:
+  - `_map_fx_pairs(...)` can prioritize preferred pairs when present.
+- Presentation-level personalization only:
+  - `_build_trader_brief(...)` adds style/experience guidance notes.
+  - `_build_highlights(...)` adds personalized focus item and beginner guidance when relevant.
+
+Important:
+
+- Core deterministic scoring and regime math were intentionally left unchanged.
+
+### Behavioral outcomes after implementation
+
+- Calendar AI:
+  - Macro analysis prompt now includes user profile guidance and relevant cross-asset snapshot.
+- Live News AI:
+  - News prompt now includes user profile guidance and relevance-ranked snapshot from expanded ticker universe.
+  - Output pair ordering favors user preferences when relevant.
+- Holistic Scan:
+  - Output ordering/emphasis is personalized; deterministic score engine remains stable.
+
+### Known tuning levers for future revisions
+
+- Ranking weights by surface (`calendar` vs `news`).
+- Keyword mapping coverage in relevant-market-context builder.
+- Snapshot size (`limit`) to balance richness vs prompt token cost.
+- Prompt personalization block length (compact vs verbose modes).
+- Holistic-scan wording style for beginner-oriented guidance.
+
+### Validation completed during implementation
+
+- Lint checks were run after edits on modified files (no introduced lint errors).
+- Python compile checks were run on modified backend services/routes (syntax passed).
