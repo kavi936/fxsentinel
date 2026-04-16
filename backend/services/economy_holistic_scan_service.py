@@ -105,6 +105,7 @@ class EconomyHolisticScanService:
         indicators: Optional[Dict[str, Any]],
         events: Optional[List[Dict[str, Any]]],
         yields: Optional[Dict[str, Any]] = None,
+        personalization: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         country = (country_code or "").upper()
         if country not in self.SUPPORTED_COUNTRIES:
@@ -146,7 +147,11 @@ class EconomyHolisticScanService:
                 "display_bias": self._regime_display_label(self._score_to_bias(long_total), quality_overrides.get("incomplete", False)),
             }
 
-        fx_pairs = self._map_fx_pairs(country, short_total)
+        fx_pairs = self._map_fx_pairs(
+            country,
+            short_total,
+            preferred_pairs=(personalization or {}).get("primary_pairs") or [],
+        )
         macro_overlay = self._load_holistic_overlay()
         central_bank_context = self._load_central_bank_snippets(country)
         pair_setups = self._build_pair_setups(
@@ -166,6 +171,7 @@ class EconomyHolisticScanService:
             pair_setups=pair_setups,
             event_flags=event_flags,
             quality_overrides=quality_overrides,
+            personalization=personalization,
         )
         highlights = self._build_highlights(
             country=country,
@@ -179,6 +185,7 @@ class EconomyHolisticScanService:
             event_risk_score=event_risk,
             macro_overlay=macro_overlay,
             central_bank_context=central_bank_context,
+            personalization=personalization,
         )
 
         return {
@@ -376,13 +383,14 @@ class EconomyHolisticScanService:
             risk += 25.0 if impact == "high" else 12.5
         return min(risk, 100.0)
 
-    def _map_fx_pairs(self, country: str, short_score: float) -> List[Dict[str, Any]]:
+    def _map_fx_pairs(self, country: str, short_score: float, preferred_pairs: Optional[List[str]] = None) -> List[Dict[str, Any]]:
         bias = self._score_to_bias(short_score)
         strength = "strong" if abs(short_score) >= 45 else ("medium" if abs(short_score) >= 20 else "light")
         pairs = self.COUNTRY_PAIRS.get(country, [])
         results: List[Dict[str, Any]] = []
 
         ccy = "USD" if country == "US" else country
+        preferred = {str(p).replace("/", "").upper() for p in (preferred_pairs or [])}
         for pair in pairs:
             base = pair[:3]
             quote = pair[3:]
@@ -402,6 +410,8 @@ class EconomyHolisticScanService:
                     "reason": f"{country} short-term macro bias is {bias}",
                 }
             )
+        if preferred:
+            results.sort(key=lambda row: 0 if row.get("pair", "").upper() in preferred else 1)
         return results
 
     def _regime_display_label(self, bias: str, incomplete: bool) -> str:
@@ -487,6 +497,7 @@ class EconomyHolisticScanService:
         pair_setups: List[Dict[str, Any]],
         event_flags: Dict[str, Any],
         quality_overrides: Dict[str, Any],
+        personalization: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         top_pair = pair_setups[0] if pair_setups else {}
         short_bias = short_term.get("bias", "neutral")
@@ -506,6 +517,15 @@ class EconomyHolisticScanService:
             warnings.append("Directional lean only — coverage is incomplete due to missing signal families.")
         if quality_overrides.get("stale"):
             warnings.append("Inputs are stale relative to UTC; reduce conviction and refresh frequently.")
+        p = personalization or {}
+        trading_style = p.get("trading_style")
+        experience_level = p.get("experience_level")
+        if trading_style == "day":
+            warnings.append("Personalization: day-trading profile detected — prioritize short-term regime and event timing.")
+        elif trading_style == "swing":
+            warnings.append("Personalization: swing-trading profile detected — prioritize long-term regime and macro follow-through.")
+        if experience_level == "beginner":
+            warnings.append("Personalization: beginner mode — use this scan as directional context, not standalone trade confirmation.")
 
         return {
             "short_term_line": short_line,
@@ -683,6 +703,7 @@ class EconomyHolisticScanService:
         event_risk_score: float,
         macro_overlay: Dict[str, Any],
         central_bank_context: Dict[str, Any],
+        personalization: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Structured key points for UI: bold label + emphasis token + supporting detail.
@@ -804,6 +825,30 @@ class EconomyHolisticScanService:
                     "label": "Context",
                     "emphasis": "NEUTRAL",
                     "detail": "Additional macro context will refine as more indicators connect.",
+                }
+            )
+
+        p = personalization or {}
+        trading_style = p.get("trading_style")
+        experience_level = p.get("experience_level")
+        if trading_style in {"day", "swing"}:
+            focus = "Short-term" if trading_style == "day" else "Long-term"
+            items.insert(
+                0,
+                {
+                    "id": "personalization_focus",
+                    "label": "Personalized focus",
+                    "emphasis": focus.upper(),
+                    "detail": f"{focus} regime is prioritized based on your onboarding trading style preference.",
+                },
+            )
+        if experience_level == "beginner":
+            items.append(
+                {
+                    "id": "personalization_beginner_note",
+                    "label": "How to read this scan",
+                    "emphasis": "BEGINNER MODE",
+                    "detail": "Start with regime bias and calendar stress first; then validate with your preferred pairs before acting.",
                 }
             )
 

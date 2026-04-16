@@ -14,6 +14,10 @@ from dataclasses import dataclass
 import os
 
 logger = logging.getLogger(__name__)
+from services.analysis_personalization import (
+    build_prompt_personalization_block,
+    prioritize_instruments,
+)
 
 @dataclass
 class MVPAnalysisResult:
@@ -428,7 +432,13 @@ class MVPNewsAnalyzer:
             logger.warning(f"Error fetching pairs sentiment data: {e}")
             return []
     
-    def analyze_news(self, news_item: Dict, market_context: Optional[Dict] = None, user_info: Optional[Dict] = None) -> MVPAnalysisResult:
+    def analyze_news(
+        self,
+        news_item: Dict,
+        market_context: Optional[Dict] = None,
+        user_info: Optional[Dict] = None,
+        personalization: Optional[Dict] = None,
+    ) -> MVPAnalysisResult:
         """Analyze news using hybrid approach
         
         Args:
@@ -443,7 +453,12 @@ class MVPNewsAnalyzer:
             
             if should_use_gpt:
                 print(f"🔍 Attempting GPT analysis...")
-                result = self._analyze_with_gpt(news_item, market_context, user_info=user_info)
+                result = self._analyze_with_gpt(
+                    news_item,
+                    market_context,
+                    user_info=user_info,
+                    personalization=personalization,
+                )
                 print(f"🔍 GPT analysis completed, type: {result.analysis_type}")
                 return result
             else:
@@ -513,7 +528,13 @@ class MVPNewsAnalyzer:
         
         return result
     
-    def _analyze_with_gpt(self, news_item: Dict, market_context: Optional[Dict] = None, user_info: Optional[Dict] = None) -> MVPAnalysisResult:
+    def _analyze_with_gpt(
+        self,
+        news_item: Dict,
+        market_context: Optional[Dict] = None,
+        user_info: Optional[Dict] = None,
+        personalization: Optional[Dict] = None,
+    ) -> MVPAnalysisResult:
         """Analyze news using GPT with enhanced prompts and live market data
         
         Args:
@@ -562,13 +583,15 @@ class MVPNewsAnalyzer:
             summary = news_item.get('summary', '')
             source = news_item.get('source', '')
             affected_instruments = self._extract_affected_instruments(title, summary)
+            preferred = (personalization or {}).get("primary_pairs") or []
+            affected_instruments = prioritize_instruments(affected_instruments, preferred, limit=4)
             # Sentiment service has FX pairs only; pass through and it will skip unknowns like XAU/USD
             pairs_sentiment = self._get_pairs_sentiment_data(affected_instruments)
             
             # Build enhanced prompt with live market data
             prompt = self._create_enhanced_prompt(
                 news_item, affected_instruments, market_data, trading_sessions,
-                sentiment_data, pairs_sentiment
+                sentiment_data, pairs_sentiment, personalization=personalization
             )
             
             # Prepare user identifier for OpenAI usage tracking
@@ -655,7 +678,11 @@ class MVPNewsAnalyzer:
                     news_impact=gpt_result.get('news_impact', ''),
                     trading_implications=gpt_result.get('trading_implications', ''),
                     immediate_reaction=gpt_result.get('immediate_reaction', 'neutral'),
-                    key_pairs=gpt_result.get('key_pairs', affected_instruments[:4] if affected_instruments else ['EUR/USD']),
+                    key_pairs=prioritize_instruments(
+                        gpt_result.get('key_pairs', affected_instruments[:4] if affected_instruments else ['EUR/USD']),
+                        (personalization or {}).get("primary_pairs") or [],
+                        limit=4,
+                    ),
                     volatility=gpt_result.get('volatility', 'medium'),
                     timeframe=gpt_result.get('timeframe', '1-24 hours'),
                     confidence=gpt_result.get('confidence', 75),
@@ -693,9 +720,16 @@ class MVPNewsAnalyzer:
             # Fallback to free analysis
             return self._analyze_with_free(news_item)
     
-    def _create_enhanced_prompt(self, news_item: Dict, affected_instruments: List[str],
-                                market_data: Dict, trading_sessions: Dict,
-                                sentiment_data: Optional[Dict], pairs_sentiment: List[Dict]) -> str:
+    def _create_enhanced_prompt(
+        self,
+        news_item: Dict,
+        affected_instruments: List[str],
+        market_data: Dict,
+        trading_sessions: Dict,
+        sentiment_data: Optional[Dict],
+        pairs_sentiment: List[Dict],
+        personalization: Optional[Dict] = None,
+    ) -> str:
         """Create enhanced prompt with live market data and context. affected_instruments has primary asset first (e.g. XAU/USD for gold news)."""
         title = news_item.get('title', '')
         summary = news_item.get('summary', '')
@@ -763,6 +797,8 @@ class MVPNewsAnalyzer:
         
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "Limited additional context available"
         
+        personalization_block = build_prompt_personalization_block(personalization, surface="live_news")
+
         prompt = f"""
 You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
 
@@ -777,6 +813,8 @@ CURRENT MARKET CONTEXT (Live Data):
 
 ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
+
+{personalization_block}
 
 ANALYSIS REQUIREMENTS:
 
