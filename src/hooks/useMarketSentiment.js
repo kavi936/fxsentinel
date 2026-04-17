@@ -34,7 +34,9 @@ const fallbackSentiment = {
       percentage: 50,
       price_change: 0.0,
       rsi: 50.0,
-      volatility: 10.0
+      volatility: 10.0,
+      impulse: 50.0,
+      daily_abs_move_pct: 10.0
     },
     {
       pair: 'GBPUSD',
@@ -42,7 +44,9 @@ const fallbackSentiment = {
       percentage: 50,
       price_change: 0.0,
       rsi: 50.0,
-      volatility: 10.0
+      volatility: 10.0,
+      impulse: 50.0,
+      daily_abs_move_pct: 10.0
     },
     {
       pair: 'USDJPY',
@@ -50,7 +54,9 @@ const fallbackSentiment = {
       percentage: 50,
       price_change: 0.0,
       rsi: 50.0,
-      volatility: 10.0
+      volatility: 10.0,
+      impulse: 50.0,
+      daily_abs_move_pct: 10.0
     },
     {
       pair: 'USDCHF',
@@ -58,7 +64,9 @@ const fallbackSentiment = {
       percentage: 50,
       price_change: 0.0,
       rsi: 50.0,
-      volatility: 10.0
+      volatility: 10.0,
+      impulse: 50.0,
+      daily_abs_move_pct: 10.0
     }
   ],
   market_drivers: [],

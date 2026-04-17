@@ -30,10 +30,10 @@ class PairSentiment:
     """Individual pair sentiment data"""
     pair: str
     sentiment: str  # 'bullish', 'bearish', 'neutral'
-    percentage: float  # 0-100
+    percentage: float  # 0-100: 50=flat; maps daily % vs GAUGE_CAP_PCT (see _calculate_pairs_sentiment)
     price_change: float
-    rsi: float
-    volatility: float
+    rsi: float  # 0-100 impulse from daily move (serialized also as 'impulse')
+    volatility: float  # abs(daily % move); serialized also as 'daily_abs_move_pct'
     support: Optional[float] = None
     resistance: Optional[float] = None
 
@@ -876,16 +876,19 @@ class MarketSentimentService:
                     else:
                         price_change_percent = 0
                     
-                    # Calculate sentiment from percentage change
-                    if price_change_percent > 0.1:  # 0.1% change
+                    # Sentiment labels (thresholds unchanged)
+                    if price_change_percent > 0.1:
                         sentiment = 'bullish'
-                        percentage = min(85, 50 + abs(price_change_percent) * 50)
-                    elif price_change_percent < -0.1:  # -0.1% change
+                    elif price_change_percent < -0.1:
                         sentiment = 'bearish'
-                        percentage = max(15, 50 - abs(price_change_percent) * 50)
                     else:
                         sentiment = 'neutral'
-                        percentage = 50
+
+                    # Bar position 0–100: 50 = flat; maps linearly from daily % in [-cap, +cap]
+                    # (keep in sync with DAILY_CHANGE_GAUGE_CAP_PCT in src/utils/dailyChangeGauge.js)
+                    GAUGE_CAP_PCT = 1.15
+                    t = float(np.clip(price_change_percent / GAUGE_CAP_PCT, -1.0, 1.0))
+                    percentage = 50.0 + t * 50.0
                     
                     # Calculate RSI (simplified momentum-based RSI)
                     # RSI formula: 100 - (100 / (1 + RS))
@@ -937,7 +940,10 @@ class MarketSentimentService:
                         rsi=rsi,
                         volatility=volatility
                     ))
-                    logger.info(f"✅ Calculated sentiment for {pair}: change={price_change_percent:.4f}%, RSI={rsi:.1f}, Vol={volatility:.2f}%")
+                    logger.info(
+                        f"✅ Calculated sentiment for {pair}: change={price_change_percent:.4f}%, "
+                        f"impulse={rsi:.1f}, daily_abs_move%={volatility:.2f}"
+                    )
                 else:
                     logger.warning(f"⚠️ Pair {pair} not found in forex_data, skipping")
             
@@ -955,32 +961,31 @@ class MarketSentimentService:
             return self._get_default_pairs_sentiment()
     
     def _get_market_drivers(self) -> List[MarketDriver]:
-        """Get current market drivers from news and events"""
+        """Short educational themes (not a live news/calendar feed)."""
         try:
-            # Updated market drivers based on current market dynamics
             return [
                 MarketDriver(
-                    title="Monetary Policy Divergence & Interest Rate Differentials",
-                    description="As global inflation normalizes, major central banks are entering different phases of the policy cycle. The Federal Reserve is expected to gradually ease policy, while others (notably the Bank of Japan) are exiting ultra-loose stances, and some (BoE/ECB) remain cautious due to sticky inflation. These differences in policy direction directly shape capital flows and yield attractiveness across currencies. Impact on Forex Markets: Narrowing US yield advantage → structural USD weakness over time. Reduced carry appeal → USD/JPY volatility and downside bias. Policy divergence → trend opportunities in G10 FX via rate spreads.",
-                    impact="high",
+                    title="Policy and yield spreads",
+                    description="Central banks rarely move in lockstep. Relative rates and expectations often drive G10 trends more than a single data point.",
+                    impact="medium",
                     sentiment="neutral",
-                    source="Central Bank Policy Analysis",
+                    source="",
                     timestamp=datetime.now(timezone.utc).isoformat()
                 ),
                 MarketDriver(
-                    title="Global Growth Divergence & Risk Sentiment",
-                    description="Economic growth prospects are diverging across regions. While developed economies face slower, late-cycle growth, select emerging markets and Asia continue to show stronger structural momentum. This divergence drives risk-on vs risk-off capital allocation, influencing demand for higher-beta currencies versus safe havens. Impact on Forex Markets: Risk-on periods → EM FX and high-beta currencies outperform. Risk-off shocks → JPY, CHF, and USD strengthen. FX trends increasingly driven by relative growth expectations, not absolute growth.",
-                    impact="high",
+                    title="Risk tone and safe havens",
+                    description="When risk assets struggle, flows often favour USD, JPY, and CHF in different mixes. When appetite returns, higher-beta FX can lead.",
+                    impact="medium",
                     sentiment="neutral",
-                    source="Economic Growth Analysis",
+                    source="",
                     timestamp=datetime.now(timezone.utc).isoformat()
                 ),
                 MarketDriver(
-                    title="Geopolitics, Trade Policy & Commodity Volatility",
-                    description="Geopolitical tensions, trade fragmentation, and energy supply risks remain elevated heading into 2026. These factors introduce non-linear shocks to FX markets, often overriding fundamentals in the short term. Commodity prices, in particular, act as transmission mechanisms into currency markets. Impact on Forex Markets: Heightened uncertainty → safe-haven demand spikes. Commodity swings → AUD, CAD, NOK highly sensitive. Increased headline risk → higher FX volatility and regime shifts.",
-                    impact="high",
+                    title="Geopolitics and commodities",
+                    description="Shocks can dominate short-term price action. Energy and key commodities often spill into AUD, CAD, NOK and broader volatility.",
+                    impact="medium",
                     sentiment="neutral",
-                    source="Geopolitical & Commodity Analysis",
+                    source="",
                     timestamp=datetime.now(timezone.utc).isoformat()
                 )
             ]
@@ -1092,6 +1097,17 @@ class MarketSentimentService:
             result = sentiment.copy()
             if vix_data:
                 result['vix'] = vix_data
+            pairs = result.get('pairs_sentiment')
+            if pairs:
+                enriched = []
+                for p in pairs:
+                    p2 = dict(p)
+                    if 'impulse' not in p2 and p2.get('rsi') is not None:
+                        p2['impulse'] = p2['rsi']
+                    if 'daily_abs_move_pct' not in p2 and p2.get('volatility') is not None:
+                        p2['daily_abs_move_pct'] = p2['volatility']
+                    enriched.append(p2)
+                result['pairs_sentiment'] = enriched
             return result
         
         # Handle MarketSentiment object
@@ -1150,6 +1166,8 @@ class MarketSentimentService:
                     'price_change': p.price_change,
                     'rsi': p.rsi,
                     'volatility': p.volatility,
+                    'impulse': p.rsi,
+                    'daily_abs_move_pct': p.volatility,
                     'support': p.support,
                     'resistance': p.resistance
                 } for p in sentiment.pairs_sentiment
