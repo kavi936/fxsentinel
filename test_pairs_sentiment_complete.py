@@ -40,7 +40,7 @@ def test_backend_calculations():
         checks = {
             'pair': pair.pair is not None and pair.pair in ['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF'],
             'sentiment': pair.sentiment in ['bullish', 'bearish', 'neutral'],
-            'percentage': 15 <= pair.percentage <= 85,
+            'percentage': 0 <= pair.percentage <= 100,
             'price_change': isinstance(pair.price_change, (int, float)),
             'rsi': 0 <= pair.rsi <= 100,
             'volatility': pair.volatility >= 0
@@ -105,7 +105,7 @@ def test_frontend_data_structure(pairs):
         print(f"  Pair Name: {pair_name}")
         print(f"  Daily Change: <span class='pair-change {change_class}'>{change_display}</span>")
         print(f"  Sentiment: {sentiment.capitalize()}")
-        print(f"  Percentage Bar: {percentage}% width")
+        print(f"  Gauge position (0=flat, 100=max bull): {percentage}%")
         print(f"  RSI: {rsi:.0f}")
         print(f"  Volatility: {volatility:.1f}%")
         
@@ -133,7 +133,7 @@ def test_calculation_accuracy():
             'data': {'EURUSD': {'price': 1.10, 'change': 0.0055, 'changePercent': 0.50}},
             'expected': {
                 'sentiment': 'bullish',
-                'percentage_range': (70, 85),
+                'percentage_range': (68, 76),
                 'rsi_range': (70, 100),  # 75 is the lower bound, so include it
                 'volatility_range': (0.45, 0.55)
             }
@@ -143,7 +143,7 @@ def test_calculation_accuracy():
             'data': {'GBPUSD': {'price': 1.27, 'change': -0.00635, 'changePercent': -0.50}},
             'expected': {
                 'sentiment': 'bearish',
-                'percentage_range': (15, 30),
+                'percentage_range': (22, 32),
                 'rsi_range': (0, 25),
                 'volatility_range': (0.45, 0.55)
             }
@@ -300,7 +300,7 @@ def main():
         print("\nFrontend should display:")
         print("  - Pair names (EURUSD, GBPUSD, USDJPY, USDCHF)")
         print("  - Daily Change with +/- sign and color coding")
-        print("  - Sentiment gauge bar (width based on percentage)")
+        print("  - Daily-change gauge (center = flat; length ∝ |%| up to cap)")
         print("  - RSI value (0-100)")
         print("  - Volatility percentage")
     else:

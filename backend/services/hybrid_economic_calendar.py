@@ -16355,7 +16355,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '59B',
                 'forecast': 'N/A',
                 'previous': '50B'
             },
@@ -16425,7 +16425,7 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.6%',
                 'forecast': 'N/A',
                 'previous': '-0.1%'
             },

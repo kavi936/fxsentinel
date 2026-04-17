@@ -11,6 +11,7 @@ import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from 
 import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
+import { getDailyChangeGaugeLayout, DAILY_CHANGE_GAUGE_CAP_PCT } from '../utils/dailyChangeGauge.js';
 
 /** Fallback catalog when API has not yet returned `instruments` (matches backend `tradingview_instruments`). */
 const TICKER_CATEGORY_ORDER = ['forex', 'crypto', 'commodities', 'bonds', 'indices'];
@@ -5303,7 +5304,7 @@ const Overview = () => {
               <div className="header-main">
                 <h2 className="sentiment-title">MARKET SENTIMENT</h2>
                 <InfoIcon 
-                  tooltipText="Market Sentiment Analysis: Our system combines multiple data sources including price action, volatility patterns, and market correlations. We analyze RSI, volatility metrics, and risk appetite indicators to provide a comprehensive view of current market conditions. Sentiment is calculated using proprietary algorithms that process real-time market data."
+                  tooltipText="Combines FX snapshots (daily impulse from today’s move—not classical RSI), VIX and crypto Fear and Greed as risk proxies, and regime gauges. Macro themes are educational primers, not a live feed."
                   position="bottom"
                 />
               </div>
@@ -5778,12 +5779,14 @@ const Overview = () => {
                       </div>
                 
                 <div className="conditions-grid">
-                  {sentiment.market_conditions.map((condition, index) => {
+                  {(sentiment.market_conditions || [])
+                    .filter((c) => c.name !== 'Volatility Environment')
+                    .map((condition, index) => {
                     const pct = condition.percentage != null ? Number(condition.percentage) : 50;
                     const pctClamped = Math.max(0, Math.min(100, pct));
                     const pctDisplay = pctClamped.toFixed(1);
                     return (
-                    <div key={index} className="condition-item">
+                    <div key={condition.name || index} className="condition-item">
                       <div className="condition-label-row">
                         <div className="condition-label">{condition.name}</div>
                         {condition.trend && (
@@ -5794,11 +5797,7 @@ const Overview = () => {
                         )}
                       </div>
                       <div className={`condition-value ${condition.value}`}>
-                        {condition.name === 'Volatility Environment'
-                          ? `${capitalizeSentiment(condition.value)} Volatility (${pctDisplay}%)`
-                          : condition.name === 'Risk Appetite'
-                            ? `${capitalizeSentiment(condition.value)} (${pctDisplay}%)`
-                            : `${capitalizeSentiment(condition.value)} (${pctDisplay}%)`}
+                        {`${capitalizeSentiment(condition.value)} (${pctDisplay}%)`}
                       </div>
                       <div className="condition-bar">
                         <div 
@@ -5817,7 +5816,13 @@ const Overview = () => {
               </div>
               
               <div className="sentiment-breakdown">
-                <h3>Major Pairs Sentiment</h3>
+                <div className="market-sentiment-heading">
+                  <h3 className="market-sentiment-heading__title">Major Pairs Sentiment</h3>
+                  <InfoIcon
+                    tooltipText="Daily impulse (0–100): mapped from today’s percentage move, not Wilder RSI. The bar is centered: it extends left or right by the size of the daily % move (scaled to ±1.15% for full width). Daily % is also shown above."
+                    position="right"
+                  />
+                </div>
                 {sentimentLoading ? (
                   <div className="loading-pairs">Loading pairs sentiment...</div>
                 ) : sentimentError ? (
@@ -5842,8 +5847,7 @@ const Overview = () => {
                         sentiment: pair.sentiment,
                         percentage: pair.percentage,
                         price_change: pair.price_change,
-                        rsi: pair.rsi,
-                        volatility: pair.volatility
+                        impulse: pair.impulse ?? pair.rsi
                       });
                     }
                     
@@ -5851,27 +5855,21 @@ const Overview = () => {
                     const priceChange = (pair.price_change !== undefined && pair.price_change !== null) 
                       ? Number(pair.price_change) 
                       : 0;
-                    const rsi = (pair.rsi !== undefined && pair.rsi !== null) 
-                      ? Number(pair.rsi) 
-                      : 50;
-                    const volatility = (pair.volatility !== undefined && pair.volatility !== null) 
-                      ? Number(pair.volatility) 
-                      : 0;
-                    const percentage = (pair.percentage !== undefined && pair.percentage !== null) 
-                      ? Number(pair.percentage) 
-                      : 50;
+                    const impulse = (pair.impulse !== undefined && pair.impulse !== null)
+                      ? Number(pair.impulse)
+                      : (pair.rsi !== undefined && pair.rsi !== null)
+                        ? Number(pair.rsi)
+                        : 50;
                     const sentimentValue = pair.sentiment || 'neutral';
+                    const gaugeLayout = getDailyChangeGaugeLayout(priceChange);
                     
                     // Warn if values are missing (only in development)
                     if (process.env.NODE_ENV === 'development') {
                       if (pair.price_change === undefined || pair.price_change === null) {
                         console.warn(`⚠️ ${pair.pair} missing price_change, using default: 0`);
                       }
-                      if (pair.rsi === undefined || pair.rsi === null) {
-                        console.warn(`⚠️ ${pair.pair} missing rsi, using default: 50`);
-                      }
-                      if (pair.volatility === undefined || pair.volatility === null) {
-                        console.warn(`⚠️ ${pair.pair} missing volatility, using default: 0`);
+                      if (pair.impulse == null && pair.rsi == null) {
+                        console.warn(`⚠️ ${pair.pair} missing impulse/rsi, using default: 50`);
                       }
                     }
                     
@@ -5886,18 +5884,26 @@ const Overview = () => {
                           </span>
                         </div>
                       </div>
-                      <div className="sentiment-gauge">
+                      <div
+                        className="sentiment-gauge sentiment-gauge--daily-change"
+                        title={`Bar length from center ∝ daily % (full span at ±${DAILY_CHANGE_GAUGE_CAP_PCT.toFixed(2)}%). Actual: ${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(2)}%`}
+                      >
                         <div 
-                          className={`gauge-fill ${sentimentValue}`} 
+                          className={`gauge-fill gauge-fill--from-center ${sentimentValue}`} 
                           style={{
-                            width: `${percentage}%`,
+                            left: `${gaugeLayout.leftPct}%`,
+                            width: `${gaugeLayout.widthPct}%`,
                             background: `linear-gradient(90deg, ${getSentimentColor(sentimentValue)} 0%, ${getSentimentColor(sentimentValue)}80 100%)`
                           }}
                         ></div>
                       </div>
-                      <div className="pair-metrics">
-                        <span className="metric">RSI: {rsi.toFixed(0)}</span>
-                        <span className="metric">Vol: {volatility.toFixed(1)}%</span>
+                      <div className="pair-metrics pair-metrics--impulse-only">
+                        <span
+                          className="metric"
+                          title="Daily impulse (0–100): derived from today’s percentage move, not Wilder RSI."
+                        >
+                          Impulse: {impulse.toFixed(0)}
+                        </span>
                       </div>
                     </div>
                     );
@@ -5907,7 +5913,16 @@ const Overview = () => {
               </div>
               
               <div className="sentiment-factors">
-                <h3>Market Drivers</h3>
+                <div className="market-sentiment-heading">
+                  <h3 className="market-sentiment-heading__title">Macro themes (general)</h3>
+                  <InfoIcon
+                    tooltipText="Short educational themes—not live headlines, today’s calendar, or personalized scans."
+                    position="right"
+                  />
+                </div>
+                <p className="macro-themes-note" style={{ margin: '6px 0 10px', fontSize: '12px', lineHeight: 1.45, color: 'rgba(255,255,255,0.55)' }}>
+                  Educational context—not live headlines or today’s calendar. Macro primer only.
+                </p>
                 <div className="drivers-list">
                   {sentiment.market_drivers.map((driver, index) => (
                     <div key={index} className={`driver-item ${driver.sentiment} impact-${driver.impact}`}>
@@ -5927,7 +5942,7 @@ const Overview = () => {
                           <div className="driver-source">Source: {driver.source}</div>
                         )}
                       </div>
-                      <div className="driver-impact">{driver.impact.charAt(0).toUpperCase() + driver.impact.slice(1)} Impact</div>
+                      <div className="driver-impact">{driver.impact.charAt(0).toUpperCase() + driver.impact.slice(1)} impact</div>
                     </div>
                   ))}
                 </div>

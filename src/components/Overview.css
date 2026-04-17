@@ -7021,7 +7021,36 @@
   margin-bottom: 25px;
 }
 
-.sentiment-breakdown h3 {
+/* Title + InfoIcon row: full-width underline; icon aligned with cap height */
+.market-sentiment-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.market-sentiment-heading__title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.25;
+}
+
+.sentiment-breakdown .market-sentiment-heading .info-icon-container,
+.sentiment-factors .market-sentiment-heading .info-icon-container {
+  margin-left: 0;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.sentiment-breakdown h3:not(.market-sentiment-heading__title) {
   font-size: 14px;
   font-weight: 700;
   color: #ffffff;
@@ -7128,6 +7157,33 @@
   margin-bottom: 8px;
 }
 
+/* Center-zero bar: length ∝ |daily %| (cap in JS); midpoint = flat */
+.sentiment-gauge--daily-change {
+  position: relative;
+}
+
+.sentiment-gauge--daily-change::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.28);
+  transform: translateX(-50%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.sentiment-gauge--daily-change .gauge-fill--from-center {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  transition: left 0.45s cubic-bezier(0.4, 0, 0.2, 1), width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 .gauge-fill {
   height: 100%;
   border-radius: 3px;
@@ -7155,6 +7211,10 @@
   gap: 8px;
 }
 
+.pair-metrics--impulse-only {
+  justify-content: flex-start;
+}
+
 .pair-metrics .metric {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.6);
@@ -7169,7 +7229,7 @@
   margin-bottom: 25px;
 }
 
-.sentiment-factors h3 {
+.sentiment-factors h3:not(.market-sentiment-heading__title) {
   font-size: 14px;
   font-weight: 700;
   color: #ffffff;

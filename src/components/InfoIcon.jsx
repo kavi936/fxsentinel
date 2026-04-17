@@ -61,6 +61,11 @@ const InfoIcon = ({ tooltipText, position = 'top' }) => {
     }
   }, [isVisible, position]);
 
+  const tooltipTransform =
+    position === 'left' || position === 'right'
+      ? 'translateY(-50%)'
+      : 'translateX(-50%)';
+
   return (
     <>
       <div 
@@ -83,7 +88,7 @@ const InfoIcon = ({ tooltipText, position = 'top' }) => {
           style={{
             top: `${tooltipPosition.top}px`,
             left: `${tooltipPosition.left}px`,
-            transform: 'translateX(-50%)',
+            transform: tooltipTransform,
             zIndex: 999999
           }}
         >
