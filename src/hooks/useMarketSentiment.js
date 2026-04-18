@@ -74,7 +74,9 @@ const fallbackSentiment = {
   confidence_score: 0.5,
   data_sources: ['Fallback'],
   is_market_closed: false,
-  market_status: 'open'
+  market_status: 'open',
+  cross_asset_strip: [],
+  rates_snapshot: {}
 };
 
 export const useMarketSentiment = () => {

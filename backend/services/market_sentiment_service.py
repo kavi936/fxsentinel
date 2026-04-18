@@ -9,8 +9,8 @@ import json
 import logging
 import requests
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Any, Optional
-from dataclasses import dataclass, asdict
+from typing import Dict, List, Any, Optional, Tuple
+from dataclasses import dataclass, asdict, field
 import numpy as np
 import pandas as pd
 
@@ -60,6 +60,9 @@ class MarketSentiment:
     data_sources: List[str]
     is_market_closed: bool = False
     market_status: str = "open"  # "open", "closed", "weekend", "holiday"
+    # Tier A: cross-asset + rates from same TradingView quote map as ticker
+    cross_asset_strip: List[Dict[str, Any]] = field(default_factory=list)
+    rates_snapshot: Dict[str, Any] = field(default_factory=dict)
 
 class MarketSentimentService:
     """Main market sentiment calculation service"""
@@ -241,13 +244,11 @@ class MarketSentimentService:
             # Check for daily reset
             self._check_daily_reset()
             
-            # Check market status first
+            # Calendar context only — do not short-circuit on weekends; crypto/commodities/indices
+            # still move and we serve the same live-style snapshot as weekdays.
             market_status = self._check_market_status()
-            
-            # If markets are closed, return market closed sentiment
-            if market_status['is_market_closed']:
-                logger.info(f"Markets are {market_status['market_status']}, returning market closed sentiment")
-                return self._get_market_closed_sentiment()
+            if market_status.get('market_status') == 'weekend':
+                logger.info("Weekend: still computing full sentiment from TradingView (multi-asset).")
             
             # Check if cache is expired or doesn't exist
             if not self.current_sentiment or self._is_cache_expired():
@@ -334,6 +335,8 @@ class MarketSentimentService:
         
         # Calculate confidence score
         confidence_score = self._calculate_confidence_score(market_conditions, pairs_sentiment)
+
+        cross_asset, rates_snap = self._build_tier_a_data(forex_data)
         
         return MarketSentiment(
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -344,9 +347,100 @@ class MarketSentimentService:
             market_outlook=market_outlook,
             confidence_score=confidence_score,
             data_sources=['TradingView', 'News Analysis', 'Technical Indicators'],
-            is_market_closed=market_status['is_market_closed'],
-            market_status=market_status['market_status']
+            # Never mark closed here: same live snapshot Sat/Sun as rest of week (FX 24/5; other assets move).
+            is_market_closed=False,
+            market_status=market_status['market_status'],
+            cross_asset_strip=cross_asset,
+            rates_snapshot=rates_snap,
         )
+    
+    def _build_tier_a_data(self, quotes: Optional[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+        """Cross-asset daily % moves + bond yields from merged TradingView quotes (Tier A)."""
+        try:
+            from services.tradingview_instruments import instrument_by_id
+            by_id = instrument_by_id()
+        except Exception:
+            by_id = {}
+
+        def _f(x: Any) -> Optional[float]:
+            if x is None:
+                return None
+            try:
+                return float(x)
+            except (TypeError, ValueError):
+                return None
+
+        def _strip_item(inst_id: str) -> Dict[str, Any]:
+            inst = by_id.get(inst_id, {})
+            label = inst.get("label", inst_id)
+            dec = int(inst.get("decimals", 2))
+            row = (quotes or {}).get(inst_id)
+            if not row:
+                return {"id": inst_id, "label": label, "change_percent": None, "decimals": dec, "missing": True}
+            return {
+                "id": inst_id,
+                "label": label,
+                "change_percent": _f(row.get("changePercent")),
+                "decimals": dec,
+                "missing": False,
+                "category": row.get("category", ""),
+            }
+
+        cross_ids = ("SPX", "IXIC", "BTCUSDT", "GOLD", "USOIL")
+        cross_asset = [_strip_item(i) for i in cross_ids]
+
+        def _yield_bond(inst_id: str) -> Dict[str, Any]:
+            inst = by_id.get(inst_id, {})
+            label = inst.get("label", inst_id)
+            dec = int(inst.get("decimals", 3))
+            row = (quotes or {}).get(inst_id)
+            if not row:
+                return {"id": inst_id, "label": label, "yield": None, "change_percent": None, "decimals": dec, "missing": True}
+            return {
+                "id": inst_id,
+                "label": label,
+                "yield": _f(row.get("price")),
+                "change_percent": _f(row.get("changePercent")),
+                "decimals": dec,
+                "missing": False,
+            }
+
+        us10 = _yield_bond("US10Y")
+        de10 = _yield_bond("DE10Y")
+        us02 = _yield_bond("US02Y")
+
+        us10_ch = us10.get("change_percent")
+        de10_ch = de10.get("change_percent")
+        spread_diff: Optional[float] = None
+        if us10_ch is not None and de10_ch is not None:
+            spread_diff = float(us10_ch) - float(de10_ch)
+
+        us02_ch = us02.get("change_percent")
+        curve_hint: Optional[str] = None
+        curve_detail = ""
+        if us02_ch is not None and us10_ch is not None:
+            shift = float(us10_ch) - float(us02_ch)
+            if shift > 0.03:
+                curve_hint = "steepening"
+                curve_detail = "Long-end yields up vs front (session move)."
+            elif shift < -0.03:
+                curve_hint = "flattening"
+                curve_detail = "Front yields up vs long end (session move)."
+            else:
+                curve_hint = "neutral"
+                curve_detail = "2Y vs 10Y moves broadly aligned."
+
+        rates_snapshot: Dict[str, Any] = {
+            "yields": [us10, de10],
+            "us_minus_de_change_percent": spread_diff,
+            "yield_curve_us": {
+                "change_2y": us02_ch,
+                "change_10y": us10_ch,
+                "hint": curve_hint,
+                "hint_detail": curve_detail,
+            },
+        }
+        return cross_asset, rates_snapshot
     
     def _calculate_market_conditions(self, forex_data: Optional[Dict] = None, vix_data: Optional[Dict[str, float]] = None) -> List[MarketCondition]:
         """Calculate market conditions (volatility, risk appetite)
@@ -1108,6 +1202,10 @@ class MarketSentimentService:
                         p2['daily_abs_move_pct'] = p2['volatility']
                     enriched.append(p2)
                 result['pairs_sentiment'] = enriched
+            if 'cross_asset_strip' not in result:
+                result['cross_asset_strip'] = []
+            if 'rates_snapshot' not in result:
+                result['rates_snapshot'] = {}
             return result
         
         # Handle MarketSentiment object
@@ -1188,7 +1286,9 @@ class MarketSentimentService:
             'is_market_closed': sentiment.is_market_closed,
             'market_status': sentiment.market_status,
             'vix': vix_data,  # Add VIX as separate field for easier access
-            'fng': None  # Filled in get_market_sentiment() from _fetch_fear_greed_index()
+            'fng': None,  # Filled in get_market_sentiment() from _fetch_fear_greed_index()
+            'cross_asset_strip': getattr(sentiment, 'cross_asset_strip', None) or [],
+            'rates_snapshot': getattr(sentiment, 'rates_snapshot', None) or {},
         }
     
     def _get_default_market_conditions(self) -> List[MarketCondition]:
@@ -1228,11 +1328,13 @@ class MarketSentimentService:
             'data_sources': ['Fallback'],
             'is_market_closed': False,
             'market_status': 'open',
-            'fng': None
+            'fng': None,
+            'cross_asset_strip': [],
+            'rates_snapshot': {},
         }
     
     def _get_market_closed_sentiment(self) -> Dict[str, Any]:
-        """Get sentiment data when markets are closed"""
+        """Legacy stub when FX was treated as fully closed (e.g. weekends). Main API no longer uses this for weekends."""
         market_status = self._check_market_status()
         
         return {
@@ -1310,7 +1412,9 @@ class MarketSentimentService:
             'data_sources': ['System Status'],
             'is_market_closed': True,
             'market_status': market_status['market_status'],
-            'fng': self._fetch_fear_greed_index()
+            'fng': self._fetch_fear_greed_index(),
+            'cross_asset_strip': [],
+            'rates_snapshot': {},
         }
 
 # Global instance

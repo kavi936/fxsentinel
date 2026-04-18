@@ -7016,6 +7016,146 @@
   text-shadow: 0 2px 4px rgba(255, 71, 87, 0.3);
 }
 
+/* Tier A — cross-asset strip + yields (market sentiment card) */
+.tier-a-block {
+  margin-bottom: 18px;
+}
+
+.tier-a-block-heading.market-sentiment-heading {
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+}
+
+.tier-a-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tier-a-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  min-width: 88px;
+  flex: 1 1 88px;
+  max-width: 150px;
+}
+
+.tier-a-chip-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.tier-a-chip-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.tier-a-val--pos {
+  color: #00ff88;
+}
+
+.tier-a-val--neg {
+  color: #ff4757;
+}
+
+.tier-a-val--na {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.tier-a-yield-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tier-a-yield-card {
+  flex: 1 1 140px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tier-a-yield-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 4px;
+}
+
+.tier-a-yield-level {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.tier-a-yield-chg {
+  font-size: 12px;
+  margin-top: 4px;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.tier-a-subline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.tier-a-subline-label {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.tier-a-subline-val {
+  font-weight: 700;
+  font-family: 'Space Grotesk', monospace;
+}
+
+.tier-a-curve-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.tier-a-curve-badge {
+  display: inline-block;
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 165, 0, 0.15);
+  border: 1px solid rgba(255, 165, 0, 0.3);
+  color: #ffa500;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.tier-a-curve-text {
+  display: inline;
+}
+
+.tier-a-curve-paren {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 10px;
+}
+
 /* Enhanced Sentiment Breakdown */
 .sentiment-breakdown {
   margin-bottom: 25px;
