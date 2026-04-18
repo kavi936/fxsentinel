@@ -45,7 +45,7 @@ This document consolidates analysis of the Market Sentiment card codebase, how l
 | **Pair “volatility”** | Implemented as **abs(daily change %)**, not annualized vol despite comments. |
 | **Market drivers** | `_get_market_drivers` returns **static boilerplate** paragraphs, not live news or calendar—misleading if presented as current drivers. |
 | **Confidence score** | Logic rewards `len(conditions) >= 3`, but only **two** market conditions are produced—branch never helps. |
-| **Forex “open/closed”** | Weekends handled; weekday hour check uses `0 <= hour <= 23` so the “closed by hour” branch is effectively dead for FX. |
+| **Forex “open/closed”** | Weekends no longer gate the API; weekday hour check `0 <= hour <= 23` still makes the “closed by hour” branch dead. |
 | **Security** | Alpha Vantage path historically included env/fallback key patterns—**keys should be env-only**, not committed. |
 | **API handler** | `importlib.reload(services.market_sentiment_service)` on every GET is unusual: extra cost and reload side effects. |
 | **`useMarketSentiment.js`** | Verbose `console.log` in production paths; `useEffect` + `fetchSentiment` both touch `loading`—redundant edge cases. |
@@ -177,6 +177,8 @@ Backend: extend `market_sentiment_service` (and API JSON) with structured fields
 - **Volatility Environment row:** Removed from the Market Conditions grid; VIX stays only under **Fear Indicators**. The API may still include the condition for outlook / parsing / other consumers.
 - **Daily impulse:** UI shows **Impulse** beside the gauge; **Daily Change** above remains the source for today’s % move. API still includes `impulse` and `daily_abs_move_pct` (aliases of `rsi` / `volatility`) for consumers.
 - **Major-pair gauge:** Bar is **center-zero** (midline = flat); length scales with **absolute daily %**, capped at **±1.15%** to the track edge (`getDailyChangeGaugeLayout` / backend `percentage` = 50 + *t*×50 with same cap).
+- **Tier A (API + UI):** **`cross_asset_strip`** — SPX, Nasdaq, BTC, Gold, WTI daily % from merged TradingView quotes; **`rates_snapshot`** — US10Y & DE10Y levels + session Δ, **US10Y Δ − DE10Y Δ**, and a simple **US 2Y vs 10Y** steepening / flattening / neutral hint (`_build_tier_a_data` in `market_sentiment_service.py`, rendered in `Overview.jsx`).
+- **Weekends:** `get_market_sentiment` no longer returns the stub `_get_market_closed_sentiment()` on weekends; it runs the same **full calculation** as weekdays. **`is_market_closed`** is always **`false`** for that path; **`market_status`** may still be **`weekend`** for calendar context.
 
 ---
 

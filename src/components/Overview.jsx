@@ -351,6 +351,17 @@ const Overview = () => {
     return value.charAt(0).toUpperCase() + value.slice(1);
   };
 
+  const formatTierPctChange = (v) => {
+    if (v === null || v === undefined || Number.isNaN(Number(v))) return '—';
+    const n = Number(v);
+    return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+  };
+
+  const tierDeltaColorClass = (v) => {
+    if (v === null || v === undefined || Number.isNaN(Number(v))) return 'tier-a-val--na';
+    return Number(v) >= 0 ? 'tier-a-val--pos' : 'tier-a-val--neg';
+  };
+
   // Improved parsing helper functions for AI analysis metrics
   const parseRiskLevel = (riskLevel) => {
     if (!riskLevel) return { value: 'Moderate', class: 'neutral' };
@@ -5323,22 +5334,7 @@ const Overview = () => {
             </div>
             <div className="sentiment-content">
               <React.Fragment>
-                {sentiment.is_market_closed ? (
-                  <div className="market-closed-state">
-                    <div className="market-closed-icon">🔒</div>
-                    <div className="market-closed-title">Markets Closed</div>
-                    <div className="market-closed-message">
-                      {sentiment.market_status === 'weekend' 
-                        ? 'Markets are closed for the weekend. Live sentiment analysis will resume on Monday.'
-                        : 'Markets are currently closed. Live sentiment analysis will resume when markets reopen.'
-                      }
-                    </div>
-                    <div className="market-closed-status">
-                      <span className="status-badge">{sentiment.market_status.toUpperCase()}</span>
-                    </div>
-                  </div>
-                ) : (
-                  <React.Fragment>
+                    {/* Full-card "markets closed" overlay removed — crypto/commodities/indices/futures still move on weekends */}
                     {/* Fear Indicators Section: VIX + Crypto Fear & Greed */}
                         <div className="vix-section">
                           <div className="vix-header">
@@ -5814,6 +5810,76 @@ const Overview = () => {
                   })}
                 </div>
               </div>
+
+              {sentiment.cross_asset_strip && sentiment.cross_asset_strip.length > 0 && (
+                <div className="tier-a-block tier-a-cross-asset">
+                  <div className="market-sentiment-heading tier-a-block-heading">
+                    <h3 className="market-sentiment-heading__title">Cross-asset (session)</h3>
+                    <InfoIcon
+                      tooltipText="Daily % change from the same TradingView feed as the ticker—equities, crypto, gold, WTI. Macro risk context for FX, not trade signals."
+                      position="right"
+                    />
+                  </div>
+                  <div className="tier-a-chip-row">
+                    {sentiment.cross_asset_strip.map((item) => (
+                      <div key={item.id} className="tier-a-chip">
+                        <span className="tier-a-chip-label">{item.label}</span>
+                        <span className={`tier-a-chip-value ${tierDeltaColorClass(item.change_percent)}`}>
+                          {formatTierPctChange(item.change_percent)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {sentiment.rates_snapshot && sentiment.rates_snapshot.yields && sentiment.rates_snapshot.yields.length > 0 && (
+                <div className="tier-a-block tier-a-rates">
+                  <div className="market-sentiment-heading tier-a-block-heading">
+                    <h3 className="market-sentiment-heading__title">Yields & curve (US / DE)</h3>
+                    <InfoIcon
+                      tooltipText="Sovereign yields (%), session change. US 10Y vs DE 10Y change spread hints at relative rate pressure. US 2Y vs 10Y move is a simple steepening vs flattening read."
+                      position="right"
+                    />
+                  </div>
+                  <div className="tier-a-yield-row">
+                    {sentiment.rates_snapshot.yields.map((y) => (
+                      <div key={y.id} className="tier-a-yield-card">
+                        <div className="tier-a-yield-label">{y.label}</div>
+                        <div className="tier-a-yield-level">
+                          {y.yield != null && !y.missing ? `${Number(y.yield).toFixed(y.decimals ?? 3)}%` : '—'}
+                        </div>
+                        <div className={`tier-a-yield-chg ${tierDeltaColorClass(y.change_percent)}`}>
+                          {formatTierPctChange(y.change_percent)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {sentiment.rates_snapshot.us_minus_de_change_percent != null && (
+                    <div className="tier-a-subline">
+                      <span className="tier-a-subline-label">US10Y Δ − DE10Y Δ</span>
+                      <span className={`tier-a-subline-val ${tierDeltaColorClass(sentiment.rates_snapshot.us_minus_de_change_percent)}`}>
+                        {formatTierPctChange(sentiment.rates_snapshot.us_minus_de_change_percent)}
+                      </span>
+                    </div>
+                  )}
+                  {sentiment.rates_snapshot.yield_curve_us && sentiment.rates_snapshot.yield_curve_us.hint && (
+                    <div className="tier-a-curve-hint">
+                      <span className="tier-a-curve-badge">{sentiment.rates_snapshot.yield_curve_us.hint}</span>
+                      <span className="tier-a-curve-text">
+                        {sentiment.rates_snapshot.yield_curve_us.hint_detail || ''}
+                        {sentiment.rates_snapshot.yield_curve_us.change_2y != null &&
+                          sentiment.rates_snapshot.yield_curve_us.change_10y != null && (
+                          <span className="tier-a-curve-paren">
+                            {' '}(2Y {formatTierPctChange(sentiment.rates_snapshot.yield_curve_us.change_2y)}, 10Y{' '}
+                            {formatTierPctChange(sentiment.rates_snapshot.yield_curve_us.change_10y)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
               
               <div className="sentiment-breakdown">
                 <div className="market-sentiment-heading">
@@ -5961,8 +6027,6 @@ const Overview = () => {
                   <button className="action-btn secondary">Set Alerts</button>
                 </div>
               </div> */}
-                  </React.Fragment>
-                )}
               </React.Fragment>
               </div>
             </div>
