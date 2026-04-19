@@ -1583,10 +1583,23 @@ class GPTAIAnalyzer:
                 None
             )
             if risk_appetite_condition:
+                detail_raw = risk_appetite_condition.get('detail', '') or ''
+                safe_havens = ''
+                risk_fx = ''
+                for part in detail_raw.split('·'):
+                    p = part.strip()
+                    pl = p.lower()
+                    if pl.startswith('safe havens:'):
+                        safe_havens = p.split(':', 1)[1].strip()
+                    elif pl.startswith('risk fx:'):
+                        risk_fx = p.split(':', 1)[1].strip()
+                if not safe_havens and detail_raw:
+                    safe_havens = detail_raw.replace('Safe Havens: ', '').replace('Safe havens: ', '').split('·')[0].strip()
                 risk_appetite_data = {
                     'level': risk_appetite_condition.get('value'),  # 'low', 'medium', 'high'
                     'percentage': risk_appetite_condition.get('percentage'),  # 25, 50, 75
-                    'safe_havens': risk_appetite_condition.get('detail', '').replace('Safe Havens: ', ''),
+                    'safe_havens': safe_havens,
+                    'risk_fx': risk_fx,
                     'trend': risk_appetite_condition.get('trend', 'stable')
                 }
             
@@ -2069,10 +2082,13 @@ class GPTAIAnalyzer:
         # Risk Appetite
         if sentiment_data and sentiment_data.get('risk_appetite'):
             risk = sentiment_data['risk_appetite']
-            additional_context_lines.append(
+            rline = (
                 f"- Risk Appetite: {risk.get('level', 'unknown').upper()} "
-                f"({risk.get('percentage', 0)}%) - Safe Havens: {risk.get('safe_havens', 'None')}"
+                f"({risk.get('percentage', 0)}%) — Safe havens: {risk.get('safe_havens', 'None')}"
             )
+            if risk.get('risk_fx'):
+                rline += f" · Risk FX: {risk.get('risk_fx')}"
+            additional_context_lines.append(rline)
         
         # Pairs Sentiment (Top 3 most important pairs) - Contextual, not deterministic
         if pairs_sentiment:

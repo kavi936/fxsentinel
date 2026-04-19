@@ -312,6 +312,11 @@ class MarketSentimentService:
         
         # Get market conditions (pass forex_data and vix_data to avoid fetching again)
         market_conditions = self._calculate_market_conditions(forex_data, vix_data)
+
+        # Tier A strip (same quote map as ticker) — used for cross-asset risk bar under Market Conditions
+        cross_asset, rates_snap = self._build_tier_a_data(forex_data)
+        cross_asset_condition = self._calculate_cross_asset_risk_condition(cross_asset)
+        market_conditions = list(market_conditions) + [cross_asset_condition]
         
         # Get pairs sentiment (pass forex_data to avoid fetching again)
         pairs_sentiment = self._calculate_pairs_sentiment(forex_data)
@@ -335,8 +340,6 @@ class MarketSentimentService:
         
         # Calculate confidence score
         confidence_score = self._calculate_confidence_score(market_conditions, pairs_sentiment)
-
-        cross_asset, rates_snap = self._build_tier_a_data(forex_data)
         
         return MarketSentiment(
             timestamp=datetime.now(timezone.utc).isoformat(),
@@ -441,6 +444,87 @@ class MarketSentimentService:
             },
         }
         return cross_asset, rates_snapshot
+
+    def _calculate_cross_asset_risk_condition(self, cross_strip: List[Dict[str, Any]]) -> Optional[MarketCondition]:
+        """Single bar: risk-on vs risk-off from Tier A strip (SPX, Nasdaq, BTC, WTI, Gold).
+
+        Gold is treated as a haven tilt (up = more risk-off) so the bar does not double-count
+        equity strength alone. Uses the same session % changes as the cross-asset row below.
+        """
+        EPS = 0.02  # ignore noise below ~2 bps for direction counts
+        ABBR = {
+            "SPX": "SPX",
+            "IXIC": "Nasdaq",
+            "BTCUSDT": "BTC",
+            "GOLD": "Gold",
+            "USOIL": "WTI",
+        }
+
+        contributions: List[float] = []
+        by_id: Dict[str, float] = {}
+        for item in cross_strip or []:
+            inst_id = item.get("id")
+            if not inst_id or item.get("missing"):
+                continue
+            ch = item.get("change_percent")
+            if ch is None:
+                continue
+            try:
+                chf = float(ch)
+            except (TypeError, ValueError):
+                continue
+            by_id[inst_id] = chf
+            mag = min(1.0, abs(chf) / 1.5)  # cap so one huge candle does not dominate
+            if inst_id == "GOLD":
+                # Gold bid often coincides with fear / diversification — counts against "risk-on" score
+                contributions.append(-np.sign(chf) * mag)
+            else:
+                contributions.append(np.sign(chf) * mag)
+
+        if not contributions:
+            return MarketCondition(
+                name="Cross-asset risk",
+                value="medium",
+                percentage=50.0,
+                detail="Cross-asset: no live moves (same feed as ticker)",
+                trend="stable",
+            )
+
+        mean_c = float(np.mean(contributions))
+        percentage = float(np.clip((mean_c + 1.0) / 2.0 * 100.0, 0.0, 100.0))
+
+        if percentage >= 66.0:
+            level = "high"
+        elif percentage >= 33.0:
+            level = "medium"
+        else:
+            level = "low"
+
+        # Compact tape summary for the subtitle line
+        risk_assets = ("SPX", "IXIC", "BTCUSDT", "USOIL")
+        up_n = sum(1 for rid in risk_assets if by_id.get(rid) is not None and by_id[rid] > EPS)
+        dn_n = sum(1 for rid in risk_assets if by_id.get(rid) is not None and by_id[rid] < -EPS)
+        gold_ch = by_id.get("GOLD")
+        gold_note = ""
+        if gold_ch is not None:
+            if gold_ch > EPS:
+                gold_note = "Gold ↑ (haven)"
+            elif gold_ch < -EPS:
+                gold_note = "Gold ↓"
+            else:
+                gold_note = "Gold flat"
+
+        detail = f"Tape {up_n}↑ {dn_n}↓ vs risk (ex-Gold)"
+        if gold_note:
+            detail = f"{detail} · {gold_note}"
+
+        return MarketCondition(
+            name="Cross-asset risk",
+            value=level,
+            percentage=percentage,
+            detail=detail,
+            trend="stable",
+        )
     
     def _calculate_market_conditions(self, forex_data: Optional[Dict] = None, vix_data: Optional[Dict[str, float]] = None) -> List[MarketCondition]:
         """Calculate market conditions (volatility, risk appetite)
@@ -480,7 +564,10 @@ class MarketSentimentService:
                     name="Risk Appetite",
                     value=risk_appetite['level'],
                     percentage=risk_appetite['percentage'],
-                    detail=f"Safe Havens: {risk_appetite['safe_havens']}",
+                    detail=(
+                        f"Safe havens: {risk_appetite['safe_havens']} · "
+                        f"Risk FX: {risk_appetite['risk_fx']}"
+                    ),
                     trend=risk_appetite['trend']
                 )
             ]
@@ -801,6 +888,39 @@ class MarketSentimentService:
             logger.error(f"Error calculating volatility: {e}")
             return {'level': 'medium', 'percentage': 50, 'vix': 15.0, 'change': 0.0, 'trend': 'stable'}
     
+    def _quote_change_percent(self, forex_data: Dict[str, Any], pair: str) -> Optional[float]:
+        """Daily % change for a pair from TradingView row (changePercent or change/price)."""
+        if not forex_data or pair not in forex_data:
+            return None
+        row = forex_data[pair]
+        try:
+            if "changePercent" in row and row["changePercent"] is not None:
+                return float(row["changePercent"])
+            if "change" in row and "price" in row:
+                price = float(row["price"])
+                if price != 0:
+                    return (float(row["change"]) / price) * 100.0
+        except (TypeError, ValueError, KeyError):
+            return None
+        return None
+
+    def _risk_fx_summary(self, forex_data: Optional[Dict[str, Any]]) -> str:
+        """Which commodity-beta G10s look bid vs USD from ticker pairs (AUDUSD, NZDUSD, USDCAD)."""
+        if not forex_data:
+            return "—"
+        thr = 0.05
+        tags: List[str] = []
+        ch = self._quote_change_percent(forex_data, "AUDUSD")
+        if ch is not None and ch > thr:
+            tags.append("AUD")
+        ch = self._quote_change_percent(forex_data, "NZDUSD")
+        if ch is not None and ch > thr:
+            tags.append("NZD")
+        ch = self._quote_change_percent(forex_data, "USDCAD")
+        if ch is not None and ch < -thr:
+            tags.append("CAD")
+        return ", ".join(sorted(set(tags))) if tags else "—"
+
     def _calculate_risk_appetite(self, forex_data: Dict) -> Dict[str, Any]:
         """Calculate risk appetite based on daily percentage movement of safe haven currencies"""
         try:
@@ -882,7 +1002,13 @@ class MarketSentimentService:
             
             if not safe_haven_percentages:
                 logger.warning("⚠️ No safe haven percentage data available, using default")
-                return {'level': 'medium', 'percentage': 50, 'safe_havens': 'JPY, CHF', 'trend': 'stable'}
+                return {
+                    'level': 'medium',
+                    'percentage': 50,
+                    'safe_havens': 'JPY, CHF',
+                    'risk_fx': self._risk_fx_summary(forex_data),
+                    'trend': 'stable',
+                }
             
             # Calculate average daily percentage movement of safe havens
             avg_safe_haven_movement = np.mean(safe_haven_percentages)
@@ -908,11 +1034,13 @@ class MarketSentimentService:
             if level == 'high' and not active_safe_havens:
                 safe_havens_str = 'None'
             logger.info(f"✅ Risk Appetite: {level.upper()} ({percentage:.1f}%) - Safe haven movement: {avg_safe_haven_movement:.4f}%")
-            
+
+            risk_fx_str = self._risk_fx_summary(forex_data)
             result = {
                 'level': level,
                 'percentage': percentage,
                 'safe_havens': safe_havens_str if safe_havens_str else 'JPY, CHF',
+                'risk_fx': risk_fx_str,
                 'trend': 'stable'
             }
             logger.debug(f"🔍 DEBUG: Risk appetite result: {result}")
@@ -922,7 +1050,13 @@ class MarketSentimentService:
             logger.error(f"❌ Error calculating risk appetite: {e}")
             import traceback
             traceback.print_exc()
-            return {'level': 'medium', 'percentage': 50, 'safe_havens': 'JPY, CHF', 'trend': 'stable'}
+            return {
+                'level': 'medium',
+                'percentage': 50,
+                'safe_havens': 'JPY, CHF',
+                'risk_fx': self._risk_fx_summary(forex_data) if forex_data else '—',
+                'trend': 'stable',
+            }
     
     def _calculate_pairs_sentiment(self, forex_data: Optional[Dict] = None) -> List[PairSentiment]:
         """Calculate sentiment for individual currency pairs
@@ -1295,7 +1429,20 @@ class MarketSentimentService:
         """Get default market conditions when data is unavailable"""
         return [
             MarketCondition("Volatility Environment", "medium", 50, "VIX: 15.0 (+0.0)", "stable"),
-            MarketCondition("Risk Appetite", "medium", 50, "Safe Havens: JPY, CHF", "stable")
+            MarketCondition(
+                "Risk Appetite",
+                "medium",
+                50,
+                "Safe havens: JPY, CHF · Risk FX: —",
+                "stable",
+            ),
+            MarketCondition(
+                "Cross-asset risk",
+                "medium",
+                50,
+                "Cross-asset: no snapshot",
+                "stable",
+            ),
         ]
     
     def _get_default_pairs_sentiment(self) -> List[PairSentiment]:
@@ -1314,7 +1461,20 @@ class MarketSentimentService:
             'trading_day': datetime.now(timezone.utc).strftime('%Y-%m-%d'),
             'market_conditions': [
                 {'name': 'Volatility Environment', 'value': 'medium', 'percentage': 50, 'detail': 'VIX: 15.0 (+0.0)', 'trend': 'stable'},
-                {'name': 'Risk Appetite', 'value': 'medium', 'percentage': 50, 'detail': 'Safe Havens: JPY, CHF', 'trend': 'stable'}
+                {
+                    'name': 'Risk Appetite',
+                    'value': 'medium',
+                    'percentage': 50,
+                    'detail': 'Safe havens: JPY, CHF · Risk FX: —',
+                    'trend': 'stable',
+                },
+                {
+                    'name': 'Cross-asset risk',
+                    'value': 'medium',
+                    'percentage': 50,
+                    'detail': 'Cross-asset: no snapshot',
+                    'trend': 'stable',
+                },
             ],
             'pairs_sentiment': [
                 {'pair': 'EURUSD', 'sentiment': 'neutral', 'percentage': 50, 'price_change': 0.0, 'rsi': 50.0, 'volatility': 10.0},

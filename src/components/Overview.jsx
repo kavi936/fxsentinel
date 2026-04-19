@@ -5784,7 +5784,27 @@ const Overview = () => {
                     return (
                     <div key={condition.name || index} className="condition-item">
                       <div className="condition-label-row">
-                        <div className="condition-label">{condition.name}</div>
+                        <div
+                          className={`condition-label ${
+                            condition.name === 'Risk Appetite' || condition.name === 'Cross-asset risk'
+                              ? 'condition-label--with-info'
+                              : ''
+                          }`}
+                        >
+                          <span>{condition.name}</span>
+                          {condition.name === 'Risk Appetite' && (
+                            <InfoIcon
+                              tooltipText="Bar level uses safe-haven (JPY/CHF) stress in G10 pairs. The line names who looks bid among havens and among commodity FX (AUD, NZD, CAD) vs USD from the same feed as the ticker—not a full macro model."
+                              position="right"
+                            />
+                          )}
+                          {condition.name === 'Cross-asset risk' && (
+                            <InfoIcon
+                              tooltipText="Session % moves from SPX, Nasdaq, BTC, WTI; gold up tilts toward haven demand so it does not purely track equities. Same inputs as Cross-asset (session) below."
+                              position="right"
+                            />
+                          )}
+                        </div>
                         {condition.trend && (
                           <span className={`trend-indicator trend-${condition.trend}`}>
                             {condition.trend === 'increasing' ? '↑' : 

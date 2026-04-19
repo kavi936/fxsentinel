@@ -48,23 +48,30 @@ def test_api_endpoint(base_url="http://localhost:5000"):
                 print(f"\n   ✅ Risk Appetite found!")
                 print(f"      Level: {condition['value']}")
                 print(f"      Percentage: {condition['percentage']}%")
-                print(f"      Safe Havens: {condition['detail']}")
+                print(f"      Detail: {condition['detail']}")
                 
                 # Validate the values
                 valid_levels = ['low', 'medium', 'high']
-                valid_percentages = [25, 50, 75]
                 
                 if condition['value'] not in valid_levels:
                     print(f"      ⚠️ Warning: Invalid level '{condition['value']}'")
                     return False
                 
-                if condition['percentage'] not in valid_percentages:
+                try:
+                    pct = float(condition['percentage'])
+                    if pct < 0 or pct > 100:
+                        print(f"      ⚠️ Warning: Percentage out of range '{condition['percentage']}'")
+                        return False
+                except (TypeError, ValueError):
                     print(f"      ⚠️ Warning: Invalid percentage '{condition['percentage']}'")
                     return False
                 
-                # Check if detail contains safe havens info
-                if 'Safe Havens:' not in condition['detail']:
-                    print(f"      ⚠️ Warning: Detail doesn't contain 'Safe Havens:'")
+                # Check if detail contains safe havens + risk FX labels
+                if 'safe havens:' not in condition['detail'].lower():
+                    print(f"      ⚠️ Warning: Detail doesn't contain 'Safe havens:'")
+                    return False
+                if 'risk fx:' not in condition['detail'].lower():
+                    print(f"      ⚠️ Warning: Detail doesn't contain 'Risk FX:'")
                     return False
         
         if not risk_appetite_found:
@@ -124,7 +131,7 @@ def test_frontend_data_structure():
     print("   - condition.name === 'Risk Appetite'")
     print("   - condition.value (capitalized)")
     print("   - condition.percentage (for bar width)")
-    print("   - condition.detail (shows 'Safe Havens: ...')")
+    print("   - condition.detail (shows 'Safe havens: ... · Risk FX: ...')")
     
     return True
 
