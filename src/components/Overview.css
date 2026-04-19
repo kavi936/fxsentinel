@@ -6795,6 +6795,12 @@
   letter-spacing: 0.5px;
 }
 
+.condition-label.condition-label--with-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .trend-indicator {
   font-size: 14px;
   font-weight: 700;

@@ -16,14 +16,14 @@ const fallbackSentiment = {
       name: 'Risk Appetite',
       value: 'medium',
       percentage: 50,
-      detail: 'Safe Havens: JPY, CHF',
+      detail: 'Safe havens: JPY, CHF · Risk FX: —',
       trend: 'stable'
     },
     {
-      name: 'Market Correlation',
+      name: 'Cross-asset risk',
       value: 'medium',
       percentage: 50,
-      detail: 'Pairs moving independently',
+      detail: 'Cross-asset: no snapshot',
       trend: 'stable'
     }
   ],
