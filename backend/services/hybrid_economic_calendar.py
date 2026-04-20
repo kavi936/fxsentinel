@@ -16541,7 +16541,7 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '698M',
                 'forecast': '175M',
                 'previous': '-257M'
             },
@@ -16551,7 +16551,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': 'N/A',
                 'previous': '0.8%'
             },
@@ -16561,7 +16561,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.00%',
                 'forecast': '3.00%',
                 'previous': '3.00%'
             },
@@ -16571,7 +16571,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.50%',
                 'forecast': '3.50%',
                 'previous': '3.50%'
             },
@@ -16583,9 +16583,9 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': '-0.4%',
-                'previous': '1.7%'
+                'previous': '2.0%'
             },
             {
                 'title': 'German PPI m/m',
@@ -16593,7 +16593,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.5%',
                 'forecast': '1.4%',
                 'previous': '-0.5%'
             },
