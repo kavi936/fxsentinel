@@ -16775,7 +16775,7 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '54.8K',
                 'forecast': 'N/A',
                 'previous': '39.3K'
             },
@@ -16785,9 +16785,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.9%',
                 'forecast': '1.3%',
-                'previous': '0.5%'
+                'previous': '0.7%'
             },
             {
                 'title': 'Retail Sales m/m',
@@ -16795,9 +16795,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.4%',
-                'previous': '0.6%'
+                'previous': '0.7%'
             },
             {
                 'title': 'Fed Chair-Designate Warsh Testifies',
