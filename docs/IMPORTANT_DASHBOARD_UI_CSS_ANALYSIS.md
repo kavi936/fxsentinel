@@ -489,3 +489,107 @@ A strong dashboard balances brand consistency and functional clarity so users ca
 - New visual styles must reuse existing tokens and component primitives.
 - Any new chart must justify chart type selection based on data purpose.
 - PRs should include checks for readability, consistency, and interaction completeness.
+
+## Designer-First Approach Playbook (How We Should Execute)
+
+### Why this approach
+Trying to "improve everything" in one pass usually creates inconsistent UI and fragile code. A designer-led process starts with decision clarity, then structure, then visual polish, and finally implementation quality gates.
+
+### Step 1: Define Outcomes Before Visuals
+- Decide what each tab must help users do:
+  - `overview`: quick market state understanding
+  - `economies`: economy-level comparison and drill-down decisions
+- Define measurable goals:
+  - faster scan time
+  - clearer KPI priority
+  - fewer ambiguous interactions
+- Set success metrics before touching styling.
+
+### Step 2: Audit Current Experience With Evidence
+- Capture key states for both tabs:
+  - default
+  - loading
+  - empty
+  - error
+  - dense-data states
+- Mark friction points:
+  - weak hierarchy
+  - inconsistent spacing/typography
+  - missing interaction feedback
+- Rank issues by impact:
+  - decision-blocking issues first
+  - cosmetic issues second
+
+### Step 3: Define Information Hierarchy
+- For each tab, limit primary KPIs to what drives decisions (avoid overload).
+- Place highest-value insight in primary scan regions (top/top-left on desktop).
+- Group related metrics into clear sections with consistent section headers.
+- Demote or remove low-value cards that do not support a real user decision.
+
+### Step 4: Build Design System Lite (Before Redesign)
+- Lock token foundations:
+  - color roles
+  - spacing scale
+  - typography scale
+  - radius/shadow scale
+- Lock reusable UI primitives:
+  - card
+  - KPI tile
+  - section header
+  - badge/chip
+  - button/input/filter row
+  - tooltip
+- Keep typography strict:
+  - max two fonts
+  - consistent size/weight hierarchy
+
+### Step 5: Wireframe Structure First
+- Create low-fidelity layout plans for desktop and mobile.
+- Validate scan path and grouping before applying branding polish.
+- Confirm that each section answers:
+  - what this is
+  - why it matters
+  - what action users can take
+
+### Step 6: Design Interaction States Explicitly
+- Define all states for every interactive element:
+  - hover
+  - focus
+  - active
+  - disabled
+  - loading
+  - error
+- Define drill-down and filter behavior for summary-to-detail workflows.
+- Ensure interaction feedback is immediate and understandable.
+
+### Step 7: Apply Brand Visual Layer
+- Apply branded visual identity after hierarchy and interactions are solid.
+- Use accent effects sparingly; readability and signal clarity come first.
+- Run a consistency pass:
+  - spacing rhythm
+  - border usage
+  - typography parity
+  - icon style coherence
+
+### Step 8: Validate With Real Tasks
+- Test real user tasks on both tabs:
+  - identify top risk/signal quickly
+  - compare current vs prior trend
+  - drill into a specific economy
+- Record hesitation/confusion points and prioritize those for iteration.
+
+### Step 9: Implement in Controlled Phases
+- Phase A: tokens + shared primitives
+- Phase B: structural split of `overview`
+- Phase C: structural split of `economies`
+- Phase D: visual polish + responsive refinement
+- Phase E: accessibility/performance/final cleanup
+
+### Step 10: Governance for Ongoing Quality
+- Every dashboard PR should pass this checklist:
+  - supports a real decision
+  - uses existing tokens/primitives
+  - includes complete interaction states
+  - preserves typography consistency
+  - avoids vibe-coded anti-patterns
+- Re-run this review quarterly and remove low-value or unused dashboard elements.
