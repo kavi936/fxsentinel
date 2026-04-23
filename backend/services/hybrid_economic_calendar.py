@@ -17017,7 +17017,7 @@ class HybridEconomicCalendar:
                 'time': '23:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.0',
                 'forecast': 'N/A',
                 'previous': '50.1'
             },
@@ -17027,7 +17027,7 @@ class HybridEconomicCalendar:
                 'time': '23:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.3',
                 'forecast': 'N/A',
                 'previous': '46.6'
             },
@@ -17037,7 +17037,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '54.9',
                 'forecast': '51.2',
                 'previous': '51.4'
             },
@@ -17047,9 +17047,9 @@ class HybridEconomicCalendar:
                 'time': '03:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.1%',
                 'forecast': 'N/A',
-                'previous': '-1.1%'
+                'previous': '1.1%'
             },
 
             # THURSDAY, APRIL 23
