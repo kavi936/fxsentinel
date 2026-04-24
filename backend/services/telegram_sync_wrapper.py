@@ -299,6 +299,9 @@ class SessionIsolatedTelegramWrapper:
             if not currency_pairs:
                 from .enhanced_forex_filter import enhanced_forex_filter
                 currency_pairs = enhanced_forex_filter.extract_currency_pairs(message_text, "")
+
+            from .enhanced_forex_filter import enhanced_forex_filter
+            market_relevance = enhanced_forex_filter.get_market_relevance(title, summary)
             
             # Generate unique ID (deterministic - hash() is randomized in Python 3)
             raw = f"telegram_isolated_{channel_name}_{message.id}_{message_date.isoformat()}"
@@ -317,6 +320,7 @@ class SessionIsolatedTelegramWrapper:
                 'added_to_feed_at': added_to_feed_at,  # Time when added to live news feed
                 'impact': impact,
                 'currency_pairs': list(set(currency_pairs)),  # Remove duplicates
+                'market_relevance': market_relevance,  # Internal metadata (not rendered in UI)
                 'type': 'TELEGRAM_USER',
                 'status': 'PUBLISHED',
                 'message_id': message.id,

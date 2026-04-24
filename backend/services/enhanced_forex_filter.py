@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 
 class EnhancedForexFilter:
     def __init__(self):
-        # Positive keywords (must have for forex relevance)
+        # Positive keywords for broad market relevance (FX, crypto, indices, commodities, rates/macro)
         self.positive_keywords = [
             # Currency names and codes
             'forex', 'currency', 'fx', 'foreign exchange',
@@ -67,38 +67,29 @@ class EnhancedForexFilter:
             # Market sentiment and risk
             'risk-off', 'risk-on', 'safe haven', 'flight to quality', 'market sentiment',
             'investor confidence', 'market volatility', 'market uncertainty', 'market fear',
-            'dollar strength', 'dollar weakness', 'currency strength', 'currency weakness'
+            'dollar strength', 'dollar weakness', 'currency strength', 'currency weakness',
+
+            # Crypto
+            'crypto', 'cryptocurrency', 'bitcoin', 'ethereum', 'solana', 'xrp', 'altcoin',
+            'stablecoin', 'defi', 'token', 'digital asset', 'crypto market',
+
+            # Indices
+            'index', 'indices', 's&p 500', 'sp 500', 'nasdaq 100', 'dow jones',
+            'ftse', 'dax', 'nikkei', 'hang seng', 'stoxx', 'sensex',
+
+            # Rates / fixed income / macro plumbing
+            'bond yield', 'treasury yield', 'yield curve', '10-year', '2-year',
+            'real yield', 'policy rate', 'benchmark rate'
         ]
         
-        # Enhanced negative keywords (exclude if present)
+        # Non-market negatives: always exclude
         self.negative_keywords = [
-            # Cryptocurrency
-            'cryptocurrency', 'bitcoin', 'ethereum', 'crypto', 'blockchain', 'defi', 'nft',
-            'altcoin', 'stablecoin', 'token', 'ico', 'airdrop', 'mining', 'wallet',
-            'crypto exchange', 'crypto trading', 'crypto market', 'crypto price',
-            
-            # Stocks and equities (but keep if they mention forex/currency impact)
-            'stock', 'equity', 'shares', 'dividend', 'earnings', 'revenue', 'profit', 'loss',
-            'market cap', 'pe ratio', 'ipo', 'secondary offering', 'buyback', 'split',
-            'stock market', 'stock exchange', 'stock price', 'stock trading',
-            'nasdaq', 's&p 500', 'dow jones', 'ftse', 'dax', 'nikkei',
-            
-            # Real estate (but keep if they mention forex/currency impact)
+            # Real estate
             'real estate', 'property', 'mortgage', 'housing', 'home', 'apartment', 'rental',
             'commercial property', 'reit', 'construction', 'builder',
             'home sales', 'housing market', 'mortgage rates', 'property market',
             
-            # Other non-forex financial instruments
-            'bonds', 'treasury', 'corporate bond', 'municipal bond', 'yield curve',
-            'options', 'futures', 'derivatives', 'hedge fund', 'mutual fund', 'etf',
-            'commodity futures', 'futures trading', 'options trading',
-            
-            # Company-specific news (unless it's about forex impact)
-            'quarterly results', 'earnings call', 'analyst rating', 'price target',
-            'merger', 'acquisition', 'takeover', 'bankruptcy', 'restructuring',
-            'ceo', 'executive', 'board of directors', 'shareholder',
-            
-            # Technology and innovation (unless forex-related)
+            # Technology and innovation
             'artificial intelligence', 'ai', 'machine learning', 'automation',
             'startup', 'venture capital', 'tech company', 'software', 'app',
             'social media', 'internet', 'digital', 'online platform',
@@ -108,11 +99,11 @@ class EnhancedForexFilter:
             'music', 'concert', 'festival', 'lifestyle', 'fashion', 'beauty',
             'food', 'restaurant', 'travel', 'tourism', 'hotel',
             
-            # Health and medical (unless economic impact)
+            # Health and medical
             'medical', 'healthcare', 'pharmaceutical', 'drug', 'treatment',
             'hospital', 'doctor', 'patient', 'disease', 'vaccine',
             
-            # Local and regional news (unless forex impact)
+            # Local and regional news
             'local news', 'city council', 'mayor', 'governor', 'state',
             'community', 'neighborhood', 'local business', 'regional',
             
@@ -121,6 +112,46 @@ class EnhancedForexFilter:
             'automotive', 'car', 'vehicle', 'transportation', 'logistics',
             'energy company', 'utility', 'telecommunications', 'media company'
         ]
+
+        # Explicit stock/equity exclusion terms (policy: everything except stocks/equities)
+        self.stock_exclusion_keywords = [
+            'stock', 'stocks', 'equity', 'equities', 'shares', 'share price', 'shareholder',
+            'earnings', 'earnings call', 'eps', 'revenue', 'guidance', 'analyst rating',
+            'price target', 'dividend', 'ipo', 'buyback', 'market cap', 'pe ratio',
+            'quarterly results', 'company outlook', 'ceo', 'board of directors'
+        ]
+        self.index_keywords = [
+            'index', 'indices', 's&p 500', 'sp 500', 'nasdaq 100', 'dow jones',
+            'ftse', 'dax', 'nikkei', 'hang seng', 'stoxx', 'sensex'
+        ]
+        self.market_keyword_map = {
+            'forex': [
+                'forex', 'currency', 'fx', 'foreign exchange',
+                'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd',
+                'dollar', 'euro', 'yen', 'pound', 'franc'
+            ],
+            'crypto': [
+                'crypto', 'cryptocurrency', 'bitcoin', 'ethereum', 'solana',
+                'xrp', 'altcoin', 'stablecoin', 'defi', 'token', 'digital asset'
+            ],
+            'indices': [
+                'index', 'indices', 's&p 500', 'sp 500', 'nasdaq 100', 'dow jones',
+                'ftse', 'dax', 'nikkei', 'hang seng', 'stoxx', 'sensex'
+            ],
+            'commodities': [
+                'commodity', 'commodities', 'gold', 'silver', 'oil',
+                'crude', 'natural gas', 'copper', 'wti', 'brent'
+            ],
+            'rates': [
+                'interest rate', 'policy rate', 'benchmark rate', 'bond yield',
+                'treasury yield', 'yield curve', '2-year', '10-year', 'real yield'
+            ],
+            'macro': [
+                'cpi', 'inflation', 'nfp', 'non-farm payrolls', 'gdp', 'pmi',
+                'retail sales', 'unemployment', 'trade balance', 'central bank',
+                'monetary policy', 'fiscal policy'
+            ]
+        }
         
         # High impact keywords for scoring
         self.high_impact_keywords = [
@@ -174,11 +205,16 @@ class EnhancedForexFilter:
             'currency_focus': []
         }
     
-    def is_forex_related(self, title: str, summary: str = "", source: str = "") -> bool:
+    def _is_stock_or_equity_news(self, text: str) -> bool:
+        """Return True when content is primarily stock/equity/company-specific."""
+        has_stock_term = any(term in text for term in self.stock_exclusion_keywords)
+        has_index_context = any(term in text for term in self.index_keywords)
+        return has_stock_term and not has_index_context
+
+    def is_market_relevant(self, title: str, summary: str = "", source: str = "") -> bool:
         """
-        Enhanced forex filtering using positive and negative keywords
-        More intelligent filtering to include economic and commodity news that impacts forex
-        Improved to exclude irrelevant news for forex traders
+        Broad market filtering aligned to product policy:
+        include FX/crypto/indices/commodities/macro-rates, exclude stocks/equities.
         """
         text = f"{title} {summary}".lower()
         source_lower = source.lower()
@@ -187,12 +223,16 @@ class EnhancedForexFilter:
         positive_matches = self._count_keyword_matches(text, self.positive_keywords)
         negative_matches = self._count_keyword_matches(text, self.negative_keywords)
         
-        # Core forex terms that indicate strong forex relevance
+        # Core market terms that indicate strong relevance
         core_forex_terms = [
             'forex', 'currency', 'fx', 'foreign exchange',
             'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd',
             'fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz',
-            'cpi', 'inflation', 'interest rate', 'non-farm payrolls', 'gdp'
+            'cpi', 'inflation', 'interest rate', 'non-farm payrolls', 'gdp',
+            'crypto', 'bitcoin', 'ethereum', 'altcoin',
+            'index', 'indices', 's&p 500', 'nasdaq 100', 'dow jones', 'ftse', 'dax', 'nikkei',
+            'commodity', 'gold', 'silver', 'oil', 'crude', 'natural gas', 'copper',
+            'treasury yield', 'bond yield', 'yield curve'
         ]
         
         # Economic and commodity terms that are forex-relevant
@@ -212,10 +252,12 @@ class EnhancedForexFilter:
         is_forex_source = any(forex_source in source_lower for forex_source in self.forex_focused_sources)
         
         # Enhanced decision logic:
-        # 1. First check for strong negative keywords that should exclude regardless
+        # 1) Explicit policy: stock/equity/company-specific content is excluded
+        if self._is_stock_or_equity_news(text):
+            return False
+
+        # 2) Check for strong negative keywords that should exclude regardless
         strong_negative_keywords = [
-            'cryptocurrency', 'bitcoin', 'ethereum', 'crypto', 'blockchain', 'defi', 'nft',
-            'earnings', 'revenue', 'profit', 'loss',
             'real estate', 'property', 'mortgage', 'housing', 'home',
             'movie', 'film', 'celebrity', 'entertainment', 'sports', 'athlete',
             'music', 'concert', 'festival', 'lifestyle', 'fashion', 'beauty',
@@ -224,34 +266,33 @@ class EnhancedForexFilter:
             'local news', 'city council', 'mayor', 'governor', 'community'
         ]
         
-        # Check for stock market news that mentions forex impact
-        stock_forex_keywords = ['dollar', 'currency', 'forex', 'usd', 'eur', 'gbp', 'jpy']
-        has_stock_forex_impact = any(term in text for term in stock_forex_keywords)
-        
-        # If it mentions stocks but also forex impact, include it
-        if ('stock' in text or 'equity' in text or 'shares' in text) and has_stock_forex_impact:
-            return True
-        
         has_strong_negative = any(term in text for term in strong_negative_keywords)
         if has_strong_negative:
             return False  # Exclude if it has strong negative keywords
         
-        # 2. If it has core forex terms, include it
+        # 3) If it has core market terms, include it
         if has_core_forex:
             return True
         
-        # 3. If it's from a forex-focused source, be more lenient
+        # 4) If it's from a forex-focused source, be more lenient
         if is_forex_source and positive_matches > 0:
             return True  # Include forex source content with positive keywords
         
-        # 4. If it has forex-relevant terms AND positive keywords, include it
+        # 5) If it has market-relevant terms and some positive context, include it
         if has_forex_relevant and positive_matches > 0:
             # But exclude if it has too many negative keywords
             return negative_matches <= 1  # Allow 1 negative keyword for context
         
-        # 5. For general sources, be more strict
-        # Exclude if it has negative keywords without strong forex relevance
+        # 6) For general sources, require at least one positive and no non-market negatives.
+        # This is broader than old forex-only gate but still blocks obvious noise.
         return negative_matches == 0 and positive_matches >= 2
+
+    def is_forex_related(self, title: str, summary: str = "", source: str = "") -> bool:
+        """
+        Backward-compatible alias.
+        Existing callers still use this name, but behavior is now market-wide.
+        """
+        return self.is_market_relevant(title, summary, source)
     
     def is_high_impact_for_alerts(self, title: str, summary: str = "", source: str = "") -> bool:
         """
@@ -306,11 +347,13 @@ class EnhancedForexFilter:
         
         # Calculate confidence score (0-100)
         confidence = 0
-        if positive_matches > 0 and negative_matches == 0:
+        is_market = self.is_market_relevant(title, summary)
+        if is_market and negative_matches == 0:
             confidence = min(100, (positive_matches * 20) + (high_impact_matches * 15) + (medium_impact_matches * 10))
         
         return {
-            'is_forex': positive_matches > 0 and negative_matches == 0,
+            'is_forex': is_market,  # Backward-compatibility for existing consumers.
+            'is_market': is_market,
             'positive_score': positive_matches,
             'negative_score': negative_matches,
             'high_impact_matches': high_impact_matches,
@@ -358,6 +401,26 @@ class EnhancedForexFilter:
         
         # Remove duplicates and return
         return list(set(currency_pairs))
+
+    def get_market_relevance(self, title: str, summary: str = "", top_n: int = 5) -> List[Dict[str, Any]]:
+        """
+        Return top market relevance buckets for internal use.
+        Each item contains the market name, score, and matched keywords.
+        """
+        text = f"{title} {summary}".lower()
+        relevance = []
+
+        for market, keywords in self.market_keyword_map.items():
+            matched = [keyword for keyword in keywords if keyword in text]
+            if matched:
+                relevance.append({
+                    'market': market,
+                    'score': len(matched),
+                    'matched_keywords': matched[:8]
+                })
+
+        relevance.sort(key=lambda item: item['score'], reverse=True)
+        return relevance[:max(3, min(top_n, 5))]
     
     def should_trigger_alert(self, news_item: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -369,7 +432,7 @@ class EnhancedForexFilter:
         content = news_item.get('content', '')
         source = news_item.get('source', '')
         
-        # Get forex score
+        # Get market relevance score
         forex_score = self.get_forex_score(title, summary)
         
         # Check if it's high impact for alerts
@@ -382,13 +445,13 @@ class EnhancedForexFilter:
         should_alert = False
         reasoning = []
         
-        if not forex_score['is_forex']:
-            reasoning.append("Not forex-related")
+        if not forex_score['is_market']:
+            reasoning.append("Not market-relevant")
         elif not is_high_impact:
             reasoning.append("Not high-impact enough for alerts")
         else:
             should_alert = True
-            reasoning.append("High-impact forex news")
+            reasoning.append("High-impact market news")
         
         # Additional factors
         if source.lower() in [s.lower() for s in self.credible_sources]:
@@ -436,7 +499,7 @@ class EnhancedForexFilter:
             title = news_item.get('title', '')
             summary = news_item.get('summary', '')
             
-            if self.is_forex_related(title, summary):
+            if self.is_market_relevant(title, summary):
                 # Add forex score to the news item
                 forex_score = self.get_forex_score(title, summary)
                 news_item['forex_score'] = forex_score

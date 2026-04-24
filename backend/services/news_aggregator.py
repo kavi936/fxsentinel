@@ -67,6 +67,10 @@ class NewsAggregator:
         # Impact keywords for categorizing news
         self.high_impact_keywords = ['cpi', 'inflation', 'fed', 'ecb', 'boj', 'boe', 'interest rate', 'non-farm payrolls', 'gdp']
         self.medium_impact_keywords = ['retail sales', 'manufacturing', 'services pmi', 'unemployment', 'employment', 'trade balance']
+        self.fxstreet_gold_slop_pattern = re.compile(
+            r'gold price today:.*according to fxstreet data',
+            re.IGNORECASE
+        )
         
     def fetch_rss_feed(self, feed_url: str, source_name: str) -> List[Dict[str, Any]]:
         """Fetch and parse RSS feed"""
@@ -116,14 +120,17 @@ class NewsAggregator:
         """Extract currency pairs using enhanced filtering"""
         from .enhanced_forex_filter import enhanced_forex_filter
         return enhanced_forex_filter.extract_currency_pairs(title, summary)
+
+    def get_market_relevance(self, title: str, summary: str) -> List[Dict[str, Any]]:
+        """Get top market relevance buckets for internal ranking features."""
+        from .enhanced_forex_filter import enhanced_forex_filter
+        return enhanced_forex_filter.get_market_relevance(title, summary)
     
-    def should_filter_news_item(self, title: str) -> bool:
-        """Check if news item should be filtered out based on title"""
-        # Filter out FXStreet gold price updates that spam the feed
-        # These items have titles like "India Gold price today: Gold rises, according to FXStreet data"
-        filter_phrase = "Gold rises, according to FXStreet data"
-        if filter_phrase in title:
-            logger.debug(f"Filtering out news item with title: {title[:80]}")
+    def should_filter_news_item(self, title: str, summary: str = "") -> bool:
+        """Check if news item should be filtered out based on repetitive slop patterns."""
+        content = f"{title or ''} {summary or ''}".strip()
+        if self.fxstreet_gold_slop_pattern.search(content):
+            logger.debug(f"Filtering out FXStreet gold slop item: {title[:80]}")
             return True
         return False
     
@@ -142,7 +149,7 @@ class NewsAggregator:
             summary = entry.summary.strip() if hasattr(entry, 'summary') else ''
             
             # Filter out unwanted news items (e.g., FXStreet gold price spam)
-            if self.should_filter_news_item(title):
+            if self.should_filter_news_item(title, summary):
                 return None
             
             # Remove HTML tags from summary
@@ -153,6 +160,7 @@ class NewsAggregator:
             
             # Extract currency pairs
             currency_pairs = self.extract_currency_pairs(title, summary)
+            market_relevance = self.get_market_relevance(title, summary)
             
             # Generate unique ID (deterministic - hash() is randomized in Python 3)
             raw = f"{source_name}_{title}_{pub_date.isoformat()}"
@@ -171,6 +179,7 @@ class NewsAggregator:
                 'added_to_feed_at': added_to_feed_at,  # Time when added to live news feed
                 'impact': impact,
                 'currency_pairs': currency_pairs,
+                'market_relevance': market_relevance,  # Internal metadata (not rendered in UI)
                 'type': 'RSS_FEED',
                 'status': 'PUBLISHED'
             }

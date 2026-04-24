@@ -9,7 +9,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   updateProfile,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  fetchSignInMethodsForEmail
 } from 'firebase/auth';
 import { isGoogleOAuthBlockedError, detectEmbeddedBrowser } from '../utils/browserDetection';
 
@@ -130,6 +131,14 @@ export const AuthProvider = ({ children }) => {
 
       return result;
     } catch (error) {
+      // Enrich duplicate-email errors so UI can suggest the correct sign-in method.
+      if (error?.code === 'auth/email-already-in-use' && email) {
+        try {
+          error.signInMethods = await fetchSignInMethodsForEmail(auth, email);
+        } catch (lookupError) {
+          console.warn('Could not fetch sign-in methods for duplicate email:', lookupError);
+        }
+      }
       throw error;
     }
   };

@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import './LiveNewsFeed.css';
 import InfoIcon from './InfoIcon.jsx';
 
+const FXSTREET_GOLD_SLOP_REGEX = /gold price today:.*according to fxstreet data/i;
+
 // Keyword mappings for currency pair detection - created once outside component
 // This prevents recreating the 500+ entry object on every render
 const KEYWORD_MAPPINGS = {
@@ -187,6 +189,12 @@ const KEYWORD_MAPPINGS = {
 };
 
 const LiveNewsFeed = () => {
+  const isUnwantedFxstreetGoldSlop = (item) => {
+    const title = item?.title || '';
+    const summary = item?.summary || '';
+    return FXSTREET_GOLD_SLOP_REGEX.test(`${title} ${summary}`);
+  };
+
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -704,10 +712,9 @@ const LiveNewsFeed = () => {
         
         // Filter out unwanted news items (e.g., FXStreet gold price spam)
         // This is a safety filter in case any unwanted items made it through backend filtering
-        const filterPhrase = "Gold rises, according to FXStreet data";
         const filteredList = currentList.filter(item => {
-          const title = item.title || '';
-          if (title.includes(filterPhrase)) {
+          if (isUnwantedFxstreetGoldSlop(item)) {
+            const title = item.title || '';
             if (process.env.NODE_ENV === 'development') {
               console.log('🚫 Frontend filtered out unwanted news item:', title.substring(0, 80));
             }
@@ -729,14 +736,14 @@ const LiveNewsFeed = () => {
                 // Enhanced filtering logic
                 let passes = false;
                 if (filter === 'all') {
-                    // For 'all' filter, still apply basic forex relevance check
-                    passes = isForexRelevant(item);
+                    // For 'all' filter, apply broad market relevance (exclude stocks/equities)
+                    passes = isMarketRelevant(item);
                 } else if (filter === 'high') {
-                    // For 'high' filter, apply strict high-impact criteria
-                    passes = isHighImpactForex(item);
+                    // For 'high' filter, apply strict high-impact market criteria
+                    passes = isHighImpactMarket(item);
                 } else {
-                    // For 'medium' and 'low' filters, check impact level
-                    passes = item.impact?.toLowerCase() === filter && isForexRelevant(item);
+                    // For 'medium' and 'low' filters, check impact level + market relevance
+                    passes = item.impact?.toLowerCase() === filter && isMarketRelevant(item);
                 }
                 
                 // Debug logging for filtered items
@@ -746,7 +753,7 @@ const LiveNewsFeed = () => {
                     source: item.source,
                     impact: item.impact,
                     filter,
-                    isForexRelevant: isForexRelevant(item)
+                    isMarketRelevant: isMarketRelevant(item)
                   });
                 }
                 
@@ -773,46 +780,58 @@ const LiveNewsFeed = () => {
     };
     
     // Enhanced filtering functions
-    const isForexRelevant = (item) => {
+    const isMarketRelevant = (item) => {
         const title = (item.title || '').toLowerCase();
         const summary = (item.summary || '').toLowerCase();
         const text = `${title} ${summary}`;
-        
-        // Core forex keywords that indicate relevance
-        const coreForexKeywords = [
+
+        // Policy: exclude stock/equity/company-specific items, but keep indices.
+        const stockExclusionKeywords = [
+            'stock', 'stocks', 'equity', 'equities', 'shares', 'share price', 'shareholder',
+            'earnings', 'earnings call', 'eps', 'revenue', 'guidance', 'analyst rating',
+            'price target', 'dividend', 'ipo', 'buyback', 'market cap', 'pe ratio',
+            'quarterly results', 'ceo', 'board of directors'
+        ];
+        const indexKeywords = [
+            'index', 'indices', 's&p 500', 'sp 500', 'nasdaq 100', 'dow jones',
+            'ftse', 'dax', 'nikkei', 'hang seng', 'stoxx', 'sensex'
+        ];
+
+        const hasStockTerm = stockExclusionKeywords.some(keyword => text.includes(keyword));
+        const hasIndexTerm = indexKeywords.some(keyword => text.includes(keyword));
+        if (hasStockTerm && !hasIndexTerm) return false;
+
+        // Market-inclusive keywords
+        const marketKeywords = [
             'forex', 'currency', 'fx', 'foreign exchange',
-            'eur/usd', 'usd/jpy', 'gbp/usd', 'usd/chf', 'aud/usd', 'usd/cad', 'nzd/usd',
             'fed', 'ecb', 'boj', 'boe', 'rba', 'boc', 'snb', 'rbnz',
-            'cpi', 'inflation', 'interest rate', 'non-farm payrolls', 'gdp'
-        ];
-        
-        // Economic and market terms that are forex-relevant
-        const forexRelevantTerms = [
+            'cpi', 'inflation', 'interest rate', 'non-farm payrolls', 'gdp',
+            'treasury yield', 'bond yield', 'yield curve',
             'commodity', 'oil', 'crude', 'gold', 'silver', 'copper', 'natural gas',
-            'economic', 'economy', 'economic data', 'economic indicator',
-            'trade', 'tariff', 'trade war', 'trade deal', 'trade agreement',
-            'geopolitical', 'geopolitics', 'diplomatic', 'sanctions',
-            'market sentiment', 'risk-off', 'risk-on', 'safe haven'
+            'bitcoin', 'ethereum', 'crypto', 'cryptocurrency', 'digital asset',
+            'index', 'indices', 's&p 500', 'nasdaq 100', 'dow jones', 'ftse', 'dax', 'nikkei',
+            'trade', 'tariff', 'geopolitical', 'sanctions', 'risk-off', 'risk-on', 'safe haven'
         ];
-        
-        const hasCoreForex = coreForexKeywords.some(keyword => text.includes(keyword));
-        const hasForexRelevant = forexRelevantTerms.some(term => text.includes(term));
-        
-        return hasCoreForex || hasForexRelevant;
+
+        return marketKeywords.some(keyword => text.includes(keyword));
     };
     
-    const isHighImpactForex = (item) => {
+    const isHighImpactMarket = (item) => {
         const title = (item.title || '').toLowerCase();
         const summary = (item.summary || '').toLowerCase();
         const source = (item.source || '').toLowerCase();
         const text = `${title} ${summary}`;
         
-        // Critical forex keywords that should always trigger high impact
+        if (!isMarketRelevant(item)) return false;
+
+        // Critical market-moving keywords that should always trigger high impact
         const criticalKeywords = [
             'fed', 'federal reserve', 'ecb', 'european central bank', 'boj', 'bank of japan',
             'boe', 'bank of england', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
             'nfp', 'non-farm payrolls', 'cpi', 'inflation', 'interest rate', 'monetary policy',
-            'rate decision', 'policy meeting', 'speech', 'testimony', 'breaking', 'urgent'
+            'rate decision', 'policy meeting', 'speech', 'testimony', 'breaking', 'urgent',
+            'bitcoin', 'ethereum', 'crypto', 'liquidation',
+            'oil', 'crude', 'gold', 'treasury yield', 'yield curve', 'index', 'indices'
         ];
         
         // High impact keywords

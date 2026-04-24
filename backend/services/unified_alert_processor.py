@@ -203,17 +203,17 @@ class UnifiedAlertProcessor:
             from services.news_alert_trigger import news_alert_trigger
             from services.firebase_realtime_storage import FirebaseRealtimeStorage
             
-            # Filter for high-impact forex news
+            # Filter for high-impact market news
             high_impact = []
             for news_item in news_items:
-                if news_alert_trigger.is_forex_high_impact(news_item):
+                if news_alert_trigger.is_high_impact_news(news_item):
                     high_impact.append(news_item)
             
             if not high_impact:
-                logger.info("No high-impact forex news found")
+                logger.info("No high-impact market news found")
                 return
             
-            logger.info(f"Found {len(high_impact)} high-impact forex news items")
+            logger.info(f"Found {len(high_impact)} high-impact market news items")
             
             # SOLUTION 1: Filter out recently checked items to prevent duplicate processing
             # This prevents the same news item from being checked multiple times within 30 seconds

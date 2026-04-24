@@ -9,6 +9,7 @@ import openai
 import os
 import json
 import time
+import re
 import asyncio
 import logging
 import threading
@@ -285,6 +286,31 @@ def clean_news_title(title):
     cleaned_title = re.sub(r'[:\s\-_]+$', '', cleaned_title)  # Remove trailing colons, spaces, dashes
     
     return cleaned_title
+
+def is_unwanted_fxstreet_gold_slop(news_item):
+    """Match repetitive FXStreet country gold-price headlines and summaries."""
+    title = (news_item or {}).get('title', '') or ''
+    summary = (news_item or {}).get('summary', '') or ''
+    combined_text = f"{title} {summary}".lower()
+    return bool(re.search(r'gold price today:.*according to fxstreet data', combined_text))
+
+def enrich_market_relevance(news_list):
+    """Backfill market relevance metadata for items missing it."""
+    try:
+        from services.enhanced_forex_filter import enhanced_forex_filter
+        enriched = []
+        for item in (news_list or []):
+            if not isinstance(item, dict):
+                continue
+            if not item.get('market_relevance'):
+                item['market_relevance'] = enhanced_forex_filter.get_market_relevance(
+                    item.get('title', ''),
+                    item.get('summary', '')
+                )
+            enriched.append(item)
+        return enriched
+    except Exception:
+        return news_list or []
 
 def remove_duplicate_news(news_list):
     """Remove duplicate news items across all sources based on title similarity"""
@@ -1169,8 +1195,7 @@ def _run_background_news_fetch():
                 seen[key] = item
                 unique.append(item)
         fresh_news = unique
-        filter_phrase = "Gold rises, according to FXStreet data"
-        fresh_news = [item for item in fresh_news if filter_phrase not in item.get('title', '')]
+        fresh_news = [item for item in fresh_news if not is_unwanted_fxstreet_gold_slop(item)]
         if not fresh_news:
             return
 
@@ -1297,9 +1322,8 @@ def get_news():
             cached_news = remove_duplicate_news(cached_news)
             
             # Filter out unwanted news items (e.g., FXStreet gold price spam)
-            filter_phrase = "Gold rises, according to FXStreet data"
             original_count = len(cached_news)
-            cached_news = [item for item in cached_news if filter_phrase not in item.get('title', '')]
+            cached_news = [item for item in cached_news if not is_unwanted_fxstreet_gold_slop(item)]
             if len(cached_news) < original_count:
                 print(f"🚫 Filtered out {original_count - len(cached_news)} unwanted cached news items")
             
@@ -1312,6 +1336,7 @@ def get_news():
                 # shows "when we're showing it" (e.g. Just now) instead of article publish time (e.g. 4 hrs ago).
                 if 'added_to_feed_at' not in item:
                     item['added_to_feed_at'] = datetime.now().isoformat()
+            cached_news = enrich_market_relevance(cached_news)
             
             # Check if cached news contains economic calendar events (Finnhub data)
             # If it does, clear the cache to force fresh news fetch
@@ -1503,13 +1528,12 @@ def get_news():
             # Filter out unwanted news items (e.g., FXStreet gold price spam)
             def filter_unwanted_news(news_list):
                 """Filter out news items that match unwanted patterns"""
-                filter_phrase = "Gold rises, according to FXStreet data"
                 filtered = []
                 for item in news_list:
-                    title = item.get('title', '')
-                    if filter_phrase not in title:
+                    if not is_unwanted_fxstreet_gold_slop(item):
                         filtered.append(item)
                     else:
+                        title = item.get('title', '')
                         print(f"🚫 Filtered out unwanted news item: {title[:80]}")
                 return filtered
             
@@ -1556,10 +1580,9 @@ def get_news():
                 
                 # Add cached items that aren't in fresh news (also filter unwanted items)
                 fresh_keys = {f"{item.get('title', '')}_{item.get('source', '')}" for item in fresh_news}
-                filter_phrase = "Gold rises, according to FXStreet data"
                 for item in cached_news:
                     # Skip unwanted items
-                    if filter_phrase in item.get('title', ''):
+                    if is_unwanted_fxstreet_gold_slop(item):
                         continue
                     key = f"{item.get('title', '')}_{item.get('source', '')}"
                     if key not in fresh_keys:
@@ -1573,9 +1596,8 @@ def get_news():
                         item['added_to_feed_at'] = current_time
             
             # Final filter pass to ensure no unwanted items made it through
-            filter_phrase = "Gold rises, according to FXStreet data"
             final_count_before = len(all_news)
-            all_news = [item for item in all_news if filter_phrase not in item.get('title', '')]
+            all_news = [item for item in all_news if not is_unwanted_fxstreet_gold_slop(item)]
             if len(all_news) < final_count_before:
                 print(f"🚫 Final filter pass removed {final_count_before - len(all_news)} unwanted items")
             
@@ -1694,8 +1716,7 @@ def get_news():
             if force_refresh and 'cached_news_for_response' in locals() and cached_news_for_response and not wait_fresh:
                 # Filter and prepare cached news for immediate response
                 cached_news_filtered = remove_duplicate_news(cached_news_for_response)
-                filter_phrase = "Gold rises, according to FXStreet data"
-                cached_news_filtered = [item for item in cached_news_filtered if filter_phrase not in item.get('title', '')]
+                cached_news_filtered = [item for item in cached_news_filtered if not is_unwanted_fxstreet_gold_slop(item)]
                 
                 # Convert IDs to strings
                 for item in cached_news_filtered:
@@ -1703,6 +1724,7 @@ def get_news():
                         item['id'] = str(item['id'])
                     if 'added_to_feed_at' not in item:
                         item['added_to_feed_at'] = datetime.now().isoformat()
+                cached_news_filtered = enrich_market_relevance(cached_news_filtered)
                 
                 print(f"⚡ Force refresh: Returning {len(cached_news_filtered)} cached items immediately, fresh fetch continues in background")
                 response_data = {
@@ -1721,6 +1743,7 @@ def get_news():
                 # This provides instant UI feedback while fresh data is being fetched
                 return jsonify(response_data)
             
+            all_news = enrich_market_relevance(all_news)
             response_data = {
                 "news": all_news,
                 "last_updated": datetime.now().isoformat(),
@@ -1748,6 +1771,7 @@ def get_news():
                         item['id'] = str(item['id'])
                     if 'added_to_feed_at' not in item:
                         item['added_to_feed_at'] = datetime.now().isoformat()
+                cached_news = enrich_market_relevance(cached_news)
                 
                 # SOLUTION 2: Trigger alerts for cached news (top 10 recent items)
                 # This ensures alerts are sent even when no fresh news is fetched
@@ -1813,6 +1837,7 @@ def get_news():
                         item['id'] = str(item['id'])
                     if 'added_to_feed_at' not in item:
                         item['added_to_feed_at'] = datetime.now().isoformat()
+                cached_news = enrich_market_relevance(cached_news)
                 
                 print(f"✅ Error occurred, using cached news ({len(cached_news)} articles)")
                 response_data = {
@@ -5406,6 +5431,49 @@ def get_news_history():
             "error": str(e)
         }), 500
 
+@app.route('/api/news-market-relevance-debug')
+def get_news_market_relevance_debug():
+    """
+    Internal QA endpoint for market relevance tagging.
+    Returns compact fields only, so teams can validate classification quickly.
+    """
+    try:
+        from services.persistent_news_cache import get_persistent_news_cache
+        news_cache = get_persistent_news_cache()
+
+        limit = request.args.get('limit', default=25, type=int)
+        if limit is None:
+            limit = 25
+        limit = max(1, min(limit, 100))
+
+        cached_news = news_cache.load_news(allow_stale=True) or []
+        cached_news = remove_duplicate_news(cached_news)
+        cached_news = enrich_market_relevance(cached_news)
+
+        items = []
+        for news_item in cached_news[:limit]:
+            items.append({
+                "id": str(news_item.get('id', '')),
+                "title": news_item.get('title', ''),
+                "source": news_item.get('source', ''),
+                "impact": news_item.get('impact', ''),
+                "published_at": news_item.get('published_at', ''),
+                "market_relevance": news_item.get('market_relevance', [])
+            })
+
+        return jsonify({
+            "success": True,
+            "count": len(items),
+            "limit": limit,
+            "items": items
+        })
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "items": []
+        }), 500
+
 @app.route('/api/news/<int:news_id>')
 def get_news_by_id(news_id):
     """Get a specific news item by ID from cache or history"""
@@ -5451,9 +5519,9 @@ def remove_filtered_news():
         from services.persistent_news_cache import get_persistent_news_cache
         news_cache = get_persistent_news_cache()
         
-        # Get filter phrase from request (default to FXStreet gold price spam)
+        # Get filter phrase from request (default to broad FXStreet country gold-price spam)
         data = request.get_json() or {}
-        filter_phrase = data.get('filter_phrase', 'Gold rises, according to FXStreet data')
+        filter_phrase = data.get('filter_phrase', 'Gold price today:')
         confirm = data.get('confirm', False)
         
         if not confirm:
