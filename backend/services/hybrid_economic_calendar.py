@@ -17239,7 +17239,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.8%',
                 'forecast': '1.7%',
                 'previous': '1.6%'
             },
@@ -17249,7 +17249,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.1%',
                 'forecast': '2.9%',
                 'previous': '2.7%'
             },
