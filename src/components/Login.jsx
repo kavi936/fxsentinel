@@ -8,6 +8,7 @@ import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 import { BackgroundBeams } from './BackgroundBeams';
+import { getLoginErrorMessage } from '../utils/authErrorMessages';
 
 const Login = () => {
   useMeta(
@@ -35,12 +36,13 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    const normalizedEmail = formData.email.trim().toLowerCase();
 
     try {
-      await login(formData.email, formData.password);
+      await login(normalizedEmail, formData.password);
       navigate('/auth-redirect');
     } catch (err) {
-      setError('Invalid email or password. Please try again.');
+      setError(getLoginErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
@@ -150,6 +152,8 @@ const Login = () => {
                 setError('Sign-in popup was blocked. Please allow popups for this site and try again.');
               } else if (err.code === 'auth/popup-closed-by-user') {
                 setError('Sign-in was cancelled. Please try again if you want to continue with Google.');
+              } else if (err.code === 'auth/account-exists-with-different-credential') {
+                setError('An account with this email already exists using a different sign-in method. Try your email/password instead.');
               } else {
                 setError('Failed to sign in with Google. Please try again.');
               }

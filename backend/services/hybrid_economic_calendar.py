@@ -17261,9 +17261,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.1%',
-                'previous': '-0.4%'
+                'previous': '-0.6%'
             },
             {
                 'title': 'SNB Chairman Schlegel Speaks',
@@ -17281,7 +17281,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '84.4',
                 'forecast': '85.6',
                 'previous': '86.4'
             },
@@ -17291,7 +17291,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.8%',
                 'previous': '0.8%'
             },
@@ -17301,7 +17301,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.9%',
                 'previous': '1.1%'
             },

@@ -10,6 +10,7 @@ import { trackSignupCompletion, trackError, trackEngagement } from '../utils/ana
 import { isGoogleOAuthBlockedError } from '../utils/browserDetection';
 import EmbeddedBrowserWarning from './EmbeddedBrowserWarning';
 import { BackgroundBeams } from './BackgroundBeams';
+import { getSignupErrorMessage } from '../utils/authErrorMessages';
 import {
   getPasswordRuleStatus,
   getPasswordStrengthTier,
@@ -61,10 +62,11 @@ const Signup = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    const normalizedEmail = formData.email.trim().toLowerCase();
 
     // Track signup attempt
     trackEngagement('signup_form_submit', {
-      email: formData.email,
+      email: normalizedEmail,
       hasFirstName: !!formData.firstName,
       hasLastName: !!formData.lastName
     });
@@ -87,18 +89,19 @@ const Signup = () => {
     }
 
     try {
-      await signup(formData.email, formData.password, formData.firstName, formData.lastName);
+      await signup(normalizedEmail, formData.password, formData.firstName, formData.lastName);
       trackSignupCompletion('email', {
-        email: formData.email,
+        email: normalizedEmail,
         hasFirstName: !!formData.firstName,
         hasLastName: !!formData.lastName
       });
       navigate(planPremium ? '/auth-redirect?plan=premium' : '/auth-redirect');
     } catch (err) {
-      setError('Failed to create account. Please try again.');
+      setError(getSignupErrorMessage(err));
       trackError('signup_failure', { 
         error: err.message || 'unknown_error',
-        email: formData.email 
+        code: err.code || 'unknown',
+        email: normalizedEmail
       });
     } finally {
       setIsLoading(false);
@@ -157,6 +160,9 @@ const Signup = () => {
       } else if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in was cancelled. Please try again if you want to continue with Google.');
         trackError('google_signup_failure_popup_closed', { code: err.code });
+      } else if (err.code === 'auth/account-exists-with-different-credential') {
+        setError('An account with this email already exists using a different sign-in method. Try signing in with email/password first.');
+        trackError('google_signup_failure_account_exists_different_credential', { code: err.code });
       } else {
         setError('Failed to sign in with Google. Please try again.');
         trackError('google_signup_failure', {

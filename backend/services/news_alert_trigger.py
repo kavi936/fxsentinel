@@ -91,50 +91,9 @@ class NewsAlertTrigger:
             return []
     
     def is_forex_high_impact(self, news_item: Dict[str, Any]) -> bool:
-        """Determine if news is specifically high-impact for forex markets"""
+        """Backward-compatible alias for high-impact market checks."""
         try:
-            title = news_item.get('title', '').lower()
-            content = news_item.get('content', '').lower()
-            source = news_item.get('source', '').lower()
-            
-            # Forex-specific high-impact keywords
-            forex_high_impact_keywords = [
-                # Central Banks
-                'fed', 'federal reserve', 'ecb', 'european central bank', 'boe', 'bank of england',
-                'boj', 'bank of japan', 'rba', 'reserve bank of australia', 'boc', 'bank of canada',
-                'snb', 'swiss national bank', 'rbnz', 'reserve bank of new zealand',
-                
-                # Major Economic Indicators
-                'nfp', 'non-farm payrolls', 'cpi', 'inflation', 'gdp', 'unemployment',
-                'interest rate', 'monetary policy', 'quantitative easing', 'tapering',
-                'retail sales', 'manufacturing pmi', 'services pmi', 'employment',
-                
-                # Market-Moving Events
-                'breaking', 'urgent', 'flash', 'alert', 'emergency', 'crisis',
-                'election', 'referendum', 'trade war', 'sanctions', 'brexit',
-                'geopolitical', 'political', 'policy change', 'regulatory',
-                
-                # Currency-Specific
-                'dollar', 'euro', 'pound', 'yen', 'franc', 'australian dollar',
-                'canadian dollar', 'new zealand dollar', 'currency', 'forex'
-            ]
-            
-            # Check for forex-specific high-impact keywords
-            for keyword in forex_high_impact_keywords:
-                if keyword in title or keyword in content:
-                    logger.info(f"Forex high-impact news detected: {keyword} in '{title[:50]}...'")
-                    return True
-            
-            # Check source credibility for forex news
-            forex_credible_sources = ['reuters', 'bloomberg', 'cnbc', 'marketwatch', 'forexfactory', 'fxstreet', 'investing.com', 'fxempire']
-            if any(source_name in source for source_name in forex_credible_sources):
-                # Additional check for important forex keywords in credible sources
-                important_forex_keywords = ['fed', 'ecb', 'boe', 'boj', 'rba', 'boc', 'nfp', 'cpi', 'gdp', 'interest rate', 'monetary']
-                if any(keyword in title for keyword in important_forex_keywords):
-                    logger.info(f"Important forex news from credible source: {source} - '{title[:50]}...'")
-                    return True
-            
-            return False
+            return self.is_high_impact_news(news_item)
             
         except Exception as e:
             logger.error(f"Error checking forex high impact news: {e}")
@@ -149,8 +108,8 @@ class NewsAlertTrigger:
                 logger.debug("AI analysis for alerts disabled via DISABLE_AI_FOR_ALERTS")
                 return False
             
-            # Only analyze forex high-impact news
-            if not self.is_forex_high_impact(news_item):
+            # Only analyze high-impact market news
+            if not self.is_high_impact_news(news_item):
                 return False
             
             # Check if it's from a credible source
@@ -176,8 +135,8 @@ class NewsAlertTrigger:
     def should_send_post_news_analysis(self, news_item: Dict[str, Any]) -> bool:
         """Determine if news should get post-news analysis after initial alert"""
         try:
-            # Only high-impact forex news gets post-analysis
-            if not self.is_forex_high_impact(news_item):
+            # Only high-impact market news gets post-analysis
+            if not self.is_high_impact_news(news_item):
                 return False
             
             # Check if it's a major economic release
@@ -307,12 +266,12 @@ class NewsAlertTrigger:
             for news_item in news_items:
                 news_id = str(news_item.get('id', ''))
                 
-                # Check if forex high impact
-                if not self.is_forex_high_impact(news_item):
+                # Check if high-impact market news
+                if not self.is_high_impact_news(news_item):
                     continue
                 
                 results['high_impact_count'] += 1
-                logger.info(f"Processing forex high-impact news: {news_item.get('title', '')[:50]}...")
+                logger.info(f"Processing high-impact market news: {news_item.get('title', '')[:50]}...")
                 
                 # Get users to alert
                 users_to_alert = self.get_users_to_alert(news_item)
