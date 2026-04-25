@@ -4777,6 +4777,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               </div>
             </div>
           )}
+          {scanState === 'default' && (
+            <div className="scan-empty-state" role="status" aria-live="polite">
+              Run an economy scan, or load any previous scans.
+            </div>
+          )}
           {scanState === 'error' && (
             <p className="analysis-placeholder">Scan unavailable right now ({scanError || 'unknown error'})</p>
           )}
@@ -5080,7 +5085,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         </div>
 
         <div className="yield-indicators-section">
-          <h2 className="analysis-title">Bond Indicators - More Coming Soon</h2>
+          <h2 className="analysis-title">
+            <span>Bond Indicators</span>
+            <span className="scan-title-separator"> - </span>
+            <span className="scan-title-economy">More Coming Soon</span>
+          </h2>
           <p className="yield-subtext">Pick a bond/yield indicator from the list below.</p>
           <div className="yield-symbol-scroll" role="tablist" aria-label="Yield symbols by economy">
             {YIELD_ECONOMY_ORDER.map((economyCode) => {
