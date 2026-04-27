@@ -766,7 +766,7 @@ class MVPNewsAnalyzer:
         # Market Status Warning (if closed)
         if trading_sessions.get('market_status') == 'closed':
             additional_context_lines.append(
-                "⚠️ MARKET STATUS: Markets are currently CLOSED (weekend/holiday). "
+                "MARKET STATUS: Markets are currently CLOSED (weekend/holiday). "
                 "Any analysis should consider that trading will resume when markets reopen. "
                 "Price movements may be limited or non-existent until markets reopen."
             )
