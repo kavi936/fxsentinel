@@ -17389,7 +17389,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BOJ Policy Rate',
-                'date': 'Mon, Apr 27',
+                'date': 'Tue, Apr 28',
                 'time': '02:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
@@ -17399,7 +17399,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Monetary Policy Statement',
-                'date': 'Mon, Apr 27',
+                'date': 'Tue, Apr 28',
                 'time': '02:30 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
@@ -17409,7 +17409,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'BOJ Outlook Report',
-                'date': 'Mon, Apr 27',
+                'date': 'Tue, Apr 28',
                 'time': '02:31 UTC',
                 'currency': 'JPY',
                 'impact': 'high',
