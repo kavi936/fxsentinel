@@ -2,6 +2,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './dashboard-tokens.css'
 import App from './App.jsx'
 
 // When a new deploy is live, the server serves a new build-version.json. We compare it to the
