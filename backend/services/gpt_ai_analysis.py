@@ -422,12 +422,12 @@ class GPTAIAnalyzer:
         logger.warning(f"❌ Using validation failed analysis for: {event.get('title', 'Unknown')}")
         
         return GPTAnalysisResult(
-            headline=f"⚠️ Data Quality Issue - {event.get('title', 'Unknown Event')}",
+            headline=f"Data Quality Issue - {event.get('title', 'Unknown Event')}",
             key_takeaway="Event data validation failed - analysis may be unreliable due to data quality issues.",
             forward_scenarios={
-                "bullish": "❌ Cannot provide reliable scenarios due to data validation issues",
-                "bearish": "❌ Cannot provide reliable scenarios due to data validation issues",
-                "neutral": "❌ Cannot provide reliable scenarios due to data validation issues"
+                "bullish": "Cannot provide reliable scenarios due to data validation issues",
+                "bearish": "Cannot provide reliable scenarios due to data validation issues",
+                "neutral": "Cannot provide reliable scenarios due to data validation issues"
             },
             event_summary={
                 "release": event.get('title', 'Unknown Event'),
@@ -622,7 +622,7 @@ class GPTAIAnalyzer:
             forward_scenarios={
                 "hawkish": f"🦅 Hawkish Tone: {speaker} signals tighter policy → {currency} strengthens. EUR/USD could test lower levels, USD/JPY higher.",
                 "dovish": f"🕊️ Dovish Tone: {speaker} signals looser policy → {currency} weakens. EUR/USD could rally, USD/JPY lower.",
-                "neutral": f"➡️ Balanced Tone: {speaker} maintains neutral stance → Range-bound trading in {currency} pairs with limited directional moves."
+                "neutral": f"Balanced Tone: {speaker} maintains neutral stance. Range-bound trading in {currency} pairs with limited directional moves."
             },
             event_summary={
                 "release": event_title,
@@ -713,12 +713,12 @@ class GPTAIAnalyzer:
             impact = "Moderate"
         
         return GPTAnalysisResult(
-            headline=f"📊 Non-Farm Payrolls Analysis - {bias} Bias Expected",
+            headline=f"Non-Farm Payrolls Analysis - {bias} Bias Expected",
             key_takeaway=f"NFP data {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show employment trends'} with {impact.lower()} USD impact.",
             forward_scenarios={
-                "bullish": f"✅ Strong NFP above {expected}: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
-                "bearish": f"❌ Weak NFP below {expected}: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
-                "neutral": f"➡️ NFP in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
+                "bullish": f"Strong NFP above {expected}: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
+                "bearish": f"Weak NFP below {expected}: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
+                "neutral": f"NFP in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
                 "release": f"Non-Farm Payrolls report for {event.get('date', 'Unknown')}",
@@ -807,12 +807,12 @@ class GPTAIAnalyzer:
             impact = "Moderate"
         
         return GPTAnalysisResult(
-            headline=f"📊 Consumer Price Index Analysis - {bias} Bias Expected",
+            headline=f"Consumer Price Index Analysis - {bias} Bias Expected",
             key_takeaway=f"CPI data {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show inflation trends'} with {impact.lower()} USD impact.",
             forward_scenarios={
-                "bullish": f"✅ Strong CPI above {expected}: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
-                "bearish": f"❌ Weak CPI below {expected}: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
-                "neutral": f"➡️ CPI in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
+                "bullish": f"Strong CPI above {expected}: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
+                "bearish": f"Weak CPI below {expected}: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
+                "neutral": f"CPI in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
                 "release": f"Consumer Price Index report for {event.get('date', 'Unknown')}",
@@ -901,12 +901,12 @@ class GPTAIAnalyzer:
             impact = "Moderate"
         
         return GPTAnalysisResult(
-            headline=f"📊 Interest Rate Decision Analysis - {bias} Bias Expected",
+            headline=f"Interest Rate Decision Analysis - {bias} Bias Expected",
             key_takeaway=f"Interest rate decision {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show policy stance'} with {impact.lower()} USD impact.",
             forward_scenarios={
-                "bullish": f"✅ Stronger than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
-                "bearish": f"❌ Weaker than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
-                "neutral": f"➡️ In line with expectations: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
+                "bullish": f"Stronger than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
+                "bearish": f"Weaker than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
+                "neutral": f"In line with expectations: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
                 "release": f"Federal Open Market Committee (FOMC) decision for {event.get('date', 'Unknown')}",
@@ -995,12 +995,12 @@ class GPTAIAnalyzer:
             impact = "Moderate"
         
         return GPTAnalysisResult(
-            headline=f"📊 Gross Domestic Product Analysis - {bias} Bias Expected",
+            headline=f"Gross Domestic Product Analysis - {bias} Bias Expected",
             key_takeaway=f"GDP data {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show economic growth'} with {impact.lower()} USD impact.",
             forward_scenarios={
-                "bullish": f"✅ Strong GDP above {expected}: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
-                "bearish": f"❌ Weak GDP below {expected}: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
-                "neutral": f"➡️ GDP in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
+                "bullish": f"Strong GDP above {expected}: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
+                "bearish": f"Weak GDP below {expected}: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
+                "neutral": f"GDP in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
                 "release": f"Gross Domestic Product report for {event.get('date', 'Unknown')}",
@@ -1089,12 +1089,12 @@ class GPTAIAnalyzer:
             impact = "Moderate"
         
         return GPTAnalysisResult(
-            headline=f"📊 Unemployment Rate Analysis - {bias} Bias Expected",
+            headline=f"Unemployment Rate Analysis - {bias} Bias Expected",
             key_takeaway=f"Unemployment rate {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show labor market trends'} with {impact.lower()} USD impact.",
             forward_scenarios={
-                "bullish": f"✅ Lower than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
-                "bearish": f"❌ Higher than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
-                "neutral": f"➡️ Unemployment rate in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
+                "bullish": f"Lower than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
+                "bearish": f"Higher than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
+                "neutral": f"Unemployment rate in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
                 "release": f"Unemployment Rate report for {event.get('date', 'Unknown')}",
@@ -1204,19 +1204,19 @@ class GPTAIAnalyzer:
         
         # Create appropriate headline and takeaway based on data availability
         if not has_data:
-            headline_text = f"📊 {event_title} - Market Impact Analysis"
+            headline_text = f"{event_title} - Market Impact Analysis"
             takeaway_text = data_note
         else:
-            headline_text = f"📊 {event_title} - {bias} Bias Expected"
+            headline_text = f"{event_title} - {bias} Bias Expected"
             takeaway_text = f"Economic data {('came in ' + bias.lower() + ' vs expectations') if is_post_event else 'expected to show economic trends'} with {impact_str.lower()} {currency} impact."
         
         return GPTAnalysisResult(
             headline=headline_text,
             key_takeaway=takeaway_text,
             forward_scenarios={
-                "bullish": f"✅ Stronger than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
-                "bearish": f"❌ Weaker than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
-                "neutral": f"➡️ Economic data in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
+                "bullish": f"Stronger than expected: USD strengthens, EUR/USD targets 1.08, USD/JPY tests 149.0",
+                "bearish": f"Weaker than expected: USD weakens, EUR/USD targets 1.09, USD/JPY tests 148.0",
+                "neutral": f"Economic data in line with {expected}: Range trading likely, EUR/USD 1.08-1.09, USD/JPY 148.0-149.0"
             },
             event_summary={
                 "release": f"{event_title} - {event.get('date', 'Unknown')}",
@@ -2059,7 +2059,7 @@ class GPTAIAnalyzer:
             market_status = trading_sessions.get('market_status', 'unknown')
             if market_status == 'closed':
                 additional_context_lines.append(
-                    "⚠️ MARKET STATUS: Markets are currently CLOSED (weekend/holiday). "
+                    "MARKET STATUS: Markets are currently CLOSED (weekend/holiday). "
                     "Any analysis should consider that trading will resume when markets reopen. "
                     "Price movements may be limited or non-existent until markets reopen."
                 )
