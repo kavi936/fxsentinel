@@ -17445,7 +17445,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '10.8%',
                 'forecast': '9.8%',
                 'previous': '9.9%'
             },
@@ -17455,7 +17455,7 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '39.3K',
                 'forecast': 'N/A',
                 'previous': '54.8K'
             },
@@ -17465,9 +17465,9 @@ class HybridEconomicCalendar:
                 'time': '13:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.1%',
-                'previous': '0.1%'
+                'previous': '0.2%'
             },
             {
                 'title': 'S&P/CS Composite-20 HPI y/y',
@@ -17475,7 +17475,7 @@ class HybridEconomicCalendar:
                 'time': '13:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '1.0%',
                 'previous': '1.2%'
             },
