@@ -13,16 +13,16 @@
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: rgba(128, 128, 128, 0.2);
-  border: 1px solid rgba(128, 128, 128, 0.3);
+  background: rgba(255, 68, 68, 0.18);
+  border: 1px solid rgba(255, 68, 68, 0.42);
   transition: all 0.2s ease;
-  color: rgba(128, 128, 128, 0.8);
+  color: rgba(255, 68, 68, 0.95);
 }
 
 .info-icon:hover {
-  background: rgba(128, 128, 128, 0.3);
-  border-color: rgba(128, 128, 128, 0.5);
-  color: rgba(128, 128, 128, 1);
+  background: rgba(255, 68, 68, 0.3);
+  border-color: rgba(255, 68, 68, 0.65);
+  color: rgba(255, 120, 120, 1);
   transform: scale(1.1);
 }
 

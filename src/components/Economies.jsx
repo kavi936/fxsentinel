@@ -2437,6 +2437,41 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     return `${hours}h`;
   };
 
+  const renderRegimeLine = (line, fallbackText) => {
+    const raw = String(line || fallbackText || '');
+    const parts = raw.split('·').map((part) => part.trim());
+
+    if (parts.length < 3) {
+      return <span>{raw}</span>;
+    }
+
+    const biasPart = parts[0];
+    const scorePart = parts[1];
+    const confidencePart = parts[2];
+
+    const scoreMatch = scorePart.match(/-?\d+(?:\.\d+)?/);
+    const scoreValue = scoreMatch ? scoreMatch[0] : null;
+    const scoreLabel = scoreValue ? scorePart.replace(scoreValue, '').trim() : scorePart;
+
+    const confidenceMatch = confidencePart.match(/\d+(?:\.\d+)?%/);
+    const confidenceValue = confidenceMatch ? confidenceMatch[0] : null;
+    const confidenceLabel = confidenceValue
+      ? confidencePart.replace(confidenceValue, '').trim()
+      : confidencePart;
+
+    return (
+      <>
+        <span>{biasPart}</span>
+        <span className="scan-regime-inline-separator"> · </span>
+        <span>{scoreLabel} </span>
+        <span className="scan-regime-inline-value">{scoreValue || 'N/A'}</span>
+        <span className="scan-regime-inline-separator"> · </span>
+        <span className="scan-regime-inline-value">{confidenceValue || 'N/A'}</span>
+        <span>{confidenceLabel ? ` ${confidenceLabel}` : ''}</span>
+      </>
+    );
+  };
+
   const handleYieldWheel = (event) => {
     event.preventDefault();
     const direction = event.deltaY > 0 ? 1 : -1;
@@ -4786,20 +4821,39 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
             <p className="analysis-placeholder">Scan unavailable right now ({scanError || 'unknown error'})</p>
           )}
           {scanState === 'ready' && holisticScan && (
-            <div className="holistic-scan-content">
+            <div className="holistic-scan-scroll-shell">
+              <div className="holistic-scan-content">
               <div className="scan-overview-bar">
                 <span className="scan-overview-item">Economy: {holisticScan.economy || selectedEconomyName}</span>
-                <span className="scan-overview-item">Data quality: {(holisticScan.data_quality?.status || 'unknown').toUpperCase()}</span>
                 {scanTimestamp && <span className="scan-overview-item">Scanned: {scanTimestamp}</span>}
               </div>
               <div className="scan-section scan-trader-brief">
                 <div className="scan-section-title">Regime Strip</div>
-                <div className="scan-meta-large">
-                  <div>{holisticScan.trader_brief?.short_term_line || 'Short-term regime unavailable.'}</div>
-                  <div>{holisticScan.trader_brief?.long_term_line || 'Long-term regime unavailable.'}</div>
-                  <div>
-                    Top pair bias: {holisticScan.trader_brief?.top_pair_bias || 'N/A'} | Calendar stress:{' '}
-                    {holisticScan.event_flags?.calendar_stress_score ?? 'N/A'}/100
+                <div className="scan-regime-strip">
+                  <div className="scan-regime-summary-row">
+                    <div className="scan-regime-pill">
+                      {renderRegimeLine(
+                        holisticScan.trader_brief?.short_term_line,
+                        'Short-term regime unavailable.'
+                      )}
+                    </div>
+                    <div className="scan-regime-pill">
+                      {renderRegimeLine(
+                        holisticScan.trader_brief?.long_term_line,
+                        'Long-term regime unavailable.'
+                      )}
+                    </div>
+                  </div>
+                  <div className="scan-regime-core-metrics">
+                    <span className="scan-regime-metric-label">Top Pair Bias</span>
+                    <span className="scan-regime-metric-value">
+                      {holisticScan.trader_brief?.top_pair_bias || 'N/A'}
+                    </span>
+                    <span className="scan-regime-metric-separator" aria-hidden="true">|</span>
+                    <span className="scan-regime-metric-label">Calendar Stress</span>
+                    <span className="scan-regime-metric-value">
+                      {holisticScan.event_flags?.calendar_stress_score ?? 'N/A'}/100
+                    </span>
                   </div>
                   {(holisticScan.trader_brief?.warnings || []).map((warning, idx) => (
                     <div key={`trader-warning-${idx}`} className="scan-trader-warning">
@@ -5080,6 +5134,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                   )}
                 </div>
               </details>
+              </div>
             </div>
           )}
         </div>
