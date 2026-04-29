@@ -4029,15 +4029,15 @@
 
 /* Live News + Analysis Card Styles */
 .live-news-analysis-card {
-  background: linear-gradient(180deg, #0a1a0a 0%, #1a2e0a 50%, #1b692d 100%);
-  border: 1px solid rgba(34, 197, 94, .25);
+  background: var(--dash-surface-main);
+  border: 1px solid var(--dash-border-subtle-brand);
   border-radius: 20px;
   margin-left: 0;
   width: 100%;
   max-width: 850px;
   min-height: 600px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15), 0 0 0 1px rgba(34, 197, 94, 0.2);
+  box-shadow: var(--dash-shadow-card);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -4052,10 +4052,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, transparent 30%, rgba(16, 185, 129, 0.05) 70%, rgba(34, 197, 94, 0.08) 100%),
-    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.02) 0%, transparent 50%);
+  background:
+    linear-gradient(135deg, rgba(218, 0, 18, 0.08) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(218, 0, 18, 0.03) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
   pointer-events: none;
   z-index: 1;
 }
@@ -4065,12 +4064,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.3);
+  border-bottom: 1px solid var(--dash-color-brand-800);
   position: relative;
   z-index: 2;
   margin-bottom: 8px;
   background: transparent;
-  backdrop-filter: blur(10px);
 }
 
 
@@ -4091,13 +4089,10 @@
   bottom: -4px;
   left: 0;
   width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, 
-    rgba(34, 197, 94, 0.8) 0%, 
-    rgba(16, 185, 129, 0.6) 50%, 
-    rgba(34, 197, 94, 0.4) 100%);
+  height: 1px;
+  background: linear-gradient(90deg, #da0012 0%, #ff4757 30%, #ff6b7a 60%, transparent 100%);
   border-radius: 1px;
-  box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 1px 4px rgba(218, 0, 18, 0.4), 0 0 6px rgba(218, 0, 18, 0.2);
 }
 
 .news-controls {
@@ -5493,15 +5488,15 @@
 
 /* Market Sentiment Card Styles - Enhanced Red Theme */
 .market-sentiment-card {
-  background: linear-gradient(135deg, #1a0a0a 0%, #2a0a0a 25%, #3d1a1a 50%, #2a0a0a 75%, #1a0a0a 100%);
-  border: 1px solid rgba(255, 68, 68, .25);
+  background: var(--dash-surface-main);
+  border: 1px solid var(--dash-border-subtle-brand);
   border-radius: 20px;
   margin-left: 0;
   width: 100%;
   max-width: 850px;
   min-height: 600px;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(255, 68, 68, 0.15), 0 0 0 1px rgba(255, 68, 68, 0.2);
+  box-shadow: var(--dash-shadow-card);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -5567,10 +5562,9 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    linear-gradient(135deg, rgba(255, 68, 68, 0.1) 0%, transparent 30%, rgba(220, 53, 69, 0.05) 70%, rgba(255, 68, 68, 0.08) 100%),
-    radial-gradient(circle at 20% 20%, rgba(220, 53, 69, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 68, 68, 0.02) 0%, transparent 50%);
+  background:
+    linear-gradient(135deg, rgba(218, 0, 18, 0.08) 0%, transparent 30%, rgba(0, 0, 0, 0.05) 70%, rgba(218, 0, 18, 0.03) 100%),
+    radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 50%);
   pointer-events: none;
   z-index: 1;
 }
@@ -5580,12 +5574,11 @@
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid rgba(255, 68, 68, 0.3);
+  border-bottom: 1px solid var(--dash-color-brand-800);
   position: relative;
   z-index: 2;
   margin-bottom: 8px;
   background: transparent;
-  backdrop-filter: blur(10px);
 }
 
 .sentiment-title {
@@ -5673,7 +5666,7 @@
   color: white;
   position: relative;
   z-index: 2;
-  background: transparent;
+  background: linear-gradient(180deg, #0f0f0f 0%, #1a0a0a 50%, #1e0505 100%);
   padding: 20px;
   direction: rtl;
 }
@@ -8325,6 +8318,7 @@
 /* Plain black button surfaces for Economic Calendar + AI Analysis areas */
 .news-calendar button,
 .ai-analysis-card button,
+.market-sentiment-card button,
 .calendar-modal button,
 .filter-modal button,
 .ai-recent-dropdown-panel button {
@@ -8334,15 +8328,25 @@
 
 .news-calendar button:hover,
 .ai-analysis-card button:hover,
+.market-sentiment-card button:hover,
 .calendar-modal button:hover,
 .filter-modal button:hover,
 .ai-recent-dropdown-panel button:hover,
 .news-calendar button:active,
 .ai-analysis-card button:active,
+.market-sentiment-card button:active,
 .calendar-modal button:active,
 .filter-modal button:active,
 .ai-recent-dropdown-panel button:active {
   background: #000000 !important;
+  background-image: none !important;
+}
+
+/* Keep this specific sentiment helper toggle transparent */
+.market-sentiment-card .vix-context-toggle,
+.market-sentiment-card .vix-context-toggle:hover,
+.market-sentiment-card .vix-context-toggle:active {
+  background: transparent !important;
   background-image: none !important;
 }
 
