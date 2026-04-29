@@ -6114,7 +6114,7 @@ const Overview = () => {
                       Conviction
                     </button>
                     <button 
-                      className={`pm-filter-btn ${pmSearchQuery ? 'active' : ''}`}
+                      className={`pm-filter-btn pm-filter-btn-icon ${pmSearchQuery ? 'active' : ''}`}
                       onClick={handlePmSearchClick}
                       title="Search Markets"
                     >
@@ -6214,7 +6214,7 @@ const Overview = () => {
                         Conviction
                       </button>
                       <button 
-                        className={`pm-filter-btn ${pmSearchQuery ? 'active' : ''}`}
+                        className={`pm-filter-btn pm-filter-btn-icon ${pmSearchQuery ? 'active' : ''}`}
                         onClick={() => { handlePmSearchClick(); setPmMobileControlsOpen(false); }}
                         title="Search Markets"
                       >
@@ -6439,11 +6439,13 @@ const Overview = () => {
                               className={`prediction-market-item ${convictionClass} ${isExpanded ? 'expanded' : ''}`}
                             >
                               {/* Header - Question with Conviction Badge */}
-                              <div className="market-header-row" onClick={() => handleMarketToggle(market)} style={{ cursor: 'pointer' }}>
-                                <div className="market-question">
-                                  {market.question}
+                              <div className="market-header-row" onClick={() => handleMarketToggle(market)}>
+                                <div className="market-header-main">
+                                  <div className="market-question">
+                                    {market.question}
+                                  </div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div className="market-header-controls">
                                   {convictionLevel && (
                                     <div className={`conviction-badge conviction-${convictionLevel}`}>
                                       {convictionLevel.toUpperCase()}
@@ -6633,7 +6635,7 @@ const Overview = () => {
                                   {/* Market context section: affected pairs and other source data */}
                                   <div className="market-chart-context">
                                     {market.affected_currency_pairs && market.affected_currency_pairs.length > 0 && (
-                                      <div className="market-context-block">
+                                      <div className="market-context-block market-context-block-pairs">
                                         <span className="market-context-label">Affected pairs</span>
                                         <div className="market-context-pairs">
                                           {market.affected_currency_pairs.map((pair) => (
@@ -6643,7 +6645,7 @@ const Overview = () => {
                                       </div>
                                     )}
                                     {(market.price_delta_24h != null || market.price_delta_7d != null) && (
-                                      <div className="market-context-block">
+                                      <div className="market-context-block market-context-block-movement">
                                         <span className="market-context-label">Price movement</span>
                                         <span className="market-context-value">
                                           {market.price_delta_24h != null && `24h ${market.price_delta_24h >= 0 ? '+' : ''}${market.price_delta_24h.toFixed(1)}%`}
@@ -6653,7 +6655,7 @@ const Overview = () => {
                                       </div>
                                     )}
                                     {market.resolution_date && (
-                                      <div className="market-context-block">
+                                      <div className="market-context-block market-context-block-meta">
                                         <span className="market-context-label">Resolves</span>
                                         <span className="market-context-value">
                                           {(() => {
@@ -6667,13 +6669,13 @@ const Overview = () => {
                                       </div>
                                     )}
                                     {market.platform && (
-                                      <div className="market-context-block">
+                                      <div className="market-context-block market-context-block-meta">
                                         <span className="market-context-label">Source</span>
                                         <span className="market-context-value">{market.platform === 'kalshi' ? 'Kalshi' : 'Polymarket'}</span>
                                       </div>
                                     )}
                                     {market.volume != null && market.volume > 0 && (
-                                      <div className="market-context-block">
+                                      <div className="market-context-block market-context-block-meta">
                                         <span className="market-context-label">Volume</span>
                                         <span className="market-context-value">
                                           {market.volume >= 1e6 ? `$${(market.volume / 1e6).toFixed(2)}M` : market.volume >= 1e3 ? `$${(market.volume / 1e3).toFixed(1)}K` : `$${market.volume.toFixed(0)}`}
