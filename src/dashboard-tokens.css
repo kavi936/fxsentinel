@@ -68,6 +68,26 @@
   --dash-border-brand: rgba(255, 68, 68, 0.3);
   --dash-border-brand-strong: rgba(255, 68, 68, 0.5);
 
+  /* ===== Live News header control tokens ===== */
+  --dash-news-ctrl-group-bg: rgba(255, 255, 255, 0.03);
+  --dash-news-ctrl-group-border: rgba(255, 255, 255, 0.1);
+
+  --dash-news-ctrl-bg: #000000;
+  --dash-news-ctrl-text: #ff6666;
+  --dash-news-ctrl-border: rgba(255, 68, 68, 0.35);
+  --dash-news-ctrl-text-hover: #ff8a8a;
+  --dash-news-ctrl-border-hover: rgba(255, 68, 68, 0.55);
+  --dash-news-ctrl-bg-active: #000000;
+  --dash-news-ctrl-border-active: rgba(255, 68, 68, 0.45);
+  --dash-news-ctrl-shadow-active: 0 0 8px rgba(255, 68, 68, 0.2);
+  --dash-news-ctrl-disabled-opacity: 0.4;
+
+  --dash-news-ctrl-neutral-text: rgba(255, 255, 255, 0.7);
+  --dash-news-ctrl-neutral-bg-hover: rgba(255, 255, 255, 0.08);
+  --dash-news-ctrl-neutral-border-hover: rgba(255, 255, 255, 0.15);
+
+  --dash-news-ctrl-focus-ring: 0 0 0 2px rgba(255, 68, 68, 0.35);
+
   /* ===== Effects ===== */
   --dash-shadow-card: 0 8px 32px #0006, 0 0 0 1px #ff44441a;
   --dash-shadow-control: 0 2px 8px rgba(0, 0, 0, 0.3);

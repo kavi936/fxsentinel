@@ -521,7 +521,7 @@ const LiveNewsFeed = () => {
 
   // Get user-friendly error messages (not technical)
   const getUserFriendlyError = (error) => {
-    if (!error) return 'Something went wrong. Please try again.';
+    if (!error) return 'We could not complete the request. Try again in a moment.';
     
     const errorMessage = error.message || String(error);
     const lowerMessage = errorMessage.toLowerCase();
@@ -529,61 +529,47 @@ const LiveNewsFeed = () => {
     // Network errors
     if (error.name === 'AbortError' || lowerMessage.includes('timeout') || lowerMessage.includes('took too long')) {
       if (lowerMessage.includes('longer than usual') || lowerMessage.includes('server may be busy')) {
-        return error.message || 'Refresh is taking longer than usual. Please try again in a moment.';
+        return 'The feed is taking longer than usual. The server may be busy, so please retry shortly.';
       }
-      return 'Request took too long. Please check your connection and try again.';
+      return 'The request timed out before we got a response. Check your connection and try again.';
     }
     
     if (error.name === 'TypeError' && (lowerMessage.includes('fetch') || lowerMessage.includes('network'))) {
-      return 'Unable to connect. Please check your internet connection.';
+      return 'We could not reach the news service. Check your internet connection and try again.';
     }
     
     // API errors
     if (lowerMessage.includes('api error: 500') || lowerMessage.includes('500')) {
-      return 'Server error. Please try again in a moment.';
+      return 'The news service returned a server error (500). Retry in a few moments.';
     }
     
     if (lowerMessage.includes('api error: 429') || lowerMessage.includes('429')) {
-      return 'Too many requests. Please wait a moment before trying again.';
+      return 'Request limit reached (429). Please wait a short while before retrying.';
     }
     
     if (lowerMessage.includes('api error: 404') || lowerMessage.includes('404')) {
-      return 'Content not found. Please refresh the page.';
+      return 'Requested news content was not found (404). Refresh and try again.';
     }
     
     if (lowerMessage.includes('invalid response format') || lowerMessage.includes('invalid response')) {
-      return 'Received unexpected data. Please refresh the page.';
+      return 'We received an unexpected response format. Refresh and try again.';
     }
     
     // Analysis errors
     if (lowerMessage.includes('failed ai analysis') || lowerMessage.includes('analyze news')) {
-      return 'Unable to analyze news. Please try again.';
+      return 'AI analysis could not be completed for this item. Please retry.';
     }
     
     if (lowerMessage.includes('failed to load cached analysis')) {
-      return 'Unable to load saved analysis. Please try again.';
+      return 'Saved analysis is temporarily unavailable. Please retry in a moment.';
     }
     
     if (lowerMessage.includes('failed to load news history')) {
-      return 'Unable to load news history. Please try again.';
+      return 'News history could not be loaded right now. Please retry shortly.';
     }
     
     // Generic fallback
-    return 'Something went wrong. Please try again.';
-  };
-
-  const getImpactColor = (impact) => {
-    switch (impact?.toLowerCase()) {
-      case 'high': return '#ff4757';
-      case 'medium': return '#ffa502';
-      case 'low': return '#2ed573';
-      default: return '#747d8c';
-    }
-  };
-
-  const getImpactIcon = (impact) => {
-    // Return empty string - no emojis, just use text
-    return '';
+    return 'Something unexpected happened while loading data. Please try again.';
   };
 
   const getSentimentColor = (sentiment) => {
@@ -592,6 +578,19 @@ const LiveNewsFeed = () => {
       case 'bearish': return '#ff4757';
       case 'neutral': return '#ffa502';
       default: return '#747d8c';
+    }
+  };
+
+  const getImpactLabel = (impact) => {
+    switch (String(impact || '').toLowerCase()) {
+      case 'high':
+        return 'HIGH';
+      case 'medium':
+        return 'Medium';
+      case 'low':
+        return 'Low';
+      default:
+        return 'Low';
     }
   };
 
@@ -1185,9 +1184,9 @@ const LiveNewsFeed = () => {
           <div className="error-state">
             <div className="error-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
               </svg>
             </div>
             <p className="error-message">{error}</p>
@@ -1273,13 +1272,13 @@ const LiveNewsFeed = () => {
                     <span className="source-name">{newsItem.source}</span>
                     <span className="news-time">{formatTime(newsItem.added_to_feed_at || newsItem.published_at)}</span>
                   </div>
-                  <div className="news-impact">
-                    <span 
-                      className="impact-badge"
-                      style={{ backgroundColor: getImpactColor(newsItem.impact) }}
-                    >
-                      {getImpactIcon(newsItem.impact)} {newsItem.impact}
-                    </span>
+                  <div className={`news-impact impact-${String(newsItem.impact || 'low').toLowerCase()}`}>
+                    <span className="impact-label">{getImpactLabel(newsItem.impact)}</span>
+                    <div className="impact-bars" aria-label={`Impact level ${newsItem.impact || 'low'}`}>
+                      <span className="impact-bar"></span>
+                      <span className="impact-bar"></span>
+                      <span className="impact-bar"></span>
+                    </div>
                   </div>
                 </div>
                 
@@ -1407,7 +1406,7 @@ const LiveNewsFeed = () => {
                         </div>
                         
                         {/* News Impact Paragraph */}
-                        <div className="news-impact">
+                        <div className="market-impact-section">
                           <h5>Market Impact</h5>
                           <p>{aiAnalysis.news_impact || 'NO NEWS IMPACT DATA'}</p>
                         </div>
@@ -1435,7 +1434,7 @@ const LiveNewsFeed = () => {
                         </div>
                         
                         {/* Trading Implications Paragraph */}
-                        <div className="trading-implications">
+                        <div className="trading-implications-section">
                           <h5>Trading Implications</h5>
                           <p>{aiAnalysis.trading_implications || 'NO TRADING IMPLICATIONS DATA'}</p>
                         </div>
