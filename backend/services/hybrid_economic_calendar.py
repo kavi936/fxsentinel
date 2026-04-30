@@ -18139,7 +18139,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': '2.2%',
                 'previous': '1.4%'
             },
@@ -18149,7 +18149,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.3%',
                 'previous': '0.4%'
             },
@@ -18159,7 +18159,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': '0.8%',
                 'previous': '0.7%'
             },
@@ -18169,9 +18169,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '3.6%',
                 'forecast': '3.9%',
-                'previous': '3.6%'
+                'previous': '3.7%'
             },
             {
                 'title': 'Unemployment Claims',
@@ -18179,7 +18179,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '189K',
                 'forecast': '212K',
                 'previous': '214K'
             },
@@ -18199,7 +18199,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.9%',
                 'previous': '0.5%'
             },
@@ -18209,7 +18209,7 @@ class HybridEconomicCalendar:
                 'time': '12:45 UTC',
                 'currency': 'EUR',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.9%',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
