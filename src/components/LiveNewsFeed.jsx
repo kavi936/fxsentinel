@@ -594,6 +594,15 @@ const LiveNewsFeed = () => {
     }
   };
 
+  const normalizeImpactLevel = (impact) => {
+    const value = String(impact || '').toLowerCase().trim();
+    if (!value) return null;
+    if (value.includes('high') || value === 'h') return 'high';
+    if (value.includes('medium') || value === 'med' || value === 'm') return 'medium';
+    if (value.includes('low') || value === 'l') return 'low';
+    return null;
+  };
+
   const getSentimentIcon = (sentiment) => {
     // Return empty string - no emojis, just use text
     return '';
@@ -734,15 +743,11 @@ const LiveNewsFeed = () => {
                 
                 // Enhanced filtering logic
                 let passes = false;
+                const effectiveImpact = getEffectiveImpact(item);
                 if (filter === 'all') {
-                    // For 'all' filter, apply broad market relevance (exclude stocks/equities)
-                    passes = isMarketRelevant(item);
-                } else if (filter === 'high') {
-                    // For 'high' filter, apply strict high-impact market criteria
-                    passes = isHighImpactMarket(item);
+                    passes = true;
                 } else {
-                    // For 'medium' and 'low' filters, check impact level + market relevance
-                    passes = item.impact?.toLowerCase() === filter && isMarketRelevant(item);
+                    passes = effectiveImpact === filter;
                 }
                 
                 // Debug logging for filtered items
@@ -751,6 +756,7 @@ const LiveNewsFeed = () => {
                     title: item.title?.substring(0, 60),
                     source: item.source,
                     impact: item.impact,
+                    effectiveImpact,
                     filter,
                     isMarketRelevant: isMarketRelevant(item)
                   });
@@ -866,6 +872,19 @@ const LiveNewsFeed = () => {
         return highImpactCount >= 3;
     };
 
+    const getEffectiveImpact = (item) => {
+        const explicitImpact =
+            normalizeImpactLevel(item?.impact) ||
+            normalizeImpactLevel(item?.impact_level) ||
+            normalizeImpactLevel(item?.analysis_summary?.impact);
+
+        if (explicitImpact) return explicitImpact;
+
+        if (isHighImpactMarket(item)) return 'high';
+        if (isMarketRelevant(item)) return 'medium';
+        return 'low';
+    };
+
   const cleanNewsTitle = (title) => {
     if (!title) return title;
     
@@ -973,7 +992,7 @@ const LiveNewsFeed = () => {
     <div className="live-news-feed">
       <div className="news-header">
         <div className="header-main">
-          <h2 className="news-title">LIVE NEWS</h2>
+          <h2 className="live-news-header-title">LIVE NEWS</h2>
           <InfoIcon 
             tooltipText="Live News + AI Analysis: Our system aggregates financial news from multiple reliable sources and provides AI-powered analysis. The system uses advanced natural language processing to analyze sentiment, identify market implications, and assess potential trading opportunities. Analysis includes confidence scores and affected currency pairs."
             position="bottom"
@@ -1261,7 +1280,9 @@ const LiveNewsFeed = () => {
               </div>
             )}
             <div className="news-list">
-            {currentNewsList.map((newsItem) => (
+            {currentNewsList.map((newsItem) => {
+              const effectiveImpact = getEffectiveImpact(newsItem);
+              return (
               <div 
                 key={newsItem.id}
                 className={`news-item ${selectedNews?.id === newsItem.id ? 'selected' : ''}`}
@@ -1272,9 +1293,9 @@ const LiveNewsFeed = () => {
                     <span className="source-name">{newsItem.source}</span>
                     <span className="news-time">{formatTime(newsItem.added_to_feed_at || newsItem.published_at)}</span>
                   </div>
-                  <div className={`news-impact impact-${String(newsItem.impact || 'low').toLowerCase()}`}>
-                    <span className="impact-label">{getImpactLabel(newsItem.impact)}</span>
-                    <div className="impact-bars" aria-label={`Impact level ${newsItem.impact || 'low'}`}>
+                  <div className={`news-impact impact-${effectiveImpact}`}>
+                    <span className="impact-label">{getImpactLabel(effectiveImpact)}</span>
+                    <div className="impact-bars" aria-label={`Impact level ${effectiveImpact}`}>
                       <span className="impact-bar"></span>
                       <span className="impact-bar"></span>
                       <span className="impact-bar"></span>
@@ -1283,7 +1304,7 @@ const LiveNewsFeed = () => {
                 </div>
                 
                 <div className="news-item-content">
-                  <h3 className="news-title">{newsItem.title}</h3>
+                  <h3 className="live-news-item-title">{newsItem.title}</h3>
                   <p className="news-summary">{newsItem.summary}</p>
                   
                   {(() => {
@@ -1474,7 +1495,7 @@ const LiveNewsFeed = () => {
                   </div>
                 )}
               </div>
-            ))}
+            )})}
           </div>
           </>
         )}
