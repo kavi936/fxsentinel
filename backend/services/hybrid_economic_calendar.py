@@ -17747,7 +17747,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-6.2M',
                 'forecast': 'N/A',
                 'previous': '1.9M'
             },
@@ -17757,7 +17757,7 @@ class HybridEconomicCalendar:
                 'time': '18:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.75%',
                 'forecast': '3.75%',
                 'previous': '3.75%'
             },
@@ -17787,7 +17787,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.5%',
                 'forecast': '0.9%',
                 'previous': '-2.1%'
             },
@@ -17797,67 +17797,67 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.7%',
                 'forecast': '1.0%',
                 'previous': '-0.2%'
             },
             {
                 'title': 'ANZ Business Confidence',
-                'date': 'Wed, Apr 29',
+                'date': 'Thu, Apr 30',
                 'time': '01:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-10.6',
                 'forecast': 'N/A',
                 'previous': '32.5'
             },
             {
                 'title': 'Import Prices q/q',
-                'date': 'Wed, Apr 29',
+                'date': 'Thu, Apr 30',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '-0.6%',
                 'previous': '0.9%'
             },
             {
                 'title': 'Private Sector Credit m/m',
-                'date': 'Wed, Apr 29',
+                'date': 'Thu, Apr 30',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.6%',
                 'previous': '0.6%'
             },
             {
                 'title': 'Manufacturing PMI',
-                'date': 'Wed, Apr 29',
+                'date': 'Thu, Apr 30',
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.3',
                 'forecast': '50.2',
                 'previous': '50.4'
             },
             {
                 'title': 'Non-Manufacturing PMI',
-                'date': 'Wed, Apr 29',
+                'date': 'Thu, Apr 30',
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '49.4',
                 'forecast': '49.9',
                 'previous': '50.1'
             },
             {
                 'title': 'RatingDog Manufacturing PMI',
-                'date': 'Wed, Apr 29',
+                'date': 'Thu, Apr 30',
                 'time': '01:45 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '52.2',
                 'forecast': '51.0',
                 'previous': '50.8'
             },
@@ -17869,7 +17869,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '32.2',
                 'forecast': '32.6',
                 'previous': '33.3'
             },
@@ -17879,7 +17879,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-29.3%',
                 'forecast': '-28.9%',
                 'previous': '-4.9%'
             },
@@ -17889,7 +17889,7 @@ class HybridEconomicCalendar:
                 'time': '05:30 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.7%',
                 'previous': '-1.4%'
             },
@@ -17899,7 +17899,7 @@ class HybridEconomicCalendar:
                 'time': '05:30 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.0%',
                 'forecast': '0.2%',
                 'previous': '0.2%'
             },
