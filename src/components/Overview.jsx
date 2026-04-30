@@ -4265,8 +4265,9 @@ const Overview = () => {
     try {
       const newWindow = window.open(openUrl, '_blank', 'noopener,noreferrer');
       
-      // Check if popup was blocked
-      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      // Only fallback when popup creation truly fails.
+      // Some browsers can report incomplete window properties even when the tab opened successfully.
+      if (!newWindow) {
         // Popup was blocked, use link method instead
         const link = document.createElement('a');
         link.href = openUrl;
