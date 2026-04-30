@@ -17929,7 +17929,7 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': '1.0%',
                 'previous': '0.9%'
             },
@@ -17939,7 +17939,7 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': '0.0%',
                 'previous': '-0.1%'
             },
@@ -17949,7 +17949,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '97.9',
                 'forecast': '95.9',
                 'previous': '96.1'
             },
@@ -17959,7 +17959,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.5%',
                 'previous': '0.8%'
             },
@@ -17969,7 +17969,7 @@ class HybridEconomicCalendar:
                 'time': '07:55 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '20K',
                 'forecast': '5K',
                 'previous': '0K'
             },
@@ -17979,7 +17979,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.1%',
                 'previous': '0.3%'
             },
@@ -17989,7 +17989,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.1%',
                 'previous': '0.3%'
             },
@@ -17999,7 +17999,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.2%',
                 'forecast': '5.3%',
                 'previous': '5.3%'
             },
@@ -18009,7 +18009,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.2%',
                 'forecast': '2.2%',
                 'previous': '2.3%'
             },
@@ -18019,7 +18019,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '3.0%',
                 'forecast': '3.0%',
                 'previous': '2.5%'
             },
@@ -18029,7 +18029,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '1.0%',
                 'previous': '0.5%'
             },
@@ -18039,7 +18039,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.2%',
                 'previous': '0.3%'
             },
@@ -18049,7 +18049,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.2%',
                 'forecast': '6.2%',
                 'previous': '6.2%'
             },
