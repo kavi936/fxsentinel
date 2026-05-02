@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useMeta } from '../hooks/useMeta';
@@ -9,13 +9,14 @@ import logoPng from '../assets/fxsentinel_logo_nobg.png';
 import logoWebp from '../assets/fxsentinel_logo_nobg.webp';
 import { BackgroundBeams } from './BackgroundBeams';
 import { PRESET_MARKET_INSTRUMENTS } from '../constants/forexPairs';
+import { MAX_TRADER_MARKETS } from '../constants/traderProfileLimits';
 import {
   PRIMARY_GOALS,
   REFERRAL_SOURCES,
   labelForPrimaryGoal,
   labelForReferralSource,
 } from '../constants/onboardingSurveyOptions';
-import { parseInstrumentSymbol } from '../utils/instrumentInput';
+import { parseInstrumentSymbol, filterInstrumentsBySearch } from '../utils/instrumentInput';
 
 const TRADING_STYLES = [
   { value: 'day', label: 'Day trading', hint: 'Intraday decisions' },
@@ -60,6 +61,12 @@ const OnboardingSurvey = () => {
   const [primaryGoal, setPrimaryGoal] = useState('stay_informed');
   const [referralSource, setReferralSource] = useState('prefer_not_say');
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [marketSearchQuery, setMarketSearchQuery] = useState('');
+
+  const filteredPresetMarkets = useMemo(
+    () => filterInstrumentsBySearch(PRESET_MARKET_INSTRUMENTS, marketSearchQuery),
+    [marketSearchQuery]
+  );
 
   const fetchProfile = useCallback(async () => {
     if (!currentUser) return;
@@ -98,12 +105,30 @@ const OnboardingSurvey = () => {
     fetchProfile();
   }, [fetchProfile]);
 
+  useEffect(() => {
+    if (step !== 3) setMarketSearchQuery('');
+  }, [step]);
+
   const togglePair = (pair) => {
     setSelectedPairs((prev) => {
-      const next = new Set(prev);
-      if (next.has(pair)) next.delete(pair);
-      else next.add(pair);
-      return next;
+      if (prev.has(pair)) {
+        setTimeout(() => setError(''), 0);
+        const next = new Set(prev);
+        next.delete(pair);
+        return next;
+      }
+      if (prev.size >= MAX_TRADER_MARKETS) {
+        setTimeout(
+          () =>
+            setError(
+              `You can select at most ${MAX_TRADER_MARKETS} markets (FXSentinel limit). Remove one to add another.`
+            ),
+          0
+        );
+        return prev;
+      }
+      setTimeout(() => setError(''), 0);
+      return new Set([...prev, pair]);
     });
   };
 
@@ -111,6 +136,16 @@ const OnboardingSurvey = () => {
     const p = parseInstrumentSymbol(customPair);
     if (!p) {
       setError('Use BASE/QUOTE — e.g. EUR/USD, XAU/USD, US500/USD, GER40/EUR.');
+      return;
+    }
+    if (selectedPairs.has(p)) {
+      setError('That market is already in your list.');
+      return;
+    }
+    if (selectedPairs.size >= MAX_TRADER_MARKETS) {
+      setError(
+        `At most ${MAX_TRADER_MARKETS} markets. Remove one before adding another.`
+      );
       return;
     }
     setError('');
@@ -122,6 +157,10 @@ const OnboardingSurvey = () => {
     setError('');
     if (step === 3 && selectedPairs.size < 1) {
       setError('Select or add at least one market to continue.');
+      return;
+    }
+    if (step === 3 && selectedPairs.size > MAX_TRADER_MARKETS) {
+      setError(`Choose at most ${MAX_TRADER_MARKETS} markets to match your saved profile limit.`);
       return;
     }
     setStep((s) => Math.min(s + 1, STEP_COUNT - 1));
@@ -161,6 +200,11 @@ const OnboardingSurvey = () => {
     const pairs = [...selectedPairs];
     if (pairs.length < 1) {
       setError('Select or add at least one market.');
+      setStep(3);
+      return;
+    }
+    if (pairs.length > MAX_TRADER_MARKETS) {
+      setError(`Select at most ${MAX_TRADER_MARKETS} markets before finishing.`);
       setStep(3);
       return;
     }
@@ -327,19 +371,69 @@ const OnboardingSurvey = () => {
                         FXSentinel focuses on macro: FX, commodities, indices, and related markets — not individual
                         stocks. Pick from the list or add your broker symbol below. Not financial advice.
                       </p>
-                      <div className="onboarding-pair-scroll" role="region" aria-label="Preset markets">
-                        <div className="onboarding-pair-grid">
-                          {PRESET_MARKET_INSTRUMENTS.map((pair) => (
-                            <label key={pair} className="onboarding-pair-tile">
-                              <input
-                                type="checkbox"
-                                checked={selectedPairs.has(pair)}
-                                onChange={() => togglePair(pair)}
-                              />
-                              <span>{pair}</span>
-                            </label>
-                          ))}
+                      <div className="onboarding-market-search-wrap">
+                        <div className="onboarding-market-search-header">
+                          <label className="onboarding-market-search-label" htmlFor="onboarding-market-search">
+                            Search markets
+                          </label>
+                          <span
+                            className={`onboarding-market-selected-pill ${
+                              selectedPairs.size >= MAX_TRADER_MARKETS ? 'is-at-cap' : ''
+                            }`}
+                            aria-live="polite"
+                          >
+                            {selectedPairs.size}/{MAX_TRADER_MARKETS} selected
+                          </span>
                         </div>
+                        <input
+                          id="onboarding-market-search"
+                          type="search"
+                          className="onboarding-market-search-input"
+                          placeholder="Filter list — e.g. JPY, XAU, US500, eurusd…"
+                          value={marketSearchQuery}
+                          onChange={(e) => setMarketSearchQuery(e.target.value)}
+                          autoComplete="off"
+                          enterKeyHint="search"
+                          aria-controls="onboarding-preset-markets-grid"
+                          aria-describedby="onboarding-market-search-hint"
+                        />
+                        <p className="onboarding-market-search-hint" id="onboarding-market-search-hint">
+                          Same symbols are saved to your profile as <span className="onboarding-code">BASE/QUOTE</span>.
+                        </p>
+                        {marketSearchQuery.trim() ? (
+                          <p className="onboarding-market-search-meta" aria-live="polite">
+                            {filteredPresetMarkets.length} match
+                            {filteredPresetMarkets.length === 1 ? '' : 'es'} in list
+                          </p>
+                        ) : null}
+                      </div>
+                      <div className="onboarding-pair-scroll" role="region" aria-label="Preset markets">
+                        {filteredPresetMarkets.length === 0 ? (
+                          <p className="onboarding-market-search-empty" id="onboarding-preset-markets-grid">
+                            No presets match that search. Try another term, or add a custom symbol as{' '}
+                            <strong>BASE/QUOTE</strong> below.
+                          </p>
+                        ) : (
+                          <div
+                            className="onboarding-pair-grid"
+                            id="onboarding-preset-markets-grid"
+                          >
+                            {filteredPresetMarkets.map((pair) => (
+                              <label key={pair} className="onboarding-pair-tile">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedPairs.has(pair)}
+                                  disabled={
+                                    !selectedPairs.has(pair) &&
+                                    selectedPairs.size >= MAX_TRADER_MARKETS
+                                  }
+                                  onChange={() => togglePair(pair)}
+                                />
+                                <span>{pair}</span>
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="onboarding-custom-own">
                         <p className="onboarding-custom-own-title">Not in the list?</p>
