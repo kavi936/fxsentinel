@@ -3,13 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { config } from '../config';
 import { PRESET_MARKET_INSTRUMENTS } from '../constants/forexPairs';
+import { MAX_TRADER_MARKETS } from '../constants/traderProfileLimits';
 import { PRIMARY_GOALS, REFERRAL_SOURCES } from '../constants/onboardingSurveyOptions';
-import { parseInstrumentSymbol } from '../utils/instrumentInput';
+import { parseInstrumentSymbol, filterInstrumentsBySearch } from '../utils/instrumentInput';
 import { startOnboardingTour } from './OnboardingTour';
 import './ProfilePopup.css';
-
-/** Matches backend MAX_PAIRS in user_trader_profile.py */
-const MAX_TRADER_MARKETS = 24;
 
 function buildTraderPrefsFromApi(tp) {
   const pairs =
@@ -80,6 +78,12 @@ const ProfilePopup = ({ isOpen, onClose }) => {
   /** Last saved server state; used for dirty detection and Discard */
   const [traderPrefsBaseline, setTraderPrefsBaseline] = useState(null);
   const [traderCustomPair, setTraderCustomPair] = useState('');
+  const [traderMarketSearch, setTraderMarketSearch] = useState('');
+
+  const filteredTraderPresetMarkets = useMemo(
+    () => filterInstrumentsBySearch(PRESET_MARKET_INSTRUMENTS, traderMarketSearch),
+    [traderMarketSearch]
+  );
 
   const traderPrefsDirty = useMemo(() => {
     if (traderPrefsLoading || !traderPrefsBaseline) return false;
@@ -459,6 +463,10 @@ const ProfilePopup = ({ isOpen, onClose }) => {
     return () => clearInterval(interval);
   }, [isOpen, currentUser]);
 
+  useEffect(() => {
+    if (!isOpen) setTraderMarketSearch('');
+  }, [isOpen]);
+
   const getUserDisplayName = (truncate = false) => {
     if (!currentUser) return 'Guest';
     
@@ -730,20 +738,76 @@ const ProfilePopup = ({ isOpen, onClose }) => {
                       </div>
                       <div className="form-group">
                         <label>Markets you follow</label>
-                        <div className="profile-trader-pair-scroll">
-                          <div className="profile-trader-pair-grid">
-                            {PRESET_MARKET_INSTRUMENTS.map((pair) => (
-                              <label key={pair} className="profile-trader-pair-tile">
-                                <input
-                                  type="checkbox"
-                                  disabled={traderPrefsSaving}
-                                  checked={traderPrefs.primary_pairs.includes(pair)}
-                                  onChange={() => toggleTraderPair(pair)}
-                                />
-                                <span>{pair}</span>
-                              </label>
-                            ))}
+                        <div className="profile-trader-market-search-wrap">
+                          <div className="profile-trader-market-search-header">
+                            <label
+                              className="profile-trader-market-search-label"
+                              htmlFor="profile-trader-market-search"
+                            >
+                              Search markets
+                            </label>
+                            <span
+                              className={`profile-trader-market-selected-pill ${
+                                traderPrefs.primary_pairs.length >= MAX_TRADER_MARKETS
+                                  ? 'is-at-cap'
+                                  : ''
+                              }`}
+                              aria-live="polite"
+                            >
+                              {traderPrefs.primary_pairs.length}/{MAX_TRADER_MARKETS} selected
+                            </span>
                           </div>
+                          <input
+                            id="profile-trader-market-search"
+                            type="search"
+                            className="profile-trader-market-search-input"
+                            placeholder="Filter list — JPY, XAU, US500…"
+                            value={traderMarketSearch}
+                            onChange={(e) => setTraderMarketSearch(e.target.value)}
+                            disabled={traderPrefsSaving}
+                            autoComplete="off"
+                            enterKeyHint="search"
+                            aria-controls="profile-trader-preset-markets-grid"
+                            aria-describedby="profile-trader-market-search-hint"
+                          />
+                          <p className="profile-trader-market-search-hint" id="profile-trader-market-search-hint">
+                            Saved as <strong>BASE/QUOTE</strong> on your account (same as onboarding).
+                          </p>
+                          {traderMarketSearch.trim() ? (
+                            <p className="profile-trader-market-search-meta" aria-live="polite">
+                              {filteredTraderPresetMarkets.length} match
+                              {filteredTraderPresetMarkets.length === 1 ? '' : 'es'} in list
+                            </p>
+                          ) : null}
+                        </div>
+                        <div className="profile-trader-pair-scroll">
+                          {filteredTraderPresetMarkets.length === 0 ? (
+                            <p
+                              className="profile-trader-market-search-empty"
+                              id="profile-trader-preset-markets-grid"
+                            >
+                              No presets match that search. Try another term, or add a custom{' '}
+                              <strong>BASE/QUOTE</strong> below.
+                            </p>
+                          ) : (
+                            <div className="profile-trader-pair-grid" id="profile-trader-preset-markets-grid">
+                              {filteredTraderPresetMarkets.map((pair) => (
+                                <label key={pair} className="profile-trader-pair-tile">
+                                  <input
+                                    type="checkbox"
+                                    disabled={
+                                      traderPrefsSaving ||
+                                      (!traderPrefs.primary_pairs.includes(pair) &&
+                                        traderPrefs.primary_pairs.length >= MAX_TRADER_MARKETS)
+                                    }
+                                    checked={traderPrefs.primary_pairs.includes(pair)}
+                                    onChange={() => toggleTraderPair(pair)}
+                                  />
+                                  <span>{pair}</span>
+                                </label>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <p className="profile-trader-custom-label">Not in the list? Add BASE/QUOTE (e.g. US500/USD)</p>
                         <div className="profile-trader-custom-pair">
