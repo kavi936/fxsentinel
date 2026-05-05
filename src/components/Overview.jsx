@@ -2438,15 +2438,19 @@ const Overview = () => {
   const calendarTableTouchRef = useRef({
     startX: 0,
     startY: 0,
+    startScrollLeft: 0,
+    startAt: 0,
     isScrollingGesture: false,
-    lastScrollGestureAt: 0
+    lastScrollGestureAt: 0,
+    allowRowTap: false
   });
   const calendarTableWrapRef = useRef(null);
   const calendarMobileScrollbarRef = useRef(null);
   const [calendarMobileScrollMetrics, setCalendarMobileScrollMetrics] = useState({
-    enabled: false,
+    enabled: true,
     scrollWidth: 0,
-    clientWidth: 0
+    clientWidth: 0,
+    scrollLeft: 0
   });
 
   // Economic calendar card width for responsive currency pairs display
@@ -3261,9 +3265,13 @@ const Overview = () => {
   const handleCalendarTableTouchStart = (e) => {
     const touch = e.touches?.[0];
     if (!touch) return;
+    const wrap = calendarTableWrapRef.current;
     calendarTableTouchRef.current.startX = touch.clientX;
     calendarTableTouchRef.current.startY = touch.clientY;
+    calendarTableTouchRef.current.startScrollLeft = wrap?.scrollLeft ?? 0;
+    calendarTableTouchRef.current.startAt = Date.now();
     calendarTableTouchRef.current.isScrollingGesture = false;
+    calendarTableTouchRef.current.allowRowTap = false;
   };
 
   const handleCalendarTableTouchMove = (e) => {
@@ -3272,7 +3280,8 @@ const Overview = () => {
 
     const dx = Math.abs(touch.clientX - calendarTableTouchRef.current.startX);
     const dy = Math.abs(touch.clientY - calendarTableTouchRef.current.startY);
-    const GESTURE_THRESHOLD_PX = 8;
+    // Bias toward scroll intent on phones to avoid accidental row taps.
+    const GESTURE_THRESHOLD_PX = 14;
 
     if (dx > GESTURE_THRESHOLD_PX || dy > GESTURE_THRESHOLD_PX) {
       calendarTableTouchRef.current.isScrollingGesture = true;
@@ -3280,19 +3289,40 @@ const Overview = () => {
   };
 
   const handleCalendarTableTouchEnd = () => {
-    if (calendarTableTouchRef.current.isScrollingGesture) {
+    const wrap = calendarTableWrapRef.current;
+    const scrollDelta = Math.abs((wrap?.scrollLeft ?? 0) - calendarTableTouchRef.current.startScrollLeft);
+    const touchDurationMs = Date.now() - calendarTableTouchRef.current.startAt;
+
+    // Strict tap qualification for mobile table rows:
+    // - no drag gesture detected
+    // - no meaningful horizontal table movement
+    // - quick tap only (longer contact is treated as scroll intent)
+    const isTapIntent =
+      !calendarTableTouchRef.current.isScrollingGesture &&
+      scrollDelta < 3 &&
+      touchDurationMs <= 180;
+
+    calendarTableTouchRef.current.allowRowTap = isTapIntent;
+
+    if (!isTapIntent) {
       calendarTableTouchRef.current.lastScrollGestureAt = Date.now();
     }
   };
 
   const handleCalendarTableRowTap = (event) => {
     const now = Date.now();
-    const wasRecentScrollGesture = now - calendarTableTouchRef.current.lastScrollGestureAt < 250;
+    const wasRecentScrollGesture = now - calendarTableTouchRef.current.lastScrollGestureAt < 450;
+    const isMobileTableMode = isMobile && calendarStyleMode === 'alternate';
+
+    if (isMobileTableMode && !calendarTableTouchRef.current.allowRowTap) {
+      return;
+    }
 
     if (calendarTableTouchRef.current.isScrollingGesture || wasRecentScrollGesture) {
       return;
     }
 
+    calendarTableTouchRef.current.allowRowTap = false;
     handleEventClick(event);
   };
 
@@ -3314,7 +3344,8 @@ const Overview = () => {
       const next = {
         enabled: wrap.scrollWidth > wrap.clientWidth + 2,
         scrollWidth: wrap.scrollWidth,
-        clientWidth: wrap.clientWidth
+        clientWidth: wrap.clientWidth,
+        scrollLeft: wrap.scrollLeft
       };
       setCalendarMobileScrollMetrics((prev) => {
         if (
@@ -3326,25 +3357,24 @@ const Overview = () => {
         }
         return next;
       });
-      if (Math.abs(proxy.scrollLeft - wrap.scrollLeft) > 1) {
-        proxy.scrollLeft = wrap.scrollLeft;
-      }
     };
 
     const onWrapScroll = () => {
-      if (syncingFrom === 'proxy') return;
-      syncingFrom = 'wrap';
-      proxy.scrollLeft = wrap.scrollLeft;
+      if (syncingFrom === 'slider') return;
+      syncingFrom = 'table';
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
+        syncMetrics();
         syncingFrom = null;
       });
     };
 
-    const onProxyScroll = () => {
-      if (syncingFrom === 'wrap') return;
-      syncingFrom = 'proxy';
-      wrap.scrollLeft = proxy.scrollLeft;
+    const onSliderInput = (e) => {
+      if (syncingFrom === 'table') return;
+      syncingFrom = 'slider';
+      const nextScrollLeft = Number(e.target.value);
+      wrap.scrollLeft = Number.isFinite(nextScrollLeft) ? nextScrollLeft : 0;
+      syncMetrics();
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
         syncingFrom = null;
@@ -3352,7 +3382,7 @@ const Overview = () => {
     };
 
     wrap.addEventListener('scroll', onWrapScroll, { passive: true });
-    proxy.addEventListener('scroll', onProxyScroll, { passive: true });
+    proxy.addEventListener('input', onSliderInput, { passive: true });
 
     const resizeObserver = new ResizeObserver(syncMetrics);
     resizeObserver.observe(wrap);
@@ -3363,7 +3393,7 @@ const Overview = () => {
 
     return () => {
       wrap.removeEventListener('scroll', onWrapScroll);
-      proxy.removeEventListener('scroll', onProxyScroll);
+      proxy.removeEventListener('input', onSliderInput);
       resizeObserver.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
     };
@@ -4871,15 +4901,22 @@ const Overview = () => {
                 )}
               </div>
             </div>
-            {isMobile && calendarStyleMode === 'alternate' && calendarMobileScrollMetrics.enabled && (
+            {isMobile && calendarStyleMode === 'alternate' && (
               <div className="calendar-mobile-scrollbar-overlay" aria-hidden="true">
                 <div className="calendar-mobile-scrollbar-label">Swipe table</div>
-                <div className="calendar-mobile-scrollbar-track" ref={calendarMobileScrollbarRef}>
-                  <div
-                    className="calendar-mobile-scrollbar-content"
-                    style={{ width: `${calendarMobileScrollMetrics.scrollWidth}px` }}
-                  />
-                </div>
+                <input
+                  ref={calendarMobileScrollbarRef}
+                  className="calendar-mobile-scrollbar-slider"
+                  type="range"
+                  min={0}
+                  max={Math.max(0, calendarMobileScrollMetrics.scrollWidth - calendarMobileScrollMetrics.clientWidth)}
+                  value={Math.min(
+                    Math.max(0, calendarMobileScrollMetrics.scrollLeft),
+                    Math.max(0, calendarMobileScrollMetrics.scrollWidth - calendarMobileScrollMetrics.clientWidth)
+                  )}
+                  disabled={!calendarMobileScrollMetrics.enabled}
+                  aria-label="Calendar horizontal scroll"
+                />
               </div>
             )}
           </div>
