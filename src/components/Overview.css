@@ -1361,7 +1361,7 @@
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
-    width: max-content;
+    width: 100%;
     min-width: 100%;
   }
 
@@ -1429,7 +1429,7 @@
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
     overscroll-behavior-x: contain;
-    width: max-content;
+    width: 100%;
     min-width: 100%;
   }
 

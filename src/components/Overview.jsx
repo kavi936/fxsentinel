@@ -2438,13 +2438,17 @@ const Overview = () => {
   const calendarTableTouchRef = useRef({
     startX: 0,
     startY: 0,
+    lastX: 0,
+    lastY: 0,
     startScrollLeft: 0,
+    startContentScrollTop: 0,
     startAt: 0,
     isScrollingGesture: false,
     lastScrollGestureAt: 0,
     allowRowTap: false
   });
   const calendarTableWrapRef = useRef(null);
+  const calendarContentRef = useRef(null);
   const calendarMobileScrollbarRef = useRef(null);
   const [calendarMobileScrollMetrics, setCalendarMobileScrollMetrics] = useState({
     enabled: true,
@@ -3266,9 +3270,13 @@ const Overview = () => {
     const touch = e.touches?.[0];
     if (!touch) return;
     const wrap = calendarTableWrapRef.current;
+    const content = calendarContentRef.current;
     calendarTableTouchRef.current.startX = touch.clientX;
     calendarTableTouchRef.current.startY = touch.clientY;
+    calendarTableTouchRef.current.lastX = touch.clientX;
+    calendarTableTouchRef.current.lastY = touch.clientY;
     calendarTableTouchRef.current.startScrollLeft = wrap?.scrollLeft ?? 0;
+    calendarTableTouchRef.current.startContentScrollTop = content?.scrollTop ?? 0;
     calendarTableTouchRef.current.startAt = Date.now();
     calendarTableTouchRef.current.isScrollingGesture = false;
     calendarTableTouchRef.current.allowRowTap = false;
@@ -3280,27 +3288,43 @@ const Overview = () => {
 
     const dx = Math.abs(touch.clientX - calendarTableTouchRef.current.startX);
     const dy = Math.abs(touch.clientY - calendarTableTouchRef.current.startY);
-    // Bias toward scroll intent on phones to avoid accidental row taps.
-    const GESTURE_THRESHOLD_PX = 14;
+    calendarTableTouchRef.current.lastX = touch.clientX;
+    calendarTableTouchRef.current.lastY = touch.clientY;
+    const content = calendarContentRef.current;
+    const scrollTopDelta = Math.abs((content?.scrollTop ?? 0) - calendarTableTouchRef.current.startContentScrollTop);
+    // Treat vertical movement aggressively as scroll intent.
+    const HORIZONTAL_SCROLL_THRESHOLD_PX = 10;
+    const VERTICAL_SCROLL_THRESHOLD_PX = 6;
 
-    if (dx > GESTURE_THRESHOLD_PX || dy > GESTURE_THRESHOLD_PX) {
+    if (
+      dx > HORIZONTAL_SCROLL_THRESHOLD_PX ||
+      dy > VERTICAL_SCROLL_THRESHOLD_PX ||
+      scrollTopDelta > 1
+    ) {
       calendarTableTouchRef.current.isScrollingGesture = true;
     }
   };
 
   const handleCalendarTableTouchEnd = () => {
     const wrap = calendarTableWrapRef.current;
+    const content = calendarContentRef.current;
     const scrollDelta = Math.abs((wrap?.scrollLeft ?? 0) - calendarTableTouchRef.current.startScrollLeft);
+    const verticalScrollDelta = Math.abs((content?.scrollTop ?? 0) - calendarTableTouchRef.current.startContentScrollTop);
     const touchDurationMs = Date.now() - calendarTableTouchRef.current.startAt;
+    const horizontalFingerDelta = Math.abs(calendarTableTouchRef.current.startX - (calendarTableTouchRef.current.lastX ?? calendarTableTouchRef.current.startX));
+    const verticalFingerDelta = Math.abs(calendarTableTouchRef.current.startY - (calendarTableTouchRef.current.lastY ?? calendarTableTouchRef.current.startY));
 
-    // Strict tap qualification for mobile table rows:
+    // Very strict tap qualification for mobile table rows:
     // - no drag gesture detected
-    // - no meaningful horizontal table movement
-    // - quick tap only (longer contact is treated as scroll intent)
+    // - no meaningful horizontal OR vertical movement/scrolling
+    // - short tap only
     const isTapIntent =
       !calendarTableTouchRef.current.isScrollingGesture &&
-      scrollDelta < 3 &&
-      touchDurationMs <= 180;
+      scrollDelta < 2 &&
+      verticalScrollDelta < 2 &&
+      horizontalFingerDelta < 6 &&
+      verticalFingerDelta < 6 &&
+      touchDurationMs <= 160;
 
     calendarTableTouchRef.current.allowRowTap = isTapIntent;
 
@@ -3311,7 +3335,7 @@ const Overview = () => {
 
   const handleCalendarTableRowTap = (event) => {
     const now = Date.now();
-    const wasRecentScrollGesture = now - calendarTableTouchRef.current.lastScrollGestureAt < 450;
+    const wasRecentScrollGesture = now - calendarTableTouchRef.current.lastScrollGestureAt < 700;
     const isMobileTableMode = isMobile && calendarStyleMode === 'alternate';
 
     if (isMobileTableMode && !calendarTableTouchRef.current.allowRowTap) {
@@ -4687,7 +4711,7 @@ const Overview = () => {
                 </button>
               </div>
             </div>
-            <div className="calendar-content">
+            <div className="calendar-content" ref={calendarContentRef}>
               {/* Filter status indicator */}
               <div className="filter-status">
                 <div className="filter-info-grid">
