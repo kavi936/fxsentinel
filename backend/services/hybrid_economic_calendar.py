@@ -18535,7 +18535,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-16.4',
                 'forecast': '0.5%',
                 'previous': '0.0%'
             },
@@ -18585,7 +18585,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.8%',
                 'forecast': 'N/A',
                 'previous': '4.1%'
             },
@@ -18595,7 +18595,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.6%',
                 'forecast': '1.8%',
                 'previous': '0.3%'
             },
@@ -18607,7 +18607,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.35%',
                 'forecast': '4.35%',
                 'previous': '4.10%'
             },
@@ -18647,7 +18647,7 @@ class HybridEconomicCalendar:
                 'time': '06:30 UTC',
                 'currency': 'CHF',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.3%	',
                 'forecast': '0.3%',
                 'previous': '0.2%'
             },
@@ -18667,7 +18667,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-62.7K',
                 'forecast': '-18.6K',
                 'previous': '-22.9K'
             },
