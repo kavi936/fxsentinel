@@ -2433,6 +2433,21 @@ const Overview = () => {
       return 'alternate';
     }
   });
+  // Touch intent guard for mobile table mode:
+  // prevent row tap selection when user is swiping the table horizontally/vertically.
+  const calendarTableTouchRef = useRef({
+    startX: 0,
+    startY: 0,
+    isScrollingGesture: false,
+    lastScrollGestureAt: 0
+  });
+  const calendarTableWrapRef = useRef(null);
+  const calendarMobileScrollbarRef = useRef(null);
+  const [calendarMobileScrollMetrics, setCalendarMobileScrollMetrics] = useState({
+    enabled: false,
+    scrollWidth: 0,
+    clientWidth: 0
+  });
 
   // Economic calendar card width for responsive currency pairs display
   // Calculate width directly from columnWidths and containerDimensions (more reliable than ResizeObserver)
@@ -3242,6 +3257,117 @@ const Overview = () => {
     setAiAnalysisState('pending'); // Set to pending instead of immediately loading
     // Don't call API yet - wait for user confirmation
   };
+
+  const handleCalendarTableTouchStart = (e) => {
+    const touch = e.touches?.[0];
+    if (!touch) return;
+    calendarTableTouchRef.current.startX = touch.clientX;
+    calendarTableTouchRef.current.startY = touch.clientY;
+    calendarTableTouchRef.current.isScrollingGesture = false;
+  };
+
+  const handleCalendarTableTouchMove = (e) => {
+    const touch = e.touches?.[0];
+    if (!touch) return;
+
+    const dx = Math.abs(touch.clientX - calendarTableTouchRef.current.startX);
+    const dy = Math.abs(touch.clientY - calendarTableTouchRef.current.startY);
+    const GESTURE_THRESHOLD_PX = 8;
+
+    if (dx > GESTURE_THRESHOLD_PX || dy > GESTURE_THRESHOLD_PX) {
+      calendarTableTouchRef.current.isScrollingGesture = true;
+    }
+  };
+
+  const handleCalendarTableTouchEnd = () => {
+    if (calendarTableTouchRef.current.isScrollingGesture) {
+      calendarTableTouchRef.current.lastScrollGestureAt = Date.now();
+    }
+  };
+
+  const handleCalendarTableRowTap = (event) => {
+    const now = Date.now();
+    const wasRecentScrollGesture = now - calendarTableTouchRef.current.lastScrollGestureAt < 250;
+
+    if (calendarTableTouchRef.current.isScrollingGesture || wasRecentScrollGesture) {
+      return;
+    }
+
+    handleEventClick(event);
+  };
+
+  // Sync mobile-only bottom scrollbar with the main calendar table scroller.
+  useEffect(() => {
+    if (!isMobile || calendarStyleMode !== 'alternate') {
+      setCalendarMobileScrollMetrics((prev) => ({ ...prev, enabled: false }));
+      return undefined;
+    }
+
+    const wrap = calendarTableWrapRef.current;
+    const proxy = calendarMobileScrollbarRef.current;
+    if (!wrap || !proxy) return undefined;
+
+    let rafId = null;
+    let syncingFrom = null;
+
+    const syncMetrics = () => {
+      const next = {
+        enabled: wrap.scrollWidth > wrap.clientWidth + 2,
+        scrollWidth: wrap.scrollWidth,
+        clientWidth: wrap.clientWidth
+      };
+      setCalendarMobileScrollMetrics((prev) => {
+        if (
+          prev.enabled === next.enabled &&
+          prev.scrollWidth === next.scrollWidth &&
+          prev.clientWidth === next.clientWidth
+        ) {
+          return prev;
+        }
+        return next;
+      });
+      if (Math.abs(proxy.scrollLeft - wrap.scrollLeft) > 1) {
+        proxy.scrollLeft = wrap.scrollLeft;
+      }
+    };
+
+    const onWrapScroll = () => {
+      if (syncingFrom === 'proxy') return;
+      syncingFrom = 'wrap';
+      proxy.scrollLeft = wrap.scrollLeft;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        syncingFrom = null;
+      });
+    };
+
+    const onProxyScroll = () => {
+      if (syncingFrom === 'wrap') return;
+      syncingFrom = 'proxy';
+      wrap.scrollLeft = proxy.scrollLeft;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        syncingFrom = null;
+      });
+    };
+
+    wrap.addEventListener('scroll', onWrapScroll, { passive: true });
+    proxy.addEventListener('scroll', onProxyScroll, { passive: true });
+
+    const resizeObserver = new ResizeObserver(syncMetrics);
+    resizeObserver.observe(wrap);
+    const tableEl = wrap.querySelector('.calendar-table');
+    if (tableEl) resizeObserver.observe(tableEl);
+
+    syncMetrics();
+
+    return () => {
+      wrap.removeEventListener('scroll', onWrapScroll);
+      proxy.removeEventListener('scroll', onProxyScroll);
+      resizeObserver.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [isMobile, calendarStyleMode, economicEvents, filterImpactLevels, filterCurrencies, selectedDateRange, currentTimezone]);
 
   const handleConfirmAnalysis = async () => {
     if (!selectedEvent) return;
@@ -4629,7 +4755,14 @@ const Overview = () => {
                       rowsWithMeta[currentTimeGroup.startIndex].timeRowSpan = currentTimeGroup.count;
                     }
                     return (
-                      <div className="calendar-table-wrap">
+                      <div
+                        className="calendar-table-wrap"
+                        ref={calendarTableWrapRef}
+                        onTouchStart={handleCalendarTableTouchStart}
+                        onTouchMove={handleCalendarTableTouchMove}
+                        onTouchEnd={handleCalendarTableTouchEnd}
+                        onTouchCancel={handleCalendarTableTouchEnd}
+                      >
                         <table className="calendar-table">
                           <thead>
                             <tr>
@@ -4648,7 +4781,7 @@ const Overview = () => {
                               <tr
                                 key={`${row.event.id}-${currentTimezone}-${index}`}
                                 className={`impact-${row.event.impact} ${selectedEvent === row.event ? 'selected' : ''}`}
-                                onClick={() => handleEventClick(row.event)}
+                                onClick={() => handleCalendarTableRowTap(row.event)}
                               >
                                 {row.dateRowSpan > 0 ? <td rowSpan={row.dateRowSpan} className="calendar-table-date-cell calendar-col-date">{row.date}</td> : null}
                                 {row.timeRowSpan > 0 ? <td rowSpan={row.timeRowSpan} className="calendar-col-time">{row.time}</td> : null}
@@ -4738,6 +4871,17 @@ const Overview = () => {
                 )}
               </div>
             </div>
+            {isMobile && calendarStyleMode === 'alternate' && calendarMobileScrollMetrics.enabled && (
+              <div className="calendar-mobile-scrollbar-overlay" aria-hidden="true">
+                <div className="calendar-mobile-scrollbar-label">Swipe table</div>
+                <div className="calendar-mobile-scrollbar-track" ref={calendarMobileScrollbarRef}>
+                  <div
+                    className="calendar-mobile-scrollbar-content"
+                    style={{ width: `${calendarMobileScrollMetrics.scrollWidth}px` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
                 {/* AI Analysis Card - Right Column, Row 1 */}
