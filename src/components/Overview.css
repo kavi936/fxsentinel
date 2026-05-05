@@ -1280,10 +1280,13 @@
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    width: max-content;
+    min-width: 100%;
   }
 
   .news-calendar[data-calendar-style="alternate"] .calendar-table {
-    min-width: 760px;
+    min-width: 900px;
     font-size: 12px;
   }
 
@@ -1292,7 +1295,7 @@
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(2) { width: 10%; } /* Time */
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(3) { width: 11%; min-width: 92px; }  /* Currency */
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(4) { width: 10%; min-width: 86px; } /* Impact */
-  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(5) { width: 29%; min-width: 220px; } /* Name */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(5) { width: 34%; min-width: 320px; } /* Name */
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(6) { width: 10%; min-width: 72px; } /* Actual */
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(7) { width: 10%; min-width: 72px; } /* Forecast */
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(8) { width: 8%; min-width: 68px; }  /* Previous */
@@ -1323,6 +1326,7 @@
     overflow-wrap: anywhere;
     word-break: break-word;
     line-height: 1.4;
+    min-width: 320px;
   }
 }
 
@@ -1332,10 +1336,13 @@
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x;
+    overscroll-behavior-x: contain;
+    width: max-content;
+    min-width: 100%;
   }
 
   .news-calendar[data-calendar-style="alternate"] .calendar-table {
-    min-width: 740px;
+    min-width: 920px;
     font-size: 11px;
   }
 
@@ -1346,11 +1353,12 @@
 
   .news-calendar[data-calendar-style="alternate"] .calendar-table td.calendar-col-name {
     line-height: 1.35;
+    min-width: 340px;
   }
 
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(3) { min-width: 92px; } /* Currency */
   .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(4) { min-width: 86px; } /* Impact */
-  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(5) { min-width: 230px; } /* Name */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(5) { min-width: 340px; } /* Name */
 }
 
 .event-main-row {
