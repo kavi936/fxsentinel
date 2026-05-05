@@ -2450,12 +2450,28 @@ const Overview = () => {
   const calendarTableWrapRef = useRef(null);
   const calendarContentRef = useRef(null);
   const calendarMobileScrollbarRef = useRef(null);
+  const calendarHorizontalScrollerRef = useRef(null);
+  const calendarRowLongPressRef = useRef({
+    timerId: null,
+    longPressTriggered: false
+  });
   const [calendarMobileScrollMetrics, setCalendarMobileScrollMetrics] = useState({
     enabled: true,
     scrollWidth: 0,
     clientWidth: 0,
     scrollLeft: 0
   });
+
+  const handleCalendarMobileScrollbarInput = useCallback((e) => {
+    const scroller = calendarHorizontalScrollerRef.current;
+    if (!scroller) return;
+    const nextScrollLeft = Number(e.target.value);
+    scroller.scrollLeft = Number.isFinite(nextScrollLeft) ? nextScrollLeft : 0;
+    setCalendarMobileScrollMetrics((prev) => ({
+      ...prev,
+      scrollLeft: scroller.scrollLeft
+    }));
+  }, []);
 
   // Economic calendar card width for responsive currency pairs display
   // Calculate width directly from columnWidths and containerDimensions (more reliable than ResizeObserver)
@@ -3338,7 +3354,9 @@ const Overview = () => {
     const wasRecentScrollGesture = now - calendarTableTouchRef.current.lastScrollGestureAt < 700;
     const isMobileTableMode = isMobile && calendarStyleMode === 'alternate';
 
-    if (isMobileTableMode && !calendarTableTouchRef.current.allowRowTap) {
+    // Mobile table mode uses long-press only for selection.
+    // Regular taps are intentionally ignored to prioritize scroll gestures.
+    if (isMobileTableMode) {
       return;
     }
 
@@ -3350,6 +3368,50 @@ const Overview = () => {
     handleEventClick(event);
   };
 
+  const clearCalendarRowLongPress = () => {
+    const timer = calendarRowLongPressRef.current.timerId;
+    if (timer) {
+      clearTimeout(timer);
+      calendarRowLongPressRef.current.timerId = null;
+    }
+  };
+
+  const handleCalendarRowTouchStart = (eventData) => {
+    const isMobileTableMode = isMobile && calendarStyleMode === 'alternate';
+    if (!isMobileTableMode) return;
+
+    clearCalendarRowLongPress();
+    calendarRowLongPressRef.current.longPressTriggered = false;
+
+    // Require deliberate hold to select on mobile table rows.
+    calendarRowLongPressRef.current.timerId = setTimeout(() => {
+      if (calendarTableTouchRef.current.isScrollingGesture) return;
+      calendarRowLongPressRef.current.longPressTriggered = true;
+      handleEventClick(eventData);
+      // Suppress follow-up click after long press.
+      calendarTableTouchRef.current.lastScrollGestureAt = Date.now();
+    }, 420);
+  };
+
+  const handleCalendarRowTouchMove = () => {
+    const isMobileTableMode = isMobile && calendarStyleMode === 'alternate';
+    if (!isMobileTableMode) return;
+    clearCalendarRowLongPress();
+  };
+
+  const handleCalendarRowTouchEnd = () => {
+    const isMobileTableMode = isMobile && calendarStyleMode === 'alternate';
+    if (!isMobileTableMode) return;
+
+    clearCalendarRowLongPress();
+    calendarTableTouchRef.current.allowRowTap = false;
+
+    // If user touched and released without long-press selection, bias toward non-selection.
+    if (!calendarRowLongPressRef.current.longPressTriggered) {
+      calendarTableTouchRef.current.lastScrollGestureAt = Date.now();
+    }
+  };
+
   // Sync mobile-only bottom scrollbar with the main calendar table scroller.
   useEffect(() => {
     if (!isMobile || calendarStyleMode !== 'alternate') {
@@ -3358,18 +3420,27 @@ const Overview = () => {
     }
 
     const wrap = calendarTableWrapRef.current;
-    const proxy = calendarMobileScrollbarRef.current;
-    if (!wrap || !proxy) return undefined;
+    const content = calendarContentRef.current;
+    if (!wrap) return undefined;
 
     let rafId = null;
     let syncingFrom = null;
 
+    const getHorizontalScroller = () => {
+      const wrapCanScrollX = wrap.scrollWidth > wrap.clientWidth + 2;
+      if (wrapCanScrollX) return wrap;
+      if (content && content.scrollWidth > content.clientWidth + 2) return content;
+      return wrap;
+    };
+
     const syncMetrics = () => {
+      const scroller = getHorizontalScroller();
+      calendarHorizontalScrollerRef.current = scroller;
       const next = {
-        enabled: wrap.scrollWidth > wrap.clientWidth + 2,
-        scrollWidth: wrap.scrollWidth,
-        clientWidth: wrap.clientWidth,
-        scrollLeft: wrap.scrollLeft
+        enabled: scroller.scrollWidth > scroller.clientWidth + 2,
+        scrollWidth: scroller.scrollWidth,
+        clientWidth: scroller.clientWidth,
+        scrollLeft: scroller.scrollLeft
       };
       setCalendarMobileScrollMetrics((prev) => {
         if (
@@ -3393,35 +3464,39 @@ const Overview = () => {
       });
     };
 
-    const onSliderInput = (e) => {
-      if (syncingFrom === 'table') return;
-      syncingFrom = 'slider';
-      const nextScrollLeft = Number(e.target.value);
-      wrap.scrollLeft = Number.isFinite(nextScrollLeft) ? nextScrollLeft : 0;
-      syncMetrics();
+    wrap.addEventListener('scroll', onWrapScroll, { passive: true });
+    const onContentScroll = () => {
+      if (syncingFrom === 'slider') return;
+      syncingFrom = 'table';
       if (rafId) cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
+        syncMetrics();
         syncingFrom = null;
       });
     };
-
-    wrap.addEventListener('scroll', onWrapScroll, { passive: true });
-    proxy.addEventListener('input', onSliderInput, { passive: true });
+    content?.addEventListener('scroll', onContentScroll, { passive: true });
 
     const resizeObserver = new ResizeObserver(syncMetrics);
     resizeObserver.observe(wrap);
     const tableEl = wrap.querySelector('.calendar-table');
     if (tableEl) resizeObserver.observe(tableEl);
+    if (content) resizeObserver.observe(content);
 
     syncMetrics();
 
     return () => {
       wrap.removeEventListener('scroll', onWrapScroll);
-      proxy.removeEventListener('input', onSliderInput);
+      content?.removeEventListener('scroll', onContentScroll);
       resizeObserver.disconnect();
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [isMobile, calendarStyleMode, economicEvents, filterImpactLevels, filterCurrencies, selectedDateRange, currentTimezone]);
+
+  useEffect(() => {
+    return () => {
+      clearCalendarRowLongPress();
+    };
+  }, []);
 
   const handleConfirmAnalysis = async () => {
     if (!selectedEvent) return;
@@ -4836,6 +4911,10 @@ const Overview = () => {
                                 key={`${row.event.id}-${currentTimezone}-${index}`}
                                 className={`impact-${row.event.impact} ${selectedEvent === row.event ? 'selected' : ''}`}
                                 onClick={() => handleCalendarTableRowTap(row.event)}
+                                onTouchStart={() => handleCalendarRowTouchStart(row.event)}
+                                onTouchMove={handleCalendarRowTouchMove}
+                                onTouchEnd={handleCalendarRowTouchEnd}
+                                onTouchCancel={handleCalendarRowTouchEnd}
                               >
                                 {row.dateRowSpan > 0 ? <td rowSpan={row.dateRowSpan} className="calendar-table-date-cell calendar-col-date">{row.date}</td> : null}
                                 {row.timeRowSpan > 0 ? <td rowSpan={row.timeRowSpan} className="calendar-col-time">{row.time}</td> : null}
@@ -4938,6 +5017,8 @@ const Overview = () => {
                     Math.max(0, calendarMobileScrollMetrics.scrollLeft),
                     Math.max(0, calendarMobileScrollMetrics.scrollWidth - calendarMobileScrollMetrics.clientWidth)
                   )}
+                  onInput={handleCalendarMobileScrollbarInput}
+                  onChange={handleCalendarMobileScrollbarInput}
                   disabled={!calendarMobileScrollMetrics.enabled}
                   aria-label="Calendar horizontal scroll"
                 />
