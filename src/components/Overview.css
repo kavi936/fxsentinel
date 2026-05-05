@@ -1256,6 +1256,61 @@
   display: none; /* Chrome, Safari, Opera */
 }
 
+/* ============================================
+ * Calendar table mobile readability overrides
+ * ============================================ */
+@media (max-width: 768px) {
+  .news-calendar[data-calendar-style="alternate"] .calendar-table-wrap {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .news-calendar[data-calendar-style="alternate"] .calendar-table {
+    min-width: 680px;
+    font-size: 12px;
+  }
+
+  /* Rebalance widths so event titles keep usable space on phones */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(1) { width: 12%; } /* Date */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(2) { width: 10%; } /* Time */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(3) { width: 8%; }  /* Currency */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(4) { width: 8%; }  /* Impact */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(5) { width: 34%; } /* Name */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(6) { width: 10%; } /* Actual */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(7) { width: 10%; } /* Forecast */
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th:nth-child(8) { width: 8%; }  /* Previous */
+
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th,
+  .news-calendar[data-calendar-style="alternate"] .calendar-table td {
+    padding: 10px 10px;
+  }
+
+  .news-calendar[data-calendar-style="alternate"] .calendar-table td.calendar-col-name {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .news-calendar[data-calendar-style="alternate"] .calendar-table {
+    min-width: 620px;
+    font-size: 11px;
+  }
+
+  .news-calendar[data-calendar-style="alternate"] .calendar-table th,
+  .news-calendar[data-calendar-style="alternate"] .calendar-table td {
+    padding: 9px 8px;
+  }
+
+  .news-calendar[data-calendar-style="alternate"] .calendar-table td.calendar-col-name {
+    line-height: 1.35;
+  }
+}
+
 .event-main-row {
   display: flex;
   gap: 16px;
