@@ -18687,7 +18687,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.8B',
                 'forecast': '-2.1B',
                 'previous': '-5.7B'
             },
@@ -18707,7 +18707,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-60.3B',
                 'forecast': '-59.0B',
                 'previous': '-57.3B'
             },
@@ -18717,7 +18717,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.0',
                 'forecast': '51.3',
                 'previous': '51.3'
             },
@@ -18727,7 +18727,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '53.6',
                 'forecast': '53.8',
                 'previous': '54.0'
             },
@@ -18737,9 +18737,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '6.87M',
                 'forecast': '6.87M',
-                'previous': '6.88M'
+                'previous': '6.92M'
             },
             {
                 'title': 'New Home Sales',
@@ -18747,7 +18747,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '635K',
                 'forecast': '668K',
                 'previous': 'N/A'
             },
