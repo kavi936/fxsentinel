@@ -3318,6 +3318,8 @@ const Overview = () => {
       scrollTopDelta > 1
     ) {
       calendarTableTouchRef.current.isScrollingGesture = true;
+      // If user is scrolling, cancel pending long-press selection immediately.
+      clearCalendarRowLongPress();
     }
   };
 
@@ -3345,6 +3347,8 @@ const Overview = () => {
     calendarTableTouchRef.current.allowRowTap = isTapIntent;
 
     if (!isTapIntent) {
+      // Ensure any pending long-press timer is cleared when gesture wasn't a clean tap.
+      clearCalendarRowLongPress();
       calendarTableTouchRef.current.lastScrollGestureAt = Date.now();
     }
   };
