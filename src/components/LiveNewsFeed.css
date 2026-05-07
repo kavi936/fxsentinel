@@ -2408,9 +2408,21 @@
   }
   
   .news-item-header {
-    flex-direction: column;
+    /* Keep source/time on the left and impact on the right on typical phones.
+       The previous forced column layout pushed impact underneath even when there was space. */
+    flex-direction: row;
     align-items: flex-start;
+    justify-content: space-between;
     gap: 12px;
+  }
+
+  .news-source {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .news-impact {
+    flex-shrink: 0;
   }
   
   .news-actions {
@@ -2444,6 +2456,14 @@
   .news-item {
     padding: 12px;
   }
+
+  /* Keep the compact row layout on regular small phones too. */
+  .news-item-header {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
   
   .live-news-item-title {
     font-size: 14px;
@@ -2459,6 +2479,15 @@
   
   .ai-analysis-expanded-section {
     margin: 0 12px 12px 12px;
+  }
+}
+
+/* Only ultra-narrow phones should stack impact below source/time. */
+@media (max-width: 360px) {
+  .news-item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 

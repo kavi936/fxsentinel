@@ -4430,6 +4430,27 @@
   position: relative;
 }
 
+.ai-selected-mobile-recent-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(60vw, 240px);
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 68, 68, 0.12);
+}
+
+.ai-selected-mobile-title {
+  min-width: 0;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ai-recent-dropdown-toggle {
   display: inline-flex;
   align-items: center;

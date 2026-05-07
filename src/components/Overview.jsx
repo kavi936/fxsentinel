@@ -2461,16 +2461,31 @@ const Overview = () => {
     clientWidth: 0,
     scrollLeft: 0
   });
+  const calendarMobileSliderRafRef = useRef(null);
+  const calendarMobileSliderTargetRef = useRef(0);
 
   const handleCalendarMobileScrollbarInput = useCallback((e) => {
     const scroller = calendarHorizontalScrollerRef.current;
     if (!scroller) return;
     const nextScrollLeft = Number(e.target.value);
-    scroller.scrollLeft = Number.isFinite(nextScrollLeft) ? nextScrollLeft : 0;
-    setCalendarMobileScrollMetrics((prev) => ({
-      ...prev,
-      scrollLeft: scroller.scrollLeft
-    }));
+    const safeScrollLeft = Number.isFinite(nextScrollLeft) ? nextScrollLeft : 0;
+    calendarMobileSliderTargetRef.current = safeScrollLeft;
+
+    // Coalesce rapid slider input events into one paint update.
+    if (calendarMobileSliderRafRef.current) return;
+    calendarMobileSliderRafRef.current = requestAnimationFrame(() => {
+      if (scroller) {
+        scroller.scrollLeft = calendarMobileSliderTargetRef.current;
+      }
+      setCalendarMobileScrollMetrics((prev) => {
+        if (Math.abs(prev.scrollLeft - calendarMobileSliderTargetRef.current) < 0.5) return prev;
+        return {
+          ...prev,
+          scrollLeft: calendarMobileSliderTargetRef.current
+        };
+      });
+      calendarMobileSliderRafRef.current = null;
+    });
   }, []);
 
   // Economic calendar card width for responsive currency pairs display
@@ -3450,7 +3465,8 @@ const Overview = () => {
         if (
           prev.enabled === next.enabled &&
           prev.scrollWidth === next.scrollWidth &&
-          prev.clientWidth === next.clientWidth
+          prev.clientWidth === next.clientWidth &&
+          Math.abs(prev.scrollLeft - next.scrollLeft) < 0.5
         ) {
           return prev;
         }
@@ -3499,6 +3515,10 @@ const Overview = () => {
   useEffect(() => {
     return () => {
       clearCalendarRowLongPress();
+      if (calendarMobileSliderRafRef.current) {
+        cancelAnimationFrame(calendarMobileSliderRafRef.current);
+        calendarMobileSliderRafRef.current = null;
+      }
     };
   }, []);
 
@@ -5051,7 +5071,9 @@ const Overview = () => {
                   tooltipText="AI Analysis System: Our advanced machine learning algorithms process economic data and news events. The system analyzes historical patterns, market correlations, and economic relationships to provide trading insights. Analysis includes immediate market impact, trading implications, and confidence scores based on data quality and market conditions."
                   position="bottom"
                 />
-                {selectedEvent && (
+                {/* On phones, selected event details are shown in the card body (pending/analysis sections).
+                    Keeping this header pill visible on mobile squeezes controls, so hide it there. */}
+                {selectedEvent && !isMobile && (
                   <div className="selected-event-info">
                     <span className="event-name">{selectedEvent.title}</span>
                     <button className="clear-analysis-btn" onClick={handleClearAnalysis}>
@@ -5062,62 +5084,76 @@ const Overview = () => {
                   </div>
                 )}
               </div>
-              {/* Recent analyses dropdown - panel rendered in portal so it stays on top and isn't clipped */}
-              <div className="ai-recent-dropdown" ref={recentAnalysesDropdownRef}>
-                <button
-                  type="button"
-                  className="ai-recent-dropdown-toggle"
-                  onClick={() => setRecentAnalysesDropdownOpen((o) => !o)}
-                  title="Recent analyses"
-                  aria-expanded={recentAnalysesDropdownOpen}
-                  aria-haspopup="true"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                  </svg>
-                  <span>Recent</span>
-                  {recentAnalyses.length > 0 && (
-                    <span className="ai-recent-dropdown-badge">{recentAnalyses.length}</span>
-                  )}
-                </button>
-                {recentAnalysesDropdownOpen && createPortal(
-                  <div
-                    ref={recentAnalysesPanelRef}
-                    data-recent-analyses-panel
-                    className="ai-recent-dropdown-panel"
-                    style={{ position: 'fixed', top: recentDropdownPanelPosition.top, right: recentDropdownPanelPosition.right }}
+              {/* Mobile: replace "Recent" button with selected event pill.
+                  Desktop/tablet: keep existing Recent dropdown behavior. */}
+              {isMobile && selectedEvent ? (
+                <div className="ai-selected-mobile-recent-slot">
+                  <span className="ai-selected-mobile-title" title={selectedEvent.title}>
+                    {selectedEvent.title}
+                  </span>
+                  <button className="clear-analysis-btn" onClick={handleClearAnalysis} aria-label="Clear selected event">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 6L6 18M6 6L18 18"/>
+                    </svg>
+                  </button>
+                </div>
+              ) : (
+                <div className="ai-recent-dropdown" ref={recentAnalysesDropdownRef}>
+                  <button
+                    type="button"
+                    className="ai-recent-dropdown-toggle"
+                    onClick={() => setRecentAnalysesDropdownOpen((o) => !o)}
+                    title="Recent analyses"
+                    aria-expanded={recentAnalysesDropdownOpen}
+                    aria-haspopup="true"
                   >
-                    <div className="ai-recent-dropdown-title">Recent analyses</div>
-                    {recentAnalyses.length === 0 ? (
-                      <div className="ai-recent-dropdown-empty">No analyses yet. Click an event and confirm to add one.</div>
-                    ) : (
-                      <ul className="ai-recent-dropdown-list">
-                        {recentAnalyses.map((item) => (
-                          <li key={item.id}>
-                            <button
-                              type="button"
-                              className="ai-recent-dropdown-item"
-                              onClick={() => handleSelectRecentAnalysis(item)}
-                            >
-                              <span className="ai-recent-dropdown-item-title">{item.event?.title || 'Event'}</span>
-                              <span className="ai-recent-dropdown-item-meta">
-                                {item.event?.currency && <span className="ai-recent-dropdown-item-currency">{item.event.currency}</span>}
-                                {item.analysis?.analysis_timestamp && (
-                                  <span className="ai-recent-dropdown-item-time">
-                                    {formatLastUpdated(new Date(item.analysis.analysis_timestamp).getTime())}
-                                  </span>
-                                )}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span>Recent</span>
+                    {recentAnalyses.length > 0 && (
+                      <span className="ai-recent-dropdown-badge">{recentAnalyses.length}</span>
                     )}
-                  </div>,
-                  document.body
-                )}
-              </div>
+                  </button>
+                  {recentAnalysesDropdownOpen && createPortal(
+                    <div
+                      ref={recentAnalysesPanelRef}
+                      data-recent-analyses-panel
+                      className="ai-recent-dropdown-panel"
+                      style={{ position: 'fixed', top: recentDropdownPanelPosition.top, right: recentDropdownPanelPosition.right }}
+                    >
+                      <div className="ai-recent-dropdown-title">Recent analyses</div>
+                      {recentAnalyses.length === 0 ? (
+                        <div className="ai-recent-dropdown-empty">No analyses yet. Click an event and confirm to add one.</div>
+                      ) : (
+                        <ul className="ai-recent-dropdown-list">
+                          {recentAnalyses.map((item) => (
+                            <li key={item.id}>
+                              <button
+                                type="button"
+                                className="ai-recent-dropdown-item"
+                                onClick={() => handleSelectRecentAnalysis(item)}
+                              >
+                                <span className="ai-recent-dropdown-item-title">{item.event?.title || 'Event'}</span>
+                                <span className="ai-recent-dropdown-item-meta">
+                                  {item.event?.currency && <span className="ai-recent-dropdown-item-currency">{item.event.currency}</span>}
+                                  {item.analysis?.analysis_timestamp && (
+                                    <span className="ai-recent-dropdown-item-time">
+                                      {formatLastUpdated(new Date(item.analysis.analysis_timestamp).getTime())}
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>,
+                    document.body
+                  )}
+                </div>
+              )}
             </div>
             <div className="ai-content">
               {aiAnalysisState === 'loading' && (

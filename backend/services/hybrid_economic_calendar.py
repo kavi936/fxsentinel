@@ -19171,9 +19171,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '200K',
                 'forecast': '203K',
-                'previous': '189K'
+                'previous': '190K'
             },
             {
                 'title': 'Prelim Nonfarm Productivity q/q',
@@ -19181,9 +19181,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '1.0%',
-                'previous': '2.8%'
+                'previous': '1.8%'
             },
             {
                 'title': 'Prelim Unit Labor Costs q/q',
@@ -19191,9 +19191,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.5%',
-                'previous': '2.8%'
+                'previous': '4.4%'
             },
             {
                 'title': 'MPC Member Taylor Speaks',
@@ -19211,9 +19211,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '0.4%',
-                'previous': 'N/A'
+                'previous': '-1.9%'
             },
             {
                 'title': 'Construction Spending m/m',
@@ -19221,7 +19221,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': 'N/A',
                 'previous': '-0.3%'
             },
@@ -19231,7 +19231,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '63B',
                 'forecast': 'N/A',
                 'previous': '79B'
             },
