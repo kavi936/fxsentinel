@@ -1359,7 +1359,9 @@
     overflow-x: auto;
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
+    /* Allow both horizontal and vertical touch panning inside the table area.
+       pan-x only was causing mobile users to fight row long-press selection while trying to scroll vertically. */
+    touch-action: pan-x pan-y;
     overscroll-behavior-x: contain;
     width: 100%;
     min-width: 100%;
@@ -1426,7 +1428,8 @@
     overflow-x: auto;
     overflow-y: visible;
     -webkit-overflow-scrolling: touch;
-    touch-action: pan-x;
+    /* Keep parity with <=768 rule to avoid stricter touch behavior on narrow phones. */
+    touch-action: pan-x pan-y;
     overscroll-behavior-x: contain;
     width: 100%;
     min-width: 100%;
