@@ -4225,6 +4225,42 @@
   );
 }
 
+/* ============================================
+ * Resize-time Performance Optimizations
+ * ============================================
+ * Active only while the user is dragging a handle
+ * (`.is-resizing` class on the grid container).
+ *
+ *  - pointer-events: none on inner card content stops :hover and
+ *    synthetic React events from firing on every drag frame.
+ *  - transition: none prevents existing CSS transitions from
+ *    interpolating between drag frames (which would lag behind).
+ *  - contain: layout style scopes a card's internal reflow to itself
+ *    so resizing one card does not ripple into the rest of the page.
+ *    Crucially we do *not* add `paint` or `will-change` here — those
+ *    promote each card to its own GPU layer, and the per-drag
+ *    layer-promotion cost outweighed the per-frame savings.
+ * ============================================ */
+.overview-grid-container.is-resizing .grid-card {
+  contain: layout style;
+}
+
+.overview-grid-container.is-resizing .grid-card * {
+  pointer-events: none !important;
+}
+
+.overview-grid-container.is-resizing .grid-card,
+.overview-grid-container.is-resizing .grid-card *,
+.overview-grid-container.is-resizing .grid-resize-handle,
+.overview-grid-container.is-resizing .grid-resize-handle::before {
+  transition: none !important;
+}
+
+/* The handle itself must remain interactive while dragging. */
+.overview-grid-container.is-resizing .grid-resize-handle {
+  pointer-events: auto;
+}
+
 /* Live News + Analysis Card Styles */
 .live-news-analysis-card {
   background: var(--dash-surface-main);

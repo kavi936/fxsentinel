@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Fragment, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, Fragment, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useForexPrices } from '../hooks/useForexPrices';
 import { useMarketSentiment } from '../hooks/useMarketSentiment.js';
@@ -1007,7 +1007,8 @@ const Overview = () => {
   // 
   // - rowHeights: Array[2][3] - Height ratios for each column's three rows
   //   Format: [[row1, row2, row3], [row1, row2, row3]]
-  //   Values are ratios (0.0 to 1.0) that must sum to ~1.0 per column
+  //   Values are ratios (0.0 to 1.0) that must sum to ~1.0 per column.
+  //   Desktop: both columns are kept identical so row band heights match handles/cards.
   // 
   // LAYOUT STRUCTURE (2 columns × 3 rows):
   //   Row 1: Economic Calendar (left) | AI Analysis (right)
@@ -1025,6 +1026,20 @@ const Overview = () => {
     [1/3, 1/3, 1/3], // Left column: Economic Calendar, Market Sentiment, Prediction Markets (equal thirds)
     [1/3, 1/3, 1/3]  // Right column: AI Analysis, Live News, Central Bank (equal thirds)
   ];
+
+  /** Average legacy per-column row ratios and renormalize so both columns stay in sync (fixes stranded handles). */
+  const unifyRowHeightsFromSaved = (parsed) => {
+    const a = parsed[0];
+    const b = parsed[1];
+    const unified = [
+      ((a[0] ?? 1 / 3) + (b[0] ?? 1 / 3)) / 2,
+      ((a[1] ?? 1 / 3) + (b[1] ?? 1 / 3)) / 2,
+      ((a[2] ?? 1 / 3) + (b[2] ?? 1 / 3)) / 2,
+    ];
+    const sum = unified.reduce((x, y) => x + y, 0);
+    const normalized = sum > 0 ? unified.map((h) => h / sum) : [1 / 3, 1 / 3, 1 / 3];
+    return [normalized, normalized];
+  };
 
   // Load grid sizes from localStorage or use defaults
   // Includes validation to ensure data integrity and prevent layout errors
@@ -1083,8 +1098,9 @@ const Overview = () => {
             return defaults;
           }
           
-          console.log('✅ Loaded saved row heights:', parsed);
-          return parsed;
+          const unified = unifyRowHeightsFromSaved(parsed);
+          console.log('✅ Loaded saved row heights (unified across columns):', unified);
+          return unified;
         }
       }
     } catch (e) {
@@ -1880,6 +1896,141 @@ const Overview = () => {
     startStateRef.current = startState;
   }, [startState]);
 
+  // Live drag state (the in-flight values during a drag, written every RAF tick).
+  // We bypass React state during the drag and apply directly to the DOM, then
+  // commit once on mouseup.  This keeps per-frame work to a few inline-style
+  // assignments instead of a full Overview re-render.
+  const liveStateRef = useRef({
+    columnWidths: null,
+    rowHeights: null,
+    bottomPadding: 0,
+    containerWidth: 0, // Cached at drag-start so we can compute px values without forcing layout.
+  });
+
+  // Cached DOM-element lookups, populated at drag-start so the per-frame apply
+  // function does not run 15 `querySelector` calls per RAF tick.
+  const cardElementsRef = useRef({});
+  const handleElementsRef = useRef({});
+
+  useEffect(() => {
+    liveStateRef.current = {
+      ...liveStateRef.current,
+      columnWidths,
+      rowHeights,
+      bottomPadding,
+    };
+  }, [columnWidths, rowHeights, bottomPadding]);
+
+  /**
+   * Apply the layout described by `liveStateRef.current` directly to the DOM.
+   * Performance-critical hot path:
+   *  - Uses pre-cached element refs (no per-frame querySelector cost).
+   *  - Computes pixel values up front (no per-frame `calc()` parsing).
+   *  - Skips style writes that would not change the rendered value.
+   * Mirrors the desktop math in calculateCardPositions/calculateHandlePositions.
+   */
+  const applyLiveLayoutToDOM = useCallback(() => {
+    const container = gridContainerRef.current;
+    if (!container || isMobile) return;
+
+    const live = liveStateRef.current;
+    const { columnWidths: cw, rowHeights: rh, bottomPadding: bp } = live;
+    if (!Array.isArray(cw) || !Array.isArray(rh)) return;
+
+    const cw0 = live.containerWidth;
+    if (!cw0 || cw0 < 1) return; // No cached width yet — nothing to do.
+
+    const HALF = GAP / 2;
+    const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+    const colW = (r, c) => clamp(cw[r]?.[c] ?? 0.5, 0.1, 0.9);
+    const rowH = (c, r) => clamp(rh[c]?.[r] ?? 1 / 3, 0.1, 0.95);
+    const cardH = (c, r) => {
+      const h = Math.max(150, rowH(c, r) * BASE_CONTAINER_HEIGHT);
+      return r === 2 ? h + (bp || 0) : h;
+    };
+
+    // Row band tops/heights (px).
+    const r1Top = 0;
+    const r1H = Math.max(rowH(0, 0), rowH(1, 0)) * BASE_CONTAINER_HEIGHT;
+    const r2Top = r1Top + r1H + GAP;
+    const r2H = Math.max(rowH(0, 1), rowH(1, 1)) * BASE_CONTAINER_HEIGHT;
+    const r3Top = r2Top + r2H + GAP;
+    const r3H =
+      Math.max(150, Math.max(rowH(0, 2), rowH(1, 2)) * BASE_CONTAINER_HEIGHT) +
+      (bp || 0);
+
+    // Column splits per row (px, derived from the cached container width).
+    const c0L = colW(0, 0) * cw0; // Row 0 left col right-edge in px.
+    const c1L = colW(1, 0) * cw0; // Row 1 left col right-edge in px.
+    const c2L = colW(2, 0) * cw0; // Row 2 left col right-edge in px.
+
+    // Helper that writes a style only if the new value differs from the old.
+    const set = (el, prop, value) => {
+      if (el.style[prop] !== value) el.style[prop] = value;
+    };
+
+    // Cards: 6 entries, [el, leftPx, topPx, widthPx, heightPx]
+    const cards = cardElementsRef.current;
+    const writeCard = (key, left, top, width, height) => {
+      const el = cards[key];
+      if (!el) return;
+      set(el, 'left', `${left}px`);
+      set(el, 'top', `${top}px`);
+      set(el, 'width', `${width}px`);
+      set(el, 'height', `${height}px`);
+    };
+
+    writeCard('economicCalendar', 0, r1Top, c0L - HALF, cardH(0, 0));
+    writeCard('aiAnalysis', c0L + HALF, r1Top, cw0 - c0L - HALF, cardH(1, 0));
+    writeCard('marketSentiment', 0, r2Top, c1L - HALF, cardH(0, 1));
+    writeCard('liveNews', c1L + HALF, r2Top, cw0 - c1L - HALF, cardH(1, 1));
+    writeCard('predictionMarkets', 0, r3Top, c2L - HALF, cardH(0, 2));
+    writeCard('centralBank', c2L + HALF, r3Top, cw0 - c2L - HALF, cardH(1, 2));
+
+    // Handles: each has either width OR right (not both).
+    const handles = handleElementsRef.current;
+    const writeHandle = (key, left, top, width, height, right) => {
+      const el = handles[key];
+      if (!el) return;
+      set(el, 'left', `${left}px`);
+      set(el, 'top', `${top}px`);
+      set(el, 'height', `${height}px`);
+      if (right === null) {
+        set(el, 'width', `${width}px`);
+        set(el, 'right', '');
+      } else {
+        set(el, 'width', '');
+        set(el, 'right', `${right}px`);
+      }
+    };
+
+    writeHandle('vertical-0', c0L - HALF, r1Top, GAP, r1H, null);
+    writeHandle('vertical-1', c1L - HALF, r2Top, GAP, r2H, null);
+    writeHandle('vertical-2', c2L - HALF, r3Top, GAP, r3H, null);
+    writeHandle('horizontal-0-0', 0, r2Top - GAP, c0L + HALF, GAP, null);
+    writeHandle('horizontal-0-1', 0, r3Top - GAP, Math.max(c1L, c2L) + HALF, GAP, null);
+    writeHandle('horizontal-1-0', c0L + HALF, r2Top - GAP, 0, GAP, 0);
+    writeHandle('horizontal-1-1', c1L + HALF, r3Top - GAP, 0, GAP, 0);
+    writeHandle('bottom-0', 0, r3Top + r3H, c2L + HALF, GAP, null);
+    writeHandle('bottom-1', c2L + HALF, r3Top + r3H, 0, GAP, 0);
+
+    const naturalH = r3Top + r3H;
+    const finalH = Math.min(3000, Math.max(500, Math.max(BASE_CONTAINER_HEIGHT, naturalH)));
+    const finalHpx = `${finalH}px`;
+    set(container, 'height', finalHpx);
+    set(container, 'minHeight', finalHpx);
+  }, [isMobile]);
+
+  // If something else triggers a re-render mid-drag, React would otherwise
+  // overwrite our DOM-level styles with the stale React-state values.
+  // useLayoutEffect runs after every render *before paint*, so re-applying
+  // here keeps the screen in lockstep with `liveStateRef`.
+  useLayoutEffect(() => {
+    if (isDraggingRef.current) {
+      applyLiveLayoutToDOM();
+    }
+  });
+
   // Update column widths function for vertical handles
   const updateColumnWidths = useCallback((rowIndex, deltaPercent) => {
     setColumnWidths(prev => {
@@ -1911,43 +2062,45 @@ const Overview = () => {
   }, []);
 
   // Update row heights function for horizontal handles
-  // This function adjusts two adjacent rows while normalizing all three to sum to 1.0
-  const updateRowHeights = useCallback((colIndex, rowIndex, deltaPercent) => {
+  // This function adjusts two adjacent rows while normalizing all three to sum to 1.0.
+  // Applies the same triple to both columns so desktop handles stay on card edges.
+  const updateRowHeights = useCallback((_colIndex, rowIndex, deltaPercent) => {
     setRowHeights(prev => {
       try {
-        const newHeights = prev.map((col, idx) => {
-          if (idx !== colIndex) return col; // Don't modify other columns
-          
-          const columnHeights = [...col];
-          const currentHeight = columnHeights[rowIndex];
-          const nextHeight = columnHeights[rowIndex + 1];
-          const thirdRowIndex = rowIndex === 0 ? 2 : (rowIndex === 1 ? 0 : 1); // The row not being adjusted
-          const thirdHeight = columnHeights[thirdRowIndex];
-          
-          // Calculate new heights for the two rows being adjusted
-          // Dragging down (positive delta) increases top row, decreases bottom row
-          const newCurrentHeight = Math.max(0.1, Math.min(0.95, currentHeight + deltaPercent));
-          const newNextHeight = Math.max(0.1, Math.min(0.95, nextHeight - deltaPercent));
-          
-          // Ensure both heights respect constraints
-          const finalCurrentHeight = Math.max(0.1, Math.min(0.95, newCurrentHeight));
-          const finalNextHeight = Math.max(0.1, Math.min(0.95, newNextHeight));
-          
-          // Calculate total including the third row (which maintains its value)
-          const total = finalCurrentHeight + finalNextHeight + thirdHeight;
-          
-          // Normalize all three rows to ensure sum = 1.0
-          // This maintains relative proportions while ensuring the sum constraint
-          if (total > 0) {
-            columnHeights[rowIndex] = finalCurrentHeight / total;
-            columnHeights[rowIndex + 1] = finalNextHeight / total;
-            columnHeights[thirdRowIndex] = thirdHeight / total;
-          }
-          
-          return columnHeights;
-        });
-        
-        return newHeights;
+        const baseCol0 = prev[0] || [1 / 3, 1 / 3, 1 / 3];
+        const baseCol1 = prev[1] || [1 / 3, 1 / 3, 1 / 3];
+        const columnHeights = [
+          ((baseCol0[0] ?? 1 / 3) + (baseCol1[0] ?? 1 / 3)) / 2,
+          ((baseCol0[1] ?? 1 / 3) + (baseCol1[1] ?? 1 / 3)) / 2,
+          ((baseCol0[2] ?? 1 / 3) + (baseCol1[2] ?? 1 / 3)) / 2,
+        ];
+        const baseSum = columnHeights.reduce((x, y) => x + y, 0);
+        if (baseSum > 0) {
+          columnHeights[0] /= baseSum;
+          columnHeights[1] /= baseSum;
+          columnHeights[2] /= baseSum;
+        }
+
+        const currentHeight = columnHeights[rowIndex];
+        const nextHeight = columnHeights[rowIndex + 1];
+        const thirdRowIndex = rowIndex === 0 ? 2 : rowIndex === 1 ? 0 : 1;
+        const thirdHeight = columnHeights[thirdRowIndex];
+
+        const newCurrentHeight = Math.max(0.1, Math.min(0.95, currentHeight + deltaPercent));
+        const newNextHeight = Math.max(0.1, Math.min(0.95, nextHeight - deltaPercent));
+
+        const finalCurrentHeight = Math.max(0.1, Math.min(0.95, newCurrentHeight));
+        const finalNextHeight = Math.max(0.1, Math.min(0.95, newNextHeight));
+
+        const total = finalCurrentHeight + finalNextHeight + thirdHeight;
+
+        if (total > 0) {
+          columnHeights[rowIndex] = finalCurrentHeight / total;
+          columnHeights[rowIndex + 1] = finalNextHeight / total;
+          columnHeights[thirdRowIndex] = thirdHeight / total;
+        }
+
+        return [columnHeights, columnHeights];
       } catch (error) {
         console.error('❌ Error updating row heights:', error);
         return prev; // Return previous state on error
@@ -2003,10 +2156,12 @@ const Overview = () => {
         const normalizedLeft = total > 0 ? finalLeftWidth / total : 0.5;
         const normalizedRight = total > 0 ? finalRightWidth / total : 0.5;
         
-        // Update only the specific row
-        setColumnWidths(prev => prev.map((row, idx) => 
+        // Write to live ref + DOM directly (no React state update during drag).
+        const newColumnWidths = baseWidths.map((row, idx) =>
           idx === handle.rowIndex ? [normalizedLeft, normalizedRight] : row
-        ));
+        );
+        liveStateRef.current = { ...liveStateRef.current, columnWidths: newColumnWidths };
+        applyLiveLayoutToDOM();
       } else if (handle.type === 'horizontal') {
         // Calculate delta in pixels from start position
         const deltaY = clientY - startPos.y;
@@ -2018,10 +2173,23 @@ const Overview = () => {
         const baseHeights = startState.rowHeights;
         if (!baseHeights) return; // Safety check
         
-        const baseColumn = baseHeights[handle.colIndex] || [1/3, 1/3, 1/3];
+        const baseCol0 = baseHeights[0] || [1 / 3, 1 / 3, 1 / 3];
+        const baseCol1 = baseHeights[1] || [1 / 3, 1 / 3, 1 / 3];
+        const baseColumn = [
+          ((baseCol0[0] ?? 1 / 3) + (baseCol1[0] ?? 1 / 3)) / 2,
+          ((baseCol0[1] ?? 1 / 3) + (baseCol1[1] ?? 1 / 3)) / 2,
+          ((baseCol0[2] ?? 1 / 3) + (baseCol1[2] ?? 1 / 3)) / 2,
+        ];
+        const baseSum = baseColumn.reduce((a, b) => a + b, 0);
+        if (baseSum > 0) {
+          baseColumn[0] /= baseSum;
+          baseColumn[1] /= baseSum;
+          baseColumn[2] /= baseSum;
+        }
+
         const currentHeight = baseColumn[handle.rowIndex];
         const nextHeight = baseColumn[handle.rowIndex + 1];
-        const thirdRowIndex = handle.rowIndex === 0 ? 2 : (handle.rowIndex === 1 ? 0 : 1);
+        const thirdRowIndex = handle.rowIndex === 0 ? 2 : handle.rowIndex === 1 ? 0 : 1;
         const thirdHeight = baseColumn[thirdRowIndex];
         
         // Calculate new heights based on initial state + delta
@@ -2041,17 +2209,19 @@ const Overview = () => {
           const normalizedCurrent = finalCurrentHeight / total;
           const normalizedNext = finalNextHeight / total;
           const normalizedThird = thirdHeight / total;
-          
-          // Update only the specific column
-          setRowHeights(prev => prev.map((col, idx) => {
-            if (idx !== handle.colIndex) return col;
-            
-            const newColumn = [...col];
-            newColumn[handle.rowIndex] = normalizedCurrent;
-            newColumn[handle.rowIndex + 1] = normalizedNext;
-            newColumn[thirdRowIndex] = normalizedThird;
-            return newColumn;
-          }));
+
+          const newColumn = [...baseColumn];
+          newColumn[handle.rowIndex] = normalizedCurrent;
+          newColumn[handle.rowIndex + 1] = normalizedNext;
+          newColumn[thirdRowIndex] = normalizedThird;
+
+          // Same row triple for both columns so horizontal seams match card bottoms.
+          // Write to live ref + DOM directly (no React state update during drag).
+          liveStateRef.current = {
+            ...liveStateRef.current,
+            rowHeights: [newColumn, newColumn],
+          };
+          applyLiveLayoutToDOM();
         }
       } else if (handle.type === 'bottom') {
         // Calculate delta in pixels from start position
@@ -2092,13 +2262,14 @@ const Overview = () => {
         const maxBottomPadding = Math.max(0, MAX_CONTAINER_HEIGHT - baseHeight);
         const newBottomPadding = Math.max(0, Math.min(maxBottomPadding, baseBottomPadding + deltaY));
         
-        // Update bottom padding (this will extend Row 3 cards downward)
-        setBottomPadding(newBottomPadding);
+        // Write to live ref + DOM directly (no React state update during drag).
+        liveStateRef.current = { ...liveStateRef.current, bottomPadding: newBottomPadding };
+        applyLiveLayoutToDOM();
       }
     } catch (error) {
       console.error('❌ Error in performResizeUpdate:', error);
     }
-  }, []);
+  }, [applyLiveLayoutToDOM]);
 
   // Handle mouse move during drag (throttled with requestAnimationFrame)
   const handleMouseMove = useCallback((e) => {
@@ -2158,16 +2329,46 @@ const Overview = () => {
   // Handle mouse up / touch end (end drag)
   const handleMouseUp = useCallback(() => {
     try {
-      setIsDragging(false);
-      setActiveHandle(null);
-      
-      // Cancel any pending RAF updates
+      // Flush any RAF that hasn't fired yet so the final pointer position is
+      // applied to the DOM before we commit to React state.
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
-      pendingUpdateRef.current = null;
-      
+      if (pendingUpdateRef.current) {
+        const { clientX, clientY } = pendingUpdateRef.current;
+        pendingUpdateRef.current = null;
+        try {
+          performResizeUpdate(clientX, clientY);
+        } catch (e) {
+          console.error('❌ Error flushing pending resize on mouseup:', e);
+        }
+      }
+
+      // Commit the in-flight values to React state so they persist to
+      // localStorage and are reflected in any consumer that reads the React
+      // state.  We only commit the dimension that was actually changed by the
+      // active handle to avoid spurious re-renders of the other dimensions.
+      const handle = activeHandleRef.current;
+      const live = liveStateRef.current;
+      if (handle && live) {
+        if (handle.type === 'vertical' && live.columnWidths) {
+          setColumnWidths(live.columnWidths);
+        } else if (handle.type === 'horizontal' && live.rowHeights) {
+          setRowHeights(live.rowHeights);
+        } else if (handle.type === 'bottom' && live.bottomPadding != null) {
+          setBottomPadding(live.bottomPadding);
+        }
+      }
+
+      setIsDragging(false);
+      setActiveHandle(null);
+
+      // Drop the cached element refs so we do not hold onto detached nodes
+      // if React happens to reconcile the cards/handles between drags.
+      cardElementsRef.current = {};
+      handleElementsRef.current = {};
+
       // Remove global listeners
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -2182,7 +2383,7 @@ const Overview = () => {
     } catch (error) {
       console.error('❌ Error in handleMouseUp:', error);
     }
-  }, [handleMouseMove, handleTouchMove]);
+  }, [handleMouseMove, handleTouchMove, performResizeUpdate]);
 
   // Handle mouse down / touch start on resize handle
   const handleMouseDown = useCallback((e, handleType, handleData) => {
@@ -2196,15 +2397,56 @@ const Overview = () => {
       
       if (clientX === undefined || clientY === undefined) return;
       
+      // Snapshot from the live ref (which mirrors React state but is always
+      // current — important if a previous drag's commit hasn't flushed yet).
+      const live = liveStateRef.current;
+      const snapshot = {
+        columnWidths: JSON.parse(JSON.stringify(live?.columnWidths ?? columnWidths)),
+        rowHeights: JSON.parse(JSON.stringify(live?.rowHeights ?? rowHeights)),
+        bottomPadding: live?.bottomPadding ?? bottomPadding,
+      };
+
+      // Cache the container width once for the whole drag — avoids hitting
+      // getBoundingClientRect during applyLiveLayoutToDOM (which would force
+      // sync layout) and lets us emit pixel values instead of calc strings.
+      const containerEl = gridContainerRef.current;
+      const cachedWidth =
+        containerEl?.getBoundingClientRect().width || containerDimensions.width || 1200;
+      liveStateRef.current = {
+        ...liveStateRef.current,
+        columnWidths: snapshot.columnWidths,
+        rowHeights: snapshot.rowHeights,
+        bottomPadding: snapshot.bottomPadding,
+        containerWidth: cachedWidth,
+      };
+
+      // Cache element refs once so applyLiveLayoutToDOM does not need to
+      // querySelector on every RAF tick.  Cleared in handleMouseUp.
+      if (containerEl) {
+        const cardCache = {};
+        containerEl.querySelectorAll('[data-card-key]').forEach((el) => {
+          cardCache[el.getAttribute('data-card-key')] = el;
+        });
+        cardElementsRef.current = cardCache;
+
+        const handleCache = {};
+        containerEl.querySelectorAll('[data-handle-key]').forEach((el) => {
+          handleCache[el.getAttribute('data-handle-key')] = el;
+        });
+        handleElementsRef.current = handleCache;
+      }
+
       setIsDragging(true);
       setActiveHandle({ type: handleType, ...handleData });
       setStartPosition({ x: clientX, y: clientY });
-      setStartState({ 
-        columnWidths: JSON.parse(JSON.stringify(columnWidths)), // Deep copy
-        rowHeights: JSON.parse(JSON.stringify(rowHeights)), // Deep copy
-        bottomPadding: bottomPadding // Copy current bottom padding
-      });
-      
+      setStartState(snapshot);
+      // Also write directly to refs so the very first RAF tick (which can
+      // race with React's commit of the above setStates) sees fresh values.
+      isDraggingRef.current = true;
+      activeHandleRef.current = { type: handleType, ...handleData };
+      startPositionRef.current = { x: clientX, y: clientY };
+      startStateRef.current = snapshot;
+
       // Add global listeners for mouse/touch move and up
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
@@ -2223,7 +2465,7 @@ const Overview = () => {
     } catch (error) {
       console.error('❌ Error in handleMouseDown:', error);
     }
-  }, [columnWidths, rowHeights, bottomPadding, handleMouseMove, handleMouseUp, handleTouchMove]);
+  }, [columnWidths, rowHeights, bottomPadding, containerDimensions.width, handleMouseMove, handleMouseUp, handleTouchMove]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -2248,34 +2490,26 @@ const Overview = () => {
     };
   }, [handleMouseMove, handleMouseUp, handleTouchMove]);
 
-  // Debug: Verify positions don't overlap (development only)
+  // Debug: Verify positions don't overlap (development only).
+  // Skipped while resizing — it ran every RAF frame and dropped frames.
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development' && !isDragging) {
       try {
-        const handlePositions = calculateHandlePositions(containerDimensions.width, calculatedContainerHeight);
-        
-        console.log('📊 Calculated Card Positions:', cardPositions);
-        console.log('📊 Calculated Handle Positions:', handlePositions);
-        console.log('📊 Container Height Needed:', handlePositions.containerHeight);
-        
-        // Verify positions don't overlap
         const cards = Object.values(cardPositions);
         for (let i = 0; i < cards.length; i++) {
           for (let j = i + 1; j < cards.length; j++) {
             const card1 = cards[i];
             const card2 = cards[j];
-            // Check if cards are in same row and column (should never overlap)
             if (card1 && card2 && card1.row === card2.row && card1.col === card2.col) {
               console.error('❌ Overlap detected:', card1, card2);
             }
           }
         }
-        console.log('✅ No overlap detected in card positions');
       } catch (error) {
         console.error('❌ Error in position verification:', error);
       }
     }
-  }, [cardPositions, containerDimensions, calculateHandlePositions, calculatedContainerHeight]);
+  }, [cardPositions, isDragging]);
 
   // Format last updated time
   const formatLastUpdated = (timestamp) => {
@@ -4701,20 +4935,7 @@ const Overview = () => {
             );
           }
 
-          if (process.env.NODE_ENV === 'development') {
-            console.log('🎯 Rendering with:', {
-              containerWidth: containerDimensions.width,
-              containerHeight: calculatedContainerHeight,
-              cardPositions: {
-                economicCalendar: cardPositions.economicCalendar ? { top: cardPositions.economicCalendar.top, height: cardPositions.economicCalendar.height } : null,
-                aiAnalysis: cardPositions.aiAnalysis ? { top: cardPositions.aiAnalysis.top, height: cardPositions.aiAnalysis.height } : null,
-                marketSentiment: cardPositions.marketSentiment ? { top: cardPositions.marketSentiment.top, height: cardPositions.marketSentiment.height } : null,
-                liveNews: cardPositions.liveNews ? { top: cardPositions.liveNews.top, height: cardPositions.liveNews.height } : null,
-                predictionMarkets: cardPositions.predictionMarkets ? { top: cardPositions.predictionMarkets.top, height: cardPositions.predictionMarkets.height } : null,
-                centralBank: cardPositions.centralBank ? { top: cardPositions.centralBank.top, height: cardPositions.centralBank.height } : null
-              }
-            });
-          }
+          // (Debug render log removed: it was running on every drag frame.)
           
           // Helper function to safely get position values
           const getPosition = (cardKey, prop) => {
@@ -4730,7 +4951,7 @@ const Overview = () => {
           return (
             <div 
               ref={gridContainerRef}
-              className="overview-grid-container"
+              className={`overview-grid-container${isDragging ? ' is-resizing' : ''}`}
               style={{ 
                 position: 'relative',
                 display: 'block', // Override CSS Grid - CRITICAL FIX
@@ -4744,6 +4965,7 @@ const Overview = () => {
                 <div 
                   ref={economicCalendarCardRef}
                   className="news-calendar grid-card"
+                  data-card-key="economicCalendar"
                   data-onboarding="economic-calendar"
                   data-calendar-style={calendarStyleMode}
                   style={{
@@ -5053,6 +5275,7 @@ const Overview = () => {
                 {/* AI Analysis Card - Right Column, Row 1 */}
                 <div 
                   className="ai-analysis-card grid-card"
+                  data-card-key="aiAnalysis"
                   data-onboarding="ai-analysis"
                   style={{
                     position: 'absolute',
@@ -5627,6 +5850,7 @@ const Overview = () => {
                 {/* Market Sentiment Card - Left Column, Row 2 */}
                 <div 
                   className="market-sentiment-card grid-card"
+                  data-card-key="marketSentiment"
                   data-onboarding="market-sentiment"
                   style={{
                     position: 'absolute',
@@ -6381,6 +6605,7 @@ const Overview = () => {
                 {/* Live News + Analysis Card - Right Column, Row 2 */}
                 <div 
                   className="live-news-analysis-card grid-card"
+                  data-card-key="liveNews"
                   data-onboarding="live-news"
                   style={{
                     position: 'absolute',
@@ -6398,6 +6623,7 @@ const Overview = () => {
                 {/* Prediction Markets Card - Left Column, Row 3 */}
                 <div 
                   className="prediction-markets-card grid-card"
+                  data-card-key="predictionMarkets"
                   data-onboarding="prediction-markets"
                   style={{
                     position: 'absolute',
@@ -7044,6 +7270,7 @@ const Overview = () => {
                 {/* Central Bank Analysis Card - Right Column, Row 3 */}
                 <div 
                   className="central-bank-analysis-card grid-card"
+                  data-card-key="centralBank"
                   data-onboarding="central-bank"
                   style={{
                     position: 'absolute',
@@ -7250,6 +7477,7 @@ const Overview = () => {
                         {handlePositions.vertical && handlePositions.vertical.map((handle, index) => (
                           <div
                             key={`vertical-${index}`}
+                            data-handle-key={`vertical-${handle.rowIndex}`}
                             className={`grid-resize-handle vertical ${isDragging && activeHandle?.type === 'vertical' && activeHandle?.rowIndex === handle.rowIndex ? 'active' : ''}`}
                             style={{
                               left: handle.left,
@@ -7266,6 +7494,7 @@ const Overview = () => {
                         {handlePositions.horizontal && handlePositions.horizontal.map((handle, index) => (
                           <div
                             key={`horizontal-${index}`}
+                            data-handle-key={`horizontal-${handle.colIndex}-${handle.rowIndex}`}
                             className={`grid-resize-handle horizontal ${isDragging && activeHandle?.type === 'horizontal' && activeHandle?.colIndex === handle.colIndex && activeHandle?.rowIndex === handle.rowIndex ? 'active' : ''}`}
                             style={{
                               left: handle.left,
@@ -7289,6 +7518,7 @@ const Overview = () => {
                         {handlePositions.bottom && handlePositions.bottom.map((handle, index) => (
                           <div
                             key={`bottom-${index}`}
+                            data-handle-key={`bottom-${handle.colIndex}`}
                             className={`grid-resize-handle horizontal ${isDragging && activeHandle?.type === 'bottom' && activeHandle?.colIndex === handle.colIndex ? 'active' : ''}`}
                             style={{
                               left: handle.left,
