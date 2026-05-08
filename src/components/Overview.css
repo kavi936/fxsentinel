@@ -11627,3 +11627,73 @@
     justify-content: center;
   }
 }
+
+/* Unified card header typography for quick Google Fonts trials.
+   Change --overview-card-header-font-family in one place to test new fonts. */
+.overview-tab {
+  --overview-card-header-font-family: 'Sen', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --overview-card-header-font-weight: 650;
+  --overview-card-header-letter-spacing: 0.01em;
+  --overview-card-header-font-size: 19px;
+  --overview-card-header-height: 68px;
+  --overview-card-header-control-height: 36px;
+}
+
+.overview-tab :is(
+  .calendar-title,
+  .ai-title,
+  .sentiment-title,
+  .prediction-markets-title,
+  .central-bank-analysis-title,
+  .calendar-header .header-main h2,
+  .filter-section-header h3,
+  .news-header .header-main h2,
+  .ai-header .header-main h2,
+  .opportunity-header h3,
+  .section-header,
+  .section-header h3,
+  .sentiment-header h3,
+  .vix-header h3,
+  .conditions-header h3,
+  .summary-header h3,
+  .event-summary-header h3,
+  .prediction-markets-header .header-main h3,
+  .prediction-markets-mobile-controls-header h3,
+  .central-bank-analysis-header h3,
+  .cb-document-header h3
+) {
+  font-family: var(--overview-card-header-font-family);
+  font-size: var(--overview-card-header-font-size);
+  font-weight: var(--overview-card-header-font-weight);
+  letter-spacing: var(--overview-card-header-letter-spacing);
+}
+
+/* Keep major Overview card headers visually aligned even when controls differ. */
+.overview-tab :is(
+  .calendar-header,
+  .news-header,
+  .ai-header,
+  .sentiment-header,
+  .prediction-markets-header,
+  .central-bank-analysis-header
+) {
+  min-height: var(--overview-card-header-height);
+  box-sizing: border-box;
+}
+
+.overview-tab :is(
+  .calendar-controls,
+  .news-controls,
+  .sentiment-controls,
+  .central-bank-controls
+) {
+  min-height: var(--overview-card-header-control-height);
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .overview-tab {
+    --overview-card-header-height: 56px;
+  }
+}
