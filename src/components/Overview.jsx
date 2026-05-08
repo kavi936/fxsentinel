@@ -5163,7 +5163,26 @@ const Overview = () => {
                                 onTouchCancel={handleCalendarRowTouchEnd}
                               >
                                 {row.dateRowSpan > 0 ? <td rowSpan={row.dateRowSpan} className="calendar-table-date-cell calendar-col-date">{row.date}</td> : null}
-                                {row.timeRowSpan > 0 ? <td rowSpan={row.timeRowSpan} className="calendar-col-time">{row.time}</td> : null}
+                                {row.timeRowSpan > 0 ? (
+                                  <td rowSpan={row.timeRowSpan} className="calendar-col-time">
+                                    {(() => {
+                                      // Table readability: show time and timezone on separate lines (e.g. 10:00 / GST)
+                                      const rawTime = row.time || '';
+                                      const parts = rawTime.trim().split(/\s+/);
+                                      if (parts.length >= 2) {
+                                        const timezone = parts.pop();
+                                        const mainTime = parts.join(' ');
+                                        return (
+                                          <span className="calendar-time-stack">
+                                            <span className="calendar-time-main">{mainTime}</span>
+                                            <span className="calendar-time-tz">{timezone}</span>
+                                          </span>
+                                        );
+                                      }
+                                      return <span className="calendar-time-main">{rawTime}</span>;
+                                    })()}
+                                  </td>
+                                ) : null}
                                 <td className="calendar-col-currency">{row.event.currency}</td>
                                 <td className="calendar-col-impact">
                                   <span className="impact-cell">
