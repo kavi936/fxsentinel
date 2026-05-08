@@ -1159,6 +1159,38 @@
   line-height: 1.4;
 }
 
+/* Time + Impact are short, high-signal fields — truncating them hurts readability.
+   We prefer preserving the full value and letting the table scroll horizontally if needed. */
+.calendar-table td.calendar-col-time,
+.calendar-table td.calendar-col-impact {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+/* Prevent the Time column from collapsing into ellipsis on narrower layouts */
+.calendar-table th:nth-child(2),
+.calendar-table td.calendar-col-time {
+  min-width: 92px;
+  font-variant-numeric: tabular-nums;
+}
+
+.calendar-time-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.15;
+}
+
+.calendar-time-main {
+  font-weight: 600;
+}
+
+.calendar-time-tz {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
 /* Column styling by class (not nth-child) so merged Date/Time rowspan doesn’t misapply styles */
 .calendar-table td.calendar-col-date { padding-left: 16px; }
 .calendar-table td.calendar-col-time,
