@@ -19333,7 +19333,7 @@ class HybridEconomicCalendar:
                 'time': '07:00 UTC',
                 'currency': 'CHF',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-40',
                 'forecast': '-46',
                 'previous': '-43'
             },
@@ -19373,7 +19373,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-17.7K',
                 'forecast': '5.1K',
                 'previous': '14.1K'
             },
@@ -19383,7 +19383,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '6.9%',
                 'forecast': '6.7%',
                 'previous': '6.7%'
             },
@@ -19393,7 +19393,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.3%',
                 'previous': '0.2%'
             },
@@ -19403,9 +19403,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '115K',
                 'forecast': '60K',
-                'previous': '178K'
+                'previous': '185K'
             },
             {
                 'title': 'Unemployment Rate',
@@ -19413,7 +19413,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.3%',
                 'forecast': '4.3%',
                 'previous': '4.3%'
             },

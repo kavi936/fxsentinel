@@ -11403,6 +11403,7 @@
 .cb-document-title {
   font-size: 15px;
   font-weight: 600;
+  font-family: var(--font-sans);
   color: #ffffff;
   margin: 0;
   flex: 1;
