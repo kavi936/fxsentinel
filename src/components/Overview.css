@@ -11659,8 +11659,7 @@
   .event-summary-header h3,
   .prediction-markets-header .header-main h3,
   .prediction-markets-mobile-controls-header h3,
-  .central-bank-analysis-header h3,
-  .cb-document-header h3
+  .central-bank-analysis-header h3
 ) {
   font-family: var(--overview-card-header-font-family);
   font-size: var(--overview-card-header-font-size);
