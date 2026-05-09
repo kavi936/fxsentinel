@@ -11697,3 +11697,92 @@
     --overview-card-header-height: 56px;
   }
 }
+
+/* ============================================================
+ * Large-screen scaling for Overview grid (min-width tiers)
+ * ------------------------------------------------------------
+ * Why this exists:
+ *   Each grid card class caps at max-width: 850px (defined on the
+ *   bare class rule earlier in this file), which causes visible
+ *   gaps inside each row on monitors wider than ~1760px. The
+ *   rules below progressively raise that cap so cards fill their
+ *   column at every width, while preventing absurdly wide cards
+ *   on 4K monitors via an outer cap on .overview-grid-container
+ *   at the top tier.
+ *
+ * Notes:
+ *   - These ONLY add rules; nothing above this line is modified.
+ *   - Card heights are intentionally left untouched (controlled
+ *     by JS BASE_CONTAINER_HEIGHT and persisted user resizes in
+ *     localStorage). Heights can be revisited as a follow-up.
+ *   - .overview-content padding-top: 80px (navbar offset) is
+ *     preserved by only overriding padding-left/right per tier.
+ *   - Forex pairs ticker (.forex-pairs-card / .forex-pairs-grid)
+ *     is intentionally NOT included — it already scales via its
+ *     own auto-fit grid and is out of scope for this change.
+ *   - Breakpoints (1600 / 1920 / 2560) match Dashboard.css navbar
+ *     tiers so the page scales cohesively at the same widths.
+ * ============================================================ */
+
+/* Tier 1 — Large desktops (~27" 1440p monitors) */
+@media (min-width: 1600px) {
+  .overview-content {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .news-calendar,
+  .ai-analysis-card,
+  .market-sentiment-card,
+  .live-news-analysis-card,
+  .prediction-markets-card,
+  .central-bank-analysis-card {
+    max-width: 1000px;
+  }
+}
+
+/* Tier 2 — Full HD desktops and external monitors */
+@media (min-width: 1920px) {
+  .overview-content {
+    padding-left: 48px;
+    padding-right: 48px;
+  }
+
+  .news-calendar,
+  .ai-analysis-card,
+  .market-sentiment-card,
+  .live-news-analysis-card,
+  .prediction-markets-card,
+  .central-bank-analysis-card {
+    max-width: 1200px;
+  }
+}
+
+/* Tier 3 — 4K and ultrawide displays
+ *   - Per-card cap is removed so cards fill their column.
+ *   - Grid container itself is capped at 2400px and centered, so
+ *     cards stop at ~1187px each rather than ballooning beyond
+ *     readability on 4K monitors. Top/bottom margin is left at
+ *     the original 10px from the bare .overview-grid-container
+ *     rule (we only override the horizontal margins). */
+@media (min-width: 2560px) {
+  .overview-content {
+    padding-left: 64px;
+    padding-right: 64px;
+  }
+
+  .overview-grid-container {
+    max-width: 2400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .news-calendar,
+  .ai-analysis-card,
+  .market-sentiment-card,
+  .live-news-analysis-card,
+  .prediction-markets-card,
+  .central-bank-analysis-card {
+    max-width: none;
+  }
+}

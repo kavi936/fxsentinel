@@ -2611,3 +2611,163 @@ body.mobile-menu-open {
     padding-top: 0px;
   }
 } 
+
+/* ============================================================
+ * Large-screen scaling (min-width tiers)
+ * ------------------------------------------------------------
+ * Why this exists:
+ *   The default navbar-container caps at max-width: 1400px and
+ *   centers itself, which leaves empty wings on monitors wider
+ *   than ~1500px. The rules below progressively raise that cap
+ *   and lightly scale inner items so the bar feels intentional
+ *   (rather than stretched) at each tier.
+ *
+ * Notes:
+ *   - These ONLY add rules; nothing above this line is modified.
+ *   - Logo (<img>) is intentionally left alone here because its
+ *     height is set via an inline style in Dashboard.jsx, which
+ *     beats CSS without !important. Logo scaling is a follow-up.
+ * ============================================================ */
+
+/* Tier 1 — Large desktops (~27" 1440p monitors) */
+@media (min-width: 1600px) {
+  .navbar-container {
+    max-width: 1700px;
+    padding: 0 3rem;
+    gap: 2.5rem;
+  }
+
+  .navbar-left {
+    gap: 2rem;
+  }
+
+  .navbar-right {
+    gap: 1.4rem;
+  }
+
+  .welcome-message {
+    font-size: 0.95rem;
+  }
+
+  .datetime-container {
+    min-width: 175px;
+    max-width: 220px;
+    padding: 9px 14px;
+  }
+
+  .date-section {
+    font-size: 0.85rem;
+  }
+
+  .time-section {
+    font-size: 0.9rem;
+  }
+
+  .navbar-tabs.expanded {
+    min-width: 620px;
+    max-width: 720px;
+  }
+
+  .nav-tab {
+    font-size: 0.9rem;
+    padding: 0.5rem 0.95rem;
+    min-width: 80px;
+  }
+
+  .market-status {
+    padding: 0.75rem 1.1rem;
+    font-size: 0.85rem;
+    min-width: 195px;
+  }
+
+  .status-text {
+    font-size: 0.85rem;
+  }
+
+  .navbar-refresh-btn,
+  .profile-btn,
+  .home-btn,
+  .settings-btn,
+  .notification-btn {
+    width: 41px;
+    height: 41px;
+  }
+}
+
+/* Tier 2 — Full HD desktops and external monitors */
+@media (min-width: 1920px) {
+  .navbar-container {
+    max-width: 1900px;
+    padding: 0 4rem;
+    gap: 3rem;
+  }
+
+  .navbar-left {
+    gap: 2.2rem;
+  }
+
+  .navbar-right {
+    gap: 1.6rem;
+  }
+
+  .welcome-message {
+    font-size: 1rem;
+  }
+
+  .datetime-container {
+    min-width: 190px;
+    max-width: 240px;
+    padding: 10px 16px;
+  }
+
+  .date-section {
+    font-size: 0.9rem;
+  }
+
+  .time-section {
+    font-size: 0.95rem;
+  }
+
+  .navbar-tabs.expanded {
+    min-width: 660px;
+    max-width: 780px;
+  }
+
+  .nav-tab {
+    font-size: 0.95rem;
+    padding: 0.55rem 1.1rem;
+    min-width: 85px;
+  }
+
+  .market-status {
+    padding: 0.85rem 1.2rem;
+    font-size: 0.9rem;
+    min-width: 210px;
+  }
+
+  .status-text {
+    font-size: 0.9rem;
+  }
+
+  .navbar-refresh-btn,
+  .profile-btn,
+  .home-btn,
+  .settings-btn,
+  .notification-btn {
+    width: 43px;
+    height: 43px;
+  }
+}
+
+/* Tier 3 — 4K and ultrawide displays
+ * Cap is removed so the bar fills the screen, but generous
+ * edge padding keeps content from hugging the bezel. Inner
+ * sizes intentionally inherit Tier 2 values: scaling further
+ * makes elements feel oversized rather than refined. */
+@media (min-width: 2560px) {
+  .navbar-container {
+    max-width: none;
+    padding: 0 6rem;
+    gap: 3rem;
+  }
+}
