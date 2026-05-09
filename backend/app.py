@@ -4478,10 +4478,7 @@ def get_prediction_markets():
         
         force_refresh = force_refresh_param == 'true'
         
-        # Import the service
-        import importlib
-        import services.prediction_markets_service
-        importlib.reload(services.prediction_markets_service)
+        # Import the shared service instance (avoid per-request module reload).
         from services.prediction_markets_service import prediction_markets_service
         
         # Get markets data
@@ -4534,6 +4531,7 @@ def get_prediction_markets():
         }), 500
 
 @app.route('/api/prediction-markets/<market_id>/history', methods=['GET', 'OPTIONS'])
+@limiter.exempt
 def get_prediction_market_history(market_id):
     """Get price history for a specific prediction market"""
     # Handle CORS preflight requests

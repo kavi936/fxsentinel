@@ -77,7 +77,7 @@ const DEFAULT_TICKER_INSTRUMENTS = [
 const YES_LINE_COLOR = '#22c55e';   // green
 const NO_LINE_COLOR = '#ef4444';    // red
 
-const MiniPriceChart = ({ data }) => {
+const MiniPriceChart = ({ data, compact = false }) => {
   const [chartHover, setChartHover] = useState(null);
 
   if (!data || data.length === 0) return null;
@@ -202,16 +202,19 @@ const MiniPriceChart = ({ data }) => {
   // X-axis labels (first and last)
   const xAxisLabels = [];
   if (validData.length > 0) {
-    xAxisLabels.push({ index: 0, label: formatDate(validData[0].timestamp) });
-    if (validData.length > 1) {
-      xAxisLabels.push({ index: validData.length - 1, label: formatDate(validData[validData.length - 1].timestamp) });
-    }
+    const firstIndex = 0;
+    const lastIndex = validData.length - 1;
+    const midIndex = Math.floor((firstIndex + lastIndex) / 2);
+    const uniqueIndices = Array.from(new Set([firstIndex, midIndex, lastIndex]));
+    uniqueIndices.forEach((index) => {
+      xAxisLabels.push({ index, label: formatDate(validData[index].timestamp) });
+    });
   }
 
   const lastPoint = pointsYes.length > 0 ? pointsYes[pointsYes.length - 1] : null;
 
   return (
-    <div className="mini-price-chart-container">
+    <div className={`mini-price-chart-container ${compact ? 'mini-price-chart-container--compact' : ''}`}>
       <div className="mini-chart-header">
         <span className="mini-chart-title">Price History</span>
         <span className="mini-chart-legend">
@@ -231,7 +234,7 @@ const MiniPriceChart = ({ data }) => {
         <svg 
           viewBox={`0 0 ${baseWidth} ${baseHeight}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ width: '100%', height: 'auto', maxHeight: '360px', background: 'transparent' }}
+          style={{ width: '100%', height: 'auto', maxHeight: compact ? '240px' : '360px', background: 'transparent' }}
         >
         {/* Grid lines */}
         {yAxisLabels.map((label, idx) => (
@@ -241,7 +244,7 @@ const MiniPriceChart = ({ data }) => {
             y1={label.y}
             x2={baseWidth - padding.right}
             y2={label.y}
-            stroke="rgba(255, 255, 255, 0.1)"
+            stroke="rgba(255, 102, 102, 0.16)"
             strokeWidth="1"
           />
         ))}
@@ -291,7 +294,7 @@ const MiniPriceChart = ({ data }) => {
             x={padding.left - 10}
             y={label.y + 4}
             textAnchor="end"
-            fill="rgba(255, 255, 255, 0.5)"
+            fill="rgba(255, 217, 217, 0.72)"
             fontSize="10"
           >
             {label.value}%
@@ -308,7 +311,7 @@ const MiniPriceChart = ({ data }) => {
               x={point.x}
               y={baseHeight - padding.bottom + 15}
               textAnchor="middle"
-              fill="rgba(255, 255, 255, 0.5)"
+              fill="rgba(255, 217, 217, 0.72)"
               fontSize="10"
             >
               {label.label}
@@ -986,6 +989,23 @@ const Overview = () => {
     }
   });
   const [pmMobileControlsOpen, setPmMobileControlsOpen] = useState(false);
+
+  const handleClosePmFilterModal = useCallback(() => {
+    setPmMobileControlsOpen(false);
+  }, []);
+
+  const handleResetPmFilters = useCallback(() => {
+    setPmSearchQuery('');
+    setPmFilterTopic('all');
+    setPmFilterStatus('all');
+    setPmFilterConviction('all');
+  }, []);
+
+  const pmV2ListRef = useRef(null);
+  const [pmV2ActiveIndex, setPmV2ActiveIndex] = useState(0);
+  const pmHistoryQueueRef = useRef([]);
+  const pmHistoryQueuedSetRef = useRef(new Set());
+  const pmHistoryProcessingRef = useRef(false);
 
   // ============================================
   // PHASE 1: Resizable Grid State Management
@@ -2817,10 +2837,18 @@ const Overview = () => {
   const fetchMarketChartData = async (market) => {
     const marketId = market.id;
     
-    // Don't fetch if already cached
-    if (pmChartDataCache[marketId]) {
+    // Don't fetch if already cached/in-flight
+    if (pmChartDataCache[marketId]?.loading || pmChartDataCache[marketId]?.history || pmChartDataCache[marketId]?.error) {
       return;
     }
+
+    setPmChartDataCache((prev) => {
+      if (prev[marketId]) return prev;
+      return {
+        ...prev,
+        [marketId]: { loading: true }
+      };
+    });
 
     try {
       const clobTokenIds = market.clob_token_ids;
@@ -2839,7 +2867,14 @@ const Overview = () => {
       const response = await fetch(url);
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let backendMessage = '';
+        try {
+          const errJson = await response.json();
+          backendMessage = errJson?.error || errJson?.message || '';
+        } catch {
+          backendMessage = '';
+        }
+        throw new Error(backendMessage || `HTTP ${response.status}`);
       }
 
       const data = await response.json();
@@ -2859,10 +2894,124 @@ const Overview = () => {
       console.error('❌ Error fetching price history:', err);
       setPmChartDataCache(prev => ({
         ...prev,
-        [marketId]: { error: 'Failed to load historical data' }
+        [marketId]: { error: `Failed to load historical data (${err?.message || 'unknown error'})` }
       }));
     }
   };
+
+  const processPmHistoryQueue = useCallback(async () => {
+    if (pmHistoryProcessingRef.current) return;
+    pmHistoryProcessingRef.current = true;
+    try {
+      while (pmHistoryQueueRef.current.length > 0) {
+        const nextMarket = pmHistoryQueueRef.current.shift();
+        if (!nextMarket) continue;
+        pmHistoryQueuedSetRef.current.delete(nextMarket.id);
+        // Sequential loading avoids blasting the backend/CLOB with parallel requests.
+        await fetchMarketChartData(nextMarket);
+        await new Promise((resolve) => setTimeout(resolve, 180));
+      }
+    } finally {
+      pmHistoryProcessingRef.current = false;
+    }
+  }, [pmChartDataCache]);
+
+  const filteredPredictionMarkets = useMemo(() => {
+    const now = new Date();
+    let filteredMarkets = predictionMarkets.filter((m) => {
+      if (pmSearchQuery) {
+        const query = pmSearchQuery.toLowerCase();
+        const question = (m.question || m.title || '').toLowerCase();
+        if (!question.includes(query)) return false;
+      }
+
+      if (pmFilterTopic !== 'all') {
+        const question = (m.question || m.title || '').toLowerCase();
+        let matchesTopic = false;
+        if (pmFilterTopic === 'GDP' && (question.includes('gdp') || question.includes('gross domestic product'))) matchesTopic = true;
+        else if (pmFilterTopic === 'CPI' && (question.includes('cpi') || question.includes('consumer price index') || question.includes('inflation'))) matchesTopic = true;
+        else if (pmFilterTopic === 'Fed' && (question.includes('fed') || question.includes('federal reserve') || question.includes('fomc') || question.includes('interest rate'))) matchesTopic = true;
+        else if (pmFilterTopic === 'Employment' && (question.includes('employment') || question.includes('nfp') || question.includes('non-farm payrolls') || question.includes('unemployment'))) matchesTopic = true;
+        else if (pmFilterTopic === 'ECB' && question.includes('ecb')) matchesTopic = true;
+        else if (pmFilterTopic === 'BOE' && (question.includes('boe') || question.includes('bank of england'))) matchesTopic = true;
+        else if (pmFilterTopic === 'BOJ' && (question.includes('boj') || question.includes('bank of japan'))) matchesTopic = true;
+        if (!matchesTopic) return false;
+      }
+
+      if (pmFilterStatus === 'active') {
+        if (m.is_resolved || m.closed) return false;
+      } else if (pmFilterStatus === 'resolved') {
+        if (!m.is_resolved && !m.closed) return false;
+      } else {
+        if (!m.is_resolved && !m.closed) return true;
+        if (m.resolution_date) {
+          const resolutionDate = new Date(m.resolution_date);
+          const daysSinceResolution = Math.floor((now - resolutionDate) / (1000 * 60 * 60 * 24));
+          if (daysSinceResolution < 0) return true;
+          if (daysSinceResolution >= 0 && daysSinceResolution <= 7) return true;
+          return false;
+        }
+        if (m.is_recently_resolved) return true;
+        return false;
+      }
+
+      return true;
+    });
+
+    if (pmFilterConviction !== 'all') {
+      filteredMarkets = filteredMarkets.filter((m) => {
+        const convictionLevel = (m.conviction_level || 'low').toLowerCase();
+        return convictionLevel === pmFilterConviction.toLowerCase();
+      });
+    }
+
+    return filteredMarkets.filter((market) => {
+      const yesPrice = market.yes_price;
+      const noPrice = market.no_price;
+      const volume = market.volume || 0;
+      if (yesPrice === null && noPrice === null && volume === 0) return false;
+      if (yesPrice === 0 && noPrice === 1 && volume === 0) return false;
+      return true;
+    });
+  }, [predictionMarkets, pmSearchQuery, pmFilterTopic, pmFilterStatus, pmFilterConviction]);
+
+  useEffect(() => {
+    if (pmStyleMode !== 'v2' || filteredPredictionMarkets.length === 0) return;
+    filteredPredictionMarkets.forEach((market) => {
+      if (!pmChartDataCache[market.id] && !pmHistoryQueuedSetRef.current.has(market.id)) {
+        pmHistoryQueuedSetRef.current.add(market.id);
+        pmHistoryQueueRef.current.push(market);
+      }
+    });
+    processPmHistoryQueue();
+  }, [pmStyleMode, filteredPredictionMarkets, pmChartDataCache, processPmHistoryQueue]);
+
+  useEffect(() => {
+    if (pmStyleMode !== 'v2') return;
+    const listEl = pmV2ListRef.current;
+    if (!listEl) return;
+
+    const onScroll = () => {
+      const centerX = listEl.scrollLeft + listEl.clientWidth / 2;
+      const children = Array.from(listEl.children);
+      if (!children.length) return;
+      let nextIndex = 0;
+      let smallestDistance = Number.POSITIVE_INFINITY;
+      children.forEach((child, index) => {
+        const childCenter = child.offsetLeft + (child.clientWidth / 2);
+        const distance = Math.abs(childCenter - centerX);
+        if (distance < smallestDistance) {
+          smallestDistance = distance;
+          nextIndex = index;
+        }
+      });
+      setPmV2ActiveIndex(nextIndex);
+    };
+
+    onScroll();
+    listEl.addEventListener('scroll', onScroll, { passive: true });
+    return () => listEl.removeEventListener('scroll', onScroll);
+  }, [pmStyleMode, filteredPredictionMarkets.length]);
 
   // Cleanup old cache on mount
   useEffect(() => {
@@ -6658,7 +6807,7 @@ const Overview = () => {
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
                         </svg>
-                        <span>Filters</span>
+                    
                         {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
                       </button>
                     );
@@ -6674,7 +6823,6 @@ const Overview = () => {
                       <rect x="3" y="8" width="18" height="8" rx="4" />
                       <circle cx={pmStyleMode === 'v2' ? 16 : 8} cy="12" r="3" fill="currentColor" stroke="none" />
                     </svg>
-                    <span>{pmStyleMode.toUpperCase()}</span>
                   </button>
                   {predictionMarketsBackgroundRefreshing && (
                     <span className="prediction-markets-updating" aria-live="polite">Updating…</span>
@@ -6717,146 +6865,6 @@ const Overview = () => {
               </div>
             </div>
 
-            {/* Mobile controls overlay for Prediction Markets */}
-            <div
-              className={`prediction-markets-mobile-controls-overlay ${pmMobileControlsOpen ? 'active' : ''}`}
-              onClick={(e) => e.target === e.currentTarget && setPmMobileControlsOpen(false)}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Prediction Markets controls"
-            >
-              <div className="prediction-markets-mobile-controls-content" onClick={(e) => e.stopPropagation()}>
-                <div className="prediction-markets-mobile-controls-header">
-                  <h3>Prediction Markets Controls</h3>
-                  <button
-                    type="button"
-                    className="prediction-markets-mobile-controls-close"
-                    onClick={() => setPmMobileControlsOpen(false)}
-                    aria-label="Close"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </div>
-                <div className="prediction-markets-mobile-controls-sections">
-                  <div className="prediction-markets-mobile-controls-section">
-                    <h4>Search & Filters</h4>
-                    <div className="pm-controls-form">
-                      <label className="pm-controls-field-label" htmlFor="pm-search-query">
-                        Search markets
-                      </label>
-                      <input
-                        id="pm-search-query"
-                        type="text"
-                        className="pm-controls-input"
-                        placeholder="Search by market question..."
-                        value={pmSearchQuery}
-                        onChange={(e) => setPmSearchQuery(e.target.value)}
-                      />
-
-                      <label className="pm-controls-field-label" htmlFor="pm-topic-filter">
-                        Topic
-                      </label>
-                      <select
-                        id="pm-topic-filter"
-                        className="pm-controls-select"
-                        value={pmFilterTopic}
-                        onChange={(e) => setPmFilterTopic(e.target.value)}
-                      >
-                        <option value="all">All Topics</option>
-                        <option value="GDP">GDP</option>
-                        <option value="CPI">CPI / Inflation</option>
-                        <option value="Fed">Fed / Interest Rates</option>
-                        <option value="Employment">Employment / NFP</option>
-                        <option value="ECB">ECB</option>
-                        <option value="BOE">BOE</option>
-                        <option value="BOJ">BOJ</option>
-                      </select>
-
-                      <label className="pm-controls-field-label" htmlFor="pm-status-filter">
-                        Status
-                      </label>
-                      <select
-                        id="pm-status-filter"
-                        className="pm-controls-select"
-                        value={pmFilterStatus}
-                        onChange={(e) => setPmFilterStatus(e.target.value)}
-                      >
-                        <option value="all">All Status</option>
-                        <option value="active">Active Only</option>
-                        <option value="resolved">Resolved</option>
-                      </select>
-
-                      <label className="pm-controls-field-label" htmlFor="pm-conviction-filter">
-                        Conviction
-                      </label>
-                      <select
-                        id="pm-conviction-filter"
-                        className="pm-controls-select"
-                        value={pmFilterConviction}
-                        onChange={(e) => setPmFilterConviction(e.target.value)}
-                      >
-                        <option value="all">All Conviction</option>
-                        <option value="high">High</option>
-                        <option value="medium">Medium</option>
-                        <option value="low">Low</option>
-                      </select>
-
-                      <button
-                        type="button"
-                        className="pm-controls-reset-btn"
-                        onClick={() => {
-                          setPmSearchQuery('');
-                          setPmFilterTopic('all');
-                          setPmFilterStatus('all');
-                          setPmFilterConviction('all');
-                        }}
-                      >
-                        Reset filters
-                      </button>
-                    </div>
-                  </div>
-                  <div className="prediction-markets-mobile-controls-section">
-                    <h4>Style & Refresh</h4>
-                    <button
-                      type="button"
-                      className="prediction-markets-style-toggle-btn prediction-markets-mobile-style-btn"
-                      onClick={handlePmStyleToggle}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="8" width="18" height="8" rx="4" />
-                        <circle cx={pmStyleMode === 'v2' ? 16 : 8} cy="12" r="3" fill="currentColor" stroke="none" />
-                      </svg>
-                      {pmStyleMode === 'v1' ? 'Switch to V2 style' : 'Switch to V1 style'}
-                    </button>
-                    <button
-                      type="button"
-                      className="prediction-markets-refresh-btn prediction-markets-mobile-refresh-btn"
-                      onClick={() => {
-                        setPmChartDataCache({});
-                        refreshPredictionMarkets();
-                        setPmMobileControlsOpen(false);
-                      }}
-                      disabled={predictionMarketsLoading}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                      </svg>
-                      {predictionMarketsLoading ? 'Refreshing…' : 'Refresh now'}
-                    </button>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  className="prediction-markets-mobile-controls-done"
-                  onClick={() => setPmMobileControlsOpen(false)}
-                >
-                  Done
-                </button>
-              </div>
-            </div>
             <div className="prediction-markets-content">
               {predictionMarketsLoading ? (
                 <div className="prediction-markets-loading">
@@ -6876,124 +6884,12 @@ const Overview = () => {
                 </div>
               ) : (
                 <>
-                  <div className={`prediction-markets-list ${pmStyleMode === 'v2' ? 'prediction-markets-list--v2' : ''}`}>
+                  <div
+                    ref={pmStyleMode === 'v2' ? pmV2ListRef : null}
+                    className={`prediction-markets-list ${pmStyleMode === 'v2' ? 'prediction-markets-list--v2' : ''}`}
+                  >
                     {(() => {
-                      // Apply search and filters
-                      const now = new Date();
-                      let filteredMarkets = predictionMarkets.filter(m => {
-                        // No frontend volume filter: show all markets returned by API (low volume can still be useful)
-                        
-                        // Search filter: Check if question/title matches search query
-                        if (pmSearchQuery) {
-                          const query = pmSearchQuery.toLowerCase();
-                          const question = (m.question || m.title || '').toLowerCase();
-                          if (!question.includes(query)) {
-                            return false;
-                          }
-                        }
-                        
-                        // Topic filter: Check if market matches selected topic
-                        if (pmFilterTopic !== 'all') {
-                          const question = (m.question || m.title || '').toLowerCase();
-                          let matchesTopic = false;
-                          
-                          if (pmFilterTopic === 'GDP' && (question.includes('gdp') || question.includes('gross domestic product'))) {
-                            matchesTopic = true;
-                          } else if (pmFilterTopic === 'CPI' && (question.includes('cpi') || question.includes('consumer price index') || question.includes('inflation'))) {
-                            matchesTopic = true;
-                          } else if (pmFilterTopic === 'Fed' && (question.includes('fed') || question.includes('federal reserve') || question.includes('fomc') || question.includes('interest rate'))) {
-                            matchesTopic = true;
-                          } else if (pmFilterTopic === 'Employment' && (question.includes('employment') || question.includes('nfp') || question.includes('non-farm payrolls') || question.includes('unemployment'))) {
-                            matchesTopic = true;
-                          } else if (pmFilterTopic === 'ECB' && question.includes('ecb')) {
-                            matchesTopic = true;
-                          } else if (pmFilterTopic === 'BOE' && (question.includes('boe') || question.includes('bank of england'))) {
-                            matchesTopic = true;
-                          } else if (pmFilterTopic === 'BOJ' && (question.includes('boj') || question.includes('bank of japan'))) {
-                            matchesTopic = true;
-                          }
-                          
-                          if (!matchesTopic) {
-                            return false;
-                          }
-                        }
-                        
-                        // Status filter: Filter by active/resolved status
-                        if (pmFilterStatus === 'active') {
-                          // Only show active markets
-                          if (m.is_resolved || m.closed) {
-                            return false;
-                          }
-                        } else if (pmFilterStatus === 'resolved') {
-                          // Only show resolved markets
-                          if (!m.is_resolved && !m.closed) {
-                            return false;
-                          }
-                        } else {
-                          // 'all' - apply default filtering logic
-                          // Show if not resolved and not closed (active markets)
-                          if (!m.is_resolved && !m.closed) {
-                            return true;
-                          }
-                          
-                          // For resolved/closed markets, check if resolution date has actually passed
-                          if (m.resolution_date) {
-                            const resolutionDate = new Date(m.resolution_date);
-                            const daysSinceResolution = Math.floor((now - resolutionDate) / (1000 * 60 * 60 * 24));
-                            
-                            // Only show if:
-                            // 1. Resolution date hasn't passed yet (market closed but not yet resolved)
-                            // 2. OR resolved within last 7 days (recent outcomes for context)
-                            if (daysSinceResolution < 0) {
-                              return true;
-                            } else if (daysSinceResolution >= 0 && daysSinceResolution <= 7) {
-                              return true;
-                            }
-                            return false;
-                          }
-                          
-                          // Show if recently resolved flag is set (fallback)
-                          if (m.is_recently_resolved) {
-                            return true;
-                          }
-                          
-                          return false;
-                        }
-                        
-                        return true;
-                      });
-                      
-                      // Conviction filter: Filter by conviction level
-                      if (pmFilterConviction !== 'all') {
-                        filteredMarkets = filteredMarkets.filter(m => {
-                          const convictionLevel = (m.conviction_level || 'low').toLowerCase();
-                          return convictionLevel === pmFilterConviction.toLowerCase();
-                        });
-                      }
-                      
-                      // Use API order (backend already sorts by relevance, priority, conviction, delta); no client re-sort
-                      const activeMarkets = filteredMarkets;
-                      
-                      return activeMarkets
-                        .filter(market => {
-                          // Filter out markets with invalid prices (already filtered in backend, but double-check)
-                          const yesPrice = market.yes_price;
-                          const noPrice = market.no_price;
-                          const volume = market.volume || 0;
-                          
-                          // Skip if prices are null/undefined (invalid data)
-                          if (yesPrice === null && noPrice === null && volume === 0) {
-                            return false;
-                          }
-                          
-                          // Skip if prices are 0/1 with no volume (no real trading data)
-                          if (yesPrice === 0 && noPrice === 1 && volume === 0) {
-                            return false;
-                          }
-                          
-                          return true;
-                        })
-                        .map((market) => {
+                      return filteredPredictionMarkets.map((market) => {
                           const yesPrice = market.yes_price;
                           const noPrice = market.no_price;
                           
@@ -7100,20 +6996,17 @@ const Overview = () => {
                                 )}
 
                                 <div className="market-chart-expanded market-chart-expanded--v2">
-                                  {!chartData ? (
-                                    <button
-                                      type="button"
-                                      className="pm-v2-load-chart-btn"
-                                      onClick={() => fetchMarketChartData(market)}
-                                    >
-                                      Load chart data
-                                    </button>
+                                  {!chartData || chartData.loading ? (
+                                    <div className="market-chart-loading">
+                                      <div className="loading-spinner"></div>
+                                      <span>Loading price history...</span>
+                                    </div>
                                   ) : chartData.error ? (
                                     <div className="market-chart-error">
                                       <span>{chartData.error}</span>
                                     </div>
                                   ) : chartData.history && chartData.history.length > 0 ? (
-                                    <MiniPriceChart data={chartData.history} />
+                                    <MiniPriceChart data={chartData.history} compact />
                                   ) : (
                                     <div className="market-chart-error">
                                       <span>No historical data available</span>
@@ -7349,7 +7242,7 @@ const Overview = () => {
                               {/* Expanded Chart Section */}
                               {isExpanded && (
                                 <div className="market-chart-expanded" onClick={(e) => e.stopPropagation()}>
-                                  {!chartData ? (
+                                  {!chartData || chartData.loading ? (
                                     <div className="market-chart-loading">
                                       <div className="loading-spinner"></div>
                                       <span>Loading price history...</span>
@@ -7423,6 +7316,29 @@ const Overview = () => {
                         });
                     })()}
                   </div>
+                  {pmStyleMode === 'v2' && filteredPredictionMarkets.length > 1 && (
+                    <div className="prediction-markets-v2-pagination" role="tablist" aria-label="Prediction market pages">
+                      {filteredPredictionMarkets.map((market, index) => (
+                        <button
+                          key={`pm-v2-dot-${market.id}`}
+                          type="button"
+                          role="tab"
+                          aria-selected={pmV2ActiveIndex === index}
+                          className={`prediction-markets-v2-dot ${pmV2ActiveIndex === index ? 'active' : ''}`}
+                          onClick={() => {
+                            const listEl = pmV2ListRef.current;
+                            const target = listEl?.children?.[index];
+                            if (!listEl || !target) return;
+                            const targetLeft = target.offsetLeft - ((listEl.clientWidth - target.clientWidth) / 2);
+                            listEl.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+                            setPmV2ActiveIndex(index);
+                          }}
+                          title={`Go to market ${index + 1}`}
+                          aria-label={`Go to market ${index + 1}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                   {(() => {
                     // Check if we have any markets (active or recently resolved)
                     const hasMarkets = predictionMarkets.some(m => {
@@ -8166,7 +8082,111 @@ const Overview = () => {
         </div>
       )}
 
-      {/* Prediction Markets Modals */}
+      {/* Prediction Markets filter modal (same overlay + modal as Economic Calendar filter) */}
+      {pmMobileControlsOpen && (
+        <div className="modal-overlay" onClick={handleClosePmFilterModal}>
+          <div
+            className="modal-content filter-modal pm-filter-modal"
+            onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pm-filter-modal-title"
+          >
+            <div className="modal-header">
+              <h2 id="pm-filter-modal-title">Filter Prediction Markets</h2>
+              <button type="button" className="modal-close-btn" onClick={handleClosePmFilterModal} aria-label="Close">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div className="pm-filter-modal-scroll">
+              <div className="filter-section">
+                <div className="filter-section-header">
+                  <h3>Search &amp; Filters</h3>
+                </div>
+                <div className="pm-controls-form">
+                  <label className="pm-controls-field-label" htmlFor="pm-search-query">
+                    Search markets
+                  </label>
+                  <input
+                    id="pm-search-query"
+                    type="text"
+                    className="pm-controls-input"
+                    placeholder="Search by market question..."
+                    value={pmSearchQuery}
+                    onChange={(e) => setPmSearchQuery(e.target.value)}
+                  />
+
+                  <label className="pm-controls-field-label" htmlFor="pm-topic-filter">
+                    Topic
+                  </label>
+                  <select
+                    id="pm-topic-filter"
+                    className="pm-controls-select"
+                    value={pmFilterTopic}
+                    onChange={(e) => setPmFilterTopic(e.target.value)}
+                  >
+                    <option value="all">All Topics</option>
+                    <option value="GDP">GDP</option>
+                    <option value="CPI">CPI / Inflation</option>
+                    <option value="Fed">Fed / Interest Rates</option>
+                    <option value="Employment">Employment / NFP</option>
+                    <option value="ECB">ECB</option>
+                    <option value="BOE">BOE</option>
+                    <option value="BOJ">BOJ</option>
+                  </select>
+
+                  <label className="pm-controls-field-label" htmlFor="pm-status-filter">
+                    Status
+                  </label>
+                  <select
+                    id="pm-status-filter"
+                    className="pm-controls-select"
+                    value={pmFilterStatus}
+                    onChange={(e) => setPmFilterStatus(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="active">Active Only</option>
+                    <option value="resolved">Resolved</option>
+                  </select>
+
+                  <label className="pm-controls-field-label" htmlFor="pm-conviction-filter">
+                    Conviction
+                  </label>
+                  <select
+                    id="pm-conviction-filter"
+                    className="pm-controls-select"
+                    value={pmFilterConviction}
+                    onChange={(e) => setPmFilterConviction(e.target.value)}
+                  >
+                    <option value="all">All Conviction</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                  </select>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="filter-modal-actions">
+              <button type="button" className="btn-reset" onClick={handleResetPmFilters}>
+                Reset filters
+              </button>
+              <div className="modal-actions-right">
+                <button type="button" className="btn-cancel" onClick={handleClosePmFilterModal}>
+                  Cancel
+                </button>
+                <button type="button" className="btn-save" onClick={handleClosePmFilterModal}>
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chart Popup */}
       <EconomicChartPopup

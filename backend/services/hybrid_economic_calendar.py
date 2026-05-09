@@ -19281,7 +19281,7 @@ class HybridEconomicCalendar:
                 'time': '02:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '586B',
                 'forecast': '570B',
                 'previous': '355B'
             },
@@ -19291,7 +19291,7 @@ class HybridEconomicCalendar:
                 'time': '02:04 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '84.8B',
                 'forecast': '82.4B',
                 'previous': '51.1B'
             },
