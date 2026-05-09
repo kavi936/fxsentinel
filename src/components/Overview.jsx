@@ -972,19 +972,19 @@ const Overview = () => {
   const [cbFilterType, setCbFilterType] = useState('all');
   const [cbFilterImpact, setCbFilterImpact] = useState('all');
   
-  // Prediction Markets filter state and modals
+  // Prediction Markets filters + view style
   const [pmSearchQuery, setPmSearchQuery] = useState('');
   const [pmFilterTopic, setPmFilterTopic] = useState('all');
   const [pmFilterStatus, setPmFilterStatus] = useState('all');
-
-
   const [pmFilterConviction, setPmFilterConviction] = useState('all');
-  
-  // Prediction Markets modal states
-  const [isPmTopicModalOpen, setIsPmTopicModalOpen] = useState(false);
-  const [isPmStatusModalOpen, setIsPmStatusModalOpen] = useState(false);
-  const [isPmConvictionModalOpen, setIsPmConvictionModalOpen] = useState(false);
-  const [isPmSearchModalOpen, setIsPmSearchModalOpen] = useState(false);
+  const [pmStyleMode, setPmStyleMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('fxSentinel_predictionMarketsStyleMode');
+      return (saved === 'v1' || saved === 'v2') ? saved : 'v1';
+    } catch {
+      return 'v1';
+    }
+  });
   const [pmMobileControlsOpen, setPmMobileControlsOpen] = useState(false);
 
   // ============================================
@@ -2772,37 +2772,16 @@ const Overview = () => {
     setIsFilterModalOpen(true);
   };
   
-  // Prediction Markets modal handlers
-  const handlePmTopicClick = () => {
-    setIsPmTopicModalOpen(true);
-  };
-  
-  const handlePmStatusClick = () => {
-    setIsPmStatusModalOpen(true);
-  };
-  
-  const handlePmConvictionClick = () => {
-    setIsPmConvictionModalOpen(true);
-  };
-  
-  const handlePmSearchClick = () => {
-    setIsPmSearchModalOpen(true);
-  };
-  
-  const handleClosePmTopicModal = () => {
-    setIsPmTopicModalOpen(false);
-  };
-  
-  const handleClosePmStatusModal = () => {
-    setIsPmStatusModalOpen(false);
-  };
-  
-  const handleClosePmConvictionModal = () => {
-    setIsPmConvictionModalOpen(false);
-  };
-  
-  const handleClosePmSearchModal = () => {
-    setIsPmSearchModalOpen(false);
+  const handlePmStyleToggle = () => {
+    setPmStyleMode((prev) => {
+      const next = prev === 'v1' ? 'v2' : 'v1';
+      try {
+        localStorage.setItem('fxSentinel_predictionMarketsStyleMode', next);
+      } catch (e) {
+        console.warn('Could not persist prediction markets style:', e);
+      }
+      return next;
+    });
   };
 
   // Chart popup handlers
@@ -5000,10 +4979,8 @@ const Overview = () => {
                   aria-label="Toggle calendar style"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <circle cx="12" cy="12" r="9" />
-                    <circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none" />
-                    <circle cx="16" cy="11" r="1.5" fill="currentColor" stroke="none" />
-                    <circle cx="9" cy="14" r="1.5" fill="currentColor" stroke="none" />
+                    <rect x="3" y="8" width="18" height="8" rx="4" />
+                    <circle cx={calendarStyleMode === 'alternate' ? 16 : 8} cy="12" r="3" fill="currentColor" stroke="none" />
                   </svg>
                 </button>
                 <button className="date-select-btn" onClick={handleDatePicker}>
@@ -6644,6 +6621,7 @@ const Overview = () => {
                   className="prediction-markets-card grid-card"
                   data-card-key="predictionMarkets"
                   data-onboarding="prediction-markets"
+                  data-pm-style={pmStyleMode}
                   style={{
                     position: 'absolute',
                     left: getPosition('predictionMarkets', 'left'),
@@ -6663,39 +6641,41 @@ const Overview = () => {
                 />
                 {/* Inline controls: hidden on mobile, shown on desktop */}
                 <div className="prediction-markets-controls-inline">
-                  <div className="prediction-markets-filter-buttons">
-                    <button 
-                      className={`pm-filter-btn ${pmFilterTopic !== 'all' ? 'active' : ''}`}
-                      onClick={handlePmTopicClick}
-                      title="Filter by Topic"
-                    >
-                      Topic
-                    </button>
-                    <button 
-                      className={`pm-filter-btn ${pmFilterStatus !== 'all' ? 'active' : ''}`}
-                      onClick={handlePmStatusClick}
-                      title="Filter by Status"
-                    >
-                      Status
-                    </button>
-                    <button 
-                      className={`pm-filter-btn ${pmFilterConviction !== 'all' ? 'active' : ''}`}
-                      onClick={handlePmConvictionClick}
-                      title="Filter by Conviction"
-                    >
-                      Conviction
-                    </button>
-                    <button 
-                      className={`pm-filter-btn pm-filter-btn-icon ${pmSearchQuery ? 'active' : ''}`}
-                      onClick={handlePmSearchClick}
-                      title="Search Markets"
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <path d="M21 21l-4.35-4.35"></path>
-                      </svg>
-                    </button>
-                  </div>
+                  {(() => {
+                    const activeFilterCount =
+                      (pmSearchQuery ? 1 : 0) +
+                      (pmFilterTopic !== 'all' ? 1 : 0) +
+                      (pmFilterStatus !== 'all' ? 1 : 0) +
+                      (pmFilterConviction !== 'all' ? 1 : 0);
+                    return (
+                      <button
+                        type="button"
+                        className={`prediction-markets-filters-popup-btn ${activeFilterCount > 0 ? 'active' : ''}`}
+                        onClick={() => setPmMobileControlsOpen(true)}
+                        title="Search and filter markets"
+                        aria-label="Open Prediction Markets filters popup"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path>
+                        </svg>
+                        <span>Filters</span>
+                        {activeFilterCount > 0 && <span className="filter-badge">{activeFilterCount}</span>}
+                      </button>
+                    );
+                  })()}
+                  <button
+                    type="button"
+                    className="prediction-markets-style-toggle-btn"
+                    onClick={handlePmStyleToggle}
+                    title={pmStyleMode === 'v1' ? 'Switch to V2 style' : 'Switch to V1 style'}
+                    aria-label="Toggle prediction markets style"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="8" width="18" height="8" rx="4" />
+                      <circle cx={pmStyleMode === 'v2' ? 16 : 8} cy="12" r="3" fill="currentColor" stroke="none" />
+                    </svg>
+                    <span>{pmStyleMode.toUpperCase()}</span>
+                  </button>
                   {predictionMarketsBackgroundRefreshing && (
                     <span className="prediction-markets-updating" aria-live="polite">Updating…</span>
                   )}
@@ -6718,8 +6698,8 @@ const Overview = () => {
                   type="button"
                   className="prediction-markets-mobile-controls-btn"
                   onClick={() => setPmMobileControlsOpen(true)}
-                  title="Controls"
-                  aria-label="Open Prediction Markets controls"
+                  title="Search and filter markets"
+                  aria-label="Open Prediction Markets filters popup"
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <line x1="4" y1="21" x2="4" y2="14"></line>
@@ -6732,7 +6712,7 @@ const Overview = () => {
                     <line x1="9" y1="8" x2="15" y2="8"></line>
                     <line x1="17" y1="16" x2="23" y2="16"></line>
                   </svg>
-                  <span>Controls</span>
+                  <span>Filters</span>
                 </button>
               </div>
             </div>
@@ -6762,44 +6742,95 @@ const Overview = () => {
                 </div>
                 <div className="prediction-markets-mobile-controls-sections">
                   <div className="prediction-markets-mobile-controls-section">
-                    <h4>Filters</h4>
-                    <div className="prediction-markets-filter-buttons">
-                      <button 
-                        className={`pm-filter-btn ${pmFilterTopic !== 'all' ? 'active' : ''}`}
-                        onClick={() => { handlePmTopicClick(); setPmMobileControlsOpen(false); }}
-                        title="Filter by Topic"
-                      >
+                    <h4>Search & Filters</h4>
+                    <div className="pm-controls-form">
+                      <label className="pm-controls-field-label" htmlFor="pm-search-query">
+                        Search markets
+                      </label>
+                      <input
+                        id="pm-search-query"
+                        type="text"
+                        className="pm-controls-input"
+                        placeholder="Search by market question..."
+                        value={pmSearchQuery}
+                        onChange={(e) => setPmSearchQuery(e.target.value)}
+                      />
+
+                      <label className="pm-controls-field-label" htmlFor="pm-topic-filter">
                         Topic
-                      </button>
-                      <button 
-                        className={`pm-filter-btn ${pmFilterStatus !== 'all' ? 'active' : ''}`}
-                        onClick={() => { handlePmStatusClick(); setPmMobileControlsOpen(false); }}
-                        title="Filter by Status"
+                      </label>
+                      <select
+                        id="pm-topic-filter"
+                        className="pm-controls-select"
+                        value={pmFilterTopic}
+                        onChange={(e) => setPmFilterTopic(e.target.value)}
                       >
+                        <option value="all">All Topics</option>
+                        <option value="GDP">GDP</option>
+                        <option value="CPI">CPI / Inflation</option>
+                        <option value="Fed">Fed / Interest Rates</option>
+                        <option value="Employment">Employment / NFP</option>
+                        <option value="ECB">ECB</option>
+                        <option value="BOE">BOE</option>
+                        <option value="BOJ">BOJ</option>
+                      </select>
+
+                      <label className="pm-controls-field-label" htmlFor="pm-status-filter">
                         Status
-                      </button>
-                      <button 
-                        className={`pm-filter-btn ${pmFilterConviction !== 'all' ? 'active' : ''}`}
-                        onClick={() => { handlePmConvictionClick(); setPmMobileControlsOpen(false); }}
-                        title="Filter by Conviction"
+                      </label>
+                      <select
+                        id="pm-status-filter"
+                        className="pm-controls-select"
+                        value={pmFilterStatus}
+                        onChange={(e) => setPmFilterStatus(e.target.value)}
                       >
+                        <option value="all">All Status</option>
+                        <option value="active">Active Only</option>
+                        <option value="resolved">Resolved</option>
+                      </select>
+
+                      <label className="pm-controls-field-label" htmlFor="pm-conviction-filter">
                         Conviction
-                      </button>
-                      <button 
-                        className={`pm-filter-btn pm-filter-btn-icon ${pmSearchQuery ? 'active' : ''}`}
-                        onClick={() => { handlePmSearchClick(); setPmMobileControlsOpen(false); }}
-                        title="Search Markets"
+                      </label>
+                      <select
+                        id="pm-conviction-filter"
+                        className="pm-controls-select"
+                        value={pmFilterConviction}
+                        onChange={(e) => setPmFilterConviction(e.target.value)}
                       >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <circle cx="11" cy="11" r="8"></circle>
-                          <path d="M21 21l-4.35-4.35"></path>
-                        </svg>
-                        Search
+                        <option value="all">All Conviction</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        className="pm-controls-reset-btn"
+                        onClick={() => {
+                          setPmSearchQuery('');
+                          setPmFilterTopic('all');
+                          setPmFilterStatus('all');
+                          setPmFilterConviction('all');
+                        }}
+                      >
+                        Reset filters
                       </button>
                     </div>
                   </div>
                   <div className="prediction-markets-mobile-controls-section">
-                    <h4>Refresh</h4>
+                    <h4>Style & Refresh</h4>
+                    <button
+                      type="button"
+                      className="prediction-markets-style-toggle-btn prediction-markets-mobile-style-btn"
+                      onClick={handlePmStyleToggle}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="8" width="18" height="8" rx="4" />
+                        <circle cx={pmStyleMode === 'v2' ? 16 : 8} cy="12" r="3" fill="currentColor" stroke="none" />
+                      </svg>
+                      {pmStyleMode === 'v1' ? 'Switch to V2 style' : 'Switch to V1 style'}
+                    </button>
                     <button
                       type="button"
                       className="prediction-markets-refresh-btn prediction-markets-mobile-refresh-btn"
@@ -6845,7 +6876,7 @@ const Overview = () => {
                 </div>
               ) : (
                 <>
-                  <div className="prediction-markets-list">
+                  <div className={`prediction-markets-list ${pmStyleMode === 'v2' ? 'prediction-markets-list--v2' : ''}`}>
                     {(() => {
                       // Apply search and filters
                       const now = new Date();
@@ -7005,6 +7036,136 @@ const Overview = () => {
                           const isExpanded = expandedMarkets[market.id] || false;
                           const chartData = pmChartDataCache[market.id];
                           
+                          if (pmStyleMode === 'v2') {
+                            return (
+                              <div
+                                key={market.id}
+                                className={`prediction-market-item prediction-market-item-v2 ${convictionClass}`}
+                              >
+                                <div className="prediction-market-v2-top">
+                                  <div className="market-question">{market.question}</div>
+                                  {convictionLevel && (
+                                    <div className={`conviction-badge conviction-${convictionLevel}`}>
+                                      {convictionLevel.toUpperCase()}
+                                    </div>
+                                  )}
+                                </div>
+
+                                {hasValidPrices && total > 0 ? (
+                                  <div className="market-probability-row">
+                                    {deltaText && (
+                                      <div className={`price-delta ${deltaClass}`} title={`24h: ${delta24h !== null ? delta24h.toFixed(1) + '%' : 'N/A'}, 48h: ${delta48h !== null ? delta48h.toFixed(1) + '%' : 'N/A'}, 7d: ${delta7d !== null ? delta7d.toFixed(1) + '%' : 'N/A'}`}>
+                                        {deltaText}
+                                      </div>
+                                    )}
+                                    <div className="probability-bar-container">
+                                      <div className="probability-bar">
+                                        {yesPriceValue > 0 && (
+                                          <div
+                                            className="probability-fill yes-fill"
+                                            style={{ width: `${yesPercent}%` }}
+                                          >
+                                            {(parseFloat(yesPercent) >= 10 || noPriceValue === 0) && (
+                                              <span className="probability-label yes-label">
+                                                YES {yesPercent}%
+                                              </span>
+                                            )}
+                                          </div>
+                                        )}
+                                        {noPriceValue > 0 && (
+                                          <div
+                                            className="probability-fill no-fill"
+                                            style={{ width: `${noPercent}%` }}
+                                          >
+                                            {(parseFloat(noPercent) >= 10 || yesPriceValue === 0) && (
+                                              <span className="probability-label no-label">
+                                                NO {noPercent}%
+                                              </span>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="market-probability-row">
+                                    <div className="probability-bar-container">
+                                      <div className="probability-bar no-data">
+                                        <span className="probability-label no-data-label">
+                                          No price data available
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="market-chart-expanded market-chart-expanded--v2">
+                                  {!chartData ? (
+                                    <button
+                                      type="button"
+                                      className="pm-v2-load-chart-btn"
+                                      onClick={() => fetchMarketChartData(market)}
+                                    >
+                                      Load chart data
+                                    </button>
+                                  ) : chartData.error ? (
+                                    <div className="market-chart-error">
+                                      <span>{chartData.error}</span>
+                                    </div>
+                                  ) : chartData.history && chartData.history.length > 0 ? (
+                                    <MiniPriceChart data={chartData.history} />
+                                  ) : (
+                                    <div className="market-chart-error">
+                                      <span>No historical data available</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="market-meta-row">
+                                  {market.volume && market.volume > 0 && (
+                                    <div className="market-meta-item">
+                                      <span className="meta-label">Volume:</span>
+                                      <span className={`meta-value ${(() => {
+                                        const vol = market.volume;
+                                        if (vol >= 50000) return 'high-volume';
+                                        if (vol >= 10000) return 'medium-volume';
+                                        return 'low-volume';
+                                      })()}`}>
+                                        {(() => {
+                                          const vol = market.volume;
+                                          if (vol >= 1000000) return `$${(vol / 1000000).toFixed(2)}M`;
+                                          if (vol >= 1000) return `$${(vol / 1000).toFixed(1)}K`;
+                                          return `$${vol.toFixed(0)}`;
+                                        })()}
+                                      </span>
+                                    </div>
+                                  )}
+
+                                  {market.resolution_date && (
+                                    <div className="market-meta-item">
+                                      <span className="meta-label">Resolves:</span>
+                                      <span className="meta-value">
+                                        {(() => {
+                                          const date = new Date(market.resolution_date);
+                                          const now = new Date();
+                                          const daysUntil = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+                                          if (daysUntil > 0 && daysUntil <= 7) {
+                                            return `In ${daysUntil} day${daysUntil !== 1 ? 's' : ''}`;
+                                          }
+                                          return date.toLocaleDateString('en-US', {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                          });
+                                        })()}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          }
+
                           return (
                             <div 
                               key={market.id} 
@@ -8006,319 +8167,6 @@ const Overview = () => {
       )}
 
       {/* Prediction Markets Modals */}
-      
-      {/* Topic Filter Modal */}
-      {isPmTopicModalOpen && (
-        <div className="modal-overlay" onClick={handleClosePmTopicModal}>
-          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Filter by Topic</h2>
-              <button className="modal-close-btn" onClick={handleClosePmTopicModal}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            <div className="pm-modal-content">
-              <div className="pm-filter-options">
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-all"
-                    name="topic"
-                    checked={pmFilterTopic === 'all'}
-                    onChange={() => setPmFilterTopic('all')}
-                  />
-                  <label htmlFor="topic-all" className="pm-filter-label">
-                    All Topics
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-gdp"
-                    name="topic"
-                    checked={pmFilterTopic === 'GDP'}
-                    onChange={() => setPmFilterTopic('GDP')}
-                  />
-                  <label htmlFor="topic-gdp" className="pm-filter-label">
-                    GDP
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-cpi"
-                    name="topic"
-                    checked={pmFilterTopic === 'CPI'}
-                    onChange={() => setPmFilterTopic('CPI')}
-                  />
-                  <label htmlFor="topic-cpi" className="pm-filter-label">
-                    CPI / Inflation
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-fed"
-                    name="topic"
-                    checked={pmFilterTopic === 'Fed'}
-                    onChange={() => setPmFilterTopic('Fed')}
-                  />
-                  <label htmlFor="topic-fed" className="pm-filter-label">
-                    Fed / Interest Rates
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-employment"
-                    name="topic"
-                    checked={pmFilterTopic === 'Employment'}
-                    onChange={() => setPmFilterTopic('Employment')}
-                  />
-                  <label htmlFor="topic-employment" className="pm-filter-label">
-                    Employment / NFP
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-ecb"
-                    name="topic"
-                    checked={pmFilterTopic === 'ECB'}
-                    onChange={() => setPmFilterTopic('ECB')}
-                  />
-                  <label htmlFor="topic-ecb" className="pm-filter-label">
-                    ECB
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-boe"
-                    name="topic"
-                    checked={pmFilterTopic === 'BOE'}
-                    onChange={() => setPmFilterTopic('BOE')}
-                  />
-                  <label htmlFor="topic-boe" className="pm-filter-label">
-                    BOE
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="topic-boj"
-                    name="topic"
-                    checked={pmFilterTopic === 'BOJ'}
-                    onChange={() => setPmFilterTopic('BOJ')}
-                  />
-                  <label htmlFor="topic-boj" className="pm-filter-label">
-                    BOJ
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="pm-modal-actions">
-              <button className="btn-cancel" onClick={handleClosePmTopicModal}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Status Filter Modal */}
-      {isPmStatusModalOpen && (
-        <div className="modal-overlay" onClick={handleClosePmStatusModal}>
-          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Filter by Status</h2>
-              <button className="modal-close-btn" onClick={handleClosePmStatusModal}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            <div className="pm-modal-content">
-              <div className="pm-filter-options">
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="status-all"
-                    name="status"
-                    checked={pmFilterStatus === 'all'}
-                    onChange={() => setPmFilterStatus('all')}
-                  />
-                  <label htmlFor="status-all" className="pm-filter-label">
-                    All Status
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="status-active"
-                    name="status"
-                    checked={pmFilterStatus === 'active'}
-                    onChange={() => setPmFilterStatus('active')}
-                  />
-                  <label htmlFor="status-active" className="pm-filter-label">
-                    Active Only
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="status-resolved"
-                    name="status"
-                    checked={pmFilterStatus === 'resolved'}
-                    onChange={() => setPmFilterStatus('resolved')}
-                  />
-                  <label htmlFor="status-resolved" className="pm-filter-label">
-                    Resolved
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="pm-modal-actions">
-              <button className="btn-cancel" onClick={handleClosePmStatusModal}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Conviction Filter Modal */}
-      {isPmConvictionModalOpen && (
-        <div className="modal-overlay" onClick={handleClosePmConvictionModal}>
-          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Filter by Conviction</h2>
-              <button className="modal-close-btn" onClick={handleClosePmConvictionModal}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            <div className="pm-modal-content">
-              <div className="pm-filter-options">
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="conviction-all"
-                    name="conviction"
-                    checked={pmFilterConviction === 'all'}
-                    onChange={() => setPmFilterConviction('all')}
-                  />
-                  <label htmlFor="conviction-all" className="pm-filter-label">
-                    All Conviction
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="conviction-high"
-                    name="conviction"
-                    checked={pmFilterConviction === 'high'}
-                    onChange={() => setPmFilterConviction('high')}
-                  />
-                  <label htmlFor="conviction-high" className="pm-filter-label">
-                    High
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="conviction-medium"
-                    name="conviction"
-                    checked={pmFilterConviction === 'medium'}
-                    onChange={() => setPmFilterConviction('medium')}
-                  />
-                  <label htmlFor="conviction-medium" className="pm-filter-label">
-                    Medium
-                  </label>
-                </div>
-                <div className="pm-filter-option">
-                  <input
-                    type="radio"
-                    id="conviction-low"
-                    name="conviction"
-                    checked={pmFilterConviction === 'low'}
-                    onChange={() => setPmFilterConviction('low')}
-                  />
-                  <label htmlFor="conviction-low" className="pm-filter-label">
-                    Low
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="pm-modal-actions">
-              <button className="btn-cancel" onClick={handleClosePmConvictionModal}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Search Modal */}
-      {isPmSearchModalOpen && (
-        <div className="modal-overlay" onClick={handleClosePmSearchModal}>
-          <div className="modal-content pm-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>Search Markets</h2>
-              <button className="modal-close-btn" onClick={handleClosePmSearchModal}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            <div className="pm-modal-content">
-              <div className="pm-search-modal-content">
-                <div className="pm-search-input-container">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="pm-search-icon">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="M21 21l-4.35-4.35"></path>
-                  </svg>
-                  <input
-                    type="text"
-                    className="pm-search-modal-input"
-                    placeholder="Search markets by question or title..."
-                    value={pmSearchQuery}
-                    onChange={(e) => setPmSearchQuery(e.target.value)}
-                    autoFocus
-                  />
-                  {pmSearchQuery && (
-                    <button 
-                      className="pm-clear-search-btn"
-                      onClick={() => setPmSearchQuery('')}
-                      title="Clear search"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M18 6L6 18M6 6l12 12"></path>
-                      </svg>
-                    </button>
-                  )}
-                </div>
-                {pmSearchQuery && (
-                  <div className="pm-search-hint">
-                    Searching for: <strong>"{pmSearchQuery}"</strong>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="pm-modal-actions">
-              <button className="btn-reset" onClick={() => setPmSearchQuery('')}>
-                Clear
-              </button>
-              <button className="btn-save" onClick={handleClosePmSearchModal}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Chart Popup */}
       <EconomicChartPopup
