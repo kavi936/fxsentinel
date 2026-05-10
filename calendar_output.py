@@ -1,601 +1,259 @@
-📊 Parsing 114 events from ForexFactory export...
-✅ Found 29 HIGH/MEDIUM impact events
-✅ Found 107 total non-holiday events (including LOW impact)
+📊 Parsing 93 events from ForexFactory export...
+✅ Found 14 HIGH/MEDIUM impact events
+✅ Found 90 total non-holiday events (including LOW impact)
 
 ======================================================================
 GENERATED PYTHON CODE:
 ======================================================================
 
-            # SUNDAY, MAY 03
+            # SUNDAY, MAY 10
             {
-                'title': 'MI Inflation Gauge m/m',
-                'date': 'Sun, May 03',
-                'time': '01:00 UTC',
-                'currency': 'AUD',
-                'impact': 'low',
+                'title': 'CPI y/y',
+                'date': 'Sun, May 10',
+                'time': '01:30 UTC',
+                'currency': 'CNY',
+                'impact': 'medium',
                 'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '1.3%'
+                'forecast': '0.9%',
+                'previous': '1.0%'
             },
             {
-                'title': 'ANZ Job Advertisements m/m',
-                'date': 'Sun, May 03',
+                'title': 'PPI y/y',
+                'date': 'Sun, May 10',
                 'time': '01:30 UTC',
-                'currency': 'AUD',
-                'impact': 'low',
+                'currency': 'CNY',
+                'impact': 'medium',
                 'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-3.1%'
-            },
-            {
-                'title': 'Building Approvals m/m',
-                'date': 'Sun, May 03',
-                'time': '01:30 UTC',
-                'currency': 'AUD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-10.2%',
-                'previous': '29.7%'
+                'forecast': '1.7%',
+                'previous': '0.5%'
             },
 
-            # MONDAY, MAY 04
+            # MONDAY, MAY 11
             {
-                'title': 'Spanish Manufacturing PMI',
-                'date': 'Mon, May 04',
-                'time': '07:15 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '49.5',
-                'previous': '48.7'
-            },
-            {
-                'title': 'Manufacturing PMI',
-                'date': 'Mon, May 04',
-                'time': '07:30 UTC',
-                'currency': 'CHF',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '52.0',
-                'previous': '53.3'
-            },
-            {
-                'title': 'Italian Manufacturing PMI',
-                'date': 'Mon, May 04',
-                'time': '07:45 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '51.6',
-                'previous': '51.3'
-            },
-            {
-                'title': 'French Final Manufacturing PMI',
-                'date': 'Mon, May 04',
-                'time': '07:50 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '52.8',
-                'previous': '52.8'
-            },
-            {
-                'title': 'German Final Manufacturing PMI',
-                'date': 'Mon, May 04',
-                'time': '07:55 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '51.2',
-                'previous': '51.2'
-            },
-            {
-                'title': 'Final Manufacturing PMI',
-                'date': 'Mon, May 04',
-                'time': '08:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '52.2',
-                'previous': '52.2'
-            },
-            {
-                'title': 'Sentix Investor Confidence',
-                'date': 'Mon, May 04',
-                'time': '08:30 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-20.9',
-                'previous': '-19.2'
-            },
-            {
-                'title': 'Eurogroup Meetings',
-                'date': 'Mon, May 04',
-                'time': '09:15 UTC',
-                'currency': 'EUR',
+                'title': 'Cleveland Fed Inflation Expectations',
+                'date': 'Mon, May 11',
+                'time': '13:48 UTC',
+                'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
-                'previous': 'N/A'
+                'previous': '3.1%'
             },
             {
-                'title': 'Factory Orders m/m',
-                'date': 'Mon, May 04',
+                'title': 'Existing Home Sales',
+                'date': 'Mon, May 11',
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '0.5%',
-                'previous': '0.0%'
+                'forecast': '4.05M',
+                'previous': '3.98M'
             },
             {
-                'title': 'FOMC Member Williams Speaks',
-                'date': 'Mon, May 04',
-                'time': '16:50 UTC',
-                'currency': 'USD',
+                'title': 'BRC Retail Sales Monitor y/y',
+                'date': 'Mon, May 11',
+                'time': '23:01 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.7%',
+                'previous': '3.1%'
+            },
+            {
+                'title': 'Household Spending y/y',
+                'date': 'Mon, May 11',
+                'time': '23:30 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-1.4%',
+                'previous': '-1.8%'
+            },
+            {
+                'title': 'BOJ Summary of Opinions',
+                'date': 'Mon, May 11',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
             {
-                'title': 'German Buba President Nagel Speaks',
-                'date': 'Mon, May 04',
-                'time': '17:05 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Loan Officer Survey',
-                'date': 'Mon, May 04',
-                'time': '18:03 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'BOC Gov Macklem Speaks',
-                'date': 'Mon, May 04',
-                'time': '19:30 UTC',
-                'currency': 'CAD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'ANZ Commodity Prices m/m',
-                'date': 'Mon, May 04',
-                'time': '01:00 UTC',
-                'currency': 'NZD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '4.1%'
-            },
-            {
-                'title': 'Household Spending m/m',
-                'date': 'Mon, May 04',
+                'title': 'NAB Business Confidence',
+                'date': 'Mon, May 11',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '1.8%',
-                'previous': '0.3%'
+                'forecast': 'N/A',
+                'previous': '-29'
+            },
+            {
+                'title': '10-y Bond Auction',
+                'date': 'Mon, May 11',
+                'time': '03:35 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '2.35|2.6'
             },
 
-            # TUESDAY, MAY 05
+            # TUESDAY, MAY 12
             {
-                'title': 'Cash Rate',
-                'date': 'Tue, May 05',
-                'time': '04:30 UTC',
-                'currency': 'AUD',
-                'impact': 'high',
+                'title': 'Leading Indicators',
+                'date': 'Tue, May 12',
+                'time': '05:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '4.35%',
-                'previous': '4.10%'
+                'forecast': '114.4%',
+                'previous': '112.4%'
             },
             {
-                'title': 'RBA Monetary Policy Statement',
-                'date': 'Tue, May 05',
-                'time': '04:30 UTC',
-                'currency': 'AUD',
-                'impact': 'high',
+                'title': 'German Final CPI m/m',
+                'date': 'Tue, May 12',
+                'time': '06:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
                 'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
+                'forecast': '0.6%',
+                'previous': '0.6%'
             },
             {
-                'title': 'RBA Rate Statement',
-                'date': 'Tue, May 05',
-                'time': '04:30 UTC',
-                'currency': 'AUD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'RBA Press Conference',
-                'date': 'Tue, May 05',
-                'time': '05:30 UTC',
-                'currency': 'AUD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'CPI m/m',
-                'date': 'Tue, May 05',
+                'title': 'PPI m/m',
+                'date': 'Tue, May 12',
                 'time': '06:30 UTC',
                 'currency': 'CHF',
-                'impact': 'medium',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.2%'
+            },
+            {
+                'title': 'FOMC Member Williams Speaks',
+                'date': 'Tue, May 12',
+                'time': '07:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Italian Industrial Production m/m',
+                'date': 'Tue, May 12',
+                'time': '08:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.2%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'German ZEW Economic Sentiment',
+                'date': 'Tue, May 12',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-19.1',
+                'previous': '-17.2'
+            },
+            {
+                'title': 'ZEW Economic Sentiment',
+                'date': 'Tue, May 12',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-21.6',
+                'previous': '-20.9'
+            },
+            {
+                'title': 'Annual Budget Release',
+                'date': 'Tue, May 12',
+                'time': '09:30 UTC',
+                'currency': 'AUD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'NFIB Small Business Index',
+                'date': 'Tue, May 12',
+                'time': '10:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '96.0',
+                'previous': '95.8'
+            },
+            {
+                'title': 'ADP Weekly Employment Change',
+                'date': 'Tue, May 12',
+                'time': '12:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '39.3K'
+            },
+            {
+                'title': 'Core CPI m/m',
+                'date': 'Tue, May 12',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
                 'actual': 'TBD',
                 'forecast': '0.3%',
                 'previous': '0.2%'
             },
             {
-                'title': 'French Gov Budget Balance',
-                'date': 'Tue, May 05',
-                'time': '06:45 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-32.1B'
-            },
-            {
-                'title': 'Spanish Unemployment Change',
-                'date': 'Tue, May 05',
-                'time': '07:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-18.6K',
-                'previous': '-22.9K'
-            },
-            {
-                'title': 'ECOFIN Meetings',
-                'date': 'Tue, May 05',
-                'time': '09:15 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Trade Balance',
-                'date': 'Tue, May 05',
-                'time': '12:30 UTC',
-                'currency': 'CAD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-2.1B',
-                'previous': '-5.7B'
-            },
-            {
-                'title': 'ECB President Lagarde Speaks',
-                'date': 'Tue, May 05',
-                'time': '12:30 UTC',
-                'currency': 'EUR',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Trade Balance',
-                'date': 'Tue, May 05',
+                'title': 'CPI m/m',
+                'date': 'Tue, May 12',
                 'time': '12:30 UTC',
                 'currency': 'USD',
-                'impact': 'low',
+                'impact': 'high',
                 'actual': 'TBD',
-                'forecast': '-59.0B',
-                'previous': '-57.3B'
+                'forecast': '0.6%',
+                'previous': '0.9%'
             },
             {
-                'title': 'Final Services PMI',
-                'date': 'Tue, May 05',
-                'time': '13:45 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '51.3',
-                'previous': '51.3'
-            },
-            {
-                'title': 'ISM Services PMI',
-                'date': 'Tue, May 05',
-                'time': '14:00 UTC',
+                'title': 'CPI y/y',
+                'date': 'Tue, May 12',
+                'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
                 'actual': 'TBD',
-                'forecast': '53.8',
-                'previous': '54.0'
+                'forecast': '3.7%',
+                'previous': '3.3%'
             },
             {
-                'title': 'JOLTS Job Openings',
-                'date': 'Tue, May 05',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '6.87M',
-                'previous': '6.88M'
-            },
-            {
-                'title': 'New Home Sales',
-                'date': 'Tue, May 05',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '668K',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'FOMC Member Bowman Speaks',
-                'date': 'Tue, May 05',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'New Home Sales',
-                'date': 'Tue, May 05',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '587K'
-            },
-            {
-                'title': 'RCM/TIPP Economic Optimism',
-                'date': 'Tue, May 05',
-                'time': '14:10 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '42.0',
-                'previous': '42.8'
-            },
-            {
-                'title': 'GDT Price Index',
-                'date': 'Tue, May 05',
-                'time': '14:50 UTC',
-                'currency': 'NZD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-2.7%'
-            },
-            {
-                'title': 'FOMC Member Barr Speaks',
-                'date': 'Tue, May 05',
-                'time': '16:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'API Weekly Statistical Bulletin',
-                'date': 'Tue, May 05',
-                'time': '20:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'RBNZ Financial Stability Report',
-                'date': 'Tue, May 05',
-                'time': '21:00 UTC',
-                'currency': 'NZD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Employment Change q/q',
-                'date': 'Tue, May 05',
-                'time': '22:45 UTC',
-                'currency': 'NZD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '0.3%',
-                'previous': '0.5%'
-            },
-            {
-                'title': 'Unemployment Rate',
-                'date': 'Tue, May 05',
-                'time': '22:45 UTC',
-                'currency': 'NZD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '5.4%',
-                'previous': '5.4%'
-            },
-            {
-                'title': 'Labor Cost Index q/q',
-                'date': 'Tue, May 05',
-                'time': '22:45 UTC',
-                'currency': 'NZD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '0.4%',
-                'previous': '0.4%'
-            },
-            {
-                'title': 'RBNZ Gov Breman Speaks',
-                'date': 'Tue, May 05',
-                'time': '01:00 UTC',
-                'currency': 'NZD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'RatingDog Services PMI',
-                'date': 'Tue, May 05',
-                'time': '01:45 UTC',
-                'currency': 'CNY',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '52.0',
-                'previous': '52.1'
-            },
-
-            # WEDNESDAY, MAY 06
-            {
-                'title': 'French Industrial Production m/m',
-                'date': 'Wed, May 06',
-                'time': '06:45 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '0.5%',
-                'previous': '-0.7%'
-            },
-            {
-                'title': 'Spanish Services PMI',
-                'date': 'Wed, May 06',
-                'time': '07:15 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '51.8',
-                'previous': '53.3'
-            },
-            {
-                'title': 'Italian Services PMI',
-                'date': 'Wed, May 06',
-                'time': '07:45 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '47.9',
-                'previous': '48.8'
-            },
-            {
-                'title': 'French Final Services PMI',
-                'date': 'Wed, May 06',
-                'time': '07:50 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '46.5',
-                'previous': '46.5'
-            },
-            {
-                'title': 'German Final Services PMI',
-                'date': 'Wed, May 06',
-                'time': '07:55 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '46.9',
-                'previous': '46.9'
-            },
-            {
-                'title': 'Final Services PMI',
-                'date': 'Wed, May 06',
-                'time': '08:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '47.4',
-                'previous': '47.4'
-            },
-            {
-                'title': 'Italian Retail Sales m/m',
-                'date': 'Wed, May 06',
-                'time': '08:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-0.4%',
-                'previous': '0.0%'
-            },
-            {
-                'title': 'Final Services PMI',
-                'date': 'Wed, May 06',
-                'time': '08:30 UTC',
-                'currency': 'GBP',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '52.0',
-                'previous': '52.0'
-            },
-            {
-                'title': 'PPI m/m',
-                'date': 'Wed, May 06',
-                'time': '09:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '3.3%',
-                'previous': '-0.7%'
-            },
-            {
-                'title': 'ADP Non-Farm Employment Change',
-                'date': 'Wed, May 06',
-                'time': '12:15 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '90K',
-                'previous': '62K'
-            },
-            {
-                'title': 'FOMC Member Musalem Speaks',
-                'date': 'Wed, May 06',
-                'time': '13:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Ivey PMI',
-                'date': 'Wed, May 06',
-                'time': '14:00 UTC',
-                'currency': 'CAD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '49.9',
-                'previous': '49.7'
-            },
-            {
-                'title': 'Crude Oil Inventories',
-                'date': 'Wed, May 06',
+                'title': 'CB Leading Index m/m',
+                'date': 'Tue, May 12',
                 'time': '14:30 UTC',
-                'currency': 'USD',
+                'currency': 'AUD',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
-                'previous': '-6.2M'
+                'previous': '1.1%'
+            },
+            {
+                'title': 'Fed Chair Nomination Vote',
+                'date': 'Tue, May 12',
+                'time': '16:00 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': 'Pass',
+                'previous': 'N/A'
             },
             {
                 'title': 'FOMC Member Goolsbee Speaks',
-                'date': 'Wed, May 06',
+                'date': 'Tue, May 12',
                 'time': '17:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
@@ -604,191 +262,181 @@ GENERATED PYTHON CODE:
                 'previous': 'N/A'
             },
             {
-                'title': 'BOC Gov Macklem Speaks',
-                'date': 'Wed, May 06',
-                'time': '20:15 UTC',
-                'currency': 'CAD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'RBNZ Gov Breman Speaks',
-                'date': 'Wed, May 06',
-                'time': '21:10 UTC',
-                'currency': 'NZD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Monetary Base y/y',
-                'date': 'Wed, May 06',
-                'time': '23:50 UTC',
-                'currency': 'JPY',
+                'title': '10-y Bond Auction',
+                'date': 'Tue, May 12',
+                'time': '17:01 UTC',
+                'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '-10.5%',
-                'previous': '-11.6%'
+                'forecast': 'N/A',
+                'previous': '4.28|2.4'
             },
             {
-                'title': 'Monetary Policy Meeting Minutes',
-                'date': 'Wed, May 06',
-                'time': '23:50 UTC',
-                'currency': 'JPY',
+                'title': 'Federal Budget Balance',
+                'date': 'Tue, May 12',
+                'time': '18:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '37.5B',
+                'previous': '-164.1B'
+            },
+            {
+                'title': 'API Weekly Statistical Bulletin',
+                'date': 'Tue, May 12',
+                'time': '20:30 UTC',
+                'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
             {
-                'title': 'Goods Trade Balance',
-                'date': 'Wed, May 06',
+                'title': 'Bank Lending y/y',
+                'date': 'Tue, May 12',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '4.6%',
+                'previous': '4.8%'
+            },
+            {
+                'title': 'Current Account',
+                'date': 'Tue, May 12',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '2.94T',
+                'previous': '2.71T'
+            },
+            {
+                'title': 'Wage Price Index q/q',
+                'date': 'Tue, May 12',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.8%',
+                'previous': '0.8%'
+            },
+            {
+                'title': 'Inflation Expectations q/q',
+                'date': 'Tue, May 12',
+                'time': '03:00 UTC',
+                'currency': 'NZD',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '4.45B',
-                'previous': '5.69B'
+                'forecast': 'N/A',
+                'previous': '2.37%'
             },
 
-            # THURSDAY, MAY 07
+            # WEDNESDAY, MAY 13
             {
-                'title': 'German Factory Orders m/m',
-                'date': 'Thu, May 07',
+                'title': 'Economy Watchers Sentiment',
+                'date': 'Wed, May 13',
+                'time': '05:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '41.7',
+                'previous': '42.2'
+            },
+            {
+                'title': 'German WPI m/m',
+                'date': 'Wed, May 13',
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '1.1%',
-                'previous': '0.9%'
+                'forecast': '1.0%',
+                'previous': '2.7%'
             },
             {
-                'title': 'French Trade Balance',
-                'date': 'Thu, May 07',
+                'title': 'French Final CPI m/m',
+                'date': 'Wed, May 13',
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '-5.6B',
-                'previous': '-5.8B'
+                'forecast': '1.0%',
+                'previous': '1.0%'
             },
             {
-                'title': 'Foreign Currency Reserves',
-                'date': 'Thu, May 07',
-                'time': '07:00 UTC',
-                'currency': 'CHF',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '721B'
-            },
-            {
-                'title': 'Unemployment Rate',
-                'date': 'Thu, May 07',
-                'time': '07:00 UTC',
-                'currency': 'CHF',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '3.0%',
-                'previous': '3.0%'
-            },
-            {
-                'title': 'MPC Member Lombardelli Speaks',
-                'date': 'Thu, May 07',
-                'time': '08:00 UTC',
-                'currency': 'GBP',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Construction PMI',
-                'date': 'Thu, May 07',
-                'time': '08:30 UTC',
-                'currency': 'GBP',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '46.0',
-                'previous': '45.6'
-            },
-            {
-                'title': 'Retail Sales m/m',
-                'date': 'Thu, May 07',
+                'title': 'Flash Employment Change q/q',
+                'date': 'Wed, May 13',
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '-0.3%',
-                'previous': '-0.2%'
+                'forecast': '0.2%',
+                'previous': '0.2%'
             },
             {
-                'title': 'Spanish 10-y Bond Auction',
-                'date': 'Thu, May 07',
-                'time': '09:03 UTC',
+                'title': 'Flash GDP q/q',
+                'date': 'Wed, May 13',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.1%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'Industrial Production m/m',
+                'date': 'Wed, May 13',
+                'time': '09:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.4%'
+            },
+            {
+                'title': 'German 30-y Bond Auction',
+                'date': 'Wed, May 13',
+                'time': '09:34 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
-                'previous': '3.44|2.0'
+                'previous': '3.58|1.4'
             },
             {
-                'title': 'French 10-y Bond Auction',
-                'date': 'Thu, May 07',
-                'time': '09:18 UTC',
-                'currency': 'EUR',
+                'title': 'Core PPI m/m',
+                'date': 'Wed, May 13',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.3%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'PPI m/m',
+                'date': 'Wed, May 13',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.5%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'CB Leading Index m/m',
+                'date': 'Wed, May 13',
+                'time': '13:30 UTC',
+                'currency': 'GBP',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
-                'previous': '3.73|1.9'
+                'previous': '-0.1%'
             },
             {
-                'title': 'Challenger Job Cuts y/y',
-                'date': 'Thu, May 07',
-                'time': '11:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-78.0%'
-            },
-            {
-                'title': 'Unemployment Claims',
-                'date': 'Thu, May 07',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '203K',
-                'previous': '189K'
-            },
-            {
-                'title': 'Prelim Nonfarm Productivity q/q',
-                'date': 'Thu, May 07',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '1.0%',
-                'previous': '2.8%'
-            },
-            {
-                'title': 'Prelim Unit Labor Costs q/q',
-                'date': 'Thu, May 07',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '2.5%',
-                'previous': '2.8%'
-            },
-            {
-                'title': 'MPC Member Taylor Speaks',
-                'date': 'Thu, May 07',
-                'time': '12:40 UTC',
+                'title': 'MPC Member Mann Speaks',
+                'date': 'Wed, May 13',
+                'time': '14:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
                 'actual': 'TBD',
@@ -796,39 +444,19 @@ GENERATED PYTHON CODE:
                 'previous': 'N/A'
             },
             {
-                'title': 'Construction Spending m/m',
-                'date': 'Thu, May 07',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '0.4%',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Construction Spending m/m',
-                'date': 'Thu, May 07',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-0.3%'
-            },
-            {
-                'title': 'Natural Gas Storage',
-                'date': 'Thu, May 07',
+                'title': 'Crude Oil Inventories',
+                'date': 'Wed, May 13',
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': 'N/A',
-                'previous': '79B'
+                'previous': '-2.3M'
             },
             {
-                'title': 'FOMC Member Hammack Speaks',
-                'date': 'Thu, May 07',
-                'time': '18:05 UTC',
+                'title': 'FOMC Member Collins Speaks',
+                'date': 'Wed, May 13',
+                'time': '15:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
@@ -836,19 +464,19 @@ GENERATED PYTHON CODE:
                 'previous': 'N/A'
             },
             {
-                'title': 'Consumer Credit m/m',
-                'date': 'Thu, May 07',
-                'time': '19:00 UTC',
+                'title': '30-y Bond Auction',
+                'date': 'Wed, May 13',
+                'time': '17:01 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '12.5B',
-                'previous': '9.5B'
+                'forecast': 'N/A',
+                'previous': '4.88|2.4'
             },
             {
-                'title': 'FOMC Member Williams Speaks',
-                'date': 'Thu, May 07',
-                'time': '19:30 UTC',
+                'title': 'FOMC Member Kashkari Speaks',
+                'date': 'Wed, May 13',
+                'time': '17:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
@@ -856,231 +484,433 @@ GENERATED PYTHON CODE:
                 'previous': 'N/A'
             },
             {
-                'title': 'Average Cash Earnings y/y',
-                'date': 'Thu, May 07',
-                'time': '23:30 UTC',
+                'title': 'BOC Summary of Deliberations',
+                'date': 'Wed, May 13',
+                'time': '17:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Gov Council Member Alexopoulos Speaks',
+                'date': 'Wed, May 13',
+                'time': '18:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'ECB President Lagarde Speaks',
+                'date': 'Wed, May 13',
+                'time': '19:15 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Visitor Arrivals m/m',
+                'date': 'Wed, May 13',
+                'time': '22:45 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '1.7%'
+            },
+            {
+                'title': 'RICS House Price Balance',
+                'date': 'Wed, May 13',
+                'time': '23:01 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-25%',
+                'previous': '-23%'
+            },
+            {
+                'title': 'M2 Money Stock y/y',
+                'date': 'Wed, May 13',
+                'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '3.2%',
-                'previous': '3.3%'
+                'forecast': '2.1%',
+                'previous': '2.0%'
             },
             {
-                'title': 'Trade Balance',
-                'date': 'Thu, May 07',
-                'time': '02:03 UTC',
-                'currency': 'CNY',
+                'title': 'MI Inflation Expectations',
+                'date': 'Wed, May 13',
+                'time': '01:00 UTC',
+                'currency': 'AUD',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '570B',
-                'previous': '355B'
+                'forecast': 'N/A',
+                'previous': '5.9%'
             },
             {
-                'title': 'USD-Denominated Trade Balance',
-                'date': 'Thu, May 07',
-                'time': '02:04 UTC',
-                'currency': 'CNY',
+                'title': '30-y Bond Auction',
+                'date': 'Wed, May 13',
+                'time': '03:35 UTC',
+                'currency': 'JPY',
                 'impact': 'low',
                 'actual': 'TBD',
-                'forecast': '82.4B',
-                'previous': '51.1B'
+                'forecast': 'N/A',
+                'previous': '3.70|3.1'
             },
 
-            # FRIDAY, MAY 08
+            # THURSDAY, MAY 14
             {
-                'title': 'German Industrial Production m/m',
-                'date': 'Fri, May 08',
-                'time': '06:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '0.4%',
-                'previous': '-0.3%'
-            },
-            {
-                'title': 'German Trade Balance',
-                'date': 'Fri, May 08',
-                'time': '06:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '18.1B',
-                'previous': '19.8B'
-            },
-            {
-                'title': 'Halifax HPI m/m',
-                'date': 'Fri, May 08',
+                'title': 'GDP m/m',
+                'date': 'Thu, May 14',
                 'time': '06:00 UTC',
                 'currency': 'GBP',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '-0.2%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Prelim GDP q/q',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '0.1%'
+            },
+            {
+                'title': 'Construction Output m/m',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.5%',
+                'previous': '1.0%'
+            },
+            {
+                'title': 'Goods Trade Balance',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-20.1B',
+                'previous': '-18.8B'
+            },
+            {
+                'title': 'Index of Services 3m/3m',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Industrial Production m/m',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.3%',
+                'previous': '0.5%'
+            },
+            {
+                'title': 'Manufacturing Production m/m',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '-0.1%',
+                'previous': '-0.1%'
+            },
+            {
+                'title': 'Prelim Business Investment q/q',
+                'date': 'Thu, May 14',
+                'time': '06:00 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.1%',
+                'previous': '-2.7%'
+            },
+            {
+                'title': 'M2 Money Supply y/y',
+                'date': 'Thu, May 14',
+                'time': '08:03 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '8.5%',
+                'previous': '8.5%'
+            },
+            {
+                'title': 'New Loans',
+                'date': 'Thu, May 14',
+                'time': '08:03 UTC',
+                'currency': 'CNY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '2990B'
+            },
+            {
+                'title': 'Wholesale Sales m/m',
+                'date': 'Thu, May 14',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.4%',
+                'previous': '2.0%'
+            },
+            {
+                'title': 'Core Retail Sales m/m',
+                'date': 'Thu, May 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '1.9%'
+            },
+            {
+                'title': 'Retail Sales m/m',
+                'date': 'Thu, May 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'high',
+                'actual': 'TBD',
+                'forecast': '0.6%',
+                'previous': '1.7%'
+            },
+            {
+                'title': 'Unemployment Claims',
+                'date': 'Thu, May 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'medium',
+                'actual': 'TBD',
+                'forecast': '206K',
+                'previous': '200K'
+            },
+            {
+                'title': 'Import Prices m/m',
+                'date': 'Thu, May 14',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '1.0%',
+                'previous': '0.8%'
+            },
+            {
+                'title': 'Business Inventories m/m',
+                'date': 'Thu, May 14',
+                'time': '14:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '0.8%',
+                'previous': '0.4%'
+            },
+            {
+                'title': 'Mortgage Delinquencies',
+                'date': 'Thu, May 14',
+                'time': '14:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Schmid Speaks',
+                'date': 'Thu, May 14',
+                'time': '14:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Natural Gas Storage',
+                'date': 'Thu, May 14',
+                'time': '14:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '63B'
+            },
+            {
+                'title': 'MPC Member Pill Speaks',
+                'date': 'Thu, May 14',
+                'time': '15:15 UTC',
+                'currency': 'GBP',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Hammack Speaks',
+                'date': 'Thu, May 14',
+                'time': '17:00 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Barr Speaks',
+                'date': 'Thu, May 14',
+                'time': '21:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'FOMC Member Williams Speaks',
+                'date': 'Thu, May 14',
+                'time': '21:45 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'BusinessNZ Manufacturing Index',
+                'date': 'Thu, May 14',
+                'time': '22:30 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '53.2'
+            },
+            {
+                'title': 'FPI m/m',
+                'date': 'Thu, May 14',
+                'time': '22:45 UTC',
+                'currency': 'NZD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '-0.6%'
+            },
+            {
+                'title': 'PPI y/y',
+                'date': 'Thu, May 14',
+                'time': '23:50 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '3.0%',
+                'previous': '2.6%'
+            },
+
+            # FRIDAY, MAY 15
+            {
+                'title': 'Prelim Machine Tool Orders y/y',
+                'date': 'Fri, May 15',
+                'time': '06:00 UTC',
+                'currency': 'JPY',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '28.1%'
+            },
+            {
+                'title': 'ECB Economic Bulletin',
+                'date': 'Fri, May 15',
+                'time': '08:00 UTC',
+                'currency': 'EUR',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': 'N/A'
+            },
+            {
+                'title': 'Housing Starts',
+                'date': 'Fri, May 15',
+                'time': '12:15 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '243K',
+                'previous': '236K'
+            },
+            {
+                'title': 'Foreign Securities Purchases',
+                'date': 'Fri, May 15',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': 'N/A',
+                'previous': '6.17B'
+            },
+            {
+                'title': 'Manufacturing Sales m/m',
+                'date': 'Fri, May 15',
+                'time': '12:30 UTC',
+                'currency': 'CAD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '3.4%',
+                'previous': '3.6%'
+            },
+            {
+                'title': 'Empire State Manufacturing Index',
+                'date': 'Fri, May 15',
+                'time': '12:30 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '7.3',
+                'previous': '11.0'
+            },
+            {
+                'title': 'Capacity Utilization Rate',
+                'date': 'Fri, May 15',
+                'time': '13:15 UTC',
+                'currency': 'USD',
+                'impact': 'low',
+                'actual': 'TBD',
+                'forecast': '75.8%',
+                'previous': '75.7%'
+            },
+            {
+                'title': 'Industrial Production m/m',
+                'date': 'Fri, May 15',
+                'time': '13:15 UTC',
+                'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
                 'forecast': '0.2%',
                 'previous': '-0.5%'
             },
             {
-                'title': 'SECO Consumer Climate',
-                'date': 'Fri, May 08',
-                'time': '07:00 UTC',
-                'currency': 'CHF',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-46',
-                'previous': '-43'
-            },
-            {
-                'title': 'ECB President Lagarde Speaks',
-                'date': 'Fri, May 08',
-                'time': '07:00 UTC',
-                'currency': 'EUR',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'FOMC Member Cook Speaks',
-                'date': 'Fri, May 08',
-                'time': '09:45 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'BOE Gov Bailey Speaks',
-                'date': 'Fri, May 08',
-                'time': '12:20 UTC',
-                'currency': 'GBP',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'Employment Change',
-                'date': 'Fri, May 08',
-                'time': '12:30 UTC',
-                'currency': 'CAD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '5.1K',
-                'previous': '14.1K'
-            },
-            {
-                'title': 'Unemployment Rate',
-                'date': 'Fri, May 08',
-                'time': '12:30 UTC',
-                'currency': 'CAD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '6.7%',
-                'previous': '6.7%'
-            },
-            {
-                'title': 'Average Hourly Earnings m/m',
-                'date': 'Fri, May 08',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '0.3%',
-                'previous': '0.2%'
-            },
-            {
-                'title': 'Non-Farm Employment Change',
-                'date': 'Fri, May 08',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '60K',
-                'previous': '178K'
-            },
-            {
-                'title': 'Unemployment Rate',
-                'date': 'Fri, May 08',
-                'time': '12:30 UTC',
-                'currency': 'USD',
-                'impact': 'high',
-                'actual': 'TBD',
-                'forecast': '4.3%',
-                'previous': '4.3%'
-            },
-            {
-                'title': 'Prelim UoM Consumer Sentiment',
-                'date': 'Fri, May 08',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': '49.3',
-                'previous': '47.6'
-            },
-            {
-                'title': 'Prelim UoM Inflation Expectations',
-                'date': 'Fri, May 08',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '4.8%'
-            },
-            {
-                'title': 'Final Wholesale Inventories m/m',
-                'date': 'Fri, May 08',
-                'time': '14:00 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '1.4%',
-                'previous': '1.4%'
-            },
-            {
-                'title': 'German Buba President Nagel Speaks',
-                'date': 'Fri, May 08',
-                'time': '16:15 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'FOMC Member Waller Speaks',
-                'date': 'Fri, May 08',
-                'time': '23:30 UTC',
-                'currency': 'USD',
-                'impact': 'medium',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'FOMC Member Bowman Speaks',
-                'date': 'Fri, May 08',
-                'time': '23:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'FOMC Member Daly Speaks',
-                'date': 'Fri, May 08',
-                'time': '23:30 UTC',
-                'currency': 'USD',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': 'N/A'
-            },
-            {
-                'title': 'FOMC Member Goolsbee Speaks',
-                'date': 'Fri, May 08',
-                'time': '23:30 UTC',
+                'title': 'Treasury Currency Report',
+                'date': 'Fri, May 15',
+                'time': '20:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
                 'actual': 'TBD',
@@ -1089,7 +919,7 @@ GENERATED PYTHON CODE:
             },
 
 ======================================================================
-✅ Generated code for 107 events
+✅ Generated code for 90 events
 
 📋 NEXT STEPS:
 1. Copy the code above

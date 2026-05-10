@@ -3,7 +3,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
-        "asOf": "2026-03-18",
+        "asOf": "2026-04-29",
         "chartData": [
           5.5,
           5.5,
@@ -26,6 +26,7 @@
           4.25,
           4.0,
           4.0,
+          3.75,
           3.75,
           3.75,
           3.75
@@ -54,7 +55,8 @@
           "2025-11-30",
           "2025-12-10",
           "2026-01-28",
-          "2026-03-18"
+          "2026-03-18",
+          "2026-04-29"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.federalreserve.gov/releases/h15/",
@@ -199,8 +201,8 @@
         "description": "Core Inflation Year-over-Year - Measures the annual change in consumer prices excluding volatile food and energy components."
       },
       "gdp-growth": {
-        "currentValue": "0.5%",
-        "asOf": "2025-11-15",
+        "currentValue": "2.0%",
+        "asOf": "2026-02-15",
         "chartData": [
           4.6,
           5.7,
@@ -222,7 +224,8 @@
           -0.6,
           3.8,
           4.4,
-          0.5
+          0.5,
+          2.0
         ],
         "chartDates": [
           "2020-11-15",
@@ -245,7 +248,8 @@
           "2025-02-15",
           "2025-05-15",
           "2025-08-15",
-          "2025-11-15"
+          "2025-11-15",
+          "2026-02-15"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bea.gov/data/gdp/gross-domestic-product",
@@ -257,7 +261,7 @@
       },
       "unemployment": {
         "currentValue": "4.3%",
-        "asOf": "2026-03-01",
+        "asOf": "2026-04-01",
         "chartData": [
           3.7,
           3.9,
@@ -284,6 +288,7 @@
           4.4,
           4.3,
           4.4,
+          4.3,
           4.3
         ],
         "chartDates": [
@@ -312,7 +317,8 @@
           "2025-12-01",
           "2026-01-01",
           "2026-02-01",
-          "2026-03-01"
+          "2026-03-01",
+          "2026-04-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -323,8 +329,8 @@
         "description": "unemployment description"
       },
       "nonfarm-payrolls": {
-        "currentValue": "178K",
-        "asOf": "2026-03-01",
+        "currentValue": "115K",
+        "asOf": "2026-04-01",
         "chartData": [
           119.0,
           222.0,
@@ -352,7 +358,8 @@
           48.0,
           126.0,
           -133.0,
-          178.0
+          185.0,
+          115.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -381,7 +388,8 @@
           "2025-12-01",
           "2026-01-01",
           "2026-02-01",
-          "2026-03-01"
+          "2026-03-01",
+          "2026-04-01"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.bls.gov/news.release/empsit.htm",
@@ -403,7 +411,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "2.15%",
-        "asOf": "2026-03-19",
+        "asOf": "2026-04-30",
         "chartData": [
           4.5,
           4.5,
@@ -422,6 +430,7 @@
           2.65,
           2.4,
           2.4,
+          2.15,
           2.15,
           2.15,
           2.15,
@@ -460,7 +469,8 @@
           "2025-12-18",
           "2026-01-31",
           "2026-02-05",
-          "2026-03-19"
+          "2026-03-19",
+          "2026-04-30"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
@@ -471,8 +481,8 @@
         "description": "Main Refinancing Rate - The primary monetary policy tool set by the European Central Bank (ECB)."
       },
       "inflation": {
-        "currentValue": "2.6%",
-        "asOf": "2026-03-01",
+        "currentValue": "3.0%",
+        "asOf": "2026-04-01",
         "chartData": [
           2.8,
           2.6,
@@ -500,7 +510,8 @@
           1.9,
           1.7,
           1.9,
-          2.6
+          2.6,
+          3.0
         ],
         "chartDates": [
           "2024-01-01",
@@ -529,7 +540,8 @@
           "2025-12-01",
           "2026-01-01",
           "2026-02-01",
-          "2026-03-01"
+          "2026-03-01",
+          "2026-04-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -540,8 +552,8 @@
         "description": "Harmonized Index of Consumer Prices (HICP) - The official measure of inflation for the eurozone."
       },
       "core-inflation-YoY": {
-        "currentValue": "2.3%",
-        "asOf": "2026-03-01",
+        "currentValue": "2.2%",
+        "asOf": "2026-04-01",
         "chartData": [
           3.3,
           3.1,
@@ -569,7 +581,8 @@
           2.3,
           2.2,
           2.4,
-          2.3
+          2.3,
+          2.2
         ],
         "chartDates": [
           "2024-01-01",
@@ -598,7 +611,8 @@
           "2025-12-01",
           "2026-01-01",
           "2026-02-01",
-          "2026-03-01"
+          "2026-03-01",
+          "2026-04-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -609,8 +623,8 @@
         "description": "Core HICP Year-over-Year - Measures the annual change in consumer prices excluding volatile food, energy, alcohol, and tobacco."
       },
       "gdp-growth": {
-        "currentValue": "1.2%",
-        "asOf": "2025-11-15",
+        "currentValue": "0.8%",
+        "asOf": "2026-02-15",
         "chartData": [
           0.3,
           15.3,
@@ -631,7 +645,8 @@
           1.6,
           1.6,
           1.4,
-          1.2
+          1.2,
+          0.8
         ],
         "chartDates": [
           "2021-02-15",
@@ -653,7 +668,8 @@
           "2025-02-15",
           "2025-05-15",
           "2025-08-15",
-          "2025-11-15"
+          "2025-11-15",
+          "2026-02-15"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/national-accounts/data/main-tables",
@@ -665,7 +681,7 @@
       },
       "unemployment": {
         "currentValue": "6.2%",
-        "asOf": "2026-02-01",
+        "asOf": "2026-03-01",
         "chartData": [
           6.6,
           6.6,
@@ -692,6 +708,7 @@
           6.3,
           6.2,
           6.1,
+          6.3,
           6.2
         ],
         "chartDates": [
@@ -720,7 +737,8 @@
           "2025-11-01",
           "2025-12-01",
           "2026-01-01",
-          "2026-02-01"
+          "2026-02-01",
+          "2026-03-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/lfs/data/main-tables",
@@ -809,7 +827,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
-        "asOf": "2026-03-19",
+        "asOf": "2026-04-20",
         "chartData": [
           5.25,
           5.25,
@@ -834,6 +852,7 @@
           4.0,
           4.0,
           4.0,
+          3.75,
           3.75,
           3.75,
           3.75,
@@ -866,7 +885,8 @@
           "2025-12-18",
           "2026-01-31",
           "2026-02-05",
-          "2026-03-19"
+          "2026-03-19",
+          "2026-04-20"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate",
@@ -1211,7 +1231,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "0.75%",
-        "asOf": "2026-03-19",
+        "asOf": "2026-04-28",
         "chartData": [
           -0.1,
           -0.1,
@@ -1236,6 +1256,7 @@
           0.5,
           0.5,
           0.5,
+          0.75,
           0.75,
           0.75,
           0.75
@@ -1266,7 +1287,8 @@
           "2025-11-30",
           "2025-12-19",
           "2026-01-23",
-          "2026-03-19"
+          "2026-03-19",
+          "2026-04-28"
         ],
         "source": "Bank of Japan",
         "sourceUrl": "https://www.boj.or.jp/en/mopo/",
@@ -1470,8 +1492,8 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "2.6%",
-        "asOf": "2026-02-01",
+        "currentValue": "2.7%",
+        "asOf": "2026-03-01",
         "chartData": [
           2.4,
           2.6,
@@ -1498,7 +1520,8 @@
           2.6,
           2.6,
           2.7,
-          2.6
+          2.6,
+          2.7
         ],
         "chartDates": [
           "2024-01-01",
@@ -1526,7 +1549,8 @@
           "2025-11-01",
           "2025-12-01",
           "2026-01-01",
-          "2026-02-01"
+          "2026-02-01",
+          "2026-03-01"
         ],
         "source": "Bank of Japan",
         "sourceUrl": "https://www.stat.go.jp/english/data/roudou/",

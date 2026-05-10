@@ -6865,7 +6865,7 @@ const Overview = () => {
               </div>
             </div>
 
-            <div className="prediction-markets-content">
+            <div className={`prediction-markets-content ${pmStyleMode === 'v2' ? 'prediction-markets-content--v2' : ''}`}>
               {predictionMarketsLoading ? (
                 <div className="prediction-markets-loading">
                   <div className="loading-spinner"></div>
@@ -7316,29 +7316,6 @@ const Overview = () => {
                         });
                     })()}
                   </div>
-                  {pmStyleMode === 'v2' && filteredPredictionMarkets.length > 1 && (
-                    <div className="prediction-markets-v2-pagination" role="tablist" aria-label="Prediction market pages">
-                      {filteredPredictionMarkets.map((market, index) => (
-                        <button
-                          key={`pm-v2-dot-${market.id}`}
-                          type="button"
-                          role="tab"
-                          aria-selected={pmV2ActiveIndex === index}
-                          className={`prediction-markets-v2-dot ${pmV2ActiveIndex === index ? 'active' : ''}`}
-                          onClick={() => {
-                            const listEl = pmV2ListRef.current;
-                            const target = listEl?.children?.[index];
-                            if (!listEl || !target) return;
-                            const targetLeft = target.offsetLeft - ((listEl.clientWidth - target.clientWidth) / 2);
-                            listEl.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
-                            setPmV2ActiveIndex(index);
-                          }}
-                          title={`Go to market ${index + 1}`}
-                          aria-label={`Go to market ${index + 1}`}
-                        />
-                      ))}
-                    </div>
-                  )}
                   {(() => {
                     // Check if we have any markets (active or recently resolved)
                     const hasMarkets = predictionMarkets.some(m => {
@@ -7361,6 +7338,29 @@ const Overview = () => {
                 </>
               )}
             </div>
+            {pmStyleMode === 'v2' && !predictionMarketsLoading && !predictionMarketsError && filteredPredictionMarkets.length > 1 && (
+              <div className="prediction-markets-v2-pagination prediction-markets-v2-pagination--dock" role="tablist" aria-label="Prediction market pages">
+                {filteredPredictionMarkets.map((market, index) => (
+                  <button
+                    key={`pm-v2-dot-${market.id}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={pmV2ActiveIndex === index}
+                    className={`prediction-markets-v2-dot ${pmV2ActiveIndex === index ? 'active' : ''}`}
+                    onClick={() => {
+                      const listEl = pmV2ListRef.current;
+                      const target = listEl?.children?.[index];
+                      if (!listEl || !target) return;
+                      const targetLeft = target.offsetLeft - ((listEl.clientWidth - target.clientWidth) / 2);
+                      listEl.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+                      setPmV2ActiveIndex(index);
+                    }}
+                    title={`Go to market ${index + 1}`}
+                    aria-label={`Go to market ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
                 {/* Central Bank Analysis Card - Right Column, Row 3 */}
