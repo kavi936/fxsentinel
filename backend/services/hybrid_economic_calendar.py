@@ -19729,9 +19729,9 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.6%',
                 'forecast': 'N/A',
-                'previous': '1.1%'
+                'previous': '1.0%'
             },
             {
                 'title': 'Fed Chair Nomination Vote',
