@@ -5,8 +5,10 @@ Uses Firebase Realtime Database instead of Firestore
 """
 
 import os
+import re
 import json
 import logging
+import hashlib
 from datetime import datetime
 from typing import Dict, Any, Optional, List, Tuple
 import requests
@@ -39,6 +41,12 @@ class FirebaseRealtimeStorage:
             "quiet_hours": {"enabled": False, "start": "22:00", "end": "06:00", "timezone": "UTC"}
         }
     
+    @staticmethod
+    def _rtdb_user_key(user_id: str) -> str:
+        """Path segment under alerts/users/ — already-md5 ids must not be hashed again."""
+        if user_id and re.fullmatch(r'[a-fA-F0-9]{32}', user_id.strip()):
+            return user_id.strip().lower()
+        return hashlib.md5(user_id.encode()).hexdigest()
 
     
     def _make_request(self, method: str, path: str, data: Dict = None) -> Dict[str, Any]:
@@ -75,9 +83,7 @@ class FirebaseRealtimeStorage:
         """Get user alert settings from Firebase Realtime Database"""
         try:
             logger.info(f"Getting alert settings for user {user_id} from Firebase Realtime Database")
-            # Hash user_id to create a safe path for Firebase (no special characters)
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            safe_user_id = self._rtdb_user_key(user_id)
             path = f"alerts/users/{safe_user_id}/settings"
             logger.info(f"Making request to: {self.database_url}/{path}.json")
             result = self._make_request('GET', path)
@@ -104,9 +110,7 @@ class FirebaseRealtimeStorage:
     def update_user_alert_settings(self, user_id: str, settings: Dict[str, Any]) -> bool:
         """Update user alert settings in Firebase Realtime Database"""
         try:
-            # Hash user_id to create a safe path for Firebase (no special characters)
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            safe_user_id = self._rtdb_user_key(user_id)
             path = f"alerts/users/{safe_user_id}/settings"
             result = self._make_request('PUT', path, settings)
             
@@ -128,9 +132,7 @@ class FirebaseRealtimeStorage:
             if 'timestamp' not in alert_data:
                 alert_data['timestamp'] = datetime.utcnow().isoformat()
             
-            # Hash user_id to create a safe path for Firebase (no special characters)
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            safe_user_id = self._rtdb_user_key(user_id)
             path = f"alerts/users/{safe_user_id}/history"
             result = self._make_request('POST', path, alert_data)
             
@@ -148,9 +150,7 @@ class FirebaseRealtimeStorage:
     def get_user_alert_history(self, user_id: str, limit: int = 50) -> List[Dict[str, Any]]:
         """Get user's alert history from Firebase Realtime Database"""
         try:
-            # Hash user_id to create a safe path for Firebase (no special characters)
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            safe_user_id = self._rtdb_user_key(user_id)
             path = f"alerts/users/{safe_user_id}/history"
             result = self._make_request('GET', path)
             
@@ -290,9 +290,7 @@ class FirebaseRealtimeStorage:
                 logger.error(f"Chat ID {chat_id} already in use by user {existing_user_id}, cannot assign to {user_id}")
                 return False
             
-            # Hash user_id to create a safe path for Firebase (no special characters)
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            safe_user_id = self._rtdb_user_key(user_id)
             path = f"alerts/users/{safe_user_id}/telegram_chat_id"
             result = self._make_request('PUT', path, chat_id)
             
@@ -313,9 +311,7 @@ class FirebaseRealtimeStorage:
         Phase 2 improvement: Check new location first, fallback to old locations, migrate if found
         """
         try:
-            # Hash user_id to create a safe path for Firebase (no special characters)
-            import hashlib
-            safe_user_id = hashlib.md5(user_id.encode()).hexdigest()
+            safe_user_id = self._rtdb_user_key(user_id)
             
             # Step 1: Check new location first (single source of truth)
             path = f"alerts/users/{safe_user_id}/telegram_chat_id"

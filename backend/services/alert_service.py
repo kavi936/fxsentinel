@@ -448,9 +448,11 @@ class AlertService:
                     logger.debug(f"Error recording metrics: {e}")
             
             # Check if Telegram is enabled (check multiple structures for backward compatibility)
+            preferences = user_settings.get('preferences', {}) or {}
             if user_settings.get('telegram', False) or \
                user_settings.get('channels', {}).get('telegram', {}).get('enabled', False) or \
-               user_settings.get('telegram_enabled', False):
+               user_settings.get('telegram_enabled', False) or \
+               preferences.get('channels', {}).get('telegram', {}).get('enabled', False):
                 telegram_enabled = True
             
             if telegram_enabled and chat_id:
@@ -553,10 +555,18 @@ class AlertService:
             
             # Handle both dict and list formats
             if isinstance(alert_types, dict):
-                if not alert_types.get(alert_type, True):
+                # UI only exposes preNews; economic reminders use type economicCalendar
+                effective_type = alert_type
+                if alert_type == 'economicCalendar' and 'economicCalendar' not in alert_types:
+                    effective_type = 'preNews'
+                if not alert_types.get(effective_type, True):
                     return False
             elif isinstance(alert_types, list):
-                if alert_type not in alert_types:
+                if alert_type in alert_types:
+                    pass
+                elif alert_type == 'economicCalendar' and 'preNews' in alert_types:
+                    pass
+                else:
                     return False
             
             # Check currency pairs (if specified)

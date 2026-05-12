@@ -678,11 +678,11 @@ class UnifiedAlertProcessor:
                             time_until_event = event_datetime - now
                             minutes_until_event = time_until_event.total_seconds() / 60
                             
-                            # Only send alerts if within timing windows (widened so 5-min checks don't miss)
+                            # Timing windows widened vs strict 10/60/120 so a 5-minute poll does not skip the slot
                             if minutes_until_event > 0:
-                                if (5 <= minutes_until_event <= 15 or     # ~10min before
-                                    50 <= minutes_until_event <= 65 or    # ~1h before
-                                    110 <= minutes_until_event <= 125):   # ~2h before
+                                if (3 <= minutes_until_event <= 18 or      # ~10min before (tolerance)
+                                    48 <= minutes_until_event <= 68 or   # ~1h before
+                                    105 <= minutes_until_event <= 130):  # ~2h before
                                     
                                     logger.info(f"Sending economic alert for: {event.get('title', 'Unknown')} ({minutes_until_event:.1f} minutes away)")
                                     self._send_economic_alert(event)
@@ -707,117 +707,28 @@ class UnifiedAlertProcessor:
             logger.debug(traceback.format_exc())
     
     def _send_economic_alert(self, event: Dict[str, Any]):
-        """Send economic calendar alert (direct function calls)"""
+        """Send economic calendar reminders using the same filters as the standalone processor (Telegram, preNews, pairs)."""
         try:
             from services.economic_calendar_alerts import economic_calendar_alerts
-            from services.firebase_realtime_storage import FirebaseRealtimeStorage
-            
-            # Get all users
-            firebase = FirebaseRealtimeStorage()
-            users = firebase.get_all_users_with_alerts()
-            
+
+            users = economic_calendar_alerts.get_users_to_alert(event)
             if not users:
+                logger.info("Economic calendar: no users matched filters for this event")
                 return
-            
-            # Process users in parallel
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-                futures = []
-                
-                for user_data in users:
-                    future = executor.submit(
-                        self._send_economic_alert_to_user,
-                        user_data,
-                        event
-                    )
-                    futures.append(future)
-                
-                # Wait for completion
+                futures = [
+                    executor.submit(economic_calendar_alerts.send_pre_event_alert, user_data, event)
+                    for user_data in users
+                ]
                 for future in concurrent.futures.as_completed(futures):
                     try:
                         future.result(timeout=30)
                     except Exception as e:
                         logger.error(f"Error processing economic alert: {e}")
-        
+
         except Exception as e:
             logger.error(f"Error sending economic alert: {e}")
-    
-    def _send_economic_alert_to_user(self, user_data: Dict[str, Any], event: Dict[str, Any]) -> bool:
-        """Send economic calendar alert to a single user"""
-        try:
-            user_id = user_data.get('user_id')
-            user_settings = user_data.get('settings', {})
-            
-            if not user_id or not user_settings:
-                return False
-            
-            # Check if user wants pre-news alerts
-            preferences = user_settings.get('preferences', {})
-            alert_types = preferences.get('alertTypes', {})
-            pre_news_enabled = alert_types.get('preNews', True)
-            
-            if not pre_news_enabled:
-                return False
-            
-            # Use economic calendar alerts service (direct function call)
-            from services.economic_calendar_alerts import economic_calendar_alerts
-            
-            # Determine alert timing (use UTC to match calendar "HH:MM UTC")
-            now = datetime.now(timezone.utc)
-            time_str = event.get('time', '')
-            date_str = event.get('date', '')
-            
-            if time_str and date_str:
-                # Parse date_str - can be "YYYY-MM-DD" or "Mon, Oct 13"
-                try:
-                    if '-' in date_str and len(date_str) == 10:
-                        # Format: "2026-01-02"
-                        event_date_obj = datetime.strptime(date_str, '%Y-%m-%d')
-                    else:
-                        # Format: "Mon, Oct 13" or "Fri, Jan 02"
-                        event_date_obj = datetime.strptime(date_str, '%a, %b %d')
-                        event_date_obj = event_date_obj.replace(year=datetime.now().year)
-                        
-                        # Adjust year if event is in the past
-                        if event_date_obj.date() < datetime.now().date():
-                            days_diff = (datetime.now().date() - event_date_obj.date()).days
-                            if days_diff > 30:
-                                event_date_obj = event_date_obj.replace(year=datetime.now().year + 1)
-                    
-                    # Parse time_str - format is "HH:MM UTC"
-                    time_part = time_str.replace(' UTC', '').strip()
-                    time_obj = datetime.strptime(time_part, '%H:%M').time()
-                    
-                    # Combine date and time as UTC
-                    event_datetime = datetime.combine(event_date_obj.date(), time_obj, tzinfo=timezone.utc)
-                    
-                    time_until_event = event_datetime - now
-                    minutes_until_event = time_until_event.total_seconds() / 60
-                    
-                    # Determine alert timing (same windows as _check_economic_calendar_alerts)
-                    if 5 <= minutes_until_event <= 15:
-                        alert_timing = "10min_before"
-                    elif 50 <= minutes_until_event <= 65:
-                        alert_timing = "1h_before"
-                    elif 110 <= minutes_until_event <= 125:
-                        alert_timing = "2h_before"
-                    else:
-                        return False
-                except Exception as e:
-                    logger.error(f"Error parsing event datetime: {e}")
-                    return False
-                
-                # Send alert (direct function call)
-                success = economic_calendar_alerts.send_pre_event_alert(
-                    user_data,
-                    event,
-                    alert_timing
-                )
-                
-                return success
-        
-        except Exception as e:
-            logger.error(f"Error sending economic alert to user {user_data.get('user_id', 'unknown')}: {e}")
-            return False
     
     def _process_post_news_analysis(self):
         """Process post-news analysis queue (direct function calls)"""

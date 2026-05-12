@@ -511,13 +511,13 @@ class EconomicCalendarAlerts:
             time_until_event = event_datetime - now
             minutes_until_event = time_until_event.total_seconds() / 60
             
-            # Determine alert timing
+            # Must match unified_alert_processor windows (5-minute poll + jitter)
             alert_timing = "unknown"
-            if minutes_until_event <= 15 and minutes_until_event >= 5:
+            if 3 <= minutes_until_event <= 18:
                 alert_timing = "10min_before"
-            elif minutes_until_event <= 65 and minutes_until_event >= 50:
+            elif 48 <= minutes_until_event <= 68:
                 alert_timing = "1h_before"
-            elif minutes_until_event <= 125 and minutes_until_event >= 110:
+            elif 105 <= minutes_until_event <= 130:
                 alert_timing = "2h_before"
             
             # Check deduplication (Firebase-backed, survives restarts)
