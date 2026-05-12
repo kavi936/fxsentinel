@@ -19527,7 +19527,7 @@ class HybridEconomicCalendar:
                 'time': '13:48 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.7%',
                 'forecast': 'N/A',
                 'previous': '3.1%'
             },
@@ -19537,7 +19537,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.02M',
                 'forecast': '4.05M',
                 'previous': '3.98M'
             },
@@ -19547,7 +19547,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.4%',
                 'forecast': '0.7%',
                 'previous': '3.1%'
             },
@@ -19557,7 +19557,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-2.9%',
                 'forecast': '-1.4%',
                 'previous': '-1.8%'
             },
@@ -19577,7 +19577,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-24',
                 'forecast': 'N/A',
                 'previous': '-29'
             },
@@ -19587,7 +19587,7 @@ class HybridEconomicCalendar:
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.54|3.9',
                 'forecast': 'N/A',
                 'previous': '2.35|2.6'
             },
@@ -19599,9 +19599,9 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '114.5%',
                 'forecast': '114.4%',
-                'previous': '112.4%'
+                'previous': '113.3%'
             },
             {
                 'title': 'German Final CPI m/m',
