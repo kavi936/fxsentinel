@@ -19861,7 +19861,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.2%',
                 'previous': '0.2%'
             },
@@ -19871,7 +19871,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.1%',
                 'previous': '0.1%'
             },
@@ -19881,7 +19881,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.2%',
                 'forecast': '0.3%',
                 'previous': '0.4%'
             },
@@ -19891,7 +19891,7 @@ class HybridEconomicCalendar:
                 'time': '09:34 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.62|1.3',
                 'forecast': 'N/A',
                 'previous': '3.58|1.4'
             },
@@ -19901,9 +19901,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': '0.3%',
-                'previous': '0.1%'
+                'previous': '0.2%'
             },
             {
                 'title': 'PPI m/m',
@@ -19911,9 +19911,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.4%',
                 'forecast': '0.5%',
-                'previous': '0.5%'
+                'previous': '0.7%'
             },
             {
                 'title': 'CB Leading Index m/m',
@@ -19921,7 +19921,7 @@ class HybridEconomicCalendar:
                 'time': '13:30 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.7%',
                 'forecast': 'N/A',
                 'previous': '-0.1%'
             },
