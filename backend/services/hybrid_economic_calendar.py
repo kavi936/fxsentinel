@@ -19759,7 +19759,7 @@ class HybridEconomicCalendar:
                 'time': '17:01 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.47|2.4',
                 'forecast': 'N/A',
                 'previous': '4.28|2.4'
             },
@@ -19769,7 +19769,7 @@ class HybridEconomicCalendar:
                 'time': '18:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '215.0B',
                 'forecast': '37.5B',
                 'previous': '-164.1B'
             },
@@ -19789,7 +19789,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.4%',
                 'forecast': '4.6%',
                 'previous': '4.8%'
             },
@@ -19799,9 +19799,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.90T',
                 'forecast': '2.94T',
-                'previous': '2.71T'
+                'previous': '2.70T'
             },
             {
                 'title': 'Wage Price Index q/q',
@@ -19809,7 +19809,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.8%',
                 'previous': '0.8%'
             },
@@ -19819,7 +19819,7 @@ class HybridEconomicCalendar:
                 'time': '03:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.53%',
                 'forecast': 'N/A',
                 'previous': '2.37%'
             },
@@ -19831,7 +19831,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '40.8',
                 'forecast': '41.7',
                 'previous': '42.2'
             },
@@ -19841,7 +19841,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': '1.0%',
                 'previous': '2.7%'
             },
@@ -19851,7 +19851,7 @@ class HybridEconomicCalendar:
                 'time': '06:45 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': '1.0%',
                 'previous': '1.0%'
             },
