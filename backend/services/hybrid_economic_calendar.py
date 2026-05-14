@@ -19739,7 +19739,7 @@ class HybridEconomicCalendar:
                 'time': '16:00 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': 'Pass',
                 'forecast': 'Pass',
                 'previous': 'N/A'
             },
@@ -19941,7 +19941,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-4.3M',
                 'forecast': 'N/A',
                 'previous': '-2.3M'
             },
@@ -19961,7 +19961,7 @@ class HybridEconomicCalendar:
                 'time': '17:01 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.05|2.3',
                 'forecast': 'N/A',
                 'previous': '4.88|2.4'
             },
@@ -20011,9 +20011,9 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.0%',
                 'forecast': 'N/A',
-                'previous': '1.7%'
+                'previous': '2.1%'
             },
             {
                 'title': 'RICS House Price Balance',
@@ -20021,7 +20021,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-34%',
                 'forecast': '-25%',
                 'previous': '-23%'
             },
@@ -20031,7 +20031,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.3%',
                 'forecast': '2.1%',
                 'previous': '2.0%'
             },
@@ -20051,7 +20051,7 @@ class HybridEconomicCalendar:
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.84|3.5',
                 'forecast': 'N/A',
                 'previous': '3.70|3.1'
             },
@@ -20063,9 +20063,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '-0.2%',
-                'previous': '0.5%'
+                'previous': '0.4%'
             },
             {
                 'title': 'Prelim GDP q/q',
@@ -20073,7 +20073,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': '0.6%',
                 'previous': '0.1%'
             },
@@ -20083,9 +20083,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.5%',
                 'forecast': '-0.5%',
-                'previous': '1.0%'
+                'previous': '0.5%'
             },
             {
                 'title': 'Goods Trade Balance',
@@ -20093,9 +20093,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-27.2B',
                 'forecast': '-20.1B',
-                'previous': '-18.8B'
+                'previous': '-22.8B'
             },
             {
                 'title': 'Index of Services 3m/3m',
@@ -20103,9 +20103,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.6%',
-                'previous': '0.5%'
+                'previous': '0.6%'
             },
             {
                 'title': 'Industrial Production m/m',
@@ -20113,9 +20113,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.3%',
-                'previous': '0.5%'
+                'previous': '0.3%'
             },
             {
                 'title': 'Manufacturing Production m/m',
@@ -20123,9 +20123,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '-0.1%',
-                'previous': '-0.1%'
+                'previous': '-0.2%'
             },
             {
                 'title': 'Prelim Business Investment q/q',
@@ -20133,9 +20133,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '1.1%',
-                'previous': '-2.7%'
+                'previous': '-2.5%'
             },
             {
                 'title': 'M2 Money Supply y/y',
@@ -20143,7 +20143,7 @@ class HybridEconomicCalendar:
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '8.6%',
                 'forecast': '8.5%',
                 'previous': '8.5%'
             },
@@ -20153,7 +20153,7 @@ class HybridEconomicCalendar:
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-10B',
                 'forecast': 'N/A',
                 'previous': '2990B'
             },
@@ -20163,7 +20163,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.9%',
                 'forecast': '1.4%',
                 'previous': '2.0%'
             },
@@ -20173,7 +20173,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.6%',
                 'previous': '1.9%'
             },
@@ -20183,7 +20183,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.6%',
                 'previous': '1.7%'
             },
@@ -20193,9 +20193,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '211K',
                 'forecast': '206K',
-                'previous': '200K'
+                'previous': '199K'
             },
             {
                 'title': 'Import Prices m/m',
@@ -20203,7 +20203,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.9%',
                 'forecast': '1.0%',
                 'previous': '0.8%'
             },
