@@ -5,6 +5,8 @@ import { sanitizeNewsItem, sanitizeAnalysis } from '../utils/sanitize';
 import { useAuth } from '../contexts/AuthContext';
 import './LiveNewsFeed.css';
 import InfoIcon from './InfoIcon.jsx';
+import AnalysisV1Spine from './AnalysisV1Spine.jsx';
+import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
 
 const FXSTREET_GOLD_SLOP_REGEX = /gold price today:.*according to fxstreet data/i;
 
@@ -572,15 +574,6 @@ const LiveNewsFeed = () => {
     return 'Something unexpected happened while loading data. Please try again.';
   };
 
-  const getSentimentColor = (sentiment) => {
-    switch (sentiment?.toLowerCase()) {
-      case 'bullish': return '#2ed573';
-      case 'bearish': return '#ff4757';
-      case 'neutral': return '#ffa502';
-      default: return '#747d8c';
-    }
-  };
-
   const getImpactLabel = (impact) => {
     switch (String(impact || '').toLowerCase()) {
       case 'high':
@@ -601,11 +594,6 @@ const LiveNewsFeed = () => {
     if (value.includes('medium') || value === 'med' || value === 'm') return 'medium';
     if (value.includes('low') || value === 'l') return 'low';
     return null;
-  };
-
-  const getSentimentIcon = (sentiment) => {
-    // Return empty string - no emojis, just use text
-    return '';
   };
 
   const formatTime = (timestamp) => {
@@ -1415,17 +1403,19 @@ const LiveNewsFeed = () => {
                         </button>
                       </div>
                     ) : aiAnalysis ? (
-                      <div className="analysis-content" onClick={(e) => e.stopPropagation()}>
-                        {/* Simplified Analysis Header */}
-                        <div className="analysis-content-header">
-                          <div className="sentiment-badge" style={{ backgroundColor: getSentimentColor(aiAnalysis.immediate_reaction?.replace('_', ' ') || 'neutral') }}>
-                            {getSentimentIcon(aiAnalysis.immediate_reaction?.replace('_', ' ') || 'neutral')} {aiAnalysis.immediate_reaction?.replace('_', ' ').toUpperCase() || 'NEUTRAL'}
+                      <div className="analysis-content fx-analysis-output" onClick={(e) => e.stopPropagation()}>
+                        {isAnalysisV1UiEnabled() &&
+                          aiAnalysis.analysis_format_version === 'v1' &&
+                          aiAnalysis.spine && (
+                          <div style={{ padding: '12px 20px 0' }} onClick={(e) => e.stopPropagation()}>
+                            <AnalysisV1Spine spine={aiAnalysis.spine} />
                           </div>
-                          <div className={`confidence-score ${aiAnalysis.confidence > 80 ? 'high' : aiAnalysis.confidence > 60 ? 'medium' : 'low'}`}>
-                            Confidence: {typeof aiAnalysis.confidence === 'string' ? aiAnalysis.confidence : `${aiAnalysis.confidence}%`}
+                        )}
+                        {isAnalysisV1UiEnabled() && aiAnalysis.cross_context_note && (
+                          <div className="analysis-cross-context-note">
+                            {aiAnalysis.cross_context_note}
                           </div>
-                        </div>
-                        
+                        )}
                         {/* News Impact Paragraph */}
                         <div className="market-impact-section">
                           <h5>Market Impact</h5>

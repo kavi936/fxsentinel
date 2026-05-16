@@ -5048,21 +5048,31 @@
   opacity: 0;
 }
 
-/* AI Analysis typography: keep UI chrome sans, make reading text serif */
+/* AI Analysis typography: Inter/sans for body; Sen headers via rules below */
 .ai-analysis-card .section-header,
 .ai-analysis-card .scenario-content h4,
-.ai-analysis-card .ai-label,
 .ai-analysis-card .analysis-pair,
-.ai-analysis-card .analysis-score {
-  font-family: var(--font-sans);
-}
-
+.ai-analysis-card .analysis-score,
 .ai-analysis-card .key-takeaway,
 .ai-analysis-card .scenario-content p,
 .ai-analysis-card .market-reaction-value,
 .ai-analysis-card .event-summary-value,
 .ai-analysis-card .catalyst-text {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
+}
+
+/* Calendar analysis — singled-out text matches section-header Sen styling */
+.ai-analysis-card .headline-text,
+.ai-analysis-card .ai-label {
+  font-family: var(--overview-card-header-font-family);
+  font-weight: var(--overview-card-header-font-weight);
+  letter-spacing: 0.07em;
+}
+
+.ai-analysis-card .headline-text {
+  text-transform: uppercase;
+  color: #ff8a92;
+  text-shadow: 0 0 18px rgba(218, 0, 18, 0.28);
 }
 
 @keyframes aiContentFadeIn {
@@ -5432,9 +5442,7 @@
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
   margin-bottom: 0;
-  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .ai-value {
@@ -8594,11 +8602,8 @@
 .headline-text {
   margin: 0;
   font-size: 1.15rem;
-  font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
   line-height: 1.35;
-  letter-spacing: -0.01em;
-  font-family: var(--font-serif);
   flex: 1;
 }
 
@@ -8624,14 +8629,14 @@
   padding-left: 14px;
   border-left: 2px solid rgba(255, 255, 255, 0.12);
   margin-top: 0;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 /* Highlighted phrases in analysis text */
 .ai-analysis-card strong {
   font-family: inherit;
   font-weight: 600;
-  font-style: italic;
+  font-style: normal;
   color: rgba(255, 255, 255, 0.96);
   text-shadow: 0 0 10px rgba(218, 0, 18, 0.18);
 }
@@ -8690,6 +8695,17 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+.analysis-context-note {
+  margin: -2px 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(253, 230, 138, 0.95);
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.24);
+}
+
 .scenarios-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -8729,14 +8745,14 @@
   margin: 0 0 8px 0;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .scenario-content p {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.82);
 }
@@ -8994,7 +9010,7 @@
   font-size: 14px;
   line-height: 1.7;
   color: rgba(255, 255, 255, 0.86);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 .in-depth-label {
@@ -9006,7 +9022,7 @@
 .in-depth-strong {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.95);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
 }
 
 .in-depth-metrics {
@@ -9059,10 +9075,10 @@
 }
 
 .in-depth-catalyst-item {
-  font-size: 15px;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.84);
-  font-family: var(--font-serif);
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.86);
+  font-family: var(--font-sans);
 }
 
 /* Unified branding pass for Overview AI analysis content (Holistic parity) */
@@ -9091,6 +9107,11 @@
 .ai-analysis-card .ai-analysis-content .scenario-content h4 {
   color: #ff6b74;
   letter-spacing: 0.07em;
+}
+
+/* Main section headers only (Probability Scenarios, Market Scenarios, etc.) −2px */
+.ai-analysis-card .ai-analysis-content .section-header {
+  font-size: 17px;
 }
 
 .ai-analysis-card .ai-analysis-content .analysis-pair,

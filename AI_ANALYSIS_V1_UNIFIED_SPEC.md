@@ -3,7 +3,7 @@
 **Status:** draft for discussion — edit freely.  
 **Goal:** Agree what each analysis area is *for*, what we **keep** from today, and what **every** response shares so traders get a consistent “spine” without forcing unrelated sections to look identical.
 
-Related docs: `AI_ANALYSIS_WORKFLOW_IDEAS.md`, `AI_WORKFLOW_AND_MULTI_LLM_ARCHITECTURE.md`.
+Related docs: `AI_ANALYSIS_WORKFLOW_IDEAS.md`, `AI_WORKFLOW_AND_MULTI_LLM_ARCHITECTURE.md`, `AI_ANALYSIS_FOUNDATION_ROADMAP.md`.
 
 ---
 
@@ -144,6 +144,12 @@ Medium-term **regime read** for an economy: rates, drivers, event density, cross
 | 2026-05-12 | Initial draft: spine + body per area, keep/improve lists. |
 | 2026-05-12 | Pre-implementation review: §9 — trace prior samples to spec; go checklist. |
 | 2026-05-12 | §9.4 codebase plan; §10 `analysis_format_version` / additive spine / rollback; §11 one section at a time. |
+| 2026-05-12 | Implemented `backend/services/analysis_v1_spine.py` + wired `app.py` (enhanced calendar, news analysis, economy scan, legacy calendar). Env: `ANALYSIS_V1_SPINE_ENABLED`. Tests: `backend/test_analysis_v1_spine.py`. |
+| 2026-05-12 | Frontend: `AnalysisV1Spine.jsx` + CSS; Overview calendar transform preserves `spine` / `scenario_alignment_warnings`; LiveNewsFeed + Economies render spine; `sanitize.js` sanitizes spine fields for news. |
+| 2026-05-13 | Holistic recents now persist/restore V1 spine metadata; calendar pass adds `scenario_alignment_status` + `level_context_note`; Overview shows context note above Probability Scenarios. |
+| 2026-05-13 | Priority hardening pass: live-news vs latest US holistic cross-check note (`cross_context_note`), endpoint observability metadata (`v1_observability`), improved spine copy for holistic/news, prompt constraints for `market_bias` and anchored vs illustrative `key_levels`, shared spine typography tokens. |
+| 2026-05-15 | Phase 2: `analysis_contract.py` + `analysis_pipeline.finalize_analysis()` — all three analysis APIs use one finalize path; responses include `analysis_kind`, `spine_profile`, `trace`. See `AI_ANALYSIS_FOUNDATION_ROADMAP.md`. |
+| 2026-05-15 | Phase 3 (partial): `calendar_scenario_engine.py` — canonical `market_scenarios` + `forward_scenarios_by_outcome`; Overview uses API table when present. |
 
 ---
 

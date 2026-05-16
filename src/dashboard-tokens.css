@@ -139,5 +139,22 @@
   --dash-transition-fast: all 0.2s ease;
   --dash-transition-base: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --dash-transition-slow: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== Trader analysis output typography (calendar / news / holistic) ===== */
+  --analysis-display-font-family: 'Sen', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --analysis-display-font-weight: 650;
+  --analysis-display-letter-spacing: 0.07em;
+  --analysis-display-color: #ff6b74;
+  --analysis-label-color: #ff7d85;
+  --analysis-body-font-family: var(--font-sans, var(--dash-font-family-sans));
+  --analysis-body-size: 13px;
+  --analysis-body-line-height: 1.65;
+  --analysis-body-color: rgba(255, 255, 255, 0.86);
+  --analysis-section-size: 16px;
+  --analysis-chrome-size: 13px;
+  --analysis-label-size: 13px;
+  --analysis-meta-size: 11px;
+  --analysis-surface-border: rgba(218, 0, 18, 0.28);
+  --analysis-surface-bg: rgba(255, 255, 255, 0.04);
 }
 

@@ -1377,15 +1377,22 @@
 
 /* AI Analysis Section - Within news item */
 .ai-analysis-section {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08) 0%, rgba(16, 185, 129, 0.05) 100%);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  /* Live news: slightly denser than shared tokens; header matches global */
+  --analysis-body-size: 13px;
+  --analysis-section-size: 16px;
+  --analysis-chrome-size: 14px;
+  --analysis-label-size: 11px;
+  --analysis-meta-size: 12px;
+
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.08) 0%, rgba(218, 0, 18, 0.04) 100%);
+  border: 1px solid rgba(255, 68, 68, 0.3);
   border-radius: 12px;
   margin-top: 16px;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.2),
-    0 0 0 1px rgba(34, 197, 94, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 0 0 1px rgba(255, 68, 68, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
   animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(15px);
   position: relative;
@@ -1426,27 +1433,28 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.2);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.14) 0%, rgba(218, 0, 18, 0.08) 100%);
   flex-wrap: wrap;
   position: relative;
   border-radius: 12px 12px 0 0;
   backdrop-filter: blur(15px);
-  box-shadow: 
-    0 4px 12px rgba(34, 197, 94, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow:
+    0 4px 12px rgba(218, 0, 18, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 68, 68, 0.28);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.2);
 }
 
 /* Analysis Header Title */
 .analysis-header h4 {
-  font-size: 16px;
-  font-weight: 700;
-  color: #22c55e;
+  font-size: var(--analysis-chrome-size, 15px);
+  font-weight: var(--analysis-display-font-weight, 650);
+  font-family: var(--analysis-display-font-family);
+  color: var(--analysis-display-color, #ff6b74);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: var(--analysis-display-letter-spacing, 0.07em);
   flex: 1;
 }
 
@@ -1456,18 +1464,29 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(16, 185, 129, 0.03) 100%);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.16);
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.08) 0%, rgba(218, 0, 18, 0.04) 100%);
   flex-wrap: wrap;
   position: relative;
   border-radius: 12px 12px 0 0;
   backdrop-filter: blur(15px);
-  box-shadow: 
-    0 2px 8px rgba(34, 197, 94, 0.1),
+  box-shadow:
+    0 2px 8px rgba(218, 0, 18, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(34, 197, 94, 0.2);
-  border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.12);
   margin-bottom: 16px;
+}
+
+.analysis-cross-context-note {
+  margin: 10px 20px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(253, 230, 138, 0.95);
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.24);
 }
 
 .analysis-type-badge {
@@ -1496,29 +1515,31 @@
 .analysis-content .market-impact-section,
 .analysis-content .trading-implications-section {
   padding: 20px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.12);
   display: block;
-  background: rgba(0, 0, 0, 0.18);
+  background: var(--analysis-surface-bg, rgba(255, 255, 255, 0.04));
   border-radius: 10px;
-  border: 1px solid rgba(255, 68, 68, 0.14);
+  border: 1px solid var(--analysis-surface-border, rgba(218, 0, 18, 0.28));
   margin-bottom: 12px;
 }
 
 .analysis-content .market-impact-section h5,
 .analysis-content .trading-implications-section h5 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #22c55e;
+  font-family: var(--analysis-display-font-family);
+  font-size: var(--analysis-section-size, 17px);
+  font-weight: var(--analysis-display-font-weight, 650);
+  color: var(--analysis-display-color, #ff6b74);
   margin: 0 0 12px 0;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: var(--analysis-display-letter-spacing, 0.07em);
 }
 
 .analysis-content .market-impact-section p,
 .analysis-content .trading-implications-section p {
-  font-size: 14px;
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-body-size, 14px);
+  line-height: var(--analysis-body-line-height, 1.65);
+  color: var(--analysis-body-color, rgba(255, 255, 255, 0.86));
   margin: 0;
   font-weight: 400;
 }
@@ -1526,7 +1547,7 @@
 /* Trading Essentials */
 .trading-essentials {
   padding: 20px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+  border-bottom: 1px solid rgba(255, 68, 68, 0.12);
 }
 
 .essentials-grid {
@@ -1540,21 +1561,25 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: rgba(34, 197, 94, 0.05);
+  background: rgba(255, 68, 68, 0.06);
   border-radius: 8px;
-  border: 1px solid rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(255, 68, 68, 0.16);
 }
 
 .essential-item .label {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size, 11px);
+  color: var(--analysis-label-color, #ff7d85);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .essential-item .value {
-  font-size: 12px;
-  color: #22c55e;
-  font-weight: 700;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size, 11px);
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -1871,7 +1896,7 @@
 }
 
 .analysis-header h4 {
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   color: #22c55e;
   margin: 0;
@@ -2096,32 +2121,35 @@
 }
 
 .analysis-content h5 {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffffff;
+  font-family: var(--analysis-display-font-family);
+  font-size: var(--analysis-section-size, 17px);
+  font-weight: var(--analysis-display-font-weight, 650);
+  color: var(--analysis-display-color, #ff6b74);
   margin: 0 0 12px 0;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.3);
-  padding-bottom: 8px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: var(--analysis-display-letter-spacing, 0.07em);
+  border-bottom: none;
+  padding-bottom: 0;
+  text-shadow: none;
 }
 
 .analysis-content h6 {
-  font-size: 11px;
-  font-weight: 700;
-  color: #22c55e;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size, 11px);
+  font-weight: 600;
+  color: var(--analysis-label-color, #ff7d85);
   margin: 0 0 8px 0;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.05em;
+  text-shadow: none;
 }
 
 .analysis-content p {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.9);
-  line-height: 1.6;
-  margin: 0 0 16px 0;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-body-size, 14px);
+  color: var(--analysis-body-color, rgba(255, 255, 255, 0.86));
+  line-height: var(--analysis-body-line-height, 1.65);
+  margin: 0;
   font-weight: 400;
 }
 
@@ -2166,7 +2194,6 @@
 }
 
 .ai-analysis-section .pair-analysis-item h6,
-.ai-analysis-section .essential-item .value,
 .ai-analysis-section .analysis-type,
 .ai-analysis-section .analysis-text,
 .ai-analysis-section .analysis-icon,
@@ -2234,72 +2261,137 @@
   box-shadow: 0 5px 14px rgba(163, 32, 42, 0.45);
 }
 
-/* AI Analysis Typography Unification */
+/* AI Analysis Typography — calendar parity (Sen display + Inter body) */
+.ai-analysis-section .analysis-content,
+.ai-analysis-section .analysis-loading p,
+.ai-analysis-section .analysis-error p {
+  font-family: var(--analysis-body-font-family);
+}
+
+.ai-analysis-section .analysis-header h4,
+.ai-analysis-section .analysis-content h5,
+.ai-analysis-section .analysis-content .market-impact-section h5,
+.ai-analysis-section .analysis-content .trading-implications-section h5,
+.ai-analysis-section .risk-assessment h5,
+.ai-analysis-section .trading-strategies h5,
+.ai-analysis-section .key-levels h5 {
+  font-family: var(--analysis-display-font-family);
+  font-weight: var(--analysis-display-font-weight);
+  letter-spacing: var(--analysis-display-letter-spacing);
+  text-transform: uppercase;
+  color: var(--analysis-display-color);
+  text-shadow: none;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
 .ai-analysis-section .analysis-header h4 {
-  font-size: 13px;
-  letter-spacing: 0.65px;
+  font-size: var(--analysis-chrome-size);
 }
 
 .ai-analysis-section .analysis-content h5,
 .ai-analysis-section .analysis-content .market-impact-section h5,
 .ai-analysis-section .analysis-content .trading-implications-section h5,
+.ai-analysis-section .risk-assessment h5,
 .ai-analysis-section .trading-strategies h5,
 .ai-analysis-section .key-levels h5 {
-  font-size: 13px;
-  letter-spacing: 0.65px;
-}
-
-.ai-analysis-section .analysis-content h6,
-.ai-analysis-section .pair-analysis-item h6 {
-  font-size: 12px;
-  letter-spacing: 0.55px;
+  font-size: var(--analysis-section-size);
+  margin: 0 0 12px 0;
+  line-height: 1.3;
 }
 
 .ai-analysis-section .analysis-content p,
 .ai-analysis-section .analysis-content .market-impact-section p,
 .ai-analysis-section .analysis-content .trading-implications-section p,
 .ai-analysis-section .pair-analysis-item p,
-.ai-analysis-section .strategy-details > div {
-  font-size: 12px;
-  line-height: 1.55;
+.ai-analysis-section .strategy-details > div,
+.ai-analysis-section .analysis-loading p {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-body-size);
+  line-height: var(--analysis-body-line-height);
+  color: var(--analysis-body-color);
+  font-weight: var(--dash-font-weight-normal);
+  margin: 0;
 }
 
 .ai-analysis-section .essential-item .label,
+.ai-analysis-section .risk-label {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size);
+  font-weight: var(--dash-font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--analysis-label-color);
+}
+
 .ai-analysis-section .essential-item .value,
+.ai-analysis-section .risk-value {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size);
+  font-weight: var(--dash-font-weight-semibold);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.ai-analysis-section .sentiment-badge,
+.ai-analysis-section .confidence-score,
+.ai-analysis-section .confidence-score.high,
+.ai-analysis-section .confidence-score.medium,
+.ai-analysis-section .confidence-score.low {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-meta-size);
+  font-weight: var(--dash-font-weight-semibold);
+}
+
 .ai-analysis-section .analysis-meta,
-.ai-analysis-section .analysis-type,
-.ai-analysis-section .analysis-confidence,
-.ai-analysis-section .analysis-reaction,
-.ai-analysis-section .analysis-cost,
-.ai-analysis-section .level-badge,
-.ai-analysis-section .strategy-name,
-.ai-analysis-section .strategy-header .pair,
-.ai-analysis-section .strategy-header .direction,
-.ai-analysis-section .stats-item {
-  font-size: 11px;
+.ai-analysis-section .analysis-meta .analysis-time {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-meta-size);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ai-analysis-section .analysis-cross-context-note {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-meta-size);
 }
 
 .ai-analysis-section .confidence-score {
-  font-size: 11px;
   padding: 7px 12px;
+}
+
+.ai-analysis-section .analysis-content h6,
+.ai-analysis-section .pair-analysis-item h6 {
+  font-size: var(--analysis-label-size);
+}
+
+.ai-analysis-section .strategy-name,
+.ai-analysis-section .strategy-header .pair,
+.ai-analysis-section .strategy-header .direction,
+.ai-analysis-section .strategy-details > div,
+.ai-analysis-section .retry-analysis-btn {
+  font-size: var(--analysis-label-size);
+}
+
+.ai-analysis-section .analysis-error p {
+  font-size: var(--analysis-meta-size);
 }
 
 /* Risk Assessment Section */
 .risk-assessment {
   margin: 20px 0;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--analysis-surface-bg, rgba(255, 255, 255, 0.04));
+  border-radius: 10px;
+  border: 1px solid var(--analysis-surface-border, rgba(218, 0, 18, 0.28));
 }
 
 .risk-assessment h5 {
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
+  font-family: var(--analysis-display-font-family);
+  color: var(--analysis-display-color, #ff6b74);
+  font-size: var(--analysis-section-size, 17px);
+  font-weight: var(--analysis-display-font-weight, 650);
   margin: 0 0 12px 0;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: var(--analysis-display-letter-spacing, 0.07em);
 }
 
 .risk-grid {
@@ -2319,14 +2411,18 @@
 }
 
 .risk-label {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
-  font-weight: 500;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size, 11px);
+  color: var(--analysis-label-color, #ff7d85);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .risk-value {
-  font-size: 11px;
-  font-weight: 700;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size, 11px);
+  font-weight: 600;
   padding: 4px 8px;
   border-radius: 4px;
   text-transform: uppercase;

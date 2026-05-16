@@ -164,6 +164,9 @@ export const sanitizeAnalysis = (analysis) => {
       sanitized[field] = sanitizeText(sanitized[field]);
     }
   });
+  if (sanitized.cross_context_note && typeof sanitized.cross_context_note === 'string') {
+    sanitized.cross_context_note = sanitizeText(sanitized.cross_context_note);
+  }
   
   // Sanitize array fields
   if (Array.isArray(sanitized.key_pairs)) {
@@ -178,6 +181,45 @@ export const sanitizeAnalysis = (analysis) => {
         sanitized.risk_assessment[field] = sanitizeText(sanitized.risk_assessment[field]);
       }
     });
+  }
+
+  // V1 unified spine (additive API fields)
+  if (sanitized.analysis_format_version && typeof sanitized.analysis_format_version === 'string') {
+    sanitized.analysis_format_version = sanitizeText(sanitized.analysis_format_version);
+  }
+  if (sanitized.spine && typeof sanitized.spine === 'object') {
+    const s = { ...sanitized.spine };
+    const spineTextKeys = [
+      'summary_line',
+      'bias',
+      'bias_subject',
+      'time_horizon',
+      'confidence_reason',
+      'invalidation',
+    ];
+    spineTextKeys.forEach((key) => {
+      if (s[key] && typeof s[key] === 'string') {
+        s[key] = sanitizeText(s[key]);
+      }
+    });
+    if (typeof s.confidence === 'string') {
+      s.confidence = sanitizeText(s.confidence);
+    }
+    if (Array.isArray(s.primary_instruments)) {
+      s.primary_instruments = s.primary_instruments.map((p) => sanitizeText(String(p)));
+    }
+    sanitized.spine = s;
+  }
+  if (Array.isArray(sanitized.scenario_alignment_warnings)) {
+    sanitized.scenario_alignment_warnings = sanitized.scenario_alignment_warnings.map((w) =>
+      sanitizeText(String(w))
+    );
+  }
+  if (sanitized.level_context_note && typeof sanitized.level_context_note === 'string') {
+    sanitized.level_context_note = sanitizeText(sanitized.level_context_note);
+  }
+  if (sanitized.scenario_alignment_status && typeof sanitized.scenario_alignment_status === 'string') {
+    sanitized.scenario_alignment_status = sanitizeText(sanitized.scenario_alignment_status);
   }
   
   return sanitized;

@@ -4,6 +4,8 @@ import './Economies.css';
 import economyIndicatorsData from '../data/economyIndicators.json';
 import { config } from '../config';
 import { useAuth } from '../contexts/AuthContext';
+import AnalysisV1Spine from './AnalysisV1Spine.jsx';
+import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
 
 /** Display order: US (by maturity 2Y→30Y), then EUR, then GBP. Wheel cycles this flat list. */
 const YIELD_ECONOMY_ORDER = ['US', 'EUR', 'GBP'];
@@ -2250,6 +2252,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   const [activeYieldSymbol, setActiveYieldSymbol] = useState('OANDA:USB10YUSD');
   const [bondYieldGuideOpen, setBondYieldGuideOpen] = useState(false);
   const [holisticScan, setHolisticScan] = useState(null);
+  /** V1 spine from last POST /economy-scan only (Firestore recents omit wrapper fields). */
+  const [holisticScanV1Meta, setHolisticScanV1Meta] = useState(null);
   const [scanState, setScanState] = useState('default'); // default | loading | ready | error
   const [scanError, setScanError] = useState(null);
   const [recentHolisticScans, setRecentHolisticScans] = useState([]);
@@ -2303,6 +2307,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
   useEffect(() => {
     setScanError(null);
     setHolisticScan(null);
+    setHolisticScanV1Meta(null);
     setScanState('default');
   }, [selectedEconomy]);
 
@@ -2337,6 +2342,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     const snap = item?.scan_snapshot;
     if (!snap) return;
     setHolisticScan(snap);
+    setHolisticScanV1Meta(
+      item?.analysis_format_version === 'v1' && item?.spine
+        ? { analysis_format_version: item.analysis_format_version, spine: item.spine }
+        : null
+    );
     setScanState('ready');
     setScanError(null);
     requestAnimationFrame(() => setRecentHolisticDropdownOpen(false));
@@ -2396,6 +2406,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         throw new Error('No scan payload');
       }
       setHolisticScan(payload.scan);
+      setHolisticScanV1Meta(
+        payload.analysis_format_version === 'v1' && payload.spine
+          ? { analysis_format_version: payload.analysis_format_version, spine: payload.spine }
+          : null
+      );
       setScanState('ready');
       loadRecentHolisticScans();
     } catch (err) {
@@ -4822,8 +4837,13 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           )}
           {scanState === 'ready' && holisticScan && (
             <div className="holistic-scan-scroll-shell">
-              <div className="holistic-scan-content">
-              <div className="scan-overview-bar">
+              <div className="holistic-scan-content fx-analysis-output">
+                {isAnalysisV1UiEnabled() &&
+                  holisticScanV1Meta?.spine &&
+                  holisticScanV1Meta?.analysis_format_version === 'v1' && (
+                  <AnalysisV1Spine spine={holisticScanV1Meta.spine} className="holistic-scan-v1-spine" />
+                )}
+                <div className="scan-overview-bar">
                 <span className="scan-overview-item">Economy: {holisticScan.economy || selectedEconomyName}</span>
                 {scanTimestamp && <span className="scan-overview-item">Scanned: {scanTimestamp}</span>}
               </div>
@@ -4832,16 +4852,22 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className="scan-regime-strip">
                   <div className="scan-regime-summary-row">
                     <div className="scan-regime-pill">
-                      {renderRegimeLine(
-                        holisticScan.trader_brief?.short_term_line,
-                        'Short-term regime unavailable.'
-                      )}
+                      <span className="scan-regime-pill-label">Short-term</span>
+                      <div className="scan-regime-pill-content">
+                        {renderRegimeLine(
+                          holisticScan.trader_brief?.short_term_line,
+                          'Short-term regime unavailable.'
+                        )}
+                      </div>
                     </div>
                     <div className="scan-regime-pill">
-                      {renderRegimeLine(
-                        holisticScan.trader_brief?.long_term_line,
-                        'Long-term regime unavailable.'
-                      )}
+                      <span className="scan-regime-pill-label">Long-term</span>
+                      <div className="scan-regime-pill-content">
+                        {renderRegimeLine(
+                          holisticScan.trader_brief?.long_term_line,
+                          'Long-term regime unavailable.'
+                        )}
+                      </div>
                     </div>
                   </div>
                   <div className="scan-regime-core-metrics">

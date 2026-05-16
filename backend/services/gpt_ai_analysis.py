@@ -2277,13 +2277,13 @@ OUTPUT FORMAT (JSON):
     "implications_takeaways": {{
         "economic_context": "Economic implications - reference current indicator values, statistical context, and trends from ECONOMIC CONTEXT above",
         "policy_implications": "Central bank policy implications - reference current rate, trend, policy pressure, and targets from ECONOMIC CONTEXT above. Explain how event reinforces, challenges, or complicates existing policy pressure",
-        "market_bias": "Overall market bias with specific reasoning based on economic context and macro drivers (not just technical indicators)",
+        "market_bias": "Start with exactly one label: BULLISH | BEARISH | NEUTRAL for {currency}, then concise reasoning based on macro drivers (not only technical indicators). Example: 'BEARISH for USD: ...'",
         "risk_level": "Risk assessment considering current economic conditions and policy environment"
     }},
     "trading_plan": {{
         "best_approach": "Recommended trading approach",
         "avoid_strategies": "Strategies to avoid",
-        "key_levels": "Important price levels",
+        "key_levels": "Important price levels. If levels are tied to live spot/last close, state anchor explicitly (e.g., 'Anchored to current spot 1.0842'). If no anchor is available, start with 'Illustrative levels:'",
         "position_sizing": "Position sizing recommendations",
         "next_catalysts": "Upcoming events to watch"
     }},

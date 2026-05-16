@@ -59,6 +59,8 @@ class EconomyHolisticScanStore:
         user_info: Optional[Dict[str, Any]],
         country_code: str,
         scan_snapshot: Dict[str, Any],
+        analysis_format_version: Optional[str] = None,
+        spine: Optional[Dict[str, Any]] = None,
     ) -> Optional[str]:
         if not self.firebase_available or not self.db:
             logger.debug("Firebase unavailable, skipping holistic scan persistence")
@@ -82,6 +84,9 @@ class EconomyHolisticScanStore:
                     "country_code": cc,
                     "economy_label": scan_snapshot.get("economy") or cc,
                     "scan_snapshot": scan_snapshot,
+                    # Additive V1 fields for shared brief on restored "Recent scans".
+                    "analysis_format_version": analysis_format_version,
+                    "spine": spine,
                     "created_at": firestore.SERVER_TIMESTAMP,
                 }
             )

@@ -1,0 +1,184 @@
+/* Shared V1 analysis spine — works on Overview, Live news, Economies (dark UIs) */
+.analysis-v1-spine {
+  --analysis-v1-font-family: inherit;
+  --analysis-v1-size-body: 13px;
+  --analysis-v1-size-summary: 14px;
+  --analysis-v1-size-label: 10px;
+  --analysis-v1-size-meta: 11px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.22);
+  font-family: var(--analysis-v1-font-family);
+  font-size: var(--analysis-v1-size-body);
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.analysis-v1-spine__header {
+  margin-bottom: 8px;
+}
+
+.analysis-v1-spine__badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(147, 197, 253, 0.95);
+  opacity: 0.95;
+}
+
+.analysis-v1-spine__summary {
+  margin: 0 0 12px;
+  font-size: var(--analysis-v1-size-summary);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+.analysis-v1-spine__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px 14px;
+}
+
+.analysis-v1-spine__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.analysis-v1-spine__cell--wide {
+  grid-column: 1 / -1;
+}
+
+.analysis-v1-spine__label {
+  font-size: var(--analysis-v1-size-label);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+
+.analysis-v1-spine__value {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.86);
+  word-break: break-word;
+}
+
+.analysis-v1-spine__value--multiline {
+  white-space: pre-wrap;
+}
+
+.analysis-v1-spine__reason {
+  font-size: var(--analysis-v1-size-meta);
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.35;
+}
+
+.analysis-v1-spine__subject {
+  font-size: var(--analysis-v1-size-meta);
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.35;
+}
+
+.analysis-v1-spine__bias {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.analysis-v1-spine__bias--bullish {
+  color: #6ee7b7;
+}
+
+.analysis-v1-spine__bias--bearish {
+  color: #fca5a5;
+}
+
+.analysis-v1-spine__bias--neutral {
+  color: #e5e7eb;
+}
+
+.analysis-v1-spine__instruments {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  word-break: break-word;
+}
+
+.analysis-v1-spine__strong {
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.98);
+}
+
+.analysis-v1-spine__warnings {
+  margin: 12px 0 0;
+  padding: 8px 10px 8px 22px;
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.08);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  color: rgba(253, 230, 138, 0.92);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.analysis-v1-spine__warnings li {
+  margin-bottom: 4px;
+}
+
+.analysis-v1-spine__warnings li:last-child {
+  margin-bottom: 0;
+}
+
+/* Light panel variant (e.g. news card on light background) */
+.analysis-v1-spine--light {
+  border-color: rgba(15, 23, 42, 0.12);
+  background: rgba(15, 23, 42, 0.04);
+  color: rgba(15, 23, 42, 0.88);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__badge {
+  color: rgba(37, 99, 235, 0.95);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__summary {
+  color: rgba(15, 23, 42, 0.94);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__label {
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__value,
+.analysis-v1-spine--light .analysis-v1-spine__instruments {
+  color: rgba(15, 23, 42, 0.88);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__reason,
+.analysis-v1-spine--light .analysis-v1-spine__subject {
+  color: rgba(15, 23, 42, 0.58);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__bias--bullish {
+  color: #047857;
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__bias--bearish {
+  color: #b91c1c;
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__bias--neutral {
+  color: #374151;
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__strong {
+  color: rgba(15, 23, 42, 0.98);
+}
+
+.analysis-v1-spine--light .analysis-v1-spine__warnings {
+  background: rgba(251, 191, 36, 0.12);
+  border-color: rgba(217, 119, 6, 0.35);
+  color: rgba(120, 53, 15, 0.95);
+}

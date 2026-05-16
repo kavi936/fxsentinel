@@ -756,6 +756,13 @@ from services.hybrid_economic_calendar import hybrid_economic_calendar
 # Import the Finnhub historical service
 from services.finnhub_historical import finnhub_historical
 from services.economy_holistic_scan_service import economy_holistic_scan_service
+from services.analysis_contract import (
+    ANALYSIS_KIND_CALENDAR_EVENT,
+    ANALYSIS_KIND_CALENDAR_EVENT_LEGACY,
+    ANALYSIS_KIND_ECONOMY_SCAN,
+    ANALYSIS_KIND_LIVE_NEWS,
+)
+from services.analysis_pipeline import FinalizeContext, finalize_analysis
 
 @app.route('/api/economy-indicators/<country_code>', methods=['GET'])
 def get_economy_indicators(country_code):
@@ -910,6 +917,7 @@ def get_economy_scan(country_code):
         refresh: If 'true', bypasses indicator cache when possible
     """
     try:
+        started = time.perf_counter()
         country_code = (country_code or "").upper()
         force_refresh = request.args.get('refresh', 'false').lower() == 'true'
         token_user_info = _extract_user_from_token()
@@ -1024,18 +1032,7 @@ def get_economy_scan(country_code):
         except Exception as billing_err:
             logger.debug(f"Holistic scan billing increment failed (non-critical): {billing_err}")
 
-        # Persist snapshot for "Recent scans" (same idea as calendar AI analyses).
-        try:
-            from services.economy_holistic_scan_store import economy_holistic_scan_store
-            economy_holistic_scan_store.save_holistic_scan(
-                user_info=token_user_info,
-                country_code=country_code,
-                scan_snapshot=scan,
-            )
-        except Exception as persist_err:
-            logger.debug(f"Holistic scan persistence failed (non-critical): {persist_err}")
-
-        return jsonify({
+        response_body = {
             "status": "success",
             "scan": scan,
             "inputs": {
@@ -1043,8 +1040,31 @@ def get_economy_scan(country_code):
                 "event_source": "hybrid_calendar",
                 "events_considered": len(events),
                 "yield_source": scan.get("yield_context", {}).get("source", "unknown"),
-            }
-        }), 200
+            },
+        }
+        response_body = finalize_analysis(
+            response_body,
+            analysis_kind=ANALYSIS_KIND_ECONOMY_SCAN,
+            context=FinalizeContext(
+                country_code=country_code,
+                latency_ms=int((time.perf_counter() - started) * 1000),
+            ),
+        )
+
+        # Persist snapshot for "Recent scans" (same idea as calendar AI analyses).
+        # Save additive V1 metadata so restored recents can render the shared spine.
+        try:
+            from services.economy_holistic_scan_store import economy_holistic_scan_store
+            economy_holistic_scan_store.save_holistic_scan(
+                user_info=token_user_info,
+                country_code=country_code,
+                scan_snapshot=scan,
+                analysis_format_version=response_body.get("analysis_format_version"),
+                spine=response_body.get("spine"),
+            )
+        except Exception as persist_err:
+            logger.debug(f"Holistic scan persistence failed (non-critical): {persist_err}")
+        return jsonify(response_body), 200
     except ValueError as ve:
         return jsonify({
             "status": "error",
@@ -2227,6 +2247,11 @@ def get_analysis(news_id):
                         event['currency'], 
                         event['impact']
                     )
+                    analysis = finalize_analysis(
+                        analysis,
+                        analysis_kind=ANALYSIS_KIND_CALENDAR_EVENT_LEGACY,
+                        context=FinalizeContext(event=event),
+                    )
                     return jsonify(analysis)
             except Exception as e:
                 print(f"🔍 Error getting economic event: {e}")
@@ -2293,6 +2318,7 @@ def get_analysis(news_id):
 def generate_news_analysis(news_item, token_user_info=None, personalization=None):
     """Generate AI analysis for RSS news articles using MVP analyzer"""
     try:
+        started = time.perf_counter()
         print(f"🔍 Starting MVP news analysis for: {news_item.get('title', 'No title')}")
         
         # Use route-provided user info to avoid duplicate token extraction
@@ -2359,7 +2385,17 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
             "risk_assessment": risk_assessment,
             "market_context": market_context
         }
-        
+
+        elapsed_ms = int((time.perf_counter() - started) * 1000)
+        analysis_result = finalize_analysis(
+            analysis_result,
+            analysis_kind=ANALYSIS_KIND_LIVE_NEWS,
+            context=FinalizeContext(
+                news_item=news_item,
+                token_user_info=token_user_info,
+                latency_ms=elapsed_ms,
+            ),
+        )
         print(f"🔍 Analysis result news_impact: {analysis_result['news_impact'][:50] if analysis_result['news_impact'] else 'EMPTY'}...")
         print(f"🔍 Analysis result trading_implications: {analysis_result['trading_implications'][:50] if analysis_result['trading_implications'] else 'EMPTY'}...")
         print(f"🔍 Analysis result structure: {list(analysis_result.keys())}")
@@ -2516,6 +2552,7 @@ def get_enhanced_analysis(news_id):
     print(f"🔍 DEBUG: Request method: {request.method}")
     print(f"🔍 DEBUG: Request headers: {dict(request.headers)}")
     try:
+        started = time.perf_counter()
         # Extract user information from Firebase token (more reliable than frontend)
         # This ensures we always have user info since users must be signed in to access dashboard
         token_user_info = _extract_user_from_token()
@@ -2786,6 +2823,16 @@ def get_enhanced_analysis(news_id):
             'validation_status': gpt_analysis.validation_status,
             'market_data_source': gpt_analysis.market_data_source
         }
+
+        enhanced_analysis = finalize_analysis(
+            enhanced_analysis,
+            analysis_kind=ANALYSIS_KIND_CALENDAR_EVENT,
+            context=FinalizeContext(
+                validated_event=validated_event,
+                analysis_type=analysis_type,
+                latency_ms=int((time.perf_counter() - started) * 1000),
+            ),
+        )
 
         # Persist a per-user snapshot of this calendar analysis so the frontend
         # can show it in "Recent" across sessions without re-running GPT.

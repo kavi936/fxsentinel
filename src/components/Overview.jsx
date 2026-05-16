@@ -11,6 +11,8 @@ import { formatTimeForTimezone, getUserTimezone, getTimezoneAbbreviation } from 
 import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
+import AnalysisV1Spine from './AnalysisV1Spine.jsx';
+import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
 import { getDailyChangeGaugeLayout, DAILY_CHANGE_GAUGE_CAP_PCT } from '../utils/dailyChangeGauge.js';
 
 /** Fallback catalog when API has not yet returned `instruments` (matches backend `tradingview_instruments`). */
@@ -674,6 +676,22 @@ const Overview = () => {
       return `${formattedValue}${unit}`;
     }
     return String(formattedValue);
+  };
+
+  // Map API canonical market_scenarios (Phase 3) to UI table shape; null => use client fallback.
+  const mapCanonicalMarketScenarios = (marketScenarios) => {
+    if (!marketScenarios?.rows) return null;
+    const rows = marketScenarios.rows;
+    const mapRow = (row) => ({
+      value: row.value,
+      sentiment: row.sentiment,
+      sentimentClass: row.sentiment_class || row.sentimentClass || 'neutral',
+    });
+    return {
+      above: (rows.above || []).map(mapRow),
+      onForecast: (rows.on_forecast || []).map(mapRow),
+      below: (rows.below || []).map(mapRow),
+    };
   };
 
   // Calculate market scenarios based on actual vs expected with event-specific logic
@@ -4236,7 +4254,20 @@ const Overview = () => {
         analysis_timestamp: analysis.analysis_timestamp || new Date().toISOString(),
         analysis_type: analysis.analysis_type || (isPostEvent ? 'post-event' : 'pre-event'),
         model_used: analysis.model_used || 'gpt_ai_analyzer',
-        cache_hit: analysis.cache_hit || false
+        cache_hit: analysis.cache_hit || false,
+
+        // V1 additive spine (preserved from backend; see analysis_v1_spine.py)
+        data_quality: analysis.data_quality,
+        validation_status: analysis.validation_status,
+        market_data_source: analysis.market_data_source,
+        cost_estimate: analysis.cost_estimate,
+        analysis_format_version: analysis.analysis_format_version,
+        spine: analysis.spine,
+        scenario_alignment_warnings: analysis.scenario_alignment_warnings,
+        scenario_alignment_status: analysis.scenario_alignment_status,
+        level_context_note: analysis.level_context_note,
+        market_scenarios: analysis.market_scenarios,
+        forward_scenarios_by_outcome: analysis.forward_scenarios_by_outcome,
       };
       return normalizeAiAnalysis(transformed, event);
       
@@ -5557,6 +5588,14 @@ const Overview = () => {
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
                 <div key={`analysis-${selectedEvent?.id}-${aiAnalysis?.analysis_timestamp || Date.now()}`} className="ai-analysis-content">
+                  {isAnalysisV1UiEnabled() &&
+                    aiAnalysis.analysis_format_version === 'v1' &&
+                    aiAnalysis.spine && (
+                    <AnalysisV1Spine
+                      spine={aiAnalysis.spine}
+                      scenarioWarnings={aiAnalysis.scenario_alignment_warnings}
+                    />
+                  )}
                   {/* NEW: Quick-Scan Headline */}
                   <div className="quick-scan-headline">
                     <div className="headline-main">
@@ -5656,7 +5695,10 @@ const Overview = () => {
                   {/* Market Scenarios Section */}
                   {(() => {
                     const eventTitle = aiAnalysis.eventSummary?.release || selectedEvent?.title || '';
-                    const marketScenarios = calculateMarketScenarios(aiAnalysis.eventSummary, eventTitle);
+                    const marketScenarios =
+                      (isAnalysisV1UiEnabled() &&
+                        mapCanonicalMarketScenarios(aiAnalysis.market_scenarios)) ||
+                      calculateMarketScenarios(aiAnalysis.eventSummary, eventTitle);
                     
                     if (!marketScenarios) {
                       return null; // Don't show if we can't calculate scenarios

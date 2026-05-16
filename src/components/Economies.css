@@ -598,25 +598,6 @@
   scrollbar-color: rgba(218, 0, 18, 0.45) rgba(255, 255, 255, 0.06);
 }
 
-.holistic-scan-scroll-shell::after {
-  content: "";
-  position: sticky;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: block;
-  width: 100%;
-  height: 46px;
-  pointer-events: none;
-  z-index: 2;
-  background: linear-gradient(
-    to bottom,
-    rgba(26, 26, 26, 0) 0%,
-    rgba(38, 38, 38, 0.58) 64%,
-    rgba(55, 55, 55, 0.82) 100%
-  );
-}
-
 .holistic-scan-scroll-shell .holistic-scan-content {
   direction: ltr;
   padding-left: 14px;
@@ -981,13 +962,14 @@
 
 .scan-section-title {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #ff6b74;
+  font-family: var(--economies-card-header-font-family);
+  font-size: calc(var(--analysis-section-size, 17px) + 1px);
+  font-weight: var(--analysis-display-font-weight, 650);
+  color: var(--analysis-display-color, #ff6b74);
   margin: 0 0 12px 0;
   padding-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: var(--analysis-display-letter-spacing, 0.07em);
   line-height: 1.35;
   border-bottom: 1px solid rgba(218, 0, 18, 0.24);
 }
@@ -1232,7 +1214,7 @@
   flex-wrap: wrap;
   gap: 2px;
   max-width: 100%;
-  font-size: 0.82rem;
+  font-size: calc(0.82rem - 2px);
   font-weight: 700;
   letter-spacing: 0.05em;
   line-height: 1.25;
@@ -2541,5 +2523,215 @@
   letter-spacing: 0.5px;
   text-align: center;
   opacity: 0.8;
+}
+
+/* Holistic scan output — calendar / live news typography parity */
+.holistic-scan-content.fx-analysis-output {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-body-size);
+  line-height: var(--analysis-body-line-height);
+  color: var(--analysis-body-color);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-section-title {
+  font-family: var(--analysis-display-font-family);
+  font-weight: var(--analysis-display-font-weight);
+  font-size: calc(var(--analysis-section-size) + 1px);
+  letter-spacing: var(--analysis-display-letter-spacing);
+  color: var(--analysis-display-color);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-title-prefix {
+  font-family: var(--analysis-display-font-family);
+  font-weight: var(--analysis-display-font-weight);
+  letter-spacing: var(--analysis-display-letter-spacing);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-paragraph,
+.holistic-scan-content.fx-analysis-output .scan-paragraph-accent,
+.holistic-scan-content.fx-analysis-output .scan-highlight-detail,
+.holistic-scan-content.fx-analysis-output .scan-meta-large,
+.holistic-scan-content.fx-analysis-output .scan-driver-row {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-body-size);
+  line-height: var(--analysis-body-line-height);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-paragraph {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-paragraph-accent,
+.holistic-scan-content.fx-analysis-output .scan-highlight-detail,
+.holistic-scan-content.fx-analysis-output .scan-meta-large {
+  color: var(--analysis-body-color);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-paragraph-metadata {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-meta-size);
+  line-height: var(--analysis-body-line-height);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-card-label,
+.holistic-scan-content.fx-analysis-output .scan-highlight-label {
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-label-size);
+  font-weight: var(--dash-font-weight-semibold);
+  letter-spacing: 0.05em;
+  color: var(--analysis-label-color);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-highlight-label {
+  color: var(--analysis-display-color);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-bias,
+.holistic-scan-content.fx-analysis-output .scan-meta {
+  font-family: var(--analysis-body-font-family);
+  font-weight: var(--dash-font-weight-semibold);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-meta {
+  font-size: var(--analysis-meta-size);
+}
+
+/* Regime strip — dedicated layout + typography (wins over fx-analysis-output defaults) */
+.holistic-scan-content.fx-analysis-output .scan-section.scan-trader-brief {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(218, 0, 18, 0.32);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-section.scan-trader-brief .scan-section-title {
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-summary-row {
+  gap: 12px;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-pill {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid rgba(218, 0, 18, 0.28);
+  border-left: 3px solid rgba(255, 107, 116, 0.85);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-pill-label {
+  font-family: var(--analysis-body-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--analysis-label-color, #ff7d85);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-pill-content {
+  font-family: var(--analysis-body-font-family);
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-inline-separator {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-inline-value {
+  color: #ff8a92;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-core-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(218, 0, 18, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 68, 68, 0.06);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-metric-label {
+  font-family: var(--analysis-body-font-family);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--analysis-label-color, #ff7d85);
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-metric-value {
+  font-family: var(--analysis-body-font-family);
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-regime-metric-separator {
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 12px;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-trader-warning {
+  font-family: var(--analysis-body-font-family);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #ffc9c9;
+  border: 1px solid rgba(218, 0, 18, 0.35);
+  border-radius: 8px;
+  background: rgba(218, 0, 18, 0.1);
+  padding: 10px 12px;
+}
+
+/* Yield strip — classic styling (isolated from fx-analysis-output body scale) */
+.holistic-scan-content.fx-analysis-output .scan-yield-strip {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-yield-strip .scan-yield-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ff7d85;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-yield-strip .scan-yield-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.holistic-scan-content.fx-analysis-output .scan-yield-strip .scan-bullish,
+.holistic-scan-content.fx-analysis-output .scan-yield-strip .scan-bearish,
+.holistic-scan-content.fx-analysis-output .scan-yield-strip .scan-neutral {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.35;
 }
 
