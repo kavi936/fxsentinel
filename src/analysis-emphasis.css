@@ -1,0 +1,52 @@
+/*
+ * Shared inline emphasis for calendar, live news, and holistic scan analysis output.
+ * Pairs with renderAnalysisEmphasis() in src/utils/analysisEmphasis.jsx
+ */
+
+.ai-analysis-card .ai-analysis-content .analysis-emphasis-bold,
+.ai-analysis-section .fx-analysis-output .analysis-emphasis-bold,
+.ai-analysis-section.fx-analysis-output .analysis-emphasis-bold,
+.fx-analysis-output .analysis-emphasis-bold {
+  font-family: inherit;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--analysis-display-color, #ff6b74);
+}
+
+.ai-analysis-card .ai-analysis-content .analysis-emphasis-bracket,
+.ai-analysis-section .fx-analysis-output .analysis-emphasis-bracket,
+.ai-analysis-section.fx-analysis-output .analysis-emphasis-bracket,
+.fx-analysis-output .analysis-emphasis-bracket {
+  font-family: inherit;
+  font-weight: 600;
+  color: #ff848c;
+}
+
+/* Holistic scan — contextual shades */
+.fx-analysis-output .scan-paragraph .analysis-emphasis-bold,
+.fx-analysis-output .scan-paragraph-accent .analysis-emphasis-bold,
+.fx-analysis-output .scan-highlight-detail .analysis-emphasis-bold,
+.fx-analysis-output .scan-meta-large .analysis-emphasis-bold,
+.fx-analysis-output .scan-driver-row .analysis-emphasis-bold {
+  color: #ff737d;
+}
+
+.fx-analysis-output .scan-highlight-label .analysis-emphasis-bold {
+  color: var(--analysis-display-color, #ff6b74);
+}
+
+.fx-analysis-output .scan-highlight-emphasis .analysis-emphasis-bold {
+  color: #ff9aa1;
+  font-weight: 700;
+}
+
+/* Legacy class aliases (holistic payloads / older markup) */
+.fx-analysis-output .scan-text-strong {
+  font-weight: 600;
+  color: var(--analysis-display-color, #ff6b74);
+}
+
+.fx-analysis-output .scan-inline-emphasis {
+  font-weight: 600;
+  color: #ff848c;
+}

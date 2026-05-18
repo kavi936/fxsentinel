@@ -13,6 +13,7 @@ import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
 import AnalysisV1Spine from './AnalysisV1Spine.jsx';
 import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
+import { renderAnalysisEmphasis } from '../utils/analysisEmphasis';
 import { getDailyChangeGaugeLayout, DAILY_CHANGE_GAUGE_CAP_PCT } from '../utils/dailyChangeGauge.js';
 
 /** Fallback catalog when API has not yet returned `instruments` (matches backend `tradingview_instruments`). */
@@ -463,15 +464,11 @@ const Overview = () => {
     };
   };
 
-  // Renders analysis text with **bold** phrases as <strong>. Uses safeRenderValue for non-strings.
+  // **bold** and [[emphasis]] — shared with live news + holistic scan
   const renderAnalysisText = (value) => {
     const str = safeRenderValue(value);
     if (str === '') return '';
-    const parts = str.split('**');
-    if (parts.length === 1) return str;
-    return parts.map((segment, i) =>
-      i % 2 === 1 ? <strong key={`bold-${i}`}>{segment}</strong> : segment
-    );
+    return renderAnalysisEmphasis(str, { bracketEmphasis: true });
   };
 
   // Helper function to parse numeric values from strings (handles "55.2", "55.2%", "-2.5K", etc.)
@@ -5587,7 +5584,7 @@ const Overview = () => {
               )}
 
               {aiAnalysisState === 'event-analysis' && aiAnalysis && (
-                <div key={`analysis-${selectedEvent?.id}-${aiAnalysis?.analysis_timestamp || Date.now()}`} className="ai-analysis-content">
+                <div key={`analysis-${selectedEvent?.id}-${aiAnalysis?.analysis_timestamp || Date.now()}`} className="ai-analysis-content fx-analysis-output">
                   {isAnalysisV1UiEnabled() &&
                     aiAnalysis.analysis_format_version === 'v1' &&
                     aiAnalysis.spine && (

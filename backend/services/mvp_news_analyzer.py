@@ -904,8 +904,8 @@ VALIDATION RULES:
 - volatility: MUST be exactly "high", "medium", or "low"
 - confidence: Integer between 50-95
 - key_pairs: Array of 1-4 instruments; MUST put the primary asset first (e.g. XAU/USD for gold news, not USD/JPY). Use XAU/USD for gold, XAG/USD for silver, then XXX/YYY for forex
-- news_impact: String, 150-250 words, focus on the primary instrument
-- trading_implications: String, 150-250 words, focus on the primary instrument
+- news_impact: String, 150-250 words, focus on the primary instrument. Wrap key levels, pairs, and critical outcomes in **double asterisks** for emphasis (same as calendar analysis). One to three per paragraph; no other markdown.
+- trading_implications: String, 150-250 words, focus on the primary instrument. Use **double asterisks** for key levels, timeframes, and actionable phrases (one to three per paragraph).
 
 EXAMPLE (gold news):
 {{

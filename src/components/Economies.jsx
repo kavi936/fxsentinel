@@ -6,6 +6,11 @@ import { config } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import AnalysisV1Spine from './AnalysisV1Spine.jsx';
 import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
+import {
+  renderAnalysisEmphasis,
+  FormattedScanParagraph,
+  FormattedScanBlock,
+} from '../utils/analysisEmphasis';
 
 /** Display order: US (by maturity 2Y→30Y), then EUR, then GBP. Wheel cycles this flat list. */
 const YIELD_ECONOMY_ORDER = ['US', 'EUR', 'GBP'];
@@ -2171,77 +2176,6 @@ function Economies() {
 }
 
 export default Economies;
-
-/**
- * Holistic Scan copy supports lightweight markup from GPT / rules:
- * - **double asterisks** → semantic bold
- * - [[double brackets]] → inline emphasis (same convention as static economy blurbs)
- * Paragraphs: split on blank lines (\n\n+); single newlines inside a block become <br />.
- */
-function renderInlineScanFormatting(text) {
-  const str = text == null ? '' : String(text);
-  const nodes = [];
-  let pos = 0;
-  const re = /\*\*(.+?)\*\*|\[\[([^\]]+)\]\]/g;
-  let m;
-  let key = 0;
-  while ((m = re.exec(str)) !== null) {
-    if (m.index > pos) {
-      nodes.push(<span key={`t-${key++}`}>{str.slice(pos, m.index)}</span>);
-    }
-    if (m[1] !== undefined) {
-      nodes.push(<strong key={`b-${key++}`} className="scan-text-strong">{m[1]}</strong>);
-    } else {
-      nodes.push(<span key={`e-${key++}`} className="scan-inline-emphasis">{m[2]}</span>);
-    }
-    pos = m.index + m[0].length;
-  }
-  if (pos < str.length) {
-    nodes.push(<span key={`t-${key++}`}>{str.slice(pos)}</span>);
-  }
-  return nodes.length > 0 ? nodes : [<span key="empty">{str}</span>];
-}
-
-function renderBlockWithNewlines(block) {
-  const lines = String(block).split('\n');
-  return lines.flatMap((line, i) => {
-    const n = renderInlineScanFormatting(line);
-    if (i === 0) return n;
-    return [<br key={`nl-${i}`} />, ...n];
-  });
-}
-
-function FormattedScanParagraph({ text, className }) {
-  const raw = String(text ?? '');
-  if (!raw.trim()) return null;
-  const blocks = raw.split(/\n\n+/).filter((b) => b.trim());
-  if (blocks.length === 0) return null;
-  return (
-    <>
-      {blocks.map((block, i) => (
-        <p key={i} className={className}>
-          {renderBlockWithNewlines(block)}
-        </p>
-      ))}
-    </>
-  );
-}
-
-function FormattedScanBlock({ text, className, as: Component = 'div' }) {
-  const raw = String(text ?? '');
-  if (!raw.trim()) return null;
-  const blocks = raw.split(/\n\n+/).filter((b) => b.trim());
-  if (blocks.length === 0) return null;
-  return (
-    <>
-      {blocks.map((block, i) => (
-        <Component key={i} className={className}>
-          {renderBlockWithNewlines(block)}
-        </Component>
-      ))}
-    </>
-  );
-}
 
 function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useApiData, currentUser }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -4949,8 +4883,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     {holisticScan.highlights.items.map((item) => (
                       <li key={item.id} className="scan-highlight-item">
                         <div className="scan-highlight-line">
-                          <span className="scan-highlight-label">{renderInlineScanFormatting(item.label)}</span>
-                          <span className="scan-highlight-emphasis">{renderInlineScanFormatting(item.emphasis)}</span>
+                          <span className="scan-highlight-label">{renderAnalysisEmphasis(item.label)}</span>
+                          <span className="scan-highlight-emphasis">{renderAnalysisEmphasis(item.emphasis)}</span>
                         </div>
                         <FormattedScanParagraph text={item.detail} className="scan-highlight-detail" />
                       </li>
@@ -5076,11 +5010,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 {(holisticScan.short_term?.drivers || []).slice(0, 3).map((driver) => (
                   <div key={driver.name} className="scan-driver-row">
                     <span>
-                      {renderInlineScanFormatting(driver.name)}
+                      {renderAnalysisEmphasis(driver.name)}
                       {driver.note ? (
                         <span className="scan-driver-note">
                           {' '}
-                          - {renderInlineScanFormatting(driver.note)}
+                          - {renderAnalysisEmphasis(driver.note)}
                         </span>
                       ) : null}
                     </span>
@@ -5096,11 +5030,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 {(holisticScan.long_term?.drivers || []).slice(0, 4).map((driver) => (
                   <div key={`long-${driver.name}`} className="scan-driver-row">
                     <span>
-                      {renderInlineScanFormatting(driver.name)}
+                      {renderAnalysisEmphasis(driver.name)}
                       {driver.note ? (
                         <span className="scan-driver-note">
                           {' '}
-                          - {renderInlineScanFormatting(driver.note)}
+                          - {renderAnalysisEmphasis(driver.note)}
                         </span>
                       ) : null}
                     </span>

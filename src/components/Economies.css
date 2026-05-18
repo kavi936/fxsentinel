@@ -1123,34 +1123,6 @@
   font-weight: 700;
 }
 
-/* **bold** and [[emphasis]] from scan / GPT payloads */
-.scan-text-strong {
-  font-weight: 600;
-  color: #ff6b74;
-}
-
-.scan-inline-emphasis {
-  font-weight: 600;
-  color: #ff848c;
-}
-
-.scan-paragraph .scan-text-strong,
-.scan-paragraph-accent .scan-text-strong,
-.scan-highlight-detail .scan-text-strong,
-.scan-meta-large .scan-text-strong,
-.scan-driver-row .scan-text-strong {
-  color: #ff737d;
-}
-
-.scan-highlight-label .scan-text-strong {
-  color: #ff6b74;
-}
-
-.scan-highlight-emphasis .scan-text-strong {
-  color: #ff9aa1;
-  font-weight: 700;
-}
-
 .scan-paragraph {
   color: #888888;
   font-size: 0.85rem;

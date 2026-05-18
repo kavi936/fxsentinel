@@ -9127,12 +9127,19 @@
   border-left-color: rgba(218, 0, 18, 0.34);
 }
 
-.ai-analysis-card .ai-analysis-content strong,
+.ai-analysis-card .ai-analysis-content .analysis-emphasis-bold,
+.ai-analysis-card .ai-analysis-content .analysis-emphasis-bracket,
+.ai-analysis-card .ai-analysis-content strong.analysis-emphasis-bold,
 .ai-analysis-card .ai-analysis-content .in-depth-strong,
 .ai-analysis-card .ai-analysis-content .scenarios-explanation-text .currency-highlight {
   color: #ff6b74;
   font-weight: 620;
   text-shadow: none;
+}
+
+.ai-analysis-card .ai-analysis-content .analysis-emphasis-bracket {
+  color: #ff848c;
+  font-weight: 600;
 }
 
 .ai-analysis-card .ai-analysis-content .analysis-score,

@@ -20495,7 +20495,7 @@ class HybridEconomicCalendar:
             # MONDAY, MAY 18
             {
                 'title': 'Foreign Direct Investment ytd/y',
-                'date': 'Mon, May 18',
+                'date': 'Fri, May 22',
                 'time': '06:02 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
@@ -20519,7 +20519,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.71B',
                 'forecast': '5.25B',
                 'previous': '4.94B'
             },

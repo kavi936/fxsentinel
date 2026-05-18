@@ -7,6 +7,7 @@ import './LiveNewsFeed.css';
 import InfoIcon from './InfoIcon.jsx';
 import AnalysisV1Spine from './AnalysisV1Spine.jsx';
 import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
+import { renderAnalysisEmphasis } from '../utils/analysisEmphasis';
 
 const FXSTREET_GOLD_SLOP_REGEX = /gold price today:.*according to fxstreet data/i;
 
@@ -1419,7 +1420,7 @@ const LiveNewsFeed = () => {
                         {/* News Impact Paragraph */}
                         <div className="market-impact-section">
                           <h5>Market Impact</h5>
-                          <p>{aiAnalysis.news_impact || 'NO NEWS IMPACT DATA'}</p>
+                          <p>{renderAnalysisEmphasis(aiAnalysis.news_impact || 'NO NEWS IMPACT DATA')}</p>
                         </div>
                         
                         {/* Trading Essentials */}
@@ -1447,7 +1448,7 @@ const LiveNewsFeed = () => {
                         {/* Trading Implications Paragraph */}
                         <div className="trading-implications-section">
                           <h5>Trading Implications</h5>
-                          <p>{aiAnalysis.trading_implications || 'NO TRADING IMPLICATIONS DATA'}</p>
+                          <p>{renderAnalysisEmphasis(aiAnalysis.trading_implications || 'NO TRADING IMPLICATIONS DATA')}</p>
                         </div>
                         
                         {/* Risk Assessment */}
