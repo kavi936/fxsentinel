@@ -20549,7 +20549,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '37',
                 'forecast': '34',
                 'previous': '34'
             },
@@ -20559,7 +20559,7 @@ class HybridEconomicCalendar:
                 'time': '20:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '81.3B',
                 'forecast': '82.4B',
                 'previous': '58.6B'
             },
@@ -20569,7 +20569,7 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.4%',
                 'forecast': '0.8%',
                 'previous': '-0.5%'
             },
@@ -20579,7 +20579,7 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.5%',
                 'previous': '0.1%'
             },
@@ -20599,7 +20599,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.4%',
                 'forecast': '3.1%',
                 'previous': '3.4%'
             },
@@ -20609,9 +20609,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.4%',
-                'previous': '0.1%'
+                'previous': '0.3%'
             },
             {
                 'title': 'Westpac Consumer Sentiment',
@@ -20619,7 +20619,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.5%',
                 'forecast': 'N/A',
                 'previous': '-12.5%'
             },
@@ -20641,7 +20641,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.4%',
                 'forecast': '-0.5%',
                 'previous': '-0.5%'
             },
@@ -20651,7 +20651,7 @@ class HybridEconomicCalendar:
                 'time': '04:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.2%',
                 'forecast': '-0.3%',
                 'previous': '-0.4%'
             },
@@ -20661,9 +20661,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '26.5K',
                 'forecast': '25.9K',
-                'previous': '26.8K'
+                'previous': '4.9K'
             },
             {
                 'title': 'Average Earnings Index 3m/y',
@@ -20671,9 +20671,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '4.1%',
                 'forecast': '3.8%',
-                'previous': '3.8%'
+                'previous': '3.9%'
             },
             {
                 'title': 'Unemployment Rate',
@@ -20681,7 +20681,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.0%',
                 'forecast': '4.9%',
                 'previous': '4.9%'
             },
@@ -20711,7 +20711,7 @@ class HybridEconomicCalendar:
                 'time': '09:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.5B',
                 'forecast': '6.5B',
                 'previous': '7.0B'
             },
