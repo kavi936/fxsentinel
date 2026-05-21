@@ -20993,7 +20993,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-7.9M',
                 'forecast': 'N/A',
                 'previous': '-4.3M'
             },
@@ -21013,7 +21013,7 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1920M',
                 'forecast': '842M',
                 'previous': '698M'
             },
@@ -21023,7 +21023,7 @@ class HybridEconomicCalendar:
                 'time': '23:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '50.2',
                 'forecast': 'N/A',
                 'previous': '51.0'
             },
@@ -21033,7 +21033,7 @@ class HybridEconomicCalendar:
                 'time': '23:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '47.7',
                 'forecast': 'N/A',
                 'previous': '50.3'
             },
@@ -21043,7 +21043,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-9.4%',
                 'forecast': '-8.7%',
                 'previous': '13.6%'
             },
@@ -21053,7 +21053,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.24T',
                 'forecast': '-0.23T',
                 'previous': '0.09T'
             },
@@ -21063,7 +21063,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '54.5',
                 'forecast': '54.5',
                 'previous': '54.9'
             },
@@ -21073,7 +21073,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.6%',
                 'forecast': 'N/A',
                 'previous': '5.9%'
             },
@@ -21083,7 +21083,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-18.6K',
                 'forecast': '15.7K',
                 'previous': '17.9K'
             },
@@ -21093,7 +21093,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.5%',
                 'forecast': '4.3%',
                 'previous': '4.3%'
             },
@@ -21103,7 +21103,7 @@ class HybridEconomicCalendar:
                 'time': '03:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '2.9%',
                 'forecast': 'N/A',
                 'previous': '2.1%'
             },
@@ -21115,7 +21115,7 @@ class HybridEconomicCalendar:
                 'time': '07:15 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '48.9',
                 'forecast': '52.3',
                 'previous': '52.8'
             },
@@ -21125,7 +21125,7 @@ class HybridEconomicCalendar:
                 'time': '07:15 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '42.9',
                 'forecast': '46.6',
                 'previous': '46.5'
             },
@@ -21135,7 +21135,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '49.9',
                 'forecast': '51.0',
                 'previous': '51.2'
             },
@@ -21145,7 +21145,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '47.8',
                 'forecast': '47.1',
                 'previous': '46.9'
             },
@@ -21155,7 +21155,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '14.9B',
                 'forecast': '26.3B',
                 'previous': '24.9B'
             },
@@ -21165,7 +21165,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.4',
                 'forecast': '51.8',
                 'previous': '52.2'
             },
@@ -21175,7 +21175,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '46.4',
                 'forecast': '47.7',
                 'previous': '47.4'
             },
@@ -21185,7 +21185,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '53.7',
                 'forecast': '53.0',
                 'previous': '53.6'
             },
@@ -21195,7 +21195,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '47.9',
                 'forecast': '51.7',
                 'previous': '52.0'
             },
@@ -21215,7 +21215,7 @@ class HybridEconomicCalendar:
                 'time': '09:33 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.03|3.4',
                 'forecast': 'N/A',
                 'previous': '4.91|3.5'
             },
@@ -21235,7 +21235,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-41',
                 'forecast': '-40',
                 'previous': '-38'
             },
@@ -21255,7 +21255,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '-0.4',
                 'forecast': '17.9',
                 'previous': '26.7'
             },
@@ -21265,7 +21265,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '209K',
                 'forecast': '210K',
                 'previous': '211K'
             },
@@ -21275,7 +21275,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.44M',
                 'forecast': '1.38M',
                 'previous': '1.37M'
             },
@@ -21285,7 +21285,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.47M',
                 'forecast': '1.40M',
                 'previous': '1.50M'
             },
@@ -21295,7 +21295,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '55.3',
                 'forecast': '53.6',
                 'previous': '54.0'
             },
@@ -21305,7 +21305,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '50.9',
                 'forecast': '51.1',
                 'previous': '51.3'
             },
@@ -21315,7 +21315,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-19',
                 'forecast': '-21',
                 'previous': '-21'
             },
@@ -21325,7 +21325,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '101B',
                 'forecast': 'N/A',
                 'previous': '85B'
             },
