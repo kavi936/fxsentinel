@@ -235,6 +235,100 @@ def _format_line(inst_id: str, q: Dict[str, Any]) -> str:
     return f"- {label} [{inst_id}]: price={price}, daily_change={chg_str}, daily_change_pct={chg_pct_str}"
 
 
+def build_market_snapshot_dict(
+    *,
+    currency: Optional[str] = None,
+    text: str = "",
+    focus_instruments: Optional[List[str]] = None,
+    preferred_instruments: Optional[List[str]] = None,
+    limit: int = 10,
+    surface: str = "generic",
+) -> Dict[str, Any]:
+    """
+    Structured market snapshot for AnalysisContextPack (same ranking as prompt block).
+    """
+    quotes = fetch_tradingview_quotes() or {}
+    if not quotes:
+        return {
+            "instruments": [],
+            "selection_reason": "unavailable",
+            "quote_count": 0,
+        }
+
+    ranked = _rank_instruments(
+        quotes=quotes,
+        currency=currency,
+        text=text,
+        focus_instruments=focus_instruments,
+        preferred_instruments=preferred_instruments,
+        surface=surface,
+    )
+    selected_ids: List[str] = [inst_id for inst_id, _ in ranked[: max(1, limit)]]
+    if not selected_ids:
+        top_movers = sorted(
+            quotes.items(),
+            key=lambda kv: abs(float(kv[1].get("changePercent") or 0.0)),
+            reverse=True,
+        )
+        selected_ids = [k for k, _ in top_movers[: max(1, min(limit, 5))]]
+        selection_reason = "top_movers_fallback"
+    else:
+        selection_reason = _selection_reason_label(
+            currency=currency,
+            text=text,
+            focus_instruments=focus_instruments,
+            preferred_instruments=preferred_instruments,
+            surface=surface,
+        )
+
+    instruments: List[Dict[str, Any]] = []
+    for inst_id in selected_ids:
+        q = quotes.get(inst_id)
+        if not q:
+            continue
+        meta = _INSTR_BY_ID.get(inst_id, {})
+        instruments.append(
+            {
+                "id": inst_id,
+                "label": meta.get("label", inst_id),
+                "category": meta.get("category"),
+                "price": q.get("price"),
+                "change": q.get("change"),
+                "change_pct": q.get("changePercent"),
+                "last_update": q.get("lastUpdate"),
+                "freshness_score": round(_freshness_score(q), 3),
+            }
+        )
+
+    return {
+        "instruments": instruments,
+        "selection_reason": selection_reason,
+        "quote_count": len(quotes),
+    }
+
+
+def _selection_reason_label(
+    *,
+    currency: Optional[str],
+    text: str,
+    focus_instruments: Optional[List[str]],
+    preferred_instruments: Optional[List[str]],
+    surface: str,
+) -> str:
+    parts: List[str] = []
+    if currency:
+        parts.append("event_currency")
+    if focus_instruments:
+        parts.append("focus_instruments")
+    if preferred_instruments:
+        parts.append("user_pairs" if surface == "news" else "user_pairs_soft")
+    if _pick_ids_by_keywords(text):
+        parts.append("keywords")
+    if not parts:
+        parts.append("ranked_relevance")
+    return ",".join(parts)
+
+
 def build_relevant_market_context_block(
     *,
     currency: Optional[str] = None,

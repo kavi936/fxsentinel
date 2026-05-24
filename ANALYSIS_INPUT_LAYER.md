@@ -627,6 +627,7 @@ merge into scan payload → API → UI (same sections as today)
 | 2026-05-18 | Initial planning doc; spine deferred; backend map + decision questionnaire |
 | 2026-05-18 | §0 holistic deterministic truth; §13 GPT narrative plan; §8.5/§7 updated   |
 | 2026-05-18 | §8 decisions locked; build order calendar → news → holistic                  |
+| 2026-05-23 | Phase B: `analysis_context_pack.py` + `test_analysis_context_pack.py`        |
 
 
 ---
@@ -635,7 +636,7 @@ merge into scan payload → API → UI (same sections as today)
 
 1. ~~Fill §8~~ — done.
 2. Finalize `AnalysisContextPack` field list in §3 using summary table above.
-3. **Phase B:** `backend/services/analysis_context_pack.py` + unit tests.
+3. ~~**Phase B:** `backend/services/analysis_context_pack.py` + unit tests.~~ **Done** (2026-05-23).
 4. **Phase C:** Wire **calendar** (`gpt_ai_analysis` prompt path).
 5. **Phase D:** Wire **live news** (`mvp_news_analyzer`) + cross-surface rules (§8.6).
 6. **Phase E–H:** Holistic `macro_snapshot`, alignment, then GPT narrative (§13).
