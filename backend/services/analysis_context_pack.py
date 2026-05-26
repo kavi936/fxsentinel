@@ -349,6 +349,55 @@ def extract_macro_snapshot_from_scan(
     }
 
 
+def macro_snapshot_from_holistic_record(
+    record: Dict[str, Any],
+    *,
+    now: Optional[datetime] = None,
+    max_age_hours: float = HOLISTIC_MAX_AGE_HOURS,
+) -> Optional[Dict[str, Any]]:
+    """
+    Resolve macro snapshot from a persisted holistic scan record (Phase E).
+
+    Prefers stored ``macro_snapshot`` (H2 write-through); falls back to extracting
+    from ``scan_snapshot`` for records saved before Phase E.
+    """
+    snap = record.get("scan_snapshot") or {}
+    if not snap and not record.get("macro_snapshot"):
+        return None
+
+    scanned_at = _parse_utc_datetime(record.get("created_at")) or _parse_utc_datetime(
+        snap.get("timestamp")
+    )
+    freshness = _hours_since(scanned_at, now=now)
+    if freshness is None or freshness > max_age_hours:
+        return None
+
+    stored = record.get("macro_snapshot")
+    if isinstance(stored, dict) and stored.get("source") == "holistic_scan":
+        macro = dict(stored)
+    else:
+        macro = extract_macro_snapshot_from_scan(snap, scanned_at=scanned_at, now=now)
+
+    macro["scan_id"] = record.get("id")
+    macro["scanned_at_utc"] = scanned_at.isoformat() if scanned_at else None
+    if macro.get("freshness_hours") is None and freshness is not None:
+        macro["freshness_hours"] = round(freshness, 2)
+    cc = (record.get("country_code") or snap.get("country") or macro.get("country_code") or "").upper()
+    if cc:
+        macro["country_code"] = cc
+    return macro
+
+
+def build_macro_snapshot_for_persist(
+    scan: Dict[str, Any],
+    *,
+    scanned_at: Optional[datetime] = None,
+    now: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    """Build macro snapshot blob to store alongside a holistic scan (Phase E H2)."""
+    return extract_macro_snapshot_from_scan(scan, scanned_at=scanned_at, now=now)
+
+
 def _load_fresh_holistic_macro(
     token_user_info: Optional[Dict[str, Any]],
     country_code: Optional[str],
@@ -361,27 +410,19 @@ def _load_fresh_holistic_macro(
     try:
         from services.economy_holistic_scan_store import economy_holistic_scan_store
 
+        cc = country_code.upper()
         recent = economy_holistic_scan_store.get_recent_holistic_scans(
             user_info=token_user_info,
             limit=1,
-            country_code=country_code.upper(),
+            country_code=cc,
         )
         if not recent:
             return None
-        record = recent[0] or {}
-        snap = record.get("scan_snapshot") or {}
-        if not snap:
-            return None
-        scanned_at = _parse_utc_datetime(record.get("created_at")) or _parse_utc_datetime(
-            snap.get("timestamp")
+        return macro_snapshot_from_holistic_record(
+            recent[0] or {},
+            now=now,
+            max_age_hours=max_age_hours,
         )
-        freshness = _hours_since(scanned_at, now=now)
-        if freshness is None or freshness > max_age_hours:
-            return None
-        macro = extract_macro_snapshot_from_scan(snap, scanned_at=scanned_at, now=now)
-        macro["scan_id"] = record.get("id")
-        macro["scanned_at_utc"] = scanned_at.isoformat() if scanned_at else None
-        return macro
     except Exception as err:
         logger.debug("Holistic macro snapshot unavailable: %s", err)
         return None
@@ -745,13 +786,43 @@ def build_calendar_area_facts(event: Dict[str, Any], analysis_type: str) -> Dict
 
 
 CALENDAR_PACK_PROMPT_RULES = """
-CALENDAR CONTEXT PACK RULES (mandatory when this pack is present):
-- Name the bias subject (e.g. "USD post-CPI", not bare "neutral").
-- If MACRO SNAPSHOT is present, reconcile your view with that regime (scores are authoritative).
-- Use edge-strength confidence: what supports vs what negates the trade idea.
-- If market session is closed, key levels must be illustrative and labeled; frame for reopen.
-- Forward scenarios must not contradict implications_takeaways.market_bias.
-- Prefer user pairs when relevant (soft personalization); include economy-linked movers when the event requires it.
+CALENDAR CONTEXT PACK RULES (Phase F — mandatory when this pack is present):
+
+REGIME VS EVENT (read carefully):
+- Latest economy scan (MACRO SNAPSHOT block) = prevailing regime; its short-term bias/scores are authoritative for baseline tone.
+- This calendar release = catalyst. forward_scenarios are conditional surprise paths (beat / miss / inline), NOT a second copy of regime.
+- implications_takeaways.market_bias: start with exactly one label BULLISH | BEARISH | NEUTRAL for the event currency, then explain how the print fits the prevailing regime (e.g. bearish regime but hot CPI could still lift USD short-term).
+- If regime and a high-probability scenario conflict, explain the tension in one sentence — do not ignore the scan.
+
+TRADER-FACING LANGUAGE:
+- Never write "macro snapshot" in JSON output — say "latest economy scan", "prevailing short-term bias", or "recent holistic view".
+- Do not repeat "data-dependent" (or similar filler) more than once in the entire response.
+- Each major section needs at least one concrete number from the pack, economy context, or event fields — no generic-only paragraphs.
+
+CONSISTENCY:
+- forward_scenarios probabilities should sum to roughly 100% across three paths.
+- big_picture.medium_term_direction must not repeat market_bias verbatim.
+- analysis_confidence (High | Medium | Low) = edge strength; if Medium/Low, use assumptions[] for what supports vs negates.
+
+LEVELS & SESSION:
+- If market session is closed, trading_plan.key_levels must start with "Illustrative levels:".
+- Prefer user onboarding pairs when relevant; still cover economy-linked movers for this release.
+""".strip()
+
+
+def calendar_forward_scenarios_json_spec(currency: str, *, is_pre_event: bool) -> str:
+    """Phase F: use bullish/bearish/neutral keys with explicit surprise-path framing."""
+    event_frame = (
+        "expected vs previous and current indicators"
+        if is_pre_event
+        else "actual vs expected and policy implications"
+    )
+    return f"""
+    "forward_scenarios": {{
+        "bullish": "{currency} strength path — conditional surprise (e.g. '45-55% if print above expected…'). State probability range, FX pairs/direction, and why vs {event_frame}.",
+        "bearish": "{currency} weakness path — conditional surprise (e.g. '25-35% if below expected…'). State probability range, FX pairs/direction, and why.",
+        "neutral": "Range/indecision path (e.g. '10-20% if in line…'). State probability range and why markets may wait."
+    }},
 """.strip()
 
 
@@ -790,13 +861,24 @@ def build_calendar_context_pack_section(
 # ---------------------------------------------------------------------------
 
 NEWS_PACK_PROMPT_RULES = """
-LIVE NEWS CONTEXT PACK RULES (mandatory when this pack is present):
-- Lead with the primary affected instrument (e.g. XAU/USD for gold, GBP/USD for UK news).
-- If MACRO SNAPSHOT is present, reconcile your view with that regime; note if the news contradicts the prevailing bias.
-- Hard personalization: user pairs must appear in key_pairs when relevant to the headline.
-- If market session is closed, all price levels are illustrative; say so explicitly.
-- Confidence must reflect edge strength (what supports vs what negates the thesis).
-- Cross-surface note: if a macro snapshot exists, briefly reference whether this news aligns or conflicts with it.
+LIVE NEWS CONTEXT PACK RULES (Phase F — mandatory when this pack is present):
+
+HEADLINE & INSTRUMENTS:
+- Lead with the primary affected instrument (XAU/USD for gold, not USD/JPY by default).
+- Hard personalization: user onboarding pairs must appear in key_pairs when relevant to the headline.
+
+REGIME VS HEADLINE:
+- If latest economy scan (MACRO SNAPSHOT) is present, state whether the headline aligns or challenges prevailing short-term bias in news_impact (one clear sentence).
+- Never write "macro snapshot" in output — use "latest economy scan" or "prevailing short-term bias".
+- Do not repeat "data-dependent" or generic safe-haven boilerplate more than once.
+
+CONFIDENCE & LEVELS:
+- confidence (50-95) = edge strength: what supports the read vs what could negate it (mention in trading_implications).
+- If market session is closed, all levels are illustrative; say so explicitly.
+- Cite at least one concrete input from the pack (VIX, pair move, scan bias, geo flag) in each paragraph.
+
+CROSS-SURFACE:
+- If CROSS-SURFACE note is present in the pack, address it in news_impact or trading_implications.
 """.strip()
 
 

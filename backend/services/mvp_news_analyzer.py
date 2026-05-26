@@ -832,6 +832,17 @@ class MVPNewsAnalyzer:
             )
             shared_context_block = f"{relevant_market_snapshot}\n\n{personalization_block}".strip()
 
+        phase_f_news_block = ""
+        if context_pack_section:
+            phase_f_news_block = """
+PHASE F QUALITY (when ANALYSIS CONTEXT PACK is present — mandatory):
+- In news_impact, state whether the headline aligns or challenges the prevailing short-term bias from the latest economy scan (if MACRO SNAPSHOT is present).
+- Never write "macro snapshot" — use "latest economy scan" or "prevailing short-term bias".
+- Cite at least one concrete pack input per paragraph (scan bias, VIX, pair move, geo flag, freshness).
+- confidence reflects edge strength; trading_implications must mention what could negate the thesis.
+- Do not repeat generic Fed/policy filler more than once.
+"""
+
         prompt = f"""
 You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
 
@@ -848,7 +859,7 @@ ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
 
 {shared_context_block}
-
+{phase_f_news_block}
 ANALYSIS REQUIREMENTS:
 
 1. **Market Impact Analysis** (2-3 sentences, 150-250 words):

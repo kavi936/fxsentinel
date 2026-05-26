@@ -29,17 +29,18 @@
 | **B** | `analysis_context_pack.py` + tests | Done | No |
 | **C** | Calendar (`gpt_ai_analysis._create_analysis_prompt`) | **Done** | **Only when `ANALYSIS_CONTEXT_PACK_ENABLED=true`** |
 | **D** | Live news (`mvp_news_analyzer.py`) | **Done** | **Only when `ANALYSIS_CONTEXT_PACK_ENABLED=true`** |
-| **E** | Holistic `macro_snapshot` export | Not started | No |
-| **F** | Prompt quality pass per surface | Not started | — |
+| **E** | Holistic `macro_snapshot` export | **Done** | Yes when pack on + fresh scan &lt; 72h |
+| **F** | Prompt quality pass per surface | **Done** | When `ANALYSIS_CONTEXT_PACK_ENABLED=true` |
 | **G** | Staging preview / debug endpoint | Not started | — |
 | **H** | Holistic GPT narrative (§13) | Not started | No |
 
-**How to try Phase C locally**
+**How to try Phase C–E locally**
 
 1. In `backend/.env`: `ANALYSIS_CONTEXT_PACK_ENABLED=true` (optional: `ANALYSIS_CONTEXT_PACK_DEBUG=true`).
 2. Restart backend.
-3. Run enhanced analysis on a USD high-impact event (e.g. CPI) while logged in.
-4. Optional: run a US holistic scan within 72h first — pack should include `MACRO SNAPSHOT` in the GPT prompt.
+3. **Phase E:** Run **US Holistic Scan** (Economies) while logged in — saves `macro_snapshot` on the Firestore doc.
+4. Within 72h, run **calendar** (USD event) or **live news** (US headline) analysis — backend log should show pack build; GPT prompt includes `MACRO SNAPSHOT`.
+5. With `ANALYSIS_CONTEXT_PACK_DEBUG=true`, economy-scan API response includes `macro_snapshot` for inspection.
 
 **Tests:** `python3 -m unittest test_analysis_context_pack test_gpt_calendar_context_pack` (from `backend/`).
 
@@ -672,6 +673,8 @@ merge into scan payload → API → UI (same sections as today)
 3. ~~**Phase B:** `backend/services/analysis_context_pack.py` + unit tests.~~ **Done** (2026-05-23).
 4. ~~**Phase C:** Wire **calendar** (`gpt_ai_analysis` prompt path).~~ **Done** (2026-05-26) — enable with env flag.
 5. ~~**Phase D:** Wire **live news** (`mvp_news_analyzer`) + cross-surface rules (§8.6).~~ **Done** (2026-05-26) — enable with `ANALYSIS_CONTEXT_PACK_ENABLED=true`.
-6. **Phase E–H:** Holistic `macro_snapshot`, alignment, then GPT narrative (§13).
+6. ~~**Phase E:** Holistic `macro_snapshot` write-through + calendar/news read.~~ **Done** (2026-05-26).
+7. ~~**Phase F:** Prompt quality pass (calendar + news).~~ **Done** (2026-05-26).
+8. **Phase G–H:** Debug endpoint, holistic GPT narrative (§13).
 7. **§8.9:** You run fixture tests when ready; use CPI / Retail Sales / Hormuz / US scan as starting set.
 

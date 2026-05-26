@@ -6,12 +6,17 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from services.analysis_context_pack import (
+    CALENDAR_PACK_PROMPT_RULES,
     HOLISTIC_MAX_AGE_HOURS,
+    NEWS_PACK_PROMPT_RULES,
     SURFACE_CALENDAR,
     SURFACE_LIVE_NEWS,
     build_analysis_context_pack,
     build_cross_surface_notes,
+    build_macro_snapshot_for_persist,
+    calendar_forward_scenarios_json_spec,
     extract_macro_snapshot_from_scan,
+    macro_snapshot_from_holistic_record,
     render_pack_for_prompt,
     resolve_subject,
     shared_pack_signature,
@@ -49,6 +54,13 @@ class AnalysisContextPackTests(unittest.TestCase):
         self.assertEqual(subj["currency"], "USD")
         self.assertEqual(subj["country_code"], "US")
         self.assertEqual(subj["economy_label"], "United States")
+
+    def test_resolve_subject_gbp_matches_holistic_country_code(self):
+        """Holistic scans use country_code GBP (not UK); calendar/news must align."""
+        subj = resolve_subject(subject_currency="GBP")
+        self.assertEqual(subj["country_code"], "GBP")
+        subj_eur = resolve_subject(subject_currency="EUR")
+        self.assertEqual(subj_eur["country_code"], "EUR")
 
     def test_extract_macro_snapshot_from_scan(self):
         snap = extract_macro_snapshot_from_scan(_sample_scan())
@@ -205,6 +217,95 @@ class AnalysisContextPackTests(unittest.TestCase):
         ]
         result = _load_fresh_holistic_macro({"user_id": "u1"}, "US", now=datetime.now(timezone.utc))
         self.assertIsNone(result)
+
+    def test_build_macro_snapshot_for_persist_matches_extract(self):
+        scan = _sample_scan()
+        macro = build_macro_snapshot_for_persist(scan)
+        self.assertEqual(macro["source"], "holistic_scan")
+        self.assertEqual(macro["short_term_bias"], "bearish")
+
+    def test_macro_snapshot_from_record_prefers_stored_blob(self):
+        now = datetime.now(timezone.utc)
+        stored = {
+            "source": "holistic_scan",
+            "short_term_bias": "bullish",
+            "country_code": "US",
+            "freshness_hours": 1.0,
+        }
+        record = {
+            "id": "scan-1",
+            "country_code": "US",
+            "created_at": now.isoformat(),
+            "scan_snapshot": _sample_scan(),
+            "macro_snapshot": stored,
+        }
+        macro = macro_snapshot_from_holistic_record(record, now=now)
+        self.assertEqual(macro["short_term_bias"], "bullish")
+        self.assertEqual(macro["scan_id"], "scan-1")
+
+    def test_macro_snapshot_from_record_fallback_without_stored_blob(self):
+        now = datetime.now(timezone.utc)
+        record = {
+            "id": "scan-legacy",
+            "country_code": "US",
+            "created_at": now.isoformat(),
+            "scan_snapshot": _sample_scan(),
+        }
+        macro = macro_snapshot_from_holistic_record(record, now=now)
+        self.assertEqual(macro["short_term_bias"], "bearish")
+        self.assertEqual(macro["scan_id"], "scan-legacy")
+
+    @patch("services.analysis_context_pack.build_market_snapshot_dict")
+    @patch("services.economy_holistic_scan_store.economy_holistic_scan_store")
+    def test_store_to_calendar_pack_integration(self, mock_store, mock_market):
+        """Phase E: persisted scan (with macro_snapshot) flows into calendar pack."""
+        mock_market.return_value = {
+            "instruments": [],
+            "selection_reason": "unavailable",
+            "quote_count": 0,
+        }
+        now = datetime.now(timezone.utc)
+        scan = _sample_scan()
+        macro = build_macro_snapshot_for_persist(scan, scanned_at=now, now=now)
+        mock_store.get_recent_holistic_scans.return_value = [
+            {
+                "id": "persisted-1",
+                "country_code": "US",
+                "created_at": now.isoformat(),
+                "scan_snapshot": scan,
+                "macro_snapshot": macro,
+            }
+        ]
+
+        pack = build_analysis_context_pack(
+            surface=SURFACE_CALENDAR,
+            token_user_info={"user_id": "u1"},
+            subject_currency="USD",
+            context_text="Core PCE",
+            area_facts={"title": "Core PCE"},
+            options={"now_utc": now, "include_holistic_macro": True},
+        )
+        prompt = render_pack_for_prompt(pack)
+        self.assertEqual(pack["macro_snapshot"]["source"], "holistic_scan")
+        self.assertEqual(pack["macro_snapshot"]["short_term_bias"], "bearish")
+        self.assertIn("MACRO SNAPSHOT", prompt)
+        mock_store.get_recent_holistic_scans.assert_called_once()
+        call_kw = mock_store.get_recent_holistic_scans.call_args[1]
+        self.assertEqual(call_kw["country_code"], "US")
+
+    def test_phase_f_calendar_rules_present(self):
+        self.assertIn("REGIME VS EVENT", CALENDAR_PACK_PROMPT_RULES)
+        self.assertIn("Never write \"macro snapshot\"", CALENDAR_PACK_PROMPT_RULES)
+
+    def test_phase_f_news_rules_present(self):
+        self.assertIn("REGIME VS HEADLINE", NEWS_PACK_PROMPT_RULES)
+
+    def test_calendar_forward_scenarios_json_spec_uses_standard_keys(self):
+        spec = calendar_forward_scenarios_json_spec("USD", is_pre_event=True)
+        self.assertIn('"bullish":', spec)
+        self.assertIn('"bearish":', spec)
+        self.assertIn('"neutral":', spec)
+        self.assertIn("conditional surprise", spec)
 
     def test_env_flag_disabled_by_default(self):
         prev = os.environ.get("ANALYSIS_CONTEXT_PACK_ENABLED")

@@ -61,6 +61,7 @@ class EconomyHolisticScanStore:
         scan_snapshot: Dict[str, Any],
         analysis_format_version: Optional[str] = None,
         spine: Optional[Dict[str, Any]] = None,
+        macro_snapshot: Optional[Dict[str, Any]] = None,
     ) -> Optional[str]:
         if not self.firebase_available or not self.db:
             logger.debug("Firebase unavailable, skipping holistic scan persistence")
@@ -79,17 +80,19 @@ class EconomyHolisticScanStore:
                 .collection("economyHolisticScans")
                 .document()
             )
-            doc_ref.set(
-                {
-                    "country_code": cc,
-                    "economy_label": scan_snapshot.get("economy") or cc,
-                    "scan_snapshot": scan_snapshot,
-                    # Additive V1 fields for shared brief on restored "Recent scans".
-                    "analysis_format_version": analysis_format_version,
-                    "spine": spine,
-                    "created_at": firestore.SERVER_TIMESTAMP,
-                }
-            )
+            payload: Dict[str, Any] = {
+                "country_code": cc,
+                "economy_label": scan_snapshot.get("economy") or cc,
+                "scan_snapshot": scan_snapshot,
+                # Additive V1 fields for shared brief on restored "Recent scans".
+                "analysis_format_version": analysis_format_version,
+                "spine": spine,
+                "created_at": firestore.SERVER_TIMESTAMP,
+            }
+            # Phase E (H2): denormalized macro blob for calendar/news context pack reads.
+            if macro_snapshot:
+                payload["macro_snapshot"] = macro_snapshot
+            doc_ref.set(payload)
             logger.info(
                 "Saved holistic scan for user=%s country=%s id=%s",
                 user_doc_id,

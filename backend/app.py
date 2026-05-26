@@ -1052,16 +1052,26 @@ def get_economy_scan(country_code):
         )
 
         # Persist snapshot for "Recent scans" (same idea as calendar AI analyses).
-        # Save additive V1 metadata so restored recents can render the shared spine.
+        # Phase E: store denormalized macro_snapshot for calendar/news context pack reads.
+        macro_snapshot = None
         try:
+            from services.analysis_context_pack import (
+                build_macro_snapshot_for_persist,
+                is_analysis_context_pack_debug,
+            )
             from services.economy_holistic_scan_store import economy_holistic_scan_store
+
+            macro_snapshot = build_macro_snapshot_for_persist(scan)
             economy_holistic_scan_store.save_holistic_scan(
                 user_info=token_user_info,
                 country_code=country_code,
                 scan_snapshot=scan,
                 analysis_format_version=response_body.get("analysis_format_version"),
                 spine=response_body.get("spine"),
+                macro_snapshot=macro_snapshot,
             )
+            if is_analysis_context_pack_debug():
+                response_body["macro_snapshot"] = macro_snapshot
         except Exception as persist_err:
             logger.debug(f"Holistic scan persistence failed (non-critical): {persist_err}")
         return jsonify(response_body), 200

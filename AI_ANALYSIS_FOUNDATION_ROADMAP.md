@@ -15,7 +15,9 @@ Living doc for engineering status. Product spine rules remain in `AI_ANALYSIS_V1
 | B — `analysis_context_pack.py` | **Done** | Tests: `test_analysis_context_pack.py` |
 | C — Calendar wiring | **Done** | `gpt_ai_analysis._create_analysis_prompt`; flag `ANALYSIS_CONTEXT_PACK_ENABLED` |
 | D — Live news | **Done** | `mvp_news_analyzer.py`; flag `ANALYSIS_CONTEXT_PACK_ENABLED` |
-| E–H — Holistic export + GPT narrative | Not started | See `ANALYSIS_INPUT_LAYER.md` §13 |
+| E — Holistic `macro_snapshot` export | **Done** | Write-through on save; calendar/news read &lt; 72h |
+| F — Prompt quality pass (calendar + news) | **Done** | Regime vs event rules when pack enabled |
+| G–H — Debug endpoint + GPT narrative | Not started | See `ANALYSIS_INPUT_LAYER.md` §13 |
 
 **Default:** pack **off** in production (same pattern as V1 spine). Enable in `backend/.env` for staging.
 
@@ -127,3 +129,5 @@ Code remains in repo: `analysis_v1_spine.py`, `analysis_pipeline.py`, `calendar_
 | 2026-05-15 | V1 paused: master flag default off; UI gated by `VITE_ANALYSIS_V1_ENABLED` |
 | 2026-05-26 | Input layer Phase C: calendar uses AnalysisContextPack when `ANALYSIS_CONTEXT_PACK_ENABLED=true` |
 | 2026-05-26 | Input layer Phase D: live news uses AnalysisContextPack when `ANALYSIS_CONTEXT_PACK_ENABLED=true` |
+| 2026-05-26 | Input layer Phase E: holistic scan stores `macro_snapshot`; pack reads fresh scan for calendar/news |
+| 2026-05-26 | Input layer Phase F: regime-vs-event prompt rules; calendar uses bullish/bearish/neutral scenarios when pack on |

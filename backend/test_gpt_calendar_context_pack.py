@@ -43,7 +43,8 @@ class GPTCalendarContextPackTests(unittest.TestCase):
         os.environ["ANALYSIS_CONTEXT_PACK_ENABLED"] = "true"
         mock_build_section.return_value = (
             {"surface": "calendar_event", "pack_version": "2026-05-18"},
-            "ANALYSIS CONTEXT PACK (calendar_event) v2026-05-18\n\nCALENDAR CONTEXT PACK RULES",
+            "ANALYSIS CONTEXT PACK (calendar_event) v2026-05-18\n\n"
+            "CALENDAR CONTEXT PACK RULES (Phase F)\nREGIME VS EVENT",
         )
 
         prompt = self.analyzer._create_analysis_prompt(
@@ -55,6 +56,9 @@ class GPTCalendarContextPackTests(unittest.TestCase):
         )
 
         self.assertIn("ANALYSIS CONTEXT PACK", prompt)
+        self.assertIn("Phase F", prompt)
+        self.assertIn("REGIME VS EVENT", prompt)
+        self.assertIn('"bullish":', prompt)
         self.assertNotIn("USER PERSONALIZATION CONTEXT (economic_calendar)", prompt)
         mock_build_section.assert_called_once()
         call_kw = mock_build_section.call_args.kwargs

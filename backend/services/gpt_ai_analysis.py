@@ -22,6 +22,7 @@ from services.economy_context_service import economy_context_service
 from services.central_bank_ai_context import get_context_for_currency
 from services.analysis_context_pack import (
     build_calendar_context_pack_section,
+    calendar_forward_scenarios_json_spec,
     is_analysis_context_pack_enabled,
 )
 from services.analysis_personalization import build_prompt_personalization_block
@@ -44,7 +45,7 @@ logger = logging.getLogger(__name__)
 
 # Bump this when prompt logic/output conventions change (e.g., bold emphasis, new injected context).
 # This ensures cached analyses don't mask prompt updates during testing.
-PROMPT_VERSION = "2026-05-23-gpt-4o-models-v1"
+PROMPT_VERSION = "2026-05-26-phase-f-regime-vs-event-v1"
 
 # Event type mapping for indicator filtering (Approach 4) - legacy, title-only.
 # Kept for test script and fallback; currency-aware mapping uses TITLE_KEYWORD_TO_CONCEPT + CONCEPT_TO_INDICATORS_BY_CURRENCY.
@@ -2118,8 +2119,9 @@ class GPTAIAnalyzer:
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "None available"
 
         focus_instruments = self._get_top_3_pairs_for_currency(currency, event)
+        context_pack_enabled = is_analysis_context_pack_enabled()
         context_pack_section = ""
-        if is_analysis_context_pack_enabled():
+        if context_pack_enabled:
             user_id = (user_info or {}).get("user_id") if user_info else None
             _, context_pack_section = build_calendar_context_pack_section(
                 event,
@@ -2217,6 +2219,18 @@ POST-EVENT ANALYSIS:
 - Explain how the actual result relates to current economic indicators and policy targets
 """
 
+        if context_pack_enabled:
+            forward_scenarios_json = calendar_forward_scenarios_json_spec(
+                currency, is_pre_event=is_pre_event
+            )
+        else:
+            forward_scenarios_json = f'''
+    "forward_scenarios": {{
+        "{currency}_strength_scenario": "{currency} strength scenario with probability range (e.g., '55-65% probability: {currency} strengthens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
+        "{currency}_weakness_scenario": "{currency} weakness scenario with probability range (e.g., '25-35% probability: {currency} weakens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
+        "range_or_indecision_scenario": "Range/indecision scenario with probability range (e.g., '10-20% probability: Range trading between [levels] if no clear macro driver emerges. Reason: [uncertainty factor]')"
+    }},'''
+
         prompt = f"""
 You are a senior macroeconomic analyst specializing in foreign exchange markets, with deep expertise in economic indicators, central bank policy, and macro-to-FX transmission mechanisms.
 
@@ -2250,10 +2264,9 @@ PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
 
 3. FORWARD SCENARIO CONSTRUCTION:
    - Provide three scenarios with probability estimates that approximately sum to 100%
-   - Scenario naming (FX-specific): {currency}_strength_scenario, {currency}_weakness_scenario, range_or_indecision_scenario
    - For each scenario: assign probability range (not false precision), reference macro driver, policy implication, expected FX reaction
    - Use price levels only if key levels are provided in MARKET CONTEXT, OR clearly state assumptions
-
+{f"   - Scenarios are conditional surprise paths (beat/miss/inline), not a restatement of the latest economy scan regime{chr(10)}" if context_pack_enabled else ""}
 4. VOLATILITY ASSESSMENT:
    - Must consider: trading sessions, event impact level, VIX regime, risk appetite
    - If markets are closed or liquidity is thin, explicitly state that volatility realization may be delayed
@@ -2280,11 +2293,7 @@ OUTPUT FORMAT (JSON):
     "assumptions": [
         "Only include if assumptions were required due to missing data (e.g., 'Assuming normal liquidity during London-NY overlap', 'Assuming no surprise geopolitical headlines')"
     ],
-    "forward_scenarios": {{
-        "{currency}_strength_scenario": "{currency} strength scenario with probability range (e.g., '55-65% probability: {currency} strengthens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
-        "{currency}_weakness_scenario": "{currency} weakness scenario with probability range (e.g., '25-35% probability: {currency} weakens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
-        "range_or_indecision_scenario": "Range/indecision scenario with probability range (e.g., '10-20% probability: Range trading between [levels] if no clear macro driver emerges. Reason: [uncertainty factor]')"
-    }},
+    {forward_scenarios_json}
     "event_summary": {{
         "release": "Event description",
         "outcome": "{'What happened vs expectations (compare actual to expected and reference current economic indicators)' if not is_pre_event else 'Expected outcome analysis (compare expected value to current indicators and policy targets)'}",
