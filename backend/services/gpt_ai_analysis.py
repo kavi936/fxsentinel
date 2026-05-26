@@ -20,8 +20,17 @@ from services.data_validator import economic_data_validator
 from services.live_market_data import live_market_data_service
 from services.economy_context_service import economy_context_service
 from services.central_bank_ai_context import get_context_for_currency
+from services.analysis_context_pack import (
+    build_calendar_context_pack_section,
+    is_analysis_context_pack_enabled,
+)
 from services.analysis_personalization import build_prompt_personalization_block
 from services.relevant_market_context import build_relevant_market_context_block
+from services.openai_model_config import (
+    MODEL_COST_PER_1K_TOKENS,
+    estimate_cost_from_usage,
+    select_model_for_event,
+)
 
 try:
     import redis
@@ -35,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 # Bump this when prompt logic/output conventions change (e.g., bold emphasis, new injected context).
 # This ensures cached analyses don't mask prompt updates during testing.
-PROMPT_VERSION = "2026-03-14-context-and-emphasis-v1"
+PROMPT_VERSION = "2026-05-23-gpt-4o-models-v1"
 
 # Event type mapping for indicator filtering (Approach 4) - legacy, title-only.
 # Kept for test script and fallback; currency-aware mapping uses TITLE_KEYWORD_TO_CONCEPT + CONCEPT_TO_INDICATORS_BY_CURRENCY.
@@ -231,10 +240,7 @@ class GPTAIAnalyzer:
         
         # Cost tracking
         self.total_cost = 0.0
-        self.cost_estimates = {
-            'gpt-4-turbo-preview': 0.03,  # $0.03 per 1K tokens
-            'gpt-3.5-turbo': 0.002,       # $0.002 per 1K tokens
-        }
+        self.cost_estimates = dict(MODEL_COST_PER_1K_TOKENS)
         
         # Cache setup
         if REDIS_AVAILABLE:
@@ -341,9 +347,13 @@ class GPTAIAnalyzer:
                 personalization=personalization,
             )
             
-            # Step 8: Add data quality information
-            analysis_result.data_quality = "validated"
-            analysis_result.validation_status = "passed"
+            # Step 8: Add data quality information (do not label fallback as "validated")
+            if (analysis_result.model_used or "").startswith("enhanced_fallback"):
+                analysis_result.data_quality = "fallback"
+                analysis_result.validation_status = "passed"
+            else:
+                analysis_result.data_quality = "validated"
+                analysis_result.validation_status = "passed"
             analysis_result.market_data_source = live_market_data.get('data_source', 'unknown')
             
             # Step 9: Cache the result
@@ -484,8 +494,12 @@ class GPTAIAnalyzer:
     
     def _generate_cache_key(self, event: Dict, analysis_type: str) -> str:
         """Generate cache key for analysis"""
-        # Include PROMPT_VERSION so prompt changes invalidate cached analyses.
-        event_data = f"{PROMPT_VERSION}_{event.get('id', '')}_{event.get('title', '')}_{analysis_type}"
+        # Include PROMPT_VERSION + model so prompt/model changes invalidate cached analyses.
+        model_id = select_model_for_event(event)
+        event_data = (
+            f"{PROMPT_VERSION}_{model_id}_{event.get('id', '')}_"
+            f"{event.get('title', '')}_{analysis_type}"
+        )
         return hashlib.md5(event_data.encode()).hexdigest()
     
     def _get_cached_analysis(self, cache_key: str, analysis_type: str) -> Optional[GPTAnalysisResult]:
@@ -1285,15 +1299,8 @@ class GPTAIAnalyzer:
         return 0.0  # Would need to track actual hits/misses
 
     def _select_model(self, event: Dict) -> str:
-        """Select appropriate GPT model based on event characteristics"""
-        # For now, use GPT-3.5-turbo for cost efficiency
-        # Could be enhanced to use GPT-4 for high-impact events
-        impact = event.get('impact', 'medium').lower()
-        
-        if impact == 'high':
-            return 'gpt-4-turbo-preview'  # Use GPT-4 for high-impact events
-        else:
-            return 'gpt-3.5-turbo'  # Use GPT-3.5 for medium/low impact events
+        """Select appropriate GPT model based on event characteristics."""
+        return select_model_for_event(event)
     
     def _get_error_fallback(self, event: Dict, analysis_type: str = "pre_event") -> GPTAnalysisResult:
         """Generate fallback analysis when GPT API fails"""
@@ -1320,6 +1327,7 @@ class GPTAIAnalyzer:
                 market_context,
                 analysis_type,
                 personalization=personalization,
+                user_info=user_info,
             )
             
             # Prepare user identifier for OpenAI usage tracking
@@ -2008,6 +2016,7 @@ class GPTAIAnalyzer:
         market_context: MarketContext,
         analysis_type: str,
         personalization: Dict = None,
+        user_info: Dict = None,
     ) -> str:
         """Create a comprehensive prompt for GPT analysis - only includes real, accurate data"""
         event_title = event.get('title', 'Unknown Event')
@@ -2107,17 +2116,35 @@ class GPTAIAnalyzer:
             additional_context_lines.append("\nNote: FX pair sentiment should inform bias, not override macroeconomic drivers.")
         
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "None available"
-        preferred_instruments = []
-        if personalization and isinstance(personalization, dict):
-            preferred_instruments = personalization.get("primary_pairs") or []
-        relevant_market_snapshot = build_relevant_market_context_block(
-            currency=currency,
-            text=event_title,
-            focus_instruments=self._get_top_3_pairs_for_currency(currency, event),
-            preferred_instruments=preferred_instruments,
-            limit=10,
-            surface="calendar",
-        )
+
+        focus_instruments = self._get_top_3_pairs_for_currency(currency, event)
+        context_pack_section = ""
+        if is_analysis_context_pack_enabled():
+            user_id = (user_info or {}).get("user_id") if user_info else None
+            _, context_pack_section = build_calendar_context_pack_section(
+                event,
+                analysis_type,
+                user_id=user_id,
+                token_user_info=user_info,
+                focus_instruments=focus_instruments,
+            )
+            logger.info("Calendar analysis using AnalysisContextPack for: %s", event_title)
+        else:
+            preferred_instruments = []
+            if personalization and isinstance(personalization, dict):
+                preferred_instruments = personalization.get("primary_pairs") or []
+            relevant_market_snapshot = build_relevant_market_context_block(
+                currency=currency,
+                text=event_title,
+                focus_instruments=focus_instruments,
+                preferred_instruments=preferred_instruments,
+                limit=10,
+                surface="calendar",
+            )
+            personalization_block = build_prompt_personalization_block(
+                personalization, surface="economic_calendar"
+            )
+            context_pack_section = f"{relevant_market_snapshot}\n\n{personalization_block}".strip()
         
         # Get economy context (Approach 1, 4, 6) - use event currency so EUR gets 'inflation', US gets 'inflation-YoY', etc.
         relevant_indicator_ids = self._get_relevant_indicators(event_title, currency)
@@ -2190,8 +2217,6 @@ POST-EVENT ANALYSIS:
 - Explain how the actual result relates to current economic indicators and policy targets
 """
 
-        personalization_block = build_prompt_personalization_block(personalization, surface="economic_calendar")
-
         prompt = f"""
 You are a senior macroeconomic analyst specializing in foreign exchange markets, with deep expertise in economic indicators, central bank policy, and macro-to-FX transmission mechanisms.
 
@@ -2215,9 +2240,7 @@ MARKET CONTEXT:
 ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
 
-{relevant_market_snapshot}
-
-{personalization_block}
+{context_pack_section}
 
 PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
 
@@ -2455,18 +2478,7 @@ CONTEXT-ANCHORING REQUIREMENT (ENFORCED):
         }
     
     def _calculate_cost_estimate(self, usage, model: str) -> float:
-        """Calculate cost estimate for API usage"""
-        if not usage:
-            return 0.0
-        
-        # Cost per 1K tokens
-        costs = {
-            'gpt-4-turbo-preview': 0.03,
-            'gpt-3.5-turbo': 0.002
-        }
-        
-        cost_per_1k = costs.get(model, 0.002)
-        total_tokens = usage.total_tokens if hasattr(usage, 'total_tokens') else 0
-        return (total_tokens / 1000) * cost_per_1k
+        """Calculate cost estimate for API usage."""
+        return estimate_cost_from_usage(usage, model)
 
 # Global instance creation removed - let app.py create its own instance

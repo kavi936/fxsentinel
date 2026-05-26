@@ -16,14 +16,7 @@ const fallbackSentiment = {
       name: 'Risk Appetite',
       value: 'medium',
       percentage: 50,
-      detail: 'Safe havens: JPY, CHF · Risk FX: —',
-      trend: 'stable'
-    },
-    {
-      name: 'Cross-asset risk',
-      value: 'medium',
-      percentage: 50,
-      detail: 'Cross-asset: no snapshot',
+      detail: 'Mixed macro tone (50; 50 is neutral). Session moves are small across drivers; nothing stands out.',
       trend: 'stable'
     }
   ],

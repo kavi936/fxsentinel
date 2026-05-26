@@ -19,6 +19,15 @@ from services.analysis_personalization import (
     prioritize_instruments,
 )
 from services.relevant_market_context import build_relevant_market_context_block
+from services.openai_model_config import (
+    MODEL_COST_PER_1K_TOKENS,
+    estimate_cost_from_usage,
+    select_model_for_news,
+)
+from services.analysis_context_pack import (
+    build_news_context_pack_section,
+    is_analysis_context_pack_enabled,
+)
 
 @dataclass
 class MVPAnalysisResult:
@@ -47,10 +56,7 @@ class MVPNewsAnalyzer:
         
         # Cost tracking
         self.total_cost = 0.0
-        self.cost_estimates = {
-            'gpt-4-turbo-preview': 0.03,  # $0.03 per 1K tokens
-            'gpt-3.5-turbo': 0.002,       # $0.002 per 1K tokens (average)
-        }
+        self.cost_estimates = dict(MODEL_COST_PER_1K_TOKENS)
         
         # Rate limiting
         self.api_calls_this_hour = 0
@@ -177,28 +183,8 @@ class MVPNewsAnalyzer:
         return self.source_credibility.get(source_lower, 0.5)
     
     def _calculate_cost_estimate(self, usage, model: str) -> float:
-        """Calculate cost estimate for GPT API usage"""
-        if not usage:
-            return 0.0
-        
-        # GPT-3.5-turbo pricing: $0.0015 per 1K input tokens, $0.002 per 1K output tokens
-        # GPT-4-turbo-preview: $0.01 per 1K input tokens, $0.03 per 1K output tokens
-        pricing = {
-            'gpt-3.5-turbo': {'input': 0.0015, 'output': 0.002},
-            'gpt-4-turbo-preview': {'input': 0.01, 'output': 0.03},
-            'gpt-4': {'input': 0.01, 'output': 0.03}
-        }
-        
-        model_pricing = pricing.get(model, pricing['gpt-3.5-turbo'])
-        
-        prompt_tokens = usage.prompt_tokens if hasattr(usage, 'prompt_tokens') else 0
-        completion_tokens = usage.completion_tokens if hasattr(usage, 'completion_tokens') else 0
-        
-        input_cost = (prompt_tokens / 1000) * model_pricing['input']
-        output_cost = (completion_tokens / 1000) * model_pricing['output']
-        total_cost = input_cost + output_cost
-        
-        return total_cost
+        """Calculate cost estimate for GPT API usage."""
+        return estimate_cost_from_usage(usage, model)
     
     def _check_rate_limit(self) -> bool:
         """Check if we're within rate limits"""
@@ -217,14 +203,8 @@ class MVPNewsAnalyzer:
         return is_within_limit
     
     def _select_model(self, news_item: Dict) -> str:
-        """Select appropriate GPT model based on news characteristics"""
-        impact = news_item.get('impact', 'medium').lower()
-        
-        # Use GPT-4 for high-impact news, GPT-3.5 for others
-        if impact == 'high':
-            return 'gpt-4-turbo-preview'
-        else:
-            return 'gpt-3.5-turbo'
+        """Select appropriate GPT model based on news characteristics."""
+        return select_model_for_news(news_item)
     
     def _get_enhanced_market_context(self) -> Dict[str, Any]:
         """Get enhanced market context from live market data service"""
@@ -602,10 +582,23 @@ class MVPNewsAnalyzer:
             # Sentiment service has FX pairs only; pass through and it will skip unknowns like XAU/USD
             pairs_sentiment = self._get_pairs_sentiment_data(affected_instruments)
             
+            # Build context pack section (Phase D) or fall back to legacy blocks
+            context_pack_section = None
+            if is_analysis_context_pack_enabled():
+                user_id = (user_info or {}).get("user_id") if user_info else None
+                _, context_pack_section = build_news_context_pack_section(
+                    news_item,
+                    user_id=user_id,
+                    token_user_info=user_info,
+                    focus_instruments=affected_instruments,
+                )
+                logger.info("Live news analysis using AnalysisContextPack for: %s", news_title)
+
             # Build enhanced prompt with live market data
             prompt = self._create_enhanced_prompt(
                 news_item, affected_instruments, market_data, trading_sessions,
-                sentiment_data, pairs_sentiment, personalization=personalization
+                sentiment_data, pairs_sentiment, personalization=personalization,
+                context_pack_section=context_pack_section,
             )
             
             # Prepare user identifier for OpenAI usage tracking
@@ -743,8 +736,14 @@ class MVPNewsAnalyzer:
         sentiment_data: Optional[Dict],
         pairs_sentiment: List[Dict],
         personalization: Optional[Dict] = None,
+        context_pack_section: Optional[str] = None,
     ) -> str:
-        """Create enhanced prompt with live market data and context. affected_instruments has primary asset first (e.g. XAU/USD for gold news)."""
+        """Create enhanced prompt with live market data and context. affected_instruments has primary asset first (e.g. XAU/USD for gold news).
+
+        When context_pack_section is provided (Phase D / ANALYSIS_CONTEXT_PACK_ENABLED=true),
+        it replaces the legacy personalization + relevant_market_snapshot blocks so GPT receives
+        the same shared context as the calendar surface.
+        """
         title = news_item.get('title', '')
         summary = news_item.get('summary', '')
         source = news_item.get('source', '')
@@ -813,19 +812,25 @@ class MVPNewsAnalyzer:
             additional_context_lines.append("\nNote: FX pair sentiment should inform bias, not override macroeconomic drivers.")
         
         additional_context_section = "\n".join(additional_context_lines) if additional_context_lines else "Limited additional context available"
-        
-        personalization_block = build_prompt_personalization_block(personalization, surface="live_news")
-        preferred_instruments = []
-        if personalization and isinstance(personalization, dict):
-            preferred_instruments = personalization.get("primary_pairs") or []
-        relevant_market_snapshot = build_relevant_market_context_block(
-            currency="USD",
-            text=f"{title} {summary}",
-            focus_instruments=affected_instruments,
-            preferred_instruments=preferred_instruments,
-            limit=10,
-            surface="news",
-        )
+
+        # When pack is enabled, it replaces legacy personalization + market snapshot blocks.
+        # When pack is off, fall back to legacy blocks exactly as before.
+        if context_pack_section:
+            shared_context_block = context_pack_section
+        else:
+            personalization_block = build_prompt_personalization_block(personalization, surface="live_news")
+            preferred_instruments = []
+            if personalization and isinstance(personalization, dict):
+                preferred_instruments = personalization.get("primary_pairs") or []
+            relevant_market_snapshot = build_relevant_market_context_block(
+                currency="USD",
+                text=f"{title} {summary}",
+                focus_instruments=affected_instruments,
+                preferred_instruments=preferred_instruments,
+                limit=10,
+                surface="news",
+            )
+            shared_context_block = f"{relevant_market_snapshot}\n\n{personalization_block}".strip()
 
         prompt = f"""
 You are a senior forex market analyst with 15+ years of experience. Your job is to provide professional, actionable market intelligence for forex traders.
@@ -842,9 +847,7 @@ CURRENT MARKET CONTEXT (Live Data):
 ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
 
-{relevant_market_snapshot}
-
-{personalization_block}
+{shared_context_block}
 
 ANALYSIS REQUIREMENTS:
 

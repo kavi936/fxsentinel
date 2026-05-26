@@ -1,8 +1,8 @@
 # Analysis Input Layer — Planning Document
 
-**Status:** draft for decisions + implementation  
-**Last updated:** 2026-05-18 (holistic = deterministic note added)  
-**Owner:** product + engineering (Kavi to fill **Decision** sections)
+**Status:** in implementation (Phase B–C shipped in code; **off by default** until staging)  
+**Last updated:** 2026-05-26  
+**Owner:** product + engineering
 
 **Related docs**
 
@@ -18,6 +18,30 @@
 
 - V1 spine UI (`AnalysisV1Spine.jsx`) and trader-brief block at top of cards  
 - Router, pre/post event automations, outcome calibration (Phase 4+)
+
+---
+
+## Progress tracker (living)
+
+| Phase | What | Status | Wired to production prompts? |
+| ----- | ---- | ------ | ---------------------------- |
+| **A** | Decisions in §8 | Done | — |
+| **B** | `analysis_context_pack.py` + tests | Done | No |
+| **C** | Calendar (`gpt_ai_analysis._create_analysis_prompt`) | **Done** | **Only when `ANALYSIS_CONTEXT_PACK_ENABLED=true`** |
+| **D** | Live news (`mvp_news_analyzer.py`) | **Done** | **Only when `ANALYSIS_CONTEXT_PACK_ENABLED=true`** |
+| **E** | Holistic `macro_snapshot` export | Not started | No |
+| **F** | Prompt quality pass per surface | Not started | — |
+| **G** | Staging preview / debug endpoint | Not started | — |
+| **H** | Holistic GPT narrative (§13) | Not started | No |
+
+**How to try Phase C locally**
+
+1. In `backend/.env`: `ANALYSIS_CONTEXT_PACK_ENABLED=true` (optional: `ANALYSIS_CONTEXT_PACK_DEBUG=true`).
+2. Restart backend.
+3. Run enhanced analysis on a USD high-impact event (e.g. CPI) while logged in.
+4. Optional: run a US holistic scan within 72h first — pack should include `MACRO SNAPSHOT` in the GPT prompt.
+
+**Tests:** `python3 -m unittest test_analysis_context_pack test_gpt_calendar_context_pack` (from `backend/`).
 
 ---
 
@@ -212,12 +236,14 @@ Use this when integrating — **substitute** pack builder calls into these paths
 - `render_pack_for_prompt(pack, max_tokens_hint) -> str`  
 - Unit tests with fixtures per surface
 
-**Call sites to wire (order TBD after decisions)**
+**Call sites (integration status)**
 
-1. `mvp_news_analyzer.py` — replace ad-hoc prompt assembly
-2. `gpt_ai_analysis.py` — calendar prompt builder
-3. `economy_holistic_scan_service.py` — at minimum: read shared `user` + write `macro_snapshot` for other surfaces to consume
-4. `app.py` — pass `user_id` consistently; optional debug endpoint `GET /api/analysis/context-pack/preview` for staging
+| # | File | Status |
+|---|------|--------|
+| 1 | `gpt_ai_analysis.py` — `_create_analysis_prompt` | **Done (Phase C)** — uses `build_calendar_context_pack_section` when flag on |
+| 2 | `mvp_news_analyzer.py` | **Phase D** — not wired |
+| 3 | `economy_holistic_scan_service.py` | **Phase E** — not wired |
+| 4 | `app.py` — preview endpoint | **Phase G** — not built |
 
 ---
 
@@ -257,7 +283,7 @@ Area prompts add section-specific output JSON (existing shapes); **no spine bloc
 | ----- | ------------------------------------------------------------------- | -------------------------------------------------------------- |
 | **A** | This doc + filled Decision sections                                 | Team agrees on pack fields                                     |
 | **B** | `analysis_context_pack.py` + tests (fixtures only)                  | Same user/event → identical shared block on news vs calendar   |
-| **C** | Wire **calendar** first (per §8.8)                                  | CPI event includes shared pack + macro snapshot when scan exists |
+| **C** | Wire **calendar** first (per §8.8)                                  | **Done** — flag-gated in `gpt_ai_analysis.py`                 |
 | **D** | Wire **live news**                                                  | Hormuz-style headline reconciles with US scan when fresh       |
 | **E** | Holistic: shared `user` in `build_scan` + `macro_snapshot` for pack | News/calendar read latest scan summary                         |
 | **F** | Prompt layer refactor (news + calendar)                             | Subjective quality review on 5 fixed samples                   |
@@ -561,7 +587,13 @@ e.g. "News analysis must mention whether it agrees with my last US scan when geo
 | `ANALYSIS_CONTEXT_PACK_DEBUG`            | Log full pack to server logs (staging only) |
 
 
-(Names TBD; not implemented yet.)
+| Flag | Default | Effect |
+|------|---------|--------|
+| `ANALYSIS_CONTEXT_PACK_ENABLED` | off | Calendar prompts use pack instead of legacy personalization + market blocks |
+| `ANALYSIS_CONTEXT_PACK_INCLUDE_HOLISTIC` | on (when pack on) | Attach holistic macro snapshot if scan &lt; 72h |
+| `ANALYSIS_CONTEXT_PACK_DEBUG` | off | Log pack build in server logs |
+
+Documented in `backend/.env.example`.
 
 ---
 
@@ -628,6 +660,7 @@ merge into scan payload → API → UI (same sections as today)
 | 2026-05-18 | §0 holistic deterministic truth; §13 GPT narrative plan; §8.5/§7 updated   |
 | 2026-05-18 | §8 decisions locked; build order calendar → news → holistic                  |
 | 2026-05-23 | Phase B: `analysis_context_pack.py` + `test_analysis_context_pack.py`        |
+| 2026-05-26 | Phase C: calendar wired in `gpt_ai_analysis.py`; progress tracker + env flags |
 
 
 ---
@@ -637,8 +670,8 @@ merge into scan payload → API → UI (same sections as today)
 1. ~~Fill §8~~ — done.
 2. Finalize `AnalysisContextPack` field list in §3 using summary table above.
 3. ~~**Phase B:** `backend/services/analysis_context_pack.py` + unit tests.~~ **Done** (2026-05-23).
-4. **Phase C:** Wire **calendar** (`gpt_ai_analysis` prompt path).
-5. **Phase D:** Wire **live news** (`mvp_news_analyzer`) + cross-surface rules (§8.6).
+4. ~~**Phase C:** Wire **calendar** (`gpt_ai_analysis` prompt path).~~ **Done** (2026-05-26) — enable with env flag.
+5. ~~**Phase D:** Wire **live news** (`mvp_news_analyzer`) + cross-surface rules (§8.6).~~ **Done** (2026-05-26) — enable with `ANALYSIS_CONTEXT_PACK_ENABLED=true`.
 6. **Phase E–H:** Holistic `macro_snapshot`, alignment, then GPT narrative (§13).
 7. **§8.9:** You run fixture tests when ready; use CPI / Retail Sales / Hormuz / US scan as starting set.
 

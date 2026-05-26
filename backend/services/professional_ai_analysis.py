@@ -13,6 +13,7 @@ import openai
 import os
 
 from .enhanced_data_services import historical_service, central_bank_service, market_data_service
+from services.openai_model_config import get_high_impact_model
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,8 @@ class ProfessionalAIAnalyzer:
                 self.client = None
         else:
             logger.warning("⚠️ No OpenAI API key found - will use fallback analysis")
+
+        self.high_impact_model = get_high_impact_model()
     
     def analyze_macro_event(self, event: Dict, analysis_type: str = "post_event") -> ProfessionalAnalysisResult:
         """Generate professional-grade macro analysis using multi-step reasoning"""
@@ -186,7 +189,7 @@ class ProfessionalAIAnalyzer:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
+                model=self.high_impact_model,
                 messages=[
                     {"role": "system", "content": "You are a senior macro analyst specializing in forex markets. Provide precise, data-driven analysis."},
                     {"role": "user", "content": prompt}
@@ -227,7 +230,7 @@ class ProfessionalAIAnalyzer:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
+                model=self.high_impact_model,
                 messages=[
                     {"role": "system", "content": "You are a central bank policy analyst. Focus on monetary policy implications."},
                     {"role": "user", "content": prompt}
@@ -270,7 +273,7 @@ class ProfessionalAIAnalyzer:
         
         try:
             response = self.client.chat.completions.create(
-                model="gpt-4-turbo",
+                model=self.high_impact_model,
                 messages=[
                     {"role": "system", "content": "You are a senior forex strategist. Provide actionable trading strategies with specific levels."},
                     {"role": "user", "content": prompt}
@@ -373,7 +376,7 @@ class ProfessionalAIAnalyzer:
             
             # Meta data
             analysis_timestamp=datetime.now().isoformat(),
-            model_used="gpt-4-turbo",
+            model_used=self.high_impact_model,
             analysis_type=analysis_type,
             processing_time=0.0
         )

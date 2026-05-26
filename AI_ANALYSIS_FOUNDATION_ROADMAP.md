@@ -2,6 +2,23 @@
 
 Living doc for engineering status. Product spine rules remain in `AI_ANALYSIS_V1_UNIFIED_SPEC.md`.
 
+**Input layer (quality-first track):** see `ANALYSIS_INPUT_LAYER.md` for full spec and progress tracker.
+
+---
+
+## Input layer — AnalysisContextPack (in progress)
+
+**Goal:** One shared context pack (user, macro snapshot, markets, session rules) before GPT writes calendar/news copy.
+
+| Phase | Status | Notes |
+|-------|--------|-------|
+| B — `analysis_context_pack.py` | **Done** | Tests: `test_analysis_context_pack.py` |
+| C — Calendar wiring | **Done** | `gpt_ai_analysis._create_analysis_prompt`; flag `ANALYSIS_CONTEXT_PACK_ENABLED` |
+| D — Live news | **Done** | `mvp_news_analyzer.py`; flag `ANALYSIS_CONTEXT_PACK_ENABLED` |
+| E–H — Holistic export + GPT narrative | Not started | See `ANALYSIS_INPUT_LAYER.md` §13 |
+
+**Default:** pack **off** in production (same pattern as V1 spine). Enable in `backend/.env` for staging.
+
 ---
 
 ## Phase 1 — Shared spine (complete)
@@ -108,3 +125,5 @@ Code remains in repo: `analysis_v1_spine.py`, `analysis_pipeline.py`, `calendar_
 |------|--------|
 | 2026-05-15 | Phase 2 started: `analysis_contract`, `analysis_pipeline`, `app.py` refactor, tests |
 | 2026-05-15 | V1 paused: master flag default off; UI gated by `VITE_ANALYSIS_V1_ENABLED` |
+| 2026-05-26 | Input layer Phase C: calendar uses AnalysisContextPack when `ANALYSIS_CONTEXT_PACK_ENABLED=true` |
+| 2026-05-26 | Input layer Phase D: live news uses AnalysisContextPack when `ANALYSIS_CONTEXT_PACK_ENABLED=true` |

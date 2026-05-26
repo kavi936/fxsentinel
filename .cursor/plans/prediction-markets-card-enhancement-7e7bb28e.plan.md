@@ -1,4 +1,40 @@
-<!-- 7e7bb28e-0ece-417e-bb1f-fc6695e74de1 e1281e0b-bf45-4a65-b106-07875a79cc1c -->
+---
+name: Prediction Markets Card Enhancement Plan
+overview: ""
+todos:
+  - id: c6298735-88c4-4348-83c2-9d075efa3453
+    content: Extend cache schema to store price snapshots with timestamps. Add _store_price_snapshot() and _load_price_history() methods in prediction_markets_service.py
+    status: pending
+  - id: c6781270-2ce7-49f8-8826-4ef6024b3840
+    content: Implement _calculate_price_deltas() method to compute 24h, 48h, 7d probability changes from historical prices
+    status: pending
+  - id: 0e9ac3c4-f7ee-49c3-93fa-a3e5af2725b1
+    content: Modify _normalize_market_data() to load historical prices, calculate deltas, and store current price snapshot
+    status: pending
+  - id: a072d3c5-feeb-4b98-8d9b-c3d67a29c8d1
+    content: Add _calculate_conviction_score() method based on volume thresholds (high >$50k, medium $10k-$50k, low <=$10k)
+    status: pending
+  - id: 207896d2-0a9b-45a9-85b0-8fdd56bb8583
+    content: Integrate conviction score calculation into _normalize_market_data() to add conviction_score and conviction_level fields
+    status: pending
+  - id: d18b5cfe-0af2-4ccd-8493-059c52f68917
+    content: Change MAX_FILTERED_MARKETS from 50 to 10 in prediction_markets_service.py line 92, add enforcement for 5-10 range
+    status: pending
+  - id: 69b947e2-38e7-4a6a-8f94-0e4a08f285ff
+    content: Update sorting in _filter_economic_markets() to prioritize conviction score + delta magnitude over raw volume
+    status: pending
+  - id: 51538b1a-947b-47ce-be33-32a75e0cac3d
+    content: Add probability delta badges (24h change) to market items in Overview.jsx with color coding for positive/negative changes
+    status: pending
+  - id: e4cef2b2-be4e-43d8-9f9f-af93cc45f8f0
+    content: Add conviction level badges and visual styling (opacity) to market items based on conviction_score in Overview.jsx
+    status: pending
+  - id: 0fa8f1da-c231-434a-87a8-e00ab9415a6b
+    content: Add CSS styles for delta badges (.price-delta.positive/.negative) and conviction indicators (.conviction-badge) in Overview.css
+    status: pending
+isProject: false
+---
+
 # Prediction Markets Card Enhancement Plan
 
 Transform the prediction markets card into a belief-pricing signal engine that shows traders where expectations are shifting, not just static probabilities.
@@ -229,16 +265,3 @@ Extend cache structure to include historical snapshots:
 - Delta calculation uses closest available historical price (handles sparse snapshots)
 - Conviction scoring is volume-based initially (can enhance with orderbook depth later)
 - Market limit reduction may require cache pruning for existing deployments
-
-### To-dos
-
-- [ ] Extend cache schema to store price snapshots with timestamps. Add _store_price_snapshot() and _load_price_history() methods in prediction_markets_service.py
-- [ ] Implement _calculate_price_deltas() method to compute 24h, 48h, 7d probability changes from historical prices
-- [ ] Modify _normalize_market_data() to load historical prices, calculate deltas, and store current price snapshot
-- [ ] Add _calculate_conviction_score() method based on volume thresholds (high >$50k, medium $10k-$50k, low <=$10k)
-- [ ] Integrate conviction score calculation into _normalize_market_data() to add conviction_score and conviction_level fields
-- [ ] Change MAX_FILTERED_MARKETS from 50 to 10 in prediction_markets_service.py line 92, add enforcement for 5-10 range
-- [ ] Update sorting in _filter_economic_markets() to prioritize conviction score + delta magnitude over raw volume
-- [ ] Add probability delta badges (24h change) to market items in Overview.jsx with color coding for positive/negative changes
-- [ ] Add conviction level badges and visual styling (opacity) to market items based on conviction_score in Overview.jsx
-- [ ] Add CSS styles for delta badges (.price-delta.positive/.negative) and conviction indicators (.conviction-badge) in Overview.css

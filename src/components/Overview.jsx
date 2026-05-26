@@ -2626,11 +2626,6 @@ const Overview = () => {
         });
         
         const tzAbbr = getTimezoneAbbreviation(currentTimezone);
-        console.log('✅ Converted:', { 
-          original: `${timeStr} on ${dateStr}`, 
-          converted: `${convertedTime} ${tzAbbr} on ${convertedDate}`,
-          timezone: currentTimezone 
-        });
         
         return {
           time: `${convertedTime} ${tzAbbr}`,
@@ -4026,8 +4021,10 @@ const Overview = () => {
     try {
       console.log('🤖 Generating comprehensive AI analysis for event:', event);
       
-      // Determine if this is pre-event or post-event analysis based on actual data availability
-      const hasActualData = event.actual && event.actual !== 'N/A' && event.actual !== '' && event.actual !== null;
+      // Pre vs post: only real prints count (TBD/--/pending are not actuals)
+      const actualRaw = event.actual != null ? String(event.actual).trim() : '';
+      const pendingActualValues = new Set(['', 'N/A', 'TBD', 'Tbd', '--', 'pending', 'Pending']);
+      const hasActualData = actualRaw && !pendingActualValues.has(actualRaw);
       const isPostEvent = hasActualData;
       
       console.log(`📊 Analysis type: ${isPostEvent ? 'POST-EVENT' : 'PRE-EVENT'} (Actual data: ${event.actual || 'Not available'})`);
@@ -4133,20 +4130,7 @@ const Overview = () => {
       console.log('🦊 Key Takeaway from backend:', analysis.key_takeaway);
       console.log('🦊 Forward Scenarios from backend:', analysis.forward_scenarios);
       
-      // Debug: Log the actual content from new enhanced structure
-      console.log('🐨🐨🐨 Frontend Debug - Enhanced Structure Content 🐨🐨🐨');
-      console.log('🐨 Event Summary:', analysis.eventSummary);
-      console.log('🐨 Market Reaction:', analysis.market_reaction);
-      console.log('🐨 Implications Takeaways:', analysis.implications_takeaways);
-      console.log('🐨 Key Takeaway:', analysis.key_takeaway);
-      console.log('🐨 Forward Scenarios:', analysis.forward_scenarios);
-      console.log('🐨 Trading Plan:', analysis.trading_plan);
-      console.log('🐨 Big Picture:', analysis.big_picture);
-      // console.log('🐨 Positioning Context:', analysis.positioning_context); // Removed - positioning context no longer used
-      console.log('🐨 Next Catalysts:', analysis.next_catalysts);
-      console.log('🐨 Sample Event Summary:', JSON.stringify(analysis.eventSummary || {}).substring(0, 200) || 'No content');
-      console.log('🐨 Sample Market Reaction:', JSON.stringify(analysis.market_reaction || {}).substring(0, 200) || 'No content');
-      console.log('🐨 Sample Key Takeaway:', analysis.key_takeaway || 'No content');
+      // Debug logs moved to after transform so event_summary (snake_case) is already resolved
       
       // Transform the backend response to work with new enhanced structure
       const transformed = {
@@ -4266,16 +4250,19 @@ const Overview = () => {
         market_scenarios: analysis.market_scenarios,
         forward_scenarios_by_outcome: analysis.forward_scenarios_by_outcome,
       };
-      return normalizeAiAnalysis(transformed, event);
-      
-      // Debug: Log the transformed data structure
-      console.log('🔍 Frontend Debug - Transformed Data Structure:');
-      console.log('   Transformed Data:', returnObject);
-      console.log('🔍 Headline in return object:', returnObject.headline);
-      console.log('🔍 Key Takeaway in return object:', returnObject.key_takeaway);
-      console.log('🔍 Forward Scenarios in return object:', returnObject.forward_scenarios);
-      
-      return returnObject;
+      const normalized = normalizeAiAnalysis(transformed, event);
+
+      console.log('🐨🐨🐨 Frontend Debug - Normalized Analysis Structure 🐨🐨🐨');
+      console.log('🐨 Event Summary:', normalized.eventSummary);
+      console.log('🐨 Market Reaction:', normalized.market_reaction);
+      console.log('🐨 Implications Takeaways:', normalized.implications_takeaways);
+      console.log('🐨 Key Takeaway:', normalized.key_takeaway);
+      console.log('🐨 Forward Scenarios:', normalized.forward_scenarios);
+      console.log('🐨 Trading Plan:', normalized.trading_plan);
+      console.log('🐨 Big Picture:', normalized.big_picture);
+      console.log('🐨 Next Catalysts:', normalized.next_catalysts);
+
+      return normalized;
       
     } catch (error) {
       console.log('🦁🦁🦁 FRONTEND: Error in generateEventAnalysis 🦁🦁🦁');
@@ -4318,7 +4305,10 @@ const Overview = () => {
               direction: 'Sideways',
               magnitude: 'Medium',
               affectedPairs: [event.currency + 'USD'],
-              confidence: parseInt(basicAnalysis.confidence?.replace('%', '') || '70')
+              confidence: parseInt(
+                String(basicAnalysis.confidence ?? '70').replace('%', ''),
+                10
+              ) || 70
             },
             expectationsAnalysis: {
               pricedInPercentage: 60,
@@ -4343,7 +4333,10 @@ const Overview = () => {
             },
             sentiment: 'neutral',
             marketConfidence: 'Medium',
-            confidenceScore: parseInt(basicAnalysis.confidence?.replace('%', '') || '70'),
+            confidenceScore: parseInt(
+              String(basicAnalysis.confidence ?? '70').replace('%', ''),
+              10
+            ) || 70,
             predictions: [
               {
                 type: 'positive',
@@ -6529,7 +6522,7 @@ const Overview = () => {
                           <span>{condition.name}</span>
                           {condition.name === 'Risk Appetite' && (
                             <InfoIcon
-                              tooltipText="Bar level uses safe-haven (JPY/CHF) stress in G10 pairs. The line names who looks bid among havens and among commodity FX (AUD, NZD, CAD) vs USD from the same feed as the ticker—not a full macro model."
+                              tooltipText="Session risk-on index (50 = neutral) from the same live feed as the ticker: FX havens (JPY/CHF), commodity FX (AUD, NZD, CAD), equities, VIX, crypto, gold/oil, and a simple rates vs equities check. The subtitle lists the main drivers; it is a macro context gauge, not a trade signal or full desk model."
                               position="right"
                             />
                           )}
@@ -6662,16 +6655,6 @@ const Overview = () => {
                 ) : (
                 <div className="pairs-sentiment-grid">
                   {sentiment.pairs_sentiment.map((pair, index) => {
-                    // Debug logging in development
-                    if (process.env.NODE_ENV === 'development') {
-                      console.log(`🔍 Rendering pair ${pair.pair}:`, {
-                        sentiment: pair.sentiment,
-                        percentage: pair.percentage,
-                        price_change: pair.price_change,
-                        impulse: pair.impulse ?? pair.rsi
-                      });
-                    }
-                    
                     // Safety checks - ensure all values exist and are valid numbers
                     const priceChange = (pair.price_change !== undefined && pair.price_change !== null) 
                       ? Number(pair.price_change) 
@@ -6683,16 +6666,6 @@ const Overview = () => {
                         : 50;
                     const sentimentValue = pair.sentiment || 'neutral';
                     const gaugeLayout = getDailyChangeGaugeLayout(priceChange);
-                    
-                    // Warn if values are missing (only in development)
-                    if (process.env.NODE_ENV === 'development') {
-                      if (pair.price_change === undefined || pair.price_change === null) {
-                        console.warn(`⚠️ ${pair.pair} missing price_change, using default: 0`);
-                      }
-                      if (pair.impulse == null && pair.rsi == null) {
-                        console.warn(`⚠️ ${pair.pair} missing impulse/rsi, using default: 50`);
-                      }
-                    }
                     
                     return (
                     <div key={index} className="pair-sentiment-item">

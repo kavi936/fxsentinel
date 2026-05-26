@@ -12,6 +12,12 @@ from dataclasses import dataclass
 import openai
 import os
 
+from services.openai_model_config import (
+    MODEL_COST_PER_1K_TOKENS,
+    get_high_impact_model,
+    select_model_for_event,
+)
+
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -75,10 +81,7 @@ class EnhancedTraderAnalyzer:
             logger.warning("⚠️ No OpenAI API key found - will use fallback analysis")
         
         # Cost estimates per 1K tokens
-        self.cost_estimates = {
-            'gpt-4-turbo': 0.03,
-            'gpt-3.5-turbo': 0.002
-        }
+        self.cost_estimates = dict(MODEL_COST_PER_1K_TOKENS)
         self.total_cost = 0.0
         
         # High-impact events for model selection
@@ -116,21 +119,16 @@ class EnhancedTraderAnalyzer:
             return self._get_error_fallback(event, market_context, analysis_type)
     
     def _select_model(self, event: Dict) -> str:
-        """Select appropriate GPT model based on event importance"""
+        """Select appropriate GPT model based on event importance."""
         event_title = event.get('title', '').lower()
         event_type = event.get('type', '').lower()
-        
-        # Check if this is a high-impact event
-        is_high_impact = any(keyword in event_title or keyword in event_type 
-                           for keyword in self.high_impact_events)
-        
-        # Check impact level
-        impact_level = event.get('impact', 'medium').lower()
-        
-        if is_high_impact or impact_level == 'high':
-            return 'gpt-4-turbo'
-        else:
-            return 'gpt-3.5-turbo'
+        is_high_impact = any(
+            keyword in event_title or keyword in event_type
+            for keyword in self.high_impact_events
+        )
+        if is_high_impact or str(event.get('impact', 'medium')).lower() == 'high':
+            return get_high_impact_model()
+        return select_model_for_event(event)
     
     def _build_enhanced_trader_prompt(self, event: Dict, market_context: MarketContext, analysis_type: str) -> str:
         """Build trader-focused prompt with quick-scan elements and forward scenarios"""

@@ -314,30 +314,37 @@ class EconomicDataValidator:
     def _has_unrealistic_values(self, event: Dict) -> bool:
         """Check for unrealistic economic values"""
         title = event.get('title', '').lower()
-        
-        # Check for obviously wrong values
+        empty_values = ['--', 'N/A', 'n/a', '', 'TBD', 'tbd', 'Pending', 'pending', None]
+
+        # Weekly claims (220K etc.) — skip; "employment" wrongly matches inside "unemployment"
+        if 'claims' in title:
+            return False
+
         for field in ['previous', 'expected', 'actual']:
             value = event.get(field, '')
-            if value and value not in ['--', 'N/A', '']:
+            if value and value not in empty_values:
                 try:
                     clean_value = re.sub(r'[%KMBT]', '', str(value))
                     num_value = float(clean_value)
-                    
-                    # Employment events with wrong units
-                    if any(keyword in title for keyword in ['employment', 'payroll', 'jobs', 'non-farm', 'nfp']):
-                        if num_value > 100 and '%' not in str(value):
-                            # Employment numbers should be in thousands or millions
-                            if num_value < 1000:  # Too small for employment
-                                return True
-                    
-                    # Percentage events with wrong values
-                    elif any(keyword in title for keyword in ['cpi', 'inflation', 'gdp', 'rate', 'unemployment']):
-                        if num_value > 1000:  # Unrealistic percentage
+
+                    if any(
+                        re.search(rf'\b{re.escape(kw)}\b', title)
+                        for kw in ['non-farm', 'nonfarm', 'nfp', 'payroll', 'payrolls']
+                    ):
+                        if num_value > 100 and '%' not in str(value) and num_value < 1000:
                             return True
-                    
+
+                    if re.search(r'\bunemployment\s+rate\b', title):
+                        if num_value > 100:
+                            return True
+
+                    elif any(kw in title for kw in ['cpi', 'inflation', 'gdp', 'pce', 'ppi']):
+                        if num_value > 1000:
+                            return True
+
                 except (ValueError, TypeError):
                     pass
-        
+
         return False
     
     def get_validation_summary(self, event: Dict, is_valid: bool, errors: List[str]) -> Dict:

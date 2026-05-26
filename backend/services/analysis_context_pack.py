@@ -698,3 +698,184 @@ def render_pack_for_prompt(
         )
 
     return "\n".join(lines)
+
+
+def is_analysis_context_pack_debug() -> bool:
+    return os.environ.get("ANALYSIS_CONTEXT_PACK_DEBUG", "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+
+
+def _calendar_release_status(event: Dict[str, Any]) -> str:
+    actual = event.get("actual")
+    if actual in ("N/A", "TBD", "", None):
+        return "pre"
+    return "post"
+
+
+def build_calendar_area_facts(event: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
+    """Area-specific facts for calendar_event surface (Phase C)."""
+    expected = event.get("expected") or event.get("forecast")
+    scheduled = (
+        event.get("scheduled_at_utc")
+        or event.get("datetime_utc")
+        or event.get("date")
+        or event.get("time")
+    )
+    impact = str(event.get("impact") or "medium").strip().lower()
+    if impact not in ("high", "medium", "low"):
+        impact = "medium"
+    release = _calendar_release_status(event)
+    if analysis_type == "post_event" and release == "pre":
+        release = "post"
+    return {
+        "event_id": str(event.get("id") or event.get("event_id") or ""),
+        "title": str(event.get("title") or ""),
+        "scheduled_at_utc": scheduled,
+        "release_status": release,
+        "analysis_type": analysis_type,
+        "actual": event.get("actual"),
+        "forecast": expected,
+        "previous": event.get("previous"),
+        "impact_tier": impact,
+    }
+
+
+CALENDAR_PACK_PROMPT_RULES = """
+CALENDAR CONTEXT PACK RULES (mandatory when this pack is present):
+- Name the bias subject (e.g. "USD post-CPI", not bare "neutral").
+- If MACRO SNAPSHOT is present, reconcile your view with that regime (scores are authoritative).
+- Use edge-strength confidence: what supports vs what negates the trade idea.
+- If market session is closed, key levels must be illustrative and labeled; frame for reopen.
+- Forward scenarios must not contradict implications_takeaways.market_bias.
+- Prefer user pairs when relevant (soft personalization); include economy-linked movers when the event requires it.
+""".strip()
+
+
+def build_calendar_context_pack_section(
+    event: Dict[str, Any],
+    analysis_type: str,
+    *,
+    user_id: Optional[str] = None,
+    token_user_info: Optional[Dict[str, Any]] = None,
+    focus_instruments: Optional[List[str]] = None,
+) -> Tuple[Dict[str, Any], str]:
+    """
+    Build AnalysisContextPack + prompt block for calendar enhanced analysis (Phase C).
+    """
+    area_facts = build_calendar_area_facts(event, analysis_type)
+    currency = str(event.get("currency") or "USD").upper()
+    title = str(event.get("title") or "")
+    pack = build_analysis_context_pack(
+        surface=SURFACE_CALENDAR,
+        user_id=user_id,
+        token_user_info=token_user_info,
+        subject_currency=currency,
+        context_text=title,
+        focus_instruments=focus_instruments,
+        area_facts=area_facts,
+        options={"include_holistic_macro": True},
+    )
+    block = render_pack_for_prompt(pack) + "\n\n" + CALENDAR_PACK_PROMPT_RULES
+    if is_analysis_context_pack_debug():
+        logger.info("Calendar context pack built for event=%s", area_facts.get("event_id") or title)
+    return pack, block
+
+
+# ---------------------------------------------------------------------------
+# Phase D — Live news context pack helpers
+# ---------------------------------------------------------------------------
+
+NEWS_PACK_PROMPT_RULES = """
+LIVE NEWS CONTEXT PACK RULES (mandatory when this pack is present):
+- Lead with the primary affected instrument (e.g. XAU/USD for gold, GBP/USD for UK news).
+- If MACRO SNAPSHOT is present, reconcile your view with that regime; note if the news contradicts the prevailing bias.
+- Hard personalization: user pairs must appear in key_pairs when relevant to the headline.
+- If market session is closed, all price levels are illustrative; say so explicitly.
+- Confidence must reflect edge strength (what supports vs what negates the thesis).
+- Cross-surface note: if a macro snapshot exists, briefly reference whether this news aligns or conflicts with it.
+""".strip()
+
+
+def _infer_news_currency(news_item: Dict[str, Any]) -> str:
+    """Best-effort: derive primary currency from news currency_pairs or title keywords."""
+    # Explicit field first
+    currency = news_item.get("currency") or news_item.get("primary_currency")
+    if currency:
+        return str(currency).upper()
+
+    # Derive from currency_pairs list (take base of first pair)
+    pairs = news_item.get("currency_pairs") or []
+    if pairs:
+        first = str(pairs[0]).replace("/", "").replace("-", "").upper()
+        if len(first) >= 3:
+            return first[:3]
+
+    # Keyword scan on title
+    title_lower = (news_item.get("title") or "").lower()
+    keyword_map = {
+        "usd": "USD", "dollar": "USD", "fed ": "USD", "federal reserve": "USD",
+        "eur": "EUR", "euro": "EUR", "ecb": "EUR",
+        "gbp": "GBP", "pound": "GBP", "boe": "GBP",
+        "jpy": "JPY", "yen": "JPY", "boj": "JPY",
+        "aud": "AUD", "australian": "AUD", "rba": "AUD",
+        "cad": "CAD", "canadian": "CAD", "boc": "CAD",
+        "chf": "CHF", "franc": "CHF", "snb": "CHF",
+        "nzd": "NZD", "kiwi": "NZD", "rbnz": "NZD",
+    }
+    for kw, ccy in keyword_map.items():
+        if kw in title_lower:
+            return ccy
+    return "USD"
+
+
+def build_news_area_facts(news_item: Dict[str, Any]) -> Dict[str, Any]:
+    """Area-specific facts for live_news surface (Phase D)."""
+    return {
+        "news_id": str(news_item.get("id") or ""),
+        "title": str(news_item.get("title") or ""),
+        "summary": str(news_item.get("summary") or "")[:400],
+        "source": str(news_item.get("source") or ""),
+        "published_at": news_item.get("published_at") or news_item.get("timestamp"),
+        "impact": str(news_item.get("impact") or "medium").lower(),
+        "currency_pairs": news_item.get("currency_pairs") or [],
+    }
+
+
+def build_news_context_pack_section(
+    news_item: Dict[str, Any],
+    *,
+    user_id: Optional[str] = None,
+    token_user_info: Optional[Dict[str, Any]] = None,
+    focus_instruments: Optional[List[str]] = None,
+) -> Tuple[Dict[str, Any], str]:
+    """
+    Build AnalysisContextPack + prompt block for live news analysis (Phase D).
+
+    Returns (pack_dict, rendered_prompt_block).
+    The caller inserts rendered_prompt_block into the GPT prompt instead of
+    the legacy personalization + market snapshot blocks.
+    """
+    area_facts = build_news_area_facts(news_item)
+    currency = _infer_news_currency(news_item)
+    title = area_facts["title"]
+    summary = area_facts["summary"]
+    context_text = f"{title} {summary}".strip()
+
+    pack = build_analysis_context_pack(
+        surface=SURFACE_LIVE_NEWS,
+        user_id=user_id,
+        token_user_info=token_user_info,
+        subject_currency=currency,
+        context_text=context_text,
+        focus_instruments=focus_instruments,
+        area_facts=area_facts,
+        options={"include_holistic_macro": True},
+    )
+    block = render_pack_for_prompt(pack) + "\n\n" + NEWS_PACK_PROMPT_RULES
+    if is_analysis_context_pack_debug():
+        logger.info("News context pack built for news_id=%s title=%s", area_facts.get("news_id"), title)
+    return pack, block

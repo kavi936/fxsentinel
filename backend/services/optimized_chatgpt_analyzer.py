@@ -13,6 +13,11 @@ from datetime import datetime
 
 from .smart_chatgpt_cache import smart_cache
 from .professional_analysis_template import professional_template
+from services.openai_model_config import (
+    MODEL_TOKEN_PRICING,
+    get_high_impact_model,
+    get_standard_model,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -33,29 +38,32 @@ class OptimizedChatGPTAnalyzer:
         else:
             logger.warning("⚠️ No OpenAI API key found")
         
-        # Model selection configuration
+        high_model = get_high_impact_model()
+        standard_model = get_standard_model()
+        high_pricing = MODEL_TOKEN_PRICING.get(high_model, MODEL_TOKEN_PRICING['gpt-4o'])
+        std_pricing = MODEL_TOKEN_PRICING.get(standard_model, MODEL_TOKEN_PRICING['gpt-4o-mini'])
         self.model_config = {
             'high_impact': {
-                'model': 'gpt-4-turbo-preview',
-                'cost_per_1k_tokens': 0.03,  # Input
-                'cost_per_1k_output': 0.06,   # Output
+                'model': high_model,
+                'cost_per_1k_tokens': high_pricing['input'],
+                'cost_per_1k_output': high_pricing['output'],
                 'max_tokens': 2000,
-                'description': 'High-impact events (CPI, NFP, Rate decisions)'
+                'description': 'High-impact events (CPI, NFP, Rate decisions)',
             },
             'medium_impact': {
-                'model': 'gpt-3.5-turbo',
-                'cost_per_1k_tokens': 0.0015,
-                'cost_per_1k_output': 0.002,
+                'model': standard_model,
+                'cost_per_1k_tokens': std_pricing['input'],
+                'cost_per_1k_output': std_pricing['output'],
                 'max_tokens': 1500,
-                'description': 'Medium-impact events (Retail Sales, Manufacturing)'
+                'description': 'Medium-impact events (Retail Sales, Manufacturing)',
             },
             'low_impact': {
-                'model': 'gpt-3.5-turbo',
-                'cost_per_1k_tokens': 0.0015,
-                'cost_per_1k_output': 0.002,
+                'model': standard_model,
+                'cost_per_1k_tokens': std_pricing['input'],
+                'cost_per_1k_output': std_pricing['output'],
                 'max_tokens': 1000,
-                'description': 'Low-impact events (Minor indicators)'
-            }
+                'description': 'Low-impact events (Minor indicators)',
+            },
         }
         
         # High-impact event keywords
