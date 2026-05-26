@@ -21657,9 +21657,12 @@ class HybridEconomicCalendar:
                 'forecast': '3.0%',
                 'previous': '3.1%'
             },
+
+            # WEDNESDAY, MAY 27
+
             {
                 'title': 'BOJ Gov Ueda Speaks',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '00:00 UTC',
                 'currency': 'JPY',
                 'impact': 'medium',
@@ -21669,7 +21672,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'MI Leading Index m/m',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '00:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -21679,7 +21682,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI m/m',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -21689,7 +21692,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'CPI y/y',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -21699,7 +21702,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Trimmed Mean CPI m/m',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
@@ -21709,7 +21712,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Construction Work Done q/q',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
@@ -21719,7 +21722,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'Official Cash Rate',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '02:00 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
@@ -21729,7 +21732,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBNZ Monetary Policy Statement',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '02:00 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
@@ -21739,7 +21742,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBNZ Rate Statement',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '02:00 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
@@ -21749,7 +21752,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'RBNZ Press Conference',
-                'date': 'Tue, May 26',
+                'date': 'Wed, May 27',
                 'time': '03:00 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
@@ -21758,7 +21761,7 @@ class HybridEconomicCalendar:
                 'previous': 'N/A'
             },
 
-            # WEDNESDAY, MAY 27
+            
             {
                 'title': 'RBA Deputy Gov Hauser Speaks',
                 'date': 'Wed, May 27',
