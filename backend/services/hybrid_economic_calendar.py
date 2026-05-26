@@ -21571,7 +21571,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '1.1%',
                 'previous': '1.0%'
             },
@@ -21583,7 +21583,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.4%',
                 'forecast': '1.7%',
                 'previous': '1.7%'
             },
@@ -21603,7 +21603,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-46',
                 'forecast': '-52',
                 'previous': '-68'
             },
