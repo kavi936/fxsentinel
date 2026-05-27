@@ -7,10 +7,12 @@ from unittest.mock import MagicMock
 
 from services.openai_model_config import (
     DEFAULT_HIGH_IMPACT_MODEL,
+    DEFAULT_HOLISTIC_NARRATIVE_MODEL,
     DEFAULT_STANDARD_MODEL,
     DEPRECATED_MODELS,
     estimate_cost_from_usage,
     normalize_model_id,
+    select_model_for_holistic_narrative,
     select_model_for_impact,
 )
 
@@ -19,6 +21,7 @@ class TestOpenAIModelConfig(unittest.TestCase):
     def test_defaults_are_modern_models(self):
         self.assertEqual(DEFAULT_HIGH_IMPACT_MODEL, "gpt-4o")
         self.assertEqual(DEFAULT_STANDARD_MODEL, "gpt-4o-mini")
+        self.assertEqual(DEFAULT_HOLISTIC_NARRATIVE_MODEL, "gpt-4o-mini")
         self.assertNotIn(DEFAULT_HIGH_IMPACT_MODEL, DEPRECATED_MODELS)
         self.assertNotIn(DEFAULT_STANDARD_MODEL, DEPRECATED_MODELS)
 
@@ -61,6 +64,17 @@ class TestOpenAIModelConfig(unittest.TestCase):
         usage = MagicMock(prompt_tokens=1000, completion_tokens=500, total_tokens=1500)
         cost = estimate_cost_from_usage(usage, "gpt-4o")
         self.assertGreater(cost, 0)
+
+    def test_select_model_for_holistic_narrative(self):
+        prev = os.environ.get("OPENAI_HOLISTIC_MODEL")
+        try:
+            os.environ["OPENAI_HOLISTIC_MODEL"] = "gpt-4-turbo-preview"
+            self.assertEqual(select_model_for_holistic_narrative(), "gpt-4o")
+        finally:
+            if prev is None:
+                os.environ.pop("OPENAI_HOLISTIC_MODEL", None)
+            else:
+                os.environ["OPENAI_HOLISTIC_MODEL"] = prev
 
 
 if __name__ == "__main__":

@@ -2226,9 +2226,9 @@ POST-EVENT ANALYSIS:
         else:
             forward_scenarios_json = f'''
     "forward_scenarios": {{
-        "{currency}_strength_scenario": "{currency} strength scenario with probability range (e.g., '55-65% probability: {currency} strengthens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
-        "{currency}_weakness_scenario": "{currency} weakness scenario with probability range (e.g., '25-35% probability: {currency} weakens due to [macro driver]. Expected reaction: [FX pairs and direction]. Reason: [policy/economic driver]')",
-        "range_or_indecision_scenario": "Range/indecision scenario with probability range (e.g., '10-20% probability: Range trading between [levels] if no clear macro driver emerges. Reason: [uncertainty factor]')"
+        "bullish": "{currency} strength path tied to ABOVE-forecast outcome (e.g., '[ABOVE] 45-55% if print above expected: {currency} strengthens due to [macro driver]...').",
+        "neutral": "Range/indecision path tied to ON-FORECAST outcome (e.g., '[ON] 15-25% if in line: range behavior due to [uncertainty factor]...').",
+        "bearish": "{currency} weakness path tied to BELOW-forecast outcome (e.g., '[BELOW] 25-35% if print below expected: {currency} weakens due to [macro driver]...')."
     }},'''
 
         prompt = f"""
@@ -2265,6 +2265,8 @@ PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
 3. FORWARD SCENARIO CONSTRUCTION:
    - Provide three scenarios with probability estimates that approximately sum to 100%
    - For each scenario: assign probability range (not false precision), reference macro driver, policy implication, expected FX reaction
+   - Canonical key mapping is mandatory: `forward_scenarios.bullish` = ABOVE forecast path, `forward_scenarios.neutral` = ON-forecast path, `forward_scenarios.bearish` = BELOW forecast path.
+   - Do not reinterpret keys as generic sentiment buckets. They are outcome buckets used by the Market Scenarios table.
    - Use price levels only if key levels are provided in MARKET CONTEXT, OR clearly state assumptions
 {f"   - Scenarios are conditional surprise paths (beat/miss/inline), not a restatement of the latest economy scan regime{chr(10)}" if context_pack_enabled else ""}
 4. VOLATILITY ASSESSMENT:

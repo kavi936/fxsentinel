@@ -1021,6 +1021,7 @@ def get_economy_scan(country_code):
             events=events,
             yields=live_quotes,
             personalization=get_user_personalization(token_user_info.get('user_id')),
+            user_info=token_user_info,
         )
 
         # Count usage only after successful scan generation.

@@ -3,6 +3,7 @@
 import unittest
 
 from services.calendar_scenario_engine import (
+    EVENT_DIRECTION_POLICY,
     build_market_scenarios,
     calendar_scenario_alignment_warnings,
     forward_scenarios_by_outcome,
@@ -12,6 +13,37 @@ from services.analysis_v1_spine import merge_v1_calendar_response
 
 
 class CalendarScenarioEngineTests(unittest.TestCase):
+    def test_direction_policy_table_contains_core_families(self):
+        self.assertIn("inflation", EVENT_DIRECTION_POLICY)
+        self.assertIn("wages", EVENT_DIRECTION_POLICY)
+        self.assertIn("employment", EVENT_DIRECTION_POLICY)
+        self.assertIn("interest_rate", EVENT_DIRECTION_POLICY)
+        self.assertFalse(EVENT_DIRECTION_POLICY["inflation"]["higher_is_bullish_for_currency"])
+        self.assertFalse(EVENT_DIRECTION_POLICY["wages"]["higher_is_bullish_for_currency"])
+        self.assertTrue(EVENT_DIRECTION_POLICY["employment"]["higher_is_bullish_for_currency"])
+        self.assertTrue(EVENT_DIRECTION_POLICY["interest_rate"]["higher_is_bullish_for_currency"])
+
+    def test_common_calendar_aliases_map_correctly(self):
+        inflation = get_event_direction_mapping("Core PCE Price Index m/m")
+        self.assertEqual(inflation["event_type"], "inflation")
+        self.assertFalse(inflation["higher_is_bullish_for_currency"])
+
+        rates = get_event_direction_mapping("Federal Funds Rate")
+        self.assertEqual(rates["event_type"], "interest_rate")
+        self.assertTrue(rates["higher_is_bullish_for_currency"])
+
+        unemployment = get_event_direction_mapping("Claimant Count Change")
+        self.assertEqual(unemployment["event_type"], "unemployment")
+        self.assertFalse(unemployment["higher_is_bullish_for_currency"])
+
+        wages = get_event_direction_mapping("Prelim Unit Labor Costs q/q")
+        self.assertEqual(wages["event_type"], "wages")
+        self.assertFalse(wages["higher_is_bullish_for_currency"])
+
+        employment = get_event_direction_mapping("JOLTS Job Openings")
+        self.assertEqual(employment["event_type"], "employment")
+        self.assertTrue(employment["higher_is_bullish_for_currency"])
+
     def test_cpi_above_is_bearish_usd(self):
         ms = build_market_scenarios(
             event_title="Consumer Price Index y/y",

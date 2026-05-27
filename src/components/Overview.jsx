@@ -368,6 +368,87 @@ const Overview = () => {
     return Number(v) >= 0 ? 'tier-a-val--pos' : 'tier-a-val--neg';
   };
 
+  const getMarketLensInsight = (focus, sentimentData) => {
+    const rates = sentimentData?.rates_snapshot || {};
+    const yields = rates?.yields || [];
+    const us10 = yields.find((y) => y?.id === 'US10Y');
+    const us10Ch = us10?.change_percent;
+    const usMinusDe = rates?.us_minus_de_change_percent;
+    const riskAppetite = (sentimentData?.market_conditions || []).find((c) => c?.name === 'Risk Appetite');
+    const riskPct = riskAppetite?.percentage;
+    const riskTone =
+      riskPct == null
+        ? 'mixed'
+        : Number(riskPct) >= 60
+          ? 'risk-on'
+          : Number(riskPct) <= 40
+            ? 'risk-off'
+            : 'mixed';
+    const goldCh = (sentimentData?.cross_asset_strip || []).find((i) => i?.id === 'GOLD')?.change_percent;
+    const usdJpyCh = (sentimentData?.pairs_sentiment || []).find((p) => p?.pair === 'USDJPY')?.price_change;
+
+    if (focus === 'EURUSD') {
+      let spreadRead = 'US and DE long yields are moving similarly today.';
+      if (usMinusDe != null) {
+        spreadRead =
+          Number(usMinusDe) > 0
+            ? 'US 10Y is outperforming DE 10Y on the session (mild USD-rate support).'
+            : Number(usMinusDe) < 0
+              ? 'DE 10Y is outperforming US 10Y on the session (mild EUR-rate support).'
+              : spreadRead;
+      }
+      return {
+        title: 'EURUSD Lens',
+        whatItMeans: spreadRead,
+        howToUse:
+          'Use this as context: if EURUSD price action disagrees with the rates spread change, momentum may be driven by positioning/news rather than rates.',
+      };
+    }
+
+    if (focus === 'USDJPY') {
+      const us10Read =
+        us10Ch == null
+          ? 'US 10Y move is unavailable right now.'
+          : Number(us10Ch) > 0
+            ? 'US 10Y is up on the session, which often supports USDJPY.'
+            : Number(us10Ch) < 0
+              ? 'US 10Y is down on the session, which can reduce USDJPY support.'
+              : 'US 10Y is flat on the session.';
+      const pairRead =
+        usdJpyCh == null
+          ? 'USDJPY pair move is currently unavailable.'
+          : `USDJPY is ${Number(usdJpyCh) >= 0 ? 'up' : 'down'} ${Math.abs(Number(usdJpyCh)).toFixed(2)}% today.`;
+      return {
+        title: 'USDJPY Lens',
+        whatItMeans: `${us10Read} ${pairRead}`,
+        howToUse:
+          'Combine US 10Y direction with risk tone. In risk-off phases, yen can strengthen even if US yields are firm; in risk-on phases, yield differentials tend to matter more.',
+      };
+    }
+
+    const goldRead =
+      goldCh == null
+        ? 'Gold session move is currently unavailable.'
+        : Number(goldCh) > 0
+          ? 'Gold is up on the session (defensive/haven demand leaning).'
+          : Number(goldCh) < 0
+            ? 'Gold is down on the session (less defensive demand today).'
+            : 'Gold is flat on the session.';
+    const rateRead =
+      us10Ch == null
+        ? 'US 10Y move is unavailable right now.'
+        : Number(us10Ch) < 0
+          ? 'US 10Y is lower, which can be supportive for gold.'
+          : Number(us10Ch) > 0
+            ? 'US 10Y is higher, which can be a headwind for gold.'
+            : 'US 10Y is flat.';
+    return {
+      title: 'Gold Lens',
+      whatItMeans: `${goldRead} ${rateRead}`,
+      howToUse: `Treat this as backdrop, not signal: when gold and yields align with a ${riskTone} tone, continuation setups tend to be cleaner; when they diverge, expect choppier follow-through.`,
+    };
+  };
+
   // Improved parsing helper functions for AI analysis metrics
   const parseRiskLevel = (riskLevel) => {
     if (!riskLevel) return { value: 'Moderate', class: 'neutral' };
@@ -501,7 +582,8 @@ const Overview = () => {
         titleLower.includes('initial claims') ||
         titleLower.includes('continuing claims') ||
         titleLower.includes('unemployment rate') ||
-        titleLower.includes('unemployment claims')) {
+        titleLower.includes('unemployment claims') ||
+        titleLower.includes('claimant count')) {
       return { higherIsBullish: false, eventType: 'unemployment' };
     }
     
@@ -510,7 +592,11 @@ const Overview = () => {
         titleLower.includes('average earnings') ||
         titleLower.includes('earnings growth') ||
         titleLower.includes('hourly earnings') ||
-        titleLower.includes('wage growth')) {
+        titleLower.includes('wage growth') ||
+        titleLower.includes('labor cost') ||
+        titleLower.includes('labour cost') ||
+        titleLower.includes('unit labor costs') ||
+        titleLower.includes('unit labour costs')) {
       return { higherIsBullish: false, eventType: 'wages' };
     }
     
@@ -524,7 +610,10 @@ const Overview = () => {
         titleLower.includes('producer price index') ||
         titleLower.includes('producer price') ||
         titleLower.includes('core inflation') ||
-        titleLower.includes('core cpi')) {
+        titleLower.includes('core cpi') ||
+        titleLower.includes('pce price') ||
+        titleLower.includes('core pce') ||
+        titleLower.includes('personal consumption expenditures')) {
       return { higherIsBullish: false, eventType: 'inflation' };
     }
     
@@ -540,6 +629,8 @@ const Overview = () => {
         titleLower.includes('employment rate') ||
         titleLower.includes('job creation') ||
         titleLower.includes('jobs created') ||
+        titleLower.includes('job openings') ||
+        titleLower.includes('jolts') ||
         (titleLower.includes('employment') && !titleLower.includes('unemployment'))) {
       return { higherIsBullish: true, eventType: 'employment' };
     }
@@ -557,7 +648,9 @@ const Overview = () => {
         titleLower.includes('rbnz rate') ||
         titleLower.includes('cash rate') ||
         titleLower.includes('policy rate') ||
-        titleLower.includes('monetary policy')) {
+        titleLower.includes('monetary policy') ||
+        titleLower.includes('federal funds rate') ||
+        titleLower.includes('fed funds rate')) {
       return { higherIsBullish: true, eventType: 'interest_rate' };
     }
     
@@ -955,6 +1048,7 @@ const Overview = () => {
     getSentimentColor, 
     formatTimeAgo 
   } = useMarketSentiment();
+  const [ratesFocus, setRatesFocus] = useState('EURUSD');
 
   // Prediction Markets hook
   const {
@@ -6626,6 +6720,32 @@ const Overview = () => {
                       </span>
                     </div>
                   )}
+                  <div className="tier-a-trader-lens">
+                    <div className="tier-a-trader-lens-head">How to use this (trader lens)</div>
+                    <div className="tier-a-trader-lens-tabs" role="tablist" aria-label="Rates context focus">
+                      {['EURUSD', 'USDJPY', 'GOLD'].map((focusId) => (
+                        <button
+                          key={focusId}
+                          type="button"
+                          className={`tier-a-trader-lens-tab ${ratesFocus === focusId ? 'is-active' : ''}`}
+                          onClick={() => setRatesFocus(focusId)}
+                          aria-pressed={ratesFocus === focusId}
+                        >
+                          {focusId === 'GOLD' ? 'Gold' : focusId}
+                        </button>
+                      ))}
+                    </div>
+                    {(() => {
+                      const lens = getMarketLensInsight(ratesFocus, sentiment);
+                      return (
+                        <div className="tier-a-trader-lens-body">
+                          <div className="tier-a-trader-lens-title">{lens.title}</div>
+                          <p className="tier-a-trader-lens-line">{lens.whatItMeans}</p>
+                          <p className="tier-a-trader-lens-line tier-a-trader-lens-line--use">{lens.howToUse}</p>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               )}
               

@@ -16,6 +16,7 @@ from services.analysis_context_pack import (
     build_macro_snapshot_for_persist,
     calendar_forward_scenarios_json_spec,
     extract_macro_snapshot_from_scan,
+    geopolitical_risk_from_severity_label,
     macro_snapshot_from_holistic_record,
     render_pack_for_prompt,
     resolve_subject,
@@ -62,6 +63,10 @@ class AnalysisContextPackTests(unittest.TestCase):
         subj_eur = resolve_subject(subject_currency="EUR")
         self.assertEqual(subj_eur["country_code"], "EUR")
 
+    def test_geopolitical_risk_critical_is_elevated(self):
+        self.assertEqual(geopolitical_risk_from_severity_label("CRITICAL"), "elevated")
+        self.assertEqual(geopolitical_risk_from_severity_label("moderate"), "low")
+
     def test_extract_macro_snapshot_from_scan(self):
         snap = extract_macro_snapshot_from_scan(_sample_scan())
         self.assertEqual(snap["source"], "holistic_scan")
@@ -70,6 +75,45 @@ class AnalysisContextPackTests(unittest.TestCase):
         self.assertEqual(snap["geopolitical_energy_risk"], "elevated")
         self.assertEqual(len(snap["top_pair_biases"]), 2)
         self.assertIn("Geopolitical", snap["one_line_summary"])
+
+    def test_extract_macro_snapshot_critical_severity(self):
+        scan = _sample_scan()
+        scan["highlights"][0]["emphasis"] = "CRITICAL"
+        snap = extract_macro_snapshot_from_scan(scan)
+        self.assertEqual(snap["geopolitical_energy_risk"], "elevated")
+
+    def test_extract_macro_snapshot_theme_digest(self):
+        scan = _sample_scan()
+        scan["curated_macro_overlay"] = {
+            "version": "1.1.0",
+            "lastUpdated": "2026-05-27",
+            "primary_geo_title": "Hormuz shock",
+            "geo_severity": "CRITICAL",
+            "theme_digest": [
+                "Hormuz [CRITICAL]: closure risk",
+                "Central banks [ELEVATED]: on hold",
+            ],
+        }
+        snap = extract_macro_snapshot_from_scan(scan)
+        self.assertEqual(snap["overlay_version"], "1.1.0")
+        self.assertEqual(snap["primary_geo_title"], "Hormuz shock")
+        self.assertEqual(snap["geo_severity"], "CRITICAL")
+        self.assertEqual(len(snap["theme_digest"]), 2)
+        rendered = render_pack_for_prompt(
+            {
+                "pack_version": "test",
+                "surface": SURFACE_CALENDAR,
+                "user": {},
+                "subject": {"currency": "USD"},
+                "macro_snapshot": snap,
+                "market_snapshot": {"instruments": []},
+                "session_and_quality": {},
+                "cross_surface": {},
+            }
+        )
+        self.assertIn("CURATED MACRO OVERLAY", rendered)
+        self.assertIn("MACRO THEME DIGEST", rendered)
+        self.assertIn("Hormuz", rendered)
 
     def test_cross_surface_geo_elevated_vs_neutral_news(self):
         macro = extract_macro_snapshot_from_scan(_sample_scan())

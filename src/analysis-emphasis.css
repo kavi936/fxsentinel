@@ -40,6 +40,11 @@
   font-weight: 700;
 }
 
+.fx-analysis-output .scan-driver-note .analysis-emphasis-bold,
+.fx-analysis-output .scan-paragraph-metadata .analysis-emphasis-bold {
+  color: #ff737d;
+}
+
 /* Legacy class aliases (holistic payloads / older markup) */
 .fx-analysis-output .scan-text-strong {
   font-weight: 600;

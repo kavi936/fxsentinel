@@ -7466,6 +7466,83 @@
   font-size: 10px;
 }
 
+.tier-a-trader-lens {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 68, 68, 0.14);
+  border-radius: 10px;
+}
+
+.tier-a-trader-lens-head {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.45px;
+  color: rgba(255, 179, 179, 0.72);
+  margin-bottom: 12px;
+}
+
+.tier-a-trader-lens-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.tier-a-trader-lens-tab {
+  border: 1px solid rgba(255, 68, 68, 0.2);
+  background: rgba(0, 0, 0, 0.4);
+  color: rgba(255, 255, 255, 0.78);
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tier-a-trader-lens-tab:focus,
+.tier-a-trader-lens-tab:focus-visible,
+.tier-a-trader-lens-tab:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.tier-a-trader-lens-tab:hover {
+  border-color: rgba(255, 111, 123, 0.4);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.tier-a-trader-lens-tab.is-active {
+  color: #fff;
+  background: rgba(255, 68, 68, 0.16);
+  border-color: rgba(255, 68, 68, 0.44);
+}
+
+.tier-a-trader-lens-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 10px;
+}
+
+.tier-a-trader-lens-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tier-a-trader-lens-line {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.tier-a-trader-lens-line--use {
+  color: rgba(255, 255, 255, 0.68);
+}
+
 /* Enhanced Sentiment Breakdown */
 .sentiment-breakdown {
   margin-bottom: 25px;

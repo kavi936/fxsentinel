@@ -5062,10 +5062,16 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                   <div key={p.pair} className="scan-driver-row">
                     <span>
                       <strong>{p.pair}</strong> - {(p.bias || 'neutral').toUpperCase()} ({p.strength || 'light'})
-                      {p.driver ? <span className="scan-driver-note"> - {p.driver}</span> : null}
-                      {p.conviction_note ? <span className="scan-driver-note"> - {p.conviction_note}</span> : null}
+                      {p.driver ? (
+                        <span className="scan-driver-note"> - {renderAnalysisEmphasis(p.driver)}</span>
+                      ) : null}
+                      {p.conviction_note ? (
+                        <span className="scan-driver-note"> - {renderAnalysisEmphasis(p.conviction_note)}</span>
+                      ) : null}
                     </span>
-                    <span className="scan-paragraph-metadata">{p.invalidation || 'N/A'}</span>
+                    <span className="scan-paragraph-metadata">
+                      {renderAnalysisEmphasis(p.invalidation || 'N/A')}
+                    </span>
                   </div>
                 ))}
               </div>

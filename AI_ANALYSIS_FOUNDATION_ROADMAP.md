@@ -6,20 +6,44 @@ Living doc for engineering status. Product spine rules remain in `AI_ANALYSIS_V1
 
 ---
 
-## Input layer — AnalysisContextPack (in progress)
+## Input layer — AnalysisContextPack (**complete**)
 
-**Goal:** One shared context pack (user, macro snapshot, markets, session rules) before GPT writes calendar/news copy.
+**Goal:** One shared context pack (user, macro snapshot, markets, session rules) before GPT writes calendar/news/holistic copy.
 
 | Phase | Status | Notes |
 |-------|--------|-------|
+| A — Decisions | **Done** | `ANALYSIS_INPUT_LAYER.md` §8 |
 | B — `analysis_context_pack.py` | **Done** | Tests: `test_analysis_context_pack.py` |
 | C — Calendar wiring | **Done** | `gpt_ai_analysis._create_analysis_prompt`; flag `ANALYSIS_CONTEXT_PACK_ENABLED` |
 | D — Live news | **Done** | `mvp_news_analyzer.py`; flag `ANALYSIS_CONTEXT_PACK_ENABLED` |
 | E — Holistic `macro_snapshot` export | **Done** | Write-through on save; calendar/news read &lt; 72h |
 | F — Prompt quality pass (calendar + news) | **Done** | Regime vs event rules when pack enabled |
-| G–H — Debug endpoint + GPT narrative | Not started | See `ANALYSIS_INPUT_LAYER.md` §13 |
+| G — Debug / inspect | **Done** | `ANALYSIS_CONTEXT_PACK_DEBUG`; `macro_snapshot` on economy-scan when debug on |
+| H — Holistic GPT narrative | **Done** | `HOLISTIC_SCAN_GPT_NARRATIVE_ENABLED`; see `ANALYSIS_INPUT_LAYER.md` §13 |
 
-**Default:** pack **off** in production (same pattern as V1 spine). Enable in `backend/.env` for staging.
+**Default:** pack and holistic GPT **off** in production until sign-off. Enable in `backend/.env` for staging.
+
+---
+
+## Post-input-layer sequence (product)
+
+Agreed order after input layer (2026-05-27). Full detail: `ANALYSIS_INPUT_LAYER.md` §12.
+
+| Step | Work | Spine? |
+|------|------|--------|
+| 1 | Curate `holistic_scan_context.json` manually (~few times/month) | No |
+| 1b | Engineering: inject overlay into holistic GPT prompt payload | No |
+| 2 | Prompt tailoring — holistic → calendar → news | No |
+| 3 | Response fields review (body JSON + UI, not spine block) | No |
+| 4 | §8.9 fixture quality review | No |
+| 5 | Phase 3 calendar trust (scenarios, live spot, repair) | No |
+| 6 | Production env flags for pack + holistic GPT | No |
+| **Later** | Re-enable V1 spine (`ANALYSIS_V1_ENABLED`, `VITE_ANALYSIS_V1_ENABLED`) | Yes |
+| **Later** | Phase 4+ router / verifier / calibration | Partial |
+
+**Explicitly deferred:** V1 spine UI and trader-brief-first layout until prompts and fields are satisfactory.
+
+**Holistic GPT:** one call per scan (H-GPT-1). Geo floor = edited JSON, not automated refresh.
 
 ---
 
@@ -131,3 +155,5 @@ Code remains in repo: `analysis_v1_spine.py`, `analysis_pipeline.py`, `calendar_
 | 2026-05-26 | Input layer Phase D: live news uses AnalysisContextPack when `ANALYSIS_CONTEXT_PACK_ENABLED=true` |
 | 2026-05-26 | Input layer Phase E: holistic scan stores `macro_snapshot`; pack reads fresh scan for calendar/news |
 | 2026-05-26 | Input layer Phase F: regime-vs-event prompt rules; calendar uses bullish/bearish/neutral scenarios when pack on |
+| 2026-05-27 | Input layer Phases G–H complete; holistic GPT narrative + debug flags; see `ANALYSIS_INPUT_LAYER.md` §13 |
+| 2026-05-27 | Post-input-layer product sequence documented (§12); spine deferred |

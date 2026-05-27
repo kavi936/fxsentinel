@@ -9,9 +9,19 @@ Why this exists:
 from __future__ import annotations
 
 import json
+import logging
+import os
+import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+from services.openai_model_config import (
+    estimate_cost_from_usage,
+    select_model_for_holistic_narrative,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class EconomyHolisticScanService:
@@ -41,6 +51,98 @@ class EconomyHolisticScanService:
                 return json.load(f)
         except Exception:
             return {"version": None, "lastUpdated": None, "global_themes": [], "economy_hooks": {}}
+
+    @staticmethod
+    def _truncate_text(text: Optional[str], max_len: int) -> str:
+        raw = str(text or "").strip()
+        if len(raw) <= max_len:
+            return raw
+        return raw[: max_len - 1].rstrip() + "…"
+
+    def _theme_detail_blurb(self, theme: Dict[str, Any], *, max_len: int = 420) -> str:
+        headline = str(theme.get("headline") or "").strip()
+        if headline:
+            return self._truncate_text(headline, max_len)
+        parts = [
+            str(theme.get("summary") or "").strip(),
+            str(theme.get("energy_channel") or "").strip(),
+        ]
+        merged = " ".join(p for p in parts if p)
+        return self._truncate_text(merged, max_len)
+
+    def _theme_for_gpt_prompt(self, theme: Dict[str, Any]) -> Dict[str, Any]:
+        row: Dict[str, Any] = {
+            "id": theme.get("id"),
+            "title": theme.get("title"),
+            "severity": theme.get("severity"),
+            "summary": self._truncate_text(theme.get("summary"), 650),
+        }
+        if theme.get("energy_channel"):
+            row["energy_channel"] = self._truncate_text(theme.get("energy_channel"), 350)
+        if theme.get("key_levels"):
+            row["key_levels"] = theme.get("key_levels")
+        if theme.get("scenario_flags"):
+            row["scenario_flags"] = theme.get("scenario_flags")
+        if theme.get("policy_matrix"):
+            row["policy_matrix"] = theme.get("policy_matrix")
+        return row
+
+    def _build_curated_macro_overlay(
+        self,
+        macro_overlay: Dict[str, Any],
+        country: str,
+    ) -> Dict[str, Any]:
+        themes = [t for t in (macro_overlay.get("global_themes") or []) if isinstance(t, dict)]
+        theme0 = themes[0] if themes else {}
+        hook = str((macro_overlay.get("economy_hooks") or {}).get(country) or "").strip()
+        digest: List[str] = []
+        for idx, theme in enumerate(themes):
+            title = str(theme.get("title") or "Macro theme").strip()
+            tsev = str(theme.get("severity") or "watch").upper()
+            blurb = self._theme_detail_blurb(theme, max_len=220)
+            if idx == 0 and hook:
+                blurb = self._truncate_text(f"{blurb} {hook}", 280)
+            digest.append(f"{title} [{tsev}]: {blurb}" if blurb else f"{title} [{tsev}]")
+        return {
+            "version": macro_overlay.get("version"),
+            "lastUpdated": macro_overlay.get("lastUpdated"),
+            "primary_geo_title": str(theme0.get("title") or "").strip() or None,
+            "geo_severity": str(theme0.get("severity") or "watch").upper(),
+            "theme_digest": digest,
+            "economy_hook": hook or None,
+            "global_themes": [self._theme_for_gpt_prompt(t) for t in themes],
+        }
+
+    def _macro_theme_highlight_items(
+        self,
+        macro_overlay: Dict[str, Any],
+        country: str,
+    ) -> List[Dict[str, Any]]:
+        items: List[Dict[str, Any]] = []
+        themes = [t for t in (macro_overlay.get("global_themes") or []) if isinstance(t, dict)]
+        hook = str((macro_overlay.get("economy_hooks") or {}).get(country) or "").strip()
+        for idx, theme in enumerate(themes):
+            tid = str(theme.get("id") or f"theme_{idx}")
+            title = str(theme.get("title") or "Macro theme").strip()
+            sev = str(theme.get("severity") or "watch").upper()
+            if idx == 0:
+                item_id = "geopolitical_energy"
+                detail_parts = [self._theme_detail_blurb(theme), hook]
+            else:
+                item_id = f"macro_theme_{tid}"
+                detail_parts = [self._theme_detail_blurb(theme)]
+            detail = " ".join(p for p in detail_parts if p).strip()
+            if not detail:
+                detail = "See holistic_scan_context.json for curated macro themes."
+            items.append(
+                {
+                    "id": item_id,
+                    "label": title,
+                    "emphasis": sev,
+                    "detail": detail,
+                }
+            )
+        return items
 
     def _load_central_bank_snippets(self, country: str) -> Dict[str, Any]:
         """
@@ -99,6 +201,220 @@ class EconomyHolisticScanService:
             "catalog_version": data.get("version"),
         }
 
+    def _should_use_gpt_narrative(self) -> bool:
+        enabled = os.getenv("HOLISTIC_SCAN_GPT_NARRATIVE_ENABLED", "").strip().lower() in (
+            "1",
+            "true",
+            "yes",
+            "on",
+        )
+        if not enabled:
+            return False
+        return bool(os.getenv("OPENAI_API_KEY", "").strip())
+
+    def _build_holistic_narrative_prompt_payload(
+        self,
+        scan: Dict[str, Any],
+        country: str,
+        personalization: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        return {
+            "country": country,
+            "economy": scan.get("economy"),
+            "timestamp": scan.get("timestamp"),
+            "short_term": scan.get("short_term") or {},
+            "long_term": scan.get("long_term") or {},
+            "event_flags": scan.get("event_flags") or {},
+            "yield_context": scan.get("yield_context") or {},
+            "trader_brief": scan.get("trader_brief") or {},
+            "highlights": scan.get("highlights") or {},
+            "curated_macro_overlay": scan.get("curated_macro_overlay") or {},
+            "pair_setups": (scan.get("pair_setups") or [])[:4],
+            "personalization": {
+                "trading_style": (personalization or {}).get("trading_style"),
+                "experience_level": (personalization or {}).get("experience_level"),
+                "primary_pairs": (personalization or {}).get("primary_pairs") or [],
+            },
+        }
+
+    def _create_holistic_narrative_prompt(self, payload: Dict[str, Any]) -> str:
+        return f"""
+You are generating narrative fields for a deterministic macro scan.
+Do NOT change scores, biases, confidence, or any numeric/ranking outputs.
+
+Use only the provided payload:
+{json.dumps(payload, ensure_ascii=True)}
+
+Rules:
+- Keep narrative aligned with deterministic bias/score.
+- You may mention alternative risk scenarios, but must label them as scenarios.
+- Pair explanations must be specific per pair (not copy/paste).
+- Use concise trader language and include concrete context where available.
+
+Curated macro overlay (required when provided in payload):
+- The payload includes curated_macro_overlay from holistic_scan_context.json (global_themes, economy_hook).
+- Treat this as the editorial floor for geopolitical, policy, tariff, and structural risks.
+- narrative.geopolitical_energy must reflect the primary geo theme and economy_hook; you may reference other global_themes where relevant.
+- Do not contradict deterministic short_term/long_term bias or scores; explain them using overlay + yields.
+
+Emphasis for UI (required):
+- Wrap important phrases in **double asterisks** so they render as red bold in the app (same as calendar analysis).
+- Use for: regime labels (**bearish**, **neutral**), key numbers (**2Y at 4.03%**), policy terms (**data-dependent**), geo/oil risk, pair names (**EURUSD**), and invalidation triggers.
+- One to three ** phrases per paragraph; do not wrap entire sentences.
+- All narrative and pair_explanations strings may contain **. Do not use other markdown or HTML.
+
+Return ONLY valid JSON with this exact shape:
+{{
+  "narrative": {{
+    "short_term": "string",
+    "long_term": "string",
+    "fx": "string",
+    "geopolitical_energy": "string"
+  }},
+  "pair_explanations": [
+    {{"pair": "EURUSD", "driver": "string", "invalidation": "string"}}
+  ]
+}}
+""".strip()
+
+    def _generate_holistic_narrative_with_gpt(
+        self,
+        payload: Dict[str, Any],
+        user_info: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
+        try:
+            import openai
+
+            api_key = os.getenv("OPENAI_API_KEY", "").strip()
+            if not api_key:
+                return {"ok": False, "error": "missing_openai_api_key"}
+
+            model = select_model_for_holistic_narrative()
+            prompt = self._create_holistic_narrative_prompt(payload)
+            client = openai.OpenAI(api_key=api_key, timeout=30.0)
+
+            params: Dict[str, Any] = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": "You are a macro strategist. Return JSON only."},
+                    {"role": "user", "content": prompt},
+                ],
+                "max_tokens": 1100,
+                "temperature": 0.2,
+            }
+            user_tag = (user_info or {}).get("user_email") or (user_info or {}).get("user_id")
+            if user_tag:
+                params["user"] = user_tag
+
+            response = client.chat.completions.create(**params)
+            content = (response.choices[0].message.content or "").strip()
+            match = re.search(r"\{.*\}", content, re.DOTALL)
+            if not match:
+                return {
+                    "ok": False,
+                    "error": "no_json_in_response",
+                    "model_used": model,
+                    "cost_estimate": estimate_cost_from_usage(getattr(response, "usage", None), model),
+                }
+            parsed = json.loads(match.group())
+            return {
+                "ok": True,
+                "data": parsed,
+                "model_used": model,
+                "cost_estimate": estimate_cost_from_usage(getattr(response, "usage", None), model),
+            }
+        except Exception as err:
+            return {"ok": False, "error": str(err)}
+
+    def _validate_holistic_narrative(
+        self,
+        generated: Dict[str, Any],
+        deterministic_scan: Dict[str, Any],
+    ) -> Tuple[bool, List[str]]:
+        errors: List[str] = []
+        narrative = generated.get("narrative")
+        if not isinstance(narrative, dict):
+            return False, ["narrative_missing_or_invalid"]
+        for key in ("short_term", "long_term", "fx", "geopolitical_energy"):
+            value = narrative.get(key)
+            if not isinstance(value, str) or len(value.strip()) < 20:
+                errors.append(f"narrative_{key}_too_short_or_missing")
+
+        pair_explanations = generated.get("pair_explanations")
+        if not isinstance(pair_explanations, list):
+            errors.append("pair_explanations_missing_or_invalid")
+            pair_explanations = []
+
+        expected_pairs = [row.get("pair") for row in (deterministic_scan.get("pair_setups") or [])[:4] if row.get("pair")]
+        seen_pairs = set()
+        for row in pair_explanations:
+            if not isinstance(row, dict):
+                errors.append("pair_explanation_row_invalid")
+                continue
+            pair = row.get("pair")
+            if not isinstance(pair, str) or not pair:
+                errors.append("pair_explanation_pair_missing")
+                continue
+            seen_pairs.add(pair)
+            for field in ("driver", "invalidation"):
+                txt = row.get(field)
+                if not isinstance(txt, str) or len(txt.strip()) < 12:
+                    errors.append(f"{pair}_{field}_too_short_or_missing")
+
+        missing_pairs = [p for p in expected_pairs if p not in seen_pairs]
+        if missing_pairs:
+            errors.append(f"missing_pair_explanations:{','.join(missing_pairs)}")
+
+        short_bias = str((deterministic_scan.get("short_term") or {}).get("bias") or "neutral").lower()
+        short_text = str(narrative.get("short_term") or "").lower()
+        if short_bias == "bearish" and "bullish" in short_text and "scenario" not in short_text:
+            errors.append("short_term_bias_contradiction_bearish_vs_bullish_text")
+        if short_bias == "bullish" and "bearish" in short_text and "scenario" not in short_text:
+            errors.append("short_term_bias_contradiction_bullish_vs_bearish_text")
+
+        return len(errors) == 0, errors
+
+    def _merge_holistic_narrative(self, scan: Dict[str, Any], generated: Dict[str, Any]) -> Dict[str, Any]:
+        narrative = scan.get("narrative") or {}
+        new_narrative = generated.get("narrative") or {}
+        for key in ("short_term", "long_term", "fx", "geopolitical_energy"):
+            if isinstance(new_narrative.get(key), str) and new_narrative.get(key).strip():
+                narrative[key] = new_narrative[key].strip()
+        scan["narrative"] = narrative
+
+        by_pair = {}
+        for row in generated.get("pair_explanations") or []:
+            if isinstance(row, dict) and isinstance(row.get("pair"), str):
+                by_pair[row["pair"]] = row
+        merged_setups = []
+        for row in scan.get("pair_setups") or []:
+            pair = row.get("pair")
+            update = by_pair.get(pair) or {}
+            if isinstance(update.get("driver"), str) and update.get("driver").strip():
+                row["driver"] = update.get("driver").strip()
+            if isinstance(update.get("invalidation"), str) and update.get("invalidation").strip():
+                row["invalidation"] = update.get("invalidation").strip()
+            merged_setups.append(row)
+        scan["pair_setups"] = merged_setups
+        return scan
+
+    def _attach_narrative_metadata(
+        self,
+        scan: Dict[str, Any],
+        *,
+        source: str,
+        model_used: Optional[str],
+        cost: float,
+        validation: str,
+        reason: Optional[str] = None,
+    ) -> None:
+        scan["narrative_source"] = source
+        scan["narrative_model_used"] = model_used
+        scan["narrative_cost_estimate"] = float(cost or 0.0)
+        scan["narrative_validation"] = validation
+        if reason:
+            scan["narrative_validation_reason"] = reason
+
     def build_scan(
         self,
         country_code: str,
@@ -106,6 +422,7 @@ class EconomyHolisticScanService:
         events: Optional[List[Dict[str, Any]]],
         yields: Optional[Dict[str, Any]] = None,
         personalization: Optional[Dict[str, Any]] = None,
+        user_info: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         country = (country_code or "").upper()
         if country not in self.SUPPORTED_COUNTRIES:
@@ -188,7 +505,7 @@ class EconomyHolisticScanService:
             personalization=personalization,
         )
 
-        return {
+        scan = {
             "country": country,
             "economy": self._country_label(country),
             "timestamp": datetime.utcnow().isoformat(),
@@ -235,6 +552,57 @@ class EconomyHolisticScanService:
             },
             "model_version": self.VERSION,
         }
+        scan["curated_macro_overlay"] = self._build_curated_macro_overlay(macro_overlay, country)
+
+        if not self._should_use_gpt_narrative():
+            self._attach_narrative_metadata(
+                scan,
+                source="deterministic_disabled",
+                model_used=None,
+                cost=0.0,
+                validation="skipped",
+            )
+            return scan
+
+        payload = self._build_holistic_narrative_prompt_payload(
+            scan,
+            country,
+            personalization=personalization,
+        )
+        gpt_result = self._generate_holistic_narrative_with_gpt(payload, user_info=user_info)
+        if not gpt_result.get("ok"):
+            self._attach_narrative_metadata(
+                scan,
+                source="deterministic_fallback",
+                model_used=gpt_result.get("model_used"),
+                cost=gpt_result.get("cost_estimate", 0.0),
+                validation="failed",
+                reason=str(gpt_result.get("error") or "unknown_error"),
+            )
+            return scan
+
+        generated = gpt_result.get("data") or {}
+        valid, errors = self._validate_holistic_narrative(generated, scan)
+        if not valid:
+            self._attach_narrative_metadata(
+                scan,
+                source="deterministic_fallback",
+                model_used=gpt_result.get("model_used"),
+                cost=gpt_result.get("cost_estimate", 0.0),
+                validation="failed",
+                reason=";".join(errors[:4]),
+            )
+            return scan
+
+        self._merge_holistic_narrative(scan, generated)
+        self._attach_narrative_metadata(
+            scan,
+            source="gpt",
+            model_used=gpt_result.get("model_used"),
+            cost=gpt_result.get("cost_estimate", 0.0),
+            validation="passed",
+        )
+        return scan
 
     def _interest_rate_keys(self, country: str) -> tuple[str, ...]:
         """Sheets/JSON use `interest-rate`; some builds may namespace by economy."""
@@ -661,7 +1029,7 @@ class EconomyHolisticScanService:
         theme = (macro_overlay.get("global_themes") or [{}])[0] if macro_overlay.get("global_themes") else {}
         hook = (macro_overlay.get("economy_hooks") or {}).get(country, "")
         geopolitical_energy = " ".join(
-            s for s in [theme.get("summary", "").strip(), theme.get("energy_channel", "").strip(), hook.strip()] if s
+            s for s in [self._theme_detail_blurb(theme, max_len=520), hook.strip()] if s
         )
         if not geopolitical_energy:
             geopolitical_energy = (
@@ -736,12 +1104,7 @@ class EconomyHolisticScanService:
             f"Oldest indicator ~{staleness_seconds // 86400}d behind UTC" if staleness_seconds >= 0 else "Indicator dates incomplete"
         )
 
-        theme0 = (macro_overlay.get("global_themes") or [{}])[0] if macro_overlay.get("global_themes") else {}
-        geo_title = (theme0.get("title") or "Geopolitical & energy").strip()
-        geo_sev = (theme0.get("severity") or "watch").upper()
-        geo_detail = " ".join(
-            s for s in [theme0.get("summary", "").strip(), (macro_overlay.get("economy_hooks") or {}).get(country, "").strip()] if s
-        ) or "See `backend/data/holistic_scan_context.json` for curated risks."
+        macro_theme_items = self._macro_theme_highlight_items(macro_overlay, country)
 
         cb_bank = central_bank_context.get("bank") or "N/A"
         cb_first = (central_bank_context.get("snippets") or [{}])[0]
@@ -763,12 +1126,7 @@ class EconomyHolisticScanService:
                 "emphasis": lt_bias,
                 "detail": f"Composite score **{lt_score}** with **{lt_conf}% confidence** on a [[3–12 month]] horizon.",
             },
-            {
-                "id": "geopolitical_energy",
-                "label": geo_title,
-                "emphasis": geo_sev,
-                "detail": geo_detail,
-            },
+            *macro_theme_items,
             {
                 "id": "central_bank_catalog",
                 "label": "Central bank document context",

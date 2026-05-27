@@ -1,7 +1,7 @@
 # Analysis Input Layer — Planning Document
 
-**Status:** in implementation (Phase B–C shipped in code; **off by default** until staging)  
-**Last updated:** 2026-05-26  
+**Status:** **input layer complete (Phases A–H)** — feature flags still **off by default** until production sign-off  
+**Last updated:** 2026-05-27  
 **Owner:** product + engineering
 
 **Related docs**
@@ -31,8 +31,8 @@
 | **D** | Live news (`mvp_news_analyzer.py`) | **Done** | **Only when `ANALYSIS_CONTEXT_PACK_ENABLED=true`** |
 | **E** | Holistic `macro_snapshot` export | **Done** | Yes when pack on + fresh scan &lt; 72h |
 | **F** | Prompt quality pass per surface | **Done** | When `ANALYSIS_CONTEXT_PACK_ENABLED=true` |
-| **G** | Staging preview / debug endpoint | Not started | — |
-| **H** | Holistic GPT narrative (§13) | Not started | No |
+| **G** | Staging preview / debug | **Done** | `ANALYSIS_CONTEXT_PACK_DEBUG` — server logs + `macro_snapshot` on economy-scan response |
+| **H** | Holistic GPT narrative (§13) | **Done** | When `HOLISTIC_SCAN_GPT_NARRATIVE_ENABLED=true` + `OPENAI_API_KEY` |
 
 **How to try Phase C–E locally**
 
@@ -46,24 +46,23 @@
 
 ---
 
-## 0. Critical reality check — Holistic Scan is not GPT today
+## 0. Holistic scan — deterministic core + optional GPT voice
 
-**Verified in code (2026-05-18):** When the user clicks **Run Holistic Scan**, the app calls `POST /api/economy-scan/<country>` → `economy_holistic_scan_service.build_scan()`. There is **no** OpenAI/GPT call on that path.
+When the user clicks **Run Holistic Scan**, the app calls `POST /api/economy-scan/<country>` → `economy_holistic_scan_service.build_scan()`.
 
+| Layer | Always | When `HOLISTIC_SCAN_GPT_NARRATIVE_ENABLED=true` |
+| ----- | ------ | ------------------------------------------------ |
+| Scores, bias, confidence, pair map, calendar stress | **Deterministic math** | Unchanged (GPT must not override) |
+| `narrative.short_term` / `long_term` / `fx` | Python templates (`_build_narrative`) | **GPT** replaces after validation |
+| `narrative.geopolitical_energy` | **Curated JSON** (`holistic_scan_context.json`) | **GPT** replaces in narrative block |
+| `narrative.central_bank_context` | Central bank catalog snippets | Stays **deterministic** (not in GPT JSON shape) |
+| `highlights[]`, `pair_setups[].key_risk` | Templates + **same JSON** overlay | Still **deterministic** (GPT does not touch highlights) |
+| `pair_setups[].driver` / `invalidation` | Template strings | **GPT** per pair when validation passes |
+| Metadata | `narrative_source`, `narrative_model_used`, `narrative_validation` | `gpt` or `deterministic_fallback` |
 
-| What traders often assume                       | What actually happens                                                                                                            |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| “AI wrote this report live”                     | **Rules + scores** (indicators, yields, calendar stress)                                                                         |
-| Geo / policy paragraphs are fresh analysis      | **Curated JSON** (`backend/data/holistic_scan_context.json`) + **central bank catalog** (`src/data/central-bank-documents.json`) |
-| “Comprehensive Context” is GPT prose            | **Python templates** (`_build_narrative`) with live numbers inserted                                                             |
-| `model_version: economy_scan_v1.2` means an LLM | **Version label for the deterministic engine** only                                                                              |
+**GPT is used for:** calendar (`gpt_ai_analysis`), live news (`mvp_news_analyzer`), and optionally holistic narrative (Phase H).
 
-
-**GPT is used today for:** calendar enhanced analysis (`gpt_ai_analysis`) and live news (`mvp_news_analyzer`). **Not** for holistic scan body text.
-
-**Why this matters for the input layer:** News and calendar will get a shared context **pack → prompt → model**. Holistic must either (a) stay deterministic and **feed** that pack, or (b) add a **real narrative LLM step** (planned as Phase 3 in `docs/HOLISTIC_SCAN_DIRECTION.md`, never shipped).
-
-**Product follow-up (agreed):** Add GPT (or hybrid) narrative for holistic so scan copy is **current, specific, and consistent** with news/calendar — after shared input pack exists, with deterministic scores remaining source-of-truth for bias/confidence.
+**Curated overlay file:** `backend/data/holistic_scan_context.json` — still loaded on every scan; see §13 for how it interacts with GPT.
 
 ---
 
@@ -242,15 +241,16 @@ Use this when integrating — **substitute** pack builder calls into these paths
 | # | File | Status |
 |---|------|--------|
 | 1 | `gpt_ai_analysis.py` — `_create_analysis_prompt` | **Done (Phase C)** — uses `build_calendar_context_pack_section` when flag on |
-| 2 | `mvp_news_analyzer.py` | **Phase D** — not wired |
-| 3 | `economy_holistic_scan_service.py` | **Phase E** — not wired |
-| 4 | `app.py` — preview endpoint | **Phase G** — not built |
+| 2 | `mvp_news_analyzer.py` | **Done (Phase D)** |
+| 3 | `economy_holistic_scan_store.py` + scan save | **Done (Phase E)** — `macro_snapshot` write-through |
+| 4 | `economy_holistic_scan_service.py` | **Done (Phase H)** — optional GPT narrative merge |
+| 5 | Debug (no separate preview route) | **Done (Phase G)** — `ANALYSIS_CONTEXT_PACK_DEBUG` + economy-scan `macro_snapshot` |
 
 ---
 
-## 5. Pack → prompt rules (preview for prompt layer)
+## 5. Pack → prompt rules
 
-*Not implemented in this doc; prompts consume pack after input layer exists.*
+Implemented in `CALENDAR_PACK_PROMPT_RULES` / `NEWS_PACK_PROMPT_RULES` when `ANALYSIS_CONTEXT_PACK_ENABLED=true`.
 
 Shared instructions derived from pack (all surfaces):
 
@@ -288,8 +288,8 @@ Area prompts add section-specific output JSON (existing shapes); **no spine bloc
 | **D** | Wire **live news**                                                  | Hormuz-style headline reconciles with US scan when fresh       |
 | **E** | Holistic: shared `user` in `build_scan` + `macro_snapshot` for pack | News/calendar read latest scan summary                         |
 | **F** | Prompt layer refactor (news + calendar)                             | Subjective quality review on 5 fixed samples                   |
-| **G** | Optional staging preview endpoint + logging                         | Debug pack in admin/staging                                    |
-| **H** | **Holistic GPT narrative** (§13)                                    | Prose is model-generated from pack + deterministic JSON        |
+| **G** | Debug logging + economy-scan `macro_snapshot` when debug flag on    | Inspect pack/macro without a separate admin route              |
+| **H** | **Holistic GPT narrative** (§13)                                    | One GPT call; merge narrative + pair driver/invalidation       |
 
 
 ---
@@ -598,9 +598,7 @@ Documented in `backend/.env.example`.
 
 ---
 
-## 13. Holistic Scan — GPT narrative layer (planned work)
-
-**Problem:** Traders (reasonably) believe holistic copy is live AI. Today it is not; repetition and stale geo text (`holistic_scan_context.json` last updated manually) hurt trust once discovered.
+## 13. Holistic Scan — GPT narrative layer (shipped)
 
 **Principle:** **Deterministic brain, GPT voice.**
 
@@ -611,24 +609,21 @@ Documented in `backend/.env.example`.
 | Narrative, driver explanations, geo framing, pair “why”     | GPT from `AnalysisContextPack` + scan JSON | Contradict deterministic bias/scores |
 
 
-**Flow (target):**
+**Flow (as implemented):**
 
 ```
-build_scan() → deterministic JSON
+build_scan() → deterministic JSON (incl. template narrative + JSON geo)
        ↓
-build_analysis_context_pack(surface=holistic, scan=...)
+_build_holistic_narrative_prompt_payload(scan) → single GPT call
        ↓
-holistic_narrative_prompt(pack) → GPT → validated narrative fields
-       ↓
-merge into scan payload → API → UI (same sections as today)
+validate → merge narrative.* + pair_explanations → API → UI
 ```
 
-**Fields to move from templates/JSON → GPT first (priority order):**
+**GPT overwrites today:** `narrative.short_term`, `long_term`, `fx`, `geopolitical_energy`; `pair_setups[].driver`, `invalidation`.
 
-1. `narrative.short_term`, `narrative.long_term`, `narrative.fx`
-2. `narrative.geopolitical_energy` (replace or augment static `global_themes`)
-3. `pair_setups[].driver` / `invalidation` (per-pair, not copy-paste)
-4. `highlights[].detail` where still templated
+**Still deterministic (not GPT):** scores/bias; `highlights[]`; `central_bank_context`; `pair_setups[].key_risk` (still uses JSON geo title); fallback narrative if GPT off/fails.
+
+**Follow-up (optional):** pass `global_themes` / economy hooks into GPT payload; GPT `highlights[].detail`; UI badge (see table below).
 
 **Guardrails:**
 
@@ -638,17 +633,29 @@ merge into scan payload → API → UI (same sections as today)
 - Env: `HOLISTIC_SCAN_GPT_NARRATIVE_ENABLED` (default off until staging sign-off).  
 - Quota: same analysis billing pool as scan run (one GPT call per scan, capped tokens).
 
-**Open decisions for §8 (holistic GPT):**
+### `holistic_scan_context.json` — what is hardcoded vs GPT?
+
+**File:** `backend/data/holistic_scan_context.json` (`global_themes`, `economy_hooks`). Last curated update in file metadata (e.g. `lastUpdated`).
+
+| Consumer | Uses JSON when | Uses GPT when |
+| -------- | -------------- | ------------- |
+| `narrative.geopolitical_energy` | Flag off or GPT fallback | Flag on + validation passed → **GPT text** (JSON not copied into prompt today) |
+| Highlights geo row (`_build_highlights`) | **Always** — title/severity/detail from `global_themes[0]` + `economy_hooks[country]` | Never |
+| `pair_setups[].key_risk` | **Always** — geo theme title | Never |
+| Template `narrative` (fallback) | **Always** built first; kept if GPT fails | Overwritten on success |
+
+So geo is **not fully hardcoded** in the UI anymore when Phase H is on: the **Comprehensive Context → Geopolitical & energy** paragraph is GPT-generated, but the **Key highlights** geo chip can still show curated JSON — possible copy mismatch until we align (pass JSON into GPT prompt or derive highlights from narrative).
+
+**GPT prompt payload today** (`_build_holistic_narrative_prompt_payload`): scores, yields, event flags, trader brief, highlights dict, pair list, personalization — **does not include** `holistic_scan_context.json` text. GPT infers geo only from scan numbers + highlight blobs.
+
+### Product decisions (recorded from shipped code — change if you want different behavior)
 
 
-| #       | Question                                                                        | Your answer |
-| ------- | ------------------------------------------------------------------------------- | ----------- |
-| H-GPT-1 | One GPT call for whole narrative vs separate calls per section?                 |             |
-| H-GPT-2 | Replace `holistic_scan_context.json` geo entirely, or GPT + human-edited floor? |             |
-| H-GPT-3 | Show “AI narrative” vs “Model-assisted” badge in UI for honesty?                |             |
-
-
-**Depends on:** Phase B–E input pack (GPT needs the same context news/calendar will use).
+| # | Question | Shipped behavior (2026-05-27) |
+| --- | -------- | ------------------------------ |
+| H-GPT-1 | One GPT call vs several? | **One call** per scan (`max_tokens` 900, `gpt-4o-mini` default via `OPENAI_HOLISTIC_MODEL`) |
+| H-GPT-2 | Replace JSON geo or augment? | **Hybrid:** JSON remains source for highlights + `key_risk` + fallback; GPT **replaces** `narrative.geopolitical_energy` (and other narrative fields) when enabled — JSON **not** injected into GPT prompt yet |
+| H-GPT-3 | UI honesty badge? | **Not built** — API exposes `narrative_source` (`gpt` / `deterministic_fallback` / `deterministic_disabled`); Economies tab does not display it |
 
 ---
 
@@ -662,19 +669,76 @@ merge into scan payload → API → UI (same sections as today)
 | 2026-05-18 | §8 decisions locked; build order calendar → news → holistic                  |
 | 2026-05-23 | Phase B: `analysis_context_pack.py` + `test_analysis_context_pack.py`        |
 | 2026-05-26 | Phase C: calendar wired in `gpt_ai_analysis.py`; progress tracker + env flags |
+| 2026-05-26 | Phase D: live news wired in `mvp_news_analyzer.py` |
+| 2026-05-26 | Phase E–F: macro_snapshot + prompt quality pass |
+| 2026-05-27 | Phase G–H: debug flags + holistic GPT narrative; §13 decisions documented |
+| 2026-05-27 | Input layer Phases A–H marked complete (flags still default off) |
+| 2026-05-27 | §12 post-input-layer sequence + manual `holistic_scan_context.json` workflow |
+| 2026-05-27 | Full overlay integration: multi-theme highlights, GPT payload, macro_snapshot digest, `critical` → elevated |
 
 
 ---
 
-## 12. Next steps (implementation)
+## 12. Suggested sequence (after input layer)
 
-1. ~~Fill §8~~ — done.
-2. Finalize `AnalysisContextPack` field list in §3 using summary table above.
-3. ~~**Phase B:** `backend/services/analysis_context_pack.py` + unit tests.~~ **Done** (2026-05-23).
-4. ~~**Phase C:** Wire **calendar** (`gpt_ai_analysis` prompt path).~~ **Done** (2026-05-26) — enable with env flag.
-5. ~~**Phase D:** Wire **live news** (`mvp_news_analyzer`) + cross-surface rules (§8.6).~~ **Done** (2026-05-26) — enable with `ANALYSIS_CONTEXT_PACK_ENABLED=true`.
-6. ~~**Phase E:** Holistic `macro_snapshot` write-through + calendar/news read.~~ **Done** (2026-05-26).
-7. ~~**Phase F:** Prompt quality pass (calendar + news).~~ **Done** (2026-05-26).
-8. **Phase G–H:** Debug endpoint, holistic GPT narrative (§13).
-7. **§8.9:** You run fixture tests when ready; use CPI / Retail Sales / Hormuz / US scan as starting set.
+Input layer implementation (Phases A–H) is **complete**. Product/engineering order below reflects team decisions (2026-05-27). **V1 spine is deferred** until prompts and response fields feel stable.
+
+See also: `AI_ANALYSIS_FOUNDATION_ROADMAP.md` → **Post-input-layer sequence**.
+
+### Priority order
+
+| Step | Focus | Goal | Automation |
+| ---- | ----- | ---- | ---------- |
+| **1** | `backend/data/holistic_scan_context.json` | Accurate curated geo/macro floor for highlights, `key_risk`, fallback narrative | **Manual** — refresh a few times per month; no automation planned (low effort vs. cost/complexity) |
+| **1b** | Wire overlay into holistic GPT (engineering) | **Done** — `curated_macro_overlay` on scan; GPT prompt + multi-theme highlights + richer `macro_snapshot` |
+| **2** | **Prompt tailoring per surface** | Sharper, section-specific instructions (holistic → calendar → news) | Prompt edits only |
+| **3** | **Response fields review** | Add/remove/rename JSON fields and UI sections per surface (body copy, not spine) | Product + schema pass |
+| **4** | **§8.9 fixture review** | Subjective quality bar on fixed samples (CPI, Retail Sales, Hormuz, US scan) | You test when ready |
+| **5** | **Phase 3 — calendar trust** | Scenario repair pass, live spot in prompt, Above/On/Below UI | See foundation roadmap |
+| **6** | **Production flags** | Turn on `ANALYSIS_CONTEXT_PACK_ENABLED` and `HOLISTIC_SCAN_GPT_NARRATIVE_ENABLED` for all users | When staging sign-off passes |
+| **Later** | **V1 spine** | Re-enable `ANALYSIS_V1_ENABLED` + `VITE_ANALYSIS_V1_ENABLED` | After steps 1–3 feel good |
+| **Later** | **Phase 4+** | Router, verifier, outcome store, calibration | Not now |
+
+### Holistic GPT decisions (locked)
+
+| Topic | Decision |
+| ----- | -------- |
+| H-GPT-1 | **One GPT call** per holistic scan (narrative + pair explanations in one JSON response) |
+| H-GPT-2 | **Augment** with human-edited `holistic_scan_context.json` (not replace with automation); inject into GPT prompt when step 1b ships |
+| H-GPT-3 | UI honesty badge (`narrative_source`) — **optional**, not blocking |
+
+### Maintaining `holistic_scan_context.json` (manual workflow)
+
+**File:** `backend/data/holistic_scan_context.json`
+
+**When to update (roughly):** a few times per month, or when a major geo/energy/policy theme clearly shifts (e.g. new conflict corridor, OPEC shock, sustained oil move).
+
+**What to edit:**
+
+| Field | Purpose |
+| ----- | ------- |
+| `lastUpdated` | Bump to today (ISO date) on every edit |
+| `global_themes[]` | Active cross-market risks (title, summary, energy_channel, severity) |
+| `economy_hooks` | Per-economy (US, EUR, GBP, JPY) one-liner on how that theme hits policy/FX |
+
+**After saving:** restart backend (or redeploy) so scans load the new overlay. Re-run a holistic scan to verify highlights + geo narrative.
+
+**Not in scope:** automated news scraping, scheduled GPT refresh of this file, or third-party geo APIs — manual curation is intentional.
+
+### Prompt tailoring (step 2) — surfaces
+
+| Surface | Code | What to tune |
+| ------- | ---- | ------------- |
+| Holistic | `economy_holistic_scan_service.py` → `_create_holistic_narrative_prompt` | Per-field rules: short-term vs long-term vs fx vs geo vs pair driver/invalidation; emphasis `**` |
+| Calendar | `gpt_ai_analysis.py` + `analysis_context_pack.py` (`CALENDAR_PACK_PROMPT_RULES`) | Regime vs event, scenarios, levels, post-event vs pre-event |
+| Live news | `mvp_news_analyzer.py` + `NEWS_PACK_PROMPT_RULES` | Headline reconciliation with macro snapshot, pair focus, illustrative levels when closed |
+
+### Response fields (step 3) — questions to answer per surface
+
+- Which fields do traders actually read vs skip?
+- Should holistic `highlights` be GPT-generated to match narrative?
+- Should calendar scenarios use `forward_scenarios_by_outcome` as the primary UI?
+- Keep `central_bank_context` as its own holistic block or fold into short-term narrative?
+
+Document answers here or in `AI_ANALYSIS_V1_UNIFIED_SPEC.md` when decided — **without** enabling spine UI until copy is stable.
 

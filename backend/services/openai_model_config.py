@@ -16,6 +16,7 @@ from typing import Dict, Optional
 # Verified working on current OpenAI API (May 2026)
 DEFAULT_HIGH_IMPACT_MODEL = "gpt-4o"
 DEFAULT_STANDARD_MODEL = "gpt-4o-mini"
+DEFAULT_HOLISTIC_NARRATIVE_MODEL = "gpt-4o-mini"
 
 # Legacy / invalid — do not use in new code
 DEPRECATED_MODELS = frozenset(
@@ -70,6 +71,11 @@ def select_model_for_event(event: Dict) -> str:
 def select_model_for_news(news_item: Dict) -> str:
     """Live news item dict with optional impact field."""
     return select_model_for_impact(news_item.get("impact"))
+
+def select_model_for_holistic_narrative() -> str:
+    """Model for holistic narrative enrichment (Phase H)."""
+    configured = os.getenv("OPENAI_HOLISTIC_MODEL", DEFAULT_HOLISTIC_NARRATIVE_MODEL).strip()
+    return normalize_model_id(configured)
 
 
 def normalize_model_id(model: Optional[str]) -> str:

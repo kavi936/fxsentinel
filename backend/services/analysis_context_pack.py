@@ -22,6 +22,55 @@ logger = logging.getLogger(__name__)
 PACK_VERSION = "2026-05-18"
 HOLISTIC_MAX_AGE_HOURS = 72
 
+# Severities that imply elevated geopolitical/energy risk in macro_snapshot + cross-checks.
+_GEO_ELEVATED_SEVERITIES = frozenset({"critical", "elevated", "high", "severe"})
+
+
+def geopolitical_risk_from_severity_label(severity: Optional[str]) -> str:
+    """Map highlight emphasis / overlay severity to macro_snapshot geo risk."""
+    sev = str(severity or "").strip().lower()
+    return "elevated" if sev in _GEO_ELEVATED_SEVERITIES else "low"
+
+
+def theme_digest_from_scan_highlights(scan: Dict[str, Any]) -> List[str]:
+    """One-line digest per curated macro theme row in holistic highlights."""
+    lines: List[str] = []
+    items = scan.get("highlights") or {}
+    if isinstance(items, dict):
+        item_list = items.get("items") or []
+    elif isinstance(items, list):
+        item_list = items
+    else:
+        item_list = []
+    for item in item_list:
+        if not isinstance(item, dict):
+            continue
+        iid = str(item.get("id") or "")
+        if iid != "geopolitical_energy" and not iid.startswith("macro_theme_"):
+            continue
+        label = str(item.get("label") or "Macro theme").strip()
+        emphasis = str(item.get("emphasis") or "").strip().upper()
+        detail = str(item.get("detail") or "").strip()
+        if len(detail) > 220:
+            detail = detail[:217].rstrip() + "…"
+        lines.append(f"{label} [{emphasis}]: {detail}" if detail else f"{label} [{emphasis}]")
+    return lines
+
+
+def max_geopolitical_risk_from_highlights(scan: Dict[str, Any]) -> str:
+    risk = "low"
+    items = scan.get("highlights") or {}
+    item_list = items.get("items") if isinstance(items, dict) else items if isinstance(items, list) else []
+    for item in item_list:
+        if not isinstance(item, dict):
+            continue
+        iid = str(item.get("id") or "")
+        if iid != "geopolitical_energy" and not iid.startswith("macro_theme_"):
+            continue
+        if geopolitical_risk_from_severity_label(item.get("emphasis")) == "elevated":
+            return "elevated"
+    return risk
+
 SURFACE_CALENDAR = "calendar_event"
 SURFACE_LIVE_NEWS = "live_news"
 SURFACE_ECONOMY_SCAN = "economy_scan"
@@ -288,16 +337,14 @@ def extract_macro_snapshot_from_scan(
     event_flags = scan.get("event_flags") or {}
     trader_brief = scan.get("trader_brief") or {}
 
-    geo_risk = "low"
-    for item in scan.get("highlights") or []:
-        if not isinstance(item, dict):
-            continue
-        if item.get("id") != "geopolitical_energy":
-            continue
-        sev = str(item.get("emphasis") or "").strip().lower()
-        if sev in ("elevated", "high", "severe", "watch"):
-            geo_risk = "elevated" if sev in ("elevated", "high", "severe") else "low"
-        break
+    geo_risk = max_geopolitical_risk_from_highlights(scan)
+    overlay_meta = scan.get("curated_macro_overlay") or {}
+    if overlay_meta.get("geo_severity"):
+        geo_risk = geopolitical_risk_from_severity_label(overlay_meta.get("geo_severity"))
+
+    theme_digest = overlay_meta.get("theme_digest")
+    if not theme_digest:
+        theme_digest = theme_digest_from_scan_highlights(scan)
 
     pair_rows = scan.get("fx_pairs") or scan.get("pair_setups") or []
     top_pairs: List[Dict[str, Any]] = []
@@ -332,6 +379,11 @@ def extract_macro_snapshot_from_scan(
         "long_term_confidence": long_term.get("confidence"),
         "calendar_stress_14d": event_flags.get("calendar_stress_score"),
         "geopolitical_energy_risk": geo_risk,
+        "overlay_version": overlay_meta.get("version"),
+        "overlay_last_updated": overlay_meta.get("lastUpdated"),
+        "primary_geo_title": overlay_meta.get("primary_geo_title"),
+        "geo_severity": (overlay_meta.get("geo_severity") or "").upper() or None,
+        "theme_digest": theme_digest or [],
         "one_line_summary": one_line or None,
         "regime_strip": {
             "short_term": {
@@ -676,6 +728,23 @@ def render_pack_for_prompt(
                 "",
             ]
         )
+        if macro.get("overlay_version") or macro.get("primary_geo_title"):
+            lines.extend(
+                [
+                    "CURATED MACRO OVERLAY (from holistic_scan_context.json):",
+                    f"- Overlay version: {macro.get('overlay_version') or 'n/a'} "
+                    f"(updated {macro.get('overlay_last_updated') or 'n/a'})",
+                    f"- Primary geo theme: {macro.get('primary_geo_title') or 'n/a'} "
+                    f"[{(macro.get('geo_severity') or 'n/a').upper()}]",
+                    "",
+                ]
+            )
+        digest = macro.get("theme_digest") or []
+        if digest:
+            lines.append("MACRO THEME DIGEST (from latest scan):")
+            for row in digest[:6]:
+                lines.append(f"- {row}")
+            lines.append("")
         top_pairs = macro.get("top_pair_biases") or []
         if top_pairs:
             lines.append("TOP PAIR BIASES FROM SCAN:")

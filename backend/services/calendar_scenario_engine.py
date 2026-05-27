@@ -25,6 +25,88 @@ FORWARD_KEY_TO_OUTCOME = {
     "neutral": "on_forecast",
 }
 
+# Direction policy is deterministic by event family.
+# This table defines whether a higher-than-forecast print is bullish for the
+# event currency in the table model.
+EVENT_DIRECTION_POLICY: Dict[str, Dict[str, Any]] = {
+    "unknown": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Fallback default when event family is unknown.",
+    },
+    "default": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Most growth/activity indicators are treated as pro-currency when higher.",
+    },
+    "unemployment": {
+        "higher_is_bullish_for_currency": False,
+        "rationale": "Higher unemployment/jobless prints imply weaker labor conditions.",
+    },
+    "wages": {
+        "higher_is_bullish_for_currency": False,
+        "rationale": "Higher labor-cost pressure is treated as growth headwind in this table policy.",
+    },
+    "inflation": {
+        "higher_is_bullish_for_currency": False,
+        "rationale": "Higher inflation prints are treated as currency-negative in this table policy.",
+    },
+    "employment": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Higher employment/job openings/payroll growth implies stronger activity.",
+    },
+    "interest_rate": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Higher policy rate settings are treated as supportive for currency yield appeal.",
+    },
+    "gdp": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Stronger output growth is treated as currency-supportive.",
+    },
+    "trade_balance": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Higher balance/surplus (or less-negative deficit) is treated as supportive.",
+    },
+    "retail_sales": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Stronger consumer demand is treated as supportive.",
+    },
+    "manufacturing": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Stronger production/new orders are treated as supportive.",
+    },
+    "pmi": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Higher diffusion readings are treated as supportive.",
+    },
+    "housing": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Stronger housing activity is treated as supportive.",
+    },
+    "confidence": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Stronger confidence/sentiment is treated as supportive.",
+    },
+    "budget": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Higher fiscal balance (or less-negative deficit) is treated as supportive.",
+    },
+    "inventories": {
+        "higher_is_bullish_for_currency": False,
+        "rationale": "Higher inventories are treated as oversupply/slowdown risk.",
+    },
+    "personal": {
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Higher personal income/spending is treated as supportive.",
+    },
+}
+
+
+def _direction_entry(event_type: str) -> Dict[str, Any]:
+    entry = EVENT_DIRECTION_POLICY.get(event_type) or EVENT_DIRECTION_POLICY["default"]
+    return {
+        "higher_is_bullish_for_currency": bool(entry["higher_is_bullish_for_currency"]),
+        "event_type": event_type,
+    }
+
 
 def parse_numeric_value(value: Any) -> Optional[float]:
     if value is None or value == "" or value == "N/A":
@@ -60,7 +142,7 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
     Matches Overview.jsx getEventDirectionMapping.
     """
     if not event_title:
-        return {"higher_is_bullish_for_currency": True, "event_type": "unknown"}
+        return _direction_entry("unknown")
 
     t = event_title.lower()
 
@@ -74,9 +156,10 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "continuing claims",
             "unemployment rate",
             "unemployment claims",
+            "claimant count",
         )
     ):
-        return {"higher_is_bullish_for_currency": False, "event_type": "unemployment"}
+        return _direction_entry("unemployment")
 
     if any(
         x in t
@@ -86,9 +169,13 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "earnings growth",
             "hourly earnings",
             "wage growth",
+            "labor cost",
+            "labour cost",
+            "unit labor costs",
+            "unit labour costs",
         )
     ):
-        return {"higher_is_bullish_for_currency": False, "event_type": "wages"}
+        return _direction_entry("wages")
 
     if any(
         x in t
@@ -102,9 +189,12 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "producer price",
             "core inflation",
             "core cpi",
+            "pce price",
+            "core pce",
+            "personal consumption expenditures",
         )
     ):
-        return {"higher_is_bullish_for_currency": False, "event_type": "inflation"}
+        return _direction_entry("inflation")
 
     if any(
         x in t
@@ -119,9 +209,11 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "employment rate",
             "job creation",
             "jobs created",
+            "job openings",
+            "jolts",
         )
     ) or ("employment" in t and "unemployment" not in t):
-        return {"higher_is_bullish_for_currency": True, "event_type": "employment"}
+        return _direction_entry("employment")
 
     if any(
         x in t
@@ -139,9 +231,11 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "cash rate",
             "policy rate",
             "monetary policy",
+            "federal funds rate",
+            "fed funds rate",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "interest_rate"}
+        return _direction_entry("interest_rate")
 
     if any(
         x in t
@@ -154,7 +248,7 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "gdp yoy",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "gdp"}
+        return _direction_entry("gdp")
 
     if any(
         x in t
@@ -166,13 +260,13 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "balance of trade",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "trade_balance"}
+        return _direction_entry("trade_balance")
 
     if any(
         x in t
         for x in ("retail sales", "consumer spending", "retail trade")
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "retail_sales"}
+        return _direction_entry("retail_sales")
 
     if any(
         x in t
@@ -184,13 +278,13 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "industrial output",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "manufacturing"}
+        return _direction_entry("manufacturing")
 
     if any(
         x in t
         for x in ("pmi", "purchasing managers index", "purchasing managers")
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "pmi"}
+        return _direction_entry("pmi")
 
     if any(
         x in t
@@ -204,7 +298,7 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "housing market",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "housing"}
+        return _direction_entry("housing")
 
     if any(
         x in t
@@ -216,7 +310,7 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "sentiment index",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "confidence"}
+        return _direction_entry("confidence")
 
     if any(
         x in t
@@ -227,21 +321,21 @@ def get_event_direction_mapping(event_title: str) -> Dict[str, Any]:
             "government budget",
         )
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "budget"}
+        return _direction_entry("budget")
 
     if any(
         x in t
         for x in ("business inventories", "inventory", "stockpiles")
     ):
-        return {"higher_is_bullish_for_currency": False, "event_type": "inventories"}
+        return _direction_entry("inventories")
 
     if any(
         x in t
         for x in ("personal income", "personal spending", "personal consumption")
     ):
-        return {"higher_is_bullish_for_currency": True, "event_type": "personal"}
+        return _direction_entry("personal")
 
-    return {"higher_is_bullish_for_currency": True, "event_type": "default"}
+    return _direction_entry("default")
 
 
 def _row(value: str, sentiment: str) -> Dict[str, str]:
