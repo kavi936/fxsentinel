@@ -27,6 +27,13 @@ from services.analysis_contract import (
     default_trace_for_kind,
     envelope_metadata,
 )
+from services.analysis_actionable_conditionals import apply_actionable_conditionals_to_response
+from services.analysis_bias_classification import apply_bias_classification_to_response
+from services.analysis_calendar_confidence import apply_calendar_confidence_if_calendar
+from services.analysis_calendar_trading_plan_structure import apply_calendar_trading_plan_structure_if_calendar
+from services.analysis_news_correlation_risk import apply_news_correlation_risk_if_news
+from services.calendar_scenario_engine import attach_canonical_calendar_scenarios
+from services.analysis_personalization_validation import apply_personalization_to_response
 from services.analysis_v1_spine import (
     is_analysis_v1_enabled,
     is_analysis_v1_spine_enabled,
@@ -52,6 +59,8 @@ class FinalizeContext:
     latency_ms: Optional[int] = None
     trace_steps: Optional[List[str]] = None
     observability_extra: Dict[str, Any] = field(default_factory=dict)
+    personalization: Optional[Dict[str, Any]] = None
+    token_user_info: Optional[Dict[str, Any]] = None
 
 
 def build_live_news_cross_context_note(
@@ -158,17 +167,56 @@ def finalize_analysis(
     if analysis_kind not in VALID_ANALYSIS_KINDS:
         raise ValueError(f"Invalid analysis_kind: {analysis_kind}")
 
+    ctx = context or FinalizeContext()
+    out = dict(payload)
+    if ctx.personalization:
+        out = apply_personalization_to_response(out, analysis_kind, ctx.personalization)
+
+    out = apply_actionable_conditionals_to_response(
+        out,
+        analysis_kind,
+        event=ctx.validated_event or ctx.event,
+        analysis_type=ctx.analysis_type,
+        news_item=ctx.news_item,
+    )
+    out = apply_bias_classification_to_response(out, analysis_kind)
+    out = apply_news_correlation_risk_if_news(
+        out,
+        analysis_kind,
+        news_item=ctx.news_item,
+    )
+
+    if analysis_kind == ANALYSIS_KIND_CALENDAR_EVENT and ctx.validated_event:
+        title = str(ctx.validated_event.get("title") or "")
+        currency = str(ctx.validated_event.get("currency") or "USD")
+        out, _ms = attach_canonical_calendar_scenarios(
+            out,
+            event_title=title,
+            currency=currency,
+        )
+        out = apply_calendar_confidence_if_calendar(
+            out,
+            analysis_kind,
+            event=ctx.validated_event,
+            analysis_type=ctx.analysis_type,
+            token_user_info=ctx.token_user_info,
+        )
+        out = apply_calendar_trading_plan_structure_if_calendar(
+            out,
+            analysis_kind,
+            event=ctx.validated_event,
+        )
+
     # V1 off (default): return analyzer payload unchanged — legacy UX on wire + UI.
     if spine_enabled is None and not is_analysis_v1_enabled():
-        return dict(payload)
+        return out
     if spine_enabled is False:
-        return dict(payload)
+        return out
 
-    ctx = context or FinalizeContext()
     if spine_enabled is None:
         spine_enabled = is_analysis_v1_spine_enabled()
 
-    out = dict(payload)
+    out = dict(out)
     out.update(envelope_metadata(analysis_kind=analysis_kind, spine_enabled=spine_enabled, spine_present=False))
 
     if spine_enabled:

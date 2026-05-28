@@ -25,6 +25,7 @@ from services.analysis_context_pack import (
     calendar_forward_scenarios_json_spec,
     is_analysis_context_pack_enabled,
 )
+from services.analysis_actionable_conditionals import ACTIONABLE_PROMPT_RULES
 from services.analysis_personalization import build_prompt_personalization_block
 from services.relevant_market_context import build_relevant_market_context_block
 from services.openai_model_config import (
@@ -2231,6 +2232,32 @@ POST-EVENT ANALYSIS:
         "bearish": "{currency} weakness path tied to BELOW-forecast outcome (e.g., '[BELOW] 25-35% if print below expected: {currency} weakens due to [macro driver]...')."
     }},'''
 
+        p = personalization or {}
+        trading_style = str(p.get("trading_style") or "unspecified").strip().lower()
+        preferred_pairs = p.get("primary_pairs") or []
+        preferred_pairs_csv = ", ".join(str(x) for x in preferred_pairs[:6]) if preferred_pairs else "none provided"
+        if trading_style == "swing":
+            style_rules = (
+                "- Personalization mode: SWING. Give multi-week follow-through in big_picture fields; "
+                "keep short-term notes as entry/noise filter rather than the main thesis."
+            )
+        elif trading_style == "day":
+            style_rules = (
+                "- Personalization mode: DAY. Prioritize immediate reaction, trigger/invalidation, and session timing "
+                "in trading_plan and market_reaction."
+            )
+        else:
+            style_rules = (
+                "- Personalization mode: BALANCED. Keep both short-term and medium-term framing concise and clear."
+            )
+        personalization_requirements = f"""
+7. PERSONALIZATION CASCADE:
+   {style_rules}
+   - Preferred pairs (if relevant): {preferred_pairs_csv}
+   - Prioritize preferred pairs in scenarios/trading_plan when relevant to this event.
+   - If preferred pairs are weakly related, state that explicitly and fall back to the most event-sensitive economy pairs.
+"""
+
         prompt = f"""
 You are a senior macroeconomic analyst specializing in foreign exchange markets, with deep expertise in economic indicators, central bank policy, and macro-to-FX transmission mechanisms.
 
@@ -2263,8 +2290,8 @@ PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
 {central_bank_pm_instructions}
 
 3. FORWARD SCENARIO CONSTRUCTION:
-   - Provide three scenarios with probability estimates that approximately sum to 100%
-   - For each scenario: assign probability range (not false precision), reference macro driver, policy implication, expected FX reaction
+   - Provide three scenarios with single integer probabilities that sum to exactly 100
+   - For each scenario: include one integer probability prefix (e.g. "[ABOVE] 48%: ..."), reference macro driver, policy implication, expected FX reaction
    - Canonical key mapping is mandatory: `forward_scenarios.bullish` = ABOVE forecast path, `forward_scenarios.neutral` = ON-forecast path, `forward_scenarios.bearish` = BELOW forecast path.
    - Do not reinterpret keys as generic sentiment buckets. They are outcome buckets used by the Market Scenarios table.
    - Use price levels only if key levels are provided in MARKET CONTEXT, OR clearly state assumptions
@@ -2284,6 +2311,13 @@ PRIMARY ANALYSIS REQUIREMENTS (ENFORCED):
    - Position sizing guidance relative to volatility
    - Strategies to avoid in uncertain conditions
    - FX pair sentiment should inform bias, not override macroeconomic drivers
+   - trading_plan.best_approach MUST include at least one explicit If→then (trigger → FX outcome/level)
+   - Do not use passive-only guidance ("monitor", "watch closely", "remain vigilant") without a linked trigger
+
+{personalization_requirements}
+
+8. ACTIONABLE TRIGGERS:
+{ACTIONABLE_PROMPT_RULES}
 
 {event_timing_instructions}
 

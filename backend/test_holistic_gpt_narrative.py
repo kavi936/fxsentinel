@@ -35,9 +35,9 @@ def _sample_scan() -> dict:
 def _generated() -> dict:
     return {
         "narrative": {
-            "short_term": "Latest economy scan remains bearish short-term, while scenario upside exists on a surprise.",
+            "short_term": "If yields extend higher, expect bearish short-term follow-through in mapped pairs; if yields fade, treat as range conditions.",
             "long_term": "Longer horizon remains mixed with neutral baseline as growth and policy offset.",
-            "fx": "FX transmission favors quote-side pressure if USD weakens and yield repricing follows through.",
+            "fx": "If USD weakens on risk-on flows, EURUSD should firm; if haven demand returns, expect quote-side USD strength.",
             "geopolitical_energy": "Geopolitical and energy risk remains elevated and can amplify volatility.",
         },
         "pair_explanations": [
@@ -70,6 +70,50 @@ class HolisticGPTNarrativeTests(unittest.TestCase):
         self.assertIn("curated_macro_overlay", prompt)
         self.assertIn("editorial floor", prompt.lower())
 
+    def test_holistic_prompt_includes_pair_sensitivity_hints(self):
+        scan = _sample_scan()
+        scan["curated_macro_overlay"] = {"economy_hook": "US hook", "global_themes": []}
+        payload = self.service._build_holistic_narrative_prompt_payload(scan, "US")
+        prompt = self.service._create_holistic_narrative_prompt(payload)
+        self.assertIn("pair_sensitivity_hints", prompt)
+        self.assertIn("required_tokens", prompt)
+
+    def test_holistic_prompt_includes_score_bridge_rules_when_critical(self):
+        scan = _sample_scan()
+        scan["curated_macro_overlay"] = {
+            "geo_severity": "CRITICAL",
+            "global_themes": [{"title": "Test critical theme", "severity": "critical"}],
+        }
+        payload = self.service._build_holistic_narrative_prompt_payload(scan, "US")
+        self.assertTrue(payload.get("score_bridge_required"))
+        prompt = self.service._create_holistic_narrative_prompt(payload)
+        self.assertIn("SCORE ↔ NARRATIVE BRIDGE", prompt)
+        self.assertIn("score_bridge_required", prompt)
+
+    def test_validate_fails_when_critical_without_score_bridge(self):
+        scan = _sample_scan()
+        scan["curated_macro_overlay"] = {"geo_severity": "CRITICAL", "global_themes": [{"title": "Theme"}]}
+        scan["short_term"]["component_breakdown"] = {
+            "drivers": [
+                {"name": "Rate momentum", "contribution": 5.0, "contribution_display": "+5.0", "available": True},
+                {"name": "Event risk", "contribution": -8.0, "contribution_display": "-8.0", "available": True},
+            ]
+        }
+        ok, errors = self.service._validate_holistic_narrative(_generated(), scan)
+        self.assertFalse(ok)
+        self.assertTrue(any("score_bridge" in e for e in errors))
+
+    def test_holistic_prompt_includes_personalization_cascade_rules(self):
+        scan = _sample_scan()
+        payload = self.service._build_holistic_narrative_prompt_payload(
+            scan,
+            "US",
+            personalization={"trading_style": "swing", "primary_pairs": ["EURUSD", "USDJPY"]},
+        )
+        prompt = self.service._create_holistic_narrative_prompt(payload)
+        self.assertIn("Personalization cascade", prompt)
+        self.assertIn("trading_style == \"swing\"", prompt)
+
     def test_macro_theme_highlights_from_overlay_file(self):
         overlay = self.service._load_holistic_overlay()
         themes = overlay.get("global_themes") or []
@@ -98,7 +142,7 @@ class HolisticGPTNarrativeTests(unittest.TestCase):
     def test_merge_updates_only_narrative_and_pair_explanations(self):
         scan = _sample_scan()
         merged = self.service._merge_holistic_narrative(scan, _generated())
-        self.assertIn("bearish short-term", merged["narrative"]["short_term"])
+        self.assertIn("If yields extend", merged["narrative"]["short_term"])
         self.assertNotEqual(merged["pair_setups"][0]["driver"], "old")
         self.assertEqual(merged["short_term"]["bias"], "bearish")
         self.assertEqual(merged["short_term"]["score"], -22.0)

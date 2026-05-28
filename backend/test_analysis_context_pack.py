@@ -340,9 +340,15 @@ class AnalysisContextPackTests(unittest.TestCase):
     def test_phase_f_calendar_rules_present(self):
         self.assertIn("REGIME VS EVENT", CALENDAR_PACK_PROMPT_RULES)
         self.assertIn("Never write \"macro snapshot\"", CALENDAR_PACK_PROMPT_RULES)
+        self.assertIn("PERSONALIZATION CASCADE", CALENDAR_PACK_PROMPT_RULES)
+        self.assertIn("ACTIONABLE TRIGGERS", CALENDAR_PACK_PROMPT_RULES)
+        self.assertIn("NEUTRAL SUB-CLASSIFICATION", CALENDAR_PACK_PROMPT_RULES)
 
     def test_phase_f_news_rules_present(self):
         self.assertIn("REGIME VS HEADLINE", NEWS_PACK_PROMPT_RULES)
+        self.assertIn("PERSONALIZATION CASCADE", NEWS_PACK_PROMPT_RULES)
+        self.assertIn("ACTIONABLE TRIGGERS", NEWS_PACK_PROMPT_RULES)
+        self.assertIn("NEUTRAL SUB-CLASSIFICATION", NEWS_PACK_PROMPT_RULES)
 
     def test_calendar_forward_scenarios_json_spec_uses_standard_keys(self):
         spec = calendar_forward_scenarios_json_spec("USD", is_pre_event=True)

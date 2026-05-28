@@ -480,9 +480,19 @@ const Overview = () => {
     return { value: 'Medium', class: 'neutral' };
   };
 
-  const parseMarketBias = (marketBias) => {
-    if (!marketBias) return { value: 'Neutral', class: 'neutral' };
-    const lower = marketBias.toLowerCase();
+  const parseMarketBias = (marketBias, displayBias) => {
+    const source = displayBias || marketBias;
+    if (!source) return { value: 'Neutral', class: 'neutral' };
+    const lower = source.toLowerCase();
+    if (/neutral.*bullish\s*lean|bullish\s*lean/.test(lower)) {
+      return { value: 'Neutral · Bullish lean', class: 'bullish' };
+    }
+    if (/neutral.*bearish\s*lean|bearish\s*lean/.test(lower)) {
+      return { value: 'Neutral · Bearish lean', class: 'bearish' };
+    }
+    if (/true\s*neutral/.test(lower)) {
+      return { value: 'True neutral', class: 'neutral' };
+    }
     // Check for bullish indicators
     if (/\b(bullish|positive|upward|rising|strengthening|optimistic|favorable)\b/.test(lower)) {
       return { value: 'Bullish', class: 'bullish' };
@@ -5710,6 +5720,11 @@ const Overview = () => {
                         <div className={`ai-fill ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`} 
                              style={{width: `${aiAnalysis.confidence_score || 85}%`}}></div>
                       </div>
+                      {aiAnalysis.confidence_reason && (
+                        <p className="ai-confidence-reason" title={aiAnalysis.confidence_reason}>
+                          {renderAnalysisText(aiAnalysis.confidence_reason)}
+                        </p>
+                      )}
                     </div>
                     
                     <div className="ai-breakdown">
@@ -5717,7 +5732,10 @@ const Overview = () => {
                         const eventImpact = parseRiskLevel(aiAnalysis.implications_takeaways?.risk_level);
                         const volatility = parseVolatility(aiAnalysis.market_reaction?.volatility);
                         const riskLevel = parseRiskLevel(aiAnalysis.implications_takeaways?.risk_level);
-                        const marketSentiment = parseMarketBias(aiAnalysis.implications_takeaways?.market_bias);
+                        const marketSentiment = parseMarketBias(
+                          aiAnalysis.implications_takeaways?.market_bias,
+                          aiAnalysis.implications_takeaways?.display_bias
+                        );
                         
                         return (
                           <>
@@ -6010,6 +6028,67 @@ const Overview = () => {
                             <span className="in-depth-label">Position sizing:</span>{' '}
                             {renderAnalysisText(aiAnalysis.trading_plan.position_sizing_risk || aiAnalysis.trading_plan.position_sizing)}
                           </p>
+                        )}
+                        {(aiAnalysis.risk_assessment?.correlation_risk || aiAnalysis.correlation_risk_display?.level) && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Correlation risk:</span>{' '}
+                            {renderAnalysisText(
+                              `${(aiAnalysis.correlation_risk_display?.level || aiAnalysis.risk_assessment?.correlation_risk || 'MEDIUM').toString().toUpperCase()}`
+                            )}
+                          </p>
+                        )}
+                        {(aiAnalysis.risk_assessment?.correlation_risk_detail || aiAnalysis.correlation_risk_display?.detail) && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Correlation detail:</span>{' '}
+                            {renderAnalysisText(aiAnalysis.risk_assessment?.correlation_risk_detail || aiAnalysis.correlation_risk_display?.detail)}
+                          </p>
+                        )}
+                        {Array.isArray(aiAnalysis.risk_assessment?.correlation_pairs) && aiAnalysis.risk_assessment.correlation_pairs.length > 0 && (
+                          <p className="in-depth-text">
+                            <span className="in-depth-label">Correlated pairs:</span>{' '}
+                            {renderAnalysisText(aiAnalysis.risk_assessment.correlation_pairs.join(', '))}
+                          </p>
+                        )}
+                        {aiAnalysis.trading_plan_structured && (
+                          <div className="in-depth-structured-plan">
+                            <div className="in-depth-label">Structured execution plan:</div>
+                            {aiAnalysis.trading_plan_structured.scenario_trigger && (
+                              <p className="in-depth-text">
+                                <span className="in-depth-label">Trigger:</span>{' '}
+                                {renderAnalysisText(aiAnalysis.trading_plan_structured.scenario_trigger)}
+                              </p>
+                            )}
+                            {aiAnalysis.trading_plan_structured.direction && (
+                              <p className="in-depth-text">
+                                <span className="in-depth-label">Direction:</span>{' '}
+                                {renderAnalysisText(aiAnalysis.trading_plan_structured.direction)}
+                              </p>
+                            )}
+                            {aiAnalysis.trading_plan_structured.entry_condition && (
+                              <p className="in-depth-text">
+                                <span className="in-depth-label">Entry condition:</span>{' '}
+                                {renderAnalysisText(aiAnalysis.trading_plan_structured.entry_condition)}
+                              </p>
+                            )}
+                            {aiAnalysis.trading_plan_structured.target_zone && (
+                              <p className="in-depth-text">
+                                <span className="in-depth-label">Target zone:</span>{' '}
+                                {renderAnalysisText(aiAnalysis.trading_plan_structured.target_zone)}
+                              </p>
+                            )}
+                            {aiAnalysis.trading_plan_structured.invalidation && (
+                              <p className="in-depth-text">
+                                <span className="in-depth-label">Invalidation:</span>{' '}
+                                {renderAnalysisText(aiAnalysis.trading_plan_structured.invalidation)}
+                              </p>
+                            )}
+                            {aiAnalysis.trading_plan_structured.sizing_note && (
+                              <p className="in-depth-text">
+                                <span className="in-depth-label">Sizing note:</span>{' '}
+                                {renderAnalysisText(aiAnalysis.trading_plan_structured.sizing_note)}
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
 

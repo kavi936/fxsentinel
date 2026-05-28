@@ -828,6 +828,8 @@ def _calendar_release_status(event: Dict[str, Any]) -> str:
 
 def build_calendar_area_facts(event: Dict[str, Any], analysis_type: str) -> Dict[str, Any]:
     """Area-specific facts for calendar_event surface (Phase C)."""
+    from services.calendar_scenario_engine import compute_neutral_zone_range
+
     expected = event.get("expected") or event.get("forecast")
     scheduled = (
         event.get("scheduled_at_utc")
@@ -841,7 +843,7 @@ def build_calendar_area_facts(event: Dict[str, Any], analysis_type: str) -> Dict
     release = _calendar_release_status(event)
     if analysis_type == "post_event" and release == "pre":
         release = "post"
-    return {
+    facts = {
         "event_id": str(event.get("id") or event.get("event_id") or ""),
         "title": str(event.get("title") or ""),
         "scheduled_at_utc": scheduled,
@@ -852,6 +854,10 @@ def build_calendar_area_facts(event: Dict[str, Any], analysis_type: str) -> Dict
         "previous": event.get("previous"),
         "impact_tier": impact,
     }
+    neutral_zone = compute_neutral_zone_range(expected)
+    if neutral_zone:
+        facts["neutral_zone"] = neutral_zone
+    return facts
 
 
 CALENDAR_PACK_PROMPT_RULES = """
@@ -869,13 +875,35 @@ TRADER-FACING LANGUAGE:
 - Each major section needs at least one concrete number from the pack, economy context, or event fields — no generic-only paragraphs.
 
 CONSISTENCY:
-- forward_scenarios probabilities should sum to roughly 100% across three paths.
+- forward_scenarios probabilities must be single integer percentages that sum to exactly 100.
+- forward_scenarios.neutral ([ON] path) must describe the **inline band** from area_facts.neutral_zone when present
+  (e.g. "0.25%–0.35%"), NOT a single exact consensus tick — markets treat near-consensus as limited reaction.
 - big_picture.medium_term_direction must not repeat market_bias verbatim.
 - analysis_confidence (High | Medium | Low) = edge strength; if Medium/Low, use assumptions[] for what supports vs negates.
 
 LEVELS & SESSION:
 - If market session is closed, trading_plan.key_levels must start with "Illustrative levels:".
 - Prefer user onboarding pairs when relevant; still cover economy-linked movers for this release.
+
+PERSONALIZATION CASCADE (mandatory):
+- If user.trading_style is swing: expand big_picture.medium_term_direction and forward_focus for multi-week framing; keep short-term language concise and conditional.
+- If user.trading_style is day: prioritize immediate post-release reaction, trigger/invalidation logic, and session-aware execution notes.
+- If user.primary_pairs is populated: prioritize those pairs in forward_scenarios/trading_plan first. If event relevance to a preferred pair is weak, say so explicitly rather than forcing a strong claim.
+
+ACTIONABLE TRIGGERS (mandatory):
+- Include at least one explicit "If [trigger] → then [FX outcome]" in trading_plan.best_approach and in each forward_scenarios path.
+- Ban passive-only lines ("monitor", "watch closely", "remain vigilant") without a linked trigger.
+- Example: "If Core PCE beats 0.3%, expect EUR/USD to test 1.1580; a break below 1.1520 would invalidate the USD-bullish follow-through."
+
+TRADING PLAN STRUCTURE (mandatory):
+- trading_plan should be execution-ready, not generic advice.
+- Include: trigger, direction (pair + long/short), entry condition, target zone, invalidation, sizing note.
+- Use conditional phrasing if levels are uncertain; do not omit invalidation logic.
+
+NEUTRAL SUB-CLASSIFICATION (mandatory):
+- implications_takeaways.market_bias must start with BULLISH | BEARISH | NEUTRAL for the event currency.
+- If drivers are balanced but tilt one way, use NEUTRAL · BULLISH LEAN or NEUTRAL · BEARISH LEAN (not plain NEUTRAL).
+- Use TRUE NEUTRAL only when there is no readable lean in scenarios or narrative.
 """.strip()
 
 
@@ -888,9 +916,9 @@ def calendar_forward_scenarios_json_spec(currency: str, *, is_pre_event: bool) -
     )
     return f"""
     "forward_scenarios": {{
-        "bullish": "{currency} strength path — conditional surprise (e.g. '45-55% if print above expected…'). State probability range, FX pairs/direction, and why vs {event_frame}.",
-        "bearish": "{currency} weakness path — conditional surprise (e.g. '25-35% if below expected…'). State probability range, FX pairs/direction, and why.",
-        "neutral": "Range/indecision path (e.g. '10-20% if in line…'). State probability range and why markets may wait."
+        "bullish": "[ABOVE] <INT>%: {currency} strength path as a conditional surprise outcome if print is above forecast. Use one integer probability; include FX pairs/direction and why vs {event_frame}.",
+        "bearish": "[BELOW] <INT>%: {currency} weakness path as a conditional surprise outcome if print is below forecast. Use one integer probability; include FX pairs/direction and why.",
+        "neutral": "[ON] <INT>%: inline/surprise-on-forecast path when print falls in the neutral_zone band from context (not a single exact tick). Use one integer probability and why reaction may be muted."
     }},
 """.strip()
 
@@ -919,7 +947,9 @@ def build_calendar_context_pack_section(
         area_facts=area_facts,
         options={"include_holistic_macro": True},
     )
-    block = render_pack_for_prompt(pack) + "\n\n" + CALENDAR_PACK_PROMPT_RULES
+    from services.analysis_calendar_confidence import CALENDAR_CONFIDENCE_PROMPT_RULES
+
+    block = render_pack_for_prompt(pack) + "\n\n" + CALENDAR_PACK_PROMPT_RULES + "\n\n" + CALENDAR_CONFIDENCE_PROMPT_RULES
     if is_analysis_context_pack_debug():
         logger.info("Calendar context pack built for event=%s", area_facts.get("event_id") or title)
     return pack, block
@@ -948,6 +978,25 @@ CONFIDENCE & LEVELS:
 
 CROSS-SURFACE:
 - If CROSS-SURFACE note is present in the pack, address it in news_impact or trading_implications.
+
+PERSONALIZATION CASCADE (mandatory):
+- If user.trading_style is swing: emphasize multi-session follow-through and invalidation conditions; avoid scalper-style micro timing language.
+- If user.trading_style is day: emphasize next-session trigger conditions and immediate risk controls.
+- If user.primary_pairs is populated: lead with the most relevant preferred pair; if headline relevance is weak for those pairs, state that explicitly.
+
+ACTIONABLE TRIGGERS (mandatory):
+- trading_implications MUST include at least one "If [trigger] → then [pair move / level / session]" using the primary instrument.
+- Replace "monitor" / "watch closely" / "remain vigilant" with a concrete conditional.
+
+CORRELATION RISK SPECIFICITY (mandatory):
+- Do not output generic "correlation risk: medium" without context.
+- Name the exact correlated pairs/channels (e.g. EUR/USD + GBP/USD via USD leg, USD/JPY via haven flow, XAU/USD via real yields).
+- State one concrete spillover condition that would raise or reduce that risk.
+
+NEUTRAL SUB-CLASSIFICATION (mandatory):
+- immediate_reaction stays bullish_usd | bearish_usd | neutral for the API enum.
+- When reaction is neutral but narrative has a mild USD lean, the copy must read as NEUTRAL · BULLISH/BEARISH LEAN in trading_implications (do not contradict with "clear bullish USD").
+- Use TRUE NEUTRAL only when the headline is genuinely two-sided for USD.
 """.strip()
 
 

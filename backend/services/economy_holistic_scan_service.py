@@ -16,6 +16,19 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from services.analysis_bias_classification import classify_from_score
+from services.analysis_score_narrative_bridge import (
+    SCORE_BRIDGE_PROMPT_RULES,
+    apply_score_narrative_bridge_to_scan,
+    requires_score_bridge,
+    validate_score_bridge_in_generated,
+)
+from services.holistic_pair_commentary import (
+    build_pair_setup_copy,
+    driver_mentions_pair_currency,
+    pair_explanations_are_distinct,
+    pair_sensitivity_hints_for_gpt,
+)
 from services.openai_model_config import (
     estimate_cost_from_usage,
     select_model_for_holistic_narrative,
@@ -27,8 +40,15 @@ logger = logging.getLogger(__name__)
 class EconomyHolisticScanService:
     """Build a deterministic short/long macro scan for one economy."""
 
-    VERSION = "economy_scan_v1.2"
+    VERSION = "economy_scan_v1.4"
     SUPPORTED_COUNTRIES = {"US", "EUR", "GBP", "JPY"}
+
+    SCORE_MIN = -100
+    SCORE_MAX = 100
+    NEUTRAL_BAND_MIN = -20
+    NEUTRAL_BAND_MAX = 20
+    BIAS_BULLISH_MIN = 21
+    BIAS_BEARISH_MAX = -21
 
     COUNTRY_PAIRS = {
         "US": ["EURUSD", "USDJPY", "GBPUSD", "AUDUSD"],
@@ -218,6 +238,7 @@ class EconomyHolisticScanService:
         country: str,
         personalization: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
+        curated = scan.get("curated_macro_overlay") or {}
         return {
             "country": country,
             "economy": scan.get("economy"),
@@ -228,8 +249,14 @@ class EconomyHolisticScanService:
             "yield_context": scan.get("yield_context") or {},
             "trader_brief": scan.get("trader_brief") or {},
             "highlights": scan.get("highlights") or {},
-            "curated_macro_overlay": scan.get("curated_macro_overlay") or {},
+            "curated_macro_overlay": curated,
+            "score_bridge_required": requires_score_bridge(curated.get("geo_severity")),
             "pair_setups": (scan.get("pair_setups") or [])[:4],
+            "pair_sensitivity_hints": pair_sensitivity_hints_for_gpt(
+                (scan.get("pair_setups") or [])[:4],
+                country,
+                scan.get("curated_macro_overlay") or {},
+            ),
             "personalization": {
                 "trading_style": (personalization or {}).get("trading_style"),
                 "experience_level": (personalization or {}).get("experience_level"),
@@ -249,13 +276,30 @@ Rules:
 - Keep narrative aligned with deterministic bias/score.
 - You may mention alternative risk scenarios, but must label them as scenarios.
 - Pair explanations must be specific per pair (not copy/paste).
+- Use payload.pair_sensitivity_hints: each pair has required_tokens (currency/institution keywords) that MUST appear in that pair's driver.
+- Rewrite each pair's driver and invalidation from scratch; do not reuse the same sentence across pairs.
+- Reference the pair's base/quote economics (e.g. JPY energy-import/BoJ for USDJPY, AUD commodity/China for AUDUSD).
 - Use concise trader language and include concrete context where available.
+- narrative.short_term and narrative.fx must each include at least one explicit "If [trigger] → then [outcome]" (yields, score band, or event risk).
+- pair_explanations invalidation fields must stay conditional ("Invalidated if ...").
+- Ban passive-only filler ("monitor", "watch closely", "remain vigilant") without a concrete trigger.
+
+NEUTRAL SUB-CLASSIFICATION:
+- When short_term/long_term bias is neutral, narrative must state NEUTRAL · BULLISH LEAN or NEUTRAL · BEARISH LEAN (or TRUE NEUTRAL) consistent with the deterministic score band.
+- Do not write plain "neutral" in prose when the score or drivers imply a lean.
 
 Curated macro overlay (required when provided in payload):
 - The payload includes curated_macro_overlay from holistic_scan_context.json (global_themes, economy_hook).
 - Treat this as the editorial floor for geopolitical, policy, tariff, and structural risks.
 - narrative.geopolitical_energy must reflect the primary geo theme and economy_hook; you may reference other global_themes where relevant.
 - Do not contradict deterministic short_term/long_term bias or scores; explain them using overlay + yields.
+
+{SCORE_BRIDGE_PROMPT_RULES}
+
+Personalization cascade (required when payload.personalization is present):
+- If trading_style == "swing": make narrative.long_term the primary thesis with multi-week framing and clear follow-through conditions; keep narrative.short_term concise as an entry/noise filter.
+- If trading_style == "day": prioritize immediate session reaction in narrative.short_term/fx and keep long_term concise.
+- If primary_pairs are provided: prioritize those pairs in pair_explanations when relevant; if one is weakly related, say so briefly instead of forcing a strong directional claim.
 
 Emphasis for UI (required):
 - Wrap important phrases in **double asterisks** so they render as red bold in the app (same as calendar analysis).
@@ -269,7 +313,8 @@ Return ONLY valid JSON with this exact shape:
     "short_term": "string",
     "long_term": "string",
     "fx": "string",
-    "geopolitical_energy": "string"
+    "geopolitical_energy": "string",
+    "score_bridge": "string (required when score_bridge_required is true; may be empty otherwise)"
   }},
   "pair_explanations": [
     {{"pair": "EURUSD", "driver": "string", "invalidation": "string"}}
@@ -340,6 +385,13 @@ Return ONLY valid JSON with this exact shape:
             if not isinstance(value, str) or len(value.strip()) < 20:
                 errors.append(f"narrative_{key}_too_short_or_missing")
 
+        from services.analysis_actionable_conditionals import has_actionable_conditional
+
+        if not has_actionable_conditional(str(narrative.get("short_term") or "")):
+            errors.append("narrative_short_term_missing_conditional")
+        if not has_actionable_conditional(str(narrative.get("fx") or "")):
+            errors.append("narrative_fx_missing_conditional")
+
         pair_explanations = generated.get("pair_explanations")
         if not isinstance(pair_explanations, list):
             errors.append("pair_explanations_missing_or_invalid")
@@ -365,6 +417,20 @@ Return ONLY valid JSON with this exact shape:
         if missing_pairs:
             errors.append(f"missing_pair_explanations:{','.join(missing_pairs)}")
 
+        distinct_ok, distinct_reason = pair_explanations_are_distinct(
+            [r for r in pair_explanations if isinstance(r, dict)]
+        )
+        if not distinct_ok:
+            errors.append(distinct_reason)
+
+        for row in pair_explanations:
+            if not isinstance(row, dict):
+                continue
+            pair_norm = str(row.get("pair") or "").replace("/", "").upper()
+            driver = str(row.get("driver") or "")
+            if pair_norm and not driver_mentions_pair_currency(pair_norm, driver):
+                errors.append(f"{pair_norm}_driver_missing_pair_specific_tokens")
+
         short_bias = str((deterministic_scan.get("short_term") or {}).get("bias") or "neutral").lower()
         short_text = str(narrative.get("short_term") or "").lower()
         if short_bias == "bearish" and "bullish" in short_text and "scenario" not in short_text:
@@ -372,14 +438,20 @@ Return ONLY valid JSON with this exact shape:
         if short_bias == "bullish" and "bearish" in short_text and "scenario" not in short_text:
             errors.append("short_term_bias_contradiction_bullish_vs_bearish_text")
 
+        bridge_ok, bridge_reason = validate_score_bridge_in_generated(generated, deterministic_scan)
+        if not bridge_ok and bridge_reason:
+            errors.append(bridge_reason)
+
         return len(errors) == 0, errors
 
     def _merge_holistic_narrative(self, scan: Dict[str, Any], generated: Dict[str, Any]) -> Dict[str, Any]:
         narrative = scan.get("narrative") or {}
         new_narrative = generated.get("narrative") or {}
-        for key in ("short_term", "long_term", "fx", "geopolitical_energy"):
+        for key in ("short_term", "long_term", "fx", "geopolitical_energy", "score_bridge"):
             if isinstance(new_narrative.get(key), str) and new_narrative.get(key).strip():
                 narrative[key] = new_narrative[key].strip()
+        if narrative.get("score_bridge"):
+            scan["score_narrative_bridge"] = narrative["score_bridge"]
         scan["narrative"] = narrative
 
         by_pair = {}
@@ -415,6 +487,9 @@ Return ONLY valid JSON with this exact shape:
         if reason:
             scan["narrative_validation_reason"] = reason
 
+    def _finalize_scan_score_bridge(self, scan: Dict[str, Any]) -> Dict[str, Any]:
+        return apply_score_narrative_bridge_to_scan(scan)
+
     def build_scan(
         self,
         country_code: str,
@@ -448,21 +523,22 @@ Return ONLY valid JSON with this exact shape:
         event_risk = self._event_risk(country, calendar_events)
         quality_status = self._quality_status(missing_signals, staleness_seconds)
         quality_overrides = self._build_quality_overrides(missing_signals, staleness_seconds)
+        staleness_confidence = self._staleness_confidence_rule(staleness_seconds)
 
-        short_term_payload = {
-                "bias": self._score_to_bias(short_total),
-                "score": short_total,
-                "confidence": self._confidence(short_components, missing_signals, staleness_seconds),
-                "drivers": short_components,
-                "display_bias": self._regime_display_label(self._score_to_bias(short_total), quality_overrides.get("incomplete", False)),
-            }
-        long_term_payload = {
-                "bias": self._score_to_bias(long_total),
-                "score": long_total,
-                "confidence": self._confidence(long_components, missing_signals, staleness_seconds),
-                "drivers": long_components,
-                "display_bias": self._regime_display_label(self._score_to_bias(long_total), quality_overrides.get("incomplete", False)),
-            }
+        short_term_payload = self._build_regime_score_payload(
+            short_total,
+            short_components,
+            missing_signals,
+            staleness_seconds,
+            quality_overrides,
+        )
+        long_term_payload = self._build_regime_score_payload(
+            long_total,
+            long_components,
+            missing_signals,
+            staleness_seconds,
+            quality_overrides,
+        )
 
         fx_pairs = self._map_fx_pairs(
             country,
@@ -480,6 +556,8 @@ Return ONLY valid JSON with this exact shape:
             sentiment=yield_context.get("investor_sentiment"),
             macro_overlay=macro_overlay,
             quality_overrides=quality_overrides,
+            data_quality_status=quality_status,
+            staleness_seconds=staleness_seconds,
         )
         event_flags = self._build_event_flags(event_risk)
         trader_brief = self._build_trader_brief(
@@ -509,6 +587,12 @@ Return ONLY valid JSON with this exact shape:
             "country": country,
             "economy": self._country_label(country),
             "timestamp": datetime.utcnow().isoformat(),
+            "personalization": {
+                "trading_style": (personalization or {}).get("trading_style"),
+                "experience_level": (personalization or {}).get("experience_level"),
+                "primary_pairs": (personalization or {}).get("primary_pairs") or [],
+            },
+            "score_scale": self._score_scale_contract(),
             "short_term": {
                 **short_term_payload,
             },
@@ -543,6 +627,9 @@ Return ONLY valid JSON with this exact shape:
                 "status": quality_status,
                 "missing_signals": missing_signals,
                 "staleness_seconds": staleness_seconds,
+                "confidence_penalty_points": staleness_confidence["penalty_points"],
+                "confidence_cap": staleness_confidence["cap"],
+                "confidence_tier": staleness_confidence["tier"],
                 "source_staleness_seconds": {
                     "indicators": staleness_seconds,
                     "yields": yield_staleness_seconds,
@@ -562,7 +649,7 @@ Return ONLY valid JSON with this exact shape:
                 cost=0.0,
                 validation="skipped",
             )
-            return scan
+            return self._finalize_scan_score_bridge(scan)
 
         payload = self._build_holistic_narrative_prompt_payload(
             scan,
@@ -579,7 +666,7 @@ Return ONLY valid JSON with this exact shape:
                 validation="failed",
                 reason=str(gpt_result.get("error") or "unknown_error"),
             )
-            return scan
+            return self._finalize_scan_score_bridge(scan)
 
         generated = gpt_result.get("data") or {}
         valid, errors = self._validate_holistic_narrative(generated, scan)
@@ -592,7 +679,7 @@ Return ONLY valid JSON with this exact shape:
                 validation="failed",
                 reason=";".join(errors[:4]),
             )
-            return scan
+            return self._finalize_scan_score_bridge(scan)
 
         self._merge_holistic_narrative(scan, generated)
         self._attach_narrative_metadata(
@@ -602,7 +689,7 @@ Return ONLY valid JSON with this exact shape:
             cost=gpt_result.get("cost_estimate", 0.0),
             validation="passed",
         )
-        return scan
+        return self._finalize_scan_score_bridge(scan)
 
     def _interest_rate_keys(self, country: str) -> tuple[str, ...]:
         """Sheets/JSON use `interest-rate`; some builds may namespace by economy."""
@@ -819,16 +906,17 @@ Return ONLY valid JSON with this exact shape:
         sentiment: Optional[str],
         macro_overlay: Dict[str, Any],
         quality_overrides: Dict[str, Any],
+        data_quality_status: str = "good",
+        staleness_seconds: int = 0,
     ) -> List[Dict[str, Any]]:
         sentiment_label = (sentiment or "balanced").replace("_", " ")
-        geo_title = ""
-        if macro_overlay.get("global_themes"):
-            geo_title = ((macro_overlay.get("global_themes") or [{}])[0].get("title") or "").strip()
-        top_geo_driver = geo_title or "geopolitical and energy risk"
-        conviction_note = (
-            f"Conviction reduced — missing signal families: {', '.join(missing_signals[:3])}."
-            if quality_overrides.get("incomplete")
-            else ("Conviction reduced — inputs are stale." if quality_overrides.get("stale") else "Conviction normal on available signal set.")
+        economy_hooks = macro_overlay.get("economy_hooks") or {}
+        economy_hook = str(economy_hooks.get(country.upper(), "") or "")
+
+        stale_inputs = (
+            str(data_quality_status).lower() == "poor"
+            or staleness_seconds == -1
+            or staleness_seconds > 60 * 60 * 24 * 14
         )
 
         setups: List[Dict[str, Any]] = []
@@ -836,24 +924,28 @@ Return ONLY valid JSON with this exact shape:
             pair = row.get("pair", "N/A")
             bias = row.get("bias", "neutral")
             strength = row.get("strength", "light")
-            invalidation = (
-                "Invalidated if oil/geopolitical stress triggers USD safe-haven bid and reverses current rate impulse."
-                if event_risk_score >= 80
-                else "Invalidated if yield-impulse direction flips for 2Y/10Y and macro bias shifts across consecutive updates."
+            copy = build_pair_setup_copy(
+                pair=str(pair),
+                scan_country=country,
+                pair_bias=str(bias),
+                scan_short_bias=str(short_bias),
+                event_risk_score=float(event_risk_score),
+                sentiment_label=sentiment_label,
+                macro_overlay=macro_overlay,
+                quality_overrides=quality_overrides,
+                economy_hook=economy_hook,
             )
-            if short_bias == "neutral":
-                driver = f"Range conditions; monitor {sentiment_label} curve and event-driven breaks."
-            else:
-                driver = f"{country} short-term {short_bias} regime with {sentiment_label} yield backdrop."
             setups.append(
                 {
                     "pair": pair,
                     "bias": bias,
                     "strength": strength,
-                    "driver": driver,
-                    "invalidation": invalidation,
-                    "key_risk": top_geo_driver,
-                    "conviction_note": conviction_note,
+                    "driver": copy["driver"],
+                    "invalidation": copy["invalidation"],
+                    "key_risk": copy["key_risk"],
+                    "conviction_note": copy["conviction_note"],
+                    "sensitivity_tags": copy.get("sensitivity_tags") or [],
+                    "stale_input": stale_inputs,
                 }
             )
         return setups
@@ -872,11 +964,15 @@ Return ONLY valid JSON with this exact shape:
         long_bias = long_term.get("bias", "neutral")
         short_line = (
             f"{self._regime_display_label(short_bias, quality_overrides.get('incomplete', False))} · "
-            f"Score {short_term.get('score')} · {short_term.get('confidence')}% confidence"
+            f"Score {short_term.get('score_display') or short_term.get('score')} · "
+            f"{short_term.get('position_label') or 'Position unavailable'} · "
+            f"{short_term.get('confidence')}% confidence"
         )
         long_line = (
             f"{self._regime_display_label(long_bias, quality_overrides.get('incomplete', False))} · "
-            f"Score {long_term.get('score')} · {long_term.get('confidence')}% confidence"
+            f"Score {long_term.get('score_display') or long_term.get('score')} · "
+            f"{long_term.get('position_label') or 'Position unavailable'} · "
+            f"{long_term.get('confidence')}% confidence"
         )
         warnings: List[str] = []
         if event_flags.get("high_repricing_risk"):
@@ -907,6 +1003,120 @@ Return ONLY valid JSON with this exact shape:
 
     def _sum_weighted(self, components: List[Dict[str, Any]]) -> float:
         return round(sum(c.get("contribution", 0.0) for c in components), 2)
+
+    def _score_scale_contract(self) -> Dict[str, Any]:
+        return {
+            "min": self.SCORE_MIN,
+            "max": self.SCORE_MAX,
+            "unit": "points",
+            "neutral_band": {
+                "min": self.NEUTRAL_BAND_MIN,
+                "max": self.NEUTRAL_BAND_MAX,
+                "label": "Neutral band (-20 to +20)",
+            },
+            "bias_thresholds": {
+                "bullish_min": self.BIAS_BULLISH_MIN,
+                "bearish_max": self.BIAS_BEARISH_MAX,
+            },
+            "interpretation_guide": (
+                f"{self.SCORE_MIN} = extreme bearish macro impulse, "
+                f"0 = balanced, "
+                f"+{self.SCORE_MAX} = extreme bullish macro impulse."
+            ),
+            "methodology": (
+                "Each driver maps an indicator/yield signal to [-100, +100], multiplied by its weight, "
+                "then summed. Missing drivers contribute 0 and reduce confidence."
+            ),
+            "display_note": "Scores are rounded to whole points for readability; drivers retain one decimal.",
+        }
+
+    def _round_score(self, score: float) -> int:
+        clipped = max(min(score, float(self.SCORE_MAX)), float(self.SCORE_MIN))
+        return int(round(clipped))
+
+    def _score_position_label(self, score: float) -> str:
+        if self.NEUTRAL_BAND_MIN <= score <= self.NEUTRAL_BAND_MAX:
+            if score > 5:
+                return "Neutral band, bullish lean"
+            if score < -5:
+                return "Neutral band, bearish lean"
+            return "Neutral band, balanced"
+        if score > self.NEUTRAL_BAND_MAX:
+            if score >= 45:
+                return "Strong bullish"
+            if score >= 35:
+                return "Moderate bullish"
+            return "Mild bullish"
+        if score <= self.BIAS_BEARISH_MAX:
+            if score <= -45:
+                return "Strong bearish"
+            if score <= -35:
+                return "Moderate bearish"
+            return "Mild bearish"
+        return "Neutral band"
+
+    def _score_band_position_pct(self, score: float) -> float:
+        span = float(self.SCORE_MAX - self.SCORE_MIN)
+        if span <= 0:
+            return 50.0
+        return round(((score - self.SCORE_MIN) / span) * 100.0, 1)
+
+    def _build_component_breakdown(
+        self,
+        components: List[Dict[str, Any]],
+        total: float,
+    ) -> Dict[str, Any]:
+        drivers: List[Dict[str, Any]] = []
+        abs_total = abs(total)
+        for component in components:
+            contribution = float(component.get("contribution") or 0.0)
+            available = bool(component.get("available", True))
+            share = round((abs(contribution) / abs_total) * 100.0, 1) if available and abs_total >= 0.01 else 0.0
+            drivers.append(
+                {
+                    "name": component.get("name"),
+                    "contribution": contribution,
+                    "contribution_display": f"{contribution:+.1f}" if available else "N/A",
+                    "direction": component.get("direction", "neutral"),
+                    "weight": component.get("weight"),
+                    "weight_pct": round(float(component.get("weight") or 0.0) * 100.0, 1),
+                    "share_of_total_pct": share,
+                    "available": available,
+                    "note": component.get("note"),
+                }
+            )
+        return {
+            "total": self._round_score(total),
+            "formula": "sum(driver_signal × weight); driver_signal bounded [-100, +100]",
+            "drivers": drivers,
+        }
+
+    def _build_regime_score_payload(
+        self,
+        total: float,
+        components: List[Dict[str, Any]],
+        missing_signals: List[str],
+        staleness_seconds: int,
+        quality_overrides: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        rounded = self._round_score(total)
+        classified = classify_from_score(
+            total,
+            incomplete=bool(quality_overrides.get("incomplete")),
+        )
+        return {
+            "bias": classified["bias"],
+            "bias_classification": classified["bias_classification"],
+            "score": rounded,
+            "score_precise": round(total, 2),
+            "score_display": f"{rounded} / {self.SCORE_MAX}",
+            "position_label": self._score_position_label(total),
+            "band_position_pct": self._score_band_position_pct(total),
+            "confidence": self._confidence(components, missing_signals, staleness_seconds),
+            "drivers": components,
+            "component_breakdown": self._build_component_breakdown(components, total),
+            "display_bias": classified["display_bias"],
+        }
 
     def _build_yield_context(self, country: str, yields: Dict[str, Any]) -> Dict[str, Any]:
         ticker_map = {
@@ -1012,7 +1222,9 @@ Return ONLY valid JSON with this exact shape:
             f"**{self._fmt(y2)} / {self._fmt(y10)} / {self._fmt(y30)}**, with [[session moves]] of "
             f"**{self._fmt_signed(c2)} / {self._fmt_signed(c10)} / {self._fmt_signed(c30)}**. "
             f"Together that reads as a [[{sentiment_phrase}]] rate backdrop; markets are repricing near-term policy and growth expectations, "
-            f"which is the main bridge from rates into FX."
+            f"which is the main bridge from rates into FX. "
+            f"If yields extend today's direction, expect FX pairs mapped to this scan to follow the **{short_bias}** bias; "
+            f"if yields reverse sharply, treat the move as a range-trade until the next catalyst confirms follow-through."
         )
         long_text = (
             f"On a longer horizon, the regime reads **{long_bias.upper()}**. "
@@ -1022,8 +1234,8 @@ Return ONLY valid JSON with this exact shape:
         )
         fx_text = (
             f"[[FX implications]] are mapped into correlated pairs using [[base/quote orientation]]. "
-            f"When [[{self._country_label(country)}]] has a stronger yield and policy profile, pairs where this economy's currency is the base tend to inherit [[bullish]] bias, "
-            f"while quote-side exposure tends to inherit [[bearish]] bias; the reverse applies when the scan weakens."
+            f"If [[{self._country_label(country)}]] keeps a stronger yield and policy profile, pairs where this currency is the base tend to inherit [[bullish]] bias, "
+            f"while quote-side exposure tends to inherit [[bearish]] bias; if the scan weakens, expect that mapping to invert on the next refresh."
         )
 
         theme = (macro_overlay.get("global_themes") or [{}])[0] if macro_overlay.get("global_themes") else {}
@@ -1328,20 +1540,31 @@ Return ONLY valid JSON with this exact shape:
         available = sum(1 for c in components if c.get("available", True))
         total = max(len(components), 1)
         base = int((available / total) * 100)
-        if staleness_seconds > 60 * 60 * 24 * 45:
-            base -= 20
-        elif staleness_seconds > 60 * 60 * 24 * 21:
-            base -= 10
+        staleness_rule = self._staleness_confidence_rule(staleness_seconds)
+        base -= staleness_rule["penalty_points"]
         if missing:
             base -= min(len(missing) * 5, 20)
-        hard_cap = 95
-        if staleness_seconds > 60 * 60 * 24 * 21:
-            hard_cap = 60
-        elif staleness_seconds > 60 * 60 * 24 * 14:
-            hard_cap = 70
-        elif staleness_seconds > 60 * 60 * 24 * 7:
-            hard_cap = 80
+        hard_cap = staleness_rule["cap"]
         return max(min(base, hard_cap), 20)
+
+    def _staleness_confidence_rule(self, staleness_seconds: int) -> Dict[str, Any]:
+        """
+        Deterministic staleness->confidence mapping.
+        This keeps confidence aligned with scan reliability and avoids stale-data
+        outputs presenting near-normal confidence.
+        """
+        day = 60 * 60 * 24
+        if staleness_seconds == -1:
+            return {"tier": "unknown", "penalty_points": 25, "cap": 50}
+        if staleness_seconds > 28 * day:
+            return {"tier": "severe", "penalty_points": 20, "cap": 50}
+        if staleness_seconds > 21 * day:
+            return {"tier": "high", "penalty_points": 15, "cap": 55}
+        if staleness_seconds > 14 * day:
+            return {"tier": "elevated", "penalty_points": 10, "cap": 65}
+        if staleness_seconds > 7 * day:
+            return {"tier": "moderate", "penalty_points": 5, "cap": 80}
+        return {"tier": "fresh", "penalty_points": 0, "cap": 95}
 
     def _quality_status(self, missing: List[str], staleness_seconds: int) -> str:
         if staleness_seconds == -1:
@@ -1353,9 +1576,9 @@ Return ONLY valid JSON with this exact shape:
         return "good"
 
     def _score_to_bias(self, score: float) -> str:
-        if score > 20:
+        if score >= self.BIAS_BULLISH_MIN:
             return "bullish"
-        if score < -20:
+        if score <= self.BIAS_BEARISH_MAX:
             return "bearish"
         return "neutral"
 

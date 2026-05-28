@@ -1428,7 +1428,11 @@ const LiveNewsFeed = () => {
                           <div className="essentials-grid">
                             <div className="essential-item">
                               <span className="label">Immediate Reaction:</span>
-                              <span className="value bold">{aiAnalysis.immediate_reaction?.replace('_', ' ').toUpperCase() || 'NEUTRAL'}</span>
+                              <span className="value bold">
+                                {aiAnalysis.reaction_display
+                                  || aiAnalysis.immediate_reaction?.replace(/_/g, ' ').toUpperCase()
+                                  || 'NEUTRAL'}
+                              </span>
                             </div>
                             <div className="essential-item">
                               <span className="label">Key Pairs:</span>

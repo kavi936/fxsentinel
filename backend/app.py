@@ -1015,12 +1015,13 @@ def get_economy_scan(country_code):
         end_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
         events = hybrid_economic_calendar.get_economic_events(start_date, end_date) or []
 
+        scan_personalization = get_user_personalization(token_user_info.get('user_id'))
         scan = economy_holistic_scan_service.build_scan(
             country_code=country_code,
             indicators=indicators,
             events=events,
             yields=live_quotes,
-            personalization=get_user_personalization(token_user_info.get('user_id')),
+            personalization=scan_personalization,
             user_info=token_user_info,
         )
 
@@ -1049,6 +1050,7 @@ def get_economy_scan(country_code):
             context=FinalizeContext(
                 country_code=country_code,
                 latency_ms=int((time.perf_counter() - started) * 1000),
+                personalization=scan_personalization,
             ),
         )
 
@@ -2405,6 +2407,7 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
                 news_item=news_item,
                 token_user_info=token_user_info,
                 latency_ms=elapsed_ms,
+                personalization=personalization,
             ),
         )
         print(f"🔍 Analysis result news_impact: {analysis_result['news_impact'][:50] if analysis_result['news_impact'] else 'EMPTY'}...")
@@ -2842,6 +2845,8 @@ def get_enhanced_analysis(news_id):
                 validated_event=validated_event,
                 analysis_type=analysis_type,
                 latency_ms=int((time.perf_counter() - started) * 1000),
+                personalization=personalization,
+                token_user_info=user_info,
             ),
         )
 

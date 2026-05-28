@@ -2376,6 +2376,11 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
 
   const selectedEconomyName = economyNameMap[selectedEconomy] || selectedEconomy;
   const scanTimestamp = holisticScan?.timestamp ? new Date(holisticScan.timestamp).toLocaleString() : null;
+  const swingWarningPresent = (holisticScan?.trader_brief?.warnings || []).some((w) =>
+    String(w).toLowerCase().includes('swing-trading profile')
+  );
+  const scanTradingStyle = String(holisticScan?.personalization?.trading_style || (swingWarningPresent ? 'swing' : '')).toLowerCase();
+  const isSwingScan = scanTradingStyle === 'swing';
   const formatYield = (value) => (typeof value === 'number' ? `${value.toFixed(2)}%` : 'N/A');
   const formatChange = (value) => (typeof value === 'number' ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}` : 'N/A');
   const formatStaleness = (seconds) => {
@@ -2384,6 +2389,79 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
     const hours = Math.floor((seconds % 86400) / 3600);
     if (days > 0) return `${days}d ${hours}h`;
     return `${hours}h`;
+  };
+
+  const renderScoreBand = (regimeKey) => {
+    const regime = holisticScan?.[regimeKey];
+    const scale = holisticScan?.score_scale;
+    if (!regime || typeof regime.score !== 'number' || !scale) return null;
+
+    const min = scale.min ?? -100;
+    const max = scale.max ?? 100;
+    const positionPct = typeof regime.band_position_pct === 'number'
+      ? regime.band_position_pct
+      : (((regime.score - min) / (max - min)) * 100);
+
+    const neutralMin = scale.neutral_band?.min ?? -20;
+    const neutralMax = scale.neutral_band?.max ?? 20;
+    const neutralStart = ((neutralMin - min) / (max - min)) * 100;
+    const neutralWidth = ((neutralMax - neutralMin) / (max - min)) * 100;
+
+    return (
+      <div className="scan-score-band" aria-label={`${regimeKey} score position on ${min} to ${max} scale`}>
+        <div className="scan-score-band-track">
+          <div
+            className="scan-score-band-neutral"
+            style={{ left: `${neutralStart}%`, width: `${neutralWidth}%` }}
+            title={scale.neutral_band?.label || 'Neutral band'}
+          />
+          <div
+            className="scan-score-band-marker"
+            style={{ left: `${Math.min(Math.max(positionPct, 0), 100)}%` }}
+            title={`Score ${regime.score_display || regime.score}`}
+          />
+        </div>
+        <div className="scan-score-band-labels">
+          <span>{min}</span>
+          <span>{scale.neutral_band?.label || 'Neutral'}</span>
+          <span>+{max}</span>
+        </div>
+      </div>
+    );
+  };
+
+  const renderComponentBreakdown = (regimeKey, title) => {
+    const breakdown = holisticScan?.[regimeKey]?.component_breakdown;
+    const drivers = breakdown?.drivers;
+    if (!Array.isArray(drivers) || drivers.length === 0) return null;
+
+    return (
+      <div className="scan-driver-breakdown">
+        <div className="scan-driver-breakdown-title">{title}</div>
+        <div className="scan-driver-breakdown-head" aria-hidden="true">
+          <span>Driver</span>
+          <span>Contribution</span>
+          <span>Share</span>
+        </div>
+        {drivers.map((driver) => (
+          <div key={`${regimeKey}-${driver.name}`} className="scan-driver-row">
+            <span className="scan-driver-name">
+              {driver.name}
+              {!driver.available && <span className="scan-driver-missing"> (missing)</span>}
+            </span>
+            <span className={`scan-driver-contribution scan-driver-${driver.direction || 'neutral'}`}>
+              {driver.contribution_display ?? 'N/A'}
+            </span>
+            <span className="scan-driver-share">
+              {driver.available ? `${driver.share_of_total_pct ?? 0}%` : '—'}
+            </span>
+          </div>
+        ))}
+        {breakdown.formula && (
+          <p className="scan-driver-formula">{breakdown.formula}</p>
+        )}
+      </div>
+    );
   };
 
   const renderRegimeLine = (line, fallbackText) => {
@@ -4781,12 +4859,14 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <span className="scan-overview-item">Economy: {holisticScan.economy || selectedEconomyName}</span>
                 {scanTimestamp && <span className="scan-overview-item">Scanned: {scanTimestamp}</span>}
               </div>
-              <div className="scan-section scan-trader-brief">
+              <div className={`scan-section scan-trader-brief ${isSwingScan ? 'scan-trader-brief-swing' : ''}`}>
                 <div className="scan-section-title">Regime Strip</div>
                 <div className="scan-regime-strip">
-                  <div className="scan-regime-summary-row">
+                  <div className={`scan-regime-summary-row ${isSwingScan ? 'scan-regime-summary-row-swing' : ''}`}>
                     <div className="scan-regime-pill">
-                      <span className="scan-regime-pill-label">Short-term</span>
+                      <span className="scan-regime-pill-label">
+                        {isSwingScan ? 'Short-term (entry/noise filter)' : 'Short-term'}
+                      </span>
                       <div className="scan-regime-pill-content">
                         {renderRegimeLine(
                           holisticScan.trader_brief?.short_term_line,
@@ -4794,8 +4874,10 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                         )}
                       </div>
                     </div>
-                    <div className="scan-regime-pill">
-                      <span className="scan-regime-pill-label">Long-term</span>
+                    <div className={`scan-regime-pill ${isSwingScan ? 'scan-regime-pill-primary' : ''}`}>
+                      <span className="scan-regime-pill-label">
+                        {isSwingScan ? 'Long-term (primary swing thesis)' : 'Long-term'}
+                      </span>
                       <div className="scan-regime-pill-content">
                         {renderRegimeLine(
                           holisticScan.trader_brief?.long_term_line,
@@ -4847,34 +4929,53 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 </div>
               </div>
 
-              <div className="scan-grid">
-                <div className="scan-card">
+              <div className={`scan-grid ${isSwingScan ? 'scan-grid-swing' : ''}`}>
+                <div className={`scan-card ${isSwingScan ? 'scan-card-secondary' : ''}`}>
                   <div className="scan-card-label">Short-Term (2-6 weeks)</div>
                   <div className={`scan-bias ${getBiasClass(holisticScan.short_term?.bias)}`}>
                     {(holisticScan.short_term?.display_bias || holisticScan.short_term?.bias || 'neutral').toUpperCase()}
                   </div>
                   <div className="scan-meta">
-                    Score: {holisticScan.short_term?.score ?? 'N/A'}
+                    Score: {(holisticScan.short_term?.score_display || holisticScan.short_term?.score) ?? 'N/A'}
                     <span className="scan-meta-sep" aria-hidden="true">
                       |
                     </span>
-                    Confidence: {holisticScan.short_term?.confidence ?? 'N/A'}
+                    {holisticScan.short_term?.position_label || 'Position unavailable'}
+                    <span className="scan-meta-sep" aria-hidden="true">
+                      |
+                    </span>
+                    Confidence: {holisticScan.short_term?.confidence ?? 'N/A'}%
                   </div>
+                  {renderScoreBand('short_term')}
+                  {renderComponentBreakdown('short_term', 'Short-term driver contributions')}
                 </div>
-                <div className="scan-card">
+                <div className={`scan-card ${isSwingScan ? 'scan-card-primary' : ''}`}>
                   <div className="scan-card-label">Long-Term (3-12 months)</div>
                   <div className={`scan-bias ${getBiasClass(holisticScan.long_term?.bias)}`}>
                     {(holisticScan.long_term?.display_bias || holisticScan.long_term?.bias || 'neutral').toUpperCase()}
                   </div>
                   <div className="scan-meta">
-                    Score: {holisticScan.long_term?.score ?? 'N/A'}
+                    Score: {(holisticScan.long_term?.score_display || holisticScan.long_term?.score) ?? 'N/A'}
                     <span className="scan-meta-sep" aria-hidden="true">
                       |
                     </span>
-                    Confidence: {holisticScan.long_term?.confidence ?? 'N/A'}
+                    {holisticScan.long_term?.position_label || 'Position unavailable'}
+                    <span className="scan-meta-sep" aria-hidden="true">
+                      |
+                    </span>
+                    Confidence: {holisticScan.long_term?.confidence ?? 'N/A'}%
                   </div>
+                  {renderScoreBand('long_term')}
+                  {renderComponentBreakdown('long_term', 'Long-term driver contributions')}
                 </div>
               </div>
+
+              {holisticScan.score_scale?.interpretation_guide && (
+                <p className="scan-score-scale-note">
+                  {holisticScan.score_scale.interpretation_guide}
+                  {holisticScan.score_scale.display_note ? ` ${holisticScan.score_scale.display_note}` : ''}
+                </p>
+              )}
 
               {Array.isArray(holisticScan.highlights?.items) && holisticScan.highlights.items.length > 0 && (
                 <div className="scan-section scan-highlights-section">
@@ -4896,21 +4997,46 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
               <div className="scan-section scan-highlights-section">
                 <div className="scan-section-title">Comprehensive Context</div>
                 <ul className="scan-highlights-list" role="list">
-                  <li className="scan-highlight-item">
-                    <div className="scan-highlight-line">
-                      <span className="scan-highlight-label">Short-term macro</span>
-                    </div>
-                    <FormattedScanParagraph
-                      text={holisticScan.narrative?.short_term || 'Short-term narrative unavailable.'}
-                      className="scan-highlight-detail"
-                    />
-                  </li>
+                  {isSwingScan ? (
+                    <li className="scan-highlight-item">
+                      <div className="scan-highlight-line">
+                        <span className="scan-highlight-label">Long-term regime (primary swing thesis)</span>
+                      </div>
+                      <FormattedScanParagraph
+                        text={holisticScan.narrative?.long_term || 'Long-term narrative unavailable.'}
+                        className="scan-highlight-detail"
+                      />
+                    </li>
+                  ) : (
+                    <li className="scan-highlight-item">
+                      <div className="scan-highlight-line">
+                        <span className="scan-highlight-label">Short-term macro</span>
+                      </div>
+                      <FormattedScanParagraph
+                        text={holisticScan.narrative?.short_term || 'Short-term narrative unavailable.'}
+                        className="scan-highlight-detail"
+                      />
+                    </li>
+                  )}
                   {holisticScan.narrative?.geopolitical_energy && (
                     <li className="scan-highlight-item">
                       <div className="scan-highlight-line">
                         <span className="scan-highlight-label">Geopolitical &amp; energy</span>
                       </div>
                       <FormattedScanParagraph text={holisticScan.narrative.geopolitical_energy} className="scan-highlight-detail" />
+                    </li>
+                  )}
+                  {holisticScan.score_bridge_present && holisticScan.score_narrative_bridge && (
+                    <li className="scan-highlight-item scan-score-bridge-item">
+                      <details className="scan-score-bridge-details">
+                        <summary className="scan-score-bridge-summary">
+                          Why is the composite score still in the neutral band?
+                        </summary>
+                        <FormattedScanParagraph
+                          text={holisticScan.score_narrative_bridge}
+                          className="scan-highlight-detail scan-score-bridge-body"
+                        />
+                      </details>
                     </li>
                   )}
                   {holisticScan.narrative?.central_bank_context && (
@@ -4924,15 +5050,27 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                       />
                     </li>
                   )}
-                  <li className="scan-highlight-item">
-                    <div className="scan-highlight-line">
-                      <span className="scan-highlight-label">Long-term regime</span>
-                    </div>
-                    <FormattedScanParagraph
-                      text={holisticScan.narrative?.long_term || 'Long-term narrative unavailable.'}
-                      className="scan-highlight-detail"
-                    />
-                  </li>
+                  {isSwingScan ? (
+                    <li className="scan-highlight-item">
+                      <div className="scan-highlight-line">
+                        <span className="scan-highlight-label">Short-term macro (entry/noise filter)</span>
+                      </div>
+                      <FormattedScanParagraph
+                        text={holisticScan.narrative?.short_term || 'Short-term narrative unavailable.'}
+                        className="scan-highlight-detail"
+                      />
+                    </li>
+                  ) : (
+                    <li className="scan-highlight-item">
+                      <div className="scan-highlight-line">
+                        <span className="scan-highlight-label">Long-term regime</span>
+                      </div>
+                      <FormattedScanParagraph
+                        text={holisticScan.narrative?.long_term || 'Long-term narrative unavailable.'}
+                        className="scan-highlight-detail"
+                      />
+                    </li>
+                  )}
                   <li className="scan-highlight-item">
                     <div className="scan-highlight-line">
                       <span className="scan-highlight-label">FX mapping</span>
@@ -5061,12 +5199,21 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 ).slice(0, 4).map((p) => (
                   <div key={p.pair} className="scan-driver-row">
                     <span>
-                      <strong>{p.pair}</strong> - {(p.bias || 'neutral').toUpperCase()} ({p.strength || 'light'})
+                      <strong>{p.pair}</strong>
+                      {p.stale_input ? (
+                        <span className="scan-pair-stale-badge" title="Macro inputs are stale — reduce conviction on this pair bias">
+                          STALE DATA
+                        </span>
+                      ) : null}
+                      {' '}- {(p.bias || 'neutral').toUpperCase()} ({p.strength || 'light'})
+                      {p.key_risk ? (
+                        <span className="scan-driver-note"> — Focus: {renderAnalysisEmphasis(p.key_risk)}</span>
+                      ) : null}
                       {p.driver ? (
-                        <span className="scan-driver-note"> - {renderAnalysisEmphasis(p.driver)}</span>
+                        <span className="scan-driver-note"> — {renderAnalysisEmphasis(p.driver)}</span>
                       ) : null}
                       {p.conviction_note ? (
-                        <span className="scan-driver-note"> - {renderAnalysisEmphasis(p.conviction_note)}</span>
+                        <span className="scan-driver-note"> — {renderAnalysisEmphasis(p.conviction_note)}</span>
                       ) : null}
                     </span>
                     <span className="scan-paragraph-metadata">

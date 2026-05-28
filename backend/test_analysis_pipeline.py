@@ -26,15 +26,20 @@ class AnalysisPipelineTests(unittest.TestCase):
 
     def test_finalize_passthrough_when_v1_disabled(self):
         os.environ["ANALYSIS_V1_ENABLED"] = "false"
-        payload = {"headline": "Only body"}
+        payload = {
+            "news_impact": "Headline risk",
+            "trading_implications": "If risk fades, EUR/USD may firm.",
+            "immediate_reaction": "neutral",
+        }
         out = finalize_analysis(
             payload,
             analysis_kind=ANALYSIS_KIND_LIVE_NEWS,
             context=FinalizeContext(news_item={"title": "t"}),
         )
-        self.assertEqual(out, payload)
         self.assertNotIn("spine", out)
         self.assertNotIn("trace", out)
+        self.assertIn("bias_classification_applied", out)
+        self.assertIn("actionable_triggers_applied", out)
 
     def test_finalize_calendar_envelope(self):
         os.environ["ANALYSIS_V1_ENABLED"] = "true"
@@ -61,6 +66,8 @@ class AnalysisPipelineTests(unittest.TestCase):
         self.assertIn("trace", out)
         self.assertIn("finalize:trader_brief_v1", out["trace"]["steps"])
         self.assertTrue(out["v1_observability"]["spine_present"])
+        self.assertIn("trading_plan_structured", out)
+        self.assertIn("trading_plan_structure_applied", out)
 
     def test_finalize_economy_scan_wrapper(self):
         payload = {
@@ -97,6 +104,8 @@ class AnalysisPipelineTests(unittest.TestCase):
         )
         self.assertEqual(out["analysis_kind"], ANALYSIS_KIND_LIVE_NEWS)
         self.assertEqual(out["spine"]["bias"], "neutral")
+        self.assertIn("correlation_risk_display", out)
+        self.assertIn("correlation_risk_applied", out)
 
 
 if __name__ == "__main__":

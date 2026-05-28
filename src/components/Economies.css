@@ -923,6 +923,122 @@
   padding: 0 4px;
 }
 
+.scan-score-band {
+  margin-top: 12px;
+}
+
+.scan-score-band-track {
+  position: relative;
+  height: 8px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.35) 0%, rgba(161, 161, 170, 0.25) 50%, rgba(34, 197, 94, 0.35) 100%);
+  overflow: visible;
+}
+
+.scan-score-band-neutral {
+  position: absolute;
+  top: -2px;
+  height: 12px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.scan-score-band-marker {
+  position: absolute;
+  top: -4px;
+  width: 4px;
+  height: 16px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.scan-score-band-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 0.68rem;
+  color: #71717a;
+}
+
+.scan-driver-breakdown {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scan-driver-breakdown-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ff7d85;
+  margin-bottom: 8px;
+}
+
+.scan-driver-breakdown-head,
+.scan-driver-row {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 0.5fr;
+  gap: 8px;
+  align-items: center;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.scan-driver-breakdown-head {
+  color: #71717a;
+  margin-bottom: 4px;
+}
+
+.scan-driver-name {
+  color: #d4d4d8;
+}
+
+.scan-driver-missing {
+  color: #71717a;
+  font-size: 0.68rem;
+}
+
+.scan-driver-contribution {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.scan-driver-positive {
+  color: #4ade80;
+}
+
+.scan-driver-negative {
+  color: #f87171;
+}
+
+.scan-driver-neutral {
+  color: #a1a1aa;
+}
+
+.scan-driver-share {
+  color: #71717a;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.scan-driver-formula {
+  margin: 8px 0 0;
+  font-size: 0.68rem;
+  color: #71717a;
+  line-height: 1.4;
+}
+
+.scan-score-scale-note {
+  margin: 10px 0 0;
+  padding: 0 2px;
+  font-size: 0.72rem;
+  color: #71717a;
+  line-height: 1.45;
+}
+
 .scan-meta-large {
   color: #e5e7eb;
   font-size: clamp(0.9rem, 0.86rem + 0.14vw, 0.98rem);
@@ -1213,6 +1329,61 @@
   color: #d3d4d8;
   font-size: 0.84rem;
   line-height: 1.62;
+}
+
+.scan-trader-brief-swing {
+  border-color: rgba(218, 0, 18, 0.42);
+}
+
+.scan-regime-summary-row-swing .scan-regime-pill-primary {
+  flex: 1.2;
+  border-color: rgba(218, 0, 18, 0.38);
+  box-shadow: 0 0 0 1px rgba(218, 0, 18, 0.16) inset;
+}
+
+.scan-grid-swing .scan-card-primary {
+  order: -1;
+  border-color: rgba(218, 0, 18, 0.4);
+  box-shadow: 0 0 0 1px rgba(218, 0, 18, 0.16) inset;
+}
+
+.scan-grid-swing .scan-card-secondary {
+  opacity: 0.92;
+}
+
+.scan-score-bridge-details {
+  margin: 0;
+}
+
+.scan-score-bridge-summary {
+  cursor: pointer;
+  color: #e8c4a8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  list-style: none;
+}
+
+.scan-score-bridge-summary::-webkit-details-marker {
+  display: none;
+}
+
+.scan-score-bridge-body {
+  margin-top: 0.5rem;
+  padding-left: 0.35rem;
+  border-left: 2px solid rgba(232, 196, 168, 0.35);
+}
+
+.scan-pair-stale-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 1px 6px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #ffb347;
+  border: 1px solid rgba(255, 179, 71, 0.45);
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
 .scan-bullish {

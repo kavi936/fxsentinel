@@ -9,11 +9,29 @@ shape that can be consumed by GPT prompts and deterministic ranking logic.
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any, Dict, List, Optional
 
 from services.user_trader_profile import user_trader_profile_store
 
 logger = logging.getLogger(__name__)
+
+
+def normalize_pair_symbol(symbol: Any) -> str:
+    """EUR/USD and EURUSD both become EURUSD."""
+    if not isinstance(symbol, str):
+        return ""
+    raw = symbol.strip().upper()
+    if not raw:
+        return ""
+    if "/" in raw:
+        parts = [p.strip() for p in raw.split("/") if p.strip()]
+        if len(parts) == 2 and len(parts[0]) == 3 and len(parts[1]) == 3:
+            return f"{parts[0]}{parts[1]}"
+    compact = re.sub(r"[^A-Z0-9]", "", raw)
+    if len(compact) == 6 and compact.isalpha():
+        return compact
+    return compact
 
 
 def _safe_list(value: Any) -> List[str]:
@@ -140,27 +158,33 @@ def prioritize_instruments(instruments: List[str], preferred_instruments: List[s
     """
     Reorder instruments so user-preferred instruments appear first when present.
     """
-    preferred_set = {p.strip().upper() for p in (preferred_instruments or []) if isinstance(p, str)}
+    preferred_set = {
+        normalize_pair_symbol(p)
+        for p in (preferred_instruments or [])
+        if isinstance(p, str) and normalize_pair_symbol(p)
+    }
     seen = set()
     prioritized: List[str] = []
 
     for raw in instruments or []:
         if not isinstance(raw, str):
             continue
-        item = raw.strip().upper()
-        if not item or item in seen:
+        item = raw.strip()
+        item_norm = normalize_pair_symbol(item)
+        if not item_norm or item_norm in seen:
             continue
-        if item in preferred_set:
+        if item_norm in preferred_set:
             prioritized.append(item)
-            seen.add(item)
+            seen.add(item_norm)
 
     for raw in instruments or []:
         if not isinstance(raw, str):
             continue
-        item = raw.strip().upper()
-        if not item or item in seen:
+        item = raw.strip()
+        item_norm = normalize_pair_symbol(item)
+        if not item_norm or item_norm in seen:
             continue
         prioritized.append(item)
-        seen.add(item)
+        seen.add(item_norm)
 
     return prioritized[:max(limit, 1)]

@@ -354,6 +354,54 @@ def _row(value: str, sentiment: str) -> Dict[str, str]:
     }
 
 
+def compute_neutral_zone_range(
+    expected: Any,
+    *,
+    half_band_pp: float = 0.1,
+) -> Optional[Dict[str, Any]]:
+    """
+    Inline / on-forecast band around consensus (review §2.2).
+    For typical macro % releases, uses ±0.1 percentage points around forecast.
+    """
+    numeric = parse_numeric_value(expected)
+    if numeric is None:
+        return None
+
+    original = str(expected or "")
+    has_percent = "%" in original
+    if has_percent or abs(numeric) <= 25:
+        half = half_band_pp
+    else:
+        half = abs(numeric) * (half_band_pp / 100.0)
+
+    low = numeric - half
+    high = numeric + half
+    return {
+        "forecast_numeric": numeric,
+        "low_numeric": low,
+        "high_numeric": high,
+        "low_display": format_value_with_unit(low, expected),
+        "high_display": format_value_with_unit(high, expected),
+        "forecast_display": format_value_with_unit(numeric, expected),
+        "half_band_pp": half_band_pp,
+        "definition": (
+            f"Print between {format_value_with_unit(low, expected)} and "
+            f"{format_value_with_unit(high, expected)} (±{half_band_pp} pp vs consensus) — limited surprise."
+        ),
+    }
+
+
+def scenario_probabilities_sum(forward_scenarios: Optional[Dict[str, Any]]) -> int:
+    total = 0
+    if not isinstance(forward_scenarios, dict):
+        return 0
+    for value in forward_scenarios.values():
+        match = re.search(r"\b(\d{1,3})\s*%", str(value or ""))
+        if match:
+            total += int(match.group(1))
+    return total
+
+
 def build_market_scenarios(
     *,
     event_title: str,
@@ -380,7 +428,12 @@ def build_market_scenarios(
         above_row = _row(f">{forecast_value}", "Bearish")
         below_row = _row(f"<{forecast_value}", "Bullish")
 
-    on_row = _row(forecast_value, "Ranging")
+    neutral_zone = compute_neutral_zone_range(expected)
+    if neutral_zone:
+        on_label = f"{neutral_zone['low_display']}–{neutral_zone['high_display']}"
+        on_row = _row(on_label, "Ranging")
+    else:
+        on_row = _row(forecast_value, "Ranging")
 
     return {
         "currency": (currency or "USD").upper(),
@@ -388,6 +441,7 @@ def build_market_scenarios(
         "higher_is_bullish_for_currency": higher,
         "expected_numeric": numeric,
         "expected_display": str(display or forecast_value),
+        "neutral_zone": neutral_zone,
         "forward_key_to_outcome": dict(FORWARD_KEY_TO_OUTCOME),
         "rows": {
             "above": [above_row],

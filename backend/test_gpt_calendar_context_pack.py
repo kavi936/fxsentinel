@@ -81,6 +81,8 @@ class GPTCalendarContextPackTests(unittest.TestCase):
 
         self.assertIn("USER PERSONALIZATION CONTEXT", prompt)
         self.assertIn("RELEVANT LIVE MARKET SNAPSHOT", prompt)
+        self.assertIn("PERSONALIZATION CASCADE", prompt)
+        self.assertIn("Preferred pairs (if relevant): EURUSD", prompt)
         self.assertNotIn("ANALYSIS CONTEXT PACK", prompt)
         mock_market.assert_called_once()
         mock_pers.assert_called_once()

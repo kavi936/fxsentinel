@@ -681,10 +681,15 @@ class MVPNewsAnalyzer:
                     raise ValueError("No JSON found in response")
                 
                 # Create MVP result with cost and data quality tracking
+                immediate_reaction = self._enforce_reaction_consistency(
+                    gpt_result.get('immediate_reaction', 'neutral'),
+                    gpt_result.get('news_impact', ''),
+                    gpt_result.get('trading_implications', ''),
+                )
                 result = MVPAnalysisResult(
                     news_impact=gpt_result.get('news_impact', ''),
                     trading_implications=gpt_result.get('trading_implications', ''),
-                    immediate_reaction=gpt_result.get('immediate_reaction', 'neutral'),
+                    immediate_reaction=immediate_reaction,
                     key_pairs=prioritize_instruments(
                         gpt_result.get('key_pairs', affected_instruments[:4] if affected_instruments else ['EUR/USD']),
                         (personalization or {}).get("primary_pairs") or [],
@@ -834,6 +839,17 @@ class MVPNewsAnalyzer:
 
         phase_f_news_block = ""
         if context_pack_section:
+            p = personalization or {}
+            trading_style = str(p.get("trading_style") or "balanced").strip().lower()
+            preferred_pairs = p.get("primary_pairs") or []
+            preferred_pairs_csv = ", ".join(str(x) for x in preferred_pairs[:6]) if preferred_pairs else "none provided"
+            style_line = (
+                "SWING mode: emphasize multi-session follow-through and invalidation conditions."
+                if trading_style == "swing"
+                else "DAY mode: emphasize immediate triggers, session timing, and near-term risk controls."
+                if trading_style == "day"
+                else "BALANCED mode: provide both near-term reaction and follow-through context."
+            )
             phase_f_news_block = """
 PHASE F QUALITY (when ANALYSIS CONTEXT PACK is present — mandatory):
 - In news_impact, state whether the headline aligns or challenges the prevailing short-term bias from the latest economy scan (if MACRO SNAPSHOT is present).
@@ -841,6 +857,14 @@ PHASE F QUALITY (when ANALYSIS CONTEXT PACK is present — mandatory):
 - Cite at least one concrete pack input per paragraph (scan bias, VIX, pair move, geo flag, freshness).
 - confidence reflects edge strength; trading_implications must mention what could negate the thesis.
 - Do not repeat generic Fed/policy filler more than once.
+- trading_implications MUST include at least one explicit If→then with the primary instrument (trigger → expected move / level / session).
+- Replace passive-only phrases ("monitor", "watch closely", "remain vigilant") with a concrete conditional.
+"""
+            phase_f_news_block += f"""
+PERSONALIZATION CASCADE (mandatory):
+- {style_line}
+- Preferred pairs: {preferred_pairs_csv}
+- Lead with preferred pairs when relevant; if relevance is weak, state that explicitly.
 """
 
         prompt = f"""
@@ -895,7 +919,8 @@ IMPORTANT GUIDELINES:
 - Provide concrete market intelligence, not generic statements
 - Focus on "what to watch" rather than "what to do"
 - Include specific price levels and timeframes when relevant
-- Avoid generic phrases like "monitor for opportunities"
+- Include at least one "If [trigger] → then [outcome]" in trading_implications (instrument + level or session).
+- Avoid generic phrases like "monitor for opportunities" unless paired with a concrete trigger
 - Reference live market data when available (prices, volatility, sentiment)
 - Consider trading session context (higher volatility during London-NY overlap)
 - FX pair sentiment should inform bias, not override macroeconomic drivers
@@ -1075,6 +1100,64 @@ Now analyze the news above and respond with ONLY the JSON object:
             return 'bearish_usd'
         else:
             return 'neutral'
+
+    def _infer_reaction_from_text(self, text: str) -> str:
+        """Infer a directional lean from narrative text for consistency checks."""
+        if not text:
+            return "neutral"
+        text_upper = text.upper()
+
+        bearish_hits = [
+            "BEARISH USD",
+            "USD WEAK",
+            "USD WEAKENS",
+            "DOVISH FED",
+            "DOWNWARD PRESSURE ON THE DOLLAR",
+            "EUR/USD RALLY",
+            "GBP/USD RALLY",
+        ]
+        bullish_hits = [
+            "BULLISH USD",
+            "USD STRONG",
+            "USD STRENGTHENS",
+            "HAWKISH FED",
+            "DOWNWARD PRESSURE ON THE EURO",
+            "EUR/USD LOWER",
+            "GBP/USD LOWER",
+        ]
+
+        bearish = sum(1 for token in bearish_hits if token in text_upper)
+        bullish = sum(1 for token in bullish_hits if token in text_upper)
+        if bearish > bullish and bearish >= 1:
+            return "bearish_usd"
+        if bullish > bearish and bullish >= 1:
+            return "bullish_usd"
+        return "neutral"
+
+    def _enforce_reaction_consistency(
+        self,
+        immediate_reaction: str,
+        news_impact: str,
+        trading_implications: str,
+    ) -> str:
+        """
+        Keep immediate_reaction aligned with narrative lean.
+        If body text implies a clear lean, do not allow a contradictory/neutral label.
+        """
+        value = str(immediate_reaction or "neutral").strip().lower()
+        if value not in ("bullish_usd", "bearish_usd", "neutral"):
+            value = "neutral"
+
+        combined = f"{news_impact}\n{trading_implications}"
+        inferred = self._infer_reaction_from_text(combined)
+        if inferred in ("bullish_usd", "bearish_usd") and value != inferred:
+            logger.info(
+                "Adjusted immediate_reaction for consistency: %s -> %s",
+                value,
+                inferred,
+            )
+            return inferred
+        return value
     
     def _analyze_sentiment_with_context(self, text: str, news_item: Dict) -> Dict[str, Any]:
         """Analyze sentiment with political context"""
