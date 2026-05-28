@@ -22062,7 +22062,7 @@ class HybridEconomicCalendar:
                 'impact': 'low',
                 'actual': '0.5%',
                 'forecast': '0.5%',
-                'previous': '0.9%'
+                'previous': '1.0%'
             },
             {
                 'title': 'FOMC Member Williams Speaks',
