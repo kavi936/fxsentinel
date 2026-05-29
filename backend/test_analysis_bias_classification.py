@@ -44,6 +44,32 @@ class BiasClassificationTests(unittest.TestCase):
         )
         self.assertIn("LEAN", row["reaction_display"].upper())
 
+    def test_ecb_hawkish_labels_eur_not_usd(self):
+        row = classify_usd_reaction(
+            "neutral",
+            "ECB tightening bias supports a stronger euro as markets price June hikes.",
+            "EUR/USD may rally if the ECB signals sustained hawkishness.",
+            title="ECB officials signal further rate hikes",
+            key_pairs=["EUR/USD"],
+        )
+        self.assertEqual(row.get("reaction_currency"), "EUR")
+        self.assertIn("EUR", row["reaction_display"])
+        self.assertNotIn("(USD)", row["reaction_display"])
+
+    def test_gpt_primary_currency_preferred_over_heuristic(self):
+        row = classify_usd_reaction(
+            "neutral",
+            "ECB tightening bias supports a stronger euro.",
+            "Watch EUR/USD.",
+            title="ECB officials signal hikes",
+            key_pairs=["EUR/USD"],
+            primary_currency="EUR",
+            reaction_rationale="Hawkish ECB repricing supports EUR.",
+        )
+        self.assertEqual(row["reaction_currency"], "EUR")
+        self.assertEqual(row.get("reaction_currency_source"), "gpt_heuristic_agree")
+        self.assertIn("Hawkish ECB", row.get("reaction_rationale", ""))
+
     def test_calendar_scenario_skew_lean(self):
         lean = infer_lean_from_forward_scenarios(
             {

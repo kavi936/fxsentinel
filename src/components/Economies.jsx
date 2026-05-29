@@ -2441,7 +2441,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         <div className="scan-driver-breakdown-head" aria-hidden="true">
           <span>Driver</span>
           <span>Contribution</span>
-          <span>Share</span>
+          <span title="Relative contribution magnitude vs total score (not a percentage of 100%)">Signal weight</span>
         </div>
         {drivers.map((driver) => (
           <div key={`${regimeKey}-${driver.name}`} className="scan-driver-row">
@@ -2458,7 +2458,10 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
           </div>
         ))}
         {breakdown.formula && (
-          <p className="scan-driver-formula">{breakdown.formula}</p>
+          <details className="scan-score-methodology">
+            <summary className="scan-score-methodology-summary">How scores are calculated</summary>
+            <p className="scan-driver-formula">{breakdown.formula}</p>
+          </details>
         )}
       </div>
     );
@@ -2474,7 +2477,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
 
     const biasPart = parts[0];
     const scorePart = parts[1];
-    const confidencePart = parts[2];
+    const confidencePart = parts.length >= 4 ? parts[parts.length - 1] : parts[2];
+    const middleParts = parts.length >= 4 ? parts.slice(2, -1) : [];
 
     const scoreMatch = scorePart.match(/-?\d+(?:\.\d+)?/);
     const scoreValue = scoreMatch ? scoreMatch[0] : null;
@@ -2492,6 +2496,12 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
         <span className="scan-regime-inline-separator"> · </span>
         <span>{scoreLabel} </span>
         <span className="scan-regime-inline-value">{scoreValue || 'N/A'}</span>
+        {middleParts.map((segment, idx) => (
+          <span key={`regime-mid-${idx}`}>
+            <span className="scan-regime-inline-separator"> · </span>
+            <span>{segment}</span>
+          </span>
+        ))}
         <span className="scan-regime-inline-separator"> · </span>
         <span className="scan-regime-inline-value">{confidenceValue || 'N/A'}</span>
         <span>{confidenceLabel ? ` ${confidenceLabel}` : ''}</span>
@@ -4933,7 +4943,12 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className={`scan-card ${isSwingScan ? 'scan-card-secondary' : ''}`}>
                   <div className="scan-card-label">Short-Term (2-6 weeks)</div>
                   <div className={`scan-bias ${getBiasClass(holisticScan.short_term?.bias)}`}>
-                    {(holisticScan.short_term?.display_bias || holisticScan.short_term?.bias || 'neutral').toUpperCase()}
+                    {(
+                      holisticScan.short_term?.headline_bias
+                      || holisticScan.short_term?.display_bias
+                      || holisticScan.short_term?.bias
+                      || 'neutral'
+                    ).toUpperCase()}
                   </div>
                   <div className="scan-meta">
                     Score: {(holisticScan.short_term?.score_display || holisticScan.short_term?.score) ?? 'N/A'}
@@ -4944,7 +4959,13 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     <span className="scan-meta-sep" aria-hidden="true">
                       |
                     </span>
-                    Confidence: {holisticScan.short_term?.confidence ?? 'N/A'}%
+                    Data confidence: {holisticScan.short_term?.data_confidence ?? holisticScan.short_term?.confidence ?? 'N/A'}%
+                    {holisticScan.short_term?.directional_conviction && (
+                      <>
+                        <span className="scan-meta-sep" aria-hidden="true">|</span>
+                        Direction conviction: {holisticScan.short_term.directional_conviction}
+                      </>
+                    )}
                   </div>
                   {renderScoreBand('short_term')}
                   {renderComponentBreakdown('short_term', 'Short-term driver contributions')}
@@ -4952,7 +4973,12 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                 <div className={`scan-card ${isSwingScan ? 'scan-card-primary' : ''}`}>
                   <div className="scan-card-label">Long-Term (3-12 months)</div>
                   <div className={`scan-bias ${getBiasClass(holisticScan.long_term?.bias)}`}>
-                    {(holisticScan.long_term?.display_bias || holisticScan.long_term?.bias || 'neutral').toUpperCase()}
+                    {(
+                      holisticScan.long_term?.headline_bias
+                      || holisticScan.long_term?.display_bias
+                      || holisticScan.long_term?.bias
+                      || 'neutral'
+                    ).toUpperCase()}
                   </div>
                   <div className="scan-meta">
                     Score: {(holisticScan.long_term?.score_display || holisticScan.long_term?.score) ?? 'N/A'}
@@ -4963,7 +4989,13 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                     <span className="scan-meta-sep" aria-hidden="true">
                       |
                     </span>
-                    Confidence: {holisticScan.long_term?.confidence ?? 'N/A'}%
+                    Data confidence: {holisticScan.long_term?.data_confidence ?? holisticScan.long_term?.confidence ?? 'N/A'}%
+                    {holisticScan.long_term?.directional_conviction && (
+                      <>
+                        <span className="scan-meta-sep" aria-hidden="true">|</span>
+                        Direction conviction: {holisticScan.long_term.directional_conviction}
+                      </>
+                    )}
                   </div>
                   {renderScoreBand('long_term')}
                   {renderComponentBreakdown('long_term', 'Long-term driver contributions')}
@@ -4975,6 +5007,10 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                   {holisticScan.score_scale.interpretation_guide}
                   {holisticScan.score_scale.display_note ? ` ${holisticScan.score_scale.display_note}` : ''}
                 </p>
+              )}
+
+              {holisticScan.score_horizon_note && (
+                <p className="scan-score-horizon-note">{holisticScan.score_horizon_note}</p>
               )}
 
               {Array.isArray(holisticScan.highlights?.items) && holisticScan.highlights.items.length > 0 && (
@@ -5018,14 +5054,25 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                       />
                     </li>
                   )}
-                  {holisticScan.narrative?.geopolitical_energy && (
-                    <li className="scan-highlight-item">
-                      <div className="scan-highlight-line">
-                        <span className="scan-highlight-label">Geopolitical &amp; energy</span>
-                      </div>
-                      <FormattedScanParagraph text={holisticScan.narrative.geopolitical_energy} className="scan-highlight-detail" />
-                    </li>
-                  )}
+                  {holisticScan.narrative?.geopolitical_energy && (() => {
+                    const geoText = holisticScan.narrative.geopolitical_energy;
+                    const bridgeText = holisticScan.score_narrative_bridge || '';
+                    const bridgeDuped =
+                      holisticScan.score_bridge_present
+                      && bridgeText
+                      && geoText.includes(bridgeText.slice(0, Math.min(80, bridgeText.length)));
+                    if (bridgeDuped) {
+                      return null;
+                    }
+                    return (
+                      <li className="scan-highlight-item">
+                        <div className="scan-highlight-line">
+                          <span className="scan-highlight-label">Geopolitical &amp; energy</span>
+                        </div>
+                        <FormattedScanParagraph text={geoText} className="scan-highlight-detail" />
+                      </li>
+                    );
+                  })()}
                   {holisticScan.score_bridge_present && holisticScan.score_narrative_bridge && (
                     <li className="scan-highlight-item scan-score-bridge-item">
                       <details className="scan-score-bridge-details">
@@ -5079,8 +5126,8 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                   </li>
                 </ul>
                 {(holisticScan.context_sources || holisticScan.yield_context?.source || holisticScan.model_version) && (
-                  <div className="scan-context-metadata">
-                    <div className="scan-section-title">Source references</div>
+                  <details className="scan-context-metadata">
+                    <summary className="scan-section-title scan-context-metadata-summary">Technical metadata (sources)</summary>
                     <ul className="scan-highlights-list" role="list">
                       <li className="scan-highlight-item">
                         <div className="scan-highlight-line">
@@ -5128,7 +5175,7 @@ function EconomyDetails({ selectedEconomy, analysisRef, apiIndicatorsData, useAp
                         </p>
                       </li>
                     </ul>
-                  </div>
+                  </details>
                 )}
               </div>
 

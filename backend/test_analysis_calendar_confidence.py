@@ -46,6 +46,16 @@ class CalendarConfidenceTests(unittest.TestCase):
         )
         self.assertIn("confidence_methodology_applied", out)
         self.assertIn("confidence_reason", out)
+        self.assertIn("data_confidence_score", out)
+        payload["edge_confidence_reason"] = "Core PCE beat would extend USD bid if services stay sticky."
+        payload["analysis_confidence"] = "High"
+        out2 = finalize_analysis(
+            payload,
+            analysis_kind="calendar_event",
+            context=FinalizeContext(validated_event=event, analysis_type="pre_event"),
+        )
+        self.assertEqual(out2.get("edge_confidence"), "High")
+        self.assertIn("USD bid", out2.get("edge_confidence_reason", ""))
         self.assertIsInstance(out.get("market_scenarios"), dict)
         self.assertIn("neutral_zone", out["market_scenarios"])
 

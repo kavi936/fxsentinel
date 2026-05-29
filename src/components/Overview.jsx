@@ -624,7 +624,7 @@ const Overview = () => {
         titleLower.includes('pce price') ||
         titleLower.includes('core pce') ||
         titleLower.includes('personal consumption expenditures')) {
-      return { higherIsBullish: false, eventType: 'inflation' };
+      return { higherIsBullish: true, eventType: 'inflation' };
     }
     
     // Employment indicators - Higher = Bullish, Lower = Bearish
@@ -5711,18 +5711,30 @@ const Overview = () => {
                   <div className="ai-overview">
                     <div className="ai-indicator">
                       <div className="ai-indicator-row">
-                        <div className="ai-label">Analysis Confidence</div>
+                        <div className="ai-label">Data quality score</div>
                         <div className={`ai-value ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}>
-                          {aiAnalysis.confidence_score ? `${aiAnalysis.confidence_score}%` : '85%'}
+                          {aiAnalysis.data_confidence_score ?? aiAnalysis.confidence_score
+                            ? `${aiAnalysis.data_confidence_score ?? aiAnalysis.confidence_score}%`
+                            : '85%'}
                         </div>
                       </div>
                       <div className="ai-bar">
-                        <div className={`ai-fill ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`} 
-                             style={{width: `${aiAnalysis.confidence_score || 85}%`}}></div>
+                        <div className={`ai-fill ${aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bullish') ? 'bullish' : aiAnalysis.implications_takeaways?.market_bias?.toLowerCase().includes('bearish') ? 'bearish' : 'neutral'}`}
+                             style={{width: `${(aiAnalysis.data_confidence_score ?? aiAnalysis.confidence_score) || 85}%`}}></div>
                       </div>
                       {aiAnalysis.confidence_reason && (
                         <p className="ai-confidence-reason" title={aiAnalysis.confidence_reason}>
+                          <span className="ai-confidence-reason-label">Inputs: </span>
                           {renderAnalysisText(aiAnalysis.confidence_reason)}
+                        </p>
+                      )}
+                      {(aiAnalysis.edge_confidence || aiAnalysis.analysis_confidence) && (
+                        <p className="ai-confidence-edge">
+                          <span className="ai-confidence-reason-label">Edge ({aiAnalysis.edge_confidence || aiAnalysis.analysis_confidence}): </span>
+                          {renderAnalysisText(
+                            aiAnalysis.edge_confidence_reason
+                              || 'Edge rationale not provided — treat directional read with extra caution.'
+                          )}
                         </p>
                       )}
                     </div>
@@ -5798,8 +5810,7 @@ const Overview = () => {
                   {(() => {
                     const eventTitle = aiAnalysis.eventSummary?.release || selectedEvent?.title || '';
                     const marketScenarios =
-                      (isAnalysisV1UiEnabled() &&
-                        mapCanonicalMarketScenarios(aiAnalysis.market_scenarios)) ||
+                      mapCanonicalMarketScenarios(aiAnalysis.market_scenarios) ||
                       calculateMarketScenarios(aiAnalysis.eventSummary, eventTitle);
                     
                     if (!marketScenarios) {
@@ -6019,7 +6030,9 @@ const Overview = () => {
                         )}
                         {aiAnalysis.trading_plan?.key_levels && (
                           <p className="in-depth-text">
-                            <span className="in-depth-label">Key levels:</span>{' '}
+                            <span className="in-depth-label">
+                              {aiAnalysis.trading_plan.key_levels_label || 'Spot reference'}:
+                            </span>{' '}
                             {renderAnalysisText(aiAnalysis.trading_plan.key_levels)}
                           </p>
                         )}
@@ -6125,7 +6138,7 @@ const Overview = () => {
                           <ul className="in-depth-catalyst-list">
                             {(aiAnalysis.next_catalysts && aiAnalysis.next_catalysts.length > 0
                               ? aiAnalysis.next_catalysts
-                              : ['Central bank meetings and CPI releases']
+                              : []
                             ).map((catalyst, index) => (
                               <li key={index} className="in-depth-catalyst-item">
                                 {catalyst}

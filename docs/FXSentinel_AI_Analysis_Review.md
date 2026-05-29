@@ -11,7 +11,9 @@
    - [0.2 Active roadmap (next work)](#02-active-roadmap-next-work-in-order)
    - [0.3 Backlog & later](#03-backlog--later-no-blocker-on-8)
    - [0.4 Implemented rework summaries](#04-implemented-rework-summaries-whats-changed-for-users)
+   - [0.5 Version 2 tracker](#05-version-2-implementation-tracker-after-v1-ships)
 1. [Cross-Cutting Issues (All Sections)](#1-cross-cutting-issues-all-sections)
+20. [Version 2 Review — source notes](#version-2-review-after-changes-source-notes)
 2. [Economic Calendar Analysis](#2-economic-calendar-analysis)
 3. [Live News Analysis](#3-live-news-analysis)
 4. [Holistic Scan](#4-holistic-scan)
@@ -238,10 +240,10 @@ Smaller or product-dependent items — not in the active queue until you choose 
 
 **When you return to this doc**
 
-1. Check [Priority queue](#priority-queue-summary) and [§0.2](#02-active-roadmap-next-work-in-order).
-2. Implement #9, then #10; update tracker rows to ✅ Done.
-3. Re-run backend tests; spot-check one calendar, one news, one US holistic scan.
-4. Only then revisit #8 or backlog rows.
+1. **V1 queue (#1–#10):** Complete except **#8** (deferred). See [Priority queue](#priority-queue-summary) and [§0.4](#04-implemented-rework-summaries-whats-changed-for-users).
+2. **V2 work:** Start at [§0.5](#05-version-2-implementation-tracker-after-v1-ships) — Tier 1 trust bugs first.
+3. Re-run backend tests; spot-check calendar, news, and US holistic per [V2 acceptance spot-checks](#v2-acceptance-spot-checks).
+4. Revisit **#8** only when OHLC provider exists ([§0.1](#01-8-deferred--level-labeling-approach-when-data-is-ready)).
 
 ---
 
@@ -273,6 +275,106 @@ Use this as the short handoff view of what was reworked and why it matters in li
 **Still intentionally deferred:**
 
 - **#8 Level basis / technical structure:** remains blocked on OHLC/structured levels provider; do not claim pivot/swing/support semantics without that data layer.
+
+---
+
+### 0.5 Version 2 Implementation Tracker (after V1 ships)
+
+**Source:** Claude re-test of live outputs — see [Version 2 Review — source notes](#version-2-review-after-changes-source-notes) (bottom of this doc).
+
+**Started:** 2026-05-28 · **Scope:** Integration bugs, UI wiring gaps, and new product ideas surfaced *after* V1 priority queue (#1–#10) shipped.
+
+**How to use:** Work **Tier 1** first (trust-breaking). Mark rows ✅ when code + UI are verified on a real output (PCE calendar, ECB news, US holistic scan). Update **Last verified** column with date and fixture/event name.
+
+#### V2 workstream status
+
+| Workstream | Focus | Status | Open IDs |
+|---|---|---|---|
+| **V2-WS1 — Calendar integration** | Scenario table direction, confidence visible, spot honesty, catalyst specificity | ✅ Done | — |
+| **V2-WS2 — Live News integration** | Label currency axis, correlation UI, timeframe/longevity, type + react playbook | ✅ Done | — |
+| **V2-WS3 — Holistic integration** | Dedup bridge, lean in takeaways, share label, confidence strip | ✅ Done | — |
+| **V2-WS4 — Cross-surface synthesis** | Regime alignment, session stamp | 📋 Planned | V2-X1–X2 |
+| **V2-WS5 — Data enrichments** | Surprise history, options implied move, regime trend | 📋 Later | V2-CA1–CA2, V2-HA1–HA2 |
+
+#### Tier 1 — Trust bugs (do first)
+
+| ID | Surface | Issue | Likely fix area | Status | Last verified |
+|---|---|---|---|---|---|
+| **V2-C1** | Calendar | Market Scenarios table inverted vs probability section (Above→Bearish for USD) | `calendar_scenario_engine.py`, `Overview.jsx` | ✅ Done | 2026-05-28 — inflation/PCE: higher print = bullish for event currency |
+| **V2-C2** | Calendar | Confidence % shown without visible `confidence_reason` | `Overview.jsx` (already wired; verify on next PCE run) | ✅ Done | 2026-05-28 — field renders when API provides it |
+| **V2-N1** | Live News | Reaction label currency wrong (ECB hawkish → USD lean; body says EUR) | `analysis_bias_classification.py`, `mvp_news_analyzer.py`, `app.py` | ✅ Done | 2026-05-28 — `detect_news_primary_currency` + `(EUR)` display |
+| **V2-N2** | Live News | Correlation risk still generic in UI (`MEDIUM` only) | `LiveNewsFeed.jsx` (+ Overview already had detail) | ✅ Done | 2026-05-28 |
+| **V2-H3** | Holistic | Score bridge paragraph duplicated (Geopolitical + “Why score neutral?”) | `analysis_score_narrative_bridge.py`, `Economies.jsx` | ✅ Done | 2026-05-28 |
+| **V2-H4** | Holistic | Key Takeaways still plain `NEUTRAL` (lean sub-class not cascaded) | `economy_holistic_scan_service.py` `_build_highlights` | ✅ Done | 2026-05-28 |
+| **V2-H5** | Holistic | Regime strip confidence `N/A` vs 50% elsewhere | `Economies.jsx` `renderRegimeLine` 4-part parse | ✅ Done | 2026-05-28 |
+
+#### Tier 2 — Clarity & honesty (no new vendors)
+
+| ID | Surface | Issue | Likely fix area | Status | Last verified |
+|---|---|---|---|---|---|
+| **V2-C3** | Calendar | `key_levels` still spot anchors — misleading precision | `analysis_calendar_content_guard.py` + Overview `key_levels_label` | ✅ Done | 2026-05-28 |
+| **V2-C4** | Calendar | Vague catalyst (“geopolitical developments in the Middle East”) | Post-parse filter + prompt rules | ✅ Done | 2026-05-28 |
+| **V2-H2** | Holistic | Driver **Share** column exceeds 100% — misleading label | `Economies.jsx` → **Signal weight** + tooltip | ✅ Done | 2026-05-28 |
+| **V2-H1** | Holistic | Short-term and long-term scores identical (-13) — looks like one pipeline | `score_horizon_note` when scores match; different driver sets documented | ✅ Done | 2026-05-28 |
+| **V2-N3** | Live News | No signal that non-primary pairs were assessed/filtered | `pairs_focus_display` metadata + LiveNewsFeed line | ✅ Done | 2026-05-28 |
+| **V2-N4** | Live News | Timeframe “2–4 hours” for multi-week ECB policy story | `impact_horizon`, `timeframe_immediate`, `timeframe_positioning` | ✅ Done | 2026-05-28 |
+| **V2-R1** | Calendar | Generic “Forward focus: monitor inflation…” filler | Replaced at finalize when generic | ✅ Done | 2026-05-28 |
+| **V2-R3** | Holistic | Developer file paths in trader-facing Source references | `Economies.jsx` — collapsed **Technical metadata** | ✅ Done | 2026-05-28 |
+| **V2-R4** | Holistic | `sum(driver × weight)` footnote inline — move to methodology | Collapsible **How scores are calculated** | ✅ Done | 2026-05-28 |
+
+#### Tier 3 — New features (product / data)
+
+| ID | Surface | Suggestion | Dependency | Status |
+|---|---|---|---|---|
+| **V2-X1** | All | Regime alignment flag (calendar + news + holistic agree/conflict) | Cross-surface compare in `analysis_pipeline` or UI | 📋 Planned |
+| **V2-X2** | All | Session context stamp (London/NY/Asia at generation) | Server timezone + session calendar | 📋 Planned |
+| **V2-CA1** | Calendar | Surprise history table (last 4–6 prints) | Calendar/history data source | 📋 Later |
+| **V2-CA2** | Calendar | Options-implied move around event | Options data vendor | 📋 Later |
+| **V2-NA1** | Live News | News longevity classification (hours vs weeks) | `news_type` + chip; finalize heuristics | ✅ Done | 2026-05-28 |
+| **V2-NA2** | Live News | Follow / fade / wait-for-confirmation label | `initial_reaction_guidance` + chip | ✅ Done | 2026-05-28 |
+| **V2-HA1** | Holistic | Regime trend arrow vs prior scans | Persist scan history / compare last N | 📋 Later |
+| **V2-HA2** | Holistic | Counter-economy regime snippet on pair rows | Second economy scan or cached bias | 📋 Later |
+
+#### V2 — linked to V1 #8 (do not fake)
+
+| ID | Surface | Issue | Status |
+|---|---|---|---|
+| **V2-C3** / **V2-R2** | Calendar | Key levels = spot only | ⏸️ Same as **#8** — rename/hide until OHLC ([§0.1](#01-8-deferred--level-labeling-approach-when-data-is-ready)) |
+
+#### V2 shipped log
+
+| Date | ID | Change | Key files |
+|---|---|---|---|
+| 2026-05-28 | V2-C1 | Inflation/PCE scenario direction: hot print = **bullish** for event currency (aligns table with `[ABOVE]` prose) | `calendar_scenario_engine.py`, `Overview.jsx`, `test_calendar_scenario_engine.py` |
+| 2026-05-28 | V2-N1 | News reaction labels use detected event currency (`EUR`, `GBP`, …) not always `(USD)` | `analysis_bias_classification.py`, `mvp_news_analyzer.py`, `app.py` |
+| 2026-05-28 | V2-N2 | Live News UI shows `correlation_risk_detail` + pairs list | `LiveNewsFeed.jsx` |
+| 2026-05-28 | V2-H3–H5, H2, R3 | Holistic: no duplicate score bridge in geo block; `display_bias` in highlights/trader brief; regime strip parses confidence; Signal weight label; metadata collapsed | `analysis_score_narrative_bridge.py`, `economy_holistic_scan_service.py`, `Economies.jsx` |
+| 2026-05-28 | Tier 2 batch | Calendar content guard (C3/C4/R1); news horizon + pairs focus (N3/N4); holistic H1 note + R4 methodology collapse | `analysis_calendar_content_guard.py`, `analysis_news_horizon.py`, `analysis_pipeline.py`, `Overview.jsx`, `LiveNewsFeed.jsx`, `Economies.jsx` |
+| 2026-05-28 | V2-NA1, NA2 | News `news_type` chip + `initial_reaction_guidance` (follow/fade/wait); GPT + finalize overrides | `analysis_news_classification.py`, `mvp_news_analyzer.py`, `LiveNewsFeed.jsx` |
+
+#### V2 acceptance spot-checks
+
+Before marking Tier 1 done, re-run these three outputs:
+
+1. **Calendar:** Core PCE (or similar USD inflation) — scenarios table direction matches `[ABOVE]` prose; `confidence_reason` visible.
+2. **Live News:** ECB tightening / hawkish headline — reaction label names **EUR** (or event currency), not USD; correlation detail visible.
+3. **Holistic:** US economy scan — no duplicate score-bridge paragraph; Key Takeaways show **Neutral · Bearish Lean**; strip confidence matches scorecard.
+
+**When you return to V2 work**
+
+1. **Tier 2** + news **NA1/NA2** shipped; remaining Tier 3: cross-surface (X1–X2), calendar/holistic data (CA/HA).
+2. Next: [Tier 3](#tier-3--new-features-product--data) cross-surface or §0.6 golden-set tests.
+3. Re-run spot-checks after deploy (calendar PCE, ECB news, US holistic).
+
+### 0.6 Architecture deepening (2026-05-28) — quality & control
+
+| Pillar | Problem | Approach shipped |
+|---|---|---|
+| **A Holistic direction** | Scores clustered in ±20 “neutral”; headline always felt flat | Narrow neutral band to **±12**, conviction at **±15**; `headline_bias` (e.g. **BULLISH LEAN**); split `data_confidence` vs `directional_conviction`; scan `v1.5` |
+| **B News currency** | Heuristic-only `(USD)` suffix; no QA | GPT must return `primary_currency` + `reaction_rationale`; heuristics validate (`reaction_currency_source` metadata) |
+| **C Calendar confidence** | Single % looked like “GPT sureness” | **Data quality score** (deterministic) + **Edge** (GPT `edge_confidence` + `edge_confidence_reason`); Overview labels both |
+
+**Still open:** golden-set accuracy tests for news currency; holistic long/short using different driver sets but often similar totals (V2-H1).
 
 ---
 
@@ -992,3 +1094,116 @@ Hollistic Scan (US):
    Invalidated if BoE's pushback caps hike pricing.
    AUDUSDSTALE DATA - NEUTRAL (light) — Focus: China growth + commodity beta vs USD haven. Overlay: Strait of Hormuz closure & structural oil supply shock (CRITICAL) — prioritize energy/terms-of-trade channel. — AUDUSD reflects commodity demand and China's economic performance against the USD's haven appeal. If China's stimulus boosts demand, then AUD may rally despite USD strength. — Conviction reduced on AUD/USD — macro inputs are stale; refresh before sizing.
    Invalidated if broad risk-off sentiment crushes AUD.
+
+## Version 2 Review (After changes) — source notes
+
+> **Tracker:** Active work is tracked in [§0.5 Version 2 Implementation Tracker](#05-version-2-implementation-tracker-after-v1-ships). This section is the full qualitative review that produced those IDs.
+
+Claude re-tested outputs after V1 ships. Below: section-by-section breakdown and addition/removal suggestions.
+
+---
+
+## Economic Calendar — What Improved
+
+The probability fix is clean — 30/45/25 summing to 100 is exactly right, and the [ABOVE]/[ON]/[BELOW] framing is much clearer than before. The neutral zone as a range (0.25%–0.35%) instead of a single tick is a meaningful improvement. The trading plan is now genuinely structured — long USD/JPY targeting 160.00 with stop below 159.00 is a real trade idea.
+
+### Remaining Issues
+
+**1. Market Scenarios table is inverted**
+The table shows:
+- Above >0.3% → Bearish
+- Below <0.3% → Bullish
+
+This is for the USD currency, but it's labelled backwards relative to the probability section above it, which correctly frames above as bullish USD. This is a logic inversion that will confuse traders fast. The table needs to either specify "For USD" explicitly in each cell, or flip the labels to match the probability section's framing.
+
+**2. Confidence jumped from 90% to 95% — unexplained**
+The previous output had 90%, this one has 95%. Without methodology being visible to the trader, this just looks like a higher random number. Even if the confidence engine is now deterministic under the hood, the trader still sees a raw percentage with no reasoning shown in the UI. Consider surfacing the `confidence_reason` field visibly — even a one-liner like *"High confidence: tight analyst consensus, Fed has explicitly cited this release"* would make 95% feel earned.
+
+**3. Key levels are still just spot anchors**
+USD/JPY 159.444 and EUR/USD 1.16169 — same problem as before. The trading plan now has a real target (160.00) but the "key levels" field still just timestamps spot. This field should either be removed until #8 is resolved, or renamed to "Spot reference" to be honest about what it is.
+
+**4. "Geopolitical developments in the Middle East" as a next catalyst is vague**
+The other two catalysts (FOMC June, NFP June) are specific and dated. The third one is a non-event — it's always true. Either remove it or make it specific: *"Strait of Hormuz — IEA supply report, early June"* or similar.
+
+---
+
+## Live News — What Improved
+
+The NEUTRAL · BULLISH LEAN (USD) label is a direct improvement — it has sub-classification and it's specific to USD. The If→then structure is present in the trading implications section. These are real gains.
+
+### Remaining Issues
+
+**1. The reaction label direction is wrong for the event**
+The news is ECB tightening bias with rate hikes expected — this is EUR bullish, not USD bullish. The immediate reaction is labelled "NEUTRAL · BULLISH LEAN (USD)" which implies the dollar benefits, but the event is about ECB hawkishness strengthening the euro. The label should read "NEUTRAL · BULLISH LEAN (EUR)" or "EUR BULLISH LEAN." The body text actually gets this right — it says "supports a stronger euro" — so the label/body contradiction from before has reappeared, just in the opposite direction.
+
+**2. Correlation Risk still generic**
+The §3.5 fix was supposed to replace the generic MEDIUM label with pair/channel-specific detail. The output still shows just "Correlation Risk: MEDIUM" with no elaboration. This backlog item appears to not have fully cascaded into the UI output yet, even if the `correlation_risk_detail` field exists in the API.
+
+**3. No "irrelevant pairs" handling shown**
+If this trader's profile includes pairs beyond EUR/USD, there's no indication the system filtered or acknowledged other pairs. The output focuses entirely on EUR/USD — which may be correct for this event — but there's no signal to the trader that other pairs were assessed and found less relevant.
+
+**4. Timeframe "next 2-4 hours" for a medium-term ECB policy story**
+An ECB tightening bias with hikes pencilled for June and July is a multi-week macro story, not a 2-4 hour event. The timeframe label doesn't match the nature of the news. This could be improved by adding a secondary timeframe: immediate reaction window vs. medium-term positioning window.
+
+---
+
+## Holistic Scan — What Improved
+
+The score transparency is dramatically better. The component breakdown table with contribution values and share percentages is exactly what was needed — a trader can now see that growth momentum (-18.9, 141% share) and event risk (-13.1, 97.6% share) are doing the heavy lifting on the bearish side. The per-pair commentary is now meaningfully differentiated — EUR/USD gets ECB/Fed repricing framing, USD/JPY gets Japan energy-import vulnerability, GBP gets BoE balancing act, AUD gets China/commodity channel. The score-narrative bridge for the CRITICAL Hormuz theme is present and functional. These are significant improvements.
+
+### Remaining Issues
+
+**1. Short-term and long-term scores are identical (-13 both)**
+This is the same value for two completely different time horizons with different driver sets. While mathematically possible, it looks like a bug or a model artefact. A trader will immediately question whether the long-term engine is actually running independently. Even a one-point difference would look more credible — worth investigating whether the two scoring pipelines are genuinely independent.
+
+**2. Driver "Share" percentages exceed 100%**
+Inflation momentum shows 145.9% share, growth momentum shows 141%, event risk shows 97.6%. These can't be shares of a whole in any conventional sense. The label "Share" is misleading — what this likely means is the driver's signal contribution relative to the final score magnitude, which is a different thing. Rename this column to something like "Signal weight" or "Contribution magnitude" and add a tooltip or footnote explaining what it represents. As-is, a trader seeing 145.9% will think there's a calculation error.
+
+**3. "Why is the score still neutral?" appears twice**
+In the comprehensive context section, the score bridge sentence appears verbatim under both "Geopolitical & energy" and "Why is the composite score still in the neutral band?" — the exact same paragraph duplicated. This looks like a rendering bug where the same content is being injected into two different slots.
+
+**4. Key takeaways still show plain "NEUTRAL" labels**
+The regime strip at the top correctly shows "NEUTRAL · BEARISH LEAN" with sub-classification. But the Key Takeaways section further down reverts to just "NEUTRAL" for both short-term and long-term regime. The sub-classification work from #9 hasn't cascaded into this section.
+
+**5. Confidence shows "N/A" in the regime strip**
+The strip reads "Score / 100 -13 · N/A Neutral band, bearish lean." The N/A for confidence is unexplained — elsewhere in the output confidence is shown as 50%. This inconsistency between the strip and the full scorecard will confuse traders. Either show 50% consistently, or explain why N/A is displayed in the strip specifically.
+
+---
+
+## Additions Worth Considering
+
+**For all three sections:**
+
+- **Regime alignment indicator** — a simple flag showing whether the holistic scan regime, the calendar event direction, and any live news lean are all pointing the same way or conflicting. When all three align on USD bullish for example, that's high-conviction. When they conflict, that's a reason to reduce size. This is the kind of cross-surface synthesis traders actually need.
+
+- **Session context stamp** — which trading session is active at time of generation (London/NY/Asia/overlap), and whether the current session is historically high or low volatility for this pair/event type. One line, but very useful for position timing.
+
+**For Economic Calendar:**
+
+- **Surprise history** — last 4–6 actual vs expected prints for this specific release, shown as a small table. Traders want to know if this release consistently surprises to the upside or downside. This would directly strengthen the probability scenarios and make the confidence score defensible.
+
+- **Options market implied move** — if you can source it, the options-implied 1-day move for the relevant pair around this event is one of the most useful pre-event data points for a retail trader. Even a rough "options market pricing ~40 pip move in EUR/USD" would be highly valuable.
+
+**For Live News:**
+
+- **Longevity classification** — explicitly flag whether this news is a 2-4 hour reaction event, a multi-day repricing event, or a structural/weeks-long theme shift. The ECB tightening story is a good example where the current 2-4 hour framing undersells the impact horizon. A "News Type: Policy Signal (multi-week)" label would help traders categorise how to position.
+
+- **Fading vs following guidance** — for experienced traders, a one-line note on whether the initial reaction is typically worth following or fading for this type of event. Some news categories (central banker speeches, analyst notes like this one) have weak initial reactions that reverse. Others (hard data prints, emergency rate decisions) are worth following. A simple "React type: follow / fade / wait for confirmation" label would be a differentiated feature.
+
+**For Holistic Scan:**
+
+- **Regime trend direction** — not just the current score, but whether it's been improving or deteriorating over the last 2–4 scans. A score of -13 that was -5 three weeks ago means something very different to a -13 that was -20. An arrow (↑ improving / ↓ deteriorating / → stable) next to the score would communicate this instantly.
+
+- **Cross-economy comparison snippet** — for the primary pairs shown, a one-line note on the counterpart economy's regime. Right now EUR/USD shows only the US side. A trader looking at EUR/USD also needs to know where the EUR holistic scan sits. Even a compact "EUR regime: Neutral · Bearish Lean (-8)" next to the pair bias would complete the picture.
+
+---
+
+## Fields to Consider Removing or Restructuring
+
+- **"Forward focus: Monitor upcoming inflation data and geopolitical developments"** in the Calendar big picture — this is filler that appears in every output regardless of the event. Either make it specific to this release or remove it.
+
+- **"Key levels: Anchored to current spot"** in Calendar until #8 is resolved — as discussed, this is a timestamp not a level. Showing it creates false precision.
+
+- **Source references block in Holistic** — the raw file paths (`backend/data/holistic_scan_context.json`) are developer-facing, not trader-facing. These should be hidden from the trader UI and kept in a developer/debug view only.
+
+- **The "sum(driver_signal × weight)" formula footnote** — useful for developers, confusing for most traders. Move to a collapsible "methodology" section rather than showing inline in the scorecard.

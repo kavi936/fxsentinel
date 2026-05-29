@@ -1404,11 +1404,17 @@ const LiveNewsFeed = () => {
                         </button>
                       </div>
                     ) : aiAnalysis ? (
-                      <div className="analysis-content fx-analysis-output" onClick={(e) => e.stopPropagation()}>
+                      <div className="analysis-content fx-analysis-output live-news-analysis" onClick={(e) => e.stopPropagation()}>
+                        {(aiAnalysis.analysis_fallback
+                          || aiAnalysis.analysis_type === 'fallback_error') && (
+                          <p className="analysis-fallback-warning">
+                            Placeholder analysis — GPT did not run. Restart the backend and click Get AI Analysis again.
+                          </p>
+                        )}
                         {isAnalysisV1UiEnabled() &&
                           aiAnalysis.analysis_format_version === 'v1' &&
                           aiAnalysis.spine && (
-                          <div style={{ padding: '12px 20px 0' }} onClick={(e) => e.stopPropagation()}>
+                          <div className="lna-spine-wrap" onClick={(e) => e.stopPropagation()}>
                             <AnalysisV1Spine spine={aiAnalysis.spine} />
                           </div>
                         )}
@@ -1417,68 +1423,139 @@ const LiveNewsFeed = () => {
                             {aiAnalysis.cross_context_note}
                           </div>
                         )}
-                        {/* News Impact Paragraph */}
-                        <div className="market-impact-section">
+                        <div className="lna-section market-impact-section">
                           <h5>Market Impact</h5>
                           <p>{renderAnalysisEmphasis(aiAnalysis.news_impact || 'NO NEWS IMPACT DATA')}</p>
                         </div>
-                        
-                        {/* Trading Essentials */}
-                        <div className="trading-essentials">
-                          <div className="essentials-grid">
-                            <div className="essential-item">
-                              <span className="label">Immediate Reaction:</span>
-                              <span className="value bold">
+
+                        {(aiAnalysis.news_type_display
+                          || aiAnalysis.initial_reaction_guidance_display) && (
+                          <div className="lna-section lna-summary">
+                            <h5>Story setup</h5>
+                            <div className="lna-summary-grid">
+                              {aiAnalysis.news_type_display && (
+                                <div className="lna-summary-item">
+                                  <span className="lna-summary-kicker">Story type</span>
+                                  <span
+                                    className={`lna-summary-chip news-type-chip news-type-${aiAnalysis.news_type || 'other'}`}
+                                    title={aiAnalysis.news_type_rationale || ''}
+                                  >
+                                    {aiAnalysis.news_type_display}
+                                  </span>
+                                </div>
+                              )}
+                              {aiAnalysis.initial_reaction_guidance_display && (
+                                <div className="lna-summary-item">
+                                  <span className="lna-summary-kicker">First move</span>
+                                  <span
+                                    className={`lna-summary-chip react-guidance-chip react-guidance-${aiAnalysis.initial_reaction_guidance || 'wait_confirmation'}`}
+                                    title={aiAnalysis.initial_reaction_guidance_rationale || ''}
+                                  >
+                                    {aiAnalysis.initial_reaction_guidance_display}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            {aiAnalysis.initial_reaction_guidance_rationale && (
+                              <p className="lna-summary-note">
+                                {aiAnalysis.initial_reaction_guidance_rationale}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="lna-section lna-snapshot">
+                          <h5>At a glance</h5>
+                          <div className="lna-reaction-row">
+                            <div
+                              className={`lna-reaction-hero lna-reaction-${(aiAnalysis.immediate_reaction || 'neutral').replace(/_.*/, '')}`}
+                            >
+                              <span className="lna-metric-label">Immediate reaction</span>
+                              <span className="lna-reaction-value">
                                 {aiAnalysis.reaction_display
                                   || aiAnalysis.immediate_reaction?.replace(/_/g, ' ').toUpperCase()
                                   || 'NEUTRAL'}
                               </span>
                             </div>
-                            <div className="essential-item">
-                              <span className="label">Key Pairs:</span>
-                              <span className="value">{aiAnalysis.key_pairs?.join(', ') || 'EUR/USD, USD/JPY'}</span>
-                            </div>
-                            <div className="essential-item">
-                              <span className="label">Volatility:</span>
-                              <span className="value">{aiAnalysis.volatility?.toUpperCase() || 'MEDIUM'}</span>
-                            </div>
-                            <div className="essential-item">
-                              <span className="label">Timeframe:</span>
-                              <span className="value">{aiAnalysis.timeframe || '1-24 hours'}</span>
+                            <div className={`lna-vol-badge lna-vol-${(aiAnalysis.volatility || 'medium').toLowerCase()}`}>
+                              <span className="lna-metric-label">Volatility</span>
+                              <span>{aiAnalysis.volatility?.toUpperCase() || 'MEDIUM'}</span>
                             </div>
                           </div>
+                          {aiAnalysis.reaction_rationale && (
+                            <p className="lna-why-line">
+                              <span className="lna-why-kicker">Why</span>
+                              {aiAnalysis.reaction_rationale}
+                            </p>
+                          )}
+                          <div className="lna-metric-grid">
+                            <div className="lna-metric-card">
+                              <span className="lna-metric-label">Key pairs</span>
+                              <span className="lna-metric-value">
+                                {aiAnalysis.key_pairs?.join(' · ') || 'EUR/USD · USD/JPY'}
+                              </span>
+                            </div>
+                            <div className="lna-metric-card">
+                              <span className="lna-metric-label">Impact horizon</span>
+                              <span className="lna-metric-value">
+                                {aiAnalysis.impact_horizon_display
+                                  || aiAnalysis.impact_horizon
+                                  || 'Intraday reaction'}
+                              </span>
+                            </div>
+                            <div className="lna-metric-card">
+                              <span className="lna-metric-label">Immediate window</span>
+                              <span className="lna-metric-value">
+                                {aiAnalysis.timeframe_immediate || aiAnalysis.timeframe || '1–24 hours'}
+                              </span>
+                            </div>
+                            {aiAnalysis.timeframe_positioning && (
+                              <div className="lna-metric-card lna-metric-card-wide">
+                                <span className="lna-metric-label">Positioning window</span>
+                                <span className="lna-metric-value">{aiAnalysis.timeframe_positioning}</span>
+                              </div>
+                            )}
+                          </div>
+                          {aiAnalysis.pairs_focus_display && (
+                            <p className="lna-pairs-focus">{aiAnalysis.pairs_focus_display}</p>
+                          )}
                         </div>
-                        
-                        {/* Trading Implications Paragraph */}
-                        <div className="trading-implications-section">
+
+                        <div className="lna-section trading-implications-section">
                           <h5>Trading Implications</h5>
                           <p>{renderAnalysisEmphasis(aiAnalysis.trading_implications || 'NO TRADING IMPLICATIONS DATA')}</p>
                         </div>
                         
-                        {/* Risk Assessment */}
                         {aiAnalysis.risk_assessment && (
-                          <div className="risk-assessment">
-                            <h5>Risk Assessment</h5>
-                            <div className="risk-grid">
-                              <div className="risk-item">
-                                <span className="risk-label">Market Volatility:</span>
-                                <span className={`risk-value ${aiAnalysis.risk_assessment.market_volatility}`}>
-                                  {aiAnalysis.risk_assessment.market_volatility?.toUpperCase() || 'MEDIUM'}
+                          <div className="lna-section risk-assessment">
+                            <h5>Risk assessment</h5>
+                            <div className="lna-risk-pills">
+                              <div className="lna-risk-pill">
+                                <span className="lna-metric-label">Market vol</span>
+                                <span className={`lna-risk-val lna-vol-${aiAnalysis.risk_assessment.market_volatility || 'medium'}`}>
+                                  {(aiAnalysis.risk_assessment.market_volatility || 'medium').toUpperCase()}
                                 </span>
                               </div>
-                              <div className="risk-item">
-                                <span className="risk-label">Liquidity Impact:</span>
-                                <span className={`risk-value ${aiAnalysis.risk_assessment.liquidity_impact}`}>
-                                  {aiAnalysis.risk_assessment.liquidity_impact?.toUpperCase() || 'MEDIUM'}
+                              <div className="lna-risk-pill">
+                                <span className="lna-metric-label">Liquidity</span>
+                                <span className="lna-risk-val">
+                                  {(aiAnalysis.risk_assessment.liquidity_impact || 'medium').toUpperCase()}
                                 </span>
                               </div>
-                              <div className="risk-item">
-                                <span className="risk-label">Correlation Risk:</span>
-                                <span className={`risk-value ${aiAnalysis.risk_assessment.correlation_risk}`}>
-                                  {aiAnalysis.risk_assessment.correlation_risk?.toUpperCase() || 'MEDIUM'}
+                              <div className="lna-risk-pill">
+                                <span className="lna-metric-label">Correlation</span>
+                                <span className="lna-risk-val">
+                                  {(aiAnalysis.risk_assessment.correlation_risk || 'medium').toUpperCase()}
                                 </span>
                               </div>
                             </div>
+                            {(aiAnalysis.risk_assessment?.correlation_risk_detail
+                              || aiAnalysis.correlation_risk_display?.detail) && (
+                              <p className="lna-correlation-detail">
+                                {aiAnalysis.risk_assessment?.correlation_risk_detail
+                                  || aiAnalysis.correlation_risk_display?.detail}
+                              </p>
+                            )}
                           </div>
                         )}
                         

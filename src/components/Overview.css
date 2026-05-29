@@ -5430,11 +5430,44 @@
   margin-bottom: 14px;
 }
 
-.ai-confidence-reason {
-  margin: 8px 0 0;
-  font-size: 0.72rem;
-  line-height: 1.45;
-  color: rgba(255, 255, 255, 0.45);
+.ai-confidence-reason,
+.ai-confidence-edge {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: var(--analysis-body-font-family);
+  font-size: var(--analysis-meta-size, 11px);
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid rgba(255, 68, 68, 0.35);
+}
+
+.ai-confidence-edge {
+  border-left-color: rgba(129, 140, 248, 0.55);
+}
+
+.ai-confidence-reason-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--analysis-label-color, #ff7d85);
+}
+
+.ai-confidence-reason .ai-confidence-reason-label,
+.ai-confidence-edge .ai-confidence-reason-label {
+  display: inline;
+  margin-bottom: 0;
+  margin-right: 4px;
+  font-size: inherit;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: rgba(255, 125, 133, 0.9);
 }
 
 .ai-indicator-row {

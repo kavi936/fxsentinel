@@ -28,14 +28,16 @@ class EconomyHolisticScanServiceTests(unittest.TestCase):
         self.assertLessEqual(stale, 50)
 
     def test_score_to_bias_uses_documented_thresholds(self):
-        self.assertEqual(self.service._score_to_bias(20), "neutral")
-        self.assertEqual(self.service._score_to_bias(21), "bullish")
-        self.assertEqual(self.service._score_to_bias(-20), "neutral")
-        self.assertEqual(self.service._score_to_bias(-21), "bearish")
+        self.assertEqual(self.service._score_to_bias(14), "neutral")
+        self.assertEqual(self.service._score_to_bias(15), "bullish")
+        self.assertEqual(self.service._score_to_bias(-12), "neutral")
+        self.assertEqual(self.service._score_to_bias(-15), "bearish")
+        self.assertEqual(self.service._score_to_bias(8), "neutral")
 
     def test_score_position_label_neutral_band(self):
-        self.assertEqual(self.service._score_position_label(-16), "Neutral band, bearish lean")
+        self.assertEqual(self.service._score_position_label(-8), "Neutral band, bearish lean")
         self.assertEqual(self.service._score_position_label(0), "Neutral band, balanced")
+        self.assertEqual(self.service._score_position_label(-16), "Mild bearish")
         self.assertEqual(self.service._score_position_label(35), "Moderate bullish")
 
     def test_component_breakdown_sums_driver_contributions(self):

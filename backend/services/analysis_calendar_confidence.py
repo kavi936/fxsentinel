@@ -15,12 +15,13 @@ from typing import Any, Dict, List, Optional, Tuple
 from services.analysis_contract import ANALYSIS_KIND_CALENDAR_EVENT
 
 CALENDAR_CONFIDENCE_PROMPT_RULES = """
-ANALYSIS CONFIDENCE (methodology — mandatory):
-- analysis_confidence (High | Medium | Low) reflects **edge strength**, not model self-assurance.
-- Your label should align with measurable inputs: event impact tier, forecast/previous completeness,
-  scenario probability discipline (integers summing to 100), and whether macro context is fresh.
-- If inputs are thin or contradictory, choose Medium or Low and list gaps in assumptions[].
-- Do not claim High confidence when forecast is missing or scenarios are vague.
+CONFIDENCE (two concepts — mandatory):
+1) **edge_confidence** (High | Medium | Low): your conviction in the directional trade read for this release.
+2) **edge_confidence_reason**: one sentence explaining that edge (e.g. "Hot CPI would extend USD bid if core surprises above 0.3% amid sticky services").
+- Also output analysis_confidence with the same High|Medium|Low value (alias for edge_confidence).
+- assumptions[]: only for missing data gaps — not a substitute for edge_confidence_reason.
+- Do not claim High edge when forecast is missing or scenarios are vague/contradictory.
+- The API applies a separate **data quality score** from inputs; your edge_confidence_reason is shown to traders as the edge explanation.
 """.strip()
 
 _TIER_FROM_SCORE = (
@@ -242,10 +243,22 @@ def apply_calendar_confidence_to_response(
         macro_snapshot=macro if isinstance(macro, dict) else None,
     )
 
+    out["data_confidence_score"] = computed["confidence_score"]
     out["confidence_score"] = computed["confidence_score"]
-    out["analysis_confidence"] = computed["analysis_confidence"]
     out["confidence_reason"] = computed["confidence_reason"]
     out["confidence_tier"] = computed["confidence_tier"]
+
+    gpt_edge = str(payload.get("analysis_confidence") or payload.get("edge_confidence") or "").strip().title()
+    if gpt_edge not in ("High", "Medium", "Low"):
+        gpt_edge = computed["analysis_confidence"]
+    edge_reason = str(payload.get("edge_confidence_reason") or "").strip()
+    if not edge_reason:
+        assumptions = payload.get("assumptions")
+        if isinstance(assumptions, list) and assumptions:
+            edge_reason = str(assumptions[0])[:320]
+    out["edge_confidence"] = gpt_edge
+    out["edge_confidence_reason"] = edge_reason
+    out["analysis_confidence"] = gpt_edge
     if isinstance(macro, dict):
         out["macro_snapshot"] = macro
     out["confidence_methodology_applied"] = {

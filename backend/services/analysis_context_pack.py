@@ -879,10 +879,13 @@ CONSISTENCY:
 - forward_scenarios.neutral ([ON] path) must describe the **inline band** from area_facts.neutral_zone when present
   (e.g. "0.25%–0.35%"), NOT a single exact consensus tick — markets treat near-consensus as limited reaction.
 - big_picture.medium_term_direction must not repeat market_bias verbatim.
-- analysis_confidence (High | Medium | Low) = edge strength; if Medium/Low, use assumptions[] for what supports vs negates.
+- edge_confidence / analysis_confidence (High | Medium | Low) = your directional edge; edge_confidence_reason = one sentence why.
+- assumptions[] only for missing data gaps (separate from edge_confidence_reason).
 
 LEVELS & SESSION:
-- If market session is closed, trading_plan.key_levels must start with "Illustrative levels:".
+- If market session is closed, trading_plan.key_levels must start with "Spot reference:" or "Illustrative levels:" — never label spot as support/resistance until structured OHLC exists.
+- next_catalysts: each entry must name a specific release or include a date/month; ban vague always-true geopolitical filler.
+- big_picture.forward_focus: must tie to THIS event or the next dated catalyst — no generic "monitor inflation and geopolitical developments".
 - Prefer user onboarding pairs when relevant; still cover economy-linked movers for this release.
 
 PERSONALIZATION CASCADE (mandatory):
@@ -905,6 +908,13 @@ NEUTRAL SUB-CLASSIFICATION (mandatory):
 - If drivers are balanced but tilt one way, use NEUTRAL · BULLISH LEAN or NEUTRAL · BEARISH LEAN (not plain NEUTRAL).
 - Use TRUE NEUTRAL only when there is no readable lean in scenarios or narrative.
 """.strip()
+
+try:
+    from services.analysis_calendar_content_guard import CALENDAR_CONTENT_GUARD_PROMPT_RULES as _CAL_GUARD
+except ImportError:
+    _CAL_GUARD = ""
+if _CAL_GUARD:
+    CALENDAR_PACK_PROMPT_RULES = f"{CALENDAR_PACK_PROMPT_RULES}\n\n{_CAL_GUARD}"
 
 
 def calendar_forward_scenarios_json_spec(currency: str, *, is_pre_event: bool) -> str:
@@ -998,6 +1008,20 @@ NEUTRAL SUB-CLASSIFICATION (mandatory):
 - When reaction is neutral but narrative has a mild USD lean, the copy must read as NEUTRAL · BULLISH/BEARISH LEAN in trading_implications (do not contradict with "clear bullish USD").
 - Use TRUE NEUTRAL only when the headline is genuinely two-sided for USD.
 """.strip()
+
+try:
+    from services.analysis_news_horizon import NEWS_HORIZON_PROMPT_RULES as _NEWS_HORIZON
+except ImportError:
+    _NEWS_HORIZON = ""
+if _NEWS_HORIZON:
+    NEWS_PACK_PROMPT_RULES = f"{NEWS_PACK_PROMPT_RULES}\n\n{_NEWS_HORIZON}"
+
+try:
+    from services.analysis_news_classification import NEWS_CLASSIFICATION_PROMPT_RULES as _NEWS_CLASS
+except ImportError:
+    _NEWS_CLASS = ""
+if _NEWS_CLASS:
+    NEWS_PACK_PROMPT_RULES = f"{NEWS_PACK_PROMPT_RULES}\n\n{_NEWS_CLASS}"
 
 
 def _infer_news_currency(news_item: Dict[str, Any]) -> str:

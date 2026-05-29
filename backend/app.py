@@ -17,6 +17,7 @@ import concurrent.futures
 from datetime import datetime
 from dotenv import load_dotenv
 import stripe
+from typing import Optional
 from firebase_admin import credentials, firestore, initialize_app, auth
 from services.stripe_service import StripeService
 from services.user_trader_profile import user_trader_profile_store, validate_trader_payload
@@ -2387,9 +2388,21 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
             }
         
         analysis_result = {
+            "title": news_item.get("title", ""),
             "news_impact": mvp_result.news_impact,
             "trading_implications": mvp_result.trading_implications,
             "immediate_reaction": mvp_result.immediate_reaction,
+            "primary_currency": getattr(mvp_result, "primary_currency", "USD"),
+            "reaction_rationale": getattr(mvp_result, "reaction_rationale", ""),
+            "impact_horizon": getattr(mvp_result, "impact_horizon", "intraday"),
+            "timeframe_immediate": getattr(mvp_result, "timeframe_immediate", "") or mvp_result.timeframe,
+            "timeframe_positioning": getattr(mvp_result, "timeframe_positioning", ""),
+            "news_type": getattr(mvp_result, "news_type", "other"),
+            "news_type_rationale": getattr(mvp_result, "news_type_rationale", ""),
+            "initial_reaction_guidance": getattr(mvp_result, "initial_reaction_guidance", "wait_confirmation"),
+            "initial_reaction_guidance_rationale": getattr(
+                mvp_result, "initial_reaction_guidance_rationale", ""
+            ),
             "key_pairs": mvp_result.key_pairs,
             "volatility": mvp_result.volatility,
             "timeframe": mvp_result.timeframe,
@@ -2430,7 +2443,7 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
         print(f"❌ Error type: {type(e).__name__}")
         import traceback
         print(f"❌ Traceback: {traceback.format_exc()}")
-        return get_mock_news_analysis(news_item.get('title', 'News Event'))
+        return get_mock_news_analysis(news_item)
 
 def generate_trading_implications_from_news(sentiment_result, currency_pairs, impact):
     """Generate trading implications from news sentiment analysis"""
@@ -2480,28 +2493,50 @@ def generate_currency_pair_analysis(currency_pairs, sentiment_result):
     
     return analysis
 
-def get_mock_news_analysis(news_title):
-    """Fallback mock analysis for news events with complete structure"""
-    return {
-        "news_impact": f"This news event about {news_title} has significant implications for forex markets. The development suggests potential shifts in market sentiment and economic outlook that could impact currency valuations. Traders should monitor for increased volatility and potential breakout opportunities as the market digests this information.",
-        "trading_implications": f"Based on this news, traders should consider monitoring key currency pairs for potential trading opportunities. The immediate market reaction may be volatile, so risk management is crucial. Focus on major pairs like EUR/USD and USD/JPY, and be prepared for both bullish and bearish scenarios depending on market interpretation.",
+def get_mock_news_analysis(news_item_or_title, *, news_item: Optional[dict] = None):
+    """Last-resort placeholder when real analysis cannot run (not GPT output)."""
+    if isinstance(news_item_or_title, dict):
+        news_item = news_item_or_title
+        news_title = news_item.get("title", "News Event")
+    else:
+        news_title = str(news_item_or_title or "News Event")
+        news_item = news_item if isinstance(news_item, dict) else None
+        if not news_item:
+            news_item = {"title": news_title, "id": "unknown"}
+
+    payload = {
+        "title": news_title,
+        "news_impact": (
+            f"Analysis could not be generated for: {news_title}. "
+            "Retry in a moment or check backend logs — this is a fallback placeholder, not live GPT output."
+        ),
+        "trading_implications": (
+            "Do not trade from this placeholder. Use Get AI Analysis again after the backend has restarted. "
+            "If this persists, verify OPENAI_API_KEY and check server logs for import or API errors."
+        ),
         "immediate_reaction": "neutral",
         "key_pairs": ["EUR/USD", "USD/JPY", "GBP/USD"],
         "volatility": "medium",
         "timeframe": "1-24 hours",
-        "confidence": 75,
-        "analysis_type": "free_enhanced",
+        "confidence": 0,
+        "analysis_type": "fallback_error",
+        "analysis_fallback": True,
         "risk_assessment": {
             "market_volatility": "medium",
             "liquidity_impact": "medium",
-            "correlation_risk": "medium"
+            "correlation_risk": "medium",
         },
         "market_context": {
-            "economic_factors": ["Market sentiment", "Economic uncertainty", "Policy implications"],
-            "technical_levels": ["Key support and resistance levels", "Psychological price levels"],
-            "sentiment_drivers": ["News sentiment", "Market positioning", "Risk appetite"]
-        }
+            "economic_factors": ["Analysis unavailable"],
+            "technical_levels": [],
+            "sentiment_drivers": [],
+        },
     }
+    return finalize_analysis(
+        payload,
+        analysis_kind=ANALYSIS_KIND_LIVE_NEWS,
+        context=FinalizeContext(news_item=news_item if isinstance(news_item, dict) else None),
+    )
 
 @app.route('/api/news-sentiment', methods=['POST'])
 def analyze_news_sentiment():
@@ -2825,6 +2860,9 @@ def get_enhanced_analysis(news_id):
             
             # Meta data
             'confidence_score': gpt_analysis.confidence_score,
+            'analysis_confidence': getattr(gpt_analysis, 'analysis_confidence', 'Medium'),
+            'edge_confidence_reason': getattr(gpt_analysis, 'edge_confidence_reason', ''),
+            'assumptions': getattr(gpt_analysis, 'assumptions', []) or [],
             'analysis_timestamp': gpt_analysis.analysis_timestamp,
             'event_id': gpt_analysis.event_id,
             'analysis_type': gpt_analysis.analysis_type,

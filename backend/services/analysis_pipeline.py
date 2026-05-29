@@ -31,6 +31,9 @@ from services.analysis_actionable_conditionals import apply_actionable_condition
 from services.analysis_bias_classification import apply_bias_classification_to_response
 from services.analysis_calendar_confidence import apply_calendar_confidence_if_calendar
 from services.analysis_calendar_trading_plan_structure import apply_calendar_trading_plan_structure_if_calendar
+from services.analysis_calendar_content_guard import apply_calendar_content_guard_if_calendar
+from services.analysis_news_horizon import apply_news_horizon_if_news
+from services.analysis_news_classification import apply_news_classification_if_news
 from services.analysis_news_correlation_risk import apply_news_correlation_risk_if_news
 from services.calendar_scenario_engine import attach_canonical_calendar_scenarios
 from services.analysis_personalization_validation import apply_personalization_to_response
@@ -185,6 +188,16 @@ def finalize_analysis(
         analysis_kind,
         news_item=ctx.news_item,
     )
+    out = apply_news_horizon_if_news(
+        out,
+        analysis_kind,
+        personalization=ctx.personalization,
+    )
+    out = apply_news_classification_if_news(
+        out,
+        analysis_kind,
+        news_item=ctx.news_item,
+    )
 
     if analysis_kind == ANALYSIS_KIND_CALENDAR_EVENT and ctx.validated_event:
         title = str(ctx.validated_event.get("title") or "")
@@ -202,6 +215,11 @@ def finalize_analysis(
             token_user_info=ctx.token_user_info,
         )
         out = apply_calendar_trading_plan_structure_if_calendar(
+            out,
+            analysis_kind,
+            event=ctx.validated_event,
+        )
+        out = apply_calendar_content_guard_if_calendar(
             out,
             analysis_kind,
             event=ctx.validated_event,

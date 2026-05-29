@@ -18,7 +18,7 @@ class CalendarScenarioEngineTests(unittest.TestCase):
         self.assertIn("wages", EVENT_DIRECTION_POLICY)
         self.assertIn("employment", EVENT_DIRECTION_POLICY)
         self.assertIn("interest_rate", EVENT_DIRECTION_POLICY)
-        self.assertFalse(EVENT_DIRECTION_POLICY["inflation"]["higher_is_bullish_for_currency"])
+        self.assertTrue(EVENT_DIRECTION_POLICY["inflation"]["higher_is_bullish_for_currency"])
         self.assertFalse(EVENT_DIRECTION_POLICY["wages"]["higher_is_bullish_for_currency"])
         self.assertTrue(EVENT_DIRECTION_POLICY["employment"]["higher_is_bullish_for_currency"])
         self.assertTrue(EVENT_DIRECTION_POLICY["interest_rate"]["higher_is_bullish_for_currency"])
@@ -26,7 +26,7 @@ class CalendarScenarioEngineTests(unittest.TestCase):
     def test_common_calendar_aliases_map_correctly(self):
         inflation = get_event_direction_mapping("Core PCE Price Index m/m")
         self.assertEqual(inflation["event_type"], "inflation")
-        self.assertFalse(inflation["higher_is_bullish_for_currency"])
+        self.assertTrue(inflation["higher_is_bullish_for_currency"])
 
         rates = get_event_direction_mapping("Federal Funds Rate")
         self.assertEqual(rates["event_type"], "interest_rate")
@@ -44,16 +44,16 @@ class CalendarScenarioEngineTests(unittest.TestCase):
         self.assertEqual(employment["event_type"], "employment")
         self.assertTrue(employment["higher_is_bullish_for_currency"])
 
-    def test_cpi_above_is_bearish_usd(self):
+    def test_cpi_above_is_bullish_for_event_currency(self):
         ms = build_market_scenarios(
             event_title="Consumer Price Index y/y",
             currency="USD",
             expected="3.7%",
         )
         self.assertIsNotNone(ms)
-        self.assertFalse(ms["higher_is_bullish_for_currency"])
-        self.assertEqual(ms["rows"]["above"][0]["sentiment"], "Bearish")
-        self.assertEqual(ms["rows"]["below"][0]["sentiment"], "Bullish")
+        self.assertTrue(ms["higher_is_bullish_for_currency"])
+        self.assertEqual(ms["rows"]["above"][0]["sentiment"], "Bullish")
+        self.assertEqual(ms["rows"]["below"][0]["sentiment"], "Bearish")
 
     def test_nfp_above_is_bullish_usd(self):
         ms = build_market_scenarios(
@@ -64,7 +64,7 @@ class CalendarScenarioEngineTests(unittest.TestCase):
         self.assertTrue(ms["higher_is_bullish_for_currency"])
         self.assertEqual(ms["rows"]["above"][0]["sentiment"], "Bullish")
 
-    def test_cpi_usd_strength_in_bullish_bucket_warns(self):
+    def test_cpi_usd_strength_in_bullish_bucket_aligns(self):
         fs = {
             "bullish": "Hot CPI: USD strengthens above consensus.",
             "bearish": "Soft print",
@@ -78,8 +78,7 @@ class CalendarScenarioEngineTests(unittest.TestCase):
         warnings = calendar_scenario_alignment_warnings(
             "Consumer Price Index y/y", "USD", fs, market_scenarios=ms
         )
-        self.assertGreaterEqual(len(warnings), 1)
-        self.assertIn("bullish", warnings[0].lower())
+        self.assertEqual(len(warnings), 0)
 
     def test_forward_scenarios_by_outcome_keys(self):
         fs = {"bullish": "a", "bearish": "b", "neutral": "c"}

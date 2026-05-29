@@ -90,7 +90,7 @@ class ScoreNarrativeBridgeTests(unittest.TestCase):
         scan = apply_score_narrative_bridge_to_scan(_scan_with_breakdown())
         self.assertTrue(scan["score_bridge_present"])
         self.assertIn("Score bridge", scan["score_narrative_bridge"])
-        self.assertIn("Score bridge", scan["narrative"]["geopolitical_energy"])
+        self.assertNotIn("Score bridge", scan["narrative"].get("geopolitical_energy", ""))
         ids = [i["id"] for i in scan["highlights"]["items"]]
         self.assertIn("score_narrative_bridge", ids)
 

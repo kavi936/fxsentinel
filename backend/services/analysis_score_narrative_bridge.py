@@ -188,11 +188,6 @@ def apply_score_narrative_bridge_to_scan(scan: Dict[str, Any]) -> Dict[str, Any]
         bridge_sentence = build_score_bridge_sentence(scan)
         if bridge_sentence:
             narrative["score_bridge"] = bridge_sentence
-            geo_block = str(narrative.get("geopolitical_energy") or "").strip()
-            if geo_block and bridge_sentence not in geo_block:
-                narrative["geopolitical_energy"] = f"{geo_block}\n\n{bridge_sentence}"
-            elif not geo_block:
-                narrative["geopolitical_energy"] = bridge_sentence
             scan["score_narrative_bridge"] = bridge_sentence
             source = "deterministic_fallback"
             present = True
@@ -201,8 +196,6 @@ def apply_score_narrative_bridge_to_scan(scan: Dict[str, Any]) -> Dict[str, Any]
             scan["score_narrative_bridge"] = narrative["score_bridge"]
         elif scan.get("score_narrative_bridge"):
             narrative["score_bridge"] = scan["score_narrative_bridge"]
-        elif narrative.get("geopolitical_energy"):
-            scan["score_narrative_bridge"] = str(narrative.get("geopolitical_energy") or "")[:480]
         source = "gpt_or_existing"
 
     scan["narrative"] = narrative

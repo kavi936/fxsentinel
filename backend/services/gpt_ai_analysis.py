@@ -218,6 +218,15 @@ class GPTAnalysisResult:
     validation_status: str = "unknown"
     market_data_source: str = "unknown"
 
+    # Edge vs data confidence (finalize attaches data_confidence_score)
+    analysis_confidence: str = "Medium"
+    edge_confidence_reason: str = ""
+    assumptions: Optional[List[str]] = None
+
+    def __post_init__(self):
+        if self.assumptions is None:
+            object.__setattr__(self, "assumptions", [])
+
 class GPTAIAnalyzer:
     """Enhanced GPT AI analyzer with data validation and live market data"""
     
@@ -2326,8 +2335,10 @@ OUTPUT FORMAT (JSON):
     "headline": "Compelling headline summarizing the key takeaway",
     "key_takeaway": "Main insight in 1-2 sentences",
     "analysis_confidence": "High | Medium | Low",
+    "edge_confidence": "High | Medium | Low (same as analysis_confidence — your conviction in the directional read)",
+    "edge_confidence_reason": "One sentence: why your edge is at this level for this release (required)",
     "assumptions": [
-        "Only include if assumptions were required due to missing data (e.g., 'Assuming normal liquidity during London-NY overlap', 'Assuming no surprise geopolitical headlines')"
+        "Only include if assumptions were required due to missing data (e.g., 'Assuming normal liquidity during London-NY overlap')"
     ],
     {forward_scenarios_json}
     "event_summary": {{
@@ -2351,7 +2362,7 @@ OUTPUT FORMAT (JSON):
     "trading_plan": {{
         "best_approach": "Recommended trading approach",
         "avoid_strategies": "Strategies to avoid",
-        "key_levels": "Important price levels. If levels are tied to live spot/last close, state anchor explicitly (e.g., 'Anchored to current spot 1.0842'). If no anchor is available, start with 'Illustrative levels:'",
+        "key_levels": "Spot reference or illustrative zones only (no pivot/swing/support labels until structured OHLC exists). Prefix with 'Spot reference:' when using last trade/spot — e.g. 'Spot reference: EUR/USD ~1.0842'. Use 'Illustrative levels:' only when session is closed.",
         "position_sizing": "Position sizing recommendations",
         "next_catalysts": "Upcoming events to watch"
     }},
@@ -2441,12 +2452,15 @@ CONTEXT-ANCHORING REQUIREMENT (ENFORCED):
                     normalized_scenarios = forward_scenarios
             
             # Extract analysis_confidence if provided, otherwise use default
-            analysis_confidence = analysis_data.get('analysis_confidence', 'Medium')
-            # Map confidence to numeric score for backward compatibility
+            analysis_confidence = analysis_data.get(
+                'edge_confidence') or analysis_data.get('analysis_confidence', 'Medium')
+            edge_confidence_reason = str(
+                analysis_data.get('edge_confidence_reason') or ''
+            ).strip()
+            # Legacy numeric placeholder — finalize replaces with data_confidence_score
             confidence_map = {'High': 90.0, 'Medium': 75.0, 'Low': 60.0}
-            confidence_score = confidence_map.get(analysis_confidence, 75.0)
-            
-            # Extract assumptions if provided
+            confidence_score = confidence_map.get(str(analysis_confidence).title(), 75.0)
+
             assumptions = analysis_data.get('assumptions', [])
             
             return GPTAnalysisResult(
@@ -2461,6 +2475,9 @@ CONTEXT-ANCHORING REQUIREMENT (ENFORCED):
                 positioning_context=analysis_data.get('positioning_context', {}),
                 next_catalysts=analysis_data.get('next_catalysts', []),
                 confidence_score=confidence_score,
+                analysis_confidence=str(analysis_confidence).title(),
+                edge_confidence_reason=edge_confidence_reason,
+                assumptions=list(assumptions) if isinstance(assumptions, list) else [],
                 analysis_timestamp=datetime.now().isoformat(),
                 event_id=str(event.get('id', 'unknown')),
                 analysis_type=analysis_type,

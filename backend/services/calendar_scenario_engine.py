@@ -46,8 +46,8 @@ EVENT_DIRECTION_POLICY: Dict[str, Dict[str, Any]] = {
         "rationale": "Higher labor-cost pressure is treated as growth headwind in this table policy.",
     },
     "inflation": {
-        "higher_is_bullish_for_currency": False,
-        "rationale": "Higher inflation prints are treated as currency-negative in this table policy.",
+        "higher_is_bullish_for_currency": True,
+        "rationale": "Hot inflation surprises typically lift the event currency via hawkish policy repricing (rates higher-for-longer).",
     },
     "employment": {
         "higher_is_bullish_for_currency": True,

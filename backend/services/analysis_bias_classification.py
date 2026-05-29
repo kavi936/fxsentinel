@@ -17,27 +17,21 @@ from services.analysis_contract import (
     ANALYSIS_KIND_ECONOMY_SCAN,
     ANALYSIS_KIND_LIVE_NEWS,
 )
-
-# Align with economy_holistic_scan_service score bands
-NEUTRAL_BAND_MIN = -20
-NEUTRAL_BAND_MAX = 20
-LEAN_THRESHOLD = 5
-BIAS_BULLISH_MIN = 21
-BIAS_BEARISH_MAX = -21
-
-BIAS_CLASS_BULLISH = "bullish"
-BIAS_CLASS_BEARISH = "bearish"
-BIAS_CLASS_TRUE_NEUTRAL = "true_neutral"
-BIAS_CLASS_NEUTRAL_BULLISH_LEAN = "neutral_bullish_lean"
-BIAS_CLASS_NEUTRAL_BEARISH_LEAN = "neutral_bearish_lean"
-
-DISPLAY_LABELS: Dict[str, str] = {
-    BIAS_CLASS_BULLISH: "BULLISH",
-    BIAS_CLASS_BEARISH: "BEARISH",
-    BIAS_CLASS_TRUE_NEUTRAL: "TRUE NEUTRAL",
-    BIAS_CLASS_NEUTRAL_BULLISH_LEAN: "NEUTRAL · BULLISH LEAN",
-    BIAS_CLASS_NEUTRAL_BEARISH_LEAN: "NEUTRAL · BEARISH LEAN",
-}
+from services.analysis_score_bands import (
+    BIAS_BEARISH_MAX,
+    BIAS_BULLISH_MIN,
+    BIAS_CLASS_BEARISH,
+    BIAS_CLASS_BULLISH,
+    BIAS_CLASS_NEUTRAL_BEARISH_LEAN,
+    BIAS_CLASS_NEUTRAL_BULLISH_LEAN,
+    BIAS_CLASS_TRUE_NEUTRAL,
+    DISPLAY_LABELS,
+    HEADLINE_LABELS,
+    LEAN_THRESHOLD,
+    NEUTRAL_BAND_MAX,
+    NEUTRAL_BAND_MIN,
+    score_to_base_bias,
+)
 
 BIAS_PROMPT_RULES = """
 NEUTRAL SUB-CLASSIFICATION (mandatory when bias is in the neutral score band):
@@ -46,14 +40,6 @@ NEUTRAL SUB-CLASSIFICATION (mandatory when bias is in the neutral score band):
 - Do not label plain NEUTRAL when the body clearly implies a directional lean — match label to narrative.
 - Strong conviction outside the neutral band: keep BULLISH or BEARISH (no lean suffix).
 """.strip()
-
-
-def score_to_base_bias(score: float) -> str:
-    if score >= BIAS_BULLISH_MIN:
-        return BIAS_CLASS_BULLISH
-    if score <= BIAS_BEARISH_MAX:
-        return BIAS_CLASS_BEARISH
-    return "neutral"
 
 
 def classify_from_score(
@@ -75,62 +61,183 @@ def classify_from_score(
         classification = BIAS_CLASS_TRUE_NEUTRAL
 
     display = DISPLAY_LABELS.get(classification, classification.upper().replace("_", " "))
+    headline = HEADLINE_LABELS.get(classification, display)
     if incomplete:
         display = f"{display} (incomplete)"
+        headline = f"{headline} (incomplete)"
 
     return {
         "bias": base,
         "bias_classification": classification,
         "display_bias": display,
+        "headline_bias": headline,
     }
 
 
-def _format_display_label(classification: str, *, incomplete: bool = False, usd_suffix: bool = False) -> str:
+def _format_display_label(
+    classification: str,
+    *,
+    incomplete: bool = False,
+    currency_code: Optional[str] = None,
+    usd_suffix: bool = False,
+) -> str:
+    """Format bias/reaction label; append (CCY) when lean applies to a specific currency."""
     label = DISPLAY_LABELS.get(classification, classification.upper().replace("_", " "))
-    if usd_suffix and classification in (BIAS_CLASS_BULLISH, BIAS_CLASS_BEARISH):
-        label = f"{label} USD"
-    if classification in (BIAS_CLASS_NEUTRAL_BULLISH_LEAN, BIAS_CLASS_NEUTRAL_BEARISH_LEAN):
-        label = f"{label} (USD)" if usd_suffix else label
+    ccy = (currency_code or ("USD" if usd_suffix else "")).upper()
+    if ccy and classification in (BIAS_CLASS_BULLISH, BIAS_CLASS_BEARISH):
+        label = f"{label} {ccy}"
+    if ccy and classification in (BIAS_CLASS_NEUTRAL_BULLISH_LEAN, BIAS_CLASS_NEUTRAL_BEARISH_LEAN):
+        label = f"{label} ({ccy})"
     if incomplete:
         label = f"{label} (incomplete)"
     return label
 
 
-def infer_text_directional_lean(text: str) -> Optional[str]:
+_CURRENCY_SIGNAL_PATTERNS: Dict[str, Tuple[str, ...]] = {
+    "EUR": (
+        r"\bECB\b",
+        r"\beuro\b",
+        r"euro[- ]?area",
+        r"\bEUR\b",
+        r"european central bank",
+        r"lagarde",
+    ),
+    "GBP": (
+        r"\bBOE\b",
+        r"\bGBP\b",
+        r"bank of england",
+        r"sterling",
+        r"\bpound\b",
+    ),
+    "JPY": (
+        r"\bBOJ\b",
+        r"\bJPY\b",
+        r"bank of japan",
+        r"\byen\b",
+    ),
+    "AUD": (r"\bRBA\b", r"\bAUD\b", r"reserve bank of australia"),
+    "USD": (
+        r"\bFED\b",
+        r"federal reserve",
+        r"\bFOMC\b",
+        r"\bUSD\b",
+        r"\bdollar\b",
+        r"greenback",
+    ),
+}
+
+
+def detect_news_primary_currency(
+    *,
+    title: str = "",
+    news_impact: str = "",
+    trading_implications: str = "",
+    key_pairs: Optional[List[str]] = None,
+) -> str:
+    """Infer which currency the headline primarily concerns (for reaction labels)."""
+    blob = f"{title}\n{news_impact}\n{trading_implications}"
+    scores: Dict[str, int] = {}
+    for ccy, patterns in _CURRENCY_SIGNAL_PATTERNS.items():
+        scores[ccy] = sum(1 for pat in patterns if re.search(pat, blob, re.IGNORECASE))
+
+    pairs = key_pairs or []
+    for pair in pairs:
+        p = str(pair or "").upper().replace("/", "").replace(" ", "")
+        if p.startswith("EUR"):
+            scores["EUR"] = scores.get("EUR", 0) + 2
+        if p.startswith("GBP"):
+            scores["GBP"] = scores.get("GBP", 0) + 2
+        if p.startswith("JPY") and "USDJPY" in p:
+            scores["JPY"] = scores.get("JPY", 0) + 1
+            scores["USD"] = scores.get("USD", 0) + 1
+
+    if re.search(r"\b(bearish|bullish|weak|strong|pressure on)\s+usd\b", blob, re.IGNORECASE):
+        scores["USD"] = scores.get("USD", 0) + 4
+    if re.search(r"\b(bearish|bullish|weak|strong|pressure on)\s+(eur|euro)\b", blob, re.IGNORECASE):
+        scores["EUR"] = scores.get("EUR", 0) + 4
+
+    ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
+    if not ranked or ranked[0][1] <= 0:
+        return "USD"
+    top_score = ranked[0][1]
+    leaders = [ccy for ccy, score in ranked if score == top_score]
+    if "USD" in leaders and len(leaders) > 1:
+        non_usd = [c for c in leaders if c != "USD"]
+        if non_usd:
+            return non_usd[0]
+    return ranked[0][0]
+
+
+def infer_text_directional_lean(text: str, primary_currency: str = "USD") -> Optional[str]:
     """Return neutral_bullish_lean / neutral_bearish_lean when text tilts but is not decisive."""
     combined = (text or "").upper()
-    bullish_hits = (
-        "BULLISH",
-        "HAWKISH",
-        "STRENGTHEN",
-        "RALLY",
-        "HIGHER",
-        "UPSIDE",
-        "SUPPORTS USD",
-        "USD STRENGTH",
-        "USD FIRMS",
-        "USD BID",
-    )
-    bearish_hits = (
-        "BEARISH",
-        "DOVISH",
-        "WEAKEN",
-        "SELLOFF",
-        "LOWER",
-        "DRIFT LOWER",
-        "DOWNSIDE",
-        "DOWNWARD",
-        "PRESSURE ON",
-        "PRESSURE ON USD",
-        "USD WEAK",
-        "USD SLIPS",
-        "USD FALLS",
-        "DOWNTURN",
-        "EURO RALLY",
-        "WEIGHS ON USD",
-    )
-    bull = sum(1 for t in bullish_hits if t in combined)
-    bear = sum(1 for t in bearish_hits if t in combined)
+    cur = (primary_currency or "USD").upper()
+
+    currency_bullish: Tuple[str, ...]
+    currency_bearish: Tuple[str, ...]
+    if cur == "EUR":
+        currency_bullish = (
+            "STRONGER EURO",
+            "EURO STRENGTHENS",
+            "EUR RALLY",
+            "EUR BULLISH",
+            "ECB HAWKISH",
+            "SUPPORTS A STRONGER EURO",
+            "EURO GAINS",
+        )
+        currency_bearish = (
+            "WEAKER EURO",
+            "EUR WEAK",
+            "EUR SLIPS",
+            "ECB DOVISH",
+            "EURO FALLS",
+            "DOWNWARD PRESSURE ON THE EURO",
+        )
+    elif cur == "GBP":
+        currency_bullish = ("STRONGER GBP", "STERLING RALLY", "BOE HAWKISH", "GBP BULLISH")
+        currency_bearish = ("WEAKER GBP", "STERLING FALLS", "BOE DOVISH", "GBP BEARISH")
+    elif cur == "JPY":
+        currency_bullish = ("STRONGER YEN", "JPY RALLY", "BOJ HAWKISH", "YEN GAINS")
+        currency_bearish = ("WEAKER YEN", "JPY SLIPS", "BOJ DOVISH", "YEN FALLS")
+    else:
+        currency_bullish = (
+            "SUPPORTS USD",
+            "USD STRENGTH",
+            "USD FIRMS",
+            "USD BID",
+            "DOLLAR STRENGTHENS",
+            "HAWKISH FED",
+        )
+        currency_bearish = (
+            "PRESSURE ON USD",
+            "USD WEAK",
+            "USD SLIPS",
+            "USD FALLS",
+            "DOLLAR WEAKENS",
+            "DOVISH FED",
+        )
+
+    bull = sum(1 for t in currency_bullish if t in combined)
+    bear = sum(1 for t in currency_bearish if t in combined)
+
+    if cur == "USD":
+        if "EUR/USD RALLY" in combined or "EURO RALLY" in combined:
+            bear += 1
+        if "EUR/USD LOWER" in combined or "DOWNWARD PRESSURE ON THE EURO" in combined:
+            bull += 1
+
+    if bull > bear and bull >= 1:
+        return BIAS_CLASS_NEUTRAL_BULLISH_LEAN
+    if bear > bull and bear >= 1:
+        return BIAS_CLASS_NEUTRAL_BEARISH_LEAN
+
+    if cur != "USD":
+        return None
+
+    generic_bullish = ("BULLISH", "HAWKISH", "STRENGTHEN", "RALLY", "HIGHER", "UPSIDE")
+    generic_bearish = ("BEARISH", "DOVISH", "WEAKEN", "SELLOFF", "LOWER", "DOWNSIDE")
+    bull = sum(1 for t in generic_bullish if t in combined)
+    bear = sum(1 for t in generic_bearish if t in combined)
     if bull > bear and bull >= 1:
         return BIAS_CLASS_NEUTRAL_BULLISH_LEAN
     if bear > bull and bear >= 1:
@@ -142,27 +249,68 @@ def classify_usd_reaction(
     immediate_reaction: str,
     news_impact: str = "",
     trading_implications: str = "",
+    *,
+    title: str = "",
+    key_pairs: Optional[List[str]] = None,
+    primary_currency: Optional[str] = None,
+    reaction_rationale: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Classify live-news immediate_reaction with optional lean when reaction is neutral.
+    Labels reference the event currency (EUR, GBP, …), not always USD.
     """
     reaction = str(immediate_reaction or "neutral").strip().lower()
     corpus = f"{news_impact}\n{trading_implications}"
+    heuristic_ccy = detect_news_primary_currency(
+        title=title,
+        news_impact=news_impact,
+        trading_implications=trading_implications,
+        key_pairs=key_pairs,
+    )
+    gpt_ccy = str(primary_currency or "").strip().upper()
+    if gpt_ccy and len(gpt_ccy) == 3:
+        primary_ccy = gpt_ccy
+        currency_source = "gpt" if gpt_ccy == heuristic_ccy else "gpt_with_heuristic_mismatch"
+    else:
+        primary_ccy = heuristic_ccy
+        currency_source = "heuristic"
+    if gpt_ccy and heuristic_ccy and gpt_ccy != heuristic_ccy:
+        currency_source = "gpt_heuristic_mismatch"
+    elif gpt_ccy and gpt_ccy == heuristic_ccy:
+        currency_source = "gpt_heuristic_agree"
 
     if reaction == "bullish_usd":
+        if primary_ccy != "USD":
+            lean = infer_text_directional_lean(corpus, primary_ccy) or BIAS_CLASS_NEUTRAL_BULLISH_LEAN
+            return {
+                "immediate_reaction": reaction,
+                "bias_classification": lean,
+                "reaction_display": _format_display_label(lean, currency_code=primary_ccy),
+                "reaction_currency": primary_ccy,
+            }
         return {
             "immediate_reaction": reaction,
             "bias_classification": BIAS_CLASS_BULLISH,
-            "reaction_display": _format_display_label(BIAS_CLASS_BULLISH, usd_suffix=True),
+            "reaction_display": _format_display_label(BIAS_CLASS_BULLISH, currency_code="USD"),
+            "reaction_currency": "USD",
         }
     if reaction == "bearish_usd":
+        if primary_ccy != "USD":
+            lean = infer_text_directional_lean(corpus, primary_ccy) or BIAS_CLASS_NEUTRAL_BEARISH_LEAN
+            return {
+                "immediate_reaction": reaction,
+                "bias_classification": lean,
+                "reaction_display": _format_display_label(lean, currency_code=primary_ccy),
+                "reaction_currency": primary_ccy,
+            }
         return {
             "immediate_reaction": reaction,
             "bias_classification": BIAS_CLASS_BEARISH,
-            "reaction_display": _format_display_label(BIAS_CLASS_BEARISH, usd_suffix=True),
+            "reaction_display": _format_display_label(BIAS_CLASS_BEARISH, currency_code="USD"),
+            "reaction_currency": "USD",
         }
 
-    lean = infer_text_directional_lean(corpus)
+    lean = infer_text_directional_lean(corpus, primary_ccy)
     if lean == BIAS_CLASS_NEUTRAL_BULLISH_LEAN:
         classification = lean
     elif lean == BIAS_CLASS_NEUTRAL_BEARISH_LEAN:
@@ -170,11 +318,16 @@ def classify_usd_reaction(
     else:
         classification = BIAS_CLASS_TRUE_NEUTRAL
 
-    return {
+    out = {
         "immediate_reaction": reaction,
         "bias_classification": classification,
-        "reaction_display": _format_display_label(classification, usd_suffix=True),
+        "reaction_display": _format_display_label(classification, currency_code=primary_ccy),
+        "reaction_currency": primary_ccy,
+        "reaction_currency_source": currency_source,
     }
+    if reaction_rationale and str(reaction_rationale).strip():
+        out["reaction_rationale"] = str(reaction_rationale).strip()[:400]
+    return out
 
 
 _SCENARIO_PROB_RE = re.compile(r"\[?(ABOVE|ON|BELOW)\]?\s*(\d{1,3})\s*%", re.IGNORECASE)
@@ -330,7 +483,17 @@ def validate_and_enforce_news(payload: Dict[str, Any]) -> Tuple[Dict[str, Any], 
         str(out.get("immediate_reaction") or "neutral"),
         str(out.get("news_impact") or ""),
         str(out.get("trading_implications") or ""),
+        title=str(out.get("title") or out.get("headline") or ""),
+        key_pairs=out.get("key_pairs") if isinstance(out.get("key_pairs"), list) else None,
+        primary_currency=out.get("primary_currency"),
+        reaction_rationale=out.get("reaction_rationale"),
     )
+    if classified.get("reaction_currency"):
+        out["reaction_currency"] = classified["reaction_currency"]
+    if classified.get("reaction_rationale"):
+        out["reaction_rationale"] = classified["reaction_rationale"]
+    if classified.get("reaction_currency_source"):
+        out["reaction_currency_source"] = classified["reaction_currency_source"]
     out["bias_classification"] = classified["bias_classification"]
     out["reaction_display"] = classified["reaction_display"]
 
@@ -344,11 +507,15 @@ def validate_and_enforce_news(payload: Dict[str, Any]) -> Tuple[Dict[str, Any], 
     ]
     if reaction == "neutral" and classified["bias_classification"] == BIAS_CLASS_TRUE_NEUTRAL:
         lean = infer_text_directional_lean(
-            f"{out.get('news_impact', '')}\n{out.get('trading_implications', '')}"
+            f"{out.get('news_impact', '')}\n{out.get('trading_implications', '')}",
+            str(classified.get("reaction_currency") or "USD"),
         )
         if lean:
             out["bias_classification"] = lean
-            out["reaction_display"] = _format_display_label(lean, usd_suffix=True)
+            out["reaction_display"] = _format_display_label(
+                lean,
+                currency_code=str(classified.get("reaction_currency") or "USD"),
+            )
             enforcement.append("upgraded_neutral_reaction_to_lean")
             checks.append(
                 _check_record("neutral_narrative_lean_applied", True, "Lean derived from narrative."),

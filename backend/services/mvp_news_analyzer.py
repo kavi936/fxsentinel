@@ -40,6 +40,15 @@ class MVPAnalysisResult:
     timeframe: str
     confidence: int
     analysis_type: str  # free_enhanced or gpt_enhanced
+    primary_currency: str = "USD"  # ISO 4217 — currency the headline primarily affects
+    reaction_rationale: str = ""  # one line: why this reaction label
+    impact_horizon: str = "intraday"  # intraday | multi_day | structural
+    timeframe_immediate: str = ""
+    timeframe_positioning: str = ""
+    news_type: str = "other"
+    news_type_rationale: str = ""
+    initial_reaction_guidance: str = "wait_confirmation"
+    initial_reaction_guidance_rationale: str = ""
     risk_assessment: Optional[Dict[str, str]] = None
     market_context: Optional[Dict[str, List[str]]] = None
     cost: float = 0.0  # Cost of GPT API call in USD
@@ -685,11 +694,25 @@ class MVPNewsAnalyzer:
                     gpt_result.get('immediate_reaction', 'neutral'),
                     gpt_result.get('news_impact', ''),
                     gpt_result.get('trading_implications', ''),
+                    title=news_item.get('title', ''),
                 )
                 result = MVPAnalysisResult(
                     news_impact=gpt_result.get('news_impact', ''),
                     trading_implications=gpt_result.get('trading_implications', ''),
                     immediate_reaction=immediate_reaction,
+                    primary_currency=str(gpt_result.get('primary_currency') or 'USD').upper()[:3],
+                    reaction_rationale=str(gpt_result.get('reaction_rationale') or '').strip(),
+                    impact_horizon=str(gpt_result.get('impact_horizon') or 'intraday').lower(),
+                    timeframe_immediate=str(gpt_result.get('timeframe_immediate') or gpt_result.get('timeframe') or '').strip(),
+                    timeframe_positioning=str(gpt_result.get('timeframe_positioning') or '').strip(),
+                    news_type=str(gpt_result.get('news_type') or 'other').lower(),
+                    news_type_rationale=str(gpt_result.get('news_type_rationale') or '').strip(),
+                    initial_reaction_guidance=str(
+                        gpt_result.get('initial_reaction_guidance') or 'wait_confirmation'
+                    ).lower(),
+                    initial_reaction_guidance_rationale=str(
+                        gpt_result.get('initial_reaction_guidance_rationale') or ''
+                    ).strip(),
                     key_pairs=prioritize_instruments(
                         gpt_result.get('key_pairs', affected_instruments[:4] if affected_instruments else ['EUR/USD']),
                         (personalization or {}).get("primary_pairs") or [],
@@ -932,6 +955,15 @@ RESPONSE FORMAT (JSON ONLY):
     "news_impact": "Specific market impact explanation with currency focus. 2-3 sentences explaining implications, affected pairs, and impact magnitude. Reference current market context and trading sessions.",
     "trading_implications": "Actionable market intelligence and what to watch. 2-3 sentences identifying key levels, timeframes, and monitoring points. Reference volatility expectations and trading sessions.",
     "immediate_reaction": "bullish_usd|bearish_usd|neutral",
+    "primary_currency": "3-letter ISO code for the currency most affected by this headline (USD, EUR, GBP, JPY, AUD, etc.)",
+    "reaction_rationale": "One sentence: why this reaction/currency (e.g. 'ECB hawkish repricing supports EUR via rate expectations')",
+    "impact_horizon": "intraday|multi_day|structural",
+    "timeframe_immediate": "near-term reaction window (e.g. 'next 2-4 hours' or 'London session')",
+    "timeframe_positioning": "positioning horizon (e.g. 'through June ECB meetings' for policy stories)",
+    "news_type": "headline_shock|data_print|central_bank_speech|policy_signal|geopolitical|analyst_note|structural_theme|other",
+    "news_type_rationale": "One sentence: story archetype for traders",
+    "initial_reaction_guidance": "follow|fade|wait_confirmation",
+    "initial_reaction_guidance_rationale": "One sentence: how the first move typically behaves for this category",
     "key_pairs": ["primary instrument first, e.g. XAU/USD or EUR/USD"],
     "volatility": "high|medium|low",
     "timeframe": "specific timeframe like 'next 2-4 hours' or 'London session'",
@@ -940,6 +972,8 @@ RESPONSE FORMAT (JSON ONLY):
 
 VALIDATION RULES:
 - immediate_reaction: MUST be exactly "bullish_usd", "bearish_usd", or "neutral"
+- primary_currency: exactly 3 letters (USD, EUR, GBP, JPY, …) for the currency the story primarily moves
+- reaction_rationale: one sentence tying headline to primary_currency (required)
 - volatility: MUST be exactly "high", "medium", or "low"
 - confidence: Integer between 50-95
 - key_pairs: Array of 1-4 instruments; MUST put the primary asset first (e.g. XAU/USD for gold news, not USD/JPY). Use XAU/USD for gold, XAG/USD for silver, then XXX/YYY for forex
@@ -951,6 +985,8 @@ EXAMPLE (gold news):
     "news_impact": "Goldman Sachs' $5,400 gold forecast reflects strong central bank demand and Fed rate-cut expectations, supporting XAU/USD. Gold (XAU/USD) is the primary focus; upside risk from private diversification and options-driven volatility. Dollar weakness and real yields matter for gold more than USD/JPY in this context.",
     "trading_implications": "Focus on XAU/USD (gold): watch key resistance levels toward the forecast target and volatility around options expiry. Expect higher volatility as noted in the note. Fed cut expectations and central bank buying are the main drivers; monitor real yields and dollar index for gold direction.",
     "immediate_reaction": "neutral",
+    "primary_currency": "USD",
+    "reaction_rationale": "Gold forecast is commodity-led; USD reaction is secondary to real yields and XAU/USD.",
     "key_pairs": ["XAU/USD"],
     "volatility": "high",
     "timeframe": "through 2026 / near-term volatility as options activity rises",
@@ -962,6 +998,8 @@ EXAMPLE (forex news):
     "news_impact": "Fed Chair Powell's hawkish comments suggest potential rate hikes ahead, creating bullish sentiment for USD. EUR/USD and GBP/USD are most affected, with expected downward pressure of 50-100 pips. London-NY session overlap expected to see highest volatility.",
     "trading_implications": "Monitor EUR/USD support at 1.0800 and GBP/USD at 1.2600 for potential breakdowns. Expect increased volatility during London session (next 2-4 hours). Watch USD/JPY for 149.00 resistance.",
     "immediate_reaction": "bullish_usd",
+    "primary_currency": "USD",
+    "reaction_rationale": "Fed hawkish tone supports USD via higher-for-longer rate expectations.",
     "key_pairs": ["EUR/USD", "GBP/USD", "USD/JPY"],
     "volatility": "high",
     "timeframe": "next 2-4 hours",
@@ -1101,10 +1139,27 @@ Now analyze the news above and respond with ONLY the JSON object:
         else:
             return 'neutral'
 
-    def _infer_reaction_from_text(self, text: str) -> str:
+    def _infer_reaction_from_text(self, text: str, title: str = "") -> str:
         """Infer a directional lean from narrative text for consistency checks."""
         if not text:
             return "neutral"
+
+        try:
+            from services.analysis_bias_classification import (
+                detect_news_primary_currency,
+                infer_text_directional_lean,
+            )
+
+            primary = detect_news_primary_currency(
+                title=title,
+                news_impact=text,
+                trading_implications=text,
+            )
+            if primary != "USD" and infer_text_directional_lean(text, primary):
+                return "neutral"
+        except Exception:
+            pass
+
         text_upper = text.upper()
 
         bearish_hits = [
@@ -1139,6 +1194,7 @@ Now analyze the news above and respond with ONLY the JSON object:
         immediate_reaction: str,
         news_impact: str,
         trading_implications: str,
+        title: str = "",
     ) -> str:
         """
         Keep immediate_reaction aligned with narrative lean.
@@ -1149,7 +1205,7 @@ Now analyze the news above and respond with ONLY the JSON object:
             value = "neutral"
 
         combined = f"{news_impact}\n{trading_implications}"
-        inferred = self._infer_reaction_from_text(combined)
+        inferred = self._infer_reaction_from_text(combined, title=title)
         if inferred in ("bullish_usd", "bearish_usd") and value != inferred:
             logger.info(
                 "Adjusted immediate_reaction for consistency: %s -> %s",

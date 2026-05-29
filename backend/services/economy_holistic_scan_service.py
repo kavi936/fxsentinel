@@ -17,6 +17,17 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from services.analysis_bias_classification import classify_from_score
+from services.analysis_score_bands import (
+    BIAS_BEARISH_MAX,
+    BIAS_BULLISH_MIN,
+    LEAN_THRESHOLD,
+    NEUTRAL_BAND_MAX,
+    NEUTRAL_BAND_MIN,
+    SCORE_MAX,
+    SCORE_MIN,
+    compute_directional_conviction,
+    neutral_band_contract,
+)
 from services.analysis_score_narrative_bridge import (
     SCORE_BRIDGE_PROMPT_RULES,
     apply_score_narrative_bridge_to_scan,
@@ -40,15 +51,15 @@ logger = logging.getLogger(__name__)
 class EconomyHolisticScanService:
     """Build a deterministic short/long macro scan for one economy."""
 
-    VERSION = "economy_scan_v1.4"
+    VERSION = "economy_scan_v1.5"
     SUPPORTED_COUNTRIES = {"US", "EUR", "GBP", "JPY"}
 
-    SCORE_MIN = -100
-    SCORE_MAX = 100
-    NEUTRAL_BAND_MIN = -20
-    NEUTRAL_BAND_MAX = 20
-    BIAS_BULLISH_MIN = 21
-    BIAS_BEARISH_MAX = -21
+    SCORE_MIN = SCORE_MIN
+    SCORE_MAX = SCORE_MAX
+    NEUTRAL_BAND_MIN = NEUTRAL_BAND_MIN
+    NEUTRAL_BAND_MAX = NEUTRAL_BAND_MAX
+    BIAS_BULLISH_MIN = BIAS_BULLISH_MIN
+    BIAS_BEARISH_MAX = BIAS_BEARISH_MAX
 
     COUNTRY_PAIRS = {
         "US": ["EURUSD", "USDJPY", "GBPUSD", "AUDUSD"],
@@ -583,6 +594,16 @@ Return ONLY valid JSON with this exact shape:
             personalization=personalization,
         )
 
+        short_score = short_term_payload.get("score")
+        long_score = long_term_payload.get("score")
+        score_horizon_note = None
+        if short_score is not None and long_score is not None and short_score == long_score:
+            score_horizon_note = (
+                "Short- and long-term composites share the same score but use different driver sets "
+                "(short: rate/inflation/growth/yield impulse/event risk; "
+                "long: policy alignment, growth/inflation trends, labor, yield curve)."
+            )
+
         scan = {
             "country": country,
             "economy": self._country_label(country),
@@ -593,6 +614,7 @@ Return ONLY valid JSON with this exact shape:
                 "primary_pairs": (personalization or {}).get("primary_pairs") or [],
             },
             "score_scale": self._score_scale_contract(),
+            "score_horizon_note": score_horizon_note,
             "short_term": {
                 **short_term_payload,
             },
@@ -962,14 +984,24 @@ Return ONLY valid JSON with this exact shape:
         top_pair = pair_setups[0] if pair_setups else {}
         short_bias = short_term.get("bias", "neutral")
         long_bias = long_term.get("bias", "neutral")
+        short_display = (
+            short_term.get("headline_bias")
+            or short_term.get("display_bias")
+            or self._regime_display_label(short_bias, quality_overrides.get("incomplete", False))
+        )
+        long_display = (
+            long_term.get("headline_bias")
+            or long_term.get("display_bias")
+            or self._regime_display_label(long_bias, quality_overrides.get("incomplete", False))
+        )
         short_line = (
-            f"{self._regime_display_label(short_bias, quality_overrides.get('incomplete', False))} · "
+            f"{short_display} · "
             f"Score {short_term.get('score_display') or short_term.get('score')} · "
             f"{short_term.get('position_label') or 'Position unavailable'} · "
             f"{short_term.get('confidence')}% confidence"
         )
         long_line = (
-            f"{self._regime_display_label(long_bias, quality_overrides.get('incomplete', False))} · "
+            f"{long_display} · "
             f"Score {long_term.get('score_display') or long_term.get('score')} · "
             f"{long_term.get('position_label') or 'Position unavailable'} · "
             f"{long_term.get('confidence')}% confidence"
@@ -1005,15 +1037,13 @@ Return ONLY valid JSON with this exact shape:
         return round(sum(c.get("contribution", 0.0) for c in components), 2)
 
     def _score_scale_contract(self) -> Dict[str, Any]:
+        band = neutral_band_contract()
         return {
             "min": self.SCORE_MIN,
             "max": self.SCORE_MAX,
             "unit": "points",
-            "neutral_band": {
-                "min": self.NEUTRAL_BAND_MIN,
-                "max": self.NEUTRAL_BAND_MAX,
-                "label": "Neutral band (-20 to +20)",
-            },
+            "neutral_band": band,
+            "band_version": "v2_narrow_neutral",
             "bias_thresholds": {
                 "bullish_min": self.BIAS_BULLISH_MIN,
                 "bearish_max": self.BIAS_BEARISH_MAX,
@@ -1036,9 +1066,9 @@ Return ONLY valid JSON with this exact shape:
 
     def _score_position_label(self, score: float) -> str:
         if self.NEUTRAL_BAND_MIN <= score <= self.NEUTRAL_BAND_MAX:
-            if score > 5:
+            if score > LEAN_THRESHOLD:
                 return "Neutral band, bullish lean"
-            if score < -5:
+            if score < -LEAN_THRESHOLD:
                 return "Neutral band, bearish lean"
             return "Neutral band, balanced"
         if score > self.NEUTRAL_BAND_MAX:
@@ -1104,6 +1134,12 @@ Return ONLY valid JSON with this exact shape:
             total,
             incomplete=bool(quality_overrides.get("incomplete")),
         )
+        data_confidence = self._confidence(components, missing_signals, staleness_seconds)
+        directional_conviction = compute_directional_conviction(
+            total,
+            data_confidence,
+            incomplete=bool(quality_overrides.get("incomplete")),
+        )
         return {
             "bias": classified["bias"],
             "bias_classification": classified["bias_classification"],
@@ -1112,7 +1148,10 @@ Return ONLY valid JSON with this exact shape:
             "score_display": f"{rounded} / {self.SCORE_MAX}",
             "position_label": self._score_position_label(total),
             "band_position_pct": self._score_band_position_pct(total),
-            "confidence": self._confidence(components, missing_signals, staleness_seconds),
+            "confidence": data_confidence,
+            "data_confidence": data_confidence,
+            "directional_conviction": directional_conviction,
+            "headline_bias": classified.get("headline_bias") or classified["display_bias"],
             "drivers": components,
             "component_breakdown": self._build_component_breakdown(components, total),
             "display_bias": classified["display_bias"],
@@ -1289,8 +1328,18 @@ Return ONLY valid JSON with this exact shape:
         Structured key points for UI: bold label + emphasis token + supporting detail.
         Contract guarantees at least `rules.minimum_items` entries for consistent layout.
         """
-        st_bias = (short_term.get("bias") or "neutral").upper()
-        lt_bias = (long_term.get("bias") or "neutral").upper()
+        st_bias = (
+            short_term.get("headline_bias")
+            or short_term.get("display_bias")
+            or short_term.get("bias")
+            or "neutral"
+        ).upper()
+        lt_bias = (
+            long_term.get("headline_bias")
+            or long_term.get("display_bias")
+            or long_term.get("bias")
+            or "neutral"
+        ).upper()
         st_score = short_term.get("score")
         lt_score = long_term.get("score")
         st_conf = short_term.get("confidence")
