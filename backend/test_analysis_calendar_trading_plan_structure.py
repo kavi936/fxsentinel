@@ -34,6 +34,22 @@ class CalendarTradingPlanStructureTests(unittest.TestCase):
         self.assertIn("1.0820-1.0850", structured["target_zone"])
         self.assertTrue(structured["invalidation"])
 
+    def test_extract_if_clause_preserves_decimal_levels(self):
+        payload = {
+            "forward_scenarios": {},
+            "implications_takeaways": {"market_bias": "BULLISH for USD"},
+            "trading_plan": {
+                "best_approach": "If EUR/USD breaks above **1.0850**, then expect continuation.",
+                "key_levels": "EUR/USD 1.0850",
+            },
+        }
+        structured = build_structured_calendar_trading_plan(payload, event={"currency": "USD"})
+        self.assertIn("1.0850", structured["scenario_trigger"])
+        self.assertNotIn("**1;", structured["scenario_trigger"])
+        self.assertIn("1.0850", structured["entry_condition"])
+        self.assertEqual(structured["scenario_trigger"].count("**") % 2, 0)
+        self.assertEqual(structured["entry_condition"].count("**") % 2, 0)
+
     def test_apply_adds_metadata(self):
         out = apply_calendar_trading_plan_structure(
             {

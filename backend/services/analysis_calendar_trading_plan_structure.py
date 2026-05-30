@@ -40,12 +40,40 @@ def _first_nonempty(*values: Any) -> str:
     return ""
 
 
+def _sanitize_emphasis_markers(text: str) -> str:
+    """Drop orphan ** pairs left by clause extraction slicing through GPT emphasis."""
+    s = str(text or "")
+    if "**" not in s:
+        return s
+    # Balanced markdown: splitting on ** yields an odd number of segments.
+    if len(s.split("**")) % 2 == 0:
+        return s.replace("**", "")
+    return s
+
+
 def _extract_if_clause(text: str) -> str:
     if not text:
         return ""
-    match = re.search(r"\bif\b([^.!?]{6,220})", text, flags=re.IGNORECASE)
-    if match:
-        return f"If {match.group(1).strip()}"
+    match = re.search(r"\bif\b", text, flags=re.IGNORECASE)
+    if not match:
+        return ""
+    chunk = text[match.end() :]
+    end = len(chunk)
+    for i, ch in enumerate(chunk):
+        if ch in "!?":
+            end = i
+            break
+        if ch == ".":
+            # Do not treat decimal points inside levels (e.g. 1.0850) as sentence ends.
+            prev_digit = i > 0 and chunk[i - 1].isdigit()
+            next_digit = i + 1 < len(chunk) and chunk[i + 1].isdigit()
+            if prev_digit and next_digit:
+                continue
+            end = i
+            break
+    clause = chunk[:end].strip(" ,;")
+    if len(clause) >= 6:
+        return _sanitize_emphasis_markers(f"If {clause}")
     return ""
 
 
@@ -134,12 +162,12 @@ def build_structured_calendar_trading_plan(
         scenario_trigger = f"{scenario_trigger}; inline zone: {neutral_zone}"
 
     return {
-        "scenario_trigger": scenario_trigger,
-        "direction": direction,
-        "entry_condition": entry_condition,
-        "target_zone": target_zone,
-        "invalidation": invalidation,
-        "sizing_note": sizing_note,
+        "scenario_trigger": _sanitize_emphasis_markers(scenario_trigger),
+        "direction": _sanitize_emphasis_markers(direction),
+        "entry_condition": _sanitize_emphasis_markers(entry_condition),
+        "target_zone": _sanitize_emphasis_markers(target_zone),
+        "invalidation": _sanitize_emphasis_markers(invalidation),
+        "sizing_note": _sanitize_emphasis_markers(sizing_note),
     }
 
 

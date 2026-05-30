@@ -2,13 +2,23 @@ import React from 'react';
 
 const EMPHASIS_RE = /\*\*(.+?)\*\*|\[\[([^\]]+)\]\]/g;
 
+/** Strip orphan ** when GPT or backend slicing leaves unbalanced markdown. */
+function normalizeEmphasisInput(text) {
+  const str = text == null ? '' : String(text);
+  if (!str.includes('**')) return str;
+  if (str.split('**').length % 2 === 0) {
+    return str.replace(/\*\*/g, '');
+  }
+  return str;
+}
+
 /**
  * Inline emphasis for trader analysis copy (calendar, live news, holistic scan).
  * - **double asterisks** → bold accent (.analysis-emphasis-bold)
  * - [[double brackets]] → secondary accent (.analysis-emphasis-bracket), optional
  */
 export function renderAnalysisEmphasis(text, { bracketEmphasis = true } = {}) {
-  const str = text == null ? '' : String(text);
+  const str = normalizeEmphasisInput(text);
   if (!str) return '';
 
   const nodes = [];

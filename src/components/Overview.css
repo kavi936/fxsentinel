@@ -5444,10 +5444,6 @@
   border-left: 3px solid rgba(255, 68, 68, 0.35);
 }
 
-.ai-confidence-edge {
-  border-left-color: rgba(129, 140, 248, 0.55);
-}
-
 .ai-confidence-reason-label {
   display: block;
   margin-bottom: 4px;
@@ -9199,11 +9195,48 @@
 }
 
 .in-depth-structured-plan {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border: 1px solid rgba(218, 0, 18, 0.24);
+  margin-top: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 3px solid rgba(255, 68, 68, 0.28);
   border-radius: 8px;
-  background: rgba(218, 0, 18, 0.06);
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.in-depth-structured-plan > .in-depth-label {
+  margin: 0;
+  padding: 0 0 2px;
+  font-family: var(--analysis-display-font-family);
+  font-size: 14px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--analysis-display-color, #ff6b74);
+  line-height: 1.3;
+}
+
+.in-depth-structured-plan .in-depth-text {
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  font-size: var(--analysis-body-size, 13px);
+  line-height: 1.6;
+  color: var(--analysis-body-color, rgba(255, 255, 255, 0.86));
+}
+
+.in-depth-structured-plan .in-depth-text .in-depth-label {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--analysis-label-color, #ff7d85);
 }
 
 /* Unified branding pass for Overview AI analysis content (Holistic parity) */
@@ -9216,6 +9249,12 @@
 .ai-analysis-card .ai-analysis-content .in-depth-metric {
   border-color: rgba(218, 0, 18, 0.28);
   background: rgba(255, 255, 255, 0.04);
+}
+
+.ai-analysis-card .ai-analysis-content .in-depth-structured-plan {
+  border-color: rgba(255, 255, 255, 0.06);
+  border-left-color: rgba(255, 68, 68, 0.28);
+  background: rgba(0, 0, 0, 0.32);
 }
 
 .ai-analysis-card .ai-analysis-content .headline-header-row,
