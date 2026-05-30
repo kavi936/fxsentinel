@@ -1,0 +1,155 @@
+/* Shared indicator mini-chart — Economies visual language */
+
+.indicator-mini-chart .mini-chart {
+  position: relative;
+  width: 100%;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 10px 10px 10px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.indicator-mini-chart--analysis-compact .mini-chart {
+  height: 170px;
+  padding: 12px 12px 12px 30px;
+}
+
+.indicator-mini-chart--economies .mini-chart {
+  height: 180px;
+  padding: 12px 12px 12px 32px;
+}
+
+.indicator-mini-chart .chart-line {
+  position: absolute;
+  top: 10px;
+  left: 28px;
+  right: 10px;
+  bottom: 10px;
+  width: calc(100% - 38px);
+  height: calc(100% - 20px);
+}
+
+.indicator-mini-chart .chart-y-axis {
+  position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  width: 22px;
+  pointer-events: none;
+}
+
+.indicator-mini-chart .chart-y-axis span {
+  position: absolute;
+  left: 0;
+  transform: translateY(-50%);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1;
+}
+
+.indicator-mini-chart .chart-path {
+  fill: none;
+  stroke: #da0012;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.indicator-mini-chart .chart-path-glow {
+  fill: none;
+  stroke: #da0012;
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.25;
+  filter: blur(3px);
+}
+
+.indicator-mini-chart .mini-chart.chart-hover .chart-path {
+  stroke-width: 3;
+}
+
+.indicator-mini-chart .chart-area {
+  opacity: 0.6;
+}
+
+.indicator-mini-chart .chart-grid-line {
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 0.3;
+}
+
+.indicator-mini-chart .chart-target-line {
+  stroke: #ff6b74;
+  stroke-width: 0.6;
+  stroke-dasharray: 3 3;
+  opacity: 0.85;
+}
+
+.indicator-mini-chart .chart-hover-tooltip {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+
+.indicator-mini-chart .chart-hover-date {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 9px;
+}
+
+/* Calendar analysis context block */
+
+.analysis-context-chart-section {
+  margin: 16px 0 20px;
+}
+
+.analysis-context-chart-section .section-header {
+  margin-bottom: 10px;
+}
+
+.analysis-context-chart-card {
+  border: 1px solid rgba(218, 0, 18, 0.18);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 16px 16px;
+}
+
+.analysis-context-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.analysis-context-chart-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.analysis-context-chart-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ff6b74;
+  white-space: nowrap;
+}
+
+.analysis-context-chart-meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 10px;
+}
+
+.analysis-context-chart-caption {
+  margin-top: 8px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}

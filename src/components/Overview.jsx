@@ -12,6 +12,8 @@ import './Overview.css';
 import EconomicChartPopup from './EconomicChartPopup.jsx';
 import InfoIcon from './InfoIcon.jsx';
 import AnalysisV1Spine from './AnalysisV1Spine.jsx';
+import AnalysisContextChart from './analysis/AnalysisContextChart.jsx';
+import './charts/IndicatorChart.css';
 import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
 import { renderAnalysisEmphasis } from '../utils/analysisEmphasis';
 import { getDailyChangeGaugeLayout, DAILY_CHANGE_GAUGE_CAP_PCT } from '../utils/dailyChangeGauge.js';
@@ -551,7 +553,17 @@ const Overview = () => {
 
     return {
       ...analysis,
-      eventSummary: resolvedEventSummary
+      eventSummary: resolvedEventSummary,
+      // Finalize fields — keep explicit so Firestore history + fresh runs always render
+      data_confidence_score: analysis.data_confidence_score ?? analysis.confidence_score,
+      confidence_reason: analysis.confidence_reason,
+      edge_confidence: analysis.edge_confidence ?? analysis.analysis_confidence,
+      edge_confidence_reason: analysis.edge_confidence_reason,
+      analysis_confidence: analysis.analysis_confidence,
+      trading_plan_structured: analysis.trading_plan_structured,
+      context_chart: analysis.context_chart ?? null,
+      context_chart_meta: analysis.context_chart_meta ?? null,
+      market_scenarios: analysis.market_scenarios,
     };
   };
 
@@ -4236,8 +4248,11 @@ const Overview = () => {
       
       // Debug logs moved to after transform so event_summary (snake_case) is already resolved
       
-      // Transform the backend response to work with new enhanced structure
+      // Transform the backend response to work with new enhanced structure.
+      // Spread ...analysis first so finalize fields (confidence_reason, edge_*, trading_plan_structured, etc.)
+      // are not dropped when the backend adds new keys.
       const transformed = {
+        ...analysis,
         event: event,
         analysisType: isPostEvent ? 'post-event' : 'pre-event',
         
@@ -4335,7 +4350,14 @@ const Overview = () => {
         ],
         
         // Confidence and metadata
-        confidence_score: analysis.confidence_score || 75,
+        confidence_score: analysis.confidence_score ?? analysis.data_confidence_score ?? 75,
+        data_confidence_score: analysis.data_confidence_score ?? analysis.confidence_score,
+        confidence_reason: analysis.confidence_reason,
+        edge_confidence: analysis.edge_confidence,
+        edge_confidence_reason: analysis.edge_confidence_reason,
+        analysis_confidence: analysis.analysis_confidence,
+        assumptions: analysis.assumptions,
+        trading_plan_structured: analysis.trading_plan_structured,
         analysis_timestamp: analysis.analysis_timestamp || new Date().toISOString(),
         analysis_type: analysis.analysis_type || (isPostEvent ? 'post-event' : 'pre-event'),
         model_used: analysis.model_used || 'gpt_ai_analyzer',
@@ -4353,6 +4375,8 @@ const Overview = () => {
         level_context_note: analysis.level_context_note,
         market_scenarios: analysis.market_scenarios,
         forward_scenarios_by_outcome: analysis.forward_scenarios_by_outcome,
+        context_chart: analysis.context_chart || null,
+        context_chart_meta: analysis.context_chart_meta || null,
       };
       const normalized = normalizeAiAnalysis(transformed, event);
 
@@ -5908,24 +5932,9 @@ const Overview = () => {
                     );
                   })()}
 
-                  {/* NEW: Positioning Context - REMOVED */}
-                  {/* <div className="positioning-context-section">
-                    <h3 className="section-header">Market Positioning</h3>
-                    <div className="positioning-grid">
-                      <div className="positioning-item">
-                        <h4>Retail Sentiment</h4>
-                        <p>{renderAnalysisText(aiAnalysis.positioning_context?.retail_sentiment) || 'Retail positioning analysis based on current market conditions'}</p>
-                      </div>
-                      <div className="positioning-item">
-                        <h4>Institutional Flow</h4>
-                        <p>{renderAnalysisText(aiAnalysis.positioning_context?.institutional_flow) || 'Institutional money flow analysis'}</p>
-                      </div>
-                      <div className="positioning-item">
-                        <h4>Market Bias</h4>
-                        <p>{renderAnalysisText(aiAnalysis.positioning_context?.market_bias) || 'Overall market bias based on positioning'}</p>
-                      </div>
-                    </div>
-                  </div> */}
+                  {aiAnalysis.context_chart && (
+                    <AnalysisContextChart chart={aiAnalysis.context_chart} />
+                  )}
 
                   {/* In-depth analysis (single card; no expandables) */}
                   <div className="in-depth-analysis-section">

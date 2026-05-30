@@ -32,6 +32,7 @@ from services.analysis_bias_classification import apply_bias_classification_to_r
 from services.analysis_calendar_confidence import apply_calendar_confidence_if_calendar
 from services.analysis_calendar_trading_plan_structure import apply_calendar_trading_plan_structure_if_calendar
 from services.analysis_calendar_content_guard import apply_calendar_content_guard_if_calendar
+from services.analysis_context_charts import apply_context_chart_if_calendar
 from services.analysis_news_horizon import apply_news_horizon_if_news
 from services.analysis_news_classification import apply_news_classification_if_news
 from services.analysis_news_correlation_risk import apply_news_correlation_risk_if_news
@@ -220,6 +221,11 @@ def finalize_analysis(
             event=ctx.validated_event,
         )
         out = apply_calendar_content_guard_if_calendar(
+            out,
+            analysis_kind,
+            event=ctx.validated_event,
+        )
+        out = apply_context_chart_if_calendar(
             out,
             analysis_kind,
             event=ctx.validated_event,
