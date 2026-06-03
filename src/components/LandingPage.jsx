@@ -601,7 +601,7 @@ const LandingPage = () => {
               </div>
               <h3>Never Miss Market-Moving Events</h3>
               <p>Stop losing money because you missed the news. We monitor 100+ sources so you see the macro-economic releases that move your trades—from central bank decisions and policy signals to key indicators like CPI, NFP, and GDP.</p>
-              <Link to="/blog/central-bank-decisions-currency-pairs" className="feature-read-more">Read more →</Link>
+              <Link to="/blog/forex-economic-calendar-guide-2026" className="feature-read-more">Read more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"
@@ -618,7 +618,7 @@ const LandingPage = () => {
               </div>
               <h3>Understand the "Why" Behind Every Move</h3>
               <p>Macro moves markets, but it can feel overwhelming. We're built to help beginner and experienced traders alike: our AI explains how each economic release and central bank decision affects major pairs and Gold in plain language—so you can build your macro intuition and make smarter trades.</p>
-              <Link to="/blog/ai-powered-news-analysis-future-of-trading" className="feature-read-more">Read more →</Link>
+              <Link to="/blog/ai-forex-news-analysis-guide-2026" className="feature-read-more">Read more →</Link>
             </div>
             <div 
               className="feature-card animate-on-scroll"

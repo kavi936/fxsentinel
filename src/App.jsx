@@ -23,6 +23,9 @@ import GeopoliticalTensionsForex from './components/blog-posts/GeopoliticalTensi
 import FedEcbRateDivergence from './components/blog-posts/FedEcbRateDivergence';
 import GoldSafeHavenInflation from './components/blog-posts/GoldSafeHavenInflation';
 import BitcoinInstitutionalAdoption from './components/blog-posts/BitcoinInstitutionalAdoption';
+import ForexEconomicCalendarGuide2026 from './components/blog-posts/ForexEconomicCalendarGuide2026';
+import TradingHighImpactEconomicNews2026 from './components/blog-posts/TradingHighImpactEconomicNews2026';
+import AiForexNewsAnalysisGuide2026 from './components/blog-posts/AiForexNewsAnalysisGuide2026';
 import { AuthProvider } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import BannerNotifications from './components/BannerNotifications';
@@ -46,6 +49,9 @@ function App() {
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/blog" element={<Blog />} />
+              <Route path="/blog/forex-economic-calendar-guide-2026" element={<ForexEconomicCalendarGuide2026 />} />
+              <Route path="/blog/trading-high-impact-economic-news-2026" element={<TradingHighImpactEconomicNews2026 />} />
+              <Route path="/blog/ai-forex-news-analysis-guide-2026" element={<AiForexNewsAnalysisGuide2026 />} />
               <Route path="/blog/geopolitical-tensions-forex-trading-2025" element={<GeopoliticalTensionsForex />} />
               <Route path="/blog/fed-ecb-rate-divergence-currency-markets" element={<FedEcbRateDivergence />} />
               <Route path="/blog/gold-rally-safe-haven-inflation-hedge" element={<GoldSafeHavenInflation />} />

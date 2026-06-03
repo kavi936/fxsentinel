@@ -52,11 +52,12 @@
   - **Why**: Strengthen topical relevance and help crawlers/LLMs connect features with educational content.
   - **Done**: Each feature card has a “Learn more →” link: Never Miss Events → central-bank-decisions; Understand the Why → ai-powered-news-analysis; Get Alerts → turning-news-actionable-signals; Focus on Trades → understanding-forex-market-sentiment. Footer already links to Blog.
 
-- [ ] **Plan and grow topic clusters**
+- [x] **Plan and grow topic clusters** *(started 2026-06-03)*
   - **Why**: Build authority for specific search and GEO intents.
-  - **Tasks**:
-    - [ ] Define 2–3 clusters (e.g. “Trading economic news”, “AI for forex”, “Market sentiment & volatility”).
-    - [ ] For each cluster, plan 2–3 additional posts and cross‑link between them.
+  - **Done (cycle 1):** Cluster “Trading economic news + AI for forex” — 3 posts published, cross-linked. Workflow: `docs/BLOG_SEO_GEO_WORKFLOW.md`.
+  - **Tasks (next cycle ~2026-08):**
+    - [ ] Macro & volatility cluster (2–3 posts) or comparison-style calendar post.
+    - [ ] Cross-link from older 2025 posts to new 2026 cluster where relevant.
 
 ---
 

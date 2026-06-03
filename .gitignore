@@ -173,3 +173,6 @@ working-dashboard.js
 .env.backup
 *.env
 .vercel
+
+# Build-time crawler HTML for bots (see scripts/generate-blog-static-html.js)
+public/crawler-snapshots/*.html
