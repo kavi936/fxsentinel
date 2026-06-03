@@ -441,6 +441,7 @@ class MVPNewsAnalyzer:
         market_context: Optional[Dict] = None,
         user_info: Optional[Dict] = None,
         personalization: Optional[Dict] = None,
+        related_evidence: Optional[Dict] = None,
     ) -> MVPAnalysisResult:
         """Analyze news using hybrid approach
         
@@ -448,6 +449,7 @@ class MVPNewsAnalyzer:
             news_item: News item to analyze
             market_context: Optional market context data
             user_info: Optional dict with user_id, user_email, user_name for OpenAI usage tracking
+            related_evidence: Optional Gemini RelatedEvidencePack from web grounding
         """
         try:
             # Determine analysis method
@@ -461,6 +463,7 @@ class MVPNewsAnalyzer:
                     market_context,
                     user_info=user_info,
                     personalization=personalization,
+                    related_evidence=related_evidence,
                 )
                 print(f"🔍 GPT analysis completed, type: {result.analysis_type}")
                 return result
@@ -537,6 +540,7 @@ class MVPNewsAnalyzer:
         market_context: Optional[Dict] = None,
         user_info: Optional[Dict] = None,
         personalization: Optional[Dict] = None,
+        related_evidence: Optional[Dict] = None,
     ) -> MVPAnalysisResult:
         """Analyze news using GPT with enhanced prompts and live market data
         
@@ -608,6 +612,7 @@ class MVPNewsAnalyzer:
                 news_item, affected_instruments, market_data, trading_sessions,
                 sentiment_data, pairs_sentiment, personalization=personalization,
                 context_pack_section=context_pack_section,
+                related_evidence=related_evidence,
             )
             
             # Prepare user identifier for OpenAI usage tracking
@@ -765,12 +770,15 @@ class MVPNewsAnalyzer:
         pairs_sentiment: List[Dict],
         personalization: Optional[Dict] = None,
         context_pack_section: Optional[str] = None,
+        related_evidence: Optional[Dict] = None,
     ) -> str:
         """Create enhanced prompt with live market data and context. affected_instruments has primary asset first (e.g. XAU/USD for gold news).
 
         When context_pack_section is provided (Phase D / ANALYSIS_CONTEXT_PACK_ENABLED=true),
         it replaces the legacy personalization + relevant_market_snapshot blocks so GPT receives
         the same shared context as the calendar surface.
+
+        When related_evidence is provided (Gemini grounding), GPT must cite only E1..En for corroboration.
         """
         title = news_item.get('title', '')
         summary = news_item.get('summary', '')
@@ -860,6 +868,12 @@ class MVPNewsAnalyzer:
             )
             shared_context_block = f"{relevant_market_snapshot}\n\n{personalization_block}".strip()
 
+        related_evidence_block = ""
+        if related_evidence:
+            from services.gemini_news_grounding_service import render_related_evidence_prompt_block
+
+            related_evidence_block = render_related_evidence_prompt_block(related_evidence)
+
         phase_f_news_block = ""
         if context_pack_section:
             p = personalization or {}
@@ -906,6 +920,7 @@ ADDITIONAL MARKET CONTEXT:
 {additional_context_section}
 
 {shared_context_block}
+{related_evidence_block}
 {phase_f_news_block}
 ANALYSIS REQUIREMENTS:
 
@@ -943,6 +958,7 @@ IMPORTANT GUIDELINES:
 - Focus on "what to watch" rather than "what to do"
 - Include specific price levels and timeframes when relevant
 - Include at least one "If [trigger] → then [outcome]" in trading_implications (instrument + level or session).
+- When RELATED HEADLINE EVIDENCE is present with ok/ok_with_summary status: cite corroboration as [E1], [E2], etc. (at least one in news_impact).
 - Avoid generic phrases like "monitor for opportunities" unless paired with a concrete trigger
 - Reference live market data when available (prices, volatility, sentiment)
 - Consider trading session context (higher volatility during London-NY overlap)

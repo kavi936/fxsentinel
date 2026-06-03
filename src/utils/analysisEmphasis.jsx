@@ -1,6 +1,7 @@
 import React from 'react';
 
 const EMPHASIS_RE = /\*\*(.+?)\*\*|\[\[([^\]]+)\]\]/g;
+const EVIDENCE_CITE_RE = /(\[E\d+\])/gi;
 
 /** Strip orphan ** when GPT or backend slicing leaves unbalanced markdown. */
 function normalizeEmphasisInput(text) {
@@ -12,21 +13,13 @@ function normalizeEmphasisInput(text) {
   return str;
 }
 
-/**
- * Inline emphasis for trader analysis copy (calendar, live news, holistic scan).
- * - **double asterisks** → bold accent (.analysis-emphasis-bold)
- * - [[double brackets]] → secondary accent (.analysis-emphasis-bracket), optional
- */
-export function renderAnalysisEmphasis(text, { bracketEmphasis = true } = {}) {
-  const str = normalizeEmphasisInput(text);
-  if (!str) return '';
+function renderEmphasisSegment(str, { bracketEmphasis = true } = {}) {
+  if (!str) return null;
 
   const nodes = [];
   let pos = 0;
   let key = 0;
-  const re = bracketEmphasis
-    ? EMPHASIS_RE
-    : /\*\*(.+?)\*\*/g;
+  const re = bracketEmphasis ? EMPHASIS_RE : /\*\*(.+?)\*\*/g;
 
   let m;
   while ((m = re.exec(str)) !== null) {
@@ -54,6 +47,53 @@ export function renderAnalysisEmphasis(text, { bracketEmphasis = true } = {}) {
   }
 
   return nodes.length > 0 ? nodes : str;
+}
+
+/**
+ * Inline emphasis for trader analysis copy (calendar, live news, holistic scan).
+ * - **double asterisks** → bold accent (.analysis-emphasis-bold)
+ * - [[double brackets]] → secondary accent (.analysis-emphasis-bracket), optional
+ * - [E1]…[En] → link to related coverage when evidenceMap is provided
+ */
+export function renderAnalysisEmphasis(text, { bracketEmphasis = true, evidenceMap = null } = {}) {
+  const str = normalizeEmphasisInput(text);
+  if (!str) return '';
+
+  const hasEvidence =
+    evidenceMap && typeof evidenceMap === 'object' && Object.keys(evidenceMap).length > 0;
+
+  if (!hasEvidence) {
+    return renderEmphasisSegment(str, { bracketEmphasis });
+  }
+
+  const parts = str.split(EVIDENCE_CITE_RE).filter((p) => p !== '');
+  if (parts.length <= 1) {
+    return renderEmphasisSegment(str, { bracketEmphasis });
+  }
+
+  return parts.map((part, i) => {
+    const citeMatch = part.match(/^\[E(\d+)\]$/i);
+    if (citeMatch) {
+      const eid = `E${citeMatch[1]}`;
+      const ev = evidenceMap[eid];
+      const href = ev?.url || `#source-${eid}`;
+      const title = ev?.headline ? `${ev.headline}${ev.publisher ? ` — ${ev.publisher}` : ''}` : eid;
+      return (
+        <a
+          key={`cite-${i}-${eid}`}
+          href={href}
+          className="analysis-evidence-cite"
+          title={title}
+          {...(ev?.url
+            ? { target: '_blank', rel: 'noopener noreferrer' }
+            : {})}
+        >
+          [{eid}]
+        </a>
+      );
+    }
+    return <span key={`seg-${i}`}>{renderEmphasisSegment(part, { bracketEmphasis })}</span>;
+  });
 }
 
 export function renderAnalysisEmphasisLines(text, options) {

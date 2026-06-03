@@ -74,6 +74,7 @@ news_cache.json
 news_history.json
 economic_indicators_cache.json
 gpt_analysis_sample.json
+calendar_output.py
 
 # IDE
 .vscode/

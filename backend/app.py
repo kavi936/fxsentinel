@@ -2171,6 +2171,49 @@ def force_refresh_news():
             "error": str(e)
         }), 500
 
+
+def _resolve_news_item_for_analysis(news_id):
+    """Find a feed/history news item by id. Returns dict or None."""
+    from services.persistent_news_cache import get_persistent_news_cache
+
+    news_cache = get_persistent_news_cache()
+    cached_news = news_cache.load_news()
+    news_item = None
+    if cached_news:
+        news_item = next(
+            (item for item in cached_news if str(item.get("id")) == str(news_id)),
+            None,
+        )
+    if not news_item:
+        try:
+            history_data = news_cache.get_recent_history(hours=24)
+            news_item = next(
+                (item for item in history_data if str(item.get("id")) == str(news_id)),
+                None,
+            )
+        except Exception:
+            pass
+    return news_item
+
+
+@app.route("/api/analysis/<news_id>/related-evidence")
+@limiter.limit("10 per minute")
+def get_related_evidence(news_id):
+    """Gemini web grounding only — warms cache before full /api/analysis (no billing increment)."""
+    try:
+        news_item = _resolve_news_item_for_analysis(news_id)
+        if not news_item:
+            return jsonify({"error": "news_not_found", "message": "News item not found"}), 404
+
+        from services.gemini_news_grounding_service import fetch_related_evidence
+
+        pack = fetch_related_evidence(news_item)
+        return jsonify({"related_evidence": pack, "news_id": str(news_id)})
+    except Exception as exc:
+        logger.warning("related-evidence endpoint failed: %s", exc)
+        return jsonify({"error": "related_evidence_failed", "message": str(exc)[:200]}), 500
+
+
 @app.route('/api/analysis/<news_id>')
 @limiter.limit("5 per minute")
 def get_analysis(news_id):
@@ -2213,40 +2256,11 @@ def get_analysis(news_id):
         print(f"🦊 BACKEND - Request origin: {request.headers.get('Origin', 'Unknown')}")
         print(f"🦊 BACKEND - Authorization header present: {'Authorization' in request.headers}")
         
-        # First try to get the news item from cached news data
-        from services.persistent_news_cache import get_persistent_news_cache
-        news_cache = get_persistent_news_cache()
-        cached_news = news_cache.load_news()
-        
-        print(f"🦊 BACKEND - Cached news count: {len(cached_news) if cached_news else 0}")
-        print(f"🦊 BACKEND - Available news IDs: {[item.get('id') for item in cached_news[:5]] if cached_news else 'None'}")
-        
-        news_item = None
-        if cached_news:
-            # Try to find news item by ID, handling both string and int types
-            news_item = next((item for item in cached_news if str(item.get('id')) == str(news_id)), None)
-            print(f"🦊 BACKEND - News item found in cache: {news_item is not None}")
-            if news_item:
-                print(f"🦊 BACKEND - News item title: {news_item.get('title', 'No title')}")
-                print(f"🦊 BACKEND - News item source: {news_item.get('source', 'No source')}")
-                print(f"🦊 BACKEND - News item ID in cache: {news_item.get('id')}")
-            else:
-                print(f"🦊 BACKEND - ❌ News item NOT found in cache for ID: {news_id}")
-                print(f"🦊 BACKEND - Available IDs: {[item.get('id') for item in cached_news[:10]]}")
-        
-        # If not found in cache, try to get from news history
-        if not news_item:
-            print(f"🔍 Trying news history for news_id: {news_id}")
-            try:
-                from services.persistent_news_cache import get_persistent_news_cache
-                news_cache = get_persistent_news_cache()
-                history_data = news_cache.get_recent_history(hours=24)
-                news_item = next((item for item in history_data if item.get('id') == news_id), None)
-                if news_item:
-                    print(f"🔍 News item found in history: {news_item.get('title', 'No title')}")
-            except Exception as e:
-                print(f"🔍 Error getting from history: {e}")
-                pass
+        news_item = _resolve_news_item_for_analysis(news_id)
+        print(f"🦊 BACKEND - News item found: {news_item is not None}")
+        if news_item:
+            print(f"🦊 BACKEND - News item title: {news_item.get('title', 'No title')}")
+            print(f"🦊 BACKEND - News item source: {news_item.get('source', 'No source')}")
         
         # If still not found, try to get from economic calendar
         if not news_item:
@@ -2341,6 +2355,16 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
         # Import MVP analyzer and analysis history
         from services.mvp_news_analyzer import mvp_news_analyzer
         from services.analysis_history import analysis_history
+        from services.gemini_news_grounding_service import fetch_related_evidence
+
+        related_evidence = fetch_related_evidence(news_item)
+        grounding_quality = (related_evidence.get("quality") or {}) if related_evidence else {}
+        if grounding_quality.get("status") not in (None, "skipped"):
+            print(
+                f"🔍 Gemini grounding: status={grounding_quality.get('status')} "
+                f"evidence={grounding_quality.get('evidence_count')} "
+                f"latency_ms={(related_evidence.get('grounding_meta') or {}).get('latency_ms')}"
+            )
         
         # Generate market context (simplified for now)
         market_context = {
@@ -2362,6 +2386,7 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
             market_context,
             user_info=token_user_info,
             personalization=personalization,
+            related_evidence=related_evidence,
         )
         
         print(f"🔍 MVP analysis completed: {mvp_result.immediate_reaction}")
@@ -2413,6 +2438,18 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
         }
 
         elapsed_ms = int((time.perf_counter() - started) * 1000)
+        grounding_obs = {}
+        if related_evidence and (related_evidence.get("quality") or {}).get("status") != "skipped":
+            gq = related_evidence.get("quality") or {}
+            grounding_obs = {
+                "gemini_grounding": {
+                    "status": gq.get("status"),
+                    "evidence_count": gq.get("evidence_count"),
+                    "search_query_count": gq.get("search_query_count"),
+                }
+            }
+            analysis_result["related_evidence"] = related_evidence
+
         analysis_result = finalize_analysis(
             analysis_result,
             analysis_kind=ANALYSIS_KIND_LIVE_NEWS,
@@ -2421,6 +2458,7 @@ def generate_news_analysis(news_item, token_user_info=None, personalization=None
                 token_user_info=token_user_info,
                 latency_ms=elapsed_ms,
                 personalization=personalization,
+                observability_extra=grounding_obs,
             ),
         )
         print(f"🔍 Analysis result news_impact: {analysis_result['news_impact'][:50] if analysis_result['news_impact'] else 'EMPTY'}...")

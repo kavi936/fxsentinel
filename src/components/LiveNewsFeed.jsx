@@ -8,6 +8,9 @@ import InfoIcon from './InfoIcon.jsx';
 import AnalysisV1Spine from './AnalysisV1Spine.jsx';
 import { isAnalysisV1UiEnabled } from '../config/analysisV1.js';
 import { renderAnalysisEmphasis } from '../utils/analysisEmphasis';
+import { buildEvidenceCitationMap } from '../utils/liveNewsGrounding';
+import LiveNewsAnalysisLoading from './LiveNewsAnalysisLoading.jsx';
+import RelatedCoverageSection from './RelatedCoverageSection.jsx';
 
 const FXSTREET_GOLD_SLOP_REGEX = /gold price today:.*according to fxstreet data/i;
 
@@ -211,6 +214,9 @@ const LiveNewsFeed = () => {
   const [selectedNews, setSelectedNews] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analysisPhase, setAnalysisPhase] = useState(null);
+  const [groundingPreview, setGroundingPreview] = useState(null);
+  const analyzeRequestRef = useRef(0);
   const [forceRefreshing, setForceRefreshing] = useState(false);
   const [mobileControlsOpen, setMobileControlsOpen] = useState(false);
 
@@ -226,6 +232,11 @@ const LiveNewsFeed = () => {
     };
   }, [mobileControlsOpen]);
   const { currentUser } = useAuth();
+
+  const evidenceCitationOptions = useMemo(() => {
+    const map = buildEvidenceCitationMap(aiAnalysis?.related_evidence);
+    return Object.keys(map).length > 0 ? { evidenceMap: map } : {};
+  }, [aiAnalysis?.related_evidence]);
 
   // Debug useEffect to monitor state changes (development only)
   useEffect(() => {
@@ -453,73 +464,101 @@ const LiveNewsFeed = () => {
   };
 
   const analyzeNews = async (newsItem) => {
+    const reqId = ++analyzeRequestRef.current;
     try {
       setAnalyzing(true);
       setError(null);
-      setAiAnalysis(null); // Clear previous analysis so we don't show stale content while the new one loads
-      
-      // Ensure news ID is treated as string to preserve precision
+      setAiAnalysis(null);
+      setGroundingPreview(null);
+      setAnalysisPhase('grounding');
+
       const newsId = String(newsItem.id);
-      const requestUrl = config.endpoints.analysis(newsId) + '?t=' + Date.now();
-      
-      // Get Firebase ID token for backend authentication and user tracking
-      let authToken = null;
+      const headers = {};
       if (currentUser) {
         try {
-          authToken = await currentUser.getIdToken();
-        } catch (error) {
-          console.error('Error getting Firebase token:', error);
+          const authToken = await currentUser.getIdToken();
+          if (authToken) {
+            headers.Authorization = `Bearer ${authToken}`;
+          }
+        } catch (tokenErr) {
+          console.error('Error getting Firebase token:', tokenErr);
         }
       }
-      
-      // Prepare headers with Authorization token if available
-      const headers = {};
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
+
+      // Step 1: Gemini related coverage (warms server cache for step 2)
+      try {
+        const evUrl = `${config.endpoints.relatedEvidence(newsId)}?t=${Date.now()}`;
+        const evRes = await fetch(evUrl, { headers });
+        if (reqId !== analyzeRequestRef.current) return;
+
+        if (evRes.status === 429) {
+          const retryAfter = evRes.headers.get('Retry-After');
+          throw new Error(
+            `API error: 429 Too many requests. Please wait ${retryAfter || 'a moment'} before trying again.`
+          );
+        }
+        if (evRes.ok) {
+          const evData = await evRes.json();
+          if (evData.related_evidence) {
+            setGroundingPreview(evData.related_evidence);
+          }
+        }
+      } catch (evErr) {
+        if (reqId !== analyzeRequestRef.current) return;
+        if (evErr.message?.includes('429')) {
+          throw evErr;
+        }
+        console.warn('Related evidence step failed (continuing):', evErr);
       }
-      
-      // Make API call to get real GPT analysis
-      const response = await fetch(requestUrl, {
-        headers: headers
-      });
-      
-      // Handle rate limit errors before parsing JSON
+
+      if (reqId !== analyzeRequestRef.current) return;
+      setAnalysisPhase('analyzing');
+
+      const requestUrl = `${config.endpoints.analysis(newsId)}?t=${Date.now()}`;
+      const response = await fetch(requestUrl, { headers });
+      if (reqId !== analyzeRequestRef.current) return;
+
       if (response.status === 429) {
         const retryAfter = response.headers.get('Retry-After');
-        throw new Error(`API error: 429 Too many requests. Please wait ${retryAfter || 'a moment'} before trying again.`);
+        throw new Error(
+          `API error: 429 Too many requests. Please wait ${retryAfter || 'a moment'} before trying again.`
+        );
       }
-      
+
       const analysis = await response.json();
-      
+
       if (response.ok) {
-        // Sanitize AI analysis content to prevent XSS
         const sanitizedAnalysis = sanitizeAnalysis(analysis);
         setAiAnalysis(sanitizedAnalysis);
         setSelectedNews(newsItem);
-        
-        // Refresh history if we're on the history tab to show the new analysis
+
         if (activeTab === 'history') {
           fetchNewsHistory();
         }
       } else {
         throw new Error(`Failed to analyze news: ${response.status} ${response.statusText}`);
       }
-      
     } catch (err) {
+      if (reqId !== analyzeRequestRef.current) return;
       console.error('Error analyzing news:', err);
-      
-      // Use user-friendly error messages
       setError(getUserFriendlyError(err));
       setAiAnalysis(null);
     } finally {
-      setAnalyzing(false);
+      if (reqId === analyzeRequestRef.current) {
+        setAnalyzing(false);
+        setAnalysisPhase(null);
+      }
     }
   };
 
   const closeAnalysis = () => {
+    analyzeRequestRef.current += 1;
     setSelectedNews(null);
     setAiAnalysis(null);
     setError(null);
+    setGroundingPreview(null);
+    setAnalysisPhase(null);
+    setAnalyzing(false);
   };
 
   // Get user-friendly error messages (not technical)
@@ -1388,10 +1427,10 @@ const LiveNewsFeed = () => {
                     </div>
                     
                     {analyzing && !aiAnalysis ? (
-                      <div className="analysis-loading" onClick={(e) => e.stopPropagation()}>
-                        <div className="loading-spinner"></div>
-                        <p>Analyzing news sentiment and market implications...</p>
-                      </div>
+                      <LiveNewsAnalysisLoading
+                        phase={analysisPhase || 'analyzing'}
+                        groundingPreview={groundingPreview}
+                      />
                     ) : error ? (
                       <div className="analysis-error" onClick={(e) => e.stopPropagation()}>
                         <p>{error}</p>
@@ -1425,7 +1464,12 @@ const LiveNewsFeed = () => {
                         )}
                         <div className="lna-section market-impact-section">
                           <h5>Market Impact</h5>
-                          <p>{renderAnalysisEmphasis(aiAnalysis.news_impact || 'NO NEWS IMPACT DATA')}</p>
+                          <p>
+                            {renderAnalysisEmphasis(
+                              aiAnalysis.news_impact || 'NO NEWS IMPACT DATA',
+                              evidenceCitationOptions
+                            )}
+                          </p>
                         </div>
 
                         {(aiAnalysis.news_type_display
@@ -1523,7 +1567,12 @@ const LiveNewsFeed = () => {
 
                         <div className="lna-section trading-implications-section">
                           <h5>Trading Implications</h5>
-                          <p>{renderAnalysisEmphasis(aiAnalysis.trading_implications || 'NO TRADING IMPLICATIONS DATA')}</p>
+                          <p>
+                            {renderAnalysisEmphasis(
+                              aiAnalysis.trading_implications || 'NO TRADING IMPLICATIONS DATA',
+                              evidenceCitationOptions
+                            )}
+                          </p>
                         </div>
                         
                         {aiAnalysis.risk_assessment && (
@@ -1559,6 +1608,8 @@ const LiveNewsFeed = () => {
                           </div>
                         )}
                         
+                        <RelatedCoverageSection relatedEvidence={aiAnalysis.related_evidence} />
+
                         <div className="analysis-meta">
                           <span className="analysis-time">Analyzed just now</span>
                         </div>

@@ -221,6 +221,42 @@ export const sanitizeAnalysis = (analysis) => {
   if (sanitized.scenario_alignment_status && typeof sanitized.scenario_alignment_status === 'string') {
     sanitized.scenario_alignment_status = sanitizeText(sanitized.scenario_alignment_status);
   }
+
+  if (sanitized.related_evidence && typeof sanitized.related_evidence === 'object') {
+    const pack = { ...sanitized.related_evidence };
+    if (typeof pack.retrieval_summary === 'string') {
+      pack.retrieval_summary = sanitizeText(pack.retrieval_summary);
+    }
+    if (Array.isArray(pack.synthesis_bullets)) {
+      pack.synthesis_bullets = pack.synthesis_bullets.map((b) => sanitizeText(String(b)));
+    }
+    if (pack.story_context && typeof pack.story_context === 'object') {
+      const sc = { ...pack.story_context };
+      if (typeof sc.contradictions_note === 'string') {
+        sc.contradictions_note = sanitizeText(sc.contradictions_note);
+      }
+      if (Array.isArray(sc.primary_entities)) {
+        sc.primary_entities = sc.primary_entities.map((e) => sanitizeText(String(e)));
+      }
+      pack.story_context = sc;
+    }
+    if (Array.isArray(pack.evidence)) {
+      pack.evidence = pack.evidence.map((ev) => {
+        const item = { ...ev };
+        const textKeys = ['headline', 'snippet', 'publisher', 'source', 'key_fact'];
+        textKeys.forEach((k) => {
+          if (item[k] && typeof item[k] === 'string') {
+            item[k] = sanitizeText(item[k]);
+          }
+        });
+        if (item.url && typeof item.url === 'string') {
+          item.url = sanitizeURL(item.url);
+        }
+        return item;
+      });
+    }
+    sanitized.related_evidence = pack;
+  }
   
   return sanitized;
 };

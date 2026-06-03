@@ -12,6 +12,7 @@
 | `AI_ANALYSIS_WORKFLOW_IDEAS.md`     | Why we need a workflow; sample failures                             |
 | `AI_ANALYSIS_V1_UNIFIED_SPEC.md`    | Spine + body ( **deferred** until input/prompt quality is good)     |
 | `AI_ANALYSIS_FOUNDATION_ROADMAP.md` | What is already built in backend (spine, pipeline, scenario engine) |
+| `docs/LIVE_NEWS_GEMINI_GROUNDING_PLAN.md` | Gemini Google Search retrieval before live-news GPT analysis (planned) |
 
 
 **Explicitly out of scope for this doc (for now)**
