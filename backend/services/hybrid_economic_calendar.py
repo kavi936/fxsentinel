@@ -23162,7 +23162,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': 'N/A',
                 'previous': '-0.8%'
             },
@@ -23172,9 +23172,9 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.79B',
                 'forecast': '-1.61B',
-                'previous': '-1.84B'
+                'previous': '-1.02B'
             },
 
             # THURSDAY, JUNE 04
