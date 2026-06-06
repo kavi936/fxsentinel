@@ -23506,7 +23506,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '58.2',
                 'forecast': '54.5',
                 'previous': '57.7'
             },
@@ -23526,7 +23526,7 @@ class HybridEconomicCalendar:
                 'time': '19:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '20.7B',
                 'forecast': '18.1B',
                 'previous': '24.9B'
             },
