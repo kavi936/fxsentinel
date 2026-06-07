@@ -1278,6 +1278,52 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* High impact: dim solid red tint from Time → Previous so releases stand out when scanning */
+.calendar-table tbody tr.impact-high td.calendar-col-time,
+.calendar-table tbody tr.impact-high td.calendar-col-currency,
+.calendar-table tbody tr.impact-high td.calendar-col-impact,
+.calendar-table tbody tr.impact-high td.calendar-col-name,
+.calendar-table tbody tr.impact-high td.calendar-col-actual,
+.calendar-table tbody tr.impact-high td.calendar-col-forecast,
+.calendar-table tbody tr.impact-high td.calendar-col-previous {
+  background: rgba(255, 68, 68, 0.14);
+  transition: background 0.15s ease;
+}
+
+.calendar-table tbody tr.impact-high td.calendar-col-time {
+  box-shadow: inset 3px 0 0 rgba(255, 68, 68, 0.55);
+}
+
+.calendar-table tbody tr.impact-high:hover td.calendar-col-time,
+.calendar-table tbody tr.impact-high:hover td.calendar-col-currency,
+.calendar-table tbody tr.impact-high:hover td.calendar-col-impact,
+.calendar-table tbody tr.impact-high:hover td.calendar-col-name,
+.calendar-table tbody tr.impact-high:hover td.calendar-col-actual,
+.calendar-table tbody tr.impact-high:hover td.calendar-col-forecast,
+.calendar-table tbody tr.impact-high:hover td.calendar-col-previous {
+  background: rgba(255, 68, 68, 0.2);
+}
+
+.calendar-table tbody tr.impact-high.selected td.calendar-col-time,
+.calendar-table tbody tr.impact-high.selected td.calendar-col-currency,
+.calendar-table tbody tr.impact-high.selected td.calendar-col-impact,
+.calendar-table tbody tr.impact-high.selected td.calendar-col-name,
+.calendar-table tbody tr.impact-high.selected td.calendar-col-actual,
+.calendar-table tbody tr.impact-high.selected td.calendar-col-forecast,
+.calendar-table tbody tr.impact-high.selected td.calendar-col-previous {
+  background: rgba(255, 68, 68, 0.24);
+}
+
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-time,
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-currency,
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-impact,
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-name,
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-actual,
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-forecast,
+.calendar-table tbody tr.impact-high.selected:hover td.calendar-col-previous {
+  background: rgba(255, 68, 68, 0.28);
+}
+
 /* Impact column: colored dot for quick scanning (Forex Factory-style) */
 .calendar-table td .impact-cell {
   display: inline-flex;
