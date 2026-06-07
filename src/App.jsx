@@ -9,6 +9,8 @@ import AuthRedirect from './components/AuthRedirect';
 import VerifyEmail from './components/VerifyEmail';
 import OnboardingSurvey from './components/OnboardingSurvey';
 import TraderProfileGate from './components/TraderProfileGate';
+import DeveloperRoute from './components/DeveloperRoute';
+import AdminUserDashboard from './components/admin/AdminUserDashboard';
 import Blog from './components/Blog';
 import Disclaimer from './components/Disclaimer';
 import Privacy from './components/Privacy';
@@ -88,6 +90,13 @@ function App() {
                   </TraderProfileGate>
                 </ProtectedRoute>
               } />
+              {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                <Route path="/admin/users" element={
+                  <DeveloperRoute>
+                    <AdminUserDashboard />
+                  </DeveloperRoute>
+                } />
+              )}
             </Routes>
           </div>
         </Router>

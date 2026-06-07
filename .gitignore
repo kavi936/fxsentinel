@@ -69,6 +69,11 @@ test_session.session*
 !src/data/economyIndicators.template.json
 !src/data/central-bank-documents.json
 !backend/data/central_bank_documents_ai_context.json
+backend/data/ohlc/
+
+# Local admin user exports (PII — never commit)
+user_dashboard_export.csv
+marketing_opt_in_export.csv
 analysis_history.json
 news_cache.json
 news_history.json

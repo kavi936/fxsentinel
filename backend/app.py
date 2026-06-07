@@ -765,6 +765,20 @@ from services.analysis_contract import (
 )
 from services.analysis_pipeline import FinalizeContext, finalize_analysis
 
+# Markets tab — TradingView UDF datafeed + OHLC API (Binance v0; MT5 later)
+try:
+    from routes.markets_udf_routes import register_markets_routes
+    register_markets_routes(app)
+except Exception as _markets_routes_err:
+    logger.warning("Markets UDF routes not loaded: %s", _markets_routes_err)
+
+# Local-only admin user dashboard (developer auth + localhost)
+try:
+    from routes.admin_dashboard_routes import register_admin_dashboard_routes
+    register_admin_dashboard_routes(app)
+except Exception as _admin_dashboard_err:
+    logger.warning("Admin dashboard routes not loaded: %s", _admin_dashboard_err)
+
 @app.route('/api/economy-indicators/<country_code>', methods=['GET'])
 def get_economy_indicators(country_code):
     """

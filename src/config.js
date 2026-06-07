@@ -51,6 +51,11 @@ export const config = {
     economyScan: (countryCode) => `${API_BASE_URL}/api/economy-scan/${countryCode}`,
     // Saved holistic scans (Firestore, same pattern as calendar analysis history)
     economyScanHistory: `${API_BASE_URL}/api/economy-scan-history`,
+    // Markets tab — research API + OHLC
+    marketResearch: (marketId) => `${API_BASE_URL}/api/markets/${marketId}/research`,
+    udfDatafeed: `${API_BASE_URL}/api/udf`,
+    marketOhlc: (marketId, tf = '4H', limit = 200) =>
+      `${API_BASE_URL}/api/markets/${marketId}/ohlc?tf=${encodeURIComponent(tf)}&limit=${limit}`,
     // Base URL for direct API calls
     baseUrl: API_BASE_URL
   }

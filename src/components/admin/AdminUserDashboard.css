@@ -1,0 +1,597 @@
+.admin-dash {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #0a0a0a 0%, #111 40%, #0d0d0d 100%);
+  color: #e8e8e8;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 1.5rem 2rem 3rem;
+}
+
+.admin-dash-loading,
+.admin-dash-blocked {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: #0a0a0a;
+  color: #fff;
+}
+
+.admin-dash-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(255, 68, 68, 0.25);
+  border-top-color: #ff4444;
+  border-radius: 50%;
+  animation: admin-spin 0.8s linear infinite;
+}
+
+@keyframes admin-spin {
+  to { transform: rotate(360deg); }
+}
+
+.admin-dash-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-dash-header h1 {
+  margin: 0;
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.admin-dash-header p {
+  margin: 0.35rem 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+}
+
+.admin-dash-header-actions {
+  display: flex;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.admin-dash-btn {
+  background: rgba(255, 68, 68, 0.15);
+  border: 1px solid rgba(255, 68, 68, 0.45);
+  color: #ff6b6b;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.admin-dash-btn:hover:not(:disabled) {
+  background: rgba(255, 68, 68, 0.28);
+  border-color: #ff4444;
+}
+
+.admin-dash-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.admin-dash-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-dash-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+}
+
+.admin-dash-sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-dash-source-pill {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.admin-dash-source-pill.ok {
+  background: rgba(76, 175, 80, 0.12);
+  border-color: rgba(76, 175, 80, 0.35);
+  color: #81c784;
+}
+
+.admin-dash-source-pill.fail {
+  background: rgba(244, 67, 54, 0.12);
+  border-color: rgba(244, 67, 54, 0.35);
+  color: #ef9a9a;
+}
+
+.admin-dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-dash-stat {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+}
+
+.admin-dash-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.admin-dash-stat-label {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-dash-stat-sub {
+  margin-top: 0.25rem;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-dash-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .admin-dash-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-dash-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+}
+
+.admin-dash-panel h2 {
+  margin: 0 0 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.admin-dash-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.55rem;
+  font-size: 0.78rem;
+}
+
+.admin-dash-bar-label {
+  width: 88px;
+  flex-shrink: 0;
+  color: rgba(255, 255, 255, 0.55);
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-dash-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.admin-dash-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4444, #ff6b6b);
+  border-radius: 4px;
+  min-width: 2px;
+  transition: width 0.4s ease;
+}
+
+.admin-dash-bar-count {
+  width: 32px;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-dash-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.admin-dash-filters input,
+.admin-dash-filters select {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  padding: 0.45rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.admin-dash-filters input {
+  min-width: 220px;
+}
+
+.admin-dash-filters input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-dash-table-wrap {
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.admin-dash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.admin-dash-table th {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+.admin-dash-table td {
+  padding: 0.55rem 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.admin-dash-table tr:hover td {
+  background: rgba(255, 68, 68, 0.04);
+}
+
+.admin-dash-tag {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-dash-tag.completed { background: rgba(76, 175, 80, 0.18); color: #81c784; }
+.admin-dash-tag.skipped { background: rgba(255, 193, 7, 0.15); color: #ffd54f; }
+.admin-dash-tag.pending { background: rgba(33, 150, 243, 0.15); color: #64b5f6; }
+.admin-dash-tag.no_firestore { background: rgba(158, 158, 158, 0.15); color: #bdbdbd; }
+.admin-dash-tag.free { background: rgba(255, 255, 255, 0.08); color: #ccc; }
+.admin-dash-tag.premium { background: rgba(156, 39, 176, 0.2); color: #ce93d8; }
+.admin-dash-tag.developer { background: rgba(255, 68, 68, 0.2); color: #ff8a80; }
+.admin-dash-tag.unknown { background: rgba(255, 255, 255, 0.05); color: #888; }
+
+.admin-dash-email {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-dash-error {
+  background: rgba(244, 67, 54, 0.12);
+  border: 1px solid rgba(244, 67, 54, 0.35);
+  color: #ef9a9a;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  margin-bottom: 1rem;
+}
+
+.admin-dash-feedback-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-dash-feedback-list li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.8rem;
+}
+
+.admin-dash-feedback-list li:last-child {
+  border-bottom: none;
+}
+
+.admin-dash-feedback-meta {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.72rem;
+  margin-top: 0.2rem;
+}
+
+.admin-dash-section-title {
+  margin: 1.75rem 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.admin-dash-count-note {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 0.75rem;
+}
+
+.admin-dash-loading-sub {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+  max-width: 420px;
+  text-align: center;
+}
+
+.admin-dash-headlines {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border: 1px solid rgba(255, 68, 68, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-dash-headlines h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #ff8a80;
+}
+
+.admin-dash-headlines ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.95rem;
+}
+
+.admin-dash-headlines li + li {
+  margin-top: 0.35rem;
+}
+
+.admin-dash-stats-compact {
+  margin-bottom: 1.25rem;
+}
+
+.admin-dash-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-dash-tabs button {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.65);
+  padding: 0.45rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin-dash-tabs button.active {
+  background: rgba(255, 68, 68, 0.18);
+  border-color: rgba(255, 68, 68, 0.45);
+  color: #fff;
+}
+
+.admin-dash-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1100px) {
+  .admin-dash-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-dash-panel-desc {
+  margin: -0.5rem 0 1rem;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.admin-dash-panel h3 {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-dash-onboarding h2 {
+  margin-bottom: 0.25rem;
+}
+
+.admin-dash-mini-table-wrap {
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.admin-dash-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.admin-dash-mini-table th {
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  background: rgba(20, 20, 20, 0.95);
+}
+
+.admin-dash-mini-table td {
+  padding: 0.45rem 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.admin-dash-mini-table tr:hover td {
+  background: rgba(255, 68, 68, 0.05);
+}
+
+.admin-dash-subline {
+  display: block;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-top: 0.1rem;
+}
+
+.admin-dash-empty {
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.admin-dash-breakdown {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-dash-breakdown li {
+  display: grid;
+  grid-template-columns: 1fr 2fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.admin-dash-breakdown-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-dash-breakdown-bar-wrap {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.admin-dash-breakdown-bar {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #ff4444, #ff6b6b);
+  border-radius: 3px;
+  min-width: 2px;
+}
+
+.admin-dash-breakdown-meta {
+  font-variant-numeric: tabular-nums;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+
+.admin-dash-breakdown-meta span {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.admin-dash-yes { color: #81c784; }
+.admin-dash-no { color: rgba(255, 255, 255, 0.25); }
+
+.admin-dash-filter-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.65);
+  cursor: pointer;
+  user-select: none;
+}
+
+.admin-dash-filter-check input {
+  accent-color: #ff4444;
+}
+
+.admin-dash-meta-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-dash-tag.excluded {
+  margin-left: 0.35rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-dash-tag.never {
+  margin-left: 0.35rem;
+  background: rgba(255, 193, 7, 0.12);
+  color: #ffc107;
+  font-size: 0.65rem;
+}
+
+.admin-dash-row-excluded {
+  opacity: 0.55;
+}
+
+.admin-dash-row-never td:first-child {
+  border-left: 2px solid rgba(255, 193, 7, 0.35);
+}
