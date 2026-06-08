@@ -23,7 +23,7 @@ function MarketChartSection({ research, marketId = 'BTCUSD', researchLoading = f
   return (
     <section
       className="markets-chart-block"
-      aria-labelledby={headline ? 'markets-headline' : undefined}
+      aria-labelledby={headline ? 'markets-headline-label' : undefined}
     >
       <div
         ref={containerRef}
@@ -40,11 +40,7 @@ function MarketChartSection({ research, marketId = 'BTCUSD', researchLoading = f
             segments={research?.headline_segments}
           />
           <div className="markets-chart-split__chart">
-            <MarketChart
-              marketId={marketId}
-              structuredLevels={research?.structured_levels}
-              showLevels
-            />
+            <MarketChart marketId={marketId} structuredLevels={research?.structured_levels} />
           </div>
         </div>
 
@@ -62,6 +58,9 @@ function MarketChartSection({ research, marketId = 'BTCUSD', researchLoading = f
             className="markets-chart-split__aside"
             verdict={research?.verdict}
             thesis={research?.thesis}
+            structuredLevels={research?.structured_levels}
+            invalidation={research?.invalidation}
+            crossAssets={research?.cross_assets}
             fallbackNews={research?.news}
             liveNews={liveNews}
             newsLoading={newsLoading}

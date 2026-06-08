@@ -61,30 +61,28 @@ function buildHeadlineParts(headline, emphasisPhrases) {
 /**
  * One-line market headline — Sen/header typography, red emphasis on key phrases.
  */
-function MarketHeadline({ headline, emphasis = [], segments = null, id = 'markets-headline' }) {
+function MarketHeadline({
+  headline,
+  emphasis = [],
+  segments = null,
+  label = 'Headline',
+  id = 'markets-headline',
+}) {
   if (!headline && !segments?.length) return null;
 
-  if (Array.isArray(segments) && segments.length > 0) {
-    return (
-      <h2 id={id} className="markets-headline">
-        {segments.map((seg, i) =>
-          seg.emphasis ? (
-            <span key={i} className="markets-headline__emphasis">
-              {seg.text ?? seg.t}
-            </span>
-          ) : (
-            <span key={i}>{seg.text ?? seg.t}</span>
-          )
-        )}
-      </h2>
-    );
-  }
-
-  const parts = buildHeadlineParts(headline, emphasis);
-
-  return (
-    <h2 id={id} className="markets-headline">
-      {parts.map((part, i) =>
+  const headlineContent =
+    Array.isArray(segments) && segments.length > 0 ? (
+      segments.map((seg, i) =>
+        seg.emphasis ? (
+          <span key={i} className="markets-headline__emphasis">
+            {seg.text ?? seg.t}
+          </span>
+        ) : (
+          <span key={i}>{seg.text ?? seg.t}</span>
+        )
+      )
+    ) : (
+      buildHeadlineParts(headline, emphasis).map((part, i) =>
         part.emphasis ? (
           <span key={i} className="markets-headline__emphasis">
             {part.text}
@@ -92,8 +90,20 @@ function MarketHeadline({ headline, emphasis = [], segments = null, id = 'market
         ) : (
           <span key={i}>{part.text}</span>
         )
-      )}
-    </h2>
+      )
+    );
+
+  return (
+    <header className="markets-headline-block">
+      {label ? (
+        <p className="markets-headline__label" id={`${id}-label`}>
+          {label}
+        </p>
+      ) : null}
+      <h2 id={id} className="markets-headline" aria-labelledby={label ? `${id}-label` : undefined}>
+        {headlineContent}
+      </h2>
+    </header>
   );
 }
 

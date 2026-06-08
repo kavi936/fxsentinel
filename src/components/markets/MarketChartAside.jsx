@@ -24,10 +24,21 @@ function biasClass(displayBias) {
 /**
  * Right column — Analysis (bias + narrative) or filtered live news.
  */
+function formatLevelPrice(level) {
+  if (level?.kind === 'range') {
+    return `${Number(level.price_low).toLocaleString()} – ${Number(level.price_high).toLocaleString()}`;
+  }
+  if (level?.price != null) return Number(level.price).toLocaleString();
+  return '—';
+}
+
 function MarketChartAside({
   className = '',
   verdict,
   thesis,
+  structuredLevels = [],
+  invalidation = [],
+  crossAssets = [],
   fallbackNews = [],
   liveNews = [],
   newsLoading,
@@ -73,6 +84,55 @@ function MarketChartAside({
           {thesis?.headline && <p className="markets-chart-aside__subhead">{thesis.headline}</p>}
           {verdict?.day_summary && <p className="markets-chart-aside__body">{verdict.day_summary}</p>}
           {thesis?.body && <p className="markets-chart-aside__body markets-chart-aside__body--muted">{thesis.body}</p>}
+
+          {structuredLevels.length > 0 && (
+            <div className="markets-chart-aside__levels">
+              <p className="markets-chart-aside__levels-title">Key structure</p>
+              <ul>
+                {structuredLevels.slice(0, 6).map((level) => (
+                  <li key={level.level_id}>
+                    <span className="markets-chart-aside__level-label">{level.label}</span>
+                    <span className="markets-chart-aside__level-price">{formatLevelPrice(level)}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {invalidation.length > 0 && (
+            <div className="markets-chart-aside__invalidation">
+              <p className="markets-chart-aside__levels-title">Invalidation</p>
+              <ul>
+                {invalidation.map((line, i) => (
+                  <li key={i}>{line}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {crossAssets.length > 0 && (
+            <div className="markets-chart-aside__cross">
+              <p className="markets-chart-aside__levels-title">Cross-asset</p>
+              <ul className="markets-chart-aside__cross-list">
+                {crossAssets.map((a) => (
+                  <li key={a.id}>
+                    <span>{a.label}</span>
+                    <span
+                      className={
+                        a.changePercent > 0
+                          ? 'markets-chart-aside__cross-up'
+                          : a.changePercent < 0
+                            ? 'markets-chart-aside__cross-down'
+                            : ''
+                      }
+                    >
+                      {a.changePercent != null ? `${a.changePercent > 0 ? '+' : ''}${Number(a.changePercent).toFixed(2)}%` : '—'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       ) : (
         <div className="markets-chart-aside__panel" role="tabpanel">

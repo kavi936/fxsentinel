@@ -8,8 +8,11 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.markets.level_engine import build_structured_levels, ohlc_quality
+from services.markets.market_news_filter import fetch_btc_market_news
 from services.markets.market_registry import get_market
 from services.markets.ohlc_ingest_binance import ingest_market
+
+BTC_CROSS_ASSETS = ("ETHUSDT", "SPX", "VIX", "US10Y", "GOLD")
 
 try:
     from services.tradingview_market_data import fetch_tradingview_quotes
@@ -115,6 +118,25 @@ def _headline_emphasis(verdict: Dict[str, str]) -> List[str]:
     return phrases[:2]
 
 
+def _build_cross_assets(quotes: Dict[str, Any]) -> List[Dict[str, Any]]:
+    from services.tradingview_instruments import instrument_by_id
+
+    inst_map = instrument_by_id()
+    out: List[Dict[str, Any]] = []
+    for inst_id in BTC_CROSS_ASSETS:
+        row = quotes.get(inst_id) or {}
+        inst = inst_map.get(inst_id, {})
+        out.append(
+            {
+                "id": inst_id,
+                "label": inst.get("label", inst_id),
+                "price": row.get("price"),
+                "changePercent": row.get("changePercent"),
+            }
+        )
+    return out
+
+
 def refresh_ohlc(market_id: str) -> None:
     """Pull latest bars before level build (Binance markets only)."""
     market = get_market(market_id)
@@ -144,10 +166,13 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
     levels = build_structured_levels(market_id)
     quality = ohlc_quality(market_id)
 
-    quote_row: Dict[str, Any] = {}
+    quotes: Dict[str, Any] = {}
     if fetch_tradingview_quotes:
         quotes = fetch_tradingview_quotes() or {}
-        inst_id = _quote_instrument_id(market)
+
+    quote_row: Dict[str, Any] = {}
+    inst_id = _quote_instrument_id(market)
+    if quotes:
         quote_row = quotes.get(inst_id, {})
 
     spot = quote_row.get("price")
@@ -175,9 +200,9 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
         },
         "verdict": verdict,
         "structured_levels": levels,
-        "cross_assets": [],
+        "cross_assets": _build_cross_assets(quotes) if market_id == "BTCUSD" else [],
         "catalysts": [],
-        "news": [],
+        "news": fetch_btc_market_news(5) if market_id == "BTCUSD" else [],
         "thesis": {
             "headline": "Deterministic structure snapshot",
             "body": verdict["day_summary"],

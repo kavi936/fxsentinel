@@ -44,16 +44,8 @@ function MarketsHub() {
 
   return (
     <div className="markets-tab">
-      <div className="markets-content markets-content--canvas">
+      <div className="markets-content--canvas">
         <header className="markets-top-bar">
-          <div className="markets-top-bar__brand">
-            <h2 className="markets-top-bar__title">
-              <span className="markets-top-bar__title-text">Markets</span>
-              <span className="markets-top-bar__title-colon" aria-hidden="true">
-                :
-              </span>
-            </h2>
-          </div>
           <div className="markets-top-bar__picker-wrap">
             <MarketPicker
               selectedId={selectedId}

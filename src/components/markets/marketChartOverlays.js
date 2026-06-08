@@ -23,6 +23,19 @@ function styleFor(level) {
  * @param {Array} structuredLevels
  * @returns {import('lightweight-charts').IPriceLine[]}
  */
+/** Filter overlays by layer toggles (levels / poi / ranges). */
+export function filterLevelsByLayer(structuredLevels = [], layers = {}) {
+  const showLevels = layers.levels !== false;
+  const showPoi = layers.poi !== false;
+  const showRanges = layers.ranges !== false;
+
+  return (structuredLevels || []).filter((level) => {
+    if (level.kind === 'poi') return showPoi;
+    if (level.kind === 'range') return showRanges;
+    return showLevels;
+  });
+}
+
 export function applyStructuredLevels(series, structuredLevels = []) {
   if (!series) return [];
 

@@ -1,10 +1,8 @@
-/* Markets tab — Phase 0 plain black canvas (build top → bottom) */
+/* Markets tab — simple vertical stack: top bar, then sections below */
 
 .markets-tab {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
   background: var(--primary-black, #000000);
   color: var(--text-white, #ffffff);
   font-family: var(--font-sans, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
@@ -13,13 +11,9 @@
 .markets-content--canvas {
   max-width: 100%;
   margin: 0 auto;
-  padding: 20px;
-  padding-top: 80px;
+  /* 60px navbar + breathing room below */
+  padding: 80px 20px 20px;
   box-sizing: border-box;
-  min-height: 100vh;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
 }
 
 /* —— Top bar —— */
@@ -32,7 +26,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-/* Picker fills space between brand and last updated */
+/* Picker fills space before last updated */
 .markets-top-bar__picker-wrap {
   flex: 1 1 auto;
   min-width: 0;
@@ -66,67 +60,14 @@
   }
 
   .markets-top-bar__picker-wrap {
-    order: 3;
     flex: 1 1 100%;
     width: 100%;
   }
 
   .markets-top-bar__meta {
-    order: 2;
     margin-left: auto;
     padding-left: 0;
   }
-}
-
-/* Branded section label — aligned with Live News header treatment */
-.markets-top-bar__brand {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  padding-right: 14px;
-  margin-right: 4px;
-  border-right: 1px solid rgba(255, 68, 68, 0.2);
-}
-
-.markets-top-bar__title {
-  margin: 0;
-  position: relative;
-  display: inline-flex;
-  align-items: baseline;
-  padding-bottom: 6px;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 0.9375rem;
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.markets-top-bar__title-text {
-  color: #ffffff;
-  text-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.75),
-    0 0 16px rgba(255, 68, 68, 0.38);
-}
-
-.markets-top-bar__title-colon {
-  margin-left: 1px;
-  color: #ff4444;
-  font-weight: 800;
-  text-shadow: 0 0 10px rgba(255, 68, 68, 0.55);
-}
-
-.markets-top-bar__title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 2px;
-  border-radius: 1px;
-  background: linear-gradient(90deg, #ff4444 0%, #ff6b6b 45%, transparent 100%);
-  box-shadow: 0 0 8px rgba(255, 68, 68, 0.35);
 }
 
 /* —— Horizontal market picker —— */
@@ -345,24 +286,15 @@
 }
 
 /* —— Content below top bar —— */
-.markets-body {
-  flex: 1;
-  min-height: 0;
-  padding-top: 0;
-  overflow-y: auto;
-}
-
 .markets-body--chart {
-  padding-top: 28px;
+  margin-top: 24px;
 }
 
-/* —— Empty workspace (chart + sections build here) —— */
+/* —— Empty workspace —— */
 .markets-canvas {
-  flex: 1;
-  min-height: calc(100dvh - 140px);
+  margin-top: 24px;
+  min-height: 240px;
   background: #000000;
-  margin: 0 -20px -20px;
-  width: calc(100% + 40px);
 }
 
 .markets-canvas__hint {

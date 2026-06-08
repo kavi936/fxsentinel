@@ -6,7 +6,7 @@ import '../Markets.css';
  */
 function MarketsComingSoon() {
   return (
-    <div className="markets-tab">
+    <div className="markets-tab markets-tab--coming-soon">
       <div className="markets-coming-bg" aria-hidden="true">
         <div className="markets-coming-gradient" />
         <div className="markets-coming-orb markets-coming-orb--a" />

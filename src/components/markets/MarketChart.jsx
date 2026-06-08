@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { CandlestickSeries, createChart } from 'lightweight-charts';
 import { useMarketOhlc } from '../../hooks/useMarketOhlc';
-import { applyStructuredLevels, clearPriceLines } from './marketChartOverlays';
+import { applyStructuredLevels, clearPriceLines, filterLevelsByLayer } from './marketChartOverlays';
 import { CANDLE_SERIES_OPTIONS, createChartOptions } from './marketChartTheme';
 import './MarketsChart.css';
 
@@ -23,7 +23,13 @@ function formatSourceFooter(meta) {
 /**
  * FXSentinel research chart — our OHLC + system level overlays (read-only).
  */
-function MarketChart({ marketId = 'BTCUSD', structuredLevels = [], showLevels = true }) {
+const LAYER_TOGGLES = [
+  { id: 'levels', label: 'Levels' },
+  { id: 'poi', label: 'POI' },
+  { id: 'ranges', label: 'Ranges' },
+];
+
+function MarketChart({ marketId = 'BTCUSD', structuredLevels = [] }) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
   const seriesRef = useRef(null);
@@ -31,7 +37,10 @@ function MarketChart({ marketId = 'BTCUSD', structuredLevels = [], showLevels = 
   const prevBarsLenRef = useRef(0);
 
   const [timeframe, setTimeframe] = useState('4H');
+  const [layers, setLayers] = useState({ levels: true, poi: true, ranges: true });
   const tfConfig = TIMEFRAMES.find((t) => t.id === timeframe) || TIMEFRAMES[1];
+
+  const visibleLevels = filterLevelsByLayer(structuredLevels, layers);
 
   const { bars, meta, loading, error } = useMarketOhlc(marketId, tfConfig.apiTf, {
     enabled: Boolean(marketId),
@@ -100,27 +109,43 @@ function MarketChart({ marketId = 'BTCUSD', structuredLevels = [], showLevels = 
     clearPriceLines(series, priceLinesRef.current);
     priceLinesRef.current = [];
 
-    if (showLevels && structuredLevels?.length) {
-      priceLinesRef.current = applyStructuredLevels(series, structuredLevels);
+    if (visibleLevels.length) {
+      priceLinesRef.current = applyStructuredLevels(series, visibleLevels);
     }
-  }, [structuredLevels, showLevels, bars.length]);
+  }, [visibleLevels, bars.length]);
 
   return (
     <div className="markets-research-chart" aria-label={`${marketId} research chart`}>
-      <div className="markets-research-chart__toolbar" role="toolbar" aria-label="Chart timeframe">
-        {TIMEFRAMES.map((tf) => (
-          <button
-            key={tf.id}
-            type="button"
-            className={timeframe === tf.id ? 'is-active' : ''}
-            onClick={() => {
-              setTimeframe(tf.id);
-              prevBarsLenRef.current = 0;
-            }}
-          >
-            {tf.label}
-          </button>
-        ))}
+      <div className="markets-research-chart__toolbar" role="toolbar" aria-label="Chart controls">
+        <div className="markets-research-chart__toolbar-group" aria-label="Timeframe">
+          {TIMEFRAMES.map((tf) => (
+            <button
+              key={tf.id}
+              type="button"
+              className={timeframe === tf.id ? 'is-active' : ''}
+              onClick={() => {
+                setTimeframe(tf.id);
+                prevBarsLenRef.current = 0;
+              }}
+            >
+              {tf.label}
+            </button>
+          ))}
+        </div>
+        <div className="markets-research-chart__toolbar-divider" aria-hidden="true" />
+        <div className="markets-research-chart__toolbar-group" aria-label="Overlay layers">
+          {LAYER_TOGGLES.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              className={`markets-research-chart__layer ${layers[id] ? 'is-active' : ''}`}
+              onClick={() => setLayers((prev) => ({ ...prev, [id]: !prev[id] }))}
+              aria-pressed={layers[id]}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="markets-research-chart__pane">
@@ -137,9 +162,9 @@ function MarketChart({ marketId = 'BTCUSD', structuredLevels = [], showLevels = 
 
       <footer className="markets-research-chart__footer">
         <span>{formatSourceFooter(meta)}</span>
-        {showLevels && structuredLevels?.length > 0 && (
+        {visibleLevels.length > 0 && (
           <span className="markets-research-chart__footer-levels">
-            {structuredLevels.length} system levels
+            {visibleLevels.length} overlays visible
           </span>
         )}
       </footer>

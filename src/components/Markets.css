@@ -1,6 +1,6 @@
 /* Markets tab — full-viewport coming soon with animated red gradient backdrop */
 
-.markets-tab {
+.markets-tab--coming-soon {
   position: relative;
   isolation: isolate;
   min-height: 100vh;
