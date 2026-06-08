@@ -23570,7 +23570,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.7%',
                 'forecast': '5.6%',
                 'previous': '5.4%'
             },
@@ -23580,7 +23580,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.21T',
                 'forecast': '3.26T',
                 'previous': '3.90T'
             },
@@ -23590,7 +23590,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.2%',
                 'forecast': '3.4%',
                 'previous': '3.4%'
             },
@@ -23600,7 +23600,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.5%',
                 'forecast': '0.3%',
                 'previous': '0.5%'
             },
@@ -23612,7 +23612,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '43.6',
                 'forecast': '41.9',
                 'previous': '40.8'
             },
@@ -23622,27 +23622,18 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-3.8%',
                 'forecast': '-2.2%',
                 'previous': '5.0%'
             },
-            {
-                'title': 'SECO Consumer Climate',
-                'date': 'Mon, Jun 08',
-                'time': '07:00 UTC',
-                'currency': 'CHF',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': '-38',
-                'previous': '-40'
-            },
+            
             {
                 'title': 'Sentix Investor Confidence',
                 'date': 'Mon, Jun 08',
                 'time': '08:30 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-13.4',
                 'forecast': '-13.8',
                 'previous': '-16.4'
             },
