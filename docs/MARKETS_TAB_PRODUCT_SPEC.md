@@ -1,10 +1,11 @@
 # Markets Tab — Product Spec & Planning Doc
 
-**Status:** Draft for validation (not implementation-ready)  
-**Last updated:** 2026-06-03 (clarifications: global runs, UI branding, news slice, chart POI/ranges)  
+**Status:** Active — BTCUSD developer preview in progress  
+**Last updated:** 2026-06-09 (aggregation vision, v1 level engine roadmap, live data, UI, status snapshot)  
 **Owner intent:** Instrument-centric research dashboards that give **clear directional bias** for day and swing traders—without making users infer direction from Economies + Overview + sentiment separately.
 
 Related docs:
+- **BTCUSD implementation strategy (read first):** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md)
 - **Advanced Charts implementation roadmap:** [`MARKETS_ADVANCED_CHARTS_ROADMAP.md`](./MARKETS_ADVANCED_CHARTS_ROADMAP.md)
 - **Chart datafeed evaluation (MT5 + Advanced Charts licensing/feasibility):** [`MARKETS_CHART_DATAFEED_EVALUATION.md`](./MARKETS_CHART_DATAFEED_EVALUATION.md)
 - **Implementation plan (2-week, BTCUSD first):** [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md)
@@ -17,11 +18,101 @@ Related docs:
 
 ---
 
-## 1. Vision (one paragraph)
+## 1. Vision
 
 The **Markets** tab is a set of **tailored research dashboards**—one per tradable market (Gold, EUR/USD or USD/JPY, BTC, etc.)—that combine **quantitative structure** (algorithmic levels from real OHLC), **macro/fundamental context**, and **scheduled catalysts** into a single bias view for **day traders** and **swing traders**. AI (GPT + Gemini) interprets and narrates; it does **not** invent levels. Charts use **TradingView-style** presentation as the visual benchmark. **Analysis runs are global** (one pipeline, same output for every user)—not per-user generation. UI shares **font and FXSentinel branding** with other tabs; layout is **Markets-native** (not a recycle of Overview/Economies card stacks).
 
----
+### 1.1 North star — data aggregation hub
+
+**Markets is not a chart widget.** It is the **trader-facing reference desk** — one place to see bias, structure, catalysts, and context without jumping tabs. The **data and intelligence live across the app** (Overview, Economies, calendar, news, sentiment); Markets **surfaces** what each market profile needs, assembled server-side.
+
+```text
+┌─────────────────────────────────────────────────────────────┐
+│  FXSentinel platform (shared backend — build once)          │
+│  calendar · news · economies · sentiment · prediction mkts │
+│  + venue data (Binance/MT5) · level_engine · GPT runs     │
+└───────────────────────────┬─────────────────────────────────┘
+                            │ market profile picks relevant slices
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Markets tab (per instrument) — easy referral for traders   │
+│  chart + zones + verdict + catalysts + news + cross-assets  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Do not rebuild Overview/Economies inside Markets.** Reuse existing services and APIs; compose them in `market_research_service` (and future `market_context_pack`) per **market profile**.
+
+| Source | Where it lives today | Role in Markets |
+|--------|----------------------|-----------------|
+| **Binance** (BTC spot) | `ohlc_ingest_binance`, `binance_ticker` | OHLC, live quote, volume/taker, order book, optional futures OI/funding |
+| **TradingView scanner** | `tradingview_market_data`, `/api/forex-prices` | Cross-asset quotes; non-crypto pickers later |
+| **Economic calendar** | `hybrid_economic_calendar.py`, `/api/economic-calendar` | Catalysts filtered per market profile |
+| **Live news cache** | `persistent_news_cache`, `/api/news`, `market_news_filter` | Minimized headline strip (crypto-filtered for BTC) |
+| **Market sentiment** | `market_sentiment_service`, `/api/market-sentiment` | Risk-on/off, pair sentiment — verdict input |
+| **Economy indicators** | Google Sheets API, `/api/economy-indicators/{country}` | Macro drivers (CPI, rates, growth) for FX/Gold profiles |
+| **Economy holistic scan** | `economy_holistic_scan_service`, `/api/economy-scan/{country}` | US/EU/JP bias, drivers, theme highlights |
+| **Calendar event analysis** | `enhanced_ai_analysis`, `/api/enhanced-analysis/{id}` | Pre/post-event context when catalyst is imminent |
+| **Prediction markets** | `/api/prediction-markets` | Macro probability context (Fed cuts, elections) — optional strip |
+| **Central bank docs** | Overview hook `/api/...` (central bank documents) | Policy narrative for FX/Gold — link or digest in thesis |
+| **AnalysisContextPack** | `analysis_context_pack.py` | **Existing** shared pack builder for calendar/news/scan — extend for `surface=market_research` |
+| **Global GPT runs** (planned) | `market_analysis_pipeline` | Narrative thesis, headline, conviction — allowlisted level IDs only |
+| **MT5 / broker OHLC** (later) | Registry stubs | FX and Gold primary candles |
+
+**Differentiation:** A trader can draw PDH/PDL on TradingView themselves. FXSentinel wins by **derived structure** (volume profile, flow, acceptance zones) **fused with macro context** (calendar, news, cross-asset) in a single verdict—not by offering more horizontal lines.
+
+**Principle:** Raw data in → deterministic features → `structured_levels[]` + metrics → GPT narrates probability relative to **allowlisted** IDs only.
+
+### 1.2 Division of responsibility — Quant vs GPT
+
+This is the non-negotiable split for Markets research:
+
+| Layer | Owns | Does **not** own |
+|-------|------|------------------|
+| **Quant system** (background) | *What* exists on the chart: key levels, zones, POIs, volume nodes, invalidation bounds; *why the zone exists mathematically* (stored as `basis`, `source`, optional `feature_metrics`) | Probabilistic language, macro narrative, “what happens if” storytelling |
+| **GPT** (global runs) | *Probability* and *thesis*: which allowlisted zone is more likely to be tested first; what it **means** if price taps a zone; day vs swing framing; catalyst/news context | Inventing prices, drawing new zones, renaming levels without a matching `level_id` |
+
+**Quant answers:** “There is a value area from 62,800–63,400 because 70% of 4H volume traded here (`basis: value_area_high/low`, POC at 63,100).”
+
+**GPT answers:** “With spot at 63,050, price is **inside** the rotation zone. **More likely** to probe the upper bound (`btcusd_target_range_*`) before a sustained break of prior day low (`btcusd_pdl_*`), unless US CPI in 6h shifts risk-off — **medium conviction**, day horizon.”
+
+**When a zone is tapped:** Quant flags the event (spot crossed into range, tagged level hit — future: `zone_events[]` in research payload). GPT **explains** whether the tap confirms or rejects the prior thesis using only allowlisted IDs + calendar/news.
+
+**Validation rule:** Any price or zone in GPT output must map to an entry in `structured_levels[]` or `invalidation[]`. Prose that cites “support near 62k” without `level_id` is rejected.
+
+**Why this matters:** Traders can get levels anywhere. FXSentinel’s edge is **curated structure + interpreted probability + macro context in one place** — not GPT guessing S/R.
+
+### 1.3 Markets tab vs platform data — referral surface, not silo
+
+**Markets is where traders look.** **The app is where the data lives.**
+
+| Principle | Detail |
+|-----------|--------|
+| **One backend composition layer** | `market_research_service` (and GPT `market_context_pack`) **pulls from existing services** — same modules Overview/Economies/calendar analysis already use |
+| **Market profile = wiring diagram** | Each instrument declares which platform sources matter (see §12). BTC weights news + risk assets; EURUSD weights US+EU scans + ECB/FOMC calendar |
+| **No tab-exclusive APIs for shared facts** | Calendar events, economy bias, sentiment should not be re-fetched differently on Markets vs Overview — one cache, one truth |
+| **Deep links optional** | Markets can link “Full calendar”, “US economy scan”, “Event analysis” for power users — but **default view must stand alone** |
+| **Quant still venue-specific** | Binance/MT5 structure is computed in `level_engine`; macro context is **fused at research assembly + GPT**, not drawn on chart |
+
+**Today’s gap:** Markets uses Binance + partial news + TV cross-assets. It does **not** yet consume economy holistic scans, calendar filters, market sentiment, or `AnalysisContextPack` — that wiring is the next platform integration step (before or alongside GPT runs).
+
+**Target assembly flow:**
+
+```text
+market_profile (BTCUSD.json)
+       │
+       ├── level_engine + feature_engine  → structured_levels[]
+       ├── hybrid_economic_calendar       → catalysts[]     (filtered)
+       ├── persistent_news_cache          → news[]          (filtered)
+       ├── market_sentiment_service       → risk_regime     (snapshot)
+       ├── economy_holistic_scan (US…)    → macro_digest[]  (profile-defined countries)
+       ├── tradingview / forex-prices     → cross_assets[]
+       └── analysis_context_pack          → unified prompt context for GPT
+                    │
+                    ▼
+           GET /api/markets/:id/research
+```
+
+**Reuse note:** `analysis_context_pack.py` already builds shared context for calendar, live news, and economy scan surfaces (`SURFACE_CALENDAR`, `SURFACE_LIVE_NEWS`, `SURFACE_ECONOMY_SCAN`). Add `SURFACE_MARKET_RESEARCH` with `market_id` + `structured_levels` + profile filters — do not fork a parallel pack builder.
 
 ## 2. Launch market candidates
 
@@ -42,11 +133,16 @@ The **Markets** tab is a set of **tailored research dashboards**—one per trada
 
 ### 2.3 Evaluation: shortlist vs codebase
 
-| Check | Result |
-|-------|--------|
-| Live quotes | ✅ `GOLD`, `EURUSD`, `USDJPY`, `BTCUSDT` already in `tradingview_instruments.py` |
-| OHLC / levels | ❌ Not implemented; GPT must not cite structure until pipeline exists |
+| Check | Result (2026-06-09) |
+|-------|------------------------|
+| Live quotes | ✅ Binance BTCUSDT for BTCUSD chart + picker; TV for cross-assets + disabled markets |
+| OHLC / levels | ✅ Binance klines → `ohlc_store`; `level_engine_v0` shipped |
+| Research API | ✅ `GET /api/markets/BTCUSD/research` — deterministic verdict/headline |
+| Live quote API | ✅ `GET /api/markets/BTCUSD/quote` — Binance 24hr ticker, 5s server cache |
+| Global GPT runs | ❌ `latest_run: null`; narrative is deterministic fallback |
+| Catalysts | ❌ API returns empty array — not wired |
 | Pair-specific copy pattern | ✅ `holistic_pair_commentary.py` — extend to **market profiles** |
+| Tab access | 🟡 **Developer-only** gate (`isDeveloper`); others see coming soon |
 | Economies overlap | Gold needs **rates/USD** legs, not a full “Choose Economy” embed |
 
 ---
@@ -279,16 +375,141 @@ Range object (chart + GPT allowlist):
 
 ### 8.3 What GPT receives
 
-- Full `structured_levels[]`
+- Full `structured_levels[]` — each with `level_id`, `kind`, `basis`, `price` or `price_low`/`price_high`, `as_of`, `source`
+- Optional **`feature_metrics`** per level (v1+) — e.g. `{ "volume_pct": 0.18, "taker_buy_pct": 0.62 }` so GPT can explain *why* the quant system flagged a zone without inventing math
 - Distance from spot (%)
+- Optional: `zone_events` — which levels/ranges were tapped since last run
 - Optional: historical hit rate placeholder (future quant work)
+- Catalyst + news summaries + cross-asset snapshot
 - **Not** raw OHLC arrays in prompt (token cost)—summaries only
 
-### 8.4 Validation gates before production
+### 8.4 What GPT is asked to output (thesis + probability)
+
+| Output field | GPT job | Quant job |
+|--------------|---------|-----------|
+| `headline` | One-line bias + key zone in play | — |
+| `verdict.bias` / `display_bias` | Classify lean (reuse Overview bias vocabulary) | — |
+| `verdict.day_summary` / `swing_summary` | Probabilistic path: “more likely A before B” citing `level_id`s | — |
+| `thesis.body` | Why zones matter **now** (macro, flow, catalyst proximity) | Zones themselves |
+| `levels_cited[]` | Subset of allowlist IDs referenced in copy | Full allowlist |
+| `invalidation` | Narrate what break **disproves** the call | Price levels for invalidation |
+
+Probabilities stay **qualitative** (high / medium / low, or “more likely / less likely”) unless backtested hit rates exist.
+
+### 8.5 Validation gates before production
 
 - [ ] Unit tests: same OHLC → same levels every run
 - [ ] Validator strips GPT prose that cites prices not in allowlist
 - [ ] UI shows basis tooltip on hover
+
+### 8.6 Shipped today — `level_engine_v0` (honest assessment)
+
+**File:** `backend/services/markets/level_engine.py`  
+**Status:** Good **scaffold**, not a product moat.
+
+| Output | `basis` | Limitation |
+|--------|---------|------------|
+| Prior day H/L/C | `prior_day_high`, `prior_day_low`, `prior_day_close` | Commodity — any trader draws these |
+| Weekly H/L | `weekly_high`, `weekly_low` | Same |
+| 4H rotation zone | `session_value_zone_4h` | Simple session box, not volume profile |
+| 4H swing H/L | `swing_high_4h`, `swing_low_4h` | Basic extrema |
+| Round-number POI | `poi_confluence` | PDH near $1k round only |
+
+**Ingest gap:** `ohlc_ingest_binance.py` currently stores only O/H/L/C/volume. Binance klines also return **quote volume, trade count, taker buy volume** — discarded today. Enriching the store is **P0** for v1.
+
+### 8.7 `level_engine_v1` — differentiation roadmap
+
+**Goal:** Derived structure a solo TradingView user cannot replicate trivially, still deterministic and allowlisted for GPT.
+
+#### Layer 1 — Volume structure (from enriched klines; no new API)
+
+| Feature | Trader use | Chart `kind` | Example `basis` |
+|---------|------------|--------------|-----------------|
+| Volume POC + VAH/VAL | Where value traded; magnet prices | `poi`, `range` | `volume_poc`, `value_area_high`, `value_area_low` |
+| High / low volume nodes (HVN/LVN) | Magnets vs air pockets | `poi` | `hvn`, `lvn` |
+| Volume-confirmed levels | PDH promoted only if rejection had top-quintile volume | upgrades `level` → `poi` | `volume_confirmed_pdh` |
+| Taker delta zones | Aggressive buy/sell imbalance bands | `range` | `taker_demand_zone`, `taker_supply_zone` |
+
+#### Layer 2 — Order book microstructure (spot REST, cached 30–60s)
+
+| Feature | Endpoint | Chart / aside |
+|---------|----------|---------------|
+| Bid/ask imbalance | `GET /api/v3/depth` | Aside metric + verdict input |
+| Liquidity walls | same | `poi` — `liquidity_wall_bid`, `liquidity_wall_ask` |
+| Spread stress | `GET /api/v3/ticker/bookTicker` | Headline flag when fragile |
+
+#### Layer 3 — Regime & acceptance (pure OHLC math)
+
+| Feature | Trader use | `basis` |
+|---------|------------|---------|
+| Opening range (OR) | First 1H UTC (or NY) H/L — day anchor | `opening_range` |
+| Acceptance vs rejection | Close spent >60% above PDH → breakout **zone** not just line | `accepted_breakout_zone` |
+| ATR-scaled invalidation | Invalidation at structure − 0.5× 4H ATR | feeds `invalidation[]` |
+
+#### Layer 4 — Crypto positioning (Binance futures public API, optional)
+
+| Feature | Endpoint | Use |
+|---------|----------|-----|
+| Open interest change | `fapi/v1/openInterest` | Leveraged vs spot-led move |
+| Funding rate | `fapi/v1/premiumIndex` or funding history | Crowded long/short |
+| Spot vs perp basis | spot − perp | Which venue leads |
+
+Display in **aside + headline**, not as chart clutter by default.
+
+#### Layer 5 — FXSentinel fusion (core moat)
+
+Combine venue microstructure with data only FXSentinel already has:
+
+| Signal | Source | Effect on verdict |
+|--------|--------|-------------------|
+| Catalyst proximity | Economic calendar | Widen ranges / lower breakout conviction before FOMC/CPI |
+| News burst | `market_news_filter` | Flag headline-driven tape |
+| Cross-asset confirmation | TV quotes in research | Downgrade BTC break without ETH/DXY/VIX alignment |
+
+#### Architecture (target)
+
+```text
+Binance klines (enriched) ──┐
+Binance depth (cached)   ──┼──► feature_engine.py ──► structured_levels[]
+Futures OI/funding       ──┘         │
+                                       ├──► level_engine (merge + rank)
+Calendar / news / TV   ──────────────┘
+                                       │
+                                       ▼
+                              GET /research + chart overlays
+                                       │
+                                       ▼
+                              GPT cites allowlisted level_ids only
+```
+
+Split **`feature_engine`** (raw transforms) from **`level_engine`** (which features become chart objects). v0 remains; v1 adds without breaking API shape.
+
+#### v1 build priority (max differentiation / min Railway cost)
+
+| Priority | Deliverable | New external calls |
+|----------|-------------|---------------------|
+| **P0** | Enrich kline store: taker buy, quote vol, trade count | None (already in klines) |
+| **P1** | 5-day volume POC + VAH/VAL on 4H | Derived |
+| **P2** | Taker delta supply/demand zones | Derived |
+| **P3** | Volume-confirmed PDH/PDL promotion | Derived |
+| **P4** | Opening range + acceptance bands | Derived |
+| **P5** | Order book walls (cached depth) | ~1 REST / 60s per market |
+| **P6** | Funding + OI context | Futures REST, low frequency |
+
+**Defer:** sub-minute WebSocket streams, full DOM heatmap, ML — overkill for v1.
+
+#### UI — “Research overlays” not “Indicators”
+
+Future layer toggles (evolve from current Levels / POI / Ranges):
+
+| Toggle | Content |
+|--------|---------|
+| **Structure** | PDH/PDL, swings (v0) |
+| **Volume profile** | POC, VAH/VAL, HVN |
+| **Flow** | Delta zones, book imbalance |
+| **FXSentinel runs** | Past analysis areas (when GPT pipeline exists) |
+
+Default on: **Structure + Volume profile** only (clutter control per §9.4).
 
 ---
 
@@ -315,7 +536,34 @@ The chart is the **hero** of the Markets tab—not a widget inside a card grid. 
 - **Live:** Append/update the forming bar on a schedule (e.g. 15–60s poll or push); full tick streaming deferred unless needed.
 - **Analytics:** Same OHLC store (+ derived series) exposed to `level_engine`, comparison jobs, and GPT context — chart is one **consumer**, not the source of truth.
 
-**Typography / chrome:** FXSentinel fonts and brand colors; dark grid/candle conventions per `DASHBOARD_BRANDING.md`.
+**Typography / chrome:** FXSentinel fonts and brand colors; dark grid/candle conventions per `DASHBOARD_BRANDING.md`. **Implemented (2026-06-09):** warm red-black chart theme (`#120809` canvas, red-tinted grid/borders, branded toolbar) — see `marketChartTheme.js`, `MarketsChart.css`.
+
+### 9.1.1 Chart toolbar (implemented)
+
+Replaced 10 inline buttons (7 timeframes + 3 layers) with compact controls:
+
+| Control | Behavior |
+|---------|----------|
+| **Timeframe pill** | Shows active TF (e.g. `4H`) + chevron; dropdown overlays chart pane |
+| **Layers icon** | Stack icon + badge when not all layers on; checkbox menu for Levels / POI / Ranges |
+| **Live quote** | Right-aligned BTCUSDT price + daily % (Binance) |
+
+Menus render **over the chart** (top-left portal), not in a crowded header row. Escape / click-outside dismisses.
+
+**Timeframes shipped:** 15m, 30m, 1H, 2H, 4H, 1D, 1W — up to 1000 bars per request (Binance max).
+
+### 9.1.2 Live data paths (BTCUSD)
+
+| Surface | Source | Refresh |
+|---------|--------|---------|
+| Chart candles | Binance klines via `ohlc_store` | Frontend poll ~30s; backend re-ingest when cache ≥30s |
+| Chart toolbar + picker price | `GET /api/markets/BTCUSD/quote` | Frontend poll 5s; **server cache 5s** (one Binance call shared across clients) |
+| Headline spot | Binance via `/research` | Research poll ~90s |
+| Cross-assets in aside | TradingView scanner | Via research payload |
+
+**Single quote hook:** `MarketsHub` polls once; passes `liveQuote` to chart (avoids duplicate requests).
+
+**Cost note (Railway):** WebSocket for sub-second ticks is a **UX** upgrade, not a cost saver. Prefer server-side quote cache + optional **client-side Binance WS** for live price if sub-second needed later. Backend WebSocket proxy only worth it at high concurrent user counts.
 
 ### 9.2 Overlay types (what appears on the chart)
 
@@ -390,6 +638,40 @@ Clarification: the founder did **not** ask for a shrunk calendar as the main ide
 - **Compact strip** in the analysis column: e.g. **3–5 headlines**, market-filtered via `relevant_market_context` logic.
 - Headlines support intraday context for the **current global run**; optional Gemini grounding on breakers (reuse `gemini_news_grounding_service` patterns).
 - Visual: single slim block—title + source + time—**Markets-native** styling (§11), not recycled news cards.
+
+### 10.3 Cross-app data inventory (reuse, don’t duplicate)
+
+Platform endpoints and services Markets should consume **server-side** (not reimplemented in React):
+
+| Data | Backend / service | API (frontend today) | Markets profile use |
+|------|-------------------|----------------------|---------------------|
+| Economic calendar | `hybrid_economic_calendar.py` | `GET /api/economic-calendar` | `catalysts[]` — filter by profile tags |
+| Live news | `persistent_news_cache`, news pipeline | `GET /api/news` | `news[]` — `market_news_filter` / `relevant_market_context` |
+| Forex + cross-asset quotes | `tradingview_market_data` | `GET /api/forex-prices` | `cross_assets[]` ✅ partial |
+| Market sentiment | `market_sentiment_service` | `GET /api/market-sentiment` | Risk regime in verdict / GPT pack |
+| Economy indicators | Google Sheets integration | `GET /api/economy-indicators/{country}` | Driver snapshot for FX/Gold |
+| Holistic economy scan | `economy_holistic_scan_service` | `POST /api/economy-scan/{country}` | Macro bias digest (US for BTC risk, US+EU for EURUSD) |
+| Scan history | `economy_holistic_scan_store` | `GET /api/economy-scan-history` | “Last US scan said…” in thesis |
+| Calendar event AI | Enhanced analysis pipeline | `GET /api/enhanced-analysis/{id}` | Catalyst row expansion / GPT context |
+| Prediction markets | Prediction markets service | `GET /api/prediction-markets` | Optional macro probability chip |
+| Central bank documents | Central bank docs service | Overview hook | Policy citations in swing thesis |
+| Shared analysis pack | `analysis_context_pack.py` | (internal) | GPT global run input |
+| Venue OHLC + quote | `ohlc_store`, `binance_ticker` | `GET /api/markets/.../ohlc`, `/quote` | Chart + quant ✅ |
+
+**Implementation rule:** New Markets features should add a **row to the market profile** (“pull US holistic scan if age < 72h”) and a **function in `market_research_service`**, not a new frontend-only fetch in `MarketsHub`.
+
+### 10.4 Example — BTCUSD pulls from the rest of the app
+
+| Platform source | Why BTC cares |
+|-----------------|---------------|
+| US holistic scan | Risk appetite / liquidity narrative |
+| `market_sentiment` | Cross-pair risk-on/off |
+| FOMC + US CPI from calendar | Dominant macro catalysts for crypto |
+| Crypto-filtered news | Idiosyncratic BTC shocks |
+| ETH, SPX, VIX, US10Y, GOLD quotes | Confirmation or divergence vs BTC structure |
+| Binance volume/delta (v1) | Venue-specific structure GPT explains |
+
+EURUSD (later) would swap in US **+ EU** scans, ECB/FOMC calendar filters, and `holistic_pair_commentary` tokens — **same shell, different profile wiring**.
 
 ---
 
@@ -472,15 +754,23 @@ Profiles live in config (JSON or Python) per instrument—**required before** GP
 | `GET /api/markets` | List enabled markets + metadata |
 | `GET /api/markets/:id/research` | Verdict, levels, thesis, events, latest run summary |
 | `GET /api/markets/:id/ohlc?tf=1D` | Candles for chart |
+| `GET /api/markets/:id/quote` | Live spot quote (Binance for crypto) |
 | `GET /api/markets/:id/analysis-runs` | History for chart markers |
 | `POST /api/markets/:id/analyze` (internal/cron) | Trigger GPT+Gemini run |
 
-Services (proposed files):
+Services (proposed + shipped):
 
-- `market_research_profiles/` — per-market config
-- `market_research_service.py` — assemble DTO
+- `market_research_profiles/` — per-market config (registry in code today; JSON profiles TBD)
+- `market_research_service.py` — assemble DTO ✅
+- `market_quote_service.py` + `binance_ticker.py` — live quote ✅
+- `ohlc_ingest_binance.py` — ingestion ✅
+- `ohlc_store.py`, `udf_datafeed.py` — read/serve bars ✅
+- `level_engine.py` — deterministic levels v0 ✅
+- `market_news_filter.py` — BTC headline filter ✅
+- `feature_engine.py` — **planned** — volume profile, delta, book features
+- `market_context_service.py` — **planned** — compose cross-app snapshots per profile (calendar, scans, sentiment)
+- Extend `analysis_context_pack.py` — **`SURFACE_MARKET_RESEARCH`** for GPT runs
 - `ohlc_ingest_mt5.py` — ingestion (spike first)
-- `level_engine.py` — deterministic levels
 - `market_analysis_pipeline.py` — `finalize_analysis(..., analysis_kind="market_research")`
 
 ---
@@ -496,6 +786,64 @@ Services (proposed files):
 | **V4 — AI runs** | 2→6 scheduled runs; store runs; chart markers | V3 + cost sign-off |
 | **V5 — Gemini grounding** | Intraday headline refresh path | V4 |
 | **V6 — Instagram-driven market #4** | New profile + ingest | User signal |
+
+### 14.1 Implementation status snapshot (2026-06-09)
+
+Cross-reference: [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md)
+
+```text
+Phase 0  Layout          ████████░░  ~80%  (chart + aside chosen; not formally signed off)
+Phase 1  Data platform   ██████████  100%  (Binance path; MT5 deferred)
+Phase 2  BTCUSD UI       ████████░░  ~85%  (developer preview)
+Phase 3  Intelligence    ██░░░░░░░░  ~15%  (deterministic bias only)
+Phase 4  Market #2       ░░░░░░░░░░   0%
+```
+
+#### Shipped (developer preview)
+
+**Backend:** `market_registry`, Binance ingest/store, UDF routes, `level_engine_v0`, `/research`, `/ohlc` (multi-TF, live refresh), `/quote` (cached), `market_news_filter`, cross-assets in research.
+
+**Frontend:** `MarketsHub` layout (picker, headline, chart split, analysis/news aside), Lightweight Charts + level/POI/range overlays + range bands, compact toolbar, red-branded theme, hooks (`useMarketResearch`, `useMarketOhlc`, `useMarketQuote`, `useMarketNews`).
+
+#### BTCUSD v0 definition-of-done gaps
+
+| Item | Status |
+|------|--------|
+| Tab open for all users (not coming soon) | ❌ Developer gate only |
+| Verdict/thesis from **global GPT run** | ❌ Deterministic fallback |
+| Catalysts in research | ❌ Empty array |
+| `GET .../runs` + chart run markers | ❌ Not built |
+| `BTCUSD.json` profile file | ❌ Registry in Python only |
+| Unit tests for level engine | ❌ |
+
+#### Recommended next milestones
+
+1. **P0 + P1 level engine** — enriched kline ingest + volume POC/VAH/VAL (differentiation)
+2. **Catalysts** — calendar filter for BTC-relevant events (quick win)
+3. **Global run pipeline** — manual script → store run → GPT headline replaces deterministic copy
+4. **Staging access** — widen or remove developer gate
+5. **Past run markers on chart** — after runs exist
+6. **Market #2** — after BTC feedback
+
+#### Key files (reference)
+
+| Area | Paths |
+|------|--------|
+| Layout | `MarketsHub.jsx`, `MarketsLayout.css`, `MarketChartSection.jsx`, `MarketChartAside.jsx` |
+| Chart | `MarketChart.jsx`, `MarketChartToolbar.jsx`, `marketChartTheme.js`, `marketChartOverlays.js`, `marketChartRangeBands.js` |
+| Data hooks | `useMarketResearch.js`, `useMarketOhlc.js`, `useMarketQuote.js`, `useMarketNews.js` |
+| Backend | `market_research_service.py`, `level_engine.py`, `market_quote_service.py`, `markets_udf_routes.py` |
+| Access gate | `Markets.jsx` → `MarketsComingSoon` for non-developers |
+
+#### Session notes (2026-06-07 — 2026-06-09)
+
+- **Focus:** Chart + data quality first; full analysis aside de-prioritized (still present as tab).
+- **Layout fix:** Scoped coming-soon flex styles to `.markets-tab--coming-soon`; vertical stack with 80px top padding for navbar.
+- **Live OHLC:** Backend `OHLC_LIVE_REFRESH_SEC=30`; chart polls ~30s so forming candle updates.
+- **Live quote:** Binance-first for BTC; 5s server cache; one poll in `MarketsHub` (no duplicate chart hook).
+- **Chart toolbar:** Compact TF pill + layers icon; menus overlay chart pane.
+- **Branding:** Red-black chart theme aligned with `--accent-red` / `DASHBOARD_BRANDING.md`.
+- **Cost (Railway):** Bill is always-on compute, not per-request; cache beats WebSocket for savings.
 
 ---
 
@@ -541,6 +889,13 @@ Services (proposed files):
 | 2026-06-04 | Chart = **research chart** (our levels on our bars); **no user drawing**; Lightweight Charts | Agreed |
 | 2026-06-04 | Advanced Charts deprioritized — not needed for read-only FXSentinel overlays | Agreed |
 | 2026-06-07 | **Lightweight Charts research chart shipped** — `level_engine_v0`, `/api/markets/BTCUSD/research`, live OHLC poll | Implemented |
+| 2026-06-08 | **Binance live quote** — `/quote`, picker + chart toolbar; server 5s cache; single frontend poll | Implemented |
+| 2026-06-08 | **Chart UX** — compact TF/layers dropdowns; red-branded chart theme; range bands behind candles | Implemented |
+| 2026-06-09 | **Markets = aggregation hub** — fuse Binance microstructure + calendar + news + cross-asset; v0 levels are scaffold | Agreed |
+| 2026-06-09 | **`level_engine_v1` priority** — enriched klines → volume profile + delta zones before book/futures | Agreed |
+| 2026-06-09 | **Live price cost** — keep REST + cache; defer backend WS; client Binance WS optional later | Agreed |
+| 2026-06-09 | **Markets = referral desk; app = data platform** — reuse Overview/Economies/calendar/sentiment via backend composition, not tab silos | Agreed |
+| 2026-06-09 | **Quant vs GPT split** — quant owns levels/zones + `basis`; GPT owns probability, thesis, zone-tap narrative (allowlist only) | Agreed |
 
 ---
 
@@ -549,8 +904,13 @@ Services (proposed files):
 - [ ] MT5/MQL5 spike: pull 30 days daily bars for `XAUUSD`, `EURUSD`, `BTCUSD`
 - [ ] Symbol mapping table: MT5 ↔ TV ↔ internal `id`
 - [ ] Level engine prototype on spike data; snapshot tests
+- [ ] **P0:** Enrich `ohlc_store` with taker buy / quote vol / trade count from Binance klines
+- [ ] **P1:** Volume POC + VAH/VAL on 4H → new `structured_levels` + chart overlays
 - [ ] Cost estimate: 6 × (GPT + Gemini) × 3 markets × 30 days (**global**, not per user)
-- [ ] UI wireframe: one market page in Figma or code stub
+- [ ] **Wire cross-app context:** calendar → `catalysts[]`, US holistic scan → macro digest, sentiment → research payload
+- [ ] Extend `analysis_context_pack` with `SURFACE_MARKET_RESEARCH`
+- [ ] Global run: manual `run_market_analysis` → `latest_run` in research
+- [ ] Staging rollout: developer gate policy
 - [ ] Instagram: define how feedback maps to market priority
 - [ ] Legal: broker data display terms
 
@@ -563,3 +923,4 @@ Services (proposed files):
 | 2026-06-03 | Initial draft from founder notes + codebase evaluation |
 | 2026-06-03 | Clarifications: global analysis, UI branding vs cards, news vs calendar, chart POI/ranges/areas |
 | 2026-06-03 | Rollout order: **BTCUSD** first (`BTCUSDT` feeds); 2-week implementation plan added |
+| 2026-06-09 | §1.1–1.3 aggregation hub + platform vs Markets tab + cross-app reuse; §10.3–10.4 data inventory; quant/GPT split; level engine v1; status snapshot |

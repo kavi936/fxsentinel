@@ -10,13 +10,14 @@ import logging
 from typing import Any, Dict, List, Optional
 
 from services.markets.market_registry import MARKETS, get_market, list_enabled_markets, resolve_udf_symbol
+from services.markets.market_timeframes import OHLC_LIVE_REFRESH_SEC, OHLC_MAX_BARS, api_timeframe_to_resolution
 from services.markets.ohlc_ingest_binance import ingest_market, resolution_to_binance_interval
-from services.markets.ohlc_store import get_bar_list, load_bars
+from services.markets.ohlc_store import cache_age_seconds, get_bar_list, load_bars
 
 logger = logging.getLogger(__name__)
 
-# Max bars per history request (TV may paginate)
-DEFAULT_HISTORY_LIMIT = 500
+# Max bars per ingest (Binance klines cap)
+DEFAULT_HISTORY_LIMIT = OHLC_MAX_BARS
 
 
 def udf_config() -> Dict[str, Any]:
@@ -104,21 +105,38 @@ def udf_search(query: str, *, limit: int = 30) -> List[Dict[str, Any]]:
     return results
 
 
-def _ensure_bars(market_id: str, resolution: str, market: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Load from store; refresh from Binance if missing or empty."""
+def _ensure_bars(
+    market_id: str,
+    resolution: str,
+    market: Dict[str, Any],
+    *,
+    min_bars: int = DEFAULT_HISTORY_LIMIT,
+    live: bool = False,
+) -> List[Dict[str, Any]]:
+    """
+    Load from store; refresh from Binance when needed.
+
+    live=True (chart /ohlc): re-pull if cache missing, thin, or older than OHLC_LIVE_REFRESH_SEC
+    so the forming candle updates on each poll.
+    """
     bars = get_bar_list(market_id, resolution)
-    if bars:
-        return bars
+    target = min(max(min_bars, 1), OHLC_MAX_BARS)
 
     source = market.get("ohlc_source")
     if source == "binance" and market.get("binance_symbol"):
         if resolution_to_binance_interval(resolution):
-            try:
-                ingest_market(market_id, market["binance_symbol"], resolution, limit=DEFAULT_HISTORY_LIMIT)
-                return get_bar_list(market_id, resolution)
-            except Exception as e:
-                logger.warning("Binance ingest failed for %s %s: %s", market_id, resolution, e)
-        return []
+            age = cache_age_seconds(market_id, resolution)
+            needs_refresh = len(bars) < target
+            if live:
+                needs_refresh = needs_refresh or age is None or age >= OHLC_LIVE_REFRESH_SEC
+            if needs_refresh:
+                try:
+                    ingest_market(market_id, market["binance_symbol"], resolution, limit=target)
+                    return get_bar_list(market_id, resolution)
+                except Exception as e:
+                    logger.warning("Binance ingest failed for %s %s: %s", market_id, resolution, e)
+                    return bars
+        return bars
 
     if source == "mt5":
         # MT5 bridge not wired yet
@@ -193,21 +211,26 @@ def udf_history(
     }
 
 
-def markets_ohlc_json(market_id: str, timeframe: str, *, limit: int = 200) -> Dict[str, Any]:
+def markets_ohlc_json(
+    market_id: str,
+    timeframe: str,
+    *,
+    limit: int = OHLC_MAX_BARS,
+    live: bool = True,
+) -> Dict[str, Any]:
     """FXSentinel-native OHLC shape (parallel to UDF for Lightweight Charts path)."""
     market = get_market(market_id)
     if not market:
         return {"error": "unknown_market"}
 
-    tf = timeframe.upper()
-    resolution = (
-        tf.replace("4H", "240")
-        .replace("1H", "60")
-        .replace("1D", "D")
-    )
-    bars = _ensure_bars(market["id"], resolution, market)
-    if limit and len(bars) > limit:
-        bars = bars[-limit:]
+    resolution = api_timeframe_to_resolution(timeframe)
+    if not resolution:
+        return {"error": "unsupported_timeframe", "timeframe": timeframe}
+
+    cap = min(max(limit, 1), OHLC_MAX_BARS)
+    bars = _ensure_bars(market["id"], resolution, market, min_bars=cap, live=live)
+    if cap and len(bars) > cap:
+        bars = bars[-cap:]
 
     doc = load_bars(market["id"], resolution)
     return {

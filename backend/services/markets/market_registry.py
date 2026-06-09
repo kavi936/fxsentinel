@@ -38,7 +38,7 @@ MARKETS: Dict[str, MarketConfig] = {
         "minmov": 1,
         "session": "24x7",
         "timezone": "Etc/UTC",
-        "supported_resolutions": ["60", "240", "D"],
+        "supported_resolutions": ["15", "30", "60", "120", "240", "D", "W"],
     },
     "EURUSD": {
         "id": "EURUSD",

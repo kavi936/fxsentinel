@@ -62,3 +62,20 @@ def get_bar_list(market_id: str, resolution_key: str) -> List[_BAR]:
         return []
     bars = doc.get("bars") or []
     return sorted(bars, key=lambda b: int(b.get("time", 0)))
+
+
+def cache_age_seconds(market_id: str, resolution_key: str) -> Optional[float]:
+    """Seconds since last save_bars for this series, or None if missing/unparseable."""
+    doc = load_bars(market_id, resolution_key)
+    if not doc:
+        return None
+    raw = doc.get("as_of")
+    if not raw:
+        return None
+    try:
+        as_of = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        if as_of.tzinfo is None:
+            as_of = as_of.replace(tzinfo=timezone.utc)
+        return max(0.0, (datetime.now(timezone.utc) - as_of).total_seconds())
+    except (TypeError, ValueError):
+        return None

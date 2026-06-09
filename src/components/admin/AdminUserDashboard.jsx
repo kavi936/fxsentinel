@@ -38,6 +38,10 @@ const labelTradingStyle = (k) => TRADING_STYLE_LABELS[k] || k?.replace(/_/g, ' '
 const labelExperience = (k) => EXPERIENCE_LABELS[k] || k || '—';
 const labelGoal = (k) => labelForPrimaryGoal(k);
 const labelReferral = (k) => labelForReferralSource(k);
+const formatPairs = (pairs) => {
+  if (!Array.isArray(pairs) || !pairs.length) return '—';
+  return pairs.join(', ');
+};
 
 const StatCard = ({ value, label, sub }) => (
   <div className="admin-dash-stat">
@@ -177,14 +181,20 @@ const AdminUserDashboard = () => {
     const cols = [
       'email', 'display_name', 'uid', 'provider_label', 'email_verified', 'created_at',
       'last_sign_in', 'onboarding_status', 'subscription_status', 'total_ai_analyses',
-      'referral_source', 'experience_level', 'primary_goal', 'trading_style',
+      'referral_source', 'experience_level', 'primary_goal', 'trading_style', 'primary_pairs',
       'receives_alert_delivery', 'telegram_chat_id', 'never_activated', 'is_excluded', 'marketing_opt_in',
     ];
     const escape = (v) => {
       const s = String(v ?? '');
       return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
     };
-    const lines = [cols.join(','), ...users.map((u) => cols.map((c) => escape(u[c])).join(','))];
+    const lines = [
+      cols.join(','),
+      ...users.map((u) => cols.map((c) => {
+        if (c === 'primary_pairs') return escape(formatPairs(u[c]));
+        return escape(u[c]);
+      }).join(',')),
+    ];
     const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -444,6 +454,10 @@ const AdminUserDashboard = () => {
                   <h3>Trading style</h3>
                   <BreakdownList items={onboarding.trading_styles} labelFn={labelTradingStyle} />
                 </div>
+                <div className="admin-dash-onboarding-wide">
+                  <h3>Markets they follow</h3>
+                  <BreakdownList items={onboarding.primary_pairs} labelFn={(k) => k} />
+                </div>
               </div>
             </div>
           )}
@@ -493,6 +507,7 @@ const AdminUserDashboard = () => {
                   <th>AI runs</th>
                   <th>Alerts</th>
                   <th>Onboarding</th>
+                  <th>Markets</th>
                   <th>Referral</th>
                   <th>Experience</th>
                 </tr>
@@ -511,6 +526,9 @@ const AdminUserDashboard = () => {
                     <td>{u.total_ai_analyses || '—'}</td>
                     <td>{u.receives_alert_delivery ? '✓ Telegram' : '—'}</td>
                     <td><StatusTag status={u.onboarding_status} /></td>
+                    <td className="admin-dash-pairs" title={formatPairs(u.primary_pairs)}>
+                      {formatPairs(u.primary_pairs)}
+                    </td>
                     <td>{labelReferral(u.referral_source)}</td>
                     <td>{labelExperience(u.experience_level)}</td>
                   </tr>

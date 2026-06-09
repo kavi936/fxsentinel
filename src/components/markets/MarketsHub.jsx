@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useForexPrices } from '../../hooks/useForexPrices';
+import { useMarketQuote } from '../../hooks/useMarketQuote';
 import { useMarketResearch } from '../../hooks/useMarketResearch';
 import { getMarketById } from './marketCatalog';
 import MarketPicker from './MarketPicker';
@@ -37,6 +38,27 @@ function MarketsHub() {
     enabled: Boolean(selected?.enabled),
   });
 
+  const { quote: liveQuote, loading: quoteLoading } = useMarketQuote(selectedId, {
+    enabled: Boolean(selected?.enabled),
+    pollMs: 5_000,
+  });
+
+  const pickerPrices = useMemo(() => {
+    const quoteId = selected?.quoteInstrumentId;
+    if (!liveQuote?.price || !quoteId) return prices;
+    return {
+      ...prices,
+      [quoteId]: {
+        ...(prices?.[quoteId] || {}),
+        price: liveQuote.price,
+        change: liveQuote.change,
+        changePercent: liveQuote.changePercent,
+        lastUpdate: liveQuote.as_of,
+        source: liveQuote.source || 'binance',
+      },
+    };
+  }, [prices, liveQuote, selected?.quoteInstrumentId]);
+
   const lastUpdatedLabel = research?.as_of ?? new Date();
 
   const showSkeleton = SHOW_LAYOUT_SKELETON && selected?.enabled && research;
@@ -50,9 +72,9 @@ function MarketsHub() {
             <MarketPicker
               selectedId={selectedId}
               onSelect={setSelectedId}
-              prices={prices}
+              prices={pickerPrices}
               instruments={instruments}
-              pricesLoading={pricesLoading}
+              pricesLoading={pricesLoading && !liveQuote?.price}
             />
           </div>
           <div className="markets-top-bar__meta">
@@ -69,7 +91,13 @@ function MarketsHub() {
           </div>
         ) : showChartSection ? (
           <div className="markets-body markets-body--chart">
-            <MarketChartSection research={research} marketId={selectedId} researchLoading={researchLoading} />
+            <MarketChartSection
+              research={research}
+              marketId={selectedId}
+              researchLoading={researchLoading}
+              liveQuote={liveQuote}
+              quoteLoading={quoteLoading}
+            />
           </div>
         ) : (
           <div className="markets-canvas" aria-label="Markets workspace">

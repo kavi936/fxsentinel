@@ -4,7 +4,7 @@ import { config } from '../config';
 /**
  * OHLC bars for Markets research chart — polls for live bar updates.
  */
-export function useMarketOhlc(marketId, timeframe = '4H', { enabled = true, pollMs = 45_000, limit = 200 } = {}) {
+export function useMarketOhlc(marketId, timeframe = '4H', { enabled = true, pollMs = 45_000, limit = 1000 } = {}) {
   const [bars, setBars] = useState([]);
   const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(Boolean(enabled && marketId));

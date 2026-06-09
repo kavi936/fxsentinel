@@ -9,7 +9,9 @@ from typing import Any, Dict, List, Optional
 
 from services.markets.level_engine import build_structured_levels, ohlc_quality
 from services.markets.market_news_filter import fetch_btc_market_news
+from services.markets.market_quote_service import get_market_live_quote
 from services.markets.market_registry import get_market
+from services.markets.market_timeframes import OHLC_MAX_BARS
 from services.markets.ohlc_ingest_binance import ingest_market
 
 BTC_CROSS_ASSETS = ("ETHUSDT", "SPX", "VIX", "US10Y", "GOLD")
@@ -147,7 +149,7 @@ def refresh_ohlc(market_id: str) -> None:
         return
     for res in market.get("supported_resolutions") or ["240", "60", "D"]:
         try:
-            ingest_market(market_id, symbol, res, limit=500)
+            ingest_market(market_id, symbol, res, limit=OHLC_MAX_BARS)
         except Exception:
             pass
 
@@ -166,21 +168,23 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
     levels = build_structured_levels(market_id)
     quality = ohlc_quality(market_id)
 
-    quotes: Dict[str, Any] = {}
-    if fetch_tradingview_quotes:
-        quotes = fetch_tradingview_quotes() or {}
+    # Live quote — Binance for crypto (matches chart OHLC venue)
+    live_quote = get_market_live_quote(market_id)
+    if live_quote.get("error"):
+        live_quote = {}
 
-    quote_row: Dict[str, Any] = {}
-    inst_id = _quote_instrument_id(market)
-    if quotes:
-        quote_row = quotes.get(inst_id, {})
-
-    spot = quote_row.get("price")
+    spot = live_quote.get("price")
     if spot is not None:
         try:
             spot = float(spot)
         except (TypeError, ValueError):
             spot = None
+
+    quote_row = live_quote if live_quote.get("price") is not None else {}
+
+    cross_assets_quotes: Dict[str, Any] = {}
+    if fetch_tradingview_quotes:
+        cross_assets_quotes = fetch_tradingview_quotes() or {}
 
     verdict = _deterministic_verdict(levels, spot)
     headline = _deterministic_headline(levels, spot, market.get("label", market_id))
@@ -195,12 +199,14 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
         "quote": {
             "price": spot,
             "changePercent": quote_row.get("changePercent"),
-            "source": quote_row.get("source", "tradingview"),
-            "instrument_id": _quote_instrument_id(market),
+            "change": quote_row.get("change"),
+            "source": quote_row.get("source", "binance"),
+            "instrument_id": quote_row.get("instrument_id") or _quote_instrument_id(market),
+            "as_of": quote_row.get("as_of"),
         },
         "verdict": verdict,
         "structured_levels": levels,
-        "cross_assets": _build_cross_assets(quotes) if market_id == "BTCUSD" else [],
+        "cross_assets": _build_cross_assets(cross_assets_quotes) if market_id == "BTCUSD" else [],
         "catalysts": [],
         "news": fetch_btc_market_news(5) if market_id == "BTCUSD" else [],
         "thesis": {

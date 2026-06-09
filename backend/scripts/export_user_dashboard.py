@@ -170,6 +170,7 @@ def merge_row(au, fs, telegram_chat_id):
         "primary_goal": tp.get("primary_goal") or "",
         "trading_style": tp.get("trading_style") or "",
         "marketing_opt_in": tp.get("marketing_opt_in"),
+        "primary_pairs": "; ".join(tp.get("primary_pairs") or []),
         "primary_pairs_count": len(tp.get("primary_pairs") or []),
         "telegram_chat_id": telegram_chat_id or "",
         "receives_alert_delivery": bool(telegram_chat_id),

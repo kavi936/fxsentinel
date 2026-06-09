@@ -595,3 +595,16 @@
 .admin-dash-row-never td:first-child {
   border-left: 2px solid rgba(255, 193, 7, 0.35);
 }
+
+.admin-dash-pairs {
+  max-width: 11rem;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-dash-onboarding-wide {
+  grid-column: 1 / -1;
+}

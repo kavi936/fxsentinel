@@ -1,12 +1,72 @@
 # Markets Tab — Implementation Plan (BTCUSD first)
 
-**Status:** Active rollout guide  
+**Status:** Active — Phase 2 BTCUSD UI in developer preview  
 **Horizon:** Phase 0 (layout) → ~2 weeks engineering for first **BTCUSD** dashboard (internal/staging)  
+**Last updated:** 2026-06-09  
+
+> **BTCUSD playbook (read first):** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md) — sprints, profile, definition of done, strict order of work.
 **Canonical market id:** `BTCUSD` (user-facing)  
 **Data feed id:** `BTCUSDT` (TradingView + Binance klines — same underlying spot)
 
-Parent spec: [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md)  
+Parent spec: [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md) — see **§1.1 aggregation hub**, **§8.6 v1 roadmap**, **§14.1 status snapshot**  
 Advanced Charts path: [`MARKETS_ADVANCED_CHARTS_ROADMAP.md`](./MARKETS_ADVANCED_CHARTS_ROADMAP.md)
+
+---
+
+## Current status (2026-06-09)
+
+### Phase progress
+
+| Phase | Name | Status |
+|-------|------|--------|
+| **0** | Layout | ~80% — chart-dominant + aside (analysis/news); not formally signed off |
+| **1** | Data platform | ✅ Binance OHLC, level_engine_v0, research/ohlc/quote APIs |
+| **2** | BTCUSD wired UI | ~85% — developer preview only |
+| **3** | Intelligence | ~15% — deterministic verdict; no GPT runs |
+| **4** | Market #2+ | Not started |
+
+### Backend modules (shipped)
+
+| Module | Path |
+|--------|------|
+| Registry | `backend/services/markets/market_registry.py` |
+| Binance ingest | `ohlc_ingest_binance.py` |
+| OHLC store + live refresh | `ohlc_store.py`, `udf_datafeed.py` |
+| Level engine v0 | `level_engine.py` |
+| Research DTO | `market_research_service.py` |
+| Live quote | `market_quote_service.py`, `binance_ticker.py` |
+| News filter | `market_news_filter.py` |
+| Routes | `backend/routes/markets_udf_routes.py` |
+
+### Frontend (shipped)
+
+| Component | Notes |
+|-----------|--------|
+| `MarketsHub.jsx` | Picker, headline, chart section; single `useMarketQuote` poll |
+| `MarketChart.jsx` | Lightweight Charts, overlays, range bands |
+| `MarketChartToolbar.jsx` | TF + layers dropdowns on chart |
+| `MarketChartSection.jsx` | Split: chart \| analysis/news aside |
+| `marketChartTheme.js` | Red-branded canvas + grid |
+| Hooks | `useMarketResearch`, `useMarketOhlc`, `useMarketQuote`, `useMarketNews` |
+
+### Not yet built (from original week-2 plan)
+
+- `feature_engine.py` — volume profile, delta, book (see spec §8.6)
+- `market_analysis_run_service.py` / `run_market_analysis.py`
+- `GET /api/markets/:id/runs`
+- Catalysts in research payload
+- Global GPT narrative (`latest_run`)
+- `BTCUSD.json` profile file
+- Public tab access (still `isDeveloper` gate)
+
+### Immediate next work (agreed priority)
+
+**See [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md) for sprint order.**
+
+1. **Sprint 1** — `BTCUSD.json` profile + `market_context_service` (calendar, US scan, sentiment)
+2. **Sprint 2** — enriched klines + volume POC/VAH/VAL (`level_engine_v1`)
+3. **Sprint 3** — global GPT run + `SURFACE_MARKET_RESEARCH`
+4. **Sprint 4** — staging access + BTCUSD v1 ship
 
 ---
 
@@ -326,14 +386,15 @@ Pipeline:
 
 ## 9. Definition of done — BTCUSD v0 (end of week 2)
 
-- [ ] User opens Markets tab and sees **BTC/USD** research (not coming soon)
-- [ ] Chart shows **real 4H candles** from your OHLC store
-- [ ] At least **PDH/PDL + one range** on chart from `level_engine`
-- [ ] Verdict + thesis from **latest global run** (or deterministic fallback if run missing)
-- [ ] **3–5 news** headlines, crypto-filtered
-- [ ] Quote updates via existing TradingView path (`BTCUSDT`)
-- [ ] No per-user analysis; same payload for all users
+- [ ] User opens Markets tab and sees **BTC/USD** research (not coming soon) — **dev gate only today**
+- [x] Chart shows **real 4H candles** from your OHLC store (+ 7 TFs, 1000 bars)
+- [x] At least **PDH/PDL + one range** on chart from `level_engine`
+- [ ] Verdict + thesis from **latest global run** (or deterministic fallback if run missing) — **fallback only**
+- [x] **3–5 news** headlines, crypto-filtered
+- [x] Quote updates via **Binance BTCUSDT** (upgraded from TV-only plan)
+- [x] No per-user analysis; same payload for all users
 - [ ] Docs: symbol map `BTCUSD` ↔ `BTCUSDT` in profile README
+- [ ] **Differentiation:** volume profile / enriched kline features (v1 — see spec §8.6)
 
 ---
 
@@ -380,3 +441,4 @@ Copy **no** BTC-specific strings into profile #2 — only config + `level_engine
 |------|--------|
 | 2026-06-03 | Initial 2-week plan; BTCUSD first; Binance OHLC v0 |
 | 2026-06-03 | Added Phase 0 (layout/presentation) before engineering weeks |
+| 2026-06-09 | Current status section; definition-of-done checkboxes updated; links to spec §8.6 / §14.1 |

@@ -312,6 +312,7 @@ class AdminUserDashboardService:
             "primary_goal": tp.get("primary_goal"),
             "referral_source": tp.get("referral_source"),
             "marketing_opt_in": tp.get("marketing_opt_in"),
+            "primary_pairs": list(tp.get("primary_pairs") or []),
             "primary_pairs_count": len(tp.get("primary_pairs") or []),
             "telegram_chat_id": telegram_chat_id,
             "telegram_connected": bool(telegram_chat_id),
@@ -345,6 +346,11 @@ class AdminUserDashboardService:
         goals = Counter(u.get("primary_goal") or "unknown" for u in users if u.get("onboarding_status") == "completed")
         trading_styles = Counter(u.get("trading_style") or "unknown" for u in users if u.get("onboarding_status") == "completed")
         completed = [u for u in users if u.get("onboarding_status") == "completed"]
+        primary_pairs = Counter()
+        for u in completed:
+            for pair in u.get("primary_pairs") or []:
+                if pair:
+                    primary_pairs[pair] += 1
         marketing_yes = sum(1 for u in completed if u.get("marketing_opt_in") is True)
 
         active_7d = sum(1 for u in users if (u.get("days_since_active") or 999) <= 7)
@@ -390,6 +396,7 @@ class AdminUserDashboardService:
             "experience_levels": dict(experience.most_common()),
             "primary_goals": dict(goals.most_common()),
             "trading_styles": dict(trading_styles.most_common()),
+            "primary_pairs": dict(primary_pairs.most_common(30)),
             "generated_at": now.isoformat(),
         }
 
@@ -496,6 +503,7 @@ class AdminUserDashboardService:
                 "experience_levels": breakdown(summary.get("experience_levels"), completed),
                 "primary_goals": breakdown(summary.get("primary_goals"), completed),
                 "trading_styles": breakdown(summary.get("trading_styles"), completed),
+                "primary_pairs": breakdown(summary.get("primary_pairs"), completed),
             },
         }
 

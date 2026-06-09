@@ -9,7 +9,7 @@ const BASIS_STYLE = {
   swing_high_4h: { color: 'rgba(255, 200, 80, 0.65)', lineStyle: 2, lineWidth: 1 },
   swing_low_4h: { color: 'rgba(255, 200, 80, 0.65)', lineStyle: 2, lineWidth: 1 },
   poi_confluence: { color: '#ff4444', lineStyle: 0, lineWidth: 2 },
-  session_value_zone_4h: { color: 'rgba(180, 120, 255, 0.7)', lineStyle: 2, lineWidth: 1 },
+  session_value_zone_4h: { color: 'rgba(255, 100, 100, 0.75)', lineStyle: 2, lineWidth: 1 },
 };
 
 const DEFAULT_STYLE = { color: 'rgba(255, 255, 255, 0.35)', lineStyle: 2, lineWidth: 1 };

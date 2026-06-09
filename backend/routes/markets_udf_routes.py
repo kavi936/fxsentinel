@@ -11,7 +11,9 @@ import logging
 from flask import Blueprint, jsonify, request
 
 from services.markets.market_registry import MARKETS
+from services.markets.market_quote_service import get_market_live_quote
 from services.markets.market_research_service import build_research
+from services.markets.market_timeframes import OHLC_MAX_BARS
 from services.markets.udf_datafeed import (
     markets_ohlc_json,
     udf_config,
@@ -108,13 +110,29 @@ def market_research_route(market_id: str):
 @markets_api_bp.route("/<market_id>/ohlc", methods=["GET", "OPTIONS"])
 def market_ohlc_route(market_id: str):
     tf = request.args.get("tf", "4H")
+    live = request.args.get("refresh", "true").lower() not in ("false", "0", "no")
     try:
-        limit = int(request.args.get("limit", 200))
+        limit = int(request.args.get("limit", OHLC_MAX_BARS))
     except ValueError:
-        limit = 200
-    payload = markets_ohlc_json(market_id, tf, limit=limit)
+        limit = OHLC_MAX_BARS
+    payload = markets_ohlc_json(market_id, tf, limit=limit, live=live)
+    if payload.get("error") == "unsupported_timeframe":
+        return jsonify(payload), 400
     if payload.get("error"):
         return jsonify(payload), 404
+    return jsonify(payload)
+
+
+@markets_api_bp.route("/<market_id>/quote", methods=["GET", "OPTIONS"])
+def market_quote_route(market_id: str):
+    """Live spot quote — Binance BTCUSDT for BTCUSD (same venue as chart OHLC)."""
+    payload = get_market_live_quote(market_id.upper())
+    if payload.get("error") == "unknown_market":
+        return jsonify(payload), 404
+    if payload.get("error") == "market_disabled":
+        return jsonify(payload), 403
+    if payload.get("error") == "quote_unavailable":
+        return jsonify(payload), 503
     return jsonify(payload)
 
 

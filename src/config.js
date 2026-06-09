@@ -53,9 +53,10 @@ export const config = {
     economyScanHistory: `${API_BASE_URL}/api/economy-scan-history`,
     // Markets tab — research API + OHLC
     marketResearch: (marketId) => `${API_BASE_URL}/api/markets/${marketId}/research`,
+    marketQuote: (marketId) => `${API_BASE_URL}/api/markets/${marketId}/quote`,
     udfDatafeed: `${API_BASE_URL}/api/udf`,
-    marketOhlc: (marketId, tf = '4H', limit = 200) =>
-      `${API_BASE_URL}/api/markets/${marketId}/ohlc?tf=${encodeURIComponent(tf)}&limit=${limit}`,
+    marketOhlc: (marketId, tf = '4H', limit = 1000) =>
+      `${API_BASE_URL}/api/markets/${marketId}/ohlc?tf=${encodeURIComponent(tf)}&limit=${limit}&refresh=true`,
     // Base URL for direct API calls
     baseUrl: API_BASE_URL
   }

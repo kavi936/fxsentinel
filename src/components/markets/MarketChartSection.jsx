@@ -9,7 +9,13 @@ import './MarketsChart.css';
 /**
  * Chart block: left = headline over research chart; right = analysis or live news.
  */
-function MarketChartSection({ research, marketId = 'BTCUSD', researchLoading = false }) {
+function MarketChartSection({
+  research,
+  marketId = 'BTCUSD',
+  researchLoading = false,
+  liveQuote = null,
+  quoteLoading = false,
+}) {
   const headline = research?.headline || research?.thesis?.headline || '';
   const { items: liveNews, loading: newsLoading, error: newsError } = useMarketNews({
     enabled: marketId === 'BTCUSD',
@@ -40,7 +46,12 @@ function MarketChartSection({ research, marketId = 'BTCUSD', researchLoading = f
             segments={research?.headline_segments}
           />
           <div className="markets-chart-split__chart">
-            <MarketChart marketId={marketId} structuredLevels={research?.structured_levels} />
+            <MarketChart
+              marketId={marketId}
+              structuredLevels={research?.structured_levels}
+              liveQuote={liveQuote}
+              quoteLoading={quoteLoading}
+            />
           </div>
         </div>
 
