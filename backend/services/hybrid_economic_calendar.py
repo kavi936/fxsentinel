@@ -23815,7 +23815,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '6.3%',
                 'forecast': '5.7%',
                 'previous': '4.9%'
             },
@@ -23825,7 +23825,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '1.3%',
                 'previous': '1.2%'
             },
@@ -23835,7 +23835,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.9%',
                 'forecast': '3.8%',
                 'previous': '2.8%'
             },
@@ -23845,7 +23845,7 @@ class HybridEconomicCalendar:
                 'time': '03:35 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.86|2.9',
                 'forecast': 'N/A',
                 'previous': '3.84|3.5'
             },
