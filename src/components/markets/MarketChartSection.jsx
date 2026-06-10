@@ -4,10 +4,11 @@ import { useMarketsChartSplitResize } from '../../hooks/useMarketsChartSplitResi
 import MarketChart from './MarketChart';
 import MarketHeadline from './MarketHeadline';
 import MarketChartAside from './MarketChartAside';
+import MarketContextPanel from './MarketContextPanel';
 import './MarketsChart.css';
 
 /**
- * Chart block: left = headline over research chart; right = analysis or live news.
+ * Chart block: headline + chart (left), structure aside (right), platform context below.
  */
 function MarketChartSection({
   research,
@@ -17,10 +18,11 @@ function MarketChartSection({
   quoteLoading = false,
 }) {
   const headline = research?.headline || research?.thesis?.headline || '';
+
   const { items: liveNews, loading: newsLoading, error: newsError } = useMarketNews({
     enabled: marketId === 'BTCUSD',
     marketId,
-    maxItems: 5,
+    maxItems: 6,
   });
 
   const { containerRef, isDragging, onHandlePointerDown, leftWidthPercent } =
@@ -58,7 +60,7 @@ function MarketChartSection({
         <div
           role="separator"
           aria-orientation="vertical"
-          aria-label="Resize chart and analysis panels"
+          aria-label="Resize chart and structure panels"
           className={`markets-chart-resize-handle vertical ${isDragging ? 'active' : ''}`}
           onMouseDown={onHandlePointerDown}
           onTouchStart={onHandlePointerDown}
@@ -68,20 +70,23 @@ function MarketChartSection({
           <MarketChartAside
             className="markets-chart-split__aside"
             verdict={research?.verdict}
-            thesis={research?.thesis}
             structuredLevels={research?.structured_levels}
             invalidation={research?.invalidation}
             crossAssets={research?.cross_assets}
-            catalysts={research?.catalysts}
-            macroContext={research?.macro_context}
-            sentiment={research?.sentiment}
-            fallbackNews={research?.news}
-            liveNews={liveNews}
-            newsLoading={newsLoading}
-            newsError={newsError}
           />
         </div>
       </div>
+
+      <MarketContextPanel
+        catalysts={research?.catalysts}
+        macroContext={research?.macro_context}
+        sentiment={research?.sentiment}
+        fallbackNews={research?.news}
+        liveNews={liveNews}
+        newsLoading={newsLoading}
+        newsError={newsError}
+        showNews={marketId === 'BTCUSD'}
+      />
     </section>
   );
 }
