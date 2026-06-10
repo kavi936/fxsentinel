@@ -21,8 +21,25 @@ function biasClass(displayBias) {
   return 'markets-bias--neutral';
 }
 
+function impactClass(impact) {
+  const t = (impact || 'medium').toLowerCase();
+  if (t === 'high' || t === 'critical') return 'markets-catalyst__impact--high';
+  if (t === 'low') return 'markets-catalyst__impact--low';
+  return 'markets-catalyst__impact--medium';
+}
+
+function formatCatalystWhen(date, time) {
+  const parts = [date, time].filter(Boolean);
+  return parts.join(' · ') || 'TBD';
+}
+
+function formatRiskRegime(regime) {
+  if (!regime) return '—';
+  return String(regime).replace(/_/g, ' ');
+}
+
 /**
- * Right column — Analysis (bias + narrative) or filtered live news.
+ * Right column — Analysis, Catalysts (calendar + macro + sentiment), or live news.
  */
 function formatLevelPrice(level) {
   if (level?.kind === 'range') {
@@ -39,6 +56,9 @@ function MarketChartAside({
   structuredLevels = [],
   invalidation = [],
   crossAssets = [],
+  catalysts = [],
+  macroContext = null,
+  sentiment = null,
   fallbackNews = [],
   liveNews = [],
   newsLoading,
@@ -65,6 +85,15 @@ function MarketChartAside({
         <button
           type="button"
           role="tab"
+          aria-selected={panel === 'catalysts'}
+          className={panel === 'catalysts' ? 'is-active' : ''}
+          onClick={() => setPanel('catalysts')}
+        >
+          Catalysts
+        </button>
+        <button
+          type="button"
+          role="tab"
           aria-selected={panel === 'news'}
           className={panel === 'news' ? 'is-active' : ''}
           onClick={() => setPanel('news')}
@@ -73,7 +102,7 @@ function MarketChartAside({
         </button>
       </div>
 
-      {panel === 'analysis' ? (
+      {panel === 'analysis' && (
         <div className="markets-chart-aside__panel" role="tabpanel">
           {verdict?.display_bias && (
             <span className={`markets-bias ${biasClass(verdict.display_bias)}`}>{verdict.display_bias}</span>
@@ -134,7 +163,76 @@ function MarketChartAside({
             </div>
           )}
         </div>
-      ) : (
+      )}
+
+      {panel === 'catalysts' && (
+        <div className="markets-chart-aside__panel" role="tabpanel">
+          {(sentiment?.risk_regime || sentiment?.fear_greed?.value != null) && (
+            <div className="markets-chart-aside__sentiment">
+              <p className="markets-chart-aside__levels-title">Risk backdrop</p>
+              <ul className="markets-chart-aside__sentiment-list">
+                {sentiment?.risk_regime && (
+                  <li>
+                    <span>Regime</span>
+                    <span>{formatRiskRegime(sentiment.risk_regime)}</span>
+                  </li>
+                )}
+                {sentiment?.fear_greed?.value != null && (
+                  <li>
+                    <span>Fear &amp; Greed</span>
+                    <span>
+                      {sentiment.fear_greed.value}
+                      {sentiment.fear_greed.classification ? ` · ${sentiment.fear_greed.classification}` : ''}
+                    </span>
+                  </li>
+                )}
+                {sentiment?.volatility && (
+                  <li>
+                    <span>Volatility</span>
+                    <span>{sentiment.volatility}</span>
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {(macroContext?.us_scan_summary || macroContext?.short_term_bias) && (
+            <div className="markets-chart-aside__macro">
+              <p className="markets-chart-aside__levels-title">US macro digest</p>
+              {macroContext?.short_term_bias && (
+                <p className="markets-chart-aside__macro-bias">Short-term · {macroContext.short_term_bias}</p>
+              )}
+              {macroContext?.us_scan_summary && (
+                <p className="markets-chart-aside__body markets-chart-aside__body--muted">{macroContext.us_scan_summary}</p>
+              )}
+              {macroContext?.us_scan_as_of && (
+                <p className="markets-chart-aside__meta">As of {formatAsOf(macroContext.us_scan_as_of)}</p>
+              )}
+            </div>
+          )}
+
+          <div className="markets-chart-aside__catalysts">
+            <p className="markets-chart-aside__levels-title">Upcoming catalysts</p>
+            {catalysts.length === 0 && (
+              <p className="markets-chart-aside__status">No high-impact USD events in the next 7 days.</p>
+            )}
+            <ul className="markets-chart-aside__catalyst-list">
+              {catalysts.map((c) => (
+                <li key={c.id || `${c.title}-${c.date}`} className="markets-catalyst">
+                  <div className="markets-catalyst__head">
+                    <span className={`markets-catalyst__impact ${impactClass(c.impact)}`}>{c.impact || 'medium'}</span>
+                    {c.currency && <span className="markets-catalyst__currency">{c.currency}</span>}
+                  </div>
+                  <span className="markets-catalyst__title">{c.title}</span>
+                  <span className="markets-catalyst__when">{formatCatalystWhen(c.date, c.time)}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {panel === 'news' && (
         <div className="markets-chart-aside__panel" role="tabpanel">
           {newsLoading && <p className="markets-chart-aside__status">Loading headlines…</p>}
           {!newsLoading && newsError && (

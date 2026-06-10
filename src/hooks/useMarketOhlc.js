@@ -45,6 +45,9 @@ export function useMarketOhlc(marketId, timeframe = '4H', { enabled = true, poll
       return undefined;
     }
 
+    // Drop previous TF bars immediately — avoids rendering 4H data with a 1D viewport.
+    setBars([]);
+    setMeta(null);
     setLoading(true);
     lastFingerprint.current = '';
     fetchOhlc();

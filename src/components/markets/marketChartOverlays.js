@@ -1,5 +1,7 @@
 /** Apply system levels / POI / ranges — read-only, data-driven overlays. */
 
+const VOLUME_BASES = new Set(['volume_poc', 'value_area_4h_5d']);
+
 const BASIS_STYLE = {
   prior_day_high: { color: 'rgba(255, 68, 68, 0.85)', lineStyle: 0, lineWidth: 1 },
   prior_day_low: { color: 'rgba(72, 187, 220, 0.85)', lineStyle: 0, lineWidth: 1 },
@@ -9,7 +11,9 @@ const BASIS_STYLE = {
   swing_high_4h: { color: 'rgba(255, 200, 80, 0.65)', lineStyle: 2, lineWidth: 1 },
   swing_low_4h: { color: 'rgba(255, 200, 80, 0.65)', lineStyle: 2, lineWidth: 1 },
   poi_confluence: { color: '#ff4444', lineStyle: 0, lineWidth: 2 },
+  volume_poc: { color: '#fbbf24', lineStyle: 0, lineWidth: 2 },
   session_value_zone_4h: { color: 'rgba(255, 100, 100, 0.75)', lineStyle: 2, lineWidth: 1 },
+  value_area_4h_5d: { color: 'rgba(251, 191, 36, 0.85)', lineStyle: 2, lineWidth: 1 },
 };
 
 const DEFAULT_STYLE = { color: 'rgba(255, 255, 255, 0.35)', lineStyle: 2, lineWidth: 1 };
@@ -23,13 +27,15 @@ function styleFor(level) {
  * @param {Array} structuredLevels
  * @returns {import('lightweight-charts').IPriceLine[]}
  */
-/** Filter overlays by layer toggles (levels / poi / ranges). */
+/** Filter overlays by layer toggles (levels / volume / poi / ranges). */
 export function filterLevelsByLayer(structuredLevels = [], layers = {}) {
   const showLevels = layers.levels !== false;
+  const showVolume = layers.volume !== false;
   const showPoi = layers.poi !== false;
   const showRanges = layers.ranges !== false;
 
   return (structuredLevels || []).filter((level) => {
+    if (VOLUME_BASES.has(level.basis)) return showVolume;
     if (level.kind === 'poi') return showPoi;
     if (level.kind === 'range') return showRanges;
     return showLevels;

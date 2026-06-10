@@ -5,7 +5,7 @@
 **Audience:** Engineering + product — get BTCUSD straight before Gold/EUR/MT5  
 
 **Canonical ids:** Display **`BTCUSD`** · Data **`BTCUSDT`** (Binance + TV)  
-**Parent docs:** [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md) · [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md)
+**Parent docs:** [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md) · [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md) · [`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md) (data research + UI surfaces)
 
 ---
 
@@ -98,6 +98,8 @@ Create `backend/services/markets/profiles/BTCUSD.json` (or equivalent in registr
 
 ## 5. Phased implementation (strict order)
 
+**Before Sprint 1:** run **Phase R** research spikes ([`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md) §4) — especially enriched klines (R1) and futures API from Railway (R4). Do not UI-build funding/heatmap features until the matrix row is ✅.
+
 Work **top to bottom**. Do not start Gold/EUR or MT5 until **BTCUSD v1** exit criteria (§7) pass.
 
 ### Sprint 1 — Profile + platform context (≈3–5 days)
@@ -130,7 +132,9 @@ Work **top to bottom**. Do not start Gold/EUR or MT5 until **BTCUSD v1** exit cr
 
 **Exit:** Chart shows volume-derived zone + POC; research `data_quality.levels_ok` true; tests pass.
 
-**Defer to v1.1:** taker delta zones (2.6), order book walls (2.7), Binance futures OI/funding (2.8).
+**Defer to v1.1 (after Phase R ✅):** taker delta zones, order book walls, funding/OI/basis — see [data plan §6 Tier v1.1](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md#tier-v11--flow--microstructure-1-week-after-v1).
+
+**Defer to v1.2:** liquidation WS buffer + liq bin panel (not full chart heatmap).
 
 ---
 
@@ -220,7 +224,8 @@ Frontend keeps **one hook** (`useMarketResearch`) — no new client fetches for 
 | Gemini co-write | Grounding optional later |
 | Past analysis areas on chart | Needs run history UI |
 | Client-side Binance WebSocket | 5s REST + cache is enough |
-| Order book / futures OI overlays | v1.1 after volume profile |
+| Order book / futures OI/funding | v1.1 after Phase R — see data plan |
+| Liquidation heatmap on chart | v1.2 simplified bins / v3 vendor — not v1 |
 | Per-user Markets analysis | Global runs only |
 
 ---

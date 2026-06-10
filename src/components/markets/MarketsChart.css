@@ -406,9 +406,24 @@
   );
 }
 
+.markets-research-chart__footer-hint {
+  flex: 1;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.28);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .markets-research-chart__footer-levels {
   color: rgba(255, 68, 68, 0.72);
   white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .markets-research-chart__footer-hint {
+    display: none;
+  }
 }
 
 /* TV embed placeholder (legacy) */
@@ -635,6 +650,95 @@
   margin-top: 4px;
   font-size: 0.65rem;
   color: rgba(255, 255, 255, 0.38);
+}
+
+.markets-chart-aside__sentiment-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.markets-chart-aside__sentiment-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.78rem;
+  padding: 4px 0;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.markets-chart-aside__macro-bias {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.82);
+  text-transform: capitalize;
+}
+
+.markets-chart-aside__catalyst-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.markets-catalyst {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.markets-catalyst:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.markets-catalyst__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.markets-catalyst__impact {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.markets-catalyst__impact--high {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.45);
+}
+
+.markets-catalyst__impact--medium {
+  color: #fde68a;
+  background: rgba(113, 63, 18, 0.35);
+}
+
+.markets-catalyst__impact--low {
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.markets-catalyst__currency {
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.markets-catalyst__title {
+  display: block;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.markets-catalyst__when {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 /* Bias pill (shared with skeleton) */

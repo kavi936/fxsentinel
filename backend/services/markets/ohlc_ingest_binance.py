@@ -55,18 +55,27 @@ def fetch_klines(
     raw = resp.json()
     bars: List[Dict[str, Any]] = []
     for row in raw:
-        # [ open_time, o, h, l, c, volume, close_time, ... ]
+        # Binance kline array:
+        # [0] open_time [1-4] OHLC [5] base volume [6] close_time
+        # [7] quote_volume [8] trades [9] taker_buy_base [10] taker_buy_quote
         open_ms = int(row[0])
-        bars.append(
-            {
-                "time": open_ms // 1000,
-                "open": float(row[1]),
-                "high": float(row[2]),
-                "low": float(row[3]),
-                "close": float(row[4]),
-                "volume": float(row[5]),
-            }
-        )
+        bar: Dict[str, Any] = {
+            "time": open_ms // 1000,
+            "open": float(row[1]),
+            "high": float(row[2]),
+            "low": float(row[3]),
+            "close": float(row[4]),
+            "volume": float(row[5]),
+        }
+        if len(row) > 7:
+            bar["quote_volume"] = float(row[7])
+        if len(row) > 8:
+            bar["trades"] = int(row[8])
+        if len(row) > 9:
+            bar["taker_buy_volume"] = float(row[9])
+        if len(row) > 10:
+            bar["taker_buy_quote_volume"] = float(row[10])
+        bars.append(bar)
     return bars
 
 

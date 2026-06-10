@@ -21,12 +21,25 @@ def _fake_daily():
 
 def _fake_h4():
     base = 1777881600
-    return [
-        {"time": base - 14400 * 3, "open": 101000, "high": 101800, "low": 100800, "close": 101200, "volume": 1},
-        {"time": base - 14400 * 2, "open": 101200, "high": 102200, "low": 101000, "close": 102000, "volume": 1},
-        {"time": base - 14400, "open": 102000, "high": 102800, "low": 101800, "close": 102400, "volume": 1},
-        {"time": base, "open": 102400, "high": 103000, "low": 102100, "close": 102900, "volume": 1},
-    ]
+    bars = []
+    for i in range(30):
+        t = base - 14400 * (29 - i)
+        bars.append(
+            {
+                "time": t,
+                "open": 101000 + i * 10,
+                "high": 101800 + i * 10,
+                "low": 100800 + i * 10,
+                "close": 101200 + i * 10,
+                "volume": 10,
+                "quote_volume": 1_000_000,
+            }
+        )
+    bars[-1]["volume"] = 5000
+    bars[-1]["quote_volume"] = 500_000_000
+    bars[-1]["high"] = 102200
+    bars[-1]["low"] = 101800
+    return bars
 
 
 class LevelEngineTest(unittest.TestCase):
@@ -53,6 +66,26 @@ class LevelEngineTest(unittest.TestCase):
         levels = build_structured_levels("BTCUSD")
         pdh = next(l for l in levels if l["basis"] == "prior_day_high")
         self.assertEqual(pdh["price"], 102000.0)
+
+    def test_volume_profile_levels_present(self):
+        levels = build_structured_levels("BTCUSD")
+        bases = {l["basis"] for l in levels}
+        self.assertIn("volume_poc", bases)
+        self.assertIn("value_area_4h_5d", bases)
+        poc = next(l for l in levels if l["basis"] == "volume_poc")
+        va = next(l for l in levels if l["basis"] == "value_area_4h_5d")
+        self.assertEqual(poc["source"], "level_engine_v1")
+        self.assertEqual(va["source"], "level_engine_v1")
+        self.assertIn("feature_metrics", poc)
+        self.assertLess(va["price_low"], va["price_high"])
+
+    def test_volume_level_ids_stable(self):
+        a = build_structured_levels("BTCUSD")
+        b = build_structured_levels("BTCUSD")
+        vol_ids_a = [l["level_id"] for l in a if l["basis"] in ("volume_poc", "value_area_4h_5d")]
+        vol_ids_b = [l["level_id"] for l in b if l["basis"] in ("volume_poc", "value_area_4h_5d")]
+        self.assertEqual(vol_ids_a, vol_ids_b)
+        self.assertEqual(len(vol_ids_a), 2)
 
 
 if __name__ == "__main__":

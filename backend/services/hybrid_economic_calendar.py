@@ -23927,7 +23927,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.25%',
                 'forecast': '2.25%',
                 'previous': '2.25%'
             },

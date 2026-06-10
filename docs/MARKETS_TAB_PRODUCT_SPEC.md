@@ -5,7 +5,8 @@
 **Owner intent:** Instrument-centric research dashboards that give **clear directional bias** for day and swing traders—without making users infer direction from Economies + Overview + sentiment separately.
 
 Related docs:
-- **BTCUSD implementation strategy (read first):** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md)
+- **BTCUSD implementation strategy:** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md)
+- **BTCUSD data research + UI plan:** [`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md)
 - **Advanced Charts implementation roadmap:** [`MARKETS_ADVANCED_CHARTS_ROADMAP.md`](./MARKETS_ADVANCED_CHARTS_ROADMAP.md)
 - **Chart datafeed evaluation (MT5 + Advanced Charts licensing/feasibility):** [`MARKETS_CHART_DATAFEED_EVALUATION.md`](./MARKETS_CHART_DATAFEED_EVALUATION.md)
 - **Implementation plan (2-week, BTCUSD first):** [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md)

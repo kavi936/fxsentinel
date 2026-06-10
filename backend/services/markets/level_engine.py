@@ -1,7 +1,8 @@
 """
-Deterministic structured levels from ohlc_store — v0 (BTCUSD).
+Deterministic structured levels from ohlc_store — v0 + v1 volume profile (BTCUSD).
 
-Algorithms: PDH/PDL/PDC, weekly H/L, 4H session range, round-number POI confluence.
+v0: PDH/PDL/PDC, weekly H/L, 4H session range, round-number POI.
+v1: 5-day 4H volume POC + value area (VAH/VAL) from feature_engine.
 """
 
 from __future__ import annotations
@@ -9,7 +10,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
+from services.markets.feature_engine import PROFILE_LOOKBACK_BARS_4H, compute_volume_profile
 from services.markets.market_registry import get_market
+from services.markets.market_timeframes import OHLC_MAX_BARS
 from services.markets.ohlc_ingest_binance import ingest_market, resolution_to_binance_interval
 from services.markets.ohlc_store import get_bar_list, load_bars
 
@@ -17,22 +20,29 @@ Level = Dict[str, Any]
 
 POI_ROUND_PCT = 0.003
 H4_SESSION_BARS = 6
+LEVEL_ENGINE_VERSION = "v1"
 
 
 def _day_tag(ts: int) -> str:
     return datetime.fromtimestamp(ts, tz=timezone.utc).strftime("%Y%m%d")
 
 
-def _ensure_bars(market_id: str, resolution: str, market: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _ensure_bars(
+    market_id: str,
+    resolution: str,
+    market: Dict[str, Any],
+    *,
+    min_bars: int = 2,
+) -> List[Dict[str, Any]]:
     bars = get_bar_list(market_id, resolution)
-    if bars:
-        return bars
+    need_ingest = len(bars) < min_bars
 
     if market.get("ohlc_source") == "binance" and market.get("binance_symbol"):
-        if resolution_to_binance_interval(resolution):
-            ingest_market(market_id, market["binance_symbol"], resolution, limit=500)
+        if resolution_to_binance_interval(resolution) and need_ingest:
+            limit = OHLC_MAX_BARS if resolution == "240" else 500
+            ingest_market(market_id, market["binance_symbol"], resolution, limit=limit)
             return get_bar_list(market_id, resolution)
-    return []
+    return bars
 
 
 def build_structured_levels(market_id: str) -> List[Level]:
@@ -45,7 +55,7 @@ def build_structured_levels(market_id: str) -> List[Level]:
         return []
 
     daily = _ensure_bars(market_id, "D", market)
-    h4 = _ensure_bars(market_id, "240", market)
+    h4 = _ensure_bars(market_id, "240", market, min_bars=PROFILE_LOOKBACK_BARS_4H)
 
     if len(daily) < 2:
         return []
@@ -192,14 +202,55 @@ def build_structured_levels(market_id: str) -> List[Level]:
             }
         )
 
+    profile = compute_volume_profile(h4)
+    if profile:
+        vol_tag = _day_tag(int(h4[-1]["time"]))
+        metrics = profile.get("feature_metrics") or {}
+        levels.append(
+            {
+                "level_id": f"{prefix}_vol_poc_{vol_tag}",
+                "kind": "poi",
+                "label": "Volume POC (5D 4H)",
+                "price": profile["poc"],
+                "basis": "volume_poc",
+                "timeframe": "4H",
+                "horizon": "swing",
+                "as_of": as_of,
+                "source": "level_engine_v1",
+                "feature_metrics": metrics,
+            }
+        )
+        levels.append(
+            {
+                "level_id": f"{prefix}_vol_va_{vol_tag}",
+                "kind": "range",
+                "label": "Value area (5D 4H)",
+                "price_low": profile["val"],
+                "price_high": profile["vah"],
+                "basis": "value_area_4h_5d",
+                "horizon": "swing",
+                "timeframe": "4H",
+                "as_of": as_of,
+                "source": "level_engine_v1",
+                "feature_metrics": metrics,
+            }
+        )
+
     return levels
 
 
 def ohlc_quality(market_id: str) -> Dict[str, Any]:
-    doc = load_bars(market_id, "240") or load_bars(market_id, "D")
+    doc_4h = load_bars(market_id, "240")
+    doc_d = load_bars(market_id, "D")
+    doc = doc_4h or doc_d
+    h4 = get_bar_list(market_id, "240")
+    enriched = sum(1 for b in h4 if b.get("quote_volume") is not None)
     return {
         "ohlc_as_of": doc.get("as_of") if doc else None,
         "ohlc_source": doc.get("source") if doc else None,
-        "bar_count_4h": len(get_bar_list(market_id, "240")),
+        "bar_count_4h": len(h4),
         "bar_count_1d": len(get_bar_list(market_id, "D")),
+        "levels_version": LEVEL_ENGINE_VERSION,
+        "enriched_bars_4h": enriched,
+        "volume_profile_ok": len(h4) >= PROFILE_LOOKBACK_BARS_4H,
     }

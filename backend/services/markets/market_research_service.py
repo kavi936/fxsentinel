@@ -8,13 +8,12 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from services.markets.level_engine import build_structured_levels, ohlc_quality
-from services.markets.market_news_filter import fetch_btc_market_news
+from services.markets.market_context_service import build_platform_context, get_cross_asset_ids
+from services.markets.market_profile import load_market_profile
 from services.markets.market_quote_service import get_market_live_quote
 from services.markets.market_registry import get_market
 from services.markets.market_timeframes import OHLC_MAX_BARS
 from services.markets.ohlc_ingest_binance import ingest_market
-
-BTC_CROSS_ASSETS = ("ETHUSDT", "SPX", "VIX", "US10Y", "GOLD")
 
 try:
     from services.tradingview_market_data import fetch_tradingview_quotes
@@ -120,12 +119,12 @@ def _headline_emphasis(verdict: Dict[str, str]) -> List[str]:
     return phrases[:2]
 
 
-def _build_cross_assets(quotes: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _build_cross_assets(quotes: Dict[str, Any], asset_ids: tuple) -> List[Dict[str, Any]]:
     from services.tradingview_instruments import instrument_by_id
 
     inst_map = instrument_by_id()
     out: List[Dict[str, Any]] = []
-    for inst_id in BTC_CROSS_ASSETS:
+    for inst_id in asset_ids:
         row = quotes.get(inst_id) or {}
         inst = inst_map.get(inst_id, {})
         out.append(
@@ -182,9 +181,14 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
 
     quote_row = live_quote if live_quote.get("price") is not None else {}
 
+    profile = load_market_profile(market_id)
+    cross_asset_ids = get_cross_asset_ids(profile)
+
     cross_assets_quotes: Dict[str, Any] = {}
-    if fetch_tradingview_quotes:
+    if fetch_tradingview_quotes and cross_asset_ids:
         cross_assets_quotes = fetch_tradingview_quotes() or {}
+
+    platform_ctx = build_platform_context(market_id)
 
     verdict = _deterministic_verdict(levels, spot)
     headline = _deterministic_headline(levels, spot, market.get("label", market_id))
@@ -206,9 +210,11 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
         },
         "verdict": verdict,
         "structured_levels": levels,
-        "cross_assets": _build_cross_assets(cross_assets_quotes) if market_id == "BTCUSD" else [],
-        "catalysts": [],
-        "news": fetch_btc_market_news(5) if market_id == "BTCUSD" else [],
+        "cross_assets": _build_cross_assets(cross_assets_quotes, cross_asset_ids) if cross_asset_ids else [],
+        "catalysts": platform_ctx.get("catalysts") or [],
+        "macro_context": platform_ctx.get("macro_context") or {},
+        "sentiment": platform_ctx.get("sentiment") or {},
+        "news": platform_ctx.get("news") or [],
         "thesis": {
             "headline": "Deterministic structure snapshot",
             "body": verdict["day_summary"],
@@ -217,7 +223,7 @@ def build_research(market_id: str, *, refresh: bool = True) -> Dict[str, Any]:
         "latest_run": None,
         "data_quality": {
             **quality,
-            "levels_ok": len(levels) >= 3,
-            "note": "level_engine_v0 · global GPT run not attached",
+            "levels_ok": len(levels) >= 5 and any(l.get("basis") == "volume_poc" for l in levels),
+            "note": "level_engine_v1 · global GPT run not attached",
         },
     }

@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CandlestickSeries, createChart } from 'lightweight-charts';
 import { useMarketOhlc } from '../../hooks/useMarketOhlc';
 import { applyStructuredLevels, clearPriceLines, filterLevelsByLayer } from './marketChartOverlays';
 import { applyRangeBands, removeRangeBands, updateRangeBands } from './marketChartRangeBands';
 import { MARKET_CHART_TIMEFRAMES, MARKET_OHLC_BAR_LIMIT } from './marketChartTimeframes';
 import { CANDLE_SERIES_OPTIONS, createChartOptions } from './marketChartTheme';
+import { captureChartViewport, fitChartContent, restoreChartViewport } from './marketChartViewport';
 import MarketChartToolbar from './MarketChartToolbar';
 import {
   formatTickerPercent,
@@ -34,11 +35,22 @@ function toCandleData(bars) {
   }));
 }
 
+function barsSeriesKey(timeframe, bars) {
+  if (!bars.length) return `${timeframe}:empty`;
+  return `${timeframe}:${bars.length}:${bars[0].time}:${bars[bars.length - 1].time}`;
+}
+
+function ohlcMatchesTimeframe(meta, apiTf) {
+  if (!meta?.timeframe || !apiTf) return false;
+  return String(meta.timeframe).toUpperCase() === String(apiTf).toUpperCase();
+}
+
 /**
  * FXSentinel research chart — our OHLC + system level overlays (read-only).
  */
 const LAYER_TOGGLES = [
-  { id: 'levels', label: 'Levels' },
+  { id: 'levels', label: 'Structure' },
+  { id: 'volume', label: 'Volume' },
   { id: 'poi', label: 'POI' },
   { id: 'ranges', label: 'Ranges' },
 ];
@@ -55,22 +67,30 @@ function MarketChart({
   const seriesRef = useRef(null);
   const bandSeriesRef = useRef([]);
   const priceLinesRef = useRef([]);
-  const prevBarsLenRef = useRef(0);
-  const prevOverlayKeyRef = useRef('');
+  const prevBarsKeyRef = useRef('');
+  const prevLevelsKeyRef = useRef('');
+  const viewportByTfRef = useRef({});
+  const pendingTimeRangeRef = useRef(null);
+  const timeframeRef = useRef('4H');
+  const isRestoringViewportRef = useRef(false);
+  const hasInitialFitRef = useRef(false);
 
   const [timeframe, setTimeframe] = useState('4H');
-  const [layers, setLayers] = useState({ levels: true, poi: true, ranges: true });
+  const [layers, setLayers] = useState({ levels: true, volume: true, poi: false, ranges: false });
   const tfConfig = TIMEFRAMES.find((t) => t.id === timeframe) || TIMEFRAMES[1];
+
+  timeframeRef.current = timeframe;
 
   const visibleLevels = useMemo(
     () => filterLevelsByLayer(structuredLevels, layers),
     [structuredLevels, layers]
   );
 
-  const overlayKey = useMemo(
+  const levelsKey = useMemo(
     () =>
       [
         layers.levels,
+        layers.volume,
         layers.poi,
         layers.ranges,
         structuredLevels.map((l) => l.level_id).join(','),
@@ -89,8 +109,76 @@ function MarketChart({
     limit: MARKET_OHLC_BAR_LIMIT,
   });
 
+  const barsReady = bars.length > 0 && ohlcMatchesTimeframe(meta, tfConfig.apiTf);
+
   const liveTone = liveQuote ? (isTickerChangePositive(liveQuote.change, liveQuote.changePercent) ? 'up' : 'down') : '';
   const quoteLabel = liveQuote?.instrument_id || liveQuote?.symbol || '—';
+
+  const persistViewport = useCallback(() => {
+    if (isRestoringViewportRef.current) return;
+    const chart = chartRef.current;
+    const series = seriesRef.current;
+    if (!chart) return;
+    const snap = captureChartViewport(chart, series);
+    if (snap?.timeRange) {
+      viewportByTfRef.current[timeframeRef.current] = snap;
+    }
+  }, []);
+
+  const handleResetView = useCallback(() => {
+    const chart = chartRef.current;
+    const series = seriesRef.current;
+    if (!chart) return;
+
+    isRestoringViewportRef.current = true;
+    fitChartContent(chart, series);
+    requestAnimationFrame(() => {
+      persistViewport();
+      isRestoringViewportRef.current = false;
+    });
+  }, [persistViewport]);
+
+  const applyViewportAfterSeriesChange = useCallback(
+    (chart, series, barCount) => {
+      const tf = timeframeRef.current;
+      const saved = viewportByTfRef.current[tf];
+      const pending = pendingTimeRangeRef.current;
+
+      isRestoringViewportRef.current = true;
+
+      const finish = () => {
+        requestAnimationFrame(() => {
+          persistViewport();
+          isRestoringViewportRef.current = false;
+        });
+      };
+
+      if (saved?.timeRange) {
+        pendingTimeRangeRef.current = null;
+        restoreChartViewport(chart, series, saved, {
+          barCount,
+          restorePrice: false,
+          onDone: finish,
+        });
+        return;
+      }
+
+      if (pending?.from != null && pending?.to != null) {
+        pendingTimeRangeRef.current = null;
+        restoreChartViewport(chart, series, { timeRange: pending }, {
+          barCount,
+          restorePrice: false,
+          onDone: finish,
+        });
+        return;
+      }
+
+      fitChartContent(chart, series);
+      hasInitialFitRef.current = true;
+      finish();
+    },
+    [persistViewport]
+  );
 
   /* Chart shell */
   useEffect(() => {
@@ -99,6 +187,11 @@ function MarketChart({
 
     const chart = createChart(el, createChartOptions(el.clientWidth, el.clientHeight || 320));
     chartRef.current = chart;
+
+    const onVisibleRangeChange = () => {
+      persistViewport();
+    };
+    chart.timeScale().subscribeVisibleLogicalRangeChange(onVisibleRangeChange);
 
     const ro = new ResizeObserver(() => {
       const { clientWidth, clientHeight } = el;
@@ -110,6 +203,7 @@ function MarketChart({
 
     return () => {
       ro.disconnect();
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(onVisibleRangeChange);
       removeRangeBands(chart, bandSeriesRef.current);
       bandSeriesRef.current = [];
       if (seriesRef.current) {
@@ -124,48 +218,97 @@ function MarketChart({
       }
       chart.remove();
       chartRef.current = null;
-      prevBarsLenRef.current = 0;
-      prevOverlayKeyRef.current = '';
+      prevBarsKeyRef.current = '';
+      prevLevelsKeyRef.current = '';
+      hasInitialFitRef.current = false;
     };
-  }, []);
+  }, [persistViewport]);
 
-  /* Candles, range fills, and price lines */
+  /* Double-click chart pane → fit all candles */
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+
+    const onDoubleClick = (event) => {
+      event.preventDefault();
+      handleResetView();
+    };
+    el.addEventListener('dblclick', onDoubleClick);
+    return () => el.removeEventListener('dblclick', onDoubleClick);
+  }, [handleResetView]);
+
+  /* Candle series — rebuild only when OHLC series identity changes (timeframe / market / full reload) */
   useEffect(() => {
     const chart = chartRef.current;
-    if (!chart || !bars.length) return;
+    if (!chart || !barsReady) return;
 
+    const barsKey = barsSeriesKey(timeframe, bars);
     const candleData = toCandleData(bars);
-    const fullRebuild =
-      bars.length !== prevBarsLenRef.current || overlayKey !== prevOverlayKeyRef.current;
 
-    if (fullRebuild) {
-      if (seriesRef.current) {
-        clearPriceLines(seriesRef.current, priceLinesRef.current);
-        priceLinesRef.current = [];
-        chart.removeSeries(seriesRef.current);
-        seriesRef.current = null;
-      }
-      removeRangeBands(chart, bandSeriesRef.current);
-      bandSeriesRef.current = applyRangeBands(chart, rangeLevels, bars);
-
-      const series = chart.addSeries(CandlestickSeries, CANDLE_SERIES_OPTIONS);
-      seriesRef.current = series;
-      series.setData(candleData);
-      chart.timeScale().fitContent();
-
-      priceLinesRef.current = applyStructuredLevels(series, visibleLevels);
-
-      prevBarsLenRef.current = bars.length;
-      prevOverlayKeyRef.current = overlayKey;
+    if (barsKey === prevBarsKeyRef.current && seriesRef.current) {
+      seriesRef.current.update(candleData[candleData.length - 1]);
+      updateRangeBands(bandSeriesRef.current, bars, rangeLevels);
       return;
     }
 
-    const series = seriesRef.current;
-    if (series) {
-      series.update(candleData[candleData.length - 1]);
+    if (seriesRef.current) {
+      clearPriceLines(seriesRef.current, priceLinesRef.current);
+      priceLinesRef.current = [];
+      try {
+        chart.removeSeries(seriesRef.current);
+      } catch {
+        /* ignore */
+      }
+      seriesRef.current = null;
     }
-    updateRangeBands(bandSeriesRef.current, bars, rangeLevels);
-  }, [bars, overlayKey, rangeLevels, visibleLevels]);
+
+    const series = chart.addSeries(CandlestickSeries, CANDLE_SERIES_OPTIONS);
+    seriesRef.current = series;
+    series.setData(candleData);
+
+    applyViewportAfterSeriesChange(chart, series, candleData.length);
+
+    prevBarsKeyRef.current = barsKey;
+    prevLevelsKeyRef.current = '';
+  }, [bars, barsReady, timeframe, rangeLevels, applyViewportAfterSeriesChange]);
+
+  /* Overlays — layer toggles update price lines / bands only (no candle tear-down) */
+  useEffect(() => {
+    const chart = chartRef.current;
+    const series = seriesRef.current;
+    if (!chart || !series || !barsReady) return;
+
+    if (levelsKey === prevLevelsKeyRef.current) return;
+
+    clearPriceLines(series, priceLinesRef.current);
+    priceLinesRef.current = applyStructuredLevels(series, visibleLevels);
+
+    removeRangeBands(chart, bandSeriesRef.current);
+    bandSeriesRef.current = applyRangeBands(chart, rangeLevels, bars);
+
+    prevLevelsKeyRef.current = levelsKey;
+  }, [levelsKey, visibleLevels, rangeLevels, bars, barsReady]);
+
+  const handleTimeframeChange = (id) => {
+    const chart = chartRef.current;
+    const series = seriesRef.current;
+    if (chart && series) {
+      const snap = captureChartViewport(chart, series);
+      if (snap) {
+        viewportByTfRef.current[timeframe] = snap;
+        if (snap.timeRange) {
+          pendingTimeRangeRef.current = snap.timeRange;
+        }
+      }
+    }
+    setTimeframe(id);
+    prevBarsKeyRef.current = '';
+    prevLevelsKeyRef.current = '';
+  };
+
+  const handleLayerToggle = (id) => {
+    setLayers((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   return (
     <div className="markets-research-chart" aria-label={`${marketId} research chart`}>
@@ -173,14 +316,11 @@ function MarketChart({
         paneRef={paneRef}
         timeframes={TIMEFRAMES}
         timeframe={timeframe}
-        onTimeframeChange={(id) => {
-          setTimeframe(id);
-          prevBarsLenRef.current = 0;
-          prevOverlayKeyRef.current = '';
-        }}
+        onTimeframeChange={handleTimeframeChange}
         layers={layers}
         layerOptions={LAYER_TOGGLES}
-        onLayerToggle={(id) => setLayers((prev) => ({ ...prev, [id]: !prev[id] }))}
+        onLayerToggle={handleLayerToggle}
+        onResetView={handleResetView}
         liveQuote={liveQuote}
         quoteLoading={quoteLoading}
         liveTone={liveTone}
@@ -198,11 +338,16 @@ function MarketChart({
             {error}
           </div>
         )}
-        <div ref={containerRef} className="markets-research-chart__canvas" />
+        <div
+          ref={containerRef}
+          className="markets-research-chart__canvas"
+          title="Double-click to reset view"
+        />
       </div>
 
       <footer className="markets-research-chart__footer">
         <span>{formatSourceFooter(meta)}</span>
+        <span className="markets-research-chart__footer-hint">Double-click chart to reset view</span>
         {visibleLevels.length > 0 && (
           <span className="markets-research-chart__footer-levels">
             {visibleLevels.length} overlays visible

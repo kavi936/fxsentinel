@@ -2,6 +2,7 @@ import { BaselineSeries } from 'lightweight-charts';
 
 const RANGE_FILL = {
   session_value_zone_4h: 'rgba(255, 68, 68, 0.12)',
+  value_area_4h_5d: 'rgba(251, 191, 36, 0.14)',
   target_range: 'rgba(255, 68, 68, 0.12)',
   default: 'rgba(255, 68, 68, 0.1)',
 };

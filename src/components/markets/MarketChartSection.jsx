@@ -72,6 +72,9 @@ function MarketChartSection({
             structuredLevels={research?.structured_levels}
             invalidation={research?.invalidation}
             crossAssets={research?.cross_assets}
+            catalysts={research?.catalysts}
+            macroContext={research?.macro_context}
+            sentiment={research?.sentiment}
             fallbackNews={research?.news}
             liveNews={liveNews}
             newsLoading={newsLoading}
