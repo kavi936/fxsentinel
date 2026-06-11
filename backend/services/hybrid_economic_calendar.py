@@ -23947,7 +23947,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-7.2M',
                 'forecast': 'N/A',
                 'previous': '-8.0M'
             },
@@ -23957,7 +23957,7 @@ class HybridEconomicCalendar:
                 'time': '17:01 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.54|2.6',
                 'forecast': 'N/A',
                 'previous': '4.47|2.4'
             },
@@ -23967,7 +23967,7 @@ class HybridEconomicCalendar:
                 'time': '18:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-292.6B',
                 'forecast': 'N/A',
                 'previous': '215.0B'
             },
@@ -23977,7 +23977,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-35%',
                 'forecast': 'N/A',
                 'previous': '-34%'
             },
@@ -23987,7 +23987,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.8',
                 'forecast': 'N/A',
                 'previous': '3.8'
             },
@@ -23997,25 +23997,16 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.5%',
                 'forecast': 'N/A',
                 'previous': '5.6%'
             },
 
             # THURSDAY, JUNE 11
-            {
-                'title': 'German WPI m/m',
-                'date': 'Thu, Jun 11',
-                'time': '06:00 UTC',
-                'currency': 'EUR',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '2.0%'
-            },
+            
             {
                 'title': 'M2 Money Supply y/y',
-                'date': 'Thu, Jun 11',
+                'date': 'Fri, Jun 12',
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
@@ -24025,7 +24016,7 @@ class HybridEconomicCalendar:
             },
             {
                 'title': 'New Loans',
-                'date': 'Thu, Jun 11',
+                'date': 'Fri, Jun 12',
                 'time': '08:03 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
@@ -24049,7 +24040,7 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'EUR',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.40%',
                 'forecast': '2.40%',
                 'previous': '2.15%'
             },
@@ -24069,7 +24060,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-7.6%',
                 'forecast': 'N/A',
                 'previous': '10.3%'
             },
@@ -24079,9 +24070,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.5%',
-                'previous': '1.0%'
+                'previous': '0.7%'
             },
             {
                 'title': 'PPI m/m',
@@ -24089,9 +24080,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.1%',
                 'forecast': '0.7%',
-                'previous': '1.4%'
+                'previous': '1.1%'
             },
             {
                 'title': 'Unemployment Claims',
@@ -24099,7 +24090,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '229K',
                 'forecast': 'N/A',
                 'previous': '225K'
             },
@@ -24119,7 +24110,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '108B',
                 'forecast': 'N/A',
                 'previous': '95B'
             },
