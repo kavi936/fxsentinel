@@ -74,6 +74,7 @@ backend/data/ohlc/
 # Local admin user exports (PII — never commit)
 user_dashboard_export.csv
 marketing_opt_in_export.csv
+outreach/
 analysis_history.json
 news_cache.json
 news_history.json
