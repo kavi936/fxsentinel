@@ -24970,9 +24970,9 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.8%',
                 'forecast': '0.8%',
-                'previous': '0.2%'
+                'previous': '0.5%'
             },
 
             # THURSDAY, JUNE 18
@@ -24982,9 +24982,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '31.2K',
                 'forecast': '25.8K',
-                'previous': '26.5K'
+                'previous': '8.3K'
             },
             {
                 'title': 'Average Earnings Index 3m/y',
@@ -24992,9 +24992,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '4.4%',
                 'forecast': '4.0%',
-                'previous': '4.1%'
+                'previous': '4.4%'
             },
             {
                 'title': 'Unemployment Rate',
@@ -25002,7 +25002,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4.9%',
                 'forecast': '5.0%',
                 'previous': '5.0%'
             },
@@ -25042,7 +25042,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'CHF',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.00%',
                 'forecast': '0.00%',
                 'previous': '0.00%'
             },
@@ -25062,7 +25062,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '15.7B',
                 'forecast': '18.5B',
                 'previous': '14.9B'
             },
@@ -25072,7 +25072,7 @@ class HybridEconomicCalendar:
                 'time': '09:03 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.38|1.9',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
@@ -25102,7 +25102,7 @@ class HybridEconomicCalendar:
                 'time': '11:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2-0-7',
                 'forecast': '1-0-8',
                 'previous': '1-0-8'
             },
@@ -25112,7 +25112,7 @@ class HybridEconomicCalendar:
                 'time': '11:00 UTC',
                 'currency': 'GBP',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '3.75%',
                 'forecast': '3.75%',
                 'previous': '3.75%'
             },
@@ -25122,9 +25122,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '1.4%',
-                'previous': '2.0%'
+                'previous': '1.6%'
             },
             {
                 'title': 'RMPI m/m',
@@ -25132,7 +25132,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '1.8%',
                 'previous': '2.6%'
             },
@@ -25142,7 +25142,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '10.3',
                 'forecast': '11.4',
                 'previous': '-0.4'
             },
@@ -25152,7 +25152,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '226K',
                 'forecast': '225K',
                 'previous': '229K'
             },
@@ -25162,9 +25162,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.1%',
                 'forecast': '0.1%',
-                'previous': '0.1%'
+                'previous': '0.2%'
             },
             {
                 'title': 'Natural Gas Storage',
@@ -25172,7 +25172,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '73B',
                 'forecast': 'N/A',
                 'previous': '108B'
             },
