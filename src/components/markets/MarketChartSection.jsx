@@ -19,10 +19,17 @@ function MarketChartSection({
 }) {
   const headline = research?.headline || research?.thesis?.headline || '';
 
-  const { items: liveNews, loading: newsLoading, error: newsError } = useMarketNews({
+  const {
+    items: liveNews,
+    loading: newsLoading,
+    error: newsError,
+    refresh: refreshNews,
+    marketLabel,
+    isEnabled: newsEnabled,
+  } = useMarketNews({
     enabled: marketId === 'BTCUSD',
     marketId,
-    maxItems: 6,
+    maxItems: 12,
   });
 
   const { containerRef, isDragging, onHandlePointerDown, leftWidthPercent } =
@@ -85,6 +92,9 @@ function MarketChartSection({
         liveNews={liveNews}
         newsLoading={newsLoading}
         newsError={newsError}
+        newsRefreshing={newsLoading && liveNews.length > 0}
+        onNewsRefresh={newsEnabled ? refreshNews : undefined}
+        marketLabel={marketLabel}
         showNews={marketId === 'BTCUSD'}
       />
     </section>

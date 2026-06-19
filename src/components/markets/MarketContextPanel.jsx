@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useMarketsContextSplitResize } from '../../hooks/useMarketsContextSplitResize';
+import { mergeMarketNews } from './marketNewsFilter';
+import MarketLiveNews from './MarketLiveNews';
 
 function formatAsOf(iso) {
   if (!iso) return '';
@@ -43,14 +45,22 @@ function MarketContextPanel({
   liveNews = [],
   newsLoading = false,
   newsError = null,
+  newsRefreshing = false,
+  onNewsRefresh,
+  marketLabel = 'Market',
   showNews = true,
+  maxNewsItems = 12,
 }) {
   const hasSentiment = sentiment?.risk_regime || sentiment?.fear_greed?.value != null || sentiment?.volatility;
   const hasMacro = macroContext?.us_scan_summary || macroContext?.short_term_bias;
   const hasCatalysts = catalysts.length > 0;
   const hasContext = hasSentiment || hasMacro || hasCatalysts;
 
-  const newsItems = liveNews.length > 0 ? liveNews : fallbackNews;
+  const newsItems = useMemo(
+    () => mergeMarketNews(liveNews, fallbackNews, maxNewsItems),
+    [liveNews, fallbackNews, maxNewsItems],
+  );
+  const usingFallback = liveNews.length === 0 && fallbackNews.length > 0 && newsItems.length > 0;
 
   const { containerRef, isDragging, onHandlePointerDown, leftWidthPercent } = useMarketsContextSplitResize({
     enabled: showNews,
@@ -117,38 +127,16 @@ function MarketContextPanel({
         />
 
         <div className="markets-context-split__news-wrap">
-          <div className="markets-context-panel__container">
-            <p className="markets-context-panel__heading">Live news</p>
-            <div className="markets-context-panel__body">
-              {newsLoading && newsItems.length === 0 && (
-                <p className="markets-context-panel__status">Loading headlines…</p>
-              )}
-              {!newsLoading && newsError && newsItems.length === 0 && (
-                <p className="markets-context-panel__status">Headlines unavailable · {newsError}</p>
-              )}
-              {!newsLoading && !newsError && newsItems.length === 0 && (
-                <p className="markets-context-panel__status">No BTC-related headlines right now.</p>
-              )}
-              {newsError && newsItems.length > 0 && (
-                <p className="markets-context-panel__status markets-context-panel__status--muted">
-                  Showing cached headlines
-                </p>
-              )}
-              <ul className="markets-context-panel__news-list">
-                {newsItems.map((n, i) => (
-                  <li key={n.id || `${n.title}-${i}`} className="markets-context-panel__news-item">
-                    <span className="markets-context-panel__news-title">{n.title}</span>
-                    {(n.source || n.published_at) && (
-                      <span className="markets-context-panel__news-meta">
-                        {[n.source, n.published_at ? formatAsOf(n.published_at) : null]
-                          .filter(Boolean)
-                          .join(' · ')}
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <div className="markets-context-panel__container markets-context-panel__container--news">
+            <MarketLiveNews
+              items={newsItems}
+              loading={newsLoading}
+              error={newsError}
+              marketLabel={marketLabel}
+              onRefresh={onNewsRefresh}
+              refreshing={newsRefreshing}
+              usingFallback={usingFallback}
+            />
           </div>
         </div>
       </div>
