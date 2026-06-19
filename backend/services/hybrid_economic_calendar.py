@@ -25182,7 +25182,7 @@ class HybridEconomicCalendar:
                 'time': '20:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '103.1B',
                 'forecast': '72.5B',
                 'previous': '81.3B'
             },
@@ -25192,7 +25192,7 @@ class HybridEconomicCalendar:
                 'time': '22:45 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '800M',
                 'forecast': '875M',
                 'previous': '1920M'
             },
@@ -25202,7 +25202,7 @@ class HybridEconomicCalendar:
                 'time': '23:01 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-23',
                 'forecast': '-23',
                 'previous': '-23'
             },
@@ -25212,7 +25212,7 @@ class HybridEconomicCalendar:
                 'time': '23:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.4%',
                 'forecast': '1.4%',
                 'previous': '1.4%'
             },
@@ -25234,7 +25234,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.8%',
                 'previous': '1.2%'
             },
@@ -25244,9 +25244,9 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '1.2%',
                 'forecast': '0.5%',
-                'previous': '-1.3%'
+                'previous': '-1.0%'
             },
             {
                 'title': 'Public Sector Net Borrowing',
@@ -25254,7 +25254,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '23.3B',
                 'forecast': '18.9B',
                 'previous': '24.3B'
             },
