@@ -3,7 +3,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
-        "asOf": "2026-04-29",
+        "asOf": "2026-06-17",
         "chartData": [
           5.5,
           5.5,
@@ -26,6 +26,7 @@
           4.25,
           4.0,
           4.0,
+          3.75,
           3.75,
           3.75,
           3.75,
@@ -56,7 +57,8 @@
           "2025-12-10",
           "2026-01-28",
           "2026-03-18",
-          "2026-04-29"
+          "2026-04-29",
+          "2026-06-17"
         ],
         "source": "Federal Reserve",
         "sourceUrl": "https://www.federalreserve.gov/releases/h15/",
@@ -422,8 +424,8 @@
   "EUR": {
     "indicators": {
       "interest-rate": {
-        "currentValue": "2.15%",
-        "asOf": "2026-04-30",
+        "currentValue": "2.4%",
+        "asOf": "2026-06-11",
         "chartData": [
           4.5,
           4.5,
@@ -452,7 +454,9 @@
           2.15,
           2.15,
           2.15,
-          2.15
+          2.15,
+          2.15,
+          2.4
         ],
         "chartDates": [
           "2024-01-25",
@@ -482,7 +486,9 @@
           "2026-01-31",
           "2026-02-05",
           "2026-03-19",
-          "2026-04-30"
+          "2026-04-30",
+          "2026-05-31",
+          "2026-06-11"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.en.html",
@@ -493,8 +499,8 @@
         "description": "Main Refinancing Rate - The primary monetary policy tool set by the European Central Bank (ECB)."
       },
       "inflation": {
-        "currentValue": "3.0%",
-        "asOf": "2026-04-01",
+        "currentValue": "3.2%",
+        "asOf": "2026-05-01",
         "chartData": [
           2.8,
           2.6,
@@ -523,7 +529,8 @@
           1.7,
           1.9,
           2.6,
-          3.0
+          3.0,
+          3.2
         ],
         "chartDates": [
           "2024-01-01",
@@ -553,7 +560,8 @@
           "2026-01-01",
           "2026-02-01",
           "2026-03-01",
-          "2026-04-01"
+          "2026-04-01",
+          "2026-05-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -564,8 +572,8 @@
         "description": "Harmonized Index of Consumer Prices (HICP) - The official measure of inflation for the eurozone."
       },
       "core-inflation-YoY": {
-        "currentValue": "2.2%",
-        "asOf": "2026-04-01",
+        "currentValue": "2.6%",
+        "asOf": "2026-05-01",
         "chartData": [
           3.3,
           3.1,
@@ -594,7 +602,8 @@
           2.2,
           2.4,
           2.3,
-          2.2
+          2.2,
+          2.6
         ],
         "chartDates": [
           "2024-01-01",
@@ -624,7 +633,8 @@
           "2026-01-01",
           "2026-02-01",
           "2026-03-01",
-          "2026-04-01"
+          "2026-04-01",
+          "2026-05-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/hicp",
@@ -692,11 +702,11 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "6.2%",
-        "asOf": "2026-03-01",
+        "currentValue": "6.3%",
+        "asOf": "2026-04-01",
         "chartData": [
-          6.6,
-          6.6,
+          6.5,
+          6.5,
           6.5,
           6.4,
           6.4,
@@ -704,24 +714,25 @@
           6.4,
           6.3,
           6.3,
-          6.3,
           6.2,
-          6.3,
-          6.3,
-          6.3,
-          6.4,
-          6.3,
-          6.4,
-          6.4,
-          6.4,
-          6.4,
-          6.4,
-          6.4,
-          6.3,
           6.2,
-          6.1,
+          6.2,
+          6.4,
           6.3,
-          6.2
+          6.3,
+          6.3,
+          6.3,
+          6.3,
+          6.3,
+          6.4,
+          6.3,
+          6.3,
+          6.3,
+          6.3,
+          6.3,
+          6.4,
+          6.3,
+          6.3
         ],
         "chartDates": [
           "2024-01-01",
@@ -750,7 +761,8 @@
           "2025-12-01",
           "2026-01-01",
           "2026-02-01",
-          "2026-03-01"
+          "2026-03-01",
+          "2026-04-01"
         ],
         "source": "European Central Bank",
         "sourceUrl": "https://ec.europa.eu/eurostat/web/lfs/data/main-tables",
@@ -841,7 +853,7 @@
     "indicators": {
       "interest-rate": {
         "currentValue": "3.75%",
-        "asOf": "2026-04-20",
+        "asOf": "2026-06-18",
         "chartData": [
           5.25,
           5.25,
@@ -866,6 +878,8 @@
           4.0,
           4.0,
           4.0,
+          3.75,
+          3.75,
           3.75,
           3.75,
           3.75,
@@ -900,7 +914,9 @@
           "2026-01-31",
           "2026-02-05",
           "2026-03-19",
-          "2026-04-20"
+          "2026-04-20",
+          "2026-05-31",
+          "2026-06-18"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.bankofengland.co.uk/monetary-policy/the-interest-rate-bank-rate",
@@ -912,7 +928,7 @@
       },
       "inflation": {
         "currentValue": "2.8%",
-        "asOf": "2026-04-01",
+        "asOf": "2026-05-01",
         "chartData": [
           4.0,
           3.4,
@@ -941,6 +957,7 @@
           3.0,
           3.0,
           3.3,
+          2.8,
           2.8
         ],
         "chartDates": [
@@ -971,7 +988,8 @@
           "2026-01-01",
           "2026-02-01",
           "2026-03-01",
-          "2026-04-01"
+          "2026-04-01",
+          "2026-05-01"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.ons.gov.uk/economy/inflationandpriceindices",
@@ -982,8 +1000,8 @@
         "description": "Consumer Price Index (CPI) Year-over-Year - The official measure of inflation for the United Kingdom."
       },
       "core-inflation-YoY": {
-        "currentValue": "2.5%",
-        "asOf": "2026-04-01",
+        "currentValue": "2.6%",
+        "asOf": "2026-05-01",
         "chartData": [
           5.1,
           4.5,
@@ -1012,7 +1030,8 @@
           3.1,
           3.2,
           3.1,
-          2.5
+          2.5,
+          2.6
         ],
         "chartDates": [
           "2024-01-01",
@@ -1042,7 +1061,8 @@
           "2026-01-01",
           "2026-02-01",
           "2026-03-01",
-          "2026-04-01"
+          "2026-04-01",
+          "2026-05-01"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.ons.gov.uk/economy/inflationandpriceindices",
@@ -1106,8 +1126,8 @@
         "description": "gdp-growth description"
       },
       "unemployment": {
-        "currentValue": "5.0%",
-        "asOf": "2026-03-01",
+        "currentValue": "4.9%",
+        "asOf": "2026-04-01",
         "chartData": [
           4.0,
           4.2,
@@ -1135,7 +1155,8 @@
           5.2,
           5.2,
           4.9,
-          5.0
+          5.0,
+          4.9
         ],
         "chartDates": [
           "2024-01-01",
@@ -1164,7 +1185,8 @@
           "2025-12-01",
           "2026-01-01",
           "2026-02-01",
-          "2026-03-01"
+          "2026-03-01",
+          "2026-04-01"
         ],
         "source": "Bank of England",
         "sourceUrl": "https://www.ons.gov.uk/employmentandlabourmarket/peoplenotinwork/unemployment",
@@ -1254,8 +1276,8 @@
   "JPY": {
     "indicators": {
       "interest-rate": {
-        "currentValue": "0.75%",
-        "asOf": "2026-04-28",
+        "currentValue": "1.0%",
+        "asOf": "2026-06-16",
         "chartData": [
           -0.1,
           -0.1,
@@ -1283,7 +1305,8 @@
           0.75,
           0.75,
           0.75,
-          0.75
+          0.75,
+          1.0
         ],
         "chartDates": [
           "2024-01-23",
@@ -1312,7 +1335,8 @@
           "2025-12-19",
           "2026-01-23",
           "2026-03-19",
-          "2026-04-28"
+          "2026-04-28",
+          "2026-06-16"
         ],
         "source": "Bank of Japan",
         "sourceUrl": "https://www.boj.or.jp/en/mopo/",
