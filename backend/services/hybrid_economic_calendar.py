@@ -25296,7 +25296,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.00%',
                 'forecast': '3.00%',
                 'previous': '3.00%'
             },
@@ -25306,7 +25306,7 @@ class HybridEconomicCalendar:
                 'time': '01:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.50%',
                 'forecast': '3.50%',
                 'previous': '3.50%'
             },
@@ -25316,22 +25316,13 @@ class HybridEconomicCalendar:
                 'time': '03:00 UTC',
                 'currency': 'NZD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '5.1%',
                 'forecast': 'N/A',
                 'previous': '2.9%'
             },
 
             # MONDAY, JUNE 22
-            {
-                'title': 'Foreign Direct Investment ytd/y',
-                'date': 'Mon, Jun 22',
-                'time': '06:02 UTC',
-                'currency': 'CNY',
-                'impact': 'low',
-                'actual': 'TBD',
-                'forecast': 'N/A',
-                'previous': '-10.3%'
-            },
+            
             {
                 'title': 'German Buba President Nagel Speaks',
                 'date': 'Mon, Jun 22',
@@ -25348,7 +25339,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '1.0%',
                 'forecast': '0.7%',
                 'previous': '0.4%'
             },
@@ -25358,7 +25349,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.1%',
                 'forecast': '2.1%',
                 'previous': '2.1%'
             },
@@ -25368,7 +25359,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.0%',
                 'forecast': '2.0%',
                 'previous': '2.0%'
             },
@@ -25378,7 +25369,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '2.7%',
                 'forecast': '2.5%',
                 'previous': '2.5%'
             },
@@ -25388,7 +25379,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'CAD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.6%',
                 'forecast': 'N/A',
                 'previous': '0.2%'
             },
