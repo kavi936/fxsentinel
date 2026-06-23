@@ -25409,7 +25409,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-18',
                 'forecast': '-18',
                 'previous': '-19'
             },
@@ -25419,9 +25419,9 @@ class HybridEconomicCalendar:
                 'time': '23:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.2',
                 'forecast': 'N/A',
-                'previous': '50.2'
+                'previous': '50.7'
             },
             {
                 'title': 'Flash Services PMI',
@@ -25429,9 +25429,9 @@ class HybridEconomicCalendar:
                 'time': '23:00 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '49.9',
                 'forecast': 'N/A',
-                'previous': '47.7'
+                'previous': '48.7'
             },
             {
                 'title': 'Flash Manufacturing PMI',
@@ -25439,7 +25439,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '54.9',
                 'forecast': '54.5',
                 'previous': '54.5'
             },
