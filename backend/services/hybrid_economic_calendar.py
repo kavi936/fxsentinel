@@ -25451,7 +25451,7 @@ class HybridEconomicCalendar:
                 'time': '05:00 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.4%',
                 'forecast': '1.5%',
                 'previous': '1.4%'
             },
@@ -25461,9 +25461,9 @@ class HybridEconomicCalendar:
                 'time': '07:15 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '50.7',
                 'forecast': '50.1',
-                'previous': '48.9'
+                'previous': '49.7'
             },
             {
                 'title': 'French Flash Services PMI',
@@ -25471,9 +25471,9 @@ class HybridEconomicCalendar:
                 'time': '07:15 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '47.4',
                 'forecast': '45.7',
-                'previous': '42.9'
+                'previous': '44.3'
             },
             {
                 'title': 'German Flash Manufacturing PMI',
@@ -25481,7 +25481,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '50.0',
                 'forecast': '50.2',
                 'previous': '49.9'
             },
@@ -25491,7 +25491,7 @@ class HybridEconomicCalendar:
                 'time': '07:30 UTC',
                 'currency': 'EUR',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '46.8',
                 'forecast': '49.0',
                 'previous': '47.8'
             },
@@ -25501,7 +25501,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.3',
                 'forecast': '51.6',
                 'previous': '51.4'
             },
@@ -25511,7 +25511,7 @@ class HybridEconomicCalendar:
                 'time': '08:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '48.9',
                 'forecast': '48.6',
                 'previous': '46.4'
             },
@@ -25521,7 +25521,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '53.1',
                 'forecast': '53.5',
                 'previous': '53.7'
             },
@@ -25531,7 +25531,7 @@ class HybridEconomicCalendar:
                 'time': '08:30 UTC',
                 'currency': 'GBP',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '48.7',
                 'forecast': '50.0',
                 'previous': '47.9'
             },
@@ -25551,7 +25551,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-45',
                 'forecast': '-33',
                 'previous': '-41'
             },
@@ -25561,9 +25561,9 @@ class HybridEconomicCalendar:
                 'time': '12:15 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '30.8K',
                 'forecast': 'N/A',
-                'previous': '25.5K'
+                'previous': '26.5K'
             },
             {
                 'title': 'MPC Member Taylor Speaks',
@@ -25591,9 +25591,9 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '55.7',
                 'forecast': '54.6',
-                'previous': '55.3'
+                'previous': '55.1'
             },
             {
                 'title': 'Flash Services PMI',
@@ -25601,9 +25601,9 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '51.3',
                 'forecast': '51.0',
-                'previous': '50.9'
+                'previous': '50.7'
             },
             {
                 'title': 'Richmond Manufacturing Index',
@@ -25611,7 +25611,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '4',
                 'forecast': '8',
                 'previous': '13'
             },
@@ -25651,9 +25651,9 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '3.3%',
                 'forecast': '3.3%',
-                'previous': '3.0%'
+                'previous': '3.3%'
             },
             {
                 'title': 'CPI m/m',
@@ -25661,7 +25661,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '-0.7%',
                 'forecast': '-0.4%',
                 'previous': '0.4%'
             },
@@ -25671,7 +25671,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.0%',
                 'forecast': '4.3%',
                 'previous': '4.2%'
             },
@@ -25681,7 +25681,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.4%',
                 'forecast': '0.3%',
                 'previous': '0.3%'
             },
