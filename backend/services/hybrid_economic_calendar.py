@@ -25803,9 +25803,9 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '580K',
                 'forecast': '637K',
-                'previous': '622K'
+                'previous': '626K'
             },
             {
                 'title': 'Crude Oil Inventories',
@@ -25813,7 +25813,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-6.1M',
                 'forecast': 'N/A',
                 'previous': '-8.3M'
             },
@@ -25863,7 +25863,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '40.3K',
                 'forecast': '30.3K',
                 'previous': '-18.6K'
             },
@@ -25873,7 +25873,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '4.4%',
                 'forecast': '4.4%',
                 'previous': '4.5%'
             },
@@ -25883,7 +25883,7 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': '0.6%',
                 'previous': '-1.1%'
             },
@@ -25893,7 +25893,7 @@ class HybridEconomicCalendar:
                 'time': '01:35 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-19',
                 'forecast': 'N/A',
                 'previous': 'N/A'
             },
@@ -25905,7 +25905,7 @@ class HybridEconomicCalendar:
                 'time': '06:00 UTC',
                 'currency': 'EUR',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-29.2',
                 'forecast': '-27.6',
                 'previous': '-29.8'
             },
@@ -25925,7 +25925,7 @@ class HybridEconomicCalendar:
                 'time': '10:00 UTC',
                 'currency': 'GBP',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-54',
                 'forecast': '-41',
                 'previous': '-46'
             },
@@ -25935,7 +25935,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '0.3%',
                 'forecast': '0.3%',
                 'previous': '0.2%'
             },
@@ -25945,7 +25945,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'high',
-                'actual': 'TBD',
+                'actual': '2.1%',
                 'forecast': '1.6%',
                 'previous': '1.6%'
             },
@@ -25955,7 +25955,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '3.6%',
                 'forecast': '3.5%',
                 'previous': '3.5%'
             },
@@ -25965,7 +25965,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '215K',
                 'forecast': '226K',
                 'previous': '229K'
             },
@@ -25975,7 +25975,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '1.3%',
                 'forecast': '0.5%',
                 'previous': '1.1%'
             },
@@ -25985,7 +25985,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-4.5%',
                 'forecast': '-4.9%',
                 'previous': '7.9%'
             },
@@ -25995,7 +25995,7 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.4%',
                 'previous': '0.0%'
             },
@@ -26005,9 +26005,9 @@ class HybridEconomicCalendar:
                 'time': '12:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '0.7%',
                 'forecast': '0.6%',
-                'previous': '0.5%'
+                'previous': '0.4%'
             },
             {
                 'title': 'CB Leading Index m/m',
@@ -26015,9 +26015,9 @@ class HybridEconomicCalendar:
                 'time': '13:00 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-0.1%',
                 'forecast': 'N/A',
-                'previous': '-0.8%'
+                'previous': '-0.9%'
             },
             {
                 'title': 'Natural Gas Storage',
@@ -26025,7 +26025,7 @@ class HybridEconomicCalendar:
                 'time': '14:30 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '76B',
                 'forecast': 'N/A',
                 'previous': '73B'
             },
