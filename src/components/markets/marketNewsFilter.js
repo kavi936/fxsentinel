@@ -1,4 +1,4 @@
-/** Keywords aligned with backend market profile news_filter (BTCUSD). */
+/** Keywords aligned with backend/services/markets/profiles/BTCUSD.json */
 export const MARKET_NEWS_CONFIG = {
   BTCUSD: {
     label: 'BTC / Crypto',
@@ -12,6 +12,8 @@ export const MARKET_NEWS_CONFIG = {
       'sec',
       'binance',
       'regulation',
+      'fed',
+      'liquidity',
     ],
     enabled: true,
   },

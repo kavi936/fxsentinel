@@ -2,10 +2,9 @@
  * Markets tab instrument list — order is display order in the horizontal picker.
  *
  * Icons (pick one per market):
- * - `iconPath`: single PNG/SVG e.g. '/markets/bitcoin.png'
- * - `iconLegs`: FX pair from currency PNGs e.g. ['EUR', 'USD'] → see marketCurrencyAssets.js
- * - Bundled import → marketIcons.js
- * - `icon`: fallback if images missing
+ * - Bundled SVG import → marketIcons.js (preferred in production)
+ * - `iconLegs`: FX pair from currency SVGs e.g. ['EUR', 'USD']
+ * - `icon`: built-in SVG fallback if bundled assets missing
  */
 export const MARKET_CATALOG = [
   {
@@ -14,7 +13,6 @@ export const MARKET_CATALOG = [
     shortLabel: 'BTC',
     enabled: true,
     icon: 'btc',
-    iconPath: '/markets/bitcoin.png',
     quoteInstrumentId: 'BTCUSDT',
   },
   {
@@ -23,7 +21,6 @@ export const MARKET_CATALOG = [
     shortLabel: 'XAU',
     enabled: false,
     icon: 'gold',
-    iconPath: '/markets/gold.png',
     quoteInstrumentId: 'GOLD',
   },
   {

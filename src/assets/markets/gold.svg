@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <circle cx="16" cy="16" r="16" fill="#3d3520"/>
+  <rect x="9" y="13" width="14" height="8" rx="1.5" fill="url(#goldBar)"/>
+  <path d="M11 13 16 9 21 13Z" fill="#E8C547"/>
+  <defs>
+    <linearGradient id="goldBar" x1="9" y1="13" x2="23" y2="21" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5D76E"/>
+      <stop offset="1" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+</svg>

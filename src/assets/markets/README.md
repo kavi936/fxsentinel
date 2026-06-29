@@ -1,35 +1,23 @@
 # Market icons (bundled via Vite)
 
-Optional folder for icons **imported** into the JS bundle (cached, hashed filenames in production).
+Production icons live here as **SVG** files. They are imported in `src/components/markets/marketIcons.js` so Vite emits hashed URLs at build time — no `/public/markets/` 404s.
 
 ## Files
 
-Same naming as `public/markets/`:
+| File | Used for |
+|------|----------|
+| `btcusd.svg` | BTC/USD picker chip |
+| `gold.svg` | XAUUSD (coming soon) |
+| `eur.svg` | EUR leg on FX pairs |
+| `us.svg` | USD leg on FX pairs |
+| `jpy.svg` | JPY leg on FX pairs |
 
-- `btcusd.svg`
-- `gold.svg`
-- `eurusd.svg`
-- `usdjpy.svg`
+## Adding a market
 
-## Wire-up
-
-1. Add the file here (e.g. `btcusd.svg`).
-2. Open `src/components/markets/marketIcons.js` and uncomment/add the import:
-
-```js
-import btcusdIcon from '../../assets/markets/btcusd.svg';
-
-export const BUNDLED_MARKET_ICONS = {
-  BTCUSD: btcusdIcon,
-};
-```
-
-3. Leave `iconPath` empty in `marketCatalog.js` for that market (bundled wins over `iconPath`).
-
-**Build note:** The file must exist before `npm run build`, or the import will fail.
+1. Add `yourmarket.svg` here (square, 32×32 viewBox, transparent background).
+2. Import in `marketIcons.js` and add to `BUNDLED_MARKET_ICONS`.
+3. Set `icon` fallback key in `marketCatalog.js` for `MarketSymbolIcon` built-in SVG.
 
 ## Format
 
-Prefer **SVG** (square, transparent). PNG/WebP at **128×128** also works.
-
-See `public/markets/README.md` for full design specs.
+Prefer **SVG**. PNG/WebP at **128×128** also works with Vite imports.

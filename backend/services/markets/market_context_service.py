@@ -6,10 +6,12 @@ All platform data is pulled server-side; Markets UI reads one /research payload.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import time
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from services.markets.market_profile import load_market_profile
@@ -91,17 +93,31 @@ def fetch_market_catalysts(profile: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def _load_fallback_indicators(country_code: str) -> Dict[str, Any]:
-    try:
-        base = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        path = os.path.join(base, "..", "src", "data", "economyIndicators.json")
-        with open(path, encoding="utf-8") as f:
-            import json
+    """Load economy indicator snapshot — tries repo-root and backend-relative paths."""
+    candidates = []
+    here = Path(__file__).resolve()
+    repo_root = here.parents[3]
+    candidates.extend(
+        [
+            repo_root / "src" / "data" / "economyIndicators.json",
+            here.parents[2] / "data" / "economyIndicators.json",
+            Path.cwd() / "src" / "data" / "economyIndicators.json",
+            Path.cwd() / "economyIndicators.json",
+        ]
+    )
 
-            payload = json.load(f)
-        return (payload.get(country_code.upper()) or {}).get("indicators") or {}
-    except Exception as e:
-        logger.debug("Fallback indicators unavailable: %s", e)
-        return {}
+    for path in candidates:
+        if not path.is_file():
+            continue
+        try:
+            with path.open(encoding="utf-8") as f:
+                payload = json.load(f)
+            return (payload.get(country_code.upper()) or {}).get("indicators") or {}
+        except Exception as e:
+            logger.debug("Indicators file %s unreadable: %s", path, e)
+
+    logger.warning("economyIndicators.json not found — US macro digest may be thin")
+    return {}
 
 
 def _load_live_yields() -> Dict[str, Any]:
@@ -184,7 +200,7 @@ def fetch_macro_context(profile: Dict[str, Any]) -> Dict[str, Any]:
     primary = digests[0] if digests else None
     return {
         "digests": digests,
-        "primary_country": (primary or {}).get("country_code"),
+        "primary_country": (primary or {}).get("country") or (primary or {}).get("country_code"),
         "us_scan_summary": (primary or {}).get("one_line_summary"),
         "us_scan_as_of": (primary or {}).get("scanned_at"),
         "short_term_bias": (primary or {}).get("short_term_bias"),
