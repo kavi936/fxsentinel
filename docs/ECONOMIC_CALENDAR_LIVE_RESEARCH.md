@@ -346,6 +346,231 @@ FastAPI
 
 ---
 
+## Production security evaluation
+
+**Verdict:** **Shippable with controls** — the MQL5 calendar idea does not introduce fundamentally new *user-facing* exposure (calendar data is already public), but it **does** introduce a new **trusted ingest path** that must be locked down. Without ingest authentication and VPS hardening, a compromised or spoofed bridge could push fake events into Telegram alerts and GPT analysis.
+
+**Overall risk if built naïvely:** **Medium–High**  
+**Overall risk with recommended controls:** **Low–Medium** (acceptable for production)
+
+---
+
+### Security comparison: manual today vs MQL5 target
+
+| Aspect | Manual hybrid (today) | MQL5 live (target) |
+|--------|----------------------|---------------------|
+| **Data entry trust** | You only — git deploy | VPS + EA + ingest pipeline |
+| **Attack surface** | Low (no runtime writer) | **New:** VPS, bridge, ingest endpoint |
+| **Public read API** | `GET /api/economic-calendar` — unauthenticated | Same — unchanged |
+| **Spoofing calendar data** | Requires repo access | Requires bridge secret or VPS compromise |
+| **Stale/wrong data risk** | Human error | Ops + timezone bugs (not security per se) |
+| **Secrets in codebase** | Alpha Vantage key hardcoded in hybrid ⚠️ | Design choice — must not repeat |
+
+---
+
+### Threat model
+
+```text
+                    ┌─────────────────────────────────────┐
+                    │         FXSentinel (Railway)         │
+                    │  GET /api/economic-calendar (public) │
+                    │  POST /api/enhanced-analysis (limited)│
+                    │  unified_alert_processor → Telegram  │
+                    └──────────────▲────────────────────────┘
+                                   │ trusts calendar store
+                    ┌──────────────┴────────────────────────┐
+                    │     calendar_store (must be protected)   │
+                    └──────────────▲────────────────────────┘
+                                   │ ingest (HIGH RISK if open)
+              ┌────────────────────┴────────────────────┐
+              │  Windows VPS                           │
+              │  MT5 + EA → local Python → HTTPS push   │
+              └────────────────────────────────────────┘
+         Threats: VPS compromise, spoofed ingest, MITM, DoS payloads
+```
+
+| Threat | Impact | Likelihood (naïve build) | Severity |
+|--------|--------|--------------------------|----------|
+| **T1 — Unauthenticated ingest** | Attacker injects fake high-impact events → false Telegram alerts, misleading AI | High if endpoint is public | **Critical** |
+| **T2 — Exposed TCP bridge port** | Anyone connects to `mt5_bridge_server`, sends fake NDJSON | High if `0.0.0.0:port` on public VPS | **Critical** |
+| **T3 — VPS / RDP compromise** | Full control of calendar feed + possible MT5 account abuse | Medium | **High** |
+| **T4 — MITM VPS → Railway** | Alter events in transit | Low (if HTTPS) / Medium (plain HTTP) | **High** |
+| **T5 — DoS via huge snapshot** | Memory/CPU exhaustion on ingest or API | Medium | **Medium** |
+| **T6 — Prompt injection in event titles** | Manipulated GPT analysis output | Low from MQL5; higher if ingest open | **Medium** |
+| **T7 — Secrets in EA source** | Bridge token leaked from `.mq5` or VPS disk | Medium if hardcoded | **High** |
+| **T8 — Downstream trust escalation** | Bad calendar → alerts fire without user action | Medium (alerts trust server data) | **High** |
+| **T9 — Legal / redistribution** | Terms violation displaying calendar to users | Low (same as showing FF data today) | **Low–Medium** |
+
+---
+
+### Current codebase security baseline (relevant to calendar)
+
+Validated against `backend/app.py` and related services:
+
+| Control | Calendar-related status |
+|---------|-------------------------|
+| **Auth on `GET /api/economic-calendar`** | ❌ None — intentionally public read |
+| **Rate limiting on calendar GET** | ⚠️ Only Flask-Limiter defaults (`200/day`, `50/hour` per IP) — no route-specific limit |
+| **CORS** | `origins="*"` — public API pattern |
+| **Auth on `POST /api/enhanced-analysis`** | ⚠️ Optional Firebase token; event body accepted from client; rate limit `10/min` |
+| **Event validation before GPT** | ✅ `economic_data_validator.validate_event_data()` |
+| **Stripe quota on analysis** | ✅ If `user_id` present |
+| **Telegram pre-event alerts** | Trust server calendar only — **no per-event crypto signature** |
+| **Telegram webhook** | ⚠️ No `X-Telegram-Bot-Api-Secret-Token` check observed |
+| **Manual data path** | Trusted (git) — but `ALPHA_VANTAGE_API_KEY` hardcoded in hybrid file ⚠️ |
+| **Ingest endpoint** | Does not exist yet — **design security now** |
+
+**Implication:** Moving to MQL5 does not make the *read* path less secure. The **new risk is entirely on the write/ingest path** and VPS ops. Alerts and GPT **already trust whatever the calendar service returns**.
+
+---
+
+### High-risk anti-patterns (do not ship)
+
+1. **Public `POST /api/calendar/ingest` without authentication** on Railway  
+2. **TCP bridge listening on `0.0.0.0`** with no auth handshake on a public VPS IP  
+3. **Shared secret hardcoded in `FXSentinelBridgeEA.mq5`** (extractable from compiled EA / logs)  
+4. **HTTP (not HTTPS)** from VPS to Railway  
+5. **Blind merge** — accept any JSON shape without schema validation, size caps, or idempotency keys  
+6. **RDP open to the world** on the Windows VPS  
+
+---
+
+### Recommended secure architecture
+
+**Preferred: co-located ingest on VPS, authenticated push to Railway**
+
+```text
+Windows VPS
+  ├── MT5 + EA
+  ├── Python: TCP on 127.0.0.1 ONLY (EA → localhost)
+  ├── Python: validate + normalize + merge → calendar_store local buffer
+  └── Python: HTTPS POST to Railway
+        Authorization: Bearer <CALENDAR_INGEST_SECRET>
+        (or HMAC-SHA256 over body with timestamp)
+
+Railway FastAPI
+  ├── POST /internal/calendar/ingest  (NOT public route name; or network-restricted)
+  │     • Verify Bearer / HMAC + timestamp skew ≤ 5 min (replay protection)
+  │     • Max body size (e.g. 2 MB)
+  │     • Max events per snapshot (e.g. 2000)
+  │     • Schema validation (required fields, enum impact, ISO dates)
+  │     • Rate limit: e.g. 60 req/hour per secret
+  └── GET /api/economic-calendar → read from store only (unchanged)
+```
+
+**Alternative:** Tailscale / WireGuard between VPS and Railway so ingest is never on the public internet.
+
+**Why EA stays TCP client:** MQL5 limitation — but the Python listener should bind **`127.0.0.1`**, not public interface, when EA and Python share the VPS.
+
+---
+
+### Security controls checklist (production)
+
+#### P0 — Must have before go-live
+
+| Control | Purpose |
+|---------|---------|
+| **`CALENDAR_INGEST_SECRET`** in Railway env + VPS env (not in git) | Authenticate ingest only from your VPS |
+| **HMAC or Bearer + clock skew** on ingest requests | Block replay and unauthorized writes |
+| **Ingest binds localhost** or private network only for TCP | No public bridge port |
+| **VPS firewall** — deny inbound RDP from `0.0.0.0/0`; allow your IP or use VPN | Reduce T3 |
+| **Schema validation on ingest** | Reject malformed / malicious payloads |
+| **Payload size + event count limits** | DoS protection |
+| **Stable `mql5_{event_id}` keys + merge logic** | Prevent duplicate alert storms |
+| **HTTPS only** VPS → Railway | MITM protection |
+| **Hybrid fallback only when MQL5 store is stale** — not writable from API | Limit blast radius |
+
+#### P1 — Should have
+
+| Control | Purpose |
+|---------|---------|
+| **Ingest audit log** — timestamp, event count, source IP, `change_id` | Forensics |
+| **Anomaly alerts** — e.g. >50 new high-impact events in one snapshot | Detect spoofing |
+| **`fetched_at` + health endpoint** `/api/health/calendar` with freshness | Ops + auto-fallback |
+| **Dedicated route limit** on `GET /api/economic-calendar` (e.g. `30/min`) | Scrape/DoS mitigation |
+| **Sanitize string fields** (`title`, `description`) — max length, strip control chars | GPT injection mitigation |
+| **Rotate ingest secret** procedure documented | Incident response |
+| **VPS auto-updates + antivirus baseline** | Host hardening |
+
+#### P2 — Nice to have
+
+| Control | Purpose |
+|---------|---------|
+| **mTLS** between VPS and Railway | Strongest channel auth |
+| **IP allowlist** on ingest (Railway edge or middleware) | Defense in depth |
+| **Sign snapshots** with ed25519 key on VPS | Integrity attestation |
+| **Telegram webhook secret** header validation | Separate existing gap |
+
+---
+
+### Downstream impact if ingest is compromised
+
+| Consumer | What an attacker could cause |
+|----------|------------------------------|
+| **Telegram alerts** | Fake “NFP in 10 minutes” to all subscribed users — **reputational + trading harm** |
+| **GPT enhanced analysis** | Analysis on fake event if user clicks injected row — partially mitigated by `data_validator` |
+| **Overview UI** | Display fake events — misleading but no code execution (React text, no `dangerouslySetInnerHTML` on titles) |
+| **Economy scan / Markets** | Skewed macro risk scores |
+
+**Most serious production impact:** **false pre-event alerts** — users may act on fake economic releases. This is why ingest auth is **P0**.
+
+---
+
+### MQL5 / MetaQuotes-specific notes
+
+| Topic | Security note |
+|-------|----------------|
+| **Calendar data authenticity** | Sourced from MetaQuotes servers inside MT5 — trustworthy **if** VPS and EA are uncompromised |
+| **EA in Strategy Tester** | Calendar API disabled in tester — not a prod concern |
+| **MQL5 `WebRequest`** | If EA POSTs directly to Railway, URL must be allowlisted in MT5 settings — prefer Python sidecar for secrets |
+| **Broker credentials on VPS** | Demo account sufficient for calendar-only; isolate from live trading credentials |
+| **Redistribution** | Same class of risk as displaying ForexFactory data today — confirm MetaQuotes/Tradays terms for your use case |
+
+---
+
+### GPT / analysis path (existing + MQL5)
+
+`POST /api/enhanced-analysis` accepts `event` in the body (frontend sends full object). A malicious user could already spoof event fields today without MQL5.
+
+| Mitigation | Status |
+|------------|--------|
+| `economic_data_validator` | ✅ Exists |
+| Rate limit `10/min` | ✅ |
+| Stripe analysis quota | ✅ When authenticated |
+| **Server-side lookup by `id` from store** instead of trusting POST body | ❌ **Recommended improvement** — load event from `mql5_calendar_service` by ID, ignore client-supplied `actual`/`expected` except for display cache |
+
+**Recommendation:** After MQL5 live, change enhanced analysis to **fetch canonical event from server store by `id`** and treat POST body as hints only. This closes client spoofing regardless of calendar source.
+
+---
+
+### Windows VPS hardening (minimum)
+
+- Use **strong unique password** or key-based auth; disable default admin where possible  
+- **Firewall:** outbound-only for EA; inbound only SSH/RDP from your IP or VPN  
+- **No production broker passwords** on calendar-only box  
+- **Separate Windows user** for MT5 (non-admin)  
+- **Monitor:** EA process + last successful push timestamp  
+- **Backups:** not critical for calendar (can resync from MQL5) — VPS is disposable if compromised: rotate secret, rebuild  
+
+---
+
+### Production go / no-go
+
+| Gate | Required? |
+|------|-----------|
+| Ingest authenticated (secret or mTLS) | **Go blocker** |
+| TCP not public OR tunneled | **Go blocker** |
+| Schema + size validation on ingest | **Go blocker** |
+| HTTPS VPS → Railway | **Go blocker** |
+| VPS firewall + restricted RDP | **Go blocker** |
+| Health/freshness monitoring | Strongly recommended |
+| Server-side event lookup for analysis | Recommended before marketing “live calendar” |
+| Legal review of calendar redistribution | Recommended (low urgency if status quo) |
+
+**Conclusion:** Implementing MQL5 calendar in production is **security-feasible** and does not require exposing MetaTrader to end users. The calendar remains read-only public data. The **non-negotiable** requirement is treating **ingest as a privileged, authenticated, validated write path** — same seriousness as a webhook or admin API. Building a public unauthenticated ingest endpoint would be a critical vulnerability.
+
+---
+
 ## Known tech debt (fix during MQL5 rollout)
 
 | Issue | Fix |
