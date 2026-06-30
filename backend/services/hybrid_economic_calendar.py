@@ -26513,7 +26513,7 @@ class HybridEconomicCalendar:
                 'time': '13:45 UTC',
                 'currency': 'USD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '56.7',
                 'forecast': '60.0',
                 'previous': '62.7'
             },
@@ -26523,7 +26523,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '91.2',
                 'forecast': '94.2',
                 'previous': '93.1'
             },
@@ -26533,7 +26533,7 @@ class HybridEconomicCalendar:
                 'time': '14:00 UTC',
                 'currency': 'USD',
                 'impact': 'medium',
-                'actual': 'TBD',
+                'actual': '7.59M',
                 'forecast': '7.28M',
                 'previous': '7.62M'
             },
