@@ -26553,7 +26553,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '22',
                 'forecast': '16',
                 'previous': '17'
             },
@@ -26563,7 +26563,7 @@ class HybridEconomicCalendar:
                 'time': '23:50 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '37',
                 'forecast': '36',
                 'previous': '36'
             },
@@ -26573,7 +26573,7 @@ class HybridEconomicCalendar:
                 'time': '00:30 UTC',
                 'currency': 'JPY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '54.8',
                 'forecast': '54.9',
                 'previous': '54.9'
             },
@@ -26583,9 +26583,9 @@ class HybridEconomicCalendar:
                 'time': '01:30 UTC',
                 'currency': 'AUD',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '-1.1%',
                 'forecast': '0.2%',
-                'previous': '-3.4%'
+                'previous': '-0.2%'
             },
             {
                 'title': 'RatingDog Manufacturing PMI',
@@ -26593,7 +26593,7 @@ class HybridEconomicCalendar:
                 'time': '01:45 UTC',
                 'currency': 'CNY',
                 'impact': 'low',
-                'actual': 'TBD',
+                'actual': '51.7',
                 'forecast': '52.0',
                 'previous': '51.8'
             },
