@@ -160,6 +160,8 @@ public/*
 !public/og-image.png
 !public/favicon.png
 !public/webhook.html
+!public/markets/
+!public/markets/**
 !public/documents/
 !public/documents/central-bank/
 !public/documents/central-bank/**/*.pdf

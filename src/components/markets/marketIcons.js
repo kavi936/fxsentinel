@@ -1,25 +1,16 @@
 /**
- * Bundled market icons (Vite imports — hashed URLs in production, no 404s).
+ * Optional bundled market icons (Vite imports from src/assets/markets/).
+ *
+ * Market logos are served as real files from `public/markets/` (see marketCatalog.js
+ * `iconPath` and marketCurrencyAssets.js). These stubs return null so those public
+ * paths win; add a bundled import here only if you want a hashed-asset override.
  */
-import btcusdIcon from '../../assets/markets/btcusd.svg';
-import goldIcon from '../../assets/markets/gold.svg';
-import eurIcon from '../../assets/markets/eur.svg';
-import usIcon from '../../assets/markets/us.svg';
-import jpyIcon from '../../assets/markets/jpy.svg';
 
 /** @type {Record<string, string>} market_id → resolved URL */
-export const BUNDLED_MARKET_ICONS = {
-  BTCUSD: btcusdIcon,
-  GOLD: goldIcon,
-};
+export const BUNDLED_MARKET_ICONS = {};
 
 /** @type {Record<string, string>} currency code → resolved URL */
-export const BUNDLED_CURRENCY_ICONS = {
-  EUR: eurIcon,
-  USD: usIcon,
-  JPY: jpyIcon,
-  US: usIcon,
-};
+export const BUNDLED_CURRENCY_ICONS = {};
 
 export function getBundledMarketIcon(marketId) {
   return BUNDLED_MARKET_ICONS[marketId] || null;
