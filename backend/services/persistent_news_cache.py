@@ -7,6 +7,8 @@ Survives app restarts and deployments (unlike local JSON files)
 
 import logging
 import json
+import os
+import tempfile
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
 from .firebase_realtime_storage import FirebaseRealtimeStorage
@@ -38,8 +40,86 @@ class PersistentNewsCache:
         self.max_age_hours = max_age_hours
         self.max_history_items = MAX_HISTORY_ITEMS
         self.history_retention_days = HISTORY_RETENTION_DAYS
-        
+
+        # Local fallback tier. Firebase is the source of truth, but when its egress is
+        # unreachable (e.g. the Railway IPv6 outage) load_news() would return None and the
+        # /api/news endpoint would fall through to a slow synchronous multi-source fetch,
+        # hanging the dashboard. This in-memory + on-disk mirror lets us keep serving the
+        # last known good cache instantly during a Firebase outage.
+        self._memory_cache: Optional[Dict[str, Any]] = None
+        self._local_cache_path = os.getenv(
+            'NEWS_LOCAL_CACHE_PATH',
+            os.path.join(tempfile.gettempdir(), 'fxsentinel_news_cache.json'),
+        )
+
         logger.info(f"Persistent News Cache Service initialized (TTL: {max_age_hours}h = {max_age_hours * 60:.0f} minutes)")
+
+    def _write_local_cache(self, cache_data: Dict[str, Any]) -> None:
+        """Mirror the latest cache payload to memory and disk (best-effort)."""
+        try:
+            if not cache_data or not isinstance(cache_data, dict):
+                return
+            self._memory_cache = cache_data
+            # Atomic write: write to a temp file then replace, so a crash mid-write
+            # can't leave a corrupted JSON file behind.
+            tmp_path = f"{self._local_cache_path}.tmp"
+            with open(tmp_path, 'w', encoding='utf-8') as f:
+                json.dump(cache_data, f)
+            os.replace(tmp_path, self._local_cache_path)
+        except Exception as e:
+            logger.debug(f"Could not write local news cache mirror: {e}")
+
+    def _read_local_cache(self) -> Optional[Dict[str, Any]]:
+        """Read the fallback cache payload from memory first, then disk."""
+        if self._memory_cache and isinstance(self._memory_cache, dict):
+            return self._memory_cache
+        try:
+            if os.path.exists(self._local_cache_path):
+                with open(self._local_cache_path, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                if isinstance(data, dict):
+                    self._memory_cache = data
+                    return data
+        except Exception as e:
+            logger.debug(f"Could not read local news cache mirror: {e}")
+        return None
+
+    def _interpret_cache_data(
+        self,
+        cache_data: Dict[str, Any],
+        allow_stale: bool,
+        return_metadata: bool,
+    ):
+        """Apply age/staleness rules to a raw cache payload and return news (or None)."""
+        if not cache_data or not isinstance(cache_data, dict):
+            return None
+
+        news_items = cache_data.get('news', [])
+        last_fetch_str = cache_data.get('last_fetch')
+        timestamp_str = cache_data.get('timestamp')
+
+        def _result(items):
+            if return_metadata:
+                return {'news': items, 'last_fetch': last_fetch_str}
+            return items
+
+        # No timestamp: return whatever news we have rather than nothing.
+        if not timestamp_str:
+            return _result(news_items) if news_items else None
+
+        try:
+            cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            if cache_timestamp.tzinfo:
+                cache_timestamp = cache_timestamp.replace(tzinfo=None)
+            age = datetime.now() - cache_timestamp
+
+            if age > timedelta(hours=self.max_age_hours) and not allow_stale:
+                logger.info(f"Cache is too old ({age}), ignoring")
+                return None
+            return _result(news_items)
+        except Exception as e:
+            logger.warning(f"Error parsing cache timestamp: {e}")
+            return _result(news_items) if news_items else None
     
     def _get_cache_path(self) -> str:
         """Get Firebase path for current news cache"""
@@ -137,6 +217,11 @@ class PersistentNewsCache:
                 'last_fetch': datetime.now().isoformat()  # Track when news was last fetched
             }
             
+            # Mirror to local fallback first so we retain the latest payload even if the
+            # Firebase write below fails (e.g. egress outage). This is what keeps the
+            # dashboard serving news instantly during a Firebase failure.
+            self._write_local_cache(cache_data)
+
             # Save to Firebase
             cache_path = self._get_cache_path()
             result = self.firebase._make_request('PUT', cache_path, cache_data)
@@ -333,64 +418,37 @@ class PersistentNewsCache:
             List of news items or None if no cache exists.
             If return_metadata=True, returns dict with keys: 'news' (list) and 'last_fetch' (str or None)
         """
+        # 1) Source of truth: Firebase
+        cache_data = None
         try:
             cache_path = self._get_cache_path()
             cache_data = self.firebase._make_request('GET', cache_path)
-            
-            if not cache_data or not isinstance(cache_data, dict):
-                logger.info("No cache found in Firebase")
-                return None
-            
-            # Check if cache is too old
-            timestamp_str = cache_data.get('timestamp')
-            if not timestamp_str:
-                logger.info("Cache has no timestamp")
-                return None
-            
-            # Extract metadata for batching
-            last_fetch_str = cache_data.get('last_fetch')
-            
-            try:
-                cache_timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
-                # Handle timezone-aware vs naive datetimes
-                now = datetime.now()
-                if cache_timestamp.tzinfo:
-                    # Convert to naive datetime for comparison
-                    cache_timestamp = cache_timestamp.replace(tzinfo=None)
-                age = now - cache_timestamp
-                
-                news_items = cache_data.get('news', [])
-                
-                if age > timedelta(hours=self.max_age_hours):
-                    if allow_stale:
-                        # Return stale cache for faster UI loading (fresh fetch will happen in background)
-                        logger.info(f"Cache is stale ({age}), but returning it for faster UI loading")
-                        if return_metadata:
-                            return {'news': news_items, 'last_fetch': last_fetch_str}
-                        return news_items
-                    else:
-                        logger.info(f"Cache is too old ({age}), ignoring")
-                        return None
-                
-                logger.info(f"Loaded {len(news_items)} news items from Firebase cache (age: {age})")
-                if return_metadata:
-                    return {'news': news_items, 'last_fetch': last_fetch_str}
-                return news_items
-                
-            except Exception as e:
-                logger.warning(f"Error parsing cache timestamp: {e}")
-                # If timestamp parsing fails, still return the news (better than nothing)
-                news_items = cache_data.get('news', [])
-                if news_items:
-                    logger.info(f"Loaded {len(news_items)} news items from cache (timestamp parse error, but returning news)")
-                    if return_metadata:
-                        return {'news': news_items, 'last_fetch': last_fetch_str}
-                    return news_items
-                return None
-            
         except Exception as e:
-            logger.error(f"Error loading news from persistent cache: {e}")
-            return None
+            logger.error(f"Error loading news from Firebase cache: {e}")
+            cache_data = None
+
+        if cache_data and isinstance(cache_data, dict) and cache_data.get('news') is not None:
+            # Keep the local fallback mirror warm on every successful read.
+            self._write_local_cache(cache_data)
+            result = self._interpret_cache_data(cache_data, allow_stale, return_metadata)
+            if result is not None:
+                news = result.get('news') if isinstance(result, dict) else result
+                logger.info(f"Loaded {len(news)} news items from Firebase cache")
+            return result
+
+        # 2) Fallback: Firebase unreachable/empty — serve last known good local cache so the
+        # dashboard degrades gracefully instead of hanging on a synchronous multi-source fetch.
+        local_data = self._read_local_cache()
+        if local_data and isinstance(local_data, dict) and local_data.get('news'):
+            logger.warning(
+                "Firebase cache unavailable — serving local fallback news cache "
+                f"({len(local_data.get('news', []))} items)"
+            )
+            # Always allow stale here: stale local data beats an empty feed / hang.
+            return self._interpret_cache_data(local_data, allow_stale=True, return_metadata=return_metadata)
+
+        logger.info("No cache found in Firebase or local fallback")
+        return None
     
     def load_history(self) -> List[Dict[str, Any]]:
         """Load news history from Firebase"""

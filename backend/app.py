@@ -420,58 +420,16 @@ def get_fallback_price(pair_name):
     }
 
 def get_economic_event_by_id(event_id):
-    """Get economic event by ID from Finnhub calendar data"""
+    """Get economic event by ID from live FF feed or hybrid fallback."""
     try:
-        # Get events from Finnhub calendar
-        events = finnhub_calendar.get_economic_calendar()
-        
-        # Find the event with matching ID
-        event = next((e for e in events if e.get('id') == event_id), None)
-        
+        event = economic_calendar_service.get_event_by_id(event_id)
         if event:
             return event
-        else:
-            # If not found, create a realistic mock event based on the ID
-            # This handles cases where the frontend sends an ID that doesn't exist in the calendar
-            print(f"⚠️ Event ID {event_id} not found in calendar, creating realistic mock event")
-            
-            # Create a realistic mock event for testing
-            return {
-                'id': event_id,
-                'title': 'US Unemployment Rate',
-                'currency': 'USD',
-                'impact': 'high',
-                'description': 'US Unemployment Rate data release - key indicator of labor market health',
-                'expected': '3.8%',
-                'previous': '3.9%',
-                'actual': '--',
-                'date': 'Fri, Aug 15',
-                'time': '13:30 UTC',
-                'status': 'UPCOMING',
-                'type': 'ECONOMIC RELEASE',
-                'currencyPairs': ['EUR/USD', 'USD/JPY', 'GBP/USD'],
-                'timestamp': datetime.now().isoformat()
-            }
-            
+        print(f"⚠️ Event ID {event_id} not found in calendar store")
+        return None
     except Exception as e:
         print(f"Error getting economic event by ID: {e}")
-        # Return realistic mock event as fallback
-        return {
-            'id': event_id,
-            'title': 'US Unemployment Rate',
-            'currency': 'USD',
-            'impact': 'high',
-            'description': 'US Unemployment Rate data release - key indicator of labor market health',
-            'expected': '3.8%',
-            'previous': '3.9%',
-            'actual': '--',
-            'date': 'Fri, Aug 15',
-            'time': '13:30 UTC',
-            'status': 'UPCOMING',
-            'type': 'ECONOMIC RELEASE',
-            'currencyPairs': ['EUR/USD', 'USD/JPY', 'GBP/USD'],
-            'timestamp': datetime.now().isoformat()
-        }
+        return None
 
 def get_currency_pairs(currency):
     """Get relevant currency pairs for a given currency (max 4 pairs)"""
@@ -751,9 +709,9 @@ def test_finnhub():
 from services.news_aggregator import news_aggregator
 # Import the telegram monitor
 from services.telegram_monitor_user import telegram_user_monitor
-# Import economic calendar services
+# Import economic calendar services (FF live primary; hybrid fallback; MT5 later)
+from services.economic_calendar_service import economic_calendar_service
 from services.hybrid_economic_calendar import hybrid_economic_calendar
-# NOTE: Only using hybrid_economic_calendar now - no fallbacks to prevent bugs
 # Import the Finnhub historical service
 from services.finnhub_historical import finnhub_historical
 from services.economy_holistic_scan_service import economy_holistic_scan_service
@@ -855,7 +813,7 @@ def get_economy_indicators(country_code):
 
 @app.route('/api/economic-calendar')
 def get_economic_calendar():
-    """Get economic calendar events from hybrid calendar ONLY (your curated ForexFactory data)"""
+    """Get economic calendar events — ForexFactory live feed (auto), hybrid fallback."""
     print("🚀 ECONOMIC CALENDAR ENDPOINT CALLED")
     try:
         # Get query parameters for date range and timezone
@@ -863,23 +821,22 @@ def get_economic_calendar():
         end_date = request.args.get('end_date')
         user_timezone = request.args.get('timezone', 'UTC')
         
-        # ONLY USE HYBRID CALENDAR - No fallbacks!
-        print("🔄 Fetching from hybrid_economic_calendar (Your Curated ForexFactory Data)...")
-        events = hybrid_economic_calendar.get_economic_events(start_date, end_date)
-        source = "Hybrid Calendar (ForexFactory)"
+        print("🔄 Fetching from economic_calendar_service (ForexFactory live → hybrid fallback)...")
+        events, source = economic_calendar_service.get_economic_events(start_date, end_date)
+        feed_meta = economic_calendar_service.get_feed_metadata()
         
         if not events:
-            print("❌ No events available - hybrid calendar returned empty")
+            print("❌ No events available in date range")
             return jsonify({
                 "events": [],
-                "source": "hybrid_calendar",
-                "last_updated": datetime.now().isoformat(),
+                "source": source,
+                "last_updated": feed_meta.get("last_fetched") or datetime.now().isoformat(),
                 "total_events": 0,
                 "status": "no_data",
-                "message": "No events in date range. Update calendar with new events."
+                "message": "No events in date range. ForexFactory feed may only cover the current week."
             })
         
-        print(f"✅ Got {len(events)} events from Hybrid Calendar")
+        print(f"✅ Got {len(events)} events from {source}")
         print(f"🔍 First event: {events[0].get('title', 'Unknown')} on {events[0].get('date', 'Unknown')}")
         
         # Light currency pair limit (just ensure max 4 pairs per event)
@@ -902,9 +859,10 @@ def get_economic_calendar():
         return jsonify({
             "events": events,
             "source": source,
-            "last_updated": datetime.now().isoformat(),
+            "last_updated": feed_meta.get("last_fetched") or datetime.now().isoformat(),
             "total_events": len(events),
-            "status": "success"
+            "status": "success",
+            "feed": feed_meta,
         })
             
     except Exception as e:
@@ -1028,7 +986,7 @@ def get_economy_scan(country_code):
         # Keep event window narrow for short-term risk in scan.
         start_date = datetime.now().strftime("%Y-%m-%d")
         end_date = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
-        events = hybrid_economic_calendar.get_economic_events(start_date, end_date) or []
+        events, _source = economic_calendar_service.get_economic_events(start_date, end_date) or ([], "")
 
         scan_personalization = get_user_personalization(token_user_info.get('user_id'))
         scan = economy_holistic_scan_service.build_scan(
@@ -1300,6 +1258,26 @@ def _start_news_scheduler():
     print("✅ News scheduler started (fetch every 5 min so cache stays up to date for all users)")
 
 _start_news_scheduler()
+
+_CALENDAR_FEED_INTERVAL_SECONDS = 6 * 60 * 60  # 6 hours — matches FF feed TTL
+
+def _calendar_scheduler_loop():
+    """Refresh ForexFactory calendar feed so the week rolls without manual imports."""
+    import time
+    time.sleep(60)  # let app finish booting
+    while True:
+        try:
+            economic_calendar_service.refresh_feed(force=False)
+        except Exception as e:
+            print(f"⚠️ Calendar scheduler tick error: {e}")
+        time.sleep(_CALENDAR_FEED_INTERVAL_SECONDS)
+
+def _start_calendar_scheduler():
+    t = threading.Thread(target=_calendar_scheduler_loop, daemon=True)
+    t.start()
+    print("✅ Calendar scheduler started (ForexFactory feed refresh every 6h)")
+
+_start_calendar_scheduler()
 
 @app.route('/api/news')
 def get_news():

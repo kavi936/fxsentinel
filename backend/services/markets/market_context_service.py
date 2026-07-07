@@ -59,9 +59,9 @@ def fetch_market_catalysts(profile: Dict[str, Any]) -> List[Dict[str, Any]]:
     end = (datetime.now(timezone.utc) + timedelta(days=horizon)).strftime("%Y-%m-%d")
 
     try:
-        from services.hybrid_economic_calendar import hybrid_economic_calendar
+        from services.economic_calendar_service import economic_calendar_service
 
-        raw = hybrid_economic_calendar.get_economic_events(start, end) or []
+        raw, _source = economic_calendar_service.get_economic_events(start, end) or ([], "")
     except Exception as e:
         logger.warning("Calendar fetch failed for Markets: %s", e)
         return []
@@ -139,7 +139,7 @@ def _build_country_scan_digest(country: str, max_age_hours: float) -> Optional[D
     try:
         from services.analysis_context_pack import extract_macro_snapshot_from_scan
         from services.economy_holistic_scan_service import economy_holistic_scan_service
-        from services.hybrid_economic_calendar import hybrid_economic_calendar
+        from services.economic_calendar_service import economic_calendar_service
     except ImportError as e:
         logger.warning("Macro scan modules unavailable: %s", e)
         return None
@@ -152,7 +152,7 @@ def _build_country_scan_digest(country: str, max_age_hours: float) -> Optional[D
     start = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     end = (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d")
     try:
-        events = hybrid_economic_calendar.get_economic_events(start, end) or []
+        events, _source = economic_calendar_service.get_economic_events(start, end) or ([], "")
     except Exception:
         events = []
 

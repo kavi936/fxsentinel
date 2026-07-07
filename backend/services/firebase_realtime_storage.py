@@ -25,6 +25,13 @@ class FirebaseRealtimeStorage:
     def __init__(self):
         self.project_id = os.getenv('FIREBASE_PROJECT_ID', 'fxsentinel')
         self.database_url = os.getenv('FIREBASE_REALTIME_URL', f"https://{self.project_id}-default-rtdb.firebaseio.com")
+        # (connect, read) timeouts in seconds. Without these, a broken network route
+        # (e.g. the Railway IPv6 egress outage) makes requests hang the request thread
+        # indefinitely instead of failing fast, which is what took the dashboard down.
+        self._http_timeout = (
+            float(os.getenv('FIREBASE_CONNECT_TIMEOUT', '3.05')),
+            float(os.getenv('FIREBASE_READ_TIMEOUT', '7')),
+        )
         # Short TTL cache to reduce repeated full-user scans in hot alert loops.
         self._users_with_alerts_cache: Optional[List[Dict[str, Any]]] = None
         self._users_with_alerts_cache_ts: Optional[datetime] = None
@@ -59,13 +66,13 @@ class FirebaseRealtimeStorage:
             }
             
             if method.upper() == 'GET':
-                response = requests.get(url, headers=headers)
+                response = requests.get(url, headers=headers, timeout=self._http_timeout)
             elif method.upper() == 'PUT':
-                response = requests.put(url, headers=headers, json=data)
+                response = requests.put(url, headers=headers, json=data, timeout=self._http_timeout)
             elif method.upper() == 'POST':
-                response = requests.post(url, headers=headers, json=data)
+                response = requests.post(url, headers=headers, json=data, timeout=self._http_timeout)
             elif method.upper() == 'DELETE':
-                response = requests.delete(url, headers=headers)
+                response = requests.delete(url, headers=headers, timeout=self._http_timeout)
             else:
                 raise ValueError(f"Unsupported HTTP method: {method}")
             

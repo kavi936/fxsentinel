@@ -607,13 +607,12 @@ class UnifiedAlertProcessor:
         try:
             logger.info("Checking for economic calendar alerts...")
             
-            # Get economic calendar events from hybrid calendar (direct function call)
+            # Get economic calendar events from unified service (FF live → hybrid fallback)
             try:
-                from services.hybrid_economic_calendar import hybrid_economic_calendar
-                # Get events for next 7 days
+                from services.economic_calendar_service import economic_calendar_service
                 start_date = datetime.now().strftime('%Y-%m-%d')
                 end_date = (datetime.now() + timedelta(days=7)).strftime('%Y-%m-%d')
-                events = hybrid_economic_calendar.get_economic_events(start_date, end_date)
+                events, _source = economic_calendar_service.get_economic_events(start_date, end_date)
             except Exception as e:
                 logger.error(f"Error getting economic calendar: {e}")
                 return

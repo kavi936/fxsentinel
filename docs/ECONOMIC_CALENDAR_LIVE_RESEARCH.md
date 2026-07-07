@@ -8,6 +8,25 @@
 
 ---
 
+## Step 1 — Automated ForexFactory (implemented)
+
+**Status:** Live in codebase — no more weekly paste into `hybrid_economic_calendar.py`.
+
+| Piece | Role |
+|-------|------|
+| `global_economic_calendar.py` | Fetches `ff_calendar_thisweek.json` every 6h; stores `backend/cache/ff_calendar_feed.json` |
+| `economic_calendar_service.py` | **Single entry point** — FF primary, hybrid fallback on FF failure |
+| `app.py` | API + 6h background scheduler (same pattern as news fetch) |
+| Alerts / Markets / economy scan | All use `economic_calendar_service` |
+
+**You no longer need to:** export JSON → run import script → paste 27k lines → git deploy.
+
+**Still manual until Step 2 (MT5):** live `actual` values at release (FF JSON feed has no `actual` field).
+
+**Step 2 hook:** Add MQL5 ingest to `economic_calendar_service` as primary; FF becomes fallback; hybrid retired.
+
+---
+
 ## Product direction (confirmed)
 
 FXSentinel will replace the **manual weekly calendar update** with the **free MetaQuotes economic calendar** exposed via the [MQL5 Calendar API](https://www.mql5.com/en/docs/calendar). This is the same underlying data as the MT5 terminal calendar and Tradays — no Finnhub subscription, no scraping ForexFactory at runtime.
