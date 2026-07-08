@@ -310,6 +310,53 @@
   gap: 12px;
 }
 
+/* Calendar data freshness notice — below header */
+.calendar-data-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 20px;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 170, 0, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 193, 7, 0.1) 0%,
+    rgba(139, 0, 0, 0.12) 50%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  position: relative;
+  z-index: 2;
+}
+
+.calendar-data-notice-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #ffaa00;
+  opacity: 0.95;
+}
+
+.calendar-data-notice-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.calendar-data-notice-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ffcc66;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  line-height: 1.3;
+}
+
+.calendar-data-notice-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.45;
+}
+
 .date-select-btn,
 .filter-btn,
 .calendar-refresh-btn,
@@ -8254,6 +8301,19 @@
   .grid-card.news-calendar .calendar-header .calendar-controls {
     flex-shrink: 0; /* Keep buttons from shrinking */
     align-self: center;
+  }
+
+  .grid-card.news-calendar .calendar-data-notice {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .grid-card.news-calendar .calendar-data-notice-title {
+    font-size: 10px;
+  }
+
+  .grid-card.news-calendar .calendar-data-notice-text {
+    font-size: 10px;
   }
   
   /* Live News card: keep header and controls on one line on mobile */

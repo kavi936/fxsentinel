@@ -27,6 +27,236 @@
 
 ---
 
+## Step 2 — MT5 / MQL5 integration plan (evaluation)
+
+**Problem:** We do not yet have real MQL5 calendar payloads in FXSentinel. FF and MetaQuotes use **different event names**, **different IDs**, and **different value encoding**. Step 1 deliberately hid this behind `economic_calendar_service` — Step 2 only changes **sources + mapper**, not the frontend.
+
+### Design principle: canonical schema is the contract
+
+Everything downstream (Overview, alerts, GPT, Markets) only cares about the **canonical event dict** produced today by FF (`id`, `title`, `date`, `time`, `currency`, `impact`, `expected`, `previous`, `actual`, `status`, `currencyPairs`, `raw_data`, `fetched_at`).
+
+MT5 does **not** plug in raw. It plugs in through:
+
+```text
+MT5 EA (MqlCalendarValue + MqlCalendarEvent)
+    → JSON ingest payload
+    → mql5_calendar_mapper.py  (unknowns handled here)
+    → backend/cache/mql5_calendar_feed.json  (same shape as ff_calendar_feed.json)
+    → mql5_calendar_service.py
+    → economic_calendar_service.py  (priority switch only)
+    → GET /api/economic-calendar
+```
+
+### Proposed file layout (Step 2)
+
+| File | Role |
+|------|------|
+| `backend/services/calendar/canonical_event.py` | Shared TypedDict / validation for canonical shape |
+| `backend/services/calendar/mql5_calendar_mapper.py` | MQL5 raw → canonical (all format weirdness lives here) |
+| `backend/services/calendar/mql5_calendar_service.py` | Read `mql5_calendar_feed.json`, filter by date |
+| `backend/services/calendar/calendar_ingest.py` | Authenticated POST/TCP merge from VPS |
+| `backend/mt5/FXSentinelBridgeEA.mq5` | `CalendarValueHistory` + `CalendarValueLast` → JSON lines |
+| `economic_calendar_service.py` | **Only file that changes priority logic** |
+
+### How `economic_calendar_service` changes (minimal)
+
+```python
+# Step 2 priority (pseudocode)
+def get_economic_events(start, end):
+    if mql5_store.is_fresh():
+        events = mql5_calendar_service.get_economic_events(start, end)
+        if events:
+            return events, "MQL5 Calendar (live)"
+    # fallback chain unchanged
+    ff_events = global_economic_calendar.get_economic_events(start, end)
+    ...
+```
+
+No changes to `Overview.jsx`, alert timing, or GPT prompts if the mapper output matches Step 1.
+
+---
+
+### FF vs MQL5 — what will differ
+
+| Aspect | ForexFactory (Step 1) | MQL5 / MetaQuotes (Step 2) |
+|--------|----------------------|----------------------------|
+| **Event names** | `"Non-Farm Employment Change"` | `"Nonfarm Payrolls"` or terminal-localized `MqlCalendarEvent.name` |
+| **IDs** | `ff_{sha256[:16]}` from title+date+currency | `mql5_{value.id}` — MetaQuotes `ulong` value ID (stable) |
+| **Currency** | `country` field = `"USD"` | From `MqlCalendarCountry` / event metadata — may need lookup |
+| **Impact** | `"High"` / `"Medium"` / `"Low"` strings | `ENUM_CALENDAR_EVENT_IMPACT` on **value** + importance on **event** |
+| **Numeric values** | Pre-formatted strings: `"216K"`, `"3.2%"` | **Integers × 1,000,000** in `actual_value` etc., or `LONG_MIN` if unset |
+| **Time** | ISO with timezone offset | `datetime time` in **trade server time** — must convert to UTC |
+| **Actuals** | Not in live JSON feed | **Yes** — `CalendarValueLast` updates `actual_value` |
+| **Horizon** | ~7 days (`thisweek`) | Configurable via `CalendarValueHistory(from, to)` — 30+ days |
+| **Language** | English titles from FF | `MqlCalendarEvent.name` follows **terminal language** unless forced |
+
+**Do not assume** FF title strings match MQL5 names. GPT and alerts use `title` as display text only — different wording is fine. **Do not** try to merge FF + MQL5 rows by fuzzy title match in v1.
+
+---
+
+### MQL5 raw structures (what the EA must send)
+
+**`MqlCalendarValue`** (one scheduled release — what you store per calendar row):
+
+| Field | Notes for mapper |
+|-------|------------------|
+| `id` | Unique **value** ID → use for `mql5_{id}` |
+| `event_id` | Links to event type → useful for grouping history |
+| `time` | Release datetime (trade server) |
+| `actual_value`, `forecast_value`, `prev_value` | ×10⁶ or `LONG_MIN` = missing — use `GetActualValue()` semantics |
+| `impact_type` | Map to `high` / `medium` / `low` |
+
+**`MqlCalendarEvent`** (event type metadata — EA should join via `CalendarEventById(event_id)`):
+
+| Field | Maps to |
+|-------|---------|
+| `name` | `title` |
+| `importance` | `impact` (secondary signal) |
+| `country_id` | → currency via country table |
+| `unit`, `multiplier` | Formatting actual/forecast/previous strings |
+| `event_code` | Optional `type` / internal tagging |
+
+**Recommended EA payload** (send joined data so Python does not need a second lookup):
+
+```json
+{
+  "type": "calendar_update",
+  "change_id": 12345,
+  "events": [{
+    "value_id": 2776,
+    "event_id": 999010007,
+    "time_utc": "2026-07-07T12:30:00Z",
+    "title": "Nonfarm Payrolls",
+    "currency": "USD",
+    "impact": "high",
+    "actual": "216K",
+    "expected": "180K",
+    "previous": "173K",
+    "unit": "K",
+    "multiplier": 1
+  }]
+}
+```
+
+Format numbers in MQL5 using `GetActualValue()` + unit metadata **before** JSON — keeps Python mapper simple.
+
+---
+
+### ID strategy and migration impact
+
+| ID prefix | Source | Stable across refreshes? |
+|-----------|--------|----------------------------|
+| `ff_*` | ForexFactory | Yes (hash of title+date+currency) |
+| `mql5_*` | MetaQuotes value id | **Yes** (authoritative) |
+| `hybrid_*` | Legacy embedded list | Fragile (hash of title only) |
+
+**When switching primary source mid-week:**
+
+- Frontend `localStorage` cache invalidates naturally (6h TTL).
+- **Alert dedup** uses `event.id` when present (`persistent_alert_deduplication`) — switching `ff_` → `mql5_` for the “same” NFP could send **one extra alert** that week. Acceptable one-time migration cost.
+- **Saved analysis history** (`calendar_analysis_store`) keys on `event_id` — old analyses stay under `ff_*`; new clicks get `mql5_*`. No data loss; historical links won’t resolve cross-source. Optional: store `canonical_key` = `{currency}|{date}|{time}|{normalized_title}` for soft linking later.
+
+**Recommendation:** On MT5 go-live, **do not merge** FF and MQL5 rows. Pick one primary; fallbacks only when primary store is empty/stale.
+
+---
+
+### Value formatting (biggest mapper risk)
+
+MQL5 stores numbers as **parts per million** (integer). Example from docs: ECB rate `3750000` → `3.75%` after ÷10⁶.
+
+Mapper rules:
+
+1. If EA sends pre-formatted strings → pass through (preferred).
+2. If EA sends raw integers → divide by 1_000_000, apply `unit` / `multiplier` from `MqlCalendarEvent`.
+3. Missing = `LONG_MIN` or empty → `TBD` for actual, `N/A` for expected/previous (match Step 1 placeholders).
+4. Percentages vs K/M suffixes — unit enum drives display (`ENUM_CALENDAR_EVENT_UNIT`).
+
+**Discovery task before production MT5:** Run EA in logging mode for 3–5 days; dump 20–30 releases across USD/EUR/GBP (NFP, CPI, PMI, rate decision) into `backend/data/mql5_calendar_samples.jsonl` and build formatter tests from real payloads.
+
+---
+
+### Title / naming — what breaks, what does not
+
+| Consumer | Sensitive to exact FF title? |
+|----------|------------------------------|
+| Overview display | No — shows whatever `title` is |
+| Alert message | No — uses `title` as label |
+| GPT analysis | **Mildly** — prompts use title for context; MQL5 names are equally valid |
+| `data_validator` keyword checks | **Yes** — uses substrings like `nfp`, `cpi` (still match MetaQuotes names) |
+| `calendar_scenario_engine` | **No** — uses numeric `expected` |
+| Economy scan event risk | **No** — uses `impact`, `currency`, `date` |
+| High-impact keyword lists in alerts | **Yes** — verify MQL5 high-impact events still match `fed`, `nfp`, `cpi` etc. |
+
+**Action:** Add `normalized_title` or `event_code` from MQL5 `event_code` field for internal matching — do not rely on display `title` for business logic.
+
+---
+
+### Merge / fallback strategy (recommended)
+
+```text
+Priority 1: mql5_calendar_feed.json
+  • fresh if last_fetched < 15 min (configurable)
+  • has live actuals via CalendarValueLast merges
+
+Priority 2: ff_calendar_feed.json  (Step 1 — keep)
+  • if MQL5 stale/down
+  • schedule-only, ~7 day horizon
+
+Priority 3: hybrid embedded list
+  • emergency only — retire after MQL5 stable 2–4 weeks
+```
+
+**Do not** blend MQL5 actuals onto FF rows or vice versa in v1 — two sources, two ID spaces, confusing UX.
+
+---
+
+### Discovery phase (before coding mapper for production)
+
+| Step | Action | Output |
+|------|--------|--------|
+| 1 | Windows VPS + MT5 demo + calendar enabled | Environment |
+| 2 | EA logs raw `CalendarValueHistory(now, now+14d)` to JSON file | Sample schedule |
+| 3 | EA runs through one US data morning (NFP/CPI/claims) with `CalendarValueLast` | Sample actuals |
+| 4 | Compare side-by-side with FF feed for same week | Diff report (names, times, impact) |
+| 5 | Implement `mql5_calendar_mapper` + unit tests from samples | Mapper v1 |
+| 6 | Ingest to `mql5_calendar_feed.json`; flip priority in `economic_calendar_service` | Go-live |
+
+**Spike script (local):** `scripts/spike_compare_ff_mql5_calendar.py` — fetches FF JSON, reads MQL5 sample dump, prints matched/unmatched pairs by datetime+currency (not title).
+
+---
+
+### Ingest security (unchanged from security eval)
+
+- VPS → Railway HTTPS POST with `CALENDAR_INGEST_SECRET`
+- Schema validate ingest; max payload size
+- TCP EA → localhost Python only on VPS
+- See **Production security evaluation** section below
+
+---
+
+### Step 2 effort estimate (after discovery samples exist)
+
+| Task | Estimate |
+|------|----------|
+| EA calendar polling + JSON | 1–2 days |
+| `calendar_ingest.py` + store | 1 day |
+| `mql5_calendar_mapper` + tests from samples | 1–2 days |
+| `economic_calendar_service` priority switch | 0.5 day |
+| Side-by-side FF comparison + alert smoke test | 1 day |
+| **Total** | **~5–7 days** after VPS ready |
+
+---
+
+### What you can push to production now (Step 1)
+
+Safe to deploy Step 1 without blocking Step 2:
+
+- `economic_calendar_service` is already the swap point
+- FF events use `ff_*` IDs; MQL5 will use `mql5_*` — no conflict
+- Adding MQL5 later is **additive** (new cache file + mapper + ingest route)
+
+---
+
 ## Product direction (confirmed)
 
 FXSentinel will replace the **manual weekly calendar update** with the **free MetaQuotes economic calendar** exposed via the [MQL5 Calendar API](https://www.mql5.com/en/docs/calendar). This is the same underlying data as the MT5 terminal calendar and Tradays — no Finnhub subscription, no scraping ForexFactory at runtime.
