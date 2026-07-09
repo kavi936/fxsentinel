@@ -2,10 +2,12 @@
 
 **Status:** Active — Phase 2 BTCUSD UI in developer preview  
 **Horizon:** Phase 0 (layout) → ~2 weeks engineering for first **BTCUSD** dashboard (internal/staging)  
-**Last updated:** 2026-06-09  
+**Last updated:** 2026-07-08 (linked master vision)  
 
+> **Product intent:** [`MARKETS_MASTER_VISION.md`](./MARKETS_MASTER_VISION.md)  
 > **BTCUSD playbook:** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md)  
 > **Data research + UI surfaces:** [`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md)
+
 **Canonical market id:** `BTCUSD` (user-facing)  
 **Data feed id:** `BTCUSDT` (TradingView + Binance klines — same underlying spot)
 

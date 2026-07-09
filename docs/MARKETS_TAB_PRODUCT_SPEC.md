@@ -1,10 +1,13 @@
 # Markets Tab — Product Spec & Planning Doc
 
 **Status:** Active — BTCUSD developer preview in progress  
-**Last updated:** 2026-06-09 (aggregation vision, v1 level engine roadmap, live data, UI, status snapshot)  
+**Last updated:** 2026-07-08 (linked master vision)  
 **Owner intent:** Instrument-centric research dashboards that give **clear directional bias** for day and swing traders—without making users infer direction from Economies + Overview + sentiment separately.
 
+**Product intent (source of truth):** [`MARKETS_MASTER_VISION.md`](./MARKETS_MASTER_VISION.md) — founder vision, priorities, session decisions. This spec expands engineering detail; if they conflict, update the master first.
+
 Related docs:
+- **Master vision:** [`MARKETS_MASTER_VISION.md`](./MARKETS_MASTER_VISION.md)
 - **BTCUSD implementation strategy:** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md)
 - **BTCUSD data research + UI plan:** [`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md)
 - **Advanced Charts implementation roadmap:** [`MARKETS_ADVANCED_CHARTS_ROADMAP.md`](./MARKETS_ADVANCED_CHARTS_ROADMAP.md)

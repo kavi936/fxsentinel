@@ -1,7 +1,8 @@
 # BTCUSD — Data Research & UI Incorporation Plan
 
 **Status:** Active — evaluate data **before** building each feature  
-**Last updated:** 2026-06-09  
+**Last updated:** 2026-07-08 (linked master vision)  
+**Product intent:** [`MARKETS_MASTER_VISION.md`](./MARKETS_MASTER_VISION.md)  
 **Companion:** [`MARKETS_BTCUSD_STRATEGY.md`](./MARKETS_BTCUSD_STRATEGY.md) (sprint order) · [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md) (product rules)
 
 ---

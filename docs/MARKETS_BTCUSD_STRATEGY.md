@@ -1,11 +1,12 @@
 # BTCUSD Markets — Implementation Strategy
 
-**Status:** Active playbook (read this before other Markets work)  
-**Last updated:** 2026-06-09  
+**Status:** Active playbook (read this after the master vision when aligning product)  
+**Last updated:** 2026-07-08 (linked master vision)  
 **Audience:** Engineering + product — get BTCUSD straight before Gold/EUR/MT5  
 
 **Canonical ids:** Display **`BTCUSD`** · Data **`BTCUSDT`** (Binance + TV)  
-**Parent docs:** [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md) · [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md) · [`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md) (data research + UI surfaces)
+**Product intent (source of truth):** [`MARKETS_MASTER_VISION.md`](./MARKETS_MASTER_VISION.md)  
+**Parent / satellite docs:** [`MARKETS_TAB_PRODUCT_SPEC.md`](./MARKETS_TAB_PRODUCT_SPEC.md) · [`MARKETS_TAB_IMPLEMENTATION_PLAN.md`](./MARKETS_TAB_IMPLEMENTATION_PLAN.md) · [`MARKETS_BTCUSD_DATA_AND_UI_PLAN.md`](./MARKETS_BTCUSD_DATA_AND_UI_PLAN.md) (data research + UI surfaces)
 
 ---
 
