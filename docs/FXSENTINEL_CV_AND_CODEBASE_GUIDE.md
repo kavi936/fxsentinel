@@ -602,21 +602,13 @@ Add these to strengthen the technical story:
 
 ## CV Bullets (Ready to Use)
 
-### Founder — FXSentinel | July 2025 – Present | fxsentinel.io
+### Founder, Web App — FXSentinel (fxsentinel.io) | Remote | July 2025 – July 2026
 
-- Built an AI-powered forex analysis platform for retail traders, serving **360+ users (~20 DAU)** with institutional-style macro analysis.
+- Solo-built a full-stack AI forex analysis platform across a **1,200+ file** codebase with **60+ REST endpoints**, integrating **15+ external APIs** including Stripe, Binance, TradingView, Finnhub and Kalshi with circuit breakers, rate limiters and caching.
 
-- Architected a full-stack system (React/Vite frontend on Vercel, Python/Flask API + background worker on Railway) with **60+ REST endpoints** and **100+ backend services**.
+- Grew to **525+ users**, **3,800+ followers**, and **6M+ social views** through GA4/GTM funnel tracking, ManyChat automation, and multi-channel content across TikTok, Instagram, and X; shipped a background alert system with impact scoring.
 
-- Designed a hybrid LLM pipeline: Gemini for real-time web grounding/evidence retrieval, OpenAI GPT for structured trade analysis — with caching, cost tracking, and fail-open fallbacks.
-
-- Built multi-source news ingestion from **8+ RSS feeds and Telegram channels**, with forex relevance filtering, deduplication, and Firebase-backed persistent caching.
-
-- Shipped automated Telegram + email alert system with deduplication, impact scoring, and economic calendar integration.
-
-- Integrated Stripe subscriptions, Firebase Auth, and Resend transactional email for onboarding/verification.
-
-- Implemented GA4/GTM/Firebase Analytics funnel tracking with UTM attribution across TikTok, Instagram, and X — supporting data-driven growth (**4M+ views, 3,600+ followers**).
+- Architected a hybrid LLM pipeline: Gemini for real-time web grounding and evidence retrieval, GPT for structured trade analysis, with smart caching, per-user cost tracking, fail-open fallbacks, and multi-source news ingestion from **8+ RSS feeds**.
 
 ---
 
@@ -729,24 +721,22 @@ Add these to strengthen the technical story:
 ## Metrics You Can Cite
 
 ### Product Metrics
-- **360+ registered users**
-- **~20 daily active users**
-- **3-day free trial → $20/month subscription**
+- **525+ registered users**
+- Freemium → paid subscription (historically Stripe)
 
 ### Growth Metrics
-- **4M+ TikTok/social views**
-- **3,600+ social followers**
-- **Multi-channel acquisition:** TikTok, Instagram, X
+- **6M+** social views
+- **3,800+** social followers
+- **Multi-channel acquisition:** TikTok, Instagram, X (+ ManyChat automation, GA4/GTM funnels)
 
 ### Technical Metrics
 - **1,200+ files** in codebase
-- **105+ backend services**
 - **60+ REST API endpoints**
-- **15+ external API integrations**
-- **40+ TradingView instruments** (forex, crypto, commodities, bonds, indices)
-- **8+ news sources** aggregated
-- **13 SEO blog posts**
-- **2 deployment services** (main app + background worker)
+- **15+ external API integrations** (incl. Stripe, Binance, TradingView, Finnhub, Kalshi)
+- Circuit breakers, rate limiters, caching
+- Hybrid Gemini → GPT analysis pipeline
+- **8+ RSS** news sources (+ Telegram)
+- Background alert system with impact scoring
 
 ---
 

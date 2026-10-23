@@ -23,22 +23,19 @@ Retail traders drown in headlines and miss *why* a release moves EUR/USD, gold, 
 
 ## Impact (from professional CV)
 
-**Founder — FXSentinel** · July 2025 – Present · [fxsentinel.io](https://fxsentinel.io)
+**Founder, Web App — FXSentinel** ([fxsentinel.io](https://fxsentinel.io)) · Remote · July 2025 – July 2026
 
 | Metric | Figure |
 |--------|--------|
-| Registered users | **360+** (~**20 DAU**) |
-| API surface | **60+** REST endpoints · **100+** backend services |
-| News ingestion | **8+** RSS feeds + Telegram channels |
-| Growth reach | **4M+** views · **3,600+** followers (TikTok / Instagram / X) |
+| Codebase | **1,200+** files |
+| API surface | **60+** REST endpoints · **15+** external APIs |
+| Users | **525+** |
+| Social | **3,800+** followers · **6M+** views |
+| News | **8+** RSS feeds (+ Telegram) |
 
-- Built an AI-powered forex analysis platform for retail traders, serving **360+ users (~20 DAU)** with institutional-style macro analysis.
-- Architected a full-stack system (React/Vite on Vercel, Python/Flask API + background worker on Railway) with **60+ REST endpoints** and **100+ backend services**.
-- Designed a hybrid LLM pipeline: Gemini for real-time web grounding/evidence retrieval, OpenAI GPT for structured trade analysis — with caching, cost tracking, and fail-open fallbacks.
-- Built multi-source news ingestion from **8+ RSS feeds and Telegram channels**, with forex relevance filtering, deduplication, and Firebase-backed persistent caching.
-- Shipped automated Telegram + email alert system with deduplication, impact scoring, and economic calendar integration.
-- Integrated Stripe subscriptions, Firebase Auth, and Resend transactional email for onboarding/verification.
-- Implemented GA4/GTM/Firebase Analytics funnel tracking with UTM attribution across TikTok, Instagram, and X — supporting data-driven growth (**4M+ views, 3,600+ followers**).
+- Solo-built a full-stack AI forex analysis platform across a **1,200+ file** codebase with **60+ REST endpoints**, integrating **15+ external APIs** including Stripe, Binance, TradingView, Finnhub and Kalshi with circuit breakers, rate limiters and caching.
+- Grew to **525+ users**, **3,800+ followers**, and **6M+ social views** through GA4/GTM funnel tracking, ManyChat automation, and multi-channel content across TikTok, Instagram, and X; shipped a background alert system with impact scoring.
+- Architected a hybrid LLM pipeline: Gemini for real-time web grounding and evidence retrieval, GPT for structured trade analysis, with smart caching, per-user cost tracking, fail-open fallbacks, and multi-source news ingestion from **8+ RSS feeds**.
 
 The company is no longer operating as an active SaaS; this repo and site are kept as a **working technical portfolio**. Current demo API runs on Render (web-only / live-lite); production historically used Railway for API + worker.
 
