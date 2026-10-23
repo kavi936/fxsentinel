@@ -133,7 +133,7 @@ def main():
     if not firebase_ok:
         print("\n❌ MAIN ISSUE: Firebase API key not configured")
         print("   Please update your .env file with the actual Firebase API key:")
-        print("   VITE_FIREBASE_API_KEY=AIzaSyCeyOao-K-cU6ah3fhAQ_K6WWEl5ijBDMI")
+        print("   VITE_FIREBASE_API_KEY=your_firebase_web_api_key_here")
         return False
     
     if firebase_ok and backend_ok and frontend_ok:
@@ -141,7 +141,7 @@ def main():
         print("\n📋 Next steps:")
         print("   1. Make sure you've updated the .env file with the correct API key")
         print("   2. Restart your frontend server: npm run dev")
-        print("   3. Try Google sign-in with: kavi.cf412@gmail.com")
+        print("   3. Try Google sign-in with a test account allowlisted in Firebase")
         print("   4. Check browser console for any JavaScript errors")
         return True
     else:

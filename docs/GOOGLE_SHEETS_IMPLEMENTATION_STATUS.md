@@ -55,7 +55,7 @@ pip install -r requirements.txt
 ```env
 # Paste the ENTIRE contents of your service account JSON file here
 # It should look like this (but with your actual values):
-GOOGLE_SHEETS_CREDENTIALS_JSON='{"type":"service_account","project_id":"your-project-id","private_key_id":"abc123...","private_key":"-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...\n-----END PRIVATE KEY-----\n","client_email":"your-service-account@project.iam.gserviceaccount.com","client_id":"123456789","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/..."}'
+GOOGLE_SHEETS_CREDENTIALS_JSON='{"type":"service_account","project_id":"your-project-id","private_key_id":"REDACTED","private_key":"-----BEGIN PRIVATE KEY-----\\nYOUR_PRIVATE_KEY_MATERIAL_HERE\\n-----END PRIVATE KEY-----\\n","client_email":"your-service-account@project.iam.gserviceaccount.com","client_id":"123456789","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"https://www.googleapis.com/robot/v1/metadata/x509/..."}'
 
 GOOGLE_SHEETS_SPREADSHEET_ID=1a2b3c4d5e6f7g8h9i0j
 GOOGLE_SHEETS_CACHE_TTL=300

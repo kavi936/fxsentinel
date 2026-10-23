@@ -1,53 +1,125 @@
 # FXSentinel
 
-FXSentinel is a forex market analysis platform with a React frontend and Flask backend.
+**AI-powered forex & macro intelligence** — turn market-moving news into clear trading context.
 
-## New Developer Start Here
+**Live:** [fxsentinel.io](https://fxsentinel.io)  
+**Founder:** [Kavi C](https://github.com/kavi936) · sole builder (product, engineering, AI, growth)
 
-If you are onboarding to this project, read these files first:
+> Portfolio / demo deployment of a production fintech system I designed, shipped, and operated as a founder. Built end-to-end over ~a year: multi-source data ingestion, hybrid LLM analysis, alerts, payments, and growth analytics.
 
-1. `CONTRIBUTING.md` - team workflow, PR flow, and setup steps
-2. `docs/BRANCH_NAMING.md` - branch naming rules
-3. `.github/pull_request_template.md` - required PR format and checklist
-4. `docs/README.md` - detailed project and environment setup
+---
 
-## Quick Project Map
+## What it does
 
-- `src/` - frontend (React + Vite)
-- `backend/` - Flask backend
-- `backend/services/` - backend service logic
-- `env.example` - environment variable names
-- `.env` - local secrets (do not commit)
+Retail traders drown in headlines and miss *why* a release moves EUR/USD, gold, or risk sentiment. FXSentinel:
 
-## Run Locally
+1. **Aggregates** forex-relevant news (RSS + optional Telegram)
+2. **Filters & caches** for relevance (Firebase-backed persistence)
+3. **Analyzes** with a hybrid LLM pipeline — Gemini for web grounding, GPT for structured insight
+4. **Surfaces** everything in a React dashboard (Overview, Economies, Markets) with calendar, sentiment, and research context
+5. **Monetized** via freemium AI quotas + Stripe (demo deploy has checkout soft-disabled)
 
-### Frontend
+---
+
+## What was accomplished
+
+| Area | Outcome |
+|------|---------|
+| **Full-stack product** | React 19 + Vite frontend (Vercel) · Python/Flask API (60+ routes, 100+ services) |
+| **Hybrid AI** | Gemini grounding → GPT structured analysis, caching, per-user cost tracking, fail-open fallbacks |
+| **Data layer** | 15+ integrations: RSS, Finnhub, TradingView, Binance OHLC, Google Sheets macro, Polymarket/Kalshi context |
+| **Macro desk** | Hybrid economic calendar, Economies scans, central-bank document library |
+| **Alerts** | Telegram + email worker with dedup / DLQ (disabled on this lean demo host to cut cost) |
+| **Growth** | Stripe freemium, Firebase Auth, GA4/GTM funnels, SEO blog, social acquisition |
+| **Ops maturity** | Circuit breakers, rate limits, multi-tier cache, health endpoints |
+
+Order-of-magnitude while live as a business: **360+ users**, social-driven acquisition. The company is no longer operating as a SaaS; this repo and site are kept as a **working technical portfolio**.
+
+---
+
+## Architecture (current demo)
+
+```text
+Browser  →  Vercel (React SPA + SEO)
+                │  VITE_API_URL
+                ▼
+         Render free (Flask + Gunicorn, web only)
+                │
+     Firebase · RSS / public APIs · optional OpenAI/Gemini
+```
+
+- **No alert worker** on the free-tier host (`LIVE_LITE_MODE=true`) — keeps memory/cost near zero.
+- Render free tier **cold-starts** after idle (~30–60s). Warm [api health](https://fxsentinel-api.onrender.com/api/health) once before a live demo.
+
+Canonical deep-dives: [`docs/GENERAL_SYSTEM_ARCHITECTURE.md`](docs/GENERAL_SYSTEM_ARCHITECTURE.md) · [`docs/FXSENTINEL_CV_AND_CODEBASE_GUIDE.md`](docs/FXSENTINEL_CV_AND_CODEBASE_GUIDE.md)
+
+---
+
+## Tech stack
+
+**Frontend:** React 19, Vite 7, React Router, Firebase Auth, Framer Motion, lightweight-charts  
+**Backend:** Python, Flask, Gunicorn  
+**AI:** OpenAI GPT, Google Gemini  
+**Data / infra:** Firebase (Auth, Firestore/Realtime), Stripe, Resend, Redis (optional)  
+**Hosting:** Vercel (frontend) · Render (API, live-lite)
+
+---
+
+## Repo map
+
+| Path | Role |
+|------|------|
+| `src/` | React app (landing, dashboard, blog) |
+| `backend/` | Flask API + services |
+| `backend/services/` | News, AI, calendar, markets, payments |
+| `docs/` | Architecture, runbooks, product notes |
+| `config/env.example` | Env var names (no secrets) |
+| `render.yaml` | Render blueprint for live-lite API |
+
+---
+
+## Run locally
+
+**Frontend**
 
 ```bash
 npm install
 npm run dev
 ```
 
-### Backend
+**Backend**
 
 ```bash
-cd backend
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python3 app.py
+# copy config/env.example → backend/.env and fill keys locally
+LIVE_LITE_MODE=true python3 main.py
 ```
 
-## Team Collaboration Rules
+Never commit `.env`, service-account JSON, or Telegram `.session` files. See [`docs/LIVE_LITE_SECURITY_ROTATION.md`](docs/LIVE_LITE_SECURITY_ROTATION.md) and [`SECURITY.md`](SECURITY.md).
 
-- `main` is the production branch.
-- No direct pushes to `main`.
-- All changes must go through Pull Requests.
-- Keep PRs small and focused.
-- Never commit API keys or secrets.
+---
 
-## Deployment
+## Status
 
-- Backend: Railway
-- Frontend: Vercel
+| Surface | State |
+|---------|--------|
+| Landing + auth | Live on Vercel |
+| Dashboard Overview (news / calendar / sentiment) | Served by Render API |
+| AI Analyze | Works when OpenAI/Gemini keys are configured on Render |
+| Alerts tab | Hidden in live-lite (no worker) |
+| Stripe checkout | Soft-disabled on demo host |
 
+---
+
+## License
+
+All rights reserved © Kavi C.  
+This repository is published for **portfolio and educational visibility**. You may view and learn from the code; you may not redistribute or operate it as a competing commercial service without written permission.
+
+---
+
+## Contact
+
+Built by **Kavi C** — [github.com/kavi936](https://github.com/kavi936) · live product: [fxsentinel.io](https://fxsentinel.io)
