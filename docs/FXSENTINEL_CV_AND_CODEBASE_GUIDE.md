@@ -604,21 +604,19 @@ Add these to strengthen the technical story:
 
 ### Founder — FXSentinel | July 2025 – Present | fxsentinel.io
 
-- Founded an AI-powered forex analysis platform serving **360+ users** (~20 DAU), combining institutional-style macro analysis with retail-friendly UX.
+- Built an AI-powered forex analysis platform for retail traders, serving **360+ users (~20 DAU)** with institutional-style macro analysis.
 
-- Architected a **full-stack system** (React/Vite frontend on Vercel, Python/Flask API + background worker on Railway) with **60+ REST endpoints** and **100+ backend services**.
+- Architected a full-stack system (React/Vite frontend on Vercel, Python/Flask API + background worker on Railway) with **60+ REST endpoints** and **100+ backend services**.
 
-- Built a **hybrid LLM pipeline**: Gemini for real-time web grounding and evidence retrieval, OpenAI GPT for structured trade analysis — with smart caching, per-user cost tracking, and fail-open fallbacks.
+- Designed a hybrid LLM pipeline: Gemini for real-time web grounding/evidence retrieval, OpenAI GPT for structured trade analysis — with caching, cost tracking, and fail-open fallbacks.
 
-- Designed multi-source news ingestion from **8+ RSS feeds and Telegram channels**, with forex relevance filtering, deduplication, and Firebase-backed persistent caching.
+- Built multi-source news ingestion from **8+ RSS feeds and Telegram channels**, with forex relevance filtering, deduplication, and Firebase-backed persistent caching.
 
-- Shipped automated **Telegram + email alert system** with deduplication, impact scoring, and economic calendar integration.
+- Shipped automated Telegram + email alert system with deduplication, impact scoring, and economic calendar integration.
 
-- Integrated **Stripe** subscriptions, **Firebase Auth**, and **Resend** transactional email for onboarding and verification.
+- Integrated Stripe subscriptions, Firebase Auth, and Resend transactional email for onboarding/verification.
 
-- Implemented **GA4/GTM/Firebase Analytics** funnel tracking with UTM attribution across TikTok, Instagram, and X — supporting data-driven growth (**4M+ views**, **3,600+ followers**).
-
-- Published **SEO-optimized blog content** and ran social acquisition (ManyChat automation, Canva/CapCut content) to convert audience into product users.
+- Implemented GA4/GTM/Firebase Analytics funnel tracking with UTM attribution across TikTok, Instagram, and X — supporting data-driven growth (**4M+ views, 3,600+ followers**).
 
 ---
 

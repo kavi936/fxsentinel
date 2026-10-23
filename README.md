@@ -21,7 +21,30 @@ Retail traders drown in headlines and miss *why* a release moves EUR/USD, gold, 
 
 ---
 
-## What was accomplished
+## Impact (from professional CV)
+
+**Founder — FXSentinel** · July 2025 – Present · [fxsentinel.io](https://fxsentinel.io)
+
+| Metric | Figure |
+|--------|--------|
+| Registered users | **360+** (~**20 DAU**) |
+| API surface | **60+** REST endpoints · **100+** backend services |
+| News ingestion | **8+** RSS feeds + Telegram channels |
+| Growth reach | **4M+** views · **3,600+** followers (TikTok / Instagram / X) |
+
+- Built an AI-powered forex analysis platform for retail traders, serving **360+ users (~20 DAU)** with institutional-style macro analysis.
+- Architected a full-stack system (React/Vite on Vercel, Python/Flask API + background worker on Railway) with **60+ REST endpoints** and **100+ backend services**.
+- Designed a hybrid LLM pipeline: Gemini for real-time web grounding/evidence retrieval, OpenAI GPT for structured trade analysis — with caching, cost tracking, and fail-open fallbacks.
+- Built multi-source news ingestion from **8+ RSS feeds and Telegram channels**, with forex relevance filtering, deduplication, and Firebase-backed persistent caching.
+- Shipped automated Telegram + email alert system with deduplication, impact scoring, and economic calendar integration.
+- Integrated Stripe subscriptions, Firebase Auth, and Resend transactional email for onboarding/verification.
+- Implemented GA4/GTM/Firebase Analytics funnel tracking with UTM attribution across TikTok, Instagram, and X — supporting data-driven growth (**4M+ views, 3,600+ followers**).
+
+The company is no longer operating as an active SaaS; this repo and site are kept as a **working technical portfolio**. Current demo API runs on Render (web-only / live-lite); production historically used Railway for API + worker.
+
+---
+
+## System highlights
 
 | Area | Outcome |
 |------|---------|
@@ -32,8 +55,6 @@ Retail traders drown in headlines and miss *why* a release moves EUR/USD, gold, 
 | **Alerts** | Telegram + email worker with dedup / DLQ (disabled on this lean demo host to cut cost) |
 | **Growth** | Stripe freemium, Firebase Auth, GA4/GTM funnels, SEO blog, social acquisition |
 | **Ops maturity** | Circuit breakers, rate limits, multi-tier cache, health endpoints |
-
-Order-of-magnitude while live as a business: **360+ users**, social-driven acquisition. The company is no longer operating as a SaaS; this repo and site are kept as a **working technical portfolio**.
 
 ---
 
