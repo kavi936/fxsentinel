@@ -1,0 +1,36 @@
+# Render Blueprint — live-lite web API only (no alert worker).
+# Docs: https://render.com/docs/blueprint-spec
+#
+# After first deploy:
+# 1. Complete docs/LIVE_LITE_SECURITY_ROTATION.md (new keys only)
+# 2. In Render dashboard → Environment, paste NEW secrets
+# 3. Set Vercel VITE_API_URL to this service's URL and redeploy frontend
+
+services:
+  - type: web
+    name: fxsentinel-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: .
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 1 -b 0.0.0.0:$PORT --timeout 120 main:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: LIVE_LITE_MODE
+        value: "true"
+      - key: ALERTS_ENABLED
+        value: "false"
+      - key: TELEGRAM_NEWS_ENABLED
+        value: "false"
+      - key: STRIPE_CHECKOUT_ENABLED
+        value: "false"
+      - key: FLASK_ENV
+        value: "production"
+      - key: ENABLE_ROBUST_ALERT_SERVICE
+        value: "false"
+      # Set these in the Render dashboard after rotating secrets (do not commit values):
+      # OPENAI_API_KEY, GEMINI_API_KEY, FIREBASE_SERVICE_ACCOUNT_JSON,
+      # FIREBASE_PROJECT_ID, FINNHUB_API_KEY, etc.

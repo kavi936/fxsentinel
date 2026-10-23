@@ -22,6 +22,12 @@ from firebase_admin import credentials, firestore, initialize_app, auth
 from services.stripe_service import StripeService
 from services.user_trader_profile import user_trader_profile_store, validate_trader_payload
 from services.analysis_personalization import get_user_personalization
+from services.live_lite_config import (
+    live_lite_mode,
+    alerts_enabled,
+    telegram_news_enabled,
+    stripe_checkout_enabled,
+)
 
 # Load .env before Firebase init so FIREBASE_PROJECT_ID / GOOGLE_CLOUD_PROJECT are available
 load_dotenv()
@@ -150,6 +156,9 @@ CORS(app, origins="*", methods=["GET", "POST", "OPTIONS"], supports_credentials=
 # Initialize unified alert processor on app startup (works in production with WSGI servers)
 def initialize_unified_alert_processor():
     """Initialize unified alert processor - runs on app startup"""
+    if not alerts_enabled():
+        print("ℹ️ Unified alert processor skipped (ALERTS_ENABLED=false / LIVE_LITE_MODE)")
+        return
     try:
         from services.unified_alert_processor import get_unified_processor
         unified_processor = get_unified_processor()
@@ -166,6 +175,19 @@ def initialize_unified_alert_processor():
 
 # Start unified processor immediately (runs when module is imported)
 initialize_unified_alert_processor()
+
+
+def _maybe_check_news_alerts(news_items, label="news"):
+    """No-op when alerts are disabled (live-lite)."""
+    if not alerts_enabled():
+        return
+    try:
+        from services.unified_alert_processor import get_unified_processor
+        get_unified_processor().check_news_alerts_async(news_items)
+        print(f"✅ Triggered alert check for {len(news_items) if news_items else 0} items ({label})")
+    except Exception as e:
+        print(f"⚠️ Alert check failed ({label}): {e}")
+
 
 # Add CORS headers to all responses
 @app.after_request
@@ -1164,6 +1186,8 @@ def _run_background_news_fetch():
                 print(f"❌ Background fetch alt: {e}")
                 return []
         def _fetch_telegram():
+            if not telegram_news_enabled():
+                return []
             try:
                 from services.telegram_sync_wrapper import telegram_sync
                 return telegram_sync.get_recent_telegram_news(hours=24)
@@ -1174,7 +1198,7 @@ def _run_background_news_fetch():
         with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
             rss_f = executor.submit(_fetch_rss)
             alt_f = executor.submit(_fetch_alt)
-            tg_f = executor.submit(_fetch_telegram)
+            tg_f = executor.submit(_fetch_telegram) if telegram_news_enabled() else None
             fresh_news = []
             try:
                 fresh_news.extend(rss_f.result(timeout=10))
@@ -1184,10 +1208,11 @@ def _run_background_news_fetch():
                 fresh_news.extend(alt_f.result(timeout=10))
             except Exception:
                 pass
-            try:
-                fresh_news.extend(tg_f.result(timeout=15))
-            except Exception:
-                pass
+            if tg_f is not None:
+                try:
+                    fresh_news.extend(tg_f.result(timeout=15))
+                except Exception:
+                    pass
 
         if not fresh_news:
             print("📭 Background news fetch: no new articles")
@@ -1216,11 +1241,12 @@ def _run_background_news_fetch():
         fresh_news_to_save = fresh_news[:MAX_CACHE_ITEMS] if len(fresh_news) > MAX_CACHE_ITEMS else fresh_news
         if news_cache.save_news(fresh_news_to_save, append=True):
             print(f"✅ Background news fetch: saved {len(fresh_news_to_save)} items to cache")
-            try:
-                from services.unified_alert_processor import get_unified_processor
-                get_unified_processor().check_news_alerts_async(fresh_news)
-            except Exception as e:
-                print(f"⚠️ Background fetch alerts: {e}")
+            if alerts_enabled():
+                try:
+                    from services.unified_alert_processor import get_unified_processor
+                    get_unified_processor().check_news_alerts_async(fresh_news)
+                except Exception as e:
+                    print(f"⚠️ Background fetch alerts: {e}")
         else:
             print("⚠️ Background news fetch: save to cache failed")
     except Exception as e:
@@ -1465,6 +1491,9 @@ def get_news():
             
             # Function to fetch Telegram news with timeout
             def fetch_telegram_news():
+                if not telegram_news_enabled():
+                    print("ℹ️ Telegram news skipped (TELEGRAM_NEWS_ENABLED=false / LIVE_LITE_MODE)")
+                    return []
                 try:
                     import sys
                     import os
@@ -1486,7 +1515,7 @@ def get_news():
                 # Submit all tasks in parallel
                 rss_future = executor.submit(fetch_rss_news)
                 alt_future = executor.submit(fetch_alternative_news)
-                telegram_future = executor.submit(fetch_telegram_news)
+                telegram_future = executor.submit(fetch_telegram_news) if telegram_news_enabled() else None
                 
                 # Wait for RSS news with timeout
                 try:
@@ -1513,17 +1542,20 @@ def get_news():
                     alt_news = []
                 
                 # Wait for Telegram news with timeout (slightly longer as it can be slower)
-                try:
-                    telegram_news = telegram_future.result(timeout=15)
-                    fresh_news.extend(telegram_news)
-                    sources_used.append("Telegram")
-                    if telegram_news:
-                        print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
-                except concurrent.futures.TimeoutError:
-                    print("⚠️ Telegram news fetch timed out")
-                    telegram_news = []
-                except Exception as e:
-                    print(f"❌ Telegram news fetch failed: {e}")
+                if telegram_future is not None:
+                    try:
+                        telegram_news = telegram_future.result(timeout=15)
+                        fresh_news.extend(telegram_news)
+                        sources_used.append("Telegram")
+                        if telegram_news:
+                            print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
+                    except concurrent.futures.TimeoutError:
+                        print("⚠️ Telegram news fetch timed out")
+                        telegram_news = []
+                    except Exception as e:
+                        print(f"❌ Telegram news fetch failed: {e}")
+                        telegram_news = []
+                else:
                     telegram_news = []
         else:
             # should_fetch_new is False - we shouldn't be fetching
@@ -2040,44 +2072,47 @@ def force_refresh_news_internal():
         except Exception as e:
             print(f"❌ Error fetching alternative news: {e}")
         
-        # Fetch Telegram news using synchronous wrapper
+        # Fetch Telegram news using synchronous wrapper (skipped in live-lite)
         telegram_news = []
-        try:
-            import sys
-            import os
-            # Add current directory to path for imports
-            if os.path.dirname(__file__) not in sys.path:
-                sys.path.insert(0, os.path.dirname(__file__))
-            
-            print("🔍 Attempting to import telegram_sync...")
-            from services.telegram_sync_wrapper import telegram_sync
-            print("✅ Successfully imported telegram_sync")
-            
-            print("🔍 Calling telegram_sync.get_recent_telegram_news...")
-            telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
-            print(f"✅ Telegram sync returned {len(telegram_news)} articles")
-            
-            # Debug: Show what we got from Telegram
-            if telegram_news:
-                print("📰 Sample Telegram articles:")
-                for i, news in enumerate(telegram_news[:3], 1):
-                    print(f"  {i}. {news.get('title', 'No title')}")
-                    print(f"     Source: {news.get('source', 'No source')}")
-                    print(f"     Impact: {news.get('impact', 'No impact')}")
-                    print(f"     Type: {news.get('type', 'No type')}")
-                    print()
-            else:
-                print("⚠️ No Telegram news returned from sync wrapper")
-            
-            fresh_news.extend(telegram_news)
-            print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
-            print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
-        except Exception as e:
-            print(f"❌ Error fetching Telegram news: {e}")
-            import traceback
-            traceback.print_exc()
-            print("Continuing with other sources...")
-            telegram_news = []
+        if telegram_news_enabled():
+            try:
+                import sys
+                import os
+                # Add current directory to path for imports
+                if os.path.dirname(__file__) not in sys.path:
+                    sys.path.insert(0, os.path.dirname(__file__))
+                
+                print("🔍 Attempting to import telegram_sync...")
+                from services.telegram_sync_wrapper import telegram_sync
+                print("✅ Successfully imported telegram_sync")
+                
+                print("🔍 Calling telegram_sync.get_recent_telegram_news...")
+                telegram_news = telegram_sync.get_recent_telegram_news(hours=24)
+                print(f"✅ Telegram sync returned {len(telegram_news)} articles")
+                
+                # Debug: Show what we got from Telegram
+                if telegram_news:
+                    print("📰 Sample Telegram articles:")
+                    for i, news in enumerate(telegram_news[:3], 1):
+                        print(f"  {i}. {news.get('title', 'No title')}")
+                        print(f"     Source: {news.get('source', 'No source')}")
+                        print(f"     Impact: {news.get('impact', 'No impact')}")
+                        print(f"     Type: {news.get('type', 'No type')}")
+                        print()
+                else:
+                    print("⚠️ No Telegram news returned from sync wrapper")
+                
+                fresh_news.extend(telegram_news)
+                print(f"✅ Added {len(telegram_news)} Telegram news articles to fresh_news")
+                print(f"📊 Total fresh_news count after Telegram: {len(fresh_news)}")
+            except Exception as e:
+                print(f"❌ Error fetching Telegram news: {e}")
+                import traceback
+                traceback.print_exc()
+                print("Continuing with other sources...")
+                telegram_news = []
+        else:
+            print("ℹ️ Telegram news skipped (TELEGRAM_NEWS_ENABLED=false / LIVE_LITE_MODE)")
         
         if fresh_news:
             print(f"📊 Before deduplication: {len(fresh_news)} articles")
@@ -3044,7 +3079,11 @@ def health_check():
     return jsonify({
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "live_lite_mode": live_lite_mode(),
+        "alerts_enabled": alerts_enabled(),
+        "telegram_news_enabled": telegram_news_enabled(),
+        "stripe_checkout_enabled": stripe_checkout_enabled(),
     })
 
 @app.route('/api/health/alerts')
@@ -6269,6 +6308,12 @@ def check_analysis_permission(user_id):
 def create_checkout_session():
     """Create a Stripe Checkout Session for premium subscription upgrade"""
     try:
+        if not stripe_checkout_enabled():
+            return jsonify({
+                'error': 'Checkout disabled',
+                'message': 'Stripe checkout is disabled for this demo deployment (STRIPE_CHECKOUT_ENABLED=false). Free-tier analysis still works.',
+            }), 503
+
         data = request.get_json()
         user_id = data.get('user_id')
         email = data.get('email')
@@ -8058,21 +8103,27 @@ if __name__ == '__main__':
     # Force debug mode off for background execution
     debug_mode = False
     
-    # Start unified alert processor (replaces separate worker)
-    try:
-        from services.unified_alert_processor import get_unified_processor
-        unified_processor = get_unified_processor()
-        unified_processor.start()
-        print("✅ Unified alert processor started in background")
-    except Exception as e:
-        print(f"⚠️ Could not start unified alert processor: {e}")
-        import traceback
-        traceback.print_exc()
-        print("   Alerts will not work!")
+    # Start unified alert processor (replaces separate worker) — skipped in live-lite
+    if alerts_enabled():
+        try:
+            from services.unified_alert_processor import get_unified_processor
+            unified_processor = get_unified_processor()
+            unified_processor.start()
+            print("✅ Unified alert processor started in background")
+        except Exception as e:
+            print(f"⚠️ Could not start unified alert processor: {e}")
+            import traceback
+            traceback.print_exc()
+            print("   Alerts will not work!")
+    else:
+        print("ℹ️ Unified alert processor skipped (ALERTS_ENABLED=false / LIVE_LITE_MODE)")
     
     # Optional legacy worker path.
     # Default OFF to avoid duplicate alert loops and extra Firebase usage.
-    robust_enabled = os.getenv('ENABLE_ROBUST_ALERT_SERVICE', 'false').strip().lower() in ('1', 'true', 'yes')
+    robust_enabled = (
+        alerts_enabled()
+        and os.getenv('ENABLE_ROBUST_ALERT_SERVICE', 'false').strip().lower() in ('1', 'true', 'yes')
+    )
     if robust_enabled:
         try:
             from services.robust_alert_service import start_robust_alert_service

@@ -20,6 +20,10 @@ import OnboardingTour from './OnboardingTour';
 import { useMeta } from '../hooks/useMeta';
 import { trackEngagement, trackFeatureUsage, trackTrialStart, trackDashboardAccess } from '../utils/analytics';
 
+// Live-lite / college-demo: hide Alerts (no worker / Telegram delivery).
+// Set VITE_ALERTS_ENABLED=true to show the tab again.
+const ALERTS_TAB_ENABLED = import.meta.env.VITE_ALERTS_ENABLED === 'true';
+
 function Dashboard() {
   useMeta(
     'Member Dashboard | FXSentinel',
@@ -587,9 +591,20 @@ function Dashboard() {
   };
 
   const handleMobileTabChange = (tab) => {
-    setActiveTab(tab);
+    if (tab === 'alerts' && !ALERTS_TAB_ENABLED) {
+      setActiveTab('overview');
+    } else {
+      setActiveTab(tab);
+    }
     setMobileMenuOpen(false);
   };
+
+  // Live-lite: if Alerts tab is disabled, never leave the UI stuck on it
+  useEffect(() => {
+    if (!ALERTS_TAB_ENABLED && activeTab === 'alerts') {
+      setActiveTab('overview');
+    }
+  }, [activeTab]);
 
   const updateAlertSettings = (setting, value) => {
     setAlertSettings(prev => ({
@@ -913,13 +928,15 @@ function Dashboard() {
                   >
                     Markets
                   </button>
-                  <button 
-                    className={`nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
-                    onClick={() => setActiveTab('alerts')}
-                    data-onboarding="nav-alerts"
-                  >
-                    Alerts
-                  </button>
+                  {ALERTS_TAB_ENABLED && (
+                    <button 
+                      className={`nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
+                      onClick={() => setActiveTab('alerts')}
+                      data-onboarding="nav-alerts"
+                    >
+                      Alerts
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -1035,13 +1052,15 @@ function Dashboard() {
               >
                 Markets
               </button>
-              <button 
-                className={`mobile-nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
-                onClick={() => handleMobileTabChange('alerts')}
-                data-onboarding="nav-alerts"
-              >
-                Alerts
-              </button>
+              {ALERTS_TAB_ENABLED && (
+                <button 
+                  className={`mobile-nav-tab ${activeTab === 'alerts' ? 'active' : ''}`}
+                  onClick={() => handleMobileTabChange('alerts')}
+                  data-onboarding="nav-alerts"
+                >
+                  Alerts
+                </button>
+              )}
             </div>
           </div>
           
@@ -1126,8 +1145,8 @@ function Dashboard() {
         <Markets />
       )}
 
-      {/* Alerts Tab - Rendered outside dashboard-main for full screen */}
-      {activeTab === 'alerts' && (
+      {/* Alerts Tab — hidden in live-lite unless VITE_ALERTS_ENABLED=true */}
+      {ALERTS_TAB_ENABLED && activeTab === 'alerts' && (
         <Alerts 
           alerts={alerts}
           alertStats={alertStats}
