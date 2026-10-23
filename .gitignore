@@ -184,3 +184,12 @@ working-dashboard.js
 
 # Build-time crawler HTML for bots (see scripts/generate-blog-static-html.js)
 public/crawler-snapshots/*.html
+
+# Telethon / Telegram session auth (never commit)
+*.session
+*.session-journal
+**/telegram_session*.session*
+**/fxsentinel_session.session*
+**/test_session.session*
+firebase-service-account.json
+**/firebase-service-account.json

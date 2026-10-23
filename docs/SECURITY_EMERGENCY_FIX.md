@@ -13,7 +13,7 @@
 ### **1. Revoke Exposed Stripe Key**
 **GO TO:** https://dashboard.stripe.com/apikeys
 
-**FIND:** Key starting with `sk_live_[REDACTED]`
+**FIND:** Key starting with `sk_live_[REDACTED — revoke in Stripe if this key still exists]`
 
 **ACTION:** Click "Revoke key" immediately
 

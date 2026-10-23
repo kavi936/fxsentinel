@@ -9,13 +9,15 @@ class FinnhubHistoricalService:
     """Service for fetching historical economic data from Finnhub"""
     
     def __init__(self):
-        # Use environment variable only, no hardcoded keys
+        # Use environment variable only, no hardcoded keys.
+        # Live-lite / free hosting: allow boot without Finnhub; methods return empty.
         self.api_key = os.getenv('FINNHUB_API_KEY')
-        if not self.api_key:
-            raise ValueError("FINNHUB_API_KEY environment variable not set")
         self.base_url = "https://finnhub.io/api/v1"
         self.session = requests.Session()
-        self.session.headers.update({'X-Finnhub-Token': self.api_key})
+        if self.api_key:
+            self.session.headers.update({'X-Finnhub-Token': self.api_key})
+        else:
+            print("⚠️ FINNHUB_API_KEY not set — historical Finnhub calls disabled")
     
     def _parse_economic_value(self, value) -> Optional[float]:
         """
