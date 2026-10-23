@@ -89,7 +89,13 @@ def fetch_tradingview_quotes() -> Optional[Dict[str, Any]]:
     if not INSTRUMENTS:
         return None
 
-    with ThreadPoolExecutor(max_workers=min(8, len(groups) or 1)) as executor:
+    try:
+        from services.live_lite_config import tradingview_max_workers
+        workers = min(tradingview_max_workers(), len(groups) or 1)
+    except Exception:
+        workers = min(8, len(groups) or 1)
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(_scan_one_market, market, insts): market
             for market, insts in groups.items()

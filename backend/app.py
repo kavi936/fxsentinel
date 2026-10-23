@@ -99,11 +99,16 @@ except Exception as e:
 # Initialize Stripe
 stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 
-# Initialize background alert worker
-from services.background_alert_worker import background_worker
+# Background alert worker — skip on live-lite to save RAM (no alerts worker on free tier)
+if alerts_enabled():
+    from services.background_alert_worker import background_worker
+else:
+    background_worker = None
+    print("ℹ️ background_alert_worker not loaded (ALERTS_ENABLED=false / LIVE_LITE_MODE)")
 
 # Debug: Check if environment variables are loaded
 print(f"🔍 Environment Debug:")
+print(f"   LIVE_LITE_MODE: {live_lite_mode()}")
 print(f"   OPENAI_API_KEY: {'SET' if os.getenv('OPENAI_API_KEY') else 'NOT SET'}")
 if os.getenv('OPENAI_API_KEY'):
     api_key = os.getenv('OPENAI_API_KEY')
@@ -547,8 +552,13 @@ except Exception as e:
     traceback.print_exc()
     gpt_ai_analyzer = None
     GPT_AVAILABLE = False
-import pandas as pd
-import numpy as np
+# pandas/numpy are heavy; only used for a mock chart path — lazy-import there on live-lite
+if live_lite_mode():
+    pd = None
+    np = None
+else:
+    import pandas as pd
+    import numpy as np
 
 def generate_ai_analysis(event_title, currency, impact):
     """Generate AI analysis using free local analysis instead of expensive APIs"""
@@ -729,14 +739,31 @@ def test_finnhub():
 
 # Import the news aggregator
 from services.news_aggregator import news_aggregator
-# Import the telegram monitor
-from services.telegram_monitor_user import telegram_user_monitor
+# Telegram user monitor pulls Telethon — skip on live-lite (RSS-only news)
+if telegram_news_enabled():
+    from services.telegram_monitor_user import telegram_user_monitor
+else:
+    telegram_user_monitor = None
+    print("ℹ️ telegram_monitor_user not loaded (TELEGRAM_NEWS_ENABLED=false / LIVE_LITE_MODE)")
 # Import economic calendar services (FF live primary; hybrid fallback; MT5 later)
 from services.economic_calendar_service import economic_calendar_service
 from services.hybrid_economic_calendar import hybrid_economic_calendar
 # Import the Finnhub historical service
 from services.finnhub_historical import finnhub_historical
-from services.economy_holistic_scan_service import economy_holistic_scan_service
+# Holistic economy scans are heavy — defer import until a scan is requested on live-lite
+economy_holistic_scan_service = None
+if not live_lite_mode():
+    from services.economy_holistic_scan_service import economy_holistic_scan_service
+else:
+    print("ℹ️ economy_holistic_scan_service deferred (LIVE_LITE_MODE)")
+
+def _get_economy_holistic_scan_service():
+    global economy_holistic_scan_service
+    if economy_holistic_scan_service is None:
+        from services.economy_holistic_scan_service import economy_holistic_scan_service as _svc
+        economy_holistic_scan_service = _svc
+    return economy_holistic_scan_service
+
 from services.analysis_contract import (
     ANALYSIS_KIND_CALENDAR_EVENT,
     ANALYSIS_KIND_CALENDAR_EVENT_LEGACY,
@@ -941,11 +968,12 @@ def get_economy_scan(country_code):
                 'status': permission.get('status')
             }), 429
 
-        if country_code not in economy_holistic_scan_service.SUPPORTED_COUNTRIES:
+        holistic = _get_economy_holistic_scan_service()
+        if country_code not in holistic.SUPPORTED_COUNTRIES:
             return jsonify({
                 "status": "error",
                 "message": f"Unsupported country code: {country_code}",
-                "supported_countries": sorted(list(economy_holistic_scan_service.SUPPORTED_COUNTRIES)),
+                "supported_countries": sorted(list(holistic.SUPPORTED_COUNTRIES)),
             }), 400
 
         def _load_fallback_indicators_from_json(ccy):
@@ -1011,7 +1039,7 @@ def get_economy_scan(country_code):
         events, _source = economic_calendar_service.get_economic_events(start_date, end_date) or ([], "")
 
         scan_personalization = get_user_personalization(token_user_info.get('user_id'))
-        scan = economy_holistic_scan_service.build_scan(
+        scan = holistic.build_scan(
             country_code=country_code,
             indicators=indicators,
             events=events,
@@ -2626,6 +2654,10 @@ def analyze_news_sentiment():
 def get_technical_analysis(pair):
     """Get technical analysis for a currency pair"""
     try:
+        global pd, np
+        if pd is None or np is None:
+            import pandas as pd
+            import numpy as np
         # Get historical data for the pair (you can enhance this with real data)
         # For now, we'll create mock data
         dates = pd.date_range(start='2024-01-01', end=datetime.now(), freq='D')

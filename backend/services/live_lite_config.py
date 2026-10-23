@@ -37,3 +37,25 @@ def stripe_checkout_enabled() -> bool:
     if os.getenv("STRIPE_CHECKOUT_ENABLED") is not None and os.getenv("STRIPE_CHECKOUT_ENABLED").strip() != "":
         return _env_bool("STRIPE_CHECKOUT_ENABLED", False)
     return not live_lite_mode()
+
+
+def news_cache_max_items() -> int:
+    """Smaller Firebase news windows on free-tier hosts (~512MB)."""
+    raw = os.getenv("NEWS_CACHE_MAX_ITEMS")
+    if raw and raw.strip().isdigit():
+        return max(20, int(raw.strip()))
+    return 50 if live_lite_mode() else 200
+
+
+def news_history_max_items() -> int:
+    raw = os.getenv("NEWS_HISTORY_MAX_ITEMS")
+    if raw and raw.strip().isdigit():
+        return max(50, int(raw.strip()))
+    return 150 if live_lite_mode() else 5000
+
+
+def tradingview_max_workers() -> int:
+    raw = os.getenv("TRADINGVIEW_MAX_WORKERS")
+    if raw and raw.strip().isdigit():
+        return max(1, int(raw.strip()))
+    return 2 if live_lite_mode() else 8

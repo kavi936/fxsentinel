@@ -16,11 +16,16 @@ from .firebase_realtime_storage import FirebaseRealtimeStorage
 logger = logging.getLogger(__name__)
 
 # Rolling window size for live feed (merge cap)
-MAX_CACHE_ITEMS = 200
+# Live-lite / Render free overrides via live_lite_config (smaller RAM footprint)
+try:
+    from .live_lite_config import news_cache_max_items, news_history_max_items
+    MAX_CACHE_ITEMS = news_cache_max_items()
+    MAX_HISTORY_ITEMS = news_history_max_items()
+except Exception:
+    MAX_CACHE_ITEMS = 200
+    MAX_HISTORY_ITEMS = 5000
 # Keep history for this many days so older events remain available (e.g. for future chart/backtest features)
 HISTORY_RETENTION_DAYS = 30
-# Max history items before count-based trim; high so retention is mainly time-based
-MAX_HISTORY_ITEMS = 5000
 
 class PersistentNewsCache:
     """
@@ -40,6 +45,8 @@ class PersistentNewsCache:
         self.max_age_hours = max_age_hours
         self.max_history_items = MAX_HISTORY_ITEMS
         self.history_retention_days = HISTORY_RETENTION_DAYS
+        # Live-lite: trim in-memory mirror aggressively after Firebase loads
+        self.max_cache_items = MAX_CACHE_ITEMS
 
         # Local fallback tier. Firebase is the source of truth, but when its egress is
         # unreachable (e.g. the Railway IPv6 outage) load_news() would return None and the
@@ -467,6 +474,9 @@ class PersistentNewsCache:
             
             # Sort by cached_at (newest first)
             history.sort(key=lambda x: x.get('cached_at', ''), reverse=True)
+            # Cap in-process list so free-tier RAM doesn't hold thousands of history rows
+            if len(history) > self.max_history_items:
+                history = history[: self.max_history_items]
             
             logger.info(f"Loaded {len(history)} items from news history")
             return history
